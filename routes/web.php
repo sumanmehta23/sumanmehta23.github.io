@@ -1,0 +1,187 @@
+<?php
+
+use App\Http\Controllers\Admin\AjaxController;
+use App\Http\Controllers\Admin\ApiAjaxController;
+use App\Http\Controllers\admin\ClientAccController;
+use App\Http\Controllers\admin\ClientController;
+use App\Http\Controllers\Admin\Dashboard;
+use App\Http\Controllers\Admin\IBController;
+use App\Http\Controllers\Admin\Kyc;
+use App\Http\Controllers\Admin\Login;
+use App\Http\Controllers\Admin\MT5Controller;
+use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StaffManagement;
+use App\Http\Controllers\Admin\Ticket;
+use App\Http\Controllers\Admin\Transaction;
+use App\Http\Controllers\Home;
+use App\Http\Controllers\Ib;
+use App\Http\Controllers\InternalTransfer;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MT5Accounts;
+use App\Http\Controllers\Payment;
+use App\Http\Controllers\Tickets;
+use App\Http\Controllers\TradeDeposit;
+use App\Http\Controllers\TradeWithdrawal;
+use App\Http\Controllers\Transactions;
+use App\Http\Controllers\Users;
+use App\Http\Controllers\Wallet;
+
+Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
+Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
+Route::get('/register', [LoginController::class, 'register'])->name('register');
+
+Route::post('/register', [LoginController::class, 'addUser']);
+Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
+Route::get('/reset-password', [LoginController::class, 'resetPassword']);
+Route::post('/reset-password', [LoginController::class, 'resetPassword']);
+Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
+Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
+
+Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth'])->group(function () {
+    // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
+    Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');
+    Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');
+    Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
+
+    Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
+    Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
+
+    Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
+    Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
+    Route::get('/view-account-details', [MT5Accounts::class, 'viewAccountDetails'])->name('view-account-details');
+    Route::get('/createLiveAccount', [MT5Accounts::class, 'showLiveAccountForm'])->name('show-live-account-form');
+    Route::post('/createLiveAccount', [MT5Accounts::class, 'createLiveAccount'])->name('create-live-account');
+    Route::get('/createDemoAccount', [MT5Accounts::class, 'showDemoAccountForm'])->name('show-demo-account-form');
+    Route::post('/createDemoAccount', [MT5Accounts::class, 'createDemoAccount'])->name('create-demo-account');
+    Route::post('/view-account-details', [MT5Accounts::class, 'changeMt5Password'])->name('change-mt5-password');
+
+    Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
+
+    Route::get('/support', [Tickets::class, 'index'])->name('supports');
+    Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
+    Route::get('/ticket_details', [Tickets::class, 'showDetails'])->name('ticket_details');
+    Route::post('/ticket_details', [Tickets::class, 'addRemark'])->name('ticket_details_store');
+    Route::get('/ticket_followups', [Tickets::class, 'fetchFollowups'])->name('ticket_followups');
+
+    Route::get('/ib-profile', [Ib::class, 'ib_profile'])->name('ib-profile');
+    Route::get('/ib', [Ib::class, 'index'])->name('ib');
+    Route::post('/ib-profile', [Ib::class, 'processTransfer'])->name('ib-profile-store');
+    Route::post('/ib-enroll', [Ib::class, 'ibEnroll'])->name('ib-enroll');
+
+    Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
+    Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+
+    Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
+    Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
+    Route::get('/wallet_deposit', [Wallet::class, 'showDepositForm'])->name('wallet_deposit');
+    Route::get('/wallet_withdrawal', [Wallet::class, 'showWithdrawalForm'])->name('wallet_withdrawal');
+    Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
+    Route::post('/wallet_withdrawal', [Wallet::class, 'withdrawal'])->name('wallet_withdrawal_store');
+    Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
+    Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
+
+    Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
+    Route::get('/trade-deposit', [TradeDeposit::class, 'index'])->name('trade-deposit');
+    Route::post('/trade-deposit', [TradeDeposit::class, 'deposit'])->name('trade-deposit_store');
+
+    Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
+    Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');
+    Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');
+    Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
+});
+
+Route::prefix("/admin")->name("admin.")->group(function () {
+    Route::get('/', [Login::class, 'showLoginForm']);
+    Route::post('/', [Login::class, 'adminLogin']);
+    Route::get('/login', [Login::class, 'showLoginForm']);
+    Route::post('/login', [Login::class, 'adminLogin']);
+    Route::get('/ajax', [AjaxController::class, 'index']);
+    Route::post('/ajax', [AjaxController::class, 'index']);
+    Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
+    Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
+    Route::get('/logout', [Login::class, 'logout'])->name('logout');
+    Route::middleware(['is_admin', 'check.permissions'])->group(function () {
+        Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+        Route::get('/transactions/{id}', [Transaction::class, 'index']);
+        Route::get('/transactions/pending/{id}', [Transaction::class, 'pending']);
+
+        Route::get('/client_list', [ClientController::class, 'index'])->name('client_list');
+        Route::get('/client_details', [ClientController::class, 'clientDetails'])->name('client_details');
+        Route::post('/updateIB', [ClientController::class, 'updateIB'])->name('updateIB');
+        Route::post('/updateRM', [ClientController::class, 'updateRM'])->name('updateRM');
+        Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser');
+        Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
+        Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
+
+        Route::get('/roles', [StaffManagement::class, 'roles']);
+        Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
+        Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles');
+        Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
+        Route::post('/update_role_status', [StaffManagement::class, 'updateRoleStatus'])->name('update_role_status');
+        Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
+        Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser');
+
+        Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions']);
+        Route::get('/admin_users', [StaffManagement::class, 'adminUsers']);
+        Route::get('/permissionsList', [StaffManagement::class, 'permissionsList'])->name('permissionsList');
+
+        Route::post('/addTicket', [Ticket::class, 'addTicket'])->name('addTicket');
+        Route::post('/assignTicket', [Ticket::class, 'assignTicket'])->name('assignTicket');
+        Route::post('/updateStatus', [Ticket::class, 'updateStatus'])->name('updateStatus');
+        Route::match(['get', 'post'], '/all_tickets', [Ticket::class, 'tickets'])->name('all_tickets');
+        Route::match(['get', 'post'], '/open_tickets', [Ticket::class, 'tickets'])->name('open_tickets');
+        Route::match(['get', 'post'], '/closed_tickets', [Ticket::class, 'tickets'])->name('closed_tickets');
+        Route::get('/ticket_details', [Ticket::class, 'showDetails'])->name('ticket_details');
+        Route::post('/ticket_details', [Ticket::class, 'addRemark'])->name('ticket_details_store');
+        Route::get('/ticket_followups', [Tickets::class, 'fetchFollowups'])->name('ticket_followups');
+
+        Route::post('/updateKyc', [Kyc::class, 'updateKyc'])->name('updateKyc');
+
+        Route::get('/wallet_deposit_details', [Transaction::class, 'wallet_deposit_details']);
+        Route::get('/wallet_withdrawal_details', [Transaction::class, 'wallet_withdrawal_details']);
+        Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal']);
+        Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
+        Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
+
+        Route::prefix('/clientAccounts')->group(function () {
+            Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts']);
+            Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts']);
+        });
+
+        Route::prefix('/ui_settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'index']);
+            Route::post('/', [SettingsController::class, 'store']);
+        });
+        Route::prefix('/update_password')->group(function () {
+            Route::get('/', [SettingsController::class, 'update_password']);
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password');
+        });
+
+        Route::get("/ibdashboard", [IBController::class, 'index']);
+        Route::get("/iblist", [IBController::class, 'list']);
+        Route::get("/iblist_active", [IBController::class, 'list_active']);
+        Route::get("/ib_settings", [IBController::class, 'ib_settings']);
+        Route::get("/ibCommission", [IBController::class, 'ibCommission']);
+        Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
+        Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
+        Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
+
+        Route::get("/mt5_groups", [MT5Controller::class, 'index']);
+
+        Route::get("/view_account_details", [MT5Controller::class, 'view']);
+        Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
+        Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
+        Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');
+        Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount');
+        Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount');
+
+        Route::get("/search", [SearchController::class, 'index']);
+    });
+});

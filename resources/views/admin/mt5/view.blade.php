@@ -1,0 +1,813 @@
+@extends('layouts.admin.admin')
+@section('content')
+<?php
+$trade_id = $getUser->trade_id;
+?>
+    @include('admin.mt5.popups')
+    <?php
+
+// include __DIR__ . "/user_actions.php";
+// include "admin_transaction.php";
+
+
+if ($getUser) {
+?>
+    <div class="main-content app-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <h1 class="page-title">Details of Trade Account</h1>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">MT5 Account Details</li>
+                </ol>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-5 col-xl-4">
+                    <div class="card custom-card">
+                        <div class="card-body">
+                            <!-- <h6 class="card-title fw-medium">DEPOSIT TICKET #$details->id ?></h6> -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="text-center">
+                                                <div class="userprofile">
+                                                    <div class="avatar userpic avatar-rounded">
+                                                        <img src="/admin_assets/assets/images/users/client.jpeg"
+                                                            alt="img" style="width:100px">
+                                                    </div>
+                                                    <h3 class="username mb-2"><?= $getUser->fullname ?></h3>
+                                                    <p class="mb-1 text-muted"><?= $getUser->email ?></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="wideget-user-desc d-flex align-items-center">
+                                                <div class="wideget-user-img">
+                                                    <img src="/assets/images/mt5.png" class="me-3" alt="img"
+                                                        style="width:50px">
+                                                </div>
+                                                <div class="user-wrap mt-auto mb-auto">
+                                                    <h4 class="fw-bold mb-0"><?= $getUser->trade_id ?></h4>
+                                                    <h6 class="fs-12 fw-normal text-muted"><?= $getUser->ac_group ?></h6>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 row justify-content-center">
+                                                <div class="col-4">
+                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                        data-bs-target="#depositModal">Deposit
+                                                        <i class="ti ti-database-import"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="col-4">
+                                                    <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                        data-bs-target="#withdrawalModal">Withdraw
+                                                        <i class="ti ti-square-rounded-arrow-down"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="col-4">
+                                                    <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                        data-bs-target="#bonusModal">Bonus
+                                                        <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+
+                                    <div class="table-responsive">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Leverage</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    echo $getUser->leverage;
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Balance</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->Balance)) {
+                                                                        echo "$" . $account->Balance;
+                                                                    } else {
+                                                                        echo "$0.00";
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Equity</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->Equity)) {
+                                                                        echo "$" . $account->Equity;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Credit</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->Credit)) {
+                                                                        echo $account->Credit . "$";
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-butterfly f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Free Margin</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->MarginFree)) {
+                                                                        echo "$" . $account->MarginFree;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-pie f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Margin</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->Margin)) {
+                                                                        echo $account->Margin;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-chart-pie-slice f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Margin Level</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->MarginLevel)) {
+                                                                        echo $account->MarginLevel . '%';
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avtar avtar-s border"><i
+                                                                class="ph-duotone ph-line-segments f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Floating PL</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($account->Floating)) {
+                                                                        echo $account->Floating;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card custom-card mt-2">
+                        <div class="card-header justify-content-between">
+                            <div class="card-title">
+                                Bonus
+                            </div>
+                            <div class="prism-toggle">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table text-nowrap" id="tableBonus">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        foreach ($bonus_trans as $bns) {
+                                        ?>
+                                        <tr>
+                                            <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
+                                            </td>
+                                            <td><?= $bns->bonus_amount ?></td>
+                                            <td><?= $bns->bonus_type ?></td>
+                                        </tr>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="row">
+                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                    <div class="card-body text-center">
+                                        <h6 class="mb-0">Total Deposit</h6>
+                                        <h2 class="mb-1 mt-2 number-font text-primary">$<span
+                                                class="counter"><?= $total_deposit ? $total_deposit : '0' ?></span>
+                                        </h2>
+                                        <!-- <p class="mb-0 text-muted"> Completed</p> -->
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                    <div class="card-body text-center">
+                                        <h6 class="mb-0">Unapproved Deposit</h6>
+                                        <h2 class="mb-1 mt-2 number-font text-secondary">$<span
+                                                class="counter"><?= $unapprove_deposit ? $unapprove_deposit : '0' ?></span>
+                                        </h2>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                    <div class="card-body text-center">
+                                        <h6 class="mb-0">Total Withdrawl</h6>
+                                        <h2 class="mb-1 mt-2 number-font text-primary">$<span
+                                                class="counter"><?= $total_withdrawl ? $total_withdrawl : '0' ?></span>
+                                        </h2>
+                                        <!-- <p class="mb-0 text-muted"> Completed</p> -->
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                    <div class="card-body text-center">
+                                        <h6 class="mb-0">Unapproved Withdrawl</h6>
+                                        <h2 class="mb-1 mt-2 number-font text-secondary">$<span
+                                                class="counter"><?= $unapprove_withdrawl ? $unapprove_withdrawl : '0' ?></span>
+                                        </h2>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title d-flex justify-content-between">
+                                        <div class="mb-auto mt-auto">Security / Passwords</div>
+                                        <div class="updatePassword"><button class="btn btn-primary">Update
+                                                Credentials</button></div>
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="">Master Password</label>
+                                                    <div class="input-group">
+                                                        <input class="form-control" type="password" name=""
+                                                            placeholder="" readonly aria-label=""
+                                                            value="<?= $getUser->trader_pwd ?>"
+                                                            aria-describedby="my-addon">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text showPassword h-100"
+                                                                id="my-addon">
+                                                                <i class="fa fa-eye-slash"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <label for="">Investor Password</label>
+                                                    <div class="input-group">
+                                                        <input class="form-control" type="password" name=""
+                                                            value="<?= $getUser->invester_pwd ?>"
+                                                            aria-describedby="my-addon">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text showPassword h-100"
+                                                                id="my-addon">
+                                                                <i class="fa fa-eye-slash"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <form action="{{route('admin.updateAccountDetails')}}" enctype="multipart/form-data" method="post">
+                                    @csrf
+                                    <input type="hidden" name="trade_id" value="<?= $getUser->trade_id ?>">
+                                    <div class="card-body">
+                                        <h5 class="card-title d-flex justify-content-between">
+                                            <div class="mb-auto mt-auto">Group / Leverage</div>
+                                        </h5>
+                                        <div class="card-body pb-0">
+                                            <div class="row">
+                                                <div class="col-lg-6">
+                                                    <div class="form-group">
+                                                        <label for="">Group</label>
+                                                        <select class="form-control acc-types" name="account_type"
+                                                            required id="account_type">
+                                                            <?php foreach ($account_types as $grp) { ?>
+                                                            <option value="<?= $grp->ac_index ?>"
+                                                                <?= $getUser->account_type == $grp->ac_index ? 'selected' : '' ?>>
+                                                                <strong><?= $grp->ac_name . '</strong> [ ' . $grp->ac_group . ' ]' ?>
+                                                            </option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div class="form-group">
+                                                        <label for="">Leverage</label>
+                                                        <div class="input-group">
+                                                            <select class="form-select" required name="leverage"
+                                                                id="leverage">
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer text-end">
+                                        <div class=""><button type="submit" name="update_group" value="submit"
+                                                class="btn btn-primary">Update Settings</button></div>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card custom-card">
+                                <div class="card-header justify-content-between">
+                                    <div class="card-title">
+                                        Deposits
+                                    </div>
+                                    <div class="prism-toggle">
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table text-nowrap" id="tableDeposit">
+                                            <thead>
+                                                <tr>
+                                                    <th>Account No</th>
+                                                    <th>Deposit Amount</th>
+                                                    <th>Deposit Type</th>
+                                                    <th>Deposit From</th>
+                                                    <th>Deposited Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card custom-card">
+                                <div class="card-header justify-content-between">
+                                    <div class="card-title">
+                                        Withdrawal
+                                    </div>
+                                    <div class="prism-toggle">
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table text-nowrap" id="tableWithdrawal">
+                                            <thead>
+                                                <tr>
+
+                                                    <th>Account No</th>
+                                                    <th>Withdrawal Amount</th>
+                                                    <th>Withdrawal Type</th>
+                                                    <th>Withdrawal From</th>
+                                                    <th>Withdrawal Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php } else { ?>
+        <div class="text-center error-page p-2">
+            <div class="error-template">
+                <h1 class="error-details text-primary">
+                    Sorry, No Data Found !!!!!
+                </h1>
+            </div>
+        </div>
+        <?php } ?>
+
+
+
+        <div id="passwordupdatemodal" class="modal fade" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <form method="post" id="passwordForm" action="{{route('admin.updatePassword')}}">
+                    @csrf
+                    <input type="hidden" name="trade_id" value="<?= $trade_id ?>">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalCenterTitle">Update Password</h5><button
+                                type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="p-2 f-w-400"><?= $trade_id ?></h5>
+                                </div>
+                            </div>
+                            <p class="f-12 text-gray-500 p-2 text-muted mt-0 mb-2"> You have the ability to update your
+                                Investor and
+                                Master passwords for your trading accounts here.</p>
+                            <div class="row mt-0 mb-0">
+                                <div class="col-lg-6">
+                                    <div class="border card p-3">
+                                        <div class="form-check"><input type="radio" name="password_type"
+                                                class="form-check-input input-primary" id="customCheckdefhor1"
+                                                value="investor" checked><label class="form-check-label d-block"
+                                                for="customCheckdefhor1"><span><span class="h6">Investor
+                                                        Password</span></span></label></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="border card p-3">
+                                        <div class="form-check"><input type="radio" name="password_type"
+                                                class="form-check-input input-primary" id="customCheckdefhor2"
+                                                value="main"><label class="form-check-label d-block"
+                                                for="customCheckdefhor2"><span><span class="h6">Master
+                                                        Password</span></span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-0 mb-0">
+                                <div class="form-group"><label class="form-label" for="exampleInputPassword1">New
+                                        Password</label><input type="password" class="form-control" name="password"
+                                        required id="password" placeholder="Password">
+                                </div>
+                                <div class="row mb-2 mt-3">
+                                    <div class="col-6"><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">Minimum 8
+                                            characters</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            uppercase
+                                            letter</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            lowercase letter</span></div>
+                                    <div class="col-6"><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            special character</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            digit</span></div>
+                                </div>
+                                <div class="form-group mb-2"><label class="form-label"
+                                        for="exampleInputPassword1">Confirm
+                                        Password</label><input type="password" class="form-control"
+                                        name="confirm_password" required id="confirm_password" placeholder="Password">
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
+                                name="passwordUpdate" value="true"> Update Password</button></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endsection
+    @section('scripts')
+        <script>
+            $("#tableBonus").DataTable();
+            $('#tableDeposit').DataTable({
+                "ajax": {
+                    "url": "/admin/ajax",
+                    "type": "GET",
+                    data: {
+                        action: 'getTradingDeposit',
+                        id: '<?= $trade_id ?>'
+                    },
+                },
+                columns: [{
+                        data: 'account_no',
+                        name: 'account_no'
+                    },
+                    {
+                        data: 'amount',
+                        name: 'amount'
+                    },
+                    {
+                        data: 'deposit_type',
+                        name: 'deposit_type'
+                    },
+                    {
+                        data: 'deposit_from',
+                        name: 'deposit_from'
+                    },
+                    {
+                        data: 'deposit_date',
+                        name: 'deposit_date',
+                        render: function(data, type, row) {
+                            var dateTime = row.deposit_date.split(' ');
+                            var date = dateTime[0];
+                            var time = dateTime[1];
+                            var return_data = "<div class='d-grid'><div class='date'>" + date +
+                                "</div><div class='time text-muted'>" + time + "</div></div>";
+                            return return_data;
+                        }
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                ]
+            });
+            $('#tableWithdrawal').DataTable({
+                "ajax": {
+                    "url": "/admin/ajax",
+                    "type": "GET",
+                    data: {
+                        action: 'getTradingWithdrawal',
+                        id: '<?= $trade_id ?>'
+                    },
+                },
+                columns: [{
+                        data: 'account_no',
+                        name: 'account_no'
+                    },
+                    {
+                        data: 'amount',
+                        name: 'amount'
+                    },
+                    {
+                        data: 'withdraw_type',
+                        name: 'withdraw_type'
+                    },
+                    {
+                        data: 'withdraw_to',
+                        name: 'withdraw_from'
+                    },
+                    {
+                        data: 'withdraw_date',
+                        name: 'withdraw_date',
+                        render: function(data, type, row) {
+                            var dateTime = row.withdraw_date.split(' ');
+                            var date = dateTime[0];
+                            var time = dateTime[1];
+                            var return_data = "<div class='d-grid'><div class='date'>" + date +
+                                "</div><div class='time text-muted'>" + time + "</div></div>";
+                            return return_data;
+                        }
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                ]
+            });
+
+            function validatePassword(password) {
+                const minLength = 8;
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasDigit = /\d/.test(password);
+                const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+                if (password.length < minLength) {
+                    return "Password must be at least 8 characters long.";
+                }
+                if (!hasUpperCase) {
+                    return "Password must contain at least one uppercase letter.";
+                }
+                if (!hasLowerCase) {
+                    return "Password must contain at least one lowercase letter.";
+                }
+                if (!hasDigit) {
+                    return "Password must contain at least one digit.";
+                }
+                if (!hasSpecialChar) {
+                    return "Password must contain at least one special character.";
+                }
+
+                return "true";
+            }
+
+            $(".updatePassword").click(function() {
+                // alert("Clicekd");
+                $("#passwordupdatemodal").modal("show");
+            });
+
+            $("#passwordForm").on("submit", function(e) {
+                e.preventDefault();
+                var pass = $("#password").val();
+                var cpass = $("#confirm_password").val();
+                if (validatePassword(pass) == "true") {
+                    if (pass == cpass) {
+                        $("#passwordForm").off();
+                        $("#passwordForm").submit();
+                    } else {
+                        swal.fire({
+                            icon: "info",
+                            title: "Passwords not matched"
+                        });
+                        $("#confirm_password").val("")
+                        return false;
+                    }
+                } else {
+                    swal.fire({
+                        icon: "info",
+                        title: "Password not matched requirement.",
+                        text: validatePassword(pass)
+                    })
+                }
+            });
+
+            $(".showPassword").click(function() {
+                var input = $(this).closest(".input-group").find("input");
+                if (input.attr("type") == "password") {
+                    input.attr("type", "text");
+                    $(this).find("i").removeClass("fa-eye-slash");
+                    $(this).find("i").addClass("fa-eye");
+                } else {
+                    input.attr("type", "password");
+                    $(this).find("i").removeClass("fa-eye");
+                    $(this).find("i").addClass("fa-eye-slash");
+                }
+            });
+
+            $(".acc-types").change(function() {
+                var selectedValue = $(".acc-types").val();
+                $("#leverage").html("<option value='' checked>Loading...</option>");
+                $.ajax({
+                    url: "/admin/api/ajax?type=leverage&id=" + selectedValue,
+                    success: function(data) {
+                        // console.log("Res:: ",$data);
+                        $("#leverage").html("");
+                        $.each(data, function(key, value) {
+                            // console.log(value);
+                            var isSelected = "";
+                            if (selectedValue == <?= $getUser->account_type ?> && value
+                                .account_leverage == <?= $getUser->leverage ?>) {
+                                isSelected = "selected";
+                            }
+                            $("#leverage").append("<option value='" + value.account_leverage +
+                                "' " + isSelected + ">" + value.account_leverage + "</option>");
+                        });
+                    }
+                })
+            });
+            $(".acc-types").trigger("change");
+            $(".acc-types").select2();
+        </script>
+    @endsection

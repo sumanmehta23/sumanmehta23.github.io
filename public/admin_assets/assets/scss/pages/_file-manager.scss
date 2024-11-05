@@ -1,0 +1,20 @@
+.file-manager-image {
+  background: rgba(229, 188, 74, 0.2509803922);
+  border-radius: 50px;
+  margin-block-end: 23px;
+  padding: 6px;
+  width: 60px;
+  height: 60px;
+}
+.open-file {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+}
+.chat-profile{
+  padding: 9px 9px 5px 10px;
+}

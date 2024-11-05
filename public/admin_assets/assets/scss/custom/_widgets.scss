@@ -1,0 +1,50 @@
+.media img {
+    width: 50px;
+    height: 50px;
+}
+.Visitors .Visitors-item {
+    margin-block: 15px !important;
+}
+.link-overlay {
+    position: relative;
+}
+.link-overlay-bg {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    inset-block-end: 0;
+    display: flex;
+    color: $white;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    opacity: 0;
+    transition: 0.3s opacity;
+    background: rgba(0, 0, 0, 0.3);
+}
+.link-overlay:hover .link-overlay-bg {
+    opacity: 1;
+}
+.chart-circle-value-3 {
+    position: absolute;
+    inset-block-start: 40px;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    margin-inline-start: auto;
+    margin-inline-end: auto;
+    inset-block-end: 0;
+    display: flex;
+    -ms-flex-pack: center;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    line-height: 1;
+}
+.widget {
+    #circle, #circle-1, #circle-2, #circle-3, #chart-circle {
+        .apexcharts-datalabels-group {
+            display: none;
+        }
+    }
+}
