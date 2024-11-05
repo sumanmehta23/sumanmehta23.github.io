@@ -1,26 +1,23 @@
 @extends('layouts.app')
 @section('content')
-    <!DOCTYPE html>
-    <html lang="en">
 
-    <body data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme="light">
         <div id="app" data-v-app="">
-            <div data-v-dde07c83="" class="auth-main">
-                <div data-v-dde07c83="" class="auth-wrapper v3">
-                    <div data-v-dde07c83="" class="auth-form">
-                        <div data-v-dde07c83="" class="auth-header row">
-                            <div data-v-dde07c83="" class="col my-1">
+            <div  class="auth-main">
+                <div  class="auth-wrapper v3">
+                    <div  class="auth-form">
+                        <div  class="auth-header row">
+                            <div  class="my-1 col">
                                 <a href="{{ route('login') }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
-                        <div data-v-dde07c83="" class="card my-3">
-                            <div data-v-dde07c83="" class="card-body">
+                        <div  class="my-3 card">
+                            <div  class="card-body">
                                 <form method="POST" action="{{ route('login') }}">
                                     @csrf
-                                    <div data-v-dde07c83="" class="text-center">
-                                        <h3 data-v-dde07c83="" class="text-center mb-3">Login</h3>
-                                        <p data-v-dde07c83="" class="mb-4 fs-6"> Please log in to access your profile and
+                                    <div  class="text-center">
+                                        <h3  class="mb-3 text-center">Login</h3>
+                                        <p  class="mb-4 fs-6"> Please log in to access your profile and
                                             manage your trading accounts and settings. </p>
                                     </div>
                                     @if (session('status'))
@@ -33,40 +30,40 @@
                                             {{ session('error') }}
                                         </div>
                                     @endif
-                                    <div data-v-dde07c83="" class="row mt-4">
-                                        <div data-v-dde07c83="" class="col-12">
-                                            <div data-v-dde07c83="" class="form-group">
+                                    <div  class="mt-4 row">
+                                        <div  class="col-12">
+                                            <div  class="form-group">
                                                 <label for="email" class="form-label">Email id</label>
                                                 <input type="email" name="email" id="email" class="form-control"
                                                     placeholder="Email id" required>
                                             </div>
                                         </div>
-                                        <div data-v-dde07c83="" class="col-12">
-                                            <div data-v-dde07c83="" class="form-group">
+                                        <div  class="col-12">
+                                            <div  class="form-group">
                                                 <label for="password" class="form-label">Password</label>
                                                 <input type="password" name="password" id="password" class="form-control"
                                                     placeholder="Password" required>
                                             </div>
                                         </div>
                                     </div>
-                                    <div data-v-dde07c83="" class="d-flex justify-content-between align-items-center">
-                                        <div data-v-dde07c83="" class="form-check">
+                                    <div  class="d-flex justify-content-between align-items-center">
+                                        <div  class="form-check">
                                             <input type="checkbox" class="form-check-input" id="customCheckc1">
                                             <label class="form-check-label text-muted" for="customCheckc1">Remember
                                                 me?</label>
                                         </div>
-                                        <h6 data-v-dde07c83="" class="text-secondary f-w-400 mb-0"><a data-v-dde07c83=""
+                                        <h6  class="mb-0 text-secondary f-w-400"><a 
                                                 href="/forgot-password" class="link-primary">Forgot Password?</a></h6>
                                     </div>
-                                    <div data-v-dde07c83="" class="row g-3 mt-1">
-                                        <div data-v-dde07c83="" class="col-sm-12">
-                                            <div data-v-dde07c83="" class="d-grid">
+                                    <div  class="mt-1 row g-3">
+                                        <div  class="col-sm-12">
+                                            <div  class="d-grid">
                                                 <input type="submit" name="signin" value="Login" class="btn btn-primary">
                                             </div>
                                         </div>
-                                        <div data-v-dde07c83="" class="col-sm-12">
-                                            <div data-v-dde07c83="" class="d-grid">
-                                                <a href="/register" data-v-dde07c83="" class="bg-transparent border btn">
+                                        <div  class="col-sm-12">
+                                            <div  class="d-grid">
+                                                <a href="/register"  class="bg-transparent border btn">
                                                     Register </a>
                                             </div>
                                         </div>
@@ -75,16 +72,16 @@
                             </div>
                         </div>
                     </div>
-                    <div data-v-dde07c83="" class="auth-sidecontent"
+                    <div  class="auth-sidecontent"
                         style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
-                        <div class="p-3 px-lg-5 text-center">
+                        <div class="p-3 text-center px-lg-5">
                             <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
                                 <div class="carousel-inner">
                                     <div class="carousel-item active">
-                                        <img src="/assets/images/acc-1.png" alt="user-image" class="hei-150 mb-3">
-                                        <h5 class="text-white mb-0">Regulatory Excellence</h5>
+                                        <img src="/assets/images/acc-1.png" alt="user-image" class="mb-3 hei-150">
+                                        <h5 class="mb-0 text-white">Regulatory Excellence</h5>
                                         <p class="text-white text-opacity-50">Compliance Assurance</p>
-                                        <div class="star f-20 my-4">
+                                        <div class="my-4 star f-20">
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
@@ -100,10 +97,10 @@
                                         </p>
                                     </div>
                                     <div class="carousel-item">
-                                        <img src="/assets/images/ben-02.png" alt="user-image" class="hei-150 mb-3">
-                                        <h5 class="text-white mb-0">Transparent Pricing Policy</h5>
+                                        <img src="/assets/images/ben-02.png" alt="user-image" class="mb-3 hei-150">
+                                        <h5 class="mb-0 text-white">Transparent Pricing Policy</h5>
                                         <p class="text-white text-opacity-50">Clear Cost Commitment</p>
-                                        <div class="star f-20 my-4">
+                                        <div class="my-4 star f-20">
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
@@ -118,10 +115,10 @@
                                         </p>
                                     </div>
                                     <div class="carousel-item">
-                                        <img src="/assets/images/ben-03.png" alt="user-image" class="hei-150 mb-3">
-                                        <h5 class="text-white mb-0">Swift and Precise Execution</h5>
+                                        <img src="/assets/images/ben-03.png" alt="user-image" class="mb-3 hei-150">
+                                        <h5 class="mb-0 text-white">Swift and Precise Execution</h5>
                                         <p class="text-white text-opacity-50">Precision Trading</p>
-                                        <div class="star f-20 my-4">
+                                        <div class="my-4 star f-20">
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
@@ -137,10 +134,10 @@
                                         </p>
                                     </div>
                                     <div class="carousel-item">
-                                        <img src="/assets/images/ben-04.png" alt="user-image" class="hei-150 mb-3">
-                                        <h5 class="text-white mb-0">Competitive Spreads</h5>
+                                        <img src="/assets/images/ben-04.png" alt="user-image" class="mb-3 hei-150">
+                                        <h5 class="mb-0 text-white">Competitive Spreads</h5>
                                         <p class="text-white text-opacity-50">Cost Efficiency</p>
-                                        <div class="star f-20 my-4">
+                                        <div class="my-4 star f-20">
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
@@ -155,7 +152,7 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="carousel-indicators position-relative mt-3">
+                                <div class="mt-3 carousel-indicators position-relative">
                                     <button type="button" data-bs-target="#carouselExampleIndicators"
                                         data-bs-slide-to="0" class="active" aria-current="true"
                                         aria-label="Slide 1"></button>
@@ -174,7 +171,5 @@
             </div>
         </div>
 
-    </body>
 
-    </html>
 @endsection

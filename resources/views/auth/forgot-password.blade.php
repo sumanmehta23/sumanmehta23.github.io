@@ -29,33 +29,33 @@
     <body data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast=""
         data-pc-theme="light" style="padding-right: 0px;">
         <div id="app" data-v-app="">
-            <div class="auth-main" data-v-dde07c83="">
-                <div class="auth-wrapper v3" data-v-dde07c83="">
+            <div class="auth-main" >
+                <div class="auth-wrapper v3" >
                     <div class="auth-form" data-v-97e32e5a="">
-                        <div class="auth-header row" data-v-dde07c83="">
-                            <div class="col my-1" data-v-dde07c83=""><a href="/login"><img
+                        <div class="auth-header row" >
+                            <div class="col my-1" ><a href="/login"><img
                                         src="/{{ $settings['admin_sidebar_logo'] }}" alt="Logo"
                                         style="height: 8vh;"></a></div>
                         </div>
                         <form method="post">
                             @csrf
-                            <div class="card my-5" data-v-dde07c83="">
-                                <div class="card-body" data-v-dde07c83="">
-                                    <div class="d-flex justify-content-between align-items-end mb-3" data-v-dde07c83="">
-                                        <h3 class="mb-2" data-v-dde07c83=""><b>Forgot Password</b></h3><a href="/login"
-                                            class="link-primary mb-2" data-v-dde07c83="">Back to Login</a>
+                            <div class="card my-5" >
+                                <div class="card-body" >
+                                    <div class="d-flex justify-content-between align-items-end mb-3" >
+                                        <h3 class="mb-2" ><b>Forgot Password</b></h3><a href="/login"
+                                            class="link-primary mb-2" >Back to Login</a>
                                     </div>
                                     @if (isset($msg))
                                         {!! $msg !!}
                                     @endif
-                                    <p class="mt-2 text-sm text-muted" data-v-dde07c83="">If you forgot your password, we’ll
+                                    <p class="mt-2 text-sm text-muted" >If you forgot your password, we’ll
                                         email you instructions to reset your password.</p>
-                                    <div class="form-group mb-3" data-v-dde07c83="">
-                                        <label class="form-label" data-v-dde07c83="">Email Address</label>
+                                    <div class="form-group mb-3" >
+                                        <label class="form-label" >Email Address</label>
                                         <input name="txtemail" type="email" class="form-control" id="floatingInput"
                                             placeholder="Email Address" required>
                                     </div>
-                                    <div class="d-grid mt-3" data-v-dde07c83="">
+                                    <div class="d-grid mt-3" >
                                         <button class="btn btn-primary" type="submit" name="btn-submit">Send Reset
                                             Link</button>
                                     </div>
@@ -72,7 +72,7 @@
                                     data-v-97e32e5a="">Trading Risk Warning</a>.</p>
                         </div>
                     </div>
-                    <div data-v-dde07c83="" class="auth-sidecontent"
+                    <div  class="auth-sidecontent"
                         style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
                         <div class="p-3 px-lg-5 text-center">
                             <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">

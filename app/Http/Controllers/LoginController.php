@@ -1,15 +1,18 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
-use App\Services\MailService as MailService;
+use App\Models\User;
 use App\Models\Country;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use App\Services\MailService as MailService;
 
 class LoginController extends Controller
 {
@@ -34,46 +37,37 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        // Prepare credentials
-        $credentials = $request->only('email', 'password');
-        // Check if the email is confirmed
-        $user = User::where('email', $credentials['email'])
-            ->where('email_confirmed', 1)
-            ->first();
-        // Check if user exists
-        if ($user) {
-            if ($user->password === $credentials['password']) {
-                // Log the user in
-                Auth::login($user);
-                $_SESSION['clogin'] = $credentials['email'];
-                $_SESSION['user'] = $user->toArray();
-                session(['user' => $user, 'clogin' => $credentials['email']]);
-            } else {
-                // Password doesn't match
-                return back()->with('error', 'Your login details are invalid or your email is not verified.');
-            }
-            // Regenerate the session to prevent session fixation
-            $request->session()->regenerate();
-            // Get IP and country information
-            $response = Http::get('https://api.ipgeolocation.io/ipgeo', [
-                'apikey' => '77ac63f823cd4a6d891562102dec49bb',
-                'ip' => $request->ip() // Use client's real IP
-            ]);
-            $geoData = $response->json();
-            // Insert login history into the database
-            DB::table('login_history')->insert([
-                'email' => $user->email,
-                'ip' => $geoData['ip'] ?? $request->ip(),
-                'country' => $geoData['country_name'] ?? 'Unknown',
-                'action' => 'login',
-                'created_date_js' => Carbon::now(),
-                'status' => 1
-            ]);
-            // Redirect to the dashboard
-            return redirect()->route('dashboard');
-        }
-        // If login fails, redirect back with error message
-        return back()->with('error', 'Your login details are invalid or your email is not verified.');
+         // Find the user by email
+         $user = User::where('email', $request->input('email'))->first();
+
+         // Check if user exists
+         if (!$user) {
+             return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+         }
+ 
+         // Check if the password is in plain text (not hashed)
+         if (Hash::needsRehash($user->password)) {
+             // If it's plain text, hash it and update the user's password
+             if ($user->password === $request->input('password')) {
+                 $user->password = Hash::make($request->input('password'));
+                 $user->save(); // Update the user's password in the database
+             } else {
+                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+             }
+         } else {
+             // If password is hashed, verify it
+             if (!Hash::check($request->input('password'), $user->password)) {
+                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+             }
+         }
+         Auth::login($user);
+         $request->session()->regenerate();
+         // Set session variables
+         Session::put('clogin', $user->email);
+         Session::put('user', $user);
+         $this->recordLoginHistory($user, $request->ip());
+         return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
+        
     }
 
 
@@ -84,10 +78,6 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        Auth::logout();
-        session()->forget(['user', 'clogin']);
-        unset($_SESSION['clogin']);
-        unset($_SESSION['user']);
         return redirect('/login');
     }
     public function forgot_password()
@@ -102,7 +92,7 @@ class LoginController extends Controller
         $email = $request->input('txtemail');
         $user = User::where('email', $email)->first();
         if ($user) {
-            $code = md5(uniqid(rand()));
+            $code =Str::random(60);
             User::where('email', $email)->update(['emailToken' => $code]);
             $settings = settings();
             $from = $settings['email_from_address'];
@@ -209,13 +199,13 @@ class LoginController extends Controller
             $ib1 = base64_decode($request->query('refercode'));
         }
         // Create the user
-        $code = md5(uniqid(rand()));
+        $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
         $lastInsertId = DB::table('aspnetusers')->insertGetId([
             'email' => $request->email,
             'fullname' => $request->fullname,
-            'password' => $request->password, // Ensure this is hashed if required
+            'password' => Hash::make($request->password), // Ensure this is hashed if required
             'number' => $number,
             'username' => $request->email,
             'referral' => '',
@@ -257,8 +247,7 @@ class LoginController extends Controller
         $settings = settings();
         $id = $request->query('id');
         $code = $request->query('code');
-        echo $id;
-        echo $code;
+        
         $user = User::where('id', $id)
             ->where('emailToken', $code)
             ->first();
@@ -297,5 +286,22 @@ class LoginController extends Controller
         } else {
             return redirect()->route('register')->with('error', 'Sorry! No Account Found. Signup here');
         }
+    }
+    private function recordLoginHistory($user, $ip)
+    {
+
+        $geoData = Http::get(config('services.ip_geolocation.url'), [
+            'apikey' => config('services.ip_geolocation.key'),
+            'ip' => $ip
+        ])->json();
+
+        DB::table('login_history')->insert([
+            'email' => $user->email,
+            'ip' => $geoData['ip'] ?? $ip,
+            'country' => $geoData['country_name'] ?? 'Unknown',
+            'action' => 'login',
+            'created_date_js' => now(),
+            'status' => 1
+        ]);
     }
 }

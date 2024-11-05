@@ -110,7 +110,7 @@
                         </p>
                     </div>
                 </div>
-                <div data-v-dde07c83="" class="auth-sidecontent"
+                <div  class="auth-sidecontent"
                     style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
                     <div class="p-3 px-lg-5 text-center">
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">

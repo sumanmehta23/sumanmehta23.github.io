@@ -25,12 +25,12 @@
  </style>
 @section('content')
     <div id="app" data-v-app="">
-        <div data-v-dde07c83="" class="auth-main">
-            <div data-v-dde07c83="" class="auth-wrapper v3">
+        <div  class="auth-main">
+            <div  class="auth-wrapper v3">
                 <div data-v-97e32e5a="" class="auth-form" style="justify-content: unset;">
-                    <div data-v-dde07c83="" class="auth-header row">
-                        <div data-v-dde07c83="" class="col my-1"><a data-v-dde07c83="" href="/login"><img
-                                    data-v-dde07c83="" src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
+                    <div  class="auth-header row">
+                        <div  class="col my-1"><a  href="/login"><img
+                                     src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
                             <h5 data-v-97e32e5a="" class="m-0 text-muted f-w-500"> Step <b data-v-97e32e5a="" class="h5"
@@ -210,7 +210,7 @@
                     </div>
                     <?php } ?>
                 </div>
-                <div data-v-dde07c83="" class="auth-sidecontent"
+                <div  class="auth-sidecontent"
                     style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
                     <div class="p-3 px-lg-5 text-center">
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
