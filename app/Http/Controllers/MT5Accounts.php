@@ -320,8 +320,8 @@ class MT5Accounts extends Controller
             'leverage' => "1:" . $new_user->Leverage,
             'server_name' => $settings['mt5_company_name'],
             'email' => $settings['email_from_address'],
-            "title_right" => "Get Started With",
-            "subtitle_right" => "New " . $type . " MT5 Account",
+            "title_right" => "",
+            "subtitle_right" => "Your " . $type . " Account is Ready!",
             "acc_type" => $new_user->type
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);

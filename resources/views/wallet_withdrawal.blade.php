@@ -52,7 +52,7 @@
                                             <div class="col-xl-8">
                                                 <div class="card">
                                                     <div class="card-body border-bottom">
-                                                        <h6>CREATE WITHDRAW TICKET</h6>
+                                                        <h6>Withdraw Funds</h6>
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="divider my-4"><span>SELECT WITHDRAW METHOD</span></div>

@@ -194,7 +194,7 @@
                                         </div>
                                         <a href="/createLiveAccount" class="d-grid">
                                             <button class="btn btn-outline-primary">
-                                                <span class="text-truncate w-100">Create new Live Account</span>
+                                                <span class="text-truncate w-100">Create New Live Account</span>
                                             </button>
                                         </a>
                                     </div>
@@ -274,7 +274,7 @@
                                         </div>
                                         <a href="{{ route('show-demo-account-form') }}" class="d-grid">
                                             <button class="btn btn-outline-primary">
-                                                <span class="text-truncate w-100">Create new Demo Account</span>
+                                                <span class="text-truncate w-100">Create New Demo Account</span>
                                             </button>
                                         </a>
                                     </div>

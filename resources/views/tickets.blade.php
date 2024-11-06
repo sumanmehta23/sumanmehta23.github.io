@@ -42,7 +42,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title" id="addTicketModalLabel1">Add New Ticket</h6>
+                <h6 class="modal-title" id="addTicketModalLabel1">New Ticket</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="">
@@ -70,7 +70,7 @@
                 </div>
                 <div class="modal-footer">
                     <input type="hidden" name="email" value="{{ session('clogin') }}" />
-                    <input type="submit" class="btn bg-primary text-white" name="add_ticket" value="Add">
+                    <input type="submit" class="btn bg-primary text-white" name="add_ticket" value="Submit Ticket">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                 </div>
             </form>
@@ -90,7 +90,7 @@
                     <div class="col-md-3 text-end">
                         <div class="d-grid">
                             <button data-bs-toggle="modal" data-bs-target="#addTicketModal" class="btn btn-primary d-grid">
-                                <span class="text-truncate w-100">Create new Ticket</span>
+                                <span class="text-truncate w-100">Create New Ticket</span>
                             </button>
                         </div>
                     </div>

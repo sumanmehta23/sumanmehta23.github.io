@@ -4,7 +4,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title" id="addTicketModalLabel1">Add New Ticket</h6>
+                    <h6 class="modal-title" id="addTicketModalLabel1">New Ticket</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form method="post" action="{{ route('admin.addTicket') }}">
@@ -54,7 +54,7 @@
                     </div>
                     <div class="modal-footer">
                         <input type="hidden" name="email" value="<?php echo $user->email; ?>" />
-                        <input type="submit" class="btn btn-primary" name="add_ticket" value="Add">
+                        <input type="submit" class="btn btn-primary" name="add_ticket" value="Submit Ticket">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </form>

@@ -135,7 +135,7 @@
                                                 <div class="d-flex justify-content-center">
                                                     <a href="{{ route('liveAccounts.create') }}" class="d-grid">
                                                         <button class="btn btn-primary">
-                                                            <span class="text-truncate w-100">Create new Live Account</span>
+                                                            <span class="text-truncate w-100">Create New Live Account</span>
                                                         </button>
                                                     </a>
                                                 </div>

@@ -11,7 +11,7 @@
     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLiveLabel">Add Bank Details</h5><button type="button"
+                <h5 class="modal-title" id="exampleModalLiveLabel">Wallet Details</h5><button type="button"
                     class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="bankDetailsForm">
@@ -21,7 +21,7 @@
                         <div class="col-sm-12">
                             <div class="form-group"><label class="form-label">Wallet Name</label><input type="text"
                                     class="form-control" autofocus name="wallet_name" required></div>
-                            <div class="form-group"><label class="form-label">Wallet Crypto</label>
+                            <div class="form-group"><label class="form-label">Select Your Cryptocurrency</label>
                                 <select id="my-select" class="form-control" name="wallet_currency" required>
                                     <option value="USDT">USDT</option>
                                 </select>

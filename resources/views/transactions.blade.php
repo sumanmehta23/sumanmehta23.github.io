@@ -123,7 +123,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="/transactions/deposit#"><img src="/assets/images/empty.png" class="w-25" alt="img"></a>
+                        <a href="/transactions/deposit#"><img src="/assets/images/deposit.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Deposit History found!</h6>
                     </div>
@@ -131,9 +131,9 @@
                 </div>
               @endif
               <div class="card-footer">
-                <div class="row g-2 justify-content-end">
+                <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/trade-deposit" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Create new Transaction</span></button></a></div>
+                    <div class="d-grid"><a href="/trade-deposit" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="#"><img src="/assets/images/empty.png" class="w-25" alt="img"></a>
+                        <a href="#"><img src="/assets/images/withdraw.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Withdrawal History found!</h6>
                     </div>
@@ -204,9 +204,9 @@
                 </div>
               @endif
               <div class="card-footer">
-                <div class="row g-2 justify-content-end">
+                <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/trade-withdrawal" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Create new Transaction</span></button></a></div>
+                    <div class="d-grid"><a href="/trade-withdrawal" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
                   </div>
                 </div>
               </div>
@@ -273,7 +273,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="#"><img src="/assets/images/empty.png" class="w-25" alt="img"></a>
+                        <a href="#"><img src="/assets/images/fundtransfer.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Internal Transfers Found!</h6>
                     </div>
@@ -281,9 +281,9 @@
                 </div>
               @endif
               <div class="card-footer">
-                <div class="row g-2 justify-content-end">
+                <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/internal-transfer" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Create new Transaction</span></button></a></div>
+                    <div class="d-grid"><a href="/internal-transfer" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
                   </div>
                 </div>
               </div>

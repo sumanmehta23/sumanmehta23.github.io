@@ -76,7 +76,7 @@
                                                 @else
                                                     <div class="card">
                                                         <div class="card-body border-bottom">
-                                                            <h6>CREATE DEPOSIT TICKET</h6>
+                                                            <h6>Deposit Funds</h6>
                                                         </div>
                                                         <div class="card-body">
 
@@ -378,7 +378,7 @@
                                                                                                 data-currency="USD"
                                                                                                 data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
                                                                                                 class="btn btn-primary cryptochill-button col-12"
-                                                                                                value="Deposit To Wallet">
+                                                                                                value="Deposit To Trading Account">
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -451,7 +451,7 @@
                                                                                             <input type="submit"
                                                                                                 name="register"
                                                                                                 class="btn btn-primary col-12"
-                                                                                                value="Deposit To Trade Account">
+                                                                                                value="Deposit To Trading Account">
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>

@@ -131,12 +131,10 @@
                                                                     src="{{ asset('assets/images/empty.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
-                                                        <h6 class="text-center text-secondary f-w-400 mb-4 f-16">KYC
-                                                            Verification Needs To Create MT5 Accounts</h6>
+                                                        <h6 class="text-center text-secondary f-w-400 mb-4 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
                                                         <a id="verify-user-kyc" href="#" class="mt-3">
                                                             <button class="btn btn-outline-primary"><span
-                                                                    class="text-truncate">Verify Now To
-                                                                    Proceed</span></button>
+                                                                    class="text-truncate">Process To Verify Now </span></button>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -197,31 +195,20 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-6">
-                                                        <h5>New password must contain:</h5>
+                                                        <h5>New Password Must Contain:</h5>
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                At
-                                                                least 8 characters</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 8 characters</li>
                                                             <li class="list-group-item mb-0"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                At
-                                                                least 1 lower letter (a-z)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 lowercase letter (a-z)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                At
-                                                                least 1 uppercase letter (A-Z)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 uppercase letter (A-Z)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                At
-                                                                least 1 number (0-9)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 number (0-9)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                At
-                                                                least 1 special character</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 special character</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>
-                                                                Passwords do not match</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords do not match</li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -306,9 +293,7 @@
                                                                         src="{{ asset('assets/images/empty.png') }}"
                                                                         class="w-25" alt="img"></a>
                                                             </div>
-                                                            <h6 class="text-center text-secondary f-w-400 mb-0 f-16">Please
-                                                                add
-                                                                your Wallet Details</h6>
+                                                            <h6 class="text-center text-secondary f-w-400 mb-0 f-16">Please Add Your Wallet Details</h6>
                                                         </div>
                                                     </div>
                                                 @endif

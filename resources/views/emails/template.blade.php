@@ -756,15 +756,11 @@ $settings=settings();
                                                                                 @if (!isset($content))
                                                                                     <div>
                                                                                         <span>Your {{ $acc_type }}
-                                                                                            MT5 account has been set up,
-                                                                                            and you are all ready to
-                                                                                            dive into the dynamic world
-                                                                                            of trading.</span>
+                                                                                            MT5 account is ready! You're all set to dive into the exciting world of trading.</span>
                                                                                     </div>
                                                                                     <div><span></span></div>
                                                                                     <div>
-                                                                                        <span>Here’s your MT5 Account
-                                                                                            Details</span>
+                                                                                        <span>Here are your MT5 account details</span>
                                                                                     </div>
                                                                                 @else
                                                                                     <div
@@ -813,21 +809,20 @@ $settings=settings();
                                                                         width="100%"
                                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0;width:100%">
                                                                         <tr>
-                                                                            <td align="right" valign="middle"
+                                                                            <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px; border-bottom:1px solid #e5e5e5;">
                                                                                 <table cellpadding="0" cellspacing="0"
                                                                                     role="presentation" width="100%"
                                                                                     border="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="right"
+                                                                                        <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
-                                                                                                style="letter-spacing:-0.2px; line-height:26px; color:#000000; text-align:right; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:16px; text-align-last:right; font-weight:normal;">
+                                                                                                style="letter-spacing:-0.2px; line-height:26px; color:#000000; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:16px; text-align-last:left; font-weight:normal;">
                                                                                                 <div>
-                                                                                                    <span>ACCOUNT
-                                                                                                        ID</span>
+                                                                                                    <span>ACCOUNT ID</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </td>
@@ -869,18 +864,18 @@ $settings=settings();
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td align="right" valign="middle"
+                                                                            <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px; border-bottom:1px solid #e5e5e5;">
                                                                                 <table border="0" cellpadding="0"
                                                                                     cellspacing="0"
                                                                                     role="presentation" width="100%"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="right"
+                                                                                        <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
-                                                                                                style="font-variant-ligatures:normal; font-size:16px; text-align-last:right; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:right; font-family:Cairo, Arial, Helvetica, sans-serif;">
+                                                                                                style="font-variant-ligatures:normal; font-size:16px; text-align-last:left; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif;">
                                                                                                 <div>
                                                                                                     <span>MASTER
                                                                                                         PASSWORD</span>
@@ -928,18 +923,18 @@ $settings=settings();
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td align="right" valign="middle"
+                                                                            <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px; border-bottom:1px solid #e5e5e5;">
                                                                                 <table border="0" cellpadding="0"
                                                                                     cellspacing="0"
                                                                                     role="presentation" width="100%"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="right"
+                                                                                        <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
-                                                                                                style="line-height:26px; font-weight:normal; text-align:right; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:right;">
+                                                                                                style="line-height:26px; font-weight:normal; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:left;">
                                                                                                 <div>
                                                                                                     <span>INVESTOR
                                                                                                         PASSWORD</span>
@@ -987,7 +982,7 @@ $settings=settings();
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td align="right" valign="middle"
+                                                                            <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; border-bottom:1px solid #e5e5e5; width:245px;">
                                                                                 <table border="0" cellpadding="0"
                                                                                     cellspacing="0"
@@ -995,10 +990,10 @@ $settings=settings();
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
                                                                                         <td valign="top"
-                                                                                            align="right"
+                                                                                            align="left"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
-                                                                                                style="font-weight:normal; text-align:right; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:right; letter-spacing:-0.2px; font-size:16px; line-height:26px;">
+                                                                                                style="font-weight:normal; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:left; letter-spacing:-0.2px; font-size:16px; line-height:26px;">
                                                                                                 <div>
                                                                                                     <span>LEVERAGE</span>
                                                                                                 </div>
@@ -1045,18 +1040,18 @@ $settings=settings();
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td align="right" valign="middle"
+                                                                            <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px;">
                                                                                 <table width="100%" border="0"
                                                                                     cellpadding="0" cellspacing="0"
                                                                                     role="presentation"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="right"
+                                                                                        <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
-                                                                                                style="text-align:right; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:right; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;">
+                                                                                                style="text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:left; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;">
                                                                                                 <div><span>MT5
                                                                                                         SERVER</span>
                                                                                                 </div>
@@ -1157,13 +1152,10 @@ $settings=settings();
                                                                 <div
                                                                     style="font-variant-ligatures:normal;text-align:left;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;color:#000000;line-height:21.8px;font-size:14px;letter-spacing:0.2px;font-weight:normal">
                                                                     <div>
-                                                                        <span style="letter-spacing:0.2px">You're all
-                                                                            set to begin your trading journey. </span>
+                                                                        <span style="letter-spacing:0.2px">You're now ready to begin your trading journey.</span>
                                                                     </div>
                                                                     <div>
-                                                                        <span style="letter-spacing:0.2px">We wish you
-                                                                            success and are here to support you in every
-                                                                            step of your trading career.</span>
+                                                                        <span style="letter-spacing:0.2px">Let the trading journey begin! If you have any questions, feel free to reach out to us for assistance.</span>
                                                                     </div>
                                                                 </div>
                                                             </td>

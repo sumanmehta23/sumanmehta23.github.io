@@ -154,7 +154,7 @@
                             <div class="col-md-6">
                                 <div class="d-grid">
                                     <a class="btn btn-primary d-grid" href="{{ url('/wallet_deposit') }}">
-                                        <span class="text-truncate w-100">Create new Transaction</span>
+                                        <span class="text-truncate w-100">Create New Transaction</span>
                                     </a>
                                 </div>
                             </div>
