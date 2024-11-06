@@ -10,7 +10,11 @@ class SettingsServiceProvider extends ServiceProvider
     public function boot()
     {
         // Fetch all settings from the database and share them with all views
-        $settings = Setting::all()->pluck('value', 'name')->toArray();
+        if (Setting::tableExists()) {
+            $settings = Setting::all()->pluck('value', 'name')->toArray();
+        } else {
+            $settings = [];
+        }
         view()->share('settings', $settings);
     }
 
