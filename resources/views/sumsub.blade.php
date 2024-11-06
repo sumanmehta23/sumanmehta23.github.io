@@ -59,8 +59,8 @@
                                 if (json_data.status == "true") {
                                     swal.fire({
                                         icon: "success",
-                                        title: "Your KYC is Got Verified.",
-                                        text: "Enjoy full access to Liquidity House",
+                                        title: "Your KYC has been successfully verified",
+                                        text: "You're now cleared for complete access to Liquidity House",
                                         allowEscapeKey: false,
                                         allowOutsideClick: false
                                     }).then(() => {

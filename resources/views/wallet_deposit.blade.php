@@ -112,7 +112,7 @@
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="col-6 col-lg-6 col-xl-6">
+                                                                {{-- <div class="col-6 col-lg-6 col-xl-6">
                                                                     <div
                                                                         class="address-check trade-deposit-type border rounded">
                                                                         <div class="form-check">
@@ -140,7 +140,7 @@
                                                                             </label>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                </div> --}}
                                                             </div>
                                                             <div class="divider my-4"><span>DEPOSIT DETAILS</span></div>
                                                             <form method="post" style="padding:10px;"
@@ -376,7 +376,7 @@
                                                                                                 id="paynow"
                                                                                                 data-amount="10"
                                                                                                 data-currency="USD"
-                                                                                                data-product="Deposit To MT5: {{ $settings['mt5_company_name'] }}"
+                                                                                                data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
                                                                                                 class="btn btn-primary cryptochill-button col-12"
                                                                                                 value="Deposit To Wallet">
                                                                                         </div>

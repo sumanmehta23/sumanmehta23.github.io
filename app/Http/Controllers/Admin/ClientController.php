@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
@@ -482,7 +482,7 @@ class ClientController extends Controller
             $user->update(['emailToken' => $code]);
             $content =
                 '<div>Welcome to ' . htmlspecialchars(settings()['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>We received a request to reset your password. If you made this request, click the link below to reset your password. If you did not request a password reset, you can ignore this email.
+                '<div>We have received a request to reset the password associated with your account. If you initiated this request, please click the link below to reset your password:
       </div>';
             $from = settings()['email_from_address'];
             $emailSubject = settings()['admin_title'] . ' - Password Reset';
@@ -492,8 +492,8 @@ class ClientController extends Controller
                 'btn_text' => "Reset Password",
                 'email' => $from,
                 "content" => $content,
-                "title_right" => "Reset",
-                "subtitle_right" => "Your Password"
+                "title_right" => "",
+                "subtitle_right" => ""
             ];
             $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
             return redirect()->back()->with("success", "An email has been sent to $email with the password reset link.");

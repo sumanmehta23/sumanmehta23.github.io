@@ -204,6 +204,7 @@ class MT5Accounts extends Controller
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
         $new_user->Group = $group->ac_group;
+        $new_user->type = $group->ac_name;
         $new_user->Leverage = $validatedData['leverage'];
         $new_user->ZipCode = $user->zipcode;
         $new_user->Country = $user->country;
@@ -249,9 +250,11 @@ class MT5Accounts extends Controller
         ]);
         $user = User::where('email', session('clogin'))->firstOrFail();
         $group = AccountType::where('ac_index', $validatedData['options'])->firstOrFail();
+
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
         $new_user->Group = $group->ac_group;
+        $new_user->type = $group->ac_name;
         $new_user->Leverage = $validatedData['leverage'];
         $new_user->ZipCode = $user->zipcode;
         $new_user->Country = $user->country;
@@ -318,7 +321,8 @@ class MT5Accounts extends Controller
             'server_name' => $settings['mt5_company_name'],
             'email' => $settings['email_from_address'],
             "title_right" => "Get Started With",
-            "subtitle_right" => "New " . $type . " MT5 Account"
+            "subtitle_right" => "New " . $type . " MT5 Account",
+            "acc_type" => $new_user->type
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 

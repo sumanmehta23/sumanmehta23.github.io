@@ -139,7 +139,7 @@
                                 <img src="/{{ $settings['admin_sidebar_logo_dark'] }}" class="img-fluid logo-lg 3"
                                     alt="logo" style="width: 70%;">
                             @endif
-                            <span class="badge bg-light-primary rounded-pill ms-2 theme-version">v1.0</span>
+                            {{-- <span class="badge bg-light-primary rounded-pill ms-2 theme-version">v1.0</span> --}}
                         </a>
                     </div>
                     <div class="navbar-content">
@@ -311,7 +311,7 @@
             <header class="pc-header">
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
-                        <ul class="list-unstyled">
+                        {{-- <ul class="list-unstyled">
                             <li class="pc-h-item pc-sidebar-collapse">
                                 <a href="/dashboard" class="pc-head-link ms-0" id="sidebar-hide">
                                     <i class="ti ti-menu-2"></i>
@@ -337,7 +337,7 @@
                                     </form>
                                 </div>
                             </li>
-                        </ul>
+                        </ul> --}}
                     </div>
                     <div class="ms-auto">
                         <ul class="list-unstyled">
@@ -359,14 +359,14 @@
                                             class="ti ti-power"></i><span>Logout</span></a>
                                 </div>
                             </li>
-                            <li class="pc-h-item">
+                            {{-- <li class="pc-h-item">
                                 <a href="/dashboard" class="pc-head-link me-0" data-bs-toggle="offcanvas"
                                     data-bs-target="#announcement" aria-controls="announcement">
                                     <svg class="pc-icon">
                                         <use xlink:href="#custom-flash"></use>
                                     </svg>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li class="dropdown pc-h-item d-none">
                                 <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false"
@@ -472,7 +472,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
                         aria-label="Close"></button>
                 </div>
-                <div class="offcanvas-body">
+                {{-- <div class="offcanvas-body">
                     <p class="text-span">Today</p>
                     <div class="card mb-3">
                         <div class="card-body">
@@ -502,7 +502,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
                 <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement"
                     aria-labelledby="announcementLabel">
                     <div class="offcanvas-header">
@@ -510,7 +510,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
                             aria-label="Close"></button>
                     </div>
-                    <div class="offcanvas-body">
+                    {{-- <div class="offcanvas-body">
                         <p class="text-span">Today</p>
                         <div class="card mb-3">
                             <div class="card-body">
@@ -540,7 +540,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>

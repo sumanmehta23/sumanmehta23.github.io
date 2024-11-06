@@ -37,7 +37,11 @@ class TradeDeposit extends Controller
         $totals = LiveAccount::where('email', $email)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
-        return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
+        $totalWd = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
+        $totalWw = WalletWithdraw::where('email', $email)->where('status', 1)->sum('withdraw_amount');
+        $wallet_balance = $totalWd - $totalWw;
+
+        return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }
     public function deposit(Request $request)
     {
@@ -135,7 +139,7 @@ class TradeDeposit extends Controller
                 ]);
             });
             AccountHelper::updateLiveAndDemoAccounts();
-            return response()->json(['success' => 'Your Live Account Got Deposited']);
+            return response()->json(['success' => 'Funds Successfully Deposited']);
         }
     }
 }

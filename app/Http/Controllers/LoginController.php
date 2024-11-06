@@ -44,7 +44,7 @@ class LoginController extends Controller
          if (!$user) {
              return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
          }
- 
+
          // Check if the password is in plain text (not hashed)
          if (Hash::needsRehash($user->password)) {
              // If it's plain text, hash it and update the user's password
@@ -67,7 +67,7 @@ class LoginController extends Controller
          Session::put('user', $user);
          $this->recordLoginHistory($user, $request->ip());
          return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
-        
+
     }
 
 
@@ -102,17 +102,22 @@ class LoginController extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>We received a request to reset your password. If you made this request, click the link below to reset your password. If you did not request a password reset, you can ignore this email.
-        </div>';
+                '<div>We have received a request to reset the password associated with your account. If you initiated this request, please click the link below to reset your password:
+                </div>';
             $id = $user['id'];
             $templateVars = [
                 'name' => $user['fullname'],
                 'site_link' => $settings['copyright_site_name_text'] . "/reset-password?id=$id&code=$code",
+                'after_btn_text'=>"<p>If you did not request a password reset, please disregard this email, and no further action is required.</p>
+                                   <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                                   <p>Best regards,<br>
+                                   The Liquidity House Team
+                                   <p>",
                 'btn_text' => "Reset Password",
                 'email' => $settings['email_from_address'],
                 "content" => $content,
-                "title_right" => "Reset",
-                "subtitle_right" => "Your Password"
+                "title_right" => "",
+                "subtitle_right" => ""
             ];
             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
             return redirect()->back()->with('success', "We have sent an email to $email. Please click on the password reset link in the email to generate a new password.");
@@ -247,7 +252,7 @@ class LoginController extends Controller
         $settings = settings();
         $id = $request->query('id');
         $code = $request->query('code');
-        
+
         $user = User::where('id', $id)
             ->where('emailToken', $code)
             ->first();

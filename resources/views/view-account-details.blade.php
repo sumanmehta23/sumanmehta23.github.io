@@ -148,8 +148,8 @@
                                                         <div class="col-6 text-end">
                                                             @if ($type != 'demo')
                                                                 <a href="/trade-deposit"
-                                                                    class="btn btn-outline-light btn-print-invoice">Quick
-                                                                    Deposit</a>
+                                                                    class="btn btn-outline-light btn-print-invoice"
+                                                                    onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
                                                             @endif
                                                         </div>
                                                     </div>

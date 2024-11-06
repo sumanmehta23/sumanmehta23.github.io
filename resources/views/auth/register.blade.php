@@ -53,9 +53,7 @@
                                         <div data-v-97e32e5a="" class="text-center">
                                             <h3 data-v-97e32e5a="" class="text-center mb-2 f-w-600">Join Us Now
                                             </h3>
-                                            <p data-v-97e32e5a="" class="mb-4 fs-5">Start Trading Today: Easy Account
-                                                Setup!
-                                            </p>
+                                            <p data-v-97e32e5a="" class="mb-4 fs-5">Get Started with Trading Today: Quick and Easy Account Setup!</p>
                                         </div>
                                         @if (session('status'))
                                             <div class="alert alert-success">
@@ -73,7 +71,7 @@
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Email Id</label><input data-v-97e32e5a=""
                                                         type="email" id="email" class="form-control"
-                                                        placeholder="Email id" required="" name="email"><!----></div>
+                                                        placeholder="Email" required="" name="email"><!----></div>
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
@@ -101,11 +99,15 @@
 
                                         <div data-v-97e32e5a="" class="row">
                                             <div data-v-97e32e5a="" class="d-flex align-items-end mt-2">
-                                                <h6 data-v-97e32e5a="" class="f-w-500 mb-0"
-                                                    style="font-size: 12px !important;">Already have an Account? </h6><a
-                                                    data-v-97e32e5a="" href="/login" class="link-primary"
+                                                <p class="f-w-500 mb-0"
+                                                    style="font-size: 14px !important;">Already have an Account? </p><a
+                                                    href="/login" class="link-primary"
                                                     style="font-size: 14px !important; padding-left: 10px; margin-top: 10px;">
                                                     Login</a>
+                                                    <a href="https://www.liquidityhouse.com/risk-disclaimer" class="link-primary ms-auto"
+                                                    style="font-size: 14px !important; padding-left: 10px;">
+                                                    Risk Disclaimer
+                                                    </a>
                                             </div>
                                         </div>
                                     </div>

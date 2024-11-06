@@ -52,7 +52,7 @@
           window.isCalled = 1;
           swal.fire({
             icon: "success",
-            title: "Payment Successfully Done.",
+            title: "Payment Successful",
             allowEscapeKey: false,
             allowOutsideClick: false,
             showCancelButton: false

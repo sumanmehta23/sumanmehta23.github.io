@@ -755,7 +755,7 @@ $settings=settings();
 
                                                                                 @if (!isset($content))
                                                                                     <div>
-                                                                                        <span>Your {{ $type }}
+                                                                                        <span>Your {{ $acc_type }}
                                                                                             MT5 account has been set up,
                                                                                             and you are all ready to
                                                                                             dive into the dynamic world
@@ -1179,6 +1179,13 @@ $settings=settings();
                                                                             class="es-button"
                                                                             style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;padding:10px 20px 10px 20px;display:inline-block;background:{{  $settings['sidebar_color']  }};border-radius:0;font-size:20px;font-family:'playfair display', georgia, 'times new roman', serif;font-weight:bold;font-style:normal;line-height:43.2px;color:#fff;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid {{  $settings['sidebar_color']  }}">{{ $btn_text ?? 'Verify' }}</a>
                                                                     </span>
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                        @if (isset($after_btn_text))
+                                                            <tr>
+                                                                <td align="left" style="padding:0;Margin:0">
+                                                                    <div style="line-height:21.8px;color:#000000;letter-spacing:-0.2px;text-align:left;font-weight:normal;text-align-last:left;font-size:14px;font-variant-ligatures:normal"><?php echo $after_btn_text; ?></div>
                                                                 </td>
                                                             </tr>
                                                         @endif

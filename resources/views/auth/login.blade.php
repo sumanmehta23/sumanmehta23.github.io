@@ -17,8 +17,7 @@
                                     @csrf
                                     <div  class="text-center">
                                         <h3  class="mb-3 text-center">Login</h3>
-                                        <p  class="mb-4 fs-6"> Please log in to access your profile and
-                                            manage your trading accounts and settings. </p>
+                                        <p  class="mb-4 fs-6">Please log in to access your profile, manage your trading accounts, and adjust your settings.</p>
                                     </div>
                                     @if (session('status'))
                                         <div class="alert alert-success">
@@ -33,9 +32,9 @@
                                     <div  class="mt-4 row">
                                         <div  class="col-12">
                                             <div  class="form-group">
-                                                <label for="email" class="form-label">Email id</label>
+                                                <label for="email" class="form-label">Email</label>
                                                 <input type="email" name="email" id="email" class="form-control"
-                                                    placeholder="Email id" required>
+                                                    placeholder="Email" required>
                                             </div>
                                         </div>
                                         <div  class="col-12">
@@ -52,7 +51,7 @@
                                             <label class="form-check-label text-muted" for="customCheckc1">Remember
                                                 me?</label>
                                         </div>
-                                        <h6  class="mb-0 text-secondary f-w-400"><a 
+                                        <h6  class="mb-0 text-secondary f-w-400"><a
                                                 href="/forgot-password" class="link-primary">Forgot Password?</a></h6>
                                     </div>
                                     <div  class="mt-1 row g-3">
@@ -71,6 +70,11 @@
                                 </form>
                             </div>
                         </div>
+                        <div data-v-dde07c83="" class="auth-footer">
+                            <p data-v-dde07c83="" class="m-0 text-center w-100" style="font-size: 11px;"> By logging in, you confirm that you have read and agree to <?= ($settings['admin_title']) ?>'s <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/risk-disclaimer">Risk Disclaimer</a>,
+                             <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/terms-conditions">Terms & Conditions</a>, and <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/privacy-policy">Privacy Policy</a>.
+                            </p>
+                          </div>
                     </div>
                     <div  class="auth-sidecontent"
                         style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">

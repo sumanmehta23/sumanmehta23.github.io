@@ -91,11 +91,17 @@
                                                                                data-type="Wallet-Transfer">
                                                                         <label class="form-check-label d-block" for="walletpayment">
                                                                             <span class="card-body p-2 d-block">
-                                                                                <span class="d-flex align-items-center">
+                                                                                <span class="d-flex justify-content-between">
                                                                                     <span>
                                                                                         <span class="h6 f-w-500 mb-1 d-block">Wallets</span>
                                                                                         <span class="f-10 text-muted">Wallet Transfer</span>
                                                                                     </span>
+                                                                                    <span class=" d-flex align-items-end">
+                                                                                        <span>
+                                                                                          <span class="mb-1 text-right h6 f-w-500 d-block" style="text-align:end">$<?php echo $wallet_balance ?></span>
+                                                                                          <span class="f-10 text-muted">Current Balance</span>
+                                                                                        </span>
+                                                                                      </span>
                                                                                 </span>
                                                                             </span>
                                                                         </label>

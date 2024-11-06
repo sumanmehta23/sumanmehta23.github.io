@@ -113,11 +113,13 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-                                                <div class="col-6 text-end">
-                                                    <a href="#" class="btn btn-primary text-end btn-page">
-                                                        <i class="ti ti-plus f-18"></i> Upload Documents
-                                                    </a>
-                                                </div>
+                                                @if ($user->kyc_verify != 1)
+                                                    <div class="col-6 text-end">
+                                                        <a href="#" class="btn btn-primary text-end btn-page">
+                                                            <i class="ti ti-plus f-18"></i> Upload Documents
+                                                        </a>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="card-body table-card text-center">

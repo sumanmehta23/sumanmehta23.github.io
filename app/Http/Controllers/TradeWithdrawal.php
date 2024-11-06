@@ -111,7 +111,7 @@ class TradeWithdrawal extends Controller
                         'Status' => 1,
                     ]);
                     DB::commit();
-                    return response()->json(['success' => "Your wallet is credited with $" . $amount]);
+                    return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
                 } catch (\Exception $e) {
                     DB::rollBack();
                     echo "<pre>";

@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\ApiAjaxController;
-use App\Http\Controllers\admin\ClientAccController;
-use App\Http\Controllers\admin\ClientController;
+use App\Http\Controllers\Admin\ClientAccController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\Kyc;
