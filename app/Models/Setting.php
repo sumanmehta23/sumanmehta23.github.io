@@ -14,6 +14,6 @@ class Setting extends Model
     protected $fillable = ['key', 'value'];
     public static function tableExists()
     {
-        return Schema::hasTable(self::getTable());
+        return Schema::hasTable('settings');
     }
 }
