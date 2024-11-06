@@ -29,10 +29,10 @@ use App\Http\Controllers\Wallet;
 Route::get('/migrations', function(){
     $migrationfiles=File::files(database_path('migrations'));
     $migrations=[];
-    foreach($migrationfiles as $file){
+    foreach($migrationfiles as $k=>$file){
         //replace .php with empty string
-        
-        echo "INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (1,'".str_replace('.php','',basename($file))."',1);<br>";
+        $i=$k+1;
+        echo "INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES ($i,'".str_replace('.php','',basename($file))."',1);<br>";
     }
 })->name('login_index');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
