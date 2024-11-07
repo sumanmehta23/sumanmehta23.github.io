@@ -35,9 +35,9 @@ class Ib extends Controller
     {
         $email = auth()->user()->email;
         $ib_result = Ib1::where('email', $email)->first();
-        if($ib_result->status == 1) {
-            return redirect("/ib-profile");
-        }
+        // if($ib_result->status == 1) {
+        //     return redirect("/ib-profile");
+        // }
         return view('ib', compact('ib_result'));
     }
     public function ibEnroll(Request $request)

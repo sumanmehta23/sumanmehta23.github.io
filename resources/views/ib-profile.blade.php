@@ -11,7 +11,7 @@
                     <div class="row align-items-center mb-0 pb-0 mt-0 pt-0">
                         <div class="col-md-12 mb-0 pb-0 mt-0 pt-0">
                             <div class="page-header-title h2">
-                                <h4 class="mb-0">MY IB PROFILE</h4>
+                                <h4 class="mb-0">My IB Profile</h4>
                             </div>
                         </div>
                     </div>
@@ -127,7 +127,7 @@
                                                                 class="p-1 d-block bg-primary rounded-circle"><span
                                                                     class="visually-hidden">New alerts</span></span></div>
                                                         <div class="flex-grow-1 ms-2">
-                                                            <p class="mb-0">Withdraw</p>
+                                                            <p class="mb-0">Withdrawals</p>
                                                         </div>
                                                     </div>
                                                     <h5 class="mb-0 f-w-500">$ 0.00</h5>
@@ -146,7 +146,7 @@
                                 <div class="card mb-0 pb-0 mt-0 pt-0">
                                     <div class="card-body">
                                         <div class="d-flex align-items-center justify-content-between">
-                                            <h5 class="mb-0 f-w-500">TRANSFER MY COMMISSION</h5>
+                                            <h5 class="mb-0 f-w-500">Transfer My Commission</h5>
                                             <div class="bg-body p-1 mt-1 rounded">
                                                 <div class="mt-1 row align-items-center">
                                                     <div class="col-12 text-end">
@@ -217,17 +217,13 @@
                             <div class="card mt-0 pt-0">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5 class="mb-0 f-w-500">MY REFERRAL LINK</h5>
+                                        <h5 class="mb-0 f-w-500">My Referral Link</h5>
                                         <div class="avtar avtar-s bg-light-primary"><i class="ti ti-list f-18"></i></div>
                                     </div>
                                     <?php
-                                    
+
                                     ?>
-                                    <hr style="opacity:.1;"><label class="col-form-label col-12 text-lg-start">Your
-                                        exclusive referral
-                                        link is ready! Share this link to invite potential clients to register under your
-                                        supervision and
-                                        start their trading journey.</label>
+                                    <hr style="opacity:.1;"><label class="col-form-label col-12 text-lg-start">Your personal referral link is now available! Share it to help new clients sign up and kick-start their trading journey.</label>
                                     <div class="col-12 mb-4">
                                         {{ session('email') }}
                                         <div class="input-group mb-2"><input type="text" class="form-control"
@@ -269,7 +265,7 @@
                             <div class="card">
                                 <div class="card-body pb-0">
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h4 class="mb-0">IB Commission Histories</h4>
+                                        <h4 class="mb-0">IB Commission History</h4>
                                         <div class="avtar avtar-s bg-light-primary">
                                             <i class="ti ti-list f-18"></i>
                                         </div>

@@ -19,7 +19,7 @@
           <div class="card">
             <div class="card-body border-bottom pb-0">
               <div class="d-flex align-items-center justify-content-between">
-                <h5 class="mb-0">My Trading Live Accounts</h5>
+                <h5 class="mb-0">My Live Trading Accounts</h5>
                 <div class="dropdown">
                   <a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
                     href="/liveAccounts#" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -126,7 +126,7 @@
                 <a href="{{ url('/trade-withdrawal') }}" class="d-flex align-items-center justify-content-between">
                   <div>
                     <p class="mb-0 text-white text-opacity-75"></p>
-                    <h4 class="mb-0 text-black">Quick Withdraw</h4>
+                    <h4 class="mb-0 text-black">Quick Withdrawal</h4>
                   </div>
                   <div class="avtar bg-success-subtle">
                     <i class="ti ti-bolt f-18"></i>

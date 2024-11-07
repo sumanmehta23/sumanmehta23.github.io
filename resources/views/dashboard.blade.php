@@ -10,7 +10,7 @@
                     <div class="card bg-gray-800 dropbox-card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
-                                <h5 class="text-white">Wallet </h5>
+                                <h5 class="text-white">WALLET </h5>
                             </div>
                             <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
                                 <div>
@@ -24,12 +24,12 @@
                                         type="button"><i class="ti ti-plus me-2"></i><!---->
                                         Activate Wallet</button>
                                 </div>
-                            </div><a href="/wallet_deposit"><small class="text-white">Fund Now</small></a>
+                            </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
                             <?php } else { ?>
                             <div>
                                 <h2 class="text-center text-white">${{ $walletBalance }}</h2>
                             </div>
-                        </div><a href="/wallet_deposit"><small class="text-white">Fund Now</small></a>
+                        </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
                         <?php } ?>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                             </div>
                         </div>
                         <h4 class="mb-1 f-w-400">${{ $totalDeposit }}</h4>
-                        <p class="text-muted mb-0">Total Deposit</p>
+                        <p class="text-muted mb-0">Total Deposits</p>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                             </div>
                         </div>
                         <h4 class="mb-1 f-w-400">${{ $totalWithdrawal }}</h4>
-                        <p class="text-muted mb-0">Total Withdrawal</p>
+                        <p class="text-muted mb-0">Total Withdrawals</p>
                     </div>
                 </div>
             </div>

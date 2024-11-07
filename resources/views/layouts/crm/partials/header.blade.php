@@ -251,7 +251,7 @@
                                     <span class="pc-badge"><i class="ti ti-headset"></i></span>
                                 </a>
                             </li>
-                            @if(!empty($ibResult))
+                            {{-- @if(!empty($ibResult)) --}}
                             <li class="pc-item">
                                 <a href="/ib-profile" class="pc-link">
                                     <span class="pc-micon">
@@ -263,7 +263,7 @@
                                     <span class="pc-badge"><i class="ti ti-users"></i></span>
                                 </a>
                             </li>
-                            @endif
+                            {{-- @endif --}}
                         </ul>
                     </div>
                 </div>
@@ -413,7 +413,7 @@
                                 </div>
                             </li>
                             <li class="dropdown pc-h-item header-user/profile">
-                                <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
+                                <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <img src="/assets/images/user.png" alt="user-image" class="user-avtar">

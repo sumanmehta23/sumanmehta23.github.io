@@ -14,7 +14,7 @@
                 </div>
             </div>
             <div class="row">
-                @if ($user->kyc_verify > 0)
+                {{-- @if ($user->kyc_verify > 0) --}}
                     <div class="col-sm-11">
                         <div class="card">
                             <div class="card-header">
@@ -132,7 +132,7 @@
                             </div>
                         </div>
                     </div>
-                @else
+                {{-- @else
                     <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
                         <div class="row p-3">
                             <div class="card-body text-center">
@@ -145,7 +145,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                @endif --}}
             </div>
         </div>
     </div>

@@ -1282,34 +1282,7 @@ $settings=settings();
                                                                                                                             Help?</span>
                                                                                                                     </div>
                                                                                                                     <div>
-                                                                                                                        <span>Our
-                                                                                                                            customer
-                                                                                                                            support
-                                                                                                                            is
-                                                                                                                            here
-                                                                                                                            to
-                                                                                                                            help
-                                                                                                                            you
-                                                                                                                            24/5.
-                                                                                                                            If
-                                                                                                                            you
-                                                                                                                            have
-                                                                                                                            any
-                                                                                                                            questions
-                                                                                                                            or
-                                                                                                                            need
-                                                                                                                            assistance
-                                                                                                                            with
-                                                                                                                            your
-                                                                                                                            account,
-                                                                                                                            please
-                                                                                                                            don’t
-                                                                                                                            hesitate
-                                                                                                                            to
-                                                                                                                            contact
-                                                                                                                            our
-                                                                                                                            Support
-                                                                                                                            Team.</span>
+                                                                                                                        <span>Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don’t hesitate to contact our Support Team.</span>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </td>
@@ -1386,6 +1359,48 @@ $settings=settings();
                                                                                                         class="m_-2550223905729420962pc-w620-gridCollapsed-0"
                                                                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
 
+                                                                                                    </table>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td align="left" valign="top"
+                                                                                        style="padding:0;Margin:0">
+                                                                                        <table align="left"
+                                                                                            border="0"
+                                                                                            cellpadding="0"
+                                                                                            cellspacing="0"
+                                                                                            role="presentation"
+                                                                                            style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                                                                            <tr>
+                                                                                                <td valign="top"
+                                                                                                    class="m_-2550223905729420962pc-w620-spacing-0-0-22-0"
+                                                                                                    style="padding:0px 0px 15px 0px;Margin:0">
+                                                                                                    <table
+                                                                                                        cellspacing="0"
+                                                                                                        role="presentation"
+                                                                                                        border="0"
+                                                                                                        cellpadding="0"
+                                                                                                        style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0">
+                                                                                                        <tr>
+                                                                                                            <td align="left"
+                                                                                                                valign="top"
+                                                                                                                style="padding:0;Margin:0">
+                                                                                                                <div
+                                                                                                                    style="color:#000;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;font-weight:normal;line-height:17.2px;letter-spacing:-0.2px;font-variant-ligatures:normal;font-size:12px;text-align:left">
+                                                                                                                    <div>
+                                                                                                                        <span>All official communication from LQH Markets (LQH Integrated Ltd.) will be conducted solely through our official email addresses, using the @‌LQHMarkets.com (hyperlink) domain.</span>
+                                                                                                                        <p>Our mailing address is as follows:</p>
+                                                                                                                                LQH Integrated Ltd<br>
+                                                                                                                                A2-704A, Al Hamra Industrial Zone-FZ<br>
+                                                                                                                                RAKEZ Business Centre<br>
+                                                                                                                                Ras Al Khaimah, UAE<br>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </td>
+                                                                                                        </tr>
                                                                                                     </table>
                                                                                                 </td>
                                                                                             </tr>

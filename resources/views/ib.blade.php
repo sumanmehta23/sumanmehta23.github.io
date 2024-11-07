@@ -70,8 +70,8 @@
           Swal.close();
           if (data.status == 'true') {
             Swal.fire({
-              title: "You're Successfully enrolled as an IB",
-              text: "Share and Earn",
+              title: "You're officially enrolled as an Introducing Broker",
+              text: "Welcome to the team!",
               icon: "success"
             }).then((val) => {
               location.reload();

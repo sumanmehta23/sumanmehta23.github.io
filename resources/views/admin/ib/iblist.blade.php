@@ -47,6 +47,7 @@
   <div class="modal-dialog  modal-dialog-centered">
     <div class="modal-content">
       <form action="#" id="ibRequestForm" method="post">
+        @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
           <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>

@@ -64,7 +64,7 @@
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div>
                                             <h4 class="mb-0 text-white">Add Funds</h4>
-                                            <p class="mb-0 text-white text-opacity-75">to my wallet</p>
+                                            <p class="mb-0 text-white text-opacity-75">to My Wallet</p>
                                         </div>
                                         <div class="avtar">
                                             <i class="ti ti-database-import f-18"></i>
@@ -78,7 +78,7 @@
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
                                         <h4 class="mb-0">Withdraw</h4>
-                                        <p class="mb-0 text-opacity-75">from my wallet</p>
+                                        <p class="mb-0 text-opacity-75">from My Wallet</p>
                                     </div>
                                     <div class="avtar avtar-s bg-gray-300">
                                         <svg class="pc-icon">
@@ -93,7 +93,7 @@
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
                                         <h4 class="mb-0">Transfer</h4>
-                                        <p class="mb-0 text-opacity-75">from my wallet</p>
+                                        <p class="mb-0 text-opacity-75">from My Wallet</p>
                                     </div>
                                     <div class="avtar avtar-s bg-gray-300">
                                         <svg class="pc-icon">
