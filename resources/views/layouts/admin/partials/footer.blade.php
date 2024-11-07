@@ -47,8 +47,7 @@
                 $(this).hide();
             }
         });
-    });
-
+   
     $("#ibRequestForm").submit(function(e) {
         e.preventDefault();
         var formData = $("#ibRequestForm").serializeArray();
@@ -82,6 +81,8 @@
             }
         });
     });
+});
+
 </script>
 @yield('scripts')
 @include('sweetalert::alert')

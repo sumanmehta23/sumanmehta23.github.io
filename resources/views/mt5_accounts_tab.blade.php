@@ -1,7 +1,7 @@
 <div class="col-12">
     <div class="card">
-        <div class="card-body p-0">
-            <ul class="nav nav-tabs checkout-tabs mb-0" id="myTab" role="tablist">
+        <div class="p-0 card-body">
+            <ul class="mb-0 nav nav-tabs checkout-tabs" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link {{ request()->is('liveAccounts') ? 'active' : '' }}" id="ecomtab-tab-1"
                         href="{{ url('/liveAccounts') }}" role="tab" aria-controls="ecomtab-1" aria-selected="true" tabindex="-1">
