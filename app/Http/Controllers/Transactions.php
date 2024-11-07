@@ -28,10 +28,10 @@ class Transactions extends Controller
             ->get();
 
         // Fetching internal transfers
-        $internal_transfer = TradeDeposits::where('email', $email)
-            ->whereIn('deposit_type', ['Wallet Transfer','Internal Transfer'])
+        $internal_transfer = InternalTransfer::where('email', $email)
+            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer'])
             ->where('status', 1)
-            ->orderBy('deposted_date', 'desc')
+            ->orderBy('date', 'desc')
             ->get();
         // foreach ($internal_transfer as $key => $value) {
         //     echo ($value).'/n';
