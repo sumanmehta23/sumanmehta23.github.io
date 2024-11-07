@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\TradeDeposits;
 use App\Models\TradeWithdrawals;
 use App\Models\InternalTransfer;
+use App\Models\WalletWithdraw;
 
 
 class Transactions extends Controller
@@ -16,22 +17,26 @@ class Transactions extends Controller
         $email = $email = auth()->user()->email;
         $deposit_history = TradeDeposits::with('liveAccount.accountType')
             ->where('email', $email)
-            ->where('deposit_type', '!=', 'Internal Transfer')
+            ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
             ->get();
 
         // Fetching withdrawal history
-        $withdrawal_history = TradeWithdrawals::where('email', $email)
-            ->where('withdraw_type', '!=', 'Internal Transfer')
+        $withdrawal_history = WalletWithdraw::where('email', $email)
+            ->where('withdraw_type', 'Wallet Withdrawal')
             ->orderBy('id', 'desc')
             ->get();
 
         // Fetching internal transfers
-        $internal_transfer = InternalTransfer::where('email', $email)
-            ->whereIn('type', ['Internal Transfer'])
-            ->orderBy('raw_id', 'desc')
+        $internal_transfer = TradeDeposits::where('email', $email)
+            ->whereIn('deposit_type', ['Wallet Transfer','Internal Transfer'])
+            ->where('status', 1)
+            ->orderBy('deposted_date', 'desc')
             ->get();
-
+        // foreach ($internal_transfer as $key => $value) {
+        //     echo ($value).'/n';
+        // }
+        // die;
         return view('transactions', compact('deposit_history', 'withdrawal_history', 'internal_transfer'));
     }
     // public function history()

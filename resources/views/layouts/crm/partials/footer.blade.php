@@ -1,9 +1,9 @@
 </div>
 <div class="pc-content">
     <p class="m-0 text-center w-100" style="font-size: 11px; padding-top: 90px; padding-bottom: 20px; color:#2ca192">LQH Integrated Ltd
-        <a target="_blank" href="https://www.liquidityhouse.com/risk-disclaimer">Risk Disclaimer</a> |
-        <a target="_blank" href="https://www.liquidityhouse.com/terms-conditions">Terms & Conditions</a> |
-        <a target="_blank" href="https://www.liquidityhouse.com/privacy-policy">Privacy Policy</a>
+        <a target="_blank" href="https://www.lqhmarkets.com/risk-disclaimer">Risk Disclaimer</a> |
+        <a target="_blank" href="https://www.lqhmarkets.com/terms-conditions">Terms & Conditions</a> |
+        <a target="_blank" href="https://www.lqhmarkets.com/privacy-policy">Privacy Policy</a>
     </p>
 </div>
 

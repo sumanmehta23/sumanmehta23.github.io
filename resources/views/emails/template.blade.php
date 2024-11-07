@@ -1114,6 +1114,11 @@ $settings=settings();
                                                                     <div>
                                                                         <span style="letter-spacing:0.2px">Let the trading journey begin! If you have any questions, feel free to reach out to us for assistance.</span>
                                                                     </div>
+                                                                    <div>
+                                                                        <div><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Server">Download MetaTrader iOS </a><br>
+                                                                        <a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Server">Download MetaTrader Android</a><br>
+                                                                        <a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe">Download Desktop </a></div>
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                         </tr>

@@ -70,8 +70,8 @@
                             </div>
                         </div>
                         <div data-v-dde07c83="" class="auth-footer">
-                            <p data-v-dde07c83="" class="m-0 text-center w-100" style="font-size: 11px;"> By logging in, you confirm that you have read and agree to <?= ($settings['admin_title']) ?>'s <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/risk-disclaimer">Risk Disclaimer</a>,
-                             <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/terms-conditions">Terms & Conditions</a>, and <a data-v-dde07c83="" target="_blank" href="https://www.liquidityhouse.com/privacy-policy">Privacy Policy</a>.
+                            <p data-v-dde07c83="" class="m-0 text-center w-100" style="font-size: 11px;"> By logging in, you confirm that you have read and agree to <?= ($settings['admin_title']) ?>'s <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/risk-disclaimer">Risk Disclaimer</a>,
+                             <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/terms-conditions">Terms & Conditions</a>, and <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/privacy-policy">Privacy Policy</a>.
                             </p>
                           </div>
                     </div>
