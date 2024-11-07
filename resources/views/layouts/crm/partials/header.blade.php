@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="{{ asset($settings['favicon']) }}">
@@ -544,3 +543,4 @@
                 </div>
             </div>
         </div>
+    </div>

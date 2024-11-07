@@ -21,7 +21,6 @@
         color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     }
 </style>
-@section('content')
 <div class="pc-container">
   <div class="pc-content">
     <div class="page-header mb-0 pb-0">
