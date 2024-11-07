@@ -31,7 +31,7 @@
         <div id="app" data-v-app="">
             <div class="auth-main" >
                 <div class="auth-wrapper v3" >
-                    <div class="auth-form" data-v-97e32e5a="">
+                    <div class="auth-form" style="justify-content: flex-start;">
                         <div class="auth-header row" >
                             <div class="col my-1" ><a href="/login"><img
                                         src="/{{ $settings['admin_sidebar_logo'] }}" alt="Logo"
@@ -48,8 +48,7 @@
                                     @if (isset($msg))
                                         {!! $msg !!}
                                     @endif
-                                    <p class="mt-2 text-sm text-muted" >If you forgot your password, we’ll
-                                        email you instructions to reset your password.</p>
+                                    <p class="mt-2 text-sm text-muted" > If you forgot your password, no worries! We’ll send you a quick email with steps to reset it.</p>
                                     <div class="form-group mb-3" >
                                         <label class="form-label" >Email Address</label>
                                         <input name="txtemail" type="email" class="form-control" id="floatingInput"

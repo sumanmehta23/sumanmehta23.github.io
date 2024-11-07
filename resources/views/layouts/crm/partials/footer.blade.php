@@ -6,6 +6,9 @@
         <a target="_blank" href="https://www.liquidityhouse.com/privacy-policy">Privacy Policy</a>
     </p>
 </div>
+
+
+
 <div id="addBankModal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
     aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">

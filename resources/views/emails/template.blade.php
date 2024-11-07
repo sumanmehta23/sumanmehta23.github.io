@@ -849,10 +849,9 @@ $settings=settings();
                                                                                                         align="left"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="color:#000000; text-align-last:right; line-height:26px; text-align:right; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold; letter-spacing:3px; font-size:18px; font-variant-ligatures:normal;">
+                                                                                                            style="color:#000000; text-align-last:left; line-height:26px; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;font-size:18px; font-variant-ligatures:normal;">
                                                                                                             <div>
-                                                                                                                <span
-                                                                                                                    style="letter-spacing:3px">{{ $trade_id }}</span>
+                                                                                                                <span>{{ $trade_id }}</span>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </td>
@@ -874,13 +873,7 @@ $settings=settings();
                                                                                         <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div
-                                                                                                style="font-variant-ligatures:normal; font-size:16px; text-align-last:left; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif;">
-                                                                                                <div>
-                                                                                                    <span>MASTER
-                                                                                                        PASSWORD</span>
-                                                                                                </div>
-                                                                                            </div>
+                                                                                            <div style="font-variant-ligatures:normal; font-size:16px; text-align-last:left; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif;"><div><span>MASTER PASSWORD</span></div></div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -899,18 +892,13 @@ $settings=settings();
                                                                                                 cellpadding="0"
                                                                                                 cellspacing="0"
                                                                                                 role="presentation"
-                                                                                                style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0; width:22px;">
+                                                                                                style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0; width:214px;">
                                                                                                 <tr>
                                                                                                     <td valign="top"
                                                                                                         align="left"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="text-align-last:right; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; letter-spacing:3px; font-weight:bold; text-align:right; color:#000000;">
-                                                                                                            <div>
-                                                                                                                <span
-                                                                                                                    style="letter-spacing:3px">{{ $trader_pwd }}</span>
-                                                                                                            </div>
-                                                                                                        </div>
+                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_pwd }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -933,13 +921,8 @@ $settings=settings();
                                                                                         <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div
-                                                                                                style="line-height:26px; font-weight:normal; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:left;">
-                                                                                                <div>
-                                                                                                    <span>INVESTOR
-                                                                                                        PASSWORD</span>
-                                                                                                </div>
-                                                                                            </div>
+                                                                                            <div style="line-height:26px; font-weight:normal; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:left;"><div><span>INVESTOR
+                                                                                                        PASSWORD</span></div></div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -958,18 +941,13 @@ $settings=settings();
                                                                                                 cellspacing="0"
                                                                                                 role="presentation"
                                                                                                 border="0"
-                                                                                                style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0; width:22px;">
+                                                                                                style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0; width:214px">
                                                                                                 <tr>
                                                                                                     <td align="left"
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:right; letter-spacing:3px; line-height:26px; color:#000000; text-align-last:right; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;">
-                                                                                                            <div>
-                                                                                                                <span
-                                                                                                                    style="letter-spacing:3px">{{ $investor_pwd }}</span>
-                                                                                                            </div>
-                                                                                                        </div>
+                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_pwd }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -992,12 +970,7 @@ $settings=settings();
                                                                                         <td valign="top"
                                                                                             align="left"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div
-                                                                                                style="font-weight:normal; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:left; letter-spacing:-0.2px; font-size:16px; line-height:26px;">
-                                                                                                <div>
-                                                                                                    <span>LEVERAGE</span>
-                                                                                                </div>
-                                                                                            </div>
+                                                                                            <div style="font-weight:normal; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:left; letter-spacing:-0.2px; font-size:16px; line-height:26px"><div><span>LEVERAGE</span></div></div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -1021,14 +994,7 @@ $settings=settings();
                                                                                                     <td align="left"
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
-                                                                                                        <div
-                                                                                                            style="font-size:18px; line-height:26px; color:#000000; letter-spacing:3px; text-align-last:right; text-align:right; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold; font-variant-ligatures:normal;">
-                                                                                                            <div>
-                                                                                                                <span
-                                                                                                                    style="letter-spacing:3px">{{ $leverage }}</span>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </td>
+                                                                                                        <div style="font-size:18px; line-height:26px; color:#000000;text-align-last:left; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold; font-variant-ligatures:normal;"><div><span>{{ $leverage }}</span></div></div></td>
                                                                                                 </tr>
                                                                                             </table>
                                                                                         </td>
@@ -1050,12 +1016,8 @@ $settings=settings();
                                                                                         <td align="left"
                                                                                             valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div
-                                                                                                style="text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:left; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;">
-                                                                                                <div><span>MT5
-                                                                                                        SERVER</span>
-                                                                                                </div>
-                                                                                            </div>
+                                                                                            <div style="text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:left; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;"><div><span>MT5
+                                                                                                        SERVER</span></div></div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -1079,12 +1041,7 @@ $settings=settings();
                                                                                                     <td align="left"
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
-                                                                                                        <div
-                                                                                                            style="font-weight:bold; letter-spacing:0.4px; text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; color:#000000; font-variant-ligatures:normal; text-align:left;">
-                                                                                                            <div>
-                                                                                                                <span>{{ $server_name }}</span>
-                                                                                                            </div>
-                                                                                                        </div>
+                                                                                                        <div style="font-weight:bold; text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; color:#000000; font-variant-ligatures:normal; text-align:left;"><div><span>{{ $server_name }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>

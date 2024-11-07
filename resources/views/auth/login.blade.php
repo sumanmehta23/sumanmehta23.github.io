@@ -48,8 +48,7 @@
                                     <div  class="d-flex justify-content-between align-items-center">
                                         <div  class="form-check">
                                             <input type="checkbox" class="form-check-input" id="customCheckc1">
-                                            <label class="form-check-label text-muted" for="customCheckc1">Remember
-                                                me?</label>
+                                            <label class="form-check-label text-muted" for="customCheckc1">Remember Me?</label>
                                         </div>
                                         <h6  class="mb-0 text-secondary f-w-400"><a
                                                 href="/forgot-password" class="link-primary">Forgot Password?</a></h6>

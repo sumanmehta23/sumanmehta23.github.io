@@ -100,9 +100,9 @@
                                             </div>
                                         </div>
                                         <div class="row mt-3">
-                                            <div class="col-3"> Amount to be deposited in Demo Account </div>
+                                            <div class="col-3">  Deposit Amount for Demo Account </div>
                                             <div class="col-9">
-                                              <div class="input-group mb-3"><span class="input-group-text">$</span><input type="number" min="1" max="50000" step="1" name="demo_deposit" required class="form-control" aria-label="Amount (to the nearest dollar)"><span class="input-group-text" required>.00</span><!----></div>
+                                              <div class="input-group mb-3"><span class="input-group-text">$</span><input type="number" min="1" max="100000" step="1" name="demo_deposit" required class="form-control" aria-label="Amount (to the nearest dollar)"><span class="input-group-text" required>.00</span><!----></div>
                                             </div>
                                           </div>
                                         <div class="row mt-3 is_account">

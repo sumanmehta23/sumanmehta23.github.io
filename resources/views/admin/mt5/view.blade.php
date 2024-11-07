@@ -607,7 +607,7 @@ if ($getUser) {
 
                             </div>
                         </div>
-                        <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                        <div class="modal-footer"><button type="button" class="btn btn-primary"
                                 data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
                                 name="passwordUpdate" value="true"> Update Password</button></div>
                     </div>

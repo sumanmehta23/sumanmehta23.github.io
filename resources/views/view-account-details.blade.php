@@ -66,7 +66,7 @@
 
                         </div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                    <div class="modal-footer"><button type="button" class="btn btn-primary"
                             data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
                             name="passwordUpdate" value="true">
                             <!----> Update Password</button></div>
@@ -375,8 +375,7 @@
                                                     <div class="d-flex align-items-center justify-content-between">
                                                         <div>
                                                             <h4 class="mb-0 text-white">Withdraw</h4>
-                                                            <p class="mb-0 text-white text-opacity-75">Transfer your
-                                                                profits</p>
+                                                            <p class="mb-0 text-white text-opacity-75">Transfer your funds</p>
                                                         </div>
                                                         <div class="avtar">
                                                             <i class="ph-duotone ph-bank f-24"></i>

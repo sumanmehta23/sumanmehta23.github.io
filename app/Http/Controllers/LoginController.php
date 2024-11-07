@@ -165,7 +165,8 @@ class LoginController extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-            '<div>You have successfully reset your password. Thank you for being with us.</div>';
+            'Your password has been successfully reset! You can now log in to your account using your new password. If you did not request this change, please reach out to our support team immediately.<br>
+            Thank you for being a valued member of our community!</div>';
         // Send email
         $templateVars = [
             'name' => $user->fullname,
