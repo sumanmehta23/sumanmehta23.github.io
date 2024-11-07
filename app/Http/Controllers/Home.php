@@ -45,7 +45,7 @@ class Home extends Controller
             ->where('status', 1)
             ->sum('deposit_amount');
         $totalWithdraw = WalletWithdraw::where('email', $email)
-            ->where('status', 1)
+            ->where('status','<>', 2)
             ->sum('withdraw_amount');
         $walletBalance = $totalDeposit - $totalWithdraw;
         return $walletBalance;

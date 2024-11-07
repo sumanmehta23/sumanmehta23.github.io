@@ -38,7 +38,7 @@ class TradeDeposit extends Controller
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         $totalWd = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('email', $email)->where('status', 1)->sum('withdraw_amount');
+        $totalWw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
         $wallet_balance = $totalWd - $totalWw;
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
@@ -80,7 +80,7 @@ class TradeDeposit extends Controller
 
         // Calculate wallet balance
         $totalWd = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('email', $email)->where('status', 1)->sum('withdraw_amount');
+        $totalWw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
         $walletBalance = $totalWd - $totalWw;
         // Check if there's enough balance
         if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {

@@ -54,7 +54,7 @@ class Wallet extends Controller
     public function getWalletBalance($email)
     {
         $totalDeposit = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWithdraw = WalletWithdraw::where('email', $email)->where('status', 1)->sum('withdraw_amount');
+        $totalWithdraw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
 
         $walletBalance = (float) $totalDeposit - (float) $totalWithdraw;
         return $walletBalance;
@@ -124,7 +124,7 @@ class Wallet extends Controller
             ->where('status', 1)
             ->sum('deposit_amount');
         $total_ww = WalletWithdraw::where('email', $email)
-            ->where('status', 1)
+            ->where('status','<>', 2)
             ->sum('withdraw_amount');
         $wallet_balance = (float) $total_wd - (float) $total_ww;
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
@@ -253,7 +253,7 @@ class Wallet extends Controller
             ->sum('deposit_amount');
 
         $totalWithdrawals = WalletWithdraw::where('email', $userEmail)
-            ->where('status', 1)
+            ->where('status',"<>", 2)
             ->sum('withdraw_amount');
 
         $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
