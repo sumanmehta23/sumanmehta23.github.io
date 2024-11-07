@@ -42522,4 +42522,11 @@ h2 {
     src: url(/assets/fonts/Cairo-Bold-BdVVyXhy.woff2) format("woff2")
 }
 
+@media (max-width: 550px) {
+    [data-pc-direction="ltr"] .text-center.mobile-left-align {
+        text-align: left !important;
+        padding: 20px;
+    }
+}
+
 /*!

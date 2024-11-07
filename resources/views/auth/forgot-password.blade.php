@@ -62,10 +62,7 @@
                             </div>
                         </form>
                         <div class="auth-footer" data-v-97e32e5a="">
-                            <p class="m-0 w-100 text-center" style="font-size: 11px;" data-v-97e32e5a=""> By signing up, I
-                                acknowledge that I have read, understood and agree to the Client Agreement <br
-                                    data-v-97e32e5a="">and give my consent for {{ $settings['admin_title'] }} to contact me for
-                                marketing purposes. <br data-v-97e32e5a=""> By registering you agree to our <a
+                            <p class="m-0 w-100 text-center mobile-left-align" style="font-size: 11px;" data-v-97e32e5a=""> By signing up, I acknowledge that I have read, understood, and<br> agree to the Client Agreement and consent to LQH Markets<br> contacting me with relevant updates and information <br><br> By registering you agree to our <a
                                     href="#" data-v-97e32e5a="">Privacy Policy</a>, <a href="#"
                                     data-v-97e32e5a="">Client Agreement</a>&amp; <a href="#"
                                     data-v-97e32e5a="">Trading Risk Warning</a>.</p>
