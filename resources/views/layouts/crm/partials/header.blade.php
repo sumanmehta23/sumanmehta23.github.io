@@ -239,7 +239,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="/support" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -249,7 +249,7 @@
                                     <span class="pc-mtext">Support</span>
                                     <span class="pc-badge"><i class="ti ti-headset"></i></span>
                                 </a>
-                            </li>
+                            </li> --}}
                             {{-- @if(!empty($ibResult)) --}}
                             <li class="pc-item">
                                 <a href="/ib-profile" class="pc-link">
