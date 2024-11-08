@@ -118,7 +118,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Balance)) {
-                                                                        echo "$" . $account->Balance;
+                                                                        echo "$" . number_format($account->Balance, 0);
                                                                     } else {
                                                                         echo "$0.00";
                                                                     }
@@ -144,7 +144,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Equity)) {
-                                                                        echo "$" . $account->Equity;
+                                                                        echo "$" . number_format($account->Equity , 0);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -168,7 +168,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Credit)) {
-                                                                        echo $account->Credit . "$";
+                                                                        echo number_format($account->Credit , 0) . "$";
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -192,7 +192,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->MarginFree)) {
-                                                                        echo "$" . $account->MarginFree;
+                                                                        echo "$" . number_format($account->MarginFree , 0);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -325,7 +325,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Total Deposit</h6>
                                         <h2 class="mb-1 mt-2 number-font text-primary">$<span
-                                                class="counter"><?= $total_deposit ? $total_deposit : '0' ?></span>
+                                                class="counter"><?= $total_deposit ? number_format($total_deposit , 0) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
@@ -334,7 +334,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Unapproved Deposit</h6>
                                         <h2 class="mb-1 mt-2 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_deposit ? $unapprove_deposit : '0' ?></span>
+                                                class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 0) : '0' ?></span>
                                         </h2>
                                     </div>
                                 </div>
@@ -342,7 +342,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Total Withdrawl</h6>
                                         <h2 class="mb-1 mt-2 number-font text-primary">$<span
-                                                class="counter"><?= $total_withdrawl ? $total_withdrawl : '0' ?></span>
+                                                class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 0) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
@@ -351,7 +351,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Unapproved Withdrawl</h6>
                                         <h2 class="mb-1 mt-2 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_withdrawl ? $unapprove_withdrawl : '0' ?></span>
+                                                class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 0) : '0' ?></span>
                                         </h2>
                                     </div>
                                 </div>

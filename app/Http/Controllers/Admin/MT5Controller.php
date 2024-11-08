@@ -158,7 +158,7 @@ class MT5Controller extends Controller
         $user = User::where('email', $eid)->first();
         $trade_id = $request->input('trade_id');
         if ($request->has('deposit_to_account')) {
-            $amount = $request->input('amount');
+            $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
             $deposit_type = 'CRM';
             $email = $eid;

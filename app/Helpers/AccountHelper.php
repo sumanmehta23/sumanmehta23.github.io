@@ -91,7 +91,9 @@ class AccountHelper
 
         // dd($liveAccount,$id);
         $accountData = NULL;
+
         $apiResponse = $api->UserAccountGet($liveAccount->trade_id, $accountData);
+
         if ($apiResponse === MTRetCode::MT_RET_OK) {
             DB::table('liveaccount')
                 ->where('trade_id', $liveAccount->trade_id)

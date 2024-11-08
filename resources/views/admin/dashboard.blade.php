@@ -22,12 +22,12 @@
                                 <h6 class="mb-2">Total Deposit</h6>
                                 <h2 class="text-end "><i
                                         class="mdi mdi-wallet icon-size float-start text-primary text-primary-shadow"></i><span>$
-                                        {{ $trade_deposit->deposit + $wallet_deposit->deposit }}</span>
+                                        {{ number_format($trade_deposit->deposit + $wallet_deposit->deposit,2) }}</span>
                                 </h2></span>
-                                <p class="mb-0">Trading Deposit<span class="float-end">${{ $trade_deposit->deposit }}
+                                <p class="mb-0">Trading Deposit<span class="float-end">${{ number_format($trade_deposit->deposit,2) }}
                                     </span></p>
                                 <p class="mb-0">Wallet Deposit<span
-                                        class="float-end">${{ $wallet_deposit->deposit }}</span></p>
+                                        class="float-end">${{ number_format($wallet_deposit->deposit,2) }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -38,12 +38,12 @@
                             <div class="card-widget">
                                 <h6 class="mb-2">Total Withdraw</h6>
                                 <h2 class="text-end"><i
-                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ $trade_withdrawal->withdraw + $wallet_withdrawal->withdraw }}</span>
+                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ number_format($trade_withdrawal->withdraw + $wallet_withdrawal->withdraw,2) }}</span>
                                 </h2>
                                 <p class="mb-0">Trading Withdrawal<span
-                                        class="float-end">${{ $trade_withdrawal->withdraw }}</span></p>
+                                        class="float-end">${{ number_format($trade_withdrawal->withdraw,2) }}</span></p>
                                 <p class="mb-0">Wallet Withdrawal<span
-                                        class="float-end">${{ $wallet_withdrawal->withdraw }}</span></p>
+                                        class="float-end">${{ number_format($wallet_withdrawal->withdraw,2) }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -54,12 +54,12 @@
                             <div class="card-widget">
                                 <h6 class="mb-2">Active Clients</h6>
                                 <h2 class="text-end"><i
-                                        class="icon-size mdi mdi-account-multiple   float-start text-warning text-warning-shadow"></i><span>{{ $total_clients->active_users + $total_clients->inactive_users }}</span>
+                                        class="icon-size mdi mdi-account-multiple   float-start text-warning text-warning-shadow"></i><span>{{ number_format($total_clients->active_users + $total_clients->inactive_users) }}</span>
                                 </h2>
                                 <p class="mb-0">Active Users<span
-                                        class="float-end">{{ $total_clients->active_users }}</span></p>
+                                        class="float-end">{{ number_format($total_clients->active_users) }}</span></p>
                                 <p class="mb-0">Inactive Users<span
-                                        class="float-end">{{ $total_clients->inactive_users }}</span></p>
+                                        class="float-end">{{ number_format($total_clients->inactive_users) }}</span></p>
                             </div>
                         </div>
                     </div>
