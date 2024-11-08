@@ -259,7 +259,7 @@ class AjaxController extends Controller
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " and deposit_type!='Internal Transfer' order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -287,7 +287,7 @@ class AjaxController extends Controller
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " and withdraw_type!='Internal Transfer' order by trs.id desc";
         $results = DB::select($sql);
         $data = [];
         foreach ($results as $row) {

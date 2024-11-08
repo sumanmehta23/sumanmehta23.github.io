@@ -34,5 +34,11 @@ return [
         'url'=>env('IP_GEOLOCATION_URL'),
         'key'=>env('IP_GEOLOCATION_API_KEY')
     ],
-
+    'cryptochill'=>[
+        'callbacktoken'=>env('CRYPTOCHILL_CALLBACK_TOKEN'),
+        'key'=>env('CRYPTOCHILL_API_KEY'),
+        'secret'=>env('CRYPTOCHILL_API_SECRET'),
+        'profileid'=>env('CRYPTOCHILL_PROFILE_ID'),
+        'accountid'=>env('CRYPTOCHILL_ACCOUNT_ID')
+    ],
 ];
