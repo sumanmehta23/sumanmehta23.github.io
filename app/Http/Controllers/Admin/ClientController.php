@@ -399,11 +399,13 @@ class ClientController extends Controller
             }
             $total_wd = DB::table('wallet_deposit')
                 ->where('email', $eid)
+                ->where('deposit_type','!=', 'Internal Transfer')
                 ->where('status', 1)
                 ->selectRaw('SUM(deposit_amount) as amount')
                 ->first();
             $total_ww = DB::table('wallet_withdraw')
                 ->where('email', $eid)
+                ->where('withdraw_type','!=', 'Internal Transfer')
                 ->where('status', 1)
                 ->selectRaw('SUM(withdraw_amount) as amount')
                 ->first();
