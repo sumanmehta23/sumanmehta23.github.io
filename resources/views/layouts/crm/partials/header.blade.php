@@ -156,12 +156,12 @@
                                                 tooltip="{{ session('user')->email }}">{{ session('user')->email }}</small>
                                         @endauth
                                     </div>
-                                    <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
+                                    {{-- <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
                                         href="/dashboard#pc_sidebar_userlink">
                                         <svg class="pc-icon">
                                             <use xlink:href="#custom-sort-outline"></use>
                                         </svg>
-                                    </a>
+                                    </a> --}}
                                 </div>
                                 <div class="collapse pc-user-links" id="pc_sidebar_userlink">
                                     <div class="pt-3">
