@@ -256,10 +256,11 @@ class AjaxController extends Controller
         if (session('userData')['role_id'] == 2) {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
+            $rmCondition .= " where ";
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " and deposit_type!='Internal Transfer' order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -284,10 +285,12 @@ class AjaxController extends Controller
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
         if (session('userData')['role_id'] == 2) {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
+        }else{
+            $rmCondition .= " where ";
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " and withdraw_type!='Internal Transfer' order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
         $results = DB::select($sql);
         $data = [];
         foreach ($results as $row) {
@@ -812,34 +815,37 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where email='" . $id . "' order by id desc";
+        $sql = "SELECT * from trade_deposit where email='" . $id . "' AND deposit_type != 'Internal Transfer' order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
         foreach ($results as $row) {
+
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from_to' => $row->deposit_from,
+                'from_to' => $row->trade_id,
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
+
         echo json_encode(['data' => $data]);
     }
     public function getLatestWithdrawal($id)
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_withdrawal where email='" . $id . "'  order by id desc";
+        $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
         foreach ($results as $row) {
+
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => $row->withdraw_to,
+                'from_to' => $row->trade_id,
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdrawal_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
