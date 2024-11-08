@@ -122,7 +122,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="/transactions/deposit#"><img src="/assets/images/deposit.png" class="w-25" alt="img"></a>
+                        <a href="/transactions/deposit#"><img src="/assets/images/deposit2.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Deposit History found!</h6>
                     </div>
