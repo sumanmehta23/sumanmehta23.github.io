@@ -118,7 +118,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Balance)) {
-                                                                        echo "$" . number_format($account->Balance, 0);
+                                                                        echo "$" . number_format($account->Balance, 2);
                                                                     } else {
                                                                         echo "$0.00";
                                                                     }
@@ -144,7 +144,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Equity)) {
-                                                                        echo "$" . number_format($account->Equity , 0);
+                                                                        echo "$" . number_format($account->Equity , 2);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -168,7 +168,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->Credit)) {
-                                                                        echo number_format($account->Credit , 0) . "$";
+                                                                        echo number_format($account->Credit , 2) . "$";
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -192,7 +192,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->MarginFree)) {
-                                                                        echo "$" . number_format($account->MarginFree , 0);
+                                                                        echo "$" . number_format($account->MarginFree , 2);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -325,7 +325,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Total Deposit</h6>
                                         <h2 class="mb-1 mt-2 number-font text-primary">$<span
-                                                class="counter"><?= $total_deposit ? number_format($total_deposit , 0) : '0' ?></span>
+                                                class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
@@ -334,7 +334,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Unapproved Deposit</h6>
                                         <h2 class="mb-1 mt-2 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 0) : '0' ?></span>
+                                                class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
                                         </h2>
                                     </div>
                                 </div>
@@ -342,7 +342,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Total Withdrawl</h6>
                                         <h2 class="mb-1 mt-2 number-font text-primary">$<span
-                                                class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 0) : '0' ?></span>
+                                                class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 2) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
@@ -351,7 +351,7 @@ if ($getUser) {
                                     <div class="card-body text-center">
                                         <h6 class="mb-0">Unapproved Withdrawl</h6>
                                         <h2 class="mb-1 mt-2 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 0) : '0' ?></span>
+                                                class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 2) : '0' ?></span>
                                         </h2>
                                     </div>
                                 </div>
@@ -615,8 +615,30 @@ if ($getUser) {
             </div>
         </div>
     @endsection
+
     @section('scripts')
+
         <script>
+            function number_format(number, decimals = 2, dec_point = '.', thousands_sep = ',') {
+                // Ensure the input is a valid number
+                const match = number.match(/\d+(\.\d{2})?/);
+                const n = parseFloat(match[0]);
+                if (isNaN(n)) return 'NA';
+                // Format the number with fixed decimals
+                const fixed = n.toFixed(decimals);
+
+                // Split the integer and decimal parts
+                const parts = fixed.split('.');
+                const integerPart = parts[0];
+                const decimalPart = parts[1];
+
+                // Add thousands separator to integer part
+                const formattedInt = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousands_sep);
+
+                return formattedInt + dec_point + decimalPart;
+            }
+
+
             $("#tableBonus").DataTable();
             $('#tableDeposit').DataTable({
                 "ajax": {
@@ -633,7 +655,10 @@ if ($getUser) {
                     },
                     {
                         data: 'amount',
-                        name: 'amount'
+                        name: 'amount',
+                        render: function(data, type, row) {
+                            return number_format(data);
+                        }
                     },
                     {
                         data: 'deposit_type',
@@ -682,7 +707,10 @@ if ($getUser) {
                     },
                     {
                         data: 'amount',
-                        name: 'amount'
+                        name: 'amount',
+                        render: function(data, type, row) {
+                            return number_format(data);
+                        }
                     },
                     {
                         data: 'withdraw_type',
