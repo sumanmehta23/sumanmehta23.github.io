@@ -815,7 +815,7 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where email='" . $id . "' AND deposit_type != 'Internal Transfer' order by id desc";
+        $sql = "SELECT * FROM trade_deposit WHERE email = '" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') ORDER BY id DESC";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -858,14 +858,16 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where deposit_type='Internal Transfer' and email='" . $id . "'  order by id desc";
+        $sql = "SELECT * from trade_deposit where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
+        // var_dump($results);
+        // die;
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from' => $row->deposit_from,
+                'from' => $row->deposit_from ?? $row->deposit_type,
                 'to' => $row->trade_id,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :

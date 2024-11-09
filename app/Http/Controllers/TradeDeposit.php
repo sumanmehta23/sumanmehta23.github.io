@@ -45,6 +45,8 @@ class TradeDeposit extends Controller
     }
     public function deposit(Request $request)
     {
+        // var_dump($request->all());
+        // die;
         $request->validate(
             [
                 'user.trade_id' => 'required',
