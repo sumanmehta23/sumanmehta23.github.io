@@ -320,10 +320,10 @@ class AjaxController extends Controller
             }
         }
         if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'].' AND';
+            $condition = ' where trs.trade_id=' . $_GET['id'];
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " trs.deposit_type != 'Internal Transfer' group by trs.id order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
