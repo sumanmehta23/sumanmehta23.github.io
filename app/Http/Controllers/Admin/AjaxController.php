@@ -320,10 +320,10 @@ class AjaxController extends Controller
             }
         }
         if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
+            $condition = ' where trs.trade_id=' . $_GET['id'].' AND';
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " trs.deposit_type != 'Internal Transfer' group by trs.id order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -335,7 +335,7 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->deposit_amount,
                 'deposit_type' => $row->deposit_type,
-                'deposit_from' => $row->deposit_from,
+                'deposit_from' => $row->deposit_from ?? $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -370,7 +370,7 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to,
+                'withdraw_to' => $row->withdraw_to ? $row->withdraw_to : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -813,9 +813,8 @@ class AjaxController extends Controller
     }
     public function getLatestDeposit($id)
     {
-
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM trade_deposit WHERE email = '" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') ORDER BY id DESC";
+        $sql = "SELECT * from wallet_deposit where email='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -823,7 +822,7 @@ class AjaxController extends Controller
 
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from_to' => $row->trade_id,
+                'from_to' => $row->trade_id ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
@@ -856,7 +855,6 @@ class AjaxController extends Controller
     }
     public function getLatestTransfer($id)
     {
-
         header('Content-Type: application/json');
         $sql = "SELECT * from trade_deposit where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
         $query = DB::select($sql);
@@ -867,7 +865,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from' => $row->deposit_from ?? $row->deposit_type,
+                'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
                 'to' => $row->trade_id,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
