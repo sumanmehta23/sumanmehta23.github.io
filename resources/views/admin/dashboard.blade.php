@@ -38,7 +38,7 @@
                             <div class="card-widget">
                                 <h6 class="mb-2">Total Withdraw</h6>
                                 <h2 class="text-end"><i
-                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ number_format($trade_withdrawal->withdraw + $wallet_withdrawal->withdraw,2) }}</span>
+                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ number_format($wallet_withdrawal->withdraw,2) }}</span>
                                 </h2>
                                 <p class="mb-0">Trading Withdrawal<span
                                         class="float-end">${{ number_format($trade_withdrawal->withdraw,2) }}</span></p>
