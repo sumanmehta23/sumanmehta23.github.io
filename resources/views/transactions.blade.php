@@ -21,7 +21,6 @@
         color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     }
 </style>
-@section('content')
 <div class="pc-container">
   <div class="pc-content">
     <div class="page-header mb-0 pb-0">
@@ -123,7 +122,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="/transactions/deposit#"><img src="/assets/images/deposit.png" class="w-25" alt="img"></a>
+                        <a href="/transactions/deposit#"><img src="/assets/images/deposit2.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Deposit History found!</h6>
                     </div>
@@ -196,7 +195,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="#"><img src="/assets/images/withdraw.png" class="w-25" alt="img"></a>
+                        <a href="#"><img src="/assets/images/withdrawals2.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Withdrawal History found!</h6>
                     </div>
@@ -273,7 +272,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="#"><img src="/assets/images/fundtransfer.png" class="w-25" alt="img"></a>
+                        <a href="#"><img src="/assets/images/internaltransfer2.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Internal Transfers Found!</h6>
                     </div>

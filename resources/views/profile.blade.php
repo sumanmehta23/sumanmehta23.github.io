@@ -16,8 +16,6 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card social-profile">
-                        <img src="{{ asset('assets/img-profile-cover-DJAPkiCO.png') }}" alt=""
-                            class="w-100 card-img-top">
                         <div class="card-body pt-0">
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
@@ -128,7 +126,7 @@
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
                                                             <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/empty.png') }}"
+                                                                    src="{{ asset('assets/images/KYC.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
                                                         <h6 class="text-center text-secondary f-w-400 mb-4 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
@@ -143,12 +141,11 @@
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
                                                             <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/ben-02.png') }}"
+                                                                    src="{{ asset('assets/images/kyc_verified.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
                                                         <h6 class="text-center btn btn-light-success font-bold ps-5 pe-5">
-                                                            KYC
-                                                            Verified</h6>
+                                                            KYC Verified</h6>
                                                     </div>
                                                 </div>
                                             @else

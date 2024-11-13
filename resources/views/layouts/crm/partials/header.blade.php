@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="{{ asset($settings['favicon']) }}">
@@ -157,12 +156,12 @@
                                                 tooltip="{{ session('user')->email }}">{{ session('user')->email }}</small>
                                         @endauth
                                     </div>
-                                    <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
+                                    {{-- <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
                                         href="/dashboard#pc_sidebar_userlink">
                                         <svg class="pc-icon">
                                             <use xlink:href="#custom-sort-outline"></use>
                                         </svg>
-                                    </a>
+                                    </a> --}}
                                 </div>
                                 <div class="collapse pc-user-links" id="pc_sidebar_userlink">
                                     <div class="pt-3">
@@ -240,7 +239,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="/support" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -250,7 +249,7 @@
                                     <span class="pc-mtext">Support</span>
                                     <span class="pc-badge"><i class="ti ti-headset"></i></span>
                                 </a>
-                            </li>
+                            </li> --}}
                             {{-- @if(!empty($ibResult)) --}}
                             <li class="pc-item">
                                 <a href="/ib-profile" class="pc-link">
@@ -544,3 +543,4 @@
                 </div>
             </div>
         </div>
+    </div>

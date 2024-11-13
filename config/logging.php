@@ -126,6 +126,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'cryptochillcallback' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/cryptochill/callbacks.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 1000,
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];

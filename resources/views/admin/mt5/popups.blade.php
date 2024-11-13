@@ -15,7 +15,7 @@
                 <div class="modal-body custom-card card mb-0" style="max-height: 400px;overflow-y: auto;">
                     <div class="card-body">
                         <div class="trade-deposit-details">
-                            <form method="post" enctype="multipart/form-data">
+                            <form method="POST" enctype="multipart/form-data">
                                 <div class="row">
                                     <div class="col-12 mt-2">
                                         <div class="form-group row"><label class="col-lg-4 col-form-label">AMOUNT IN USD

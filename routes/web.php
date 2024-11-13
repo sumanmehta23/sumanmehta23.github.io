@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\StaffManagement;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Home;
+use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Ib;
 use App\Http\Controllers\InternalTransfer;
 use App\Http\Controllers\LoginController;
@@ -26,21 +27,14 @@ use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
-Route::get('/migrations', function(){
-    $migrationfiles=File::files(database_path('migrations'));
-    $migrations=[];
-    foreach($migrationfiles as $k=>$file){
-        //replace .php with empty string
-        $i=$k+1;
-        echo "INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES ($i,'".str_replace('.php','',basename($file))."',1);<br>";
-    }
-})->name('login_index');
+Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
+
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);

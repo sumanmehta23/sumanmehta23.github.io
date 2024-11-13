@@ -71,24 +71,27 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3"><a href="/dashboard">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <div class="avtar avtar-s bg-light-primary"><i class="ti ti-shield-check f-18"></i></div>
-                                <div class="dropdown"><a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
-                                        href="/dashboard" data-bs-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false"><i class="ti ti-dots-vertical f-18"></i></a>
-                                    <div class="dropdown-menu dropdown-menu-end"><a href="/liveAccounts"
-                                            class="dropdown-item">View
-                                            Accounts </a></div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="avtar avtar-s bg-light-primary"><i class="ti ti-shield-check f-18"></i></div>
+                            <div class="dropdown">
+                                <a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="/dashboard" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="ti ti-dots-vertical f-18"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <a href="/liveAccounts" class="dropdown-item">View Accounts </a>
                                 </div>
+
                             </div>
-                            <h3 class="mb-0 f-w-400">{{ $liveAccounts }}</h3>
-                            <p class="text-muted mb-0">Live MT5 Accounts</p>
+
                         </div>
+                        <h3 class="mb-0 f-w-400">{{ $liveAccounts }}</h3>
+                        <p class="text-muted mb-0">Live MT5 Accounts</p>
                     </div>
-                </a></div>
+                </div>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-12 col-lg-9">
@@ -286,29 +289,26 @@
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
-                <a href="/dashboard">
-                    <div class="card">
-                        <div class="card-body p-3"><a href="/trade-deposit"
-                                class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 text-white text-opacity-75"></p>
-                                    <h4 class="mb-0 text-black">Quick Deposit</h4>
-                                </div>
-                                <div class="avtar bg-light-primary"><i class="ti ti-bolt f-18"></i></div>
-                            </a></div>
-                    </div>
-                </a><a href="/dashboard">
-                    <div class="card">
-                        <div class="card-body p-3"><a href="/trade-withdrawal"
-                                class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 text-white text-opacity-75"></p>
-                                    <h4 class="mb-0 text-black">Quick Withdraw</h4>
-                                </div>
-                                <div class="avtar bg-light-primary"><i class="ti ti-bolt f-18"></i></div>
-                            </a></div>
-                    </div>
-                </a>
+                <div class="card">
+                    <div class="card-body p-3"><a href="/trade-deposit"
+                            class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="mb-0 text-white text-opacity-75"></p>
+                                <h4 class="mb-0 text-black">Quick Deposit</h4>
+                            </div>
+                            <div class="avtar bg-light-primary"><i class="ti ti-bolt f-18"></i></div>
+                        </a></div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-3"><a href="/trade-withdrawal"
+                            class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <p class="mb-0 text-white text-opacity-75"></p>
+                                <h4 class="mb-0 text-black">Quick Withdraw</h4>
+                            </div>
+                            <div class="avtar bg-light-primary"><i class="ti ti-bolt f-18"></i></div>
+                        </a></div>
+                </div>
                 @php
                     $ib = $ibResult ? '/ib-profile' : '/ib';
                 @endphp
