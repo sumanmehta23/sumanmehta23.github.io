@@ -1,5 +1,10 @@
 @extends('layouts.crm.crm')
 @section('content')
+<style>
+    #profile_image{
+        cursor: pointer;
+    }
+</style>
     <div class="pc-container">
         <div class="pc-content">
             <div class="page-header">
@@ -19,8 +24,15 @@
                         <div class="card-body pt-0">
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
-                                    <img class="img-fluid img-profile-avtar" src="{{ asset('assets/images/user.png') }}"
+                                    <img id="profile_image"  class="img-fluid img-profile-avtar" src="{{ asset('assets/images/user.png') }}"
                                         alt="User image">
+                                         <!-- Hidden File Input to Trigger Image Upload -->
+        <input type="file" id="profile_picture_input" style="display: none;">
+        <div class="edit-text" 
+            style="position: absolute; bottom: 10px; left: 10px; color: white; background-color: rgba(0, 0, 0, 0.5); padding: 5px 10px; border-radius: 5px; display: none;">
+            Edit Picture
+        </div>
+                                    
                                 </div>
                                 <div class="col">
                                     <div class="row justify-content-between align-items-end">
@@ -372,5 +384,41 @@
                 }
             });
         });
+        $(document).ready(function() {
+        // Show "Edit Picture" text when hovering over the image
+        $('#profile_image').hover(function() {
+            $('.edit-text').fadeIn(); // Show "Edit Picture" text
+        }, function() {
+            $('.edit-text').fadeOut(); // Hide "Edit Picture" text
+        });
+
+        // Trigger file input when image is clicked
+        $('#profile_image').click(function() {
+            $('#profile_picture_input').click(); // Open file input dialog
+        });
+
+        // Handle file input change (when user selects an image)
+        $('#profile_picture_input').change(function() {
+            var formData = new FormData();
+            formData.append('profile_picture', this.files[0]);
+
+            $.ajax({
+                url: '#', // Make sure this is your correct route
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    // Update the image on success
+                    $('#profile_image').attr('src', response.new_image_url);
+                    alert('Profile picture updated successfully!');
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    alert('Error updating profile picture!');
+                }
+            });
+        });
+    });
     </script>
 @endsection
