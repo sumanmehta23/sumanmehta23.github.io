@@ -26,6 +26,7 @@ class User extends Authenticatable
         'ib1',
         'emailToken'
     ];
+
     public $timestamps = false;
 
     /**

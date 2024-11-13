@@ -25118,6 +25118,7 @@ pre[class*=language-]>code {
 
 .pc-header .user-avtar {
     width: 40px;
+    height: 40px;
     border-radius: 50%
 }
 

@@ -35,6 +35,28 @@ class Users extends Controller
             return response()->json(['message' => 'Current Password is not matched'], 422);
         }
     }
+    public function changeProfileImage(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $email = auth()->user()->email;
+        $user = DB::table('aspnetusers')->where('email', $email)->first();
+
+        if ($user && $request->hasFile('profile_picture')) {
+            // Store the uploaded file in the 'profile_images' directory within 'public' storage
+            $filePath = $request->file('profile_picture')->store('profile_images', 'public');
+            // Extract only the filename from the stored path
+            $filename = basename($filePath);
+            // Update the database with only the filename
+            DB::table('aspnetusers')->where('email', $email)->update(['profile_image_url' => $filename]);
+            return response()->json(['success' => 'Profile Image Successfully Changed']);
+        }
+
+        return response()->json(['error' => 'Unable to update profile image'], 400);
+    }
+
     public function sumsub()
     {
         $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key

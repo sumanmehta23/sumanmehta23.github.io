@@ -146,8 +146,8 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center w-75">
                                     <div class="flex-shrink-0">
-                                        <img src="/assets/images/user.png" alt="user-image"
-                                            class="user-avtar wid-70 rounded-circle">
+                                        <img src="{{ Storage::url('profile_images/' . $user->profile_image_url) }}" alt="user-image"
+                                            class="user-avtar wid-70 hei-70 rounded-circle">
                                     </div>
                                     <div class="flex-grow-1 ms-3 me-2 w-75">
                                         @auth
@@ -415,18 +415,18 @@
                                 <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false"
                                     data-bs-auto-close="outside" aria-expanded="false">
-                                    <img src="/assets/images/user.png" alt="user-image" class="user-avtar">
+                                    <img src="{{ Storage::url('profile_images/' . $user->profile_image_url) }}" alt="user-image" class="user-avtar">
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
-                                        <h5 class="m-0">Profile</h5>
+                                        <h5 class="m-0">Profssile</h5>
                                     </div>
                                     <div class="dropdown-body">
                                         <div class="profile-notification-scroll position-relative"
                                             style="max-height: calc(-225px + 100vh);">
                                             <div class="d-flex mb-1">
                                                 <div class="flex-shrink-0">
-                                                    <img src="/assets/images/user.png" alt="user-image"
+                                                    <img src="{{ Storage::url('profile_images/' . $user->profile_image_url) }}" alt="user-image"
                                                         class="user-avtar wid-35">
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">

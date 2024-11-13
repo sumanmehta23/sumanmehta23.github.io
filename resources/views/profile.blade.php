@@ -1,10 +1,59 @@
 @extends('layouts.crm.crm')
 @section('content')
 <style>
-    #profile_image{
-        cursor: pointer;
-    }
+.profile-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Darken the image on hover */
+.profile-image-container:hover .img-profile-avatar {
+    opacity: 0.5; /* Make the image half transparent */
+}
+
+/* Style the camera icon */
+.edit-icon {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the icon */
+    opacity: 0; /* Hidden by default */
+    background-color: rgba(0, 0, 0, 0.43); /* Dark background */
+    color: rgb(255, 255, 255); /* White icon */
+    font-size: 45px;
+    border-radius: 50%;
+    width: 95px; /* Adjusted size */
+    height: 95px; /* Adjusted size */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease; /* Smooth transition */
+}
+
+/* Show the camera icon on hover */
+.profile-image-container:hover .edit-icon {
+    opacity: 1; /* Show the camera icon when hovering over the container */
+}
+
+/* Style the profile image */
+.img-profile-avatar {
+    width: 100px; /* Adjust as needed */
+    height: 100px; /* Adjust as needed */
+    margin-top: -25px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white; /* Inner white border */
+}
+
+/* Increase icon size on hover */
+.edit-icon:hover i {
+    transform: scale(1.1);
+    font-size: 30px;
+}
+
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <div class="pc-container">
         <div class="pc-content">
             <div class="page-header">
@@ -24,16 +73,16 @@
                         <div class="card-body pt-0">
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
-                                    <img id="profile_image"  class="img-fluid img-profile-avtar" src="{{ asset('assets/images/user.png') }}"
-                                        alt="User image">
-                                         <!-- Hidden File Input to Trigger Image Upload -->
-        <input type="file" id="profile_picture_input" style="display: none;">
-        <div class="edit-text" 
-            style="position: absolute; bottom: 10px; left: 10px; color: white; background-color: rgba(0, 0, 0, 0.5); padding: 5px 10px; border-radius: 5px; display: none;">
-            Edit Picture
-        </div>
-                                    
+                                    <div class="profile-image-container">
+                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle" src="{{ Storage::url('profile_images/' . $user->profile_image_url) }}" alt="User image">
+                                        <!-- Camera Icon Input (Only Visible on Hover) -->
+                                        <input type="file" id="profile_picture_input" style="display: none;" accept="image/*">
+                                        <label for="profile_picture_input" class="edit-icon">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                    </div>
                                 </div>
+
                                 <div class="col">
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
@@ -320,6 +369,7 @@
 
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
@@ -403,7 +453,7 @@
             formData.append('profile_picture', this.files[0]);
 
             $.ajax({
-                url: '#', // Make sure this is your correct route
+                url: "{{ route('profileimage.change') }}", // Make sure this is your correct route
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -411,7 +461,15 @@
                 success: function(response) {
                     // Update the image on success
                     $('#profile_image').attr('src', response.new_image_url);
-                    alert('Profile picture updated successfully!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Profile picture updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        // Reload the page after the popup closes
+                        location.reload();
+                    });
                 },
                 error: function(xhr, status, error) {
                     // Handle error

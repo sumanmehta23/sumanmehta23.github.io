@@ -90,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
+    Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
     Route::get('/trade-deposit', [TradeDeposit::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDeposit::class, 'deposit'])->name('trade-deposit_store');
 
