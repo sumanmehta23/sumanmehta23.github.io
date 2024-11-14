@@ -9,6 +9,7 @@ use App\Models\ClientWallets;
 use App\Models\KycUpdate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 class Users extends Controller
 {
     public function profile()
@@ -45,6 +46,14 @@ class Users extends Controller
         $user = DB::table('aspnetusers')->where('email', $email)->first();
 
         if ($user && $request->hasFile('profile_picture')) {
+            // Check if there's an existing profile image and delete it
+            if ($user->profile_image_url) {
+                // Delete the old image from storage
+                $oldImagePath = 'profile_images/' . $user->profile_image_url;
+                if (Storage::disk('public')->exists($oldImagePath)) {
+                    Storage::disk('public')->delete($oldImagePath);
+                }
+            }
             // Store the uploaded file in the 'profile_images' directory within 'public' storage
             $filePath = $request->file('profile_picture')->store('profile_images', 'public');
             // Extract only the filename from the stored path

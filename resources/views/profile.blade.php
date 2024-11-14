@@ -74,7 +74,7 @@
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
                                     <div class="profile-image-container">
-                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle" src="{{ Storage::url('profile_images/' . $user->profile_image_url) }}" alt="User image">
+                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle" src="{{ isset($user->profile_image_url) ? Storage::url('profile_images/' . $user->profile_image_url) : '\assets\images\user.png' }}" alt="User image">
                                         <!-- Camera Icon Input (Only Visible on Hover) -->
                                         <input type="file" id="profile_picture_input" style="display: none;" accept="image/*">
                                         <label for="profile_picture_input" class="edit-icon">
