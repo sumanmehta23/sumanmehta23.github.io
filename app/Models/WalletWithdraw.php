@@ -13,6 +13,7 @@ class WalletWithdraw extends Model
         'email',
         'withdraw_amount',
         'withdraw_type',
+        'client_bank',
         'transaction_id',
         'status',
         'created_at',

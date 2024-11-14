@@ -1,4 +1,6 @@
-
+@php
+    $user=session('user');
+@endphp
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="{{ asset($settings['favicon']) }}">

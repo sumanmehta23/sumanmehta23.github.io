@@ -1,11 +1,17 @@
 <?php
+
 namespace App\Http\Controllers\admin;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use DB;
 use App\Models\WalletWithdraw;
 use App\Models\TotalBalance;
+use App\Models\ClientWallets;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class Transaction extends Controller
 {
@@ -21,8 +27,6 @@ class Transaction extends Controller
         }
         $id = $request->id;
         return view('admin.transactions', compact('id'));
-
-
     }
     public function pending(Request $request)
     {
@@ -176,18 +180,98 @@ class Transaction extends Controller
         $email = $validatedData['email'];
         $depositAmount = $validatedData['amount'];
         $did = $request->input('id');
-        $transaction_id=$request->input('transaction_id');
+        $transaction_id = $request->input('transaction_id');
         $transaction = WalletWithdraw::whereRaw('md5(id) = ?', [$did])->first();
         if ($transaction) {
             $transaction->AdminRemark = $description;
             $transaction->Status = $status;
-            $transaction->transaction_id=$transaction_id;
+            $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
                 TotalBalance::create([
                     'email' => $email,
                     'withdraw_amount' => $depositAmount,
                 ]);
+
+                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_bank > 0) {
+
+                    $bankDetails = ClientWallets::where('client_wallet_id', $transaction->client_bank)->first();
+                    $walletNetwork = $bankDetails->wallet_network;
+                    $walletCurrency = $bankDetails->wallet_currency;
+                    $walletAddress = $bankDetails->wallet_address;
+                    $amount = $transaction->withdraw_amount;
+                    
+                   
+                    $payload = [
+                        "profile_id" => env('CRYPTOCHILL_PROFILE_ID'),
+                        "passthrough" => json_encode(["trans_id" => $did]),
+                        "reference_id" => "LQHPRW" . str_pad($transaction->id, 9, '0', STR_PAD_LEFT) . "-" . rand(100, 999),
+                        "kind" => $walletNetwork,
+                        "recipients" => [
+                            [
+                                "amount" => $amount,
+                                "currency" => $walletCurrency,
+                                "address" => $walletAddress,
+                                "notes" => $email . " WD# " . $transaction->id
+                            ]
+                        ],
+                        "request" => "/v1/payouts/",
+                        "nonce" => time() * 1000
+                    ];
+
+                    $response = Http::withHeaders([
+                        'X-CC-KEY' => env('CRYPTOCHILL_API_KEY'),
+                        'X-CC-PAYLOAD' => base64_encode(json_encode($payload)),
+                        'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), env('CRYPTOCHILL_API_SECRET')),
+                    ])->post('https://api.cryptochill.com/v1/payouts/', $payload);
+                
+                    // Log the response
+                    Log::channel('payouts')->info("Request Payload: " . json_encode($payload));
+                    Log::channel('payouts')->info("API Response: " . $response->body());
+
+                    // Check if there was an error decoding the JSON
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new Exception("Error decoding response payload: " . json_last_error_msg());
+                    }
+
+                    $responseData=json_decode($response);
+
+                    // Process the result from the API
+                    if (isset($responseData->result) && isset($responseData->result->id)) {
+                        $payoutResult = $responseData->result;
+
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction) {
+                            // Update wallet_withdraw table with transaction_id and status
+                            WalletWithdraw::where('id', $transaction->id)
+                                ->orWhere(DB::raw('MD5(id)'), '=', $request->did)
+                                ->update([
+                                    'transaction_id' => $payoutResult->id,
+                                    'payout_res' => $response->body(),
+                                    'payout_req' => json_encode($payoutResult->passthrough),
+                                    'status' => 1  // Set status to 1 (success)
+                                ]);
+                        });
+                    } else {
+                        // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
+                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
+                            // Update wallet_withdraw table with response and set status to 0 (error state)
+                            WalletWithdraw::where('id', $transaction->id)
+                                ->orWhere(DB::raw('MD5(id)'), '=', $request->did)
+                                ->update([
+                                    'payout_res' => $response->body(),
+                                    'payout_req' => json_encode($responseData),
+                                    'status' => 0
+                                ]);
+
+                            // Delete total_balance entry
+                            TotalBalance::where('id', $transaction->id)->delete();
+                        });
+
+                        // Throw an exception with the error message from the response
+                        throw new Exception("Error Processing Request: " . $responseData->message);
+                    }
+                }
+
                 $deposit_details = WalletWithdraw::with('user')
                     ->whereRaw('md5(id) = ?', [$did])
                     ->first();
@@ -221,5 +305,4 @@ class Transaction extends Controller
             return redirect()->back()->with('error', 'Transaction Not Found');
         }
     }
-
 }
