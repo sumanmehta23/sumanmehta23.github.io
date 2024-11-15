@@ -10,6 +10,7 @@ use App\Models\KycUpdate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 class Users extends Controller
 {
     public function profile()
@@ -38,9 +39,18 @@ class Users extends Controller
     }
     public function changeProfileImage(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // If validation fails, return a detailed error response
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $email = auth()->user()->email;
         $user = DB::table('aspnetusers')->where('email', $email)->first();
