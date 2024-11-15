@@ -1,4 +1,21 @@
-
+@php
+    $user = DB::table('aspnetusers')->where('email', session('user')->email)->first();
+@endphp
+@if (isset($user))
+    @if ($user->profile_image_url==NULL)
+        @php
+            $profile_image_url = asset('assets/images/user.png');
+        @endphp
+    @else
+        @php
+            $profile_image_url = Storage::url('profile_images/' . $user->profile_image_url) ;
+        @endphp
+    @endif
+@else
+    @php
+        $profile_image_url = asset('assets/images/user.png');
+    @endphp
+@endif
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="{{ asset($settings['favicon']) }}">
@@ -146,8 +163,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center w-75">
                                     <div class="flex-shrink-0">
-                                        <img src="/assets/images/user.png" alt="user-image"
-                                            class="user-avtar wid-70 rounded-circle">
+                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle">
                                     </div>
                                     <div class="flex-grow-1 ms-3 me-2 w-75">
                                         @auth
@@ -156,15 +172,9 @@
                                                 tooltip="{{ session('user')->email }}">{{ session('user')->email }}</small>
                                         @endauth
                                     </div>
-                                    <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse"
-                                        href="/dashboard#pc_sidebar_userlink">
-                                        <svg class="pc-icon">
-                                            <use xlink:href="#custom-sort-outline"></use>
-                                        </svg>
-                                    </a>
                                 </div>
-                                <div class="collapse pc-user-links" id="pc_sidebar_userlink">
-                                    <div class="pt-3">
+                                <div class="pc-user-links">
+                                    <div class="pt-3 d-flex flex-column">
                                         <a href="/user-profile" class=""><i class="ti ti-user"></i><span>My
                                                 Account</span></a>
                                         <a href="/logout" id="logout-link"><i
@@ -239,7 +249,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="/support" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -249,7 +259,7 @@
                                     <span class="pc-mtext">Support</span>
                                     <span class="pc-badge"><i class="ti ti-headset"></i></span>
                                 </a>
-                            </li>
+                            </li> --}}
                             {{-- @if(!empty($ibResult)) --}}
                             <li class="pc-item">
                                 <a href="/ib-profile" class="pc-link">
@@ -415,19 +425,22 @@
                                 <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false"
                                     data-bs-auto-close="outside" aria-expanded="false">
-                                    <img src="/assets/images/user.png" alt="user-image" class="user-avtar">
+                                    {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
+
+                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar">
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
-                                        <h5 class="m-0">Profile</h5>
+                                        <h5 class="m-0">Profssile</h5>
                                     </div>
                                     <div class="dropdown-body">
                                         <div class="profile-notification-scroll position-relative"
                                             style="max-height: calc(-225px + 100vh);">
                                             <div class="d-flex mb-1">
                                                 <div class="flex-shrink-0">
-                                                    <img src="/assets/images/user.png" alt="user-image"
-                                                        class="user-avtar wid-35">
+                                                    {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image"
+                                                        class="user-avtar wid-35"> --}}
+                                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35">
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <h6 class="mb-1">{{ ucfirst(session('user')->fullname) }} 🖖</h6>

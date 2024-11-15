@@ -69,7 +69,7 @@
                                         <div data-v-97e32e5a="" class="row my-2">
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Email Id</label><input data-v-97e32e5a=""
+                                                        class="form-label">Email</label><input data-v-97e32e5a=""
                                                         type="email" id="email" class="form-control"
                                                         placeholder="Email" required="" name="email"><!----></div>
                                             </div>

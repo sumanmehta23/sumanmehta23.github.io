@@ -1,5 +1,59 @@
 @extends('layouts.crm.crm')
 @section('content')
+<style>
+.profile-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Darken the image on hover */
+.profile-image-container:hover .img-profile-avatar {
+    opacity: 0.5; /* Make the image half transparent */
+}
+
+/* Style the camera icon */
+.edit-icon {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the icon */
+    opacity: 0; /* Hidden by default */
+    background-color: rgba(0, 0, 0, 0.43); /* Dark background */
+    color: rgb(255, 255, 255); /* White icon */
+    font-size: 45px;
+    border-radius: 50%;
+    width: 95px; /* Adjusted size */
+    height: 95px; /* Adjusted size */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease; /* Smooth transition */
+}
+
+/* Show the camera icon on hover */
+.profile-image-container:hover .edit-icon {
+    opacity: 1; /* Show the camera icon when hovering over the container */
+}
+
+/* Style the profile image */
+.img-profile-avatar {
+    width: 100px; /* Adjust as needed */
+    height: 100px; /* Adjust as needed */
+    margin-top: -25px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white; /* Inner white border */
+}
+
+/* Increase icon size on hover */
+.edit-icon:hover i {
+    transform: scale(1.1);
+    font-size: 30px;
+}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <div class="pc-container">
         <div class="pc-content">
             <div class="page-header">
@@ -16,14 +70,19 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card social-profile">
-                        <img src="{{ asset('assets/img-profile-cover-DJAPkiCO.png') }}" alt=""
-                            class="w-100 card-img-top">
                         <div class="card-body pt-0">
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
-                                    <img class="img-fluid img-profile-avtar" src="{{ asset('assets/images/user.png') }}"
-                                        alt="User image">
+                                    <div class="profile-image-container">
+                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle" src="{{ isset($user->profile_image_url) ? Storage::url('profile_images/' . $user->profile_image_url) : '\assets\images\user.png' }}" alt="User image">
+                                        <!-- Camera Icon Input (Only Visible on Hover) -->
+                                        <input type="file" id="profile_picture_input" style="display: none;" accept="image/*">
+                                        <label for="profile_picture_input" class="edit-icon">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                    </div>
                                 </div>
+
                                 <div class="col">
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
@@ -128,7 +187,7 @@
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
                                                             <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/empty.png') }}"
+                                                                    src="{{ asset('assets/images/KYC.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
                                                         <h6 class="text-center text-secondary f-w-400 mb-4 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
@@ -143,12 +202,11 @@
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
                                                             <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/ben-02.png') }}"
+                                                                    src="{{ asset('assets/images/kyc_verified.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
                                                         <h6 class="text-center btn btn-light-success font-bold ps-5 pe-5">
-                                                            KYC
-                                                            Verified</h6>
+                                                            KYC Verified</h6>
                                                     </div>
                                                 </div>
                                             @else
@@ -311,6 +369,7 @@
 
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
@@ -375,5 +434,49 @@
                 }
             });
         });
+        $(document).ready(function() {
+        // Show "Edit Picture" text when hovering over the image
+        $('#profile_image').hover(function() {
+            $('.edit-text').fadeIn(); // Show "Edit Picture" text
+        }, function() {
+            $('.edit-text').fadeOut(); // Hide "Edit Picture" text
+        });
+
+        // Trigger file input when image is clicked
+        $('#profile_image').click(function() {
+            $('#profile_picture_input').click(); // Open file input dialog
+        });
+
+        // Handle file input change (when user selects an image)
+        $('#profile_picture_input').change(function() {
+            var formData = new FormData();
+            formData.append('profile_picture', this.files[0]);
+
+            $.ajax({
+                url: "{{ route('profileimage.change') }}", // Make sure this is your correct route
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    // Update the image on success
+                    $('#profile_image').attr('src', response.new_image_url);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Profile picture updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        // Reload the page after the popup closes
+                        location.reload();
+                    });
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    alert('Error updating profile picture!');
+                }
+            });
+        });
+    });
     </script>
 @endsection

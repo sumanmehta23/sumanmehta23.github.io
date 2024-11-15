@@ -29,7 +29,7 @@ class Transactions extends Controller
 
         // Fetching internal transfers
         $internal_transfer = InternalTransfer::where('email', $email)
-            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer'])
+            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
             ->where('status', 1)
             ->orderBy('date', 'desc')
             ->get();
