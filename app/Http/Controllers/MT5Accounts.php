@@ -129,11 +129,11 @@ class MT5Accounts extends Controller
                 session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
             }
             if ($type == "demo") {
-                $getUser = DemoAccount::with('accountType')
+                $getUser = DemoAccount::with('accountType', 'bonusTrans')
                     ->where('trade_id', $trade_id)
                     ->first();
             } else {
-                $getUser = LiveAccount::with('accountType')
+                $getUser = LiveAccount::with('accountType', 'bonusTrans')
                     ->where('trade_id', $trade_id)
                     ->first();
             }

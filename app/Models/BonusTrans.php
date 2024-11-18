@@ -26,4 +26,19 @@ class BonusTrans extends Model
      */
     public $timestamps=false;
     protected $fillable = ['email', 'trade_id', 'bonus_amount', 'bonus_currency', 'bonus_type', 'bonus_code_id', 'bonus_code_desc', 'bonus_date', 'status', 'adminRemark', 'Js_Admin_Remark_Date', 'created_by'];
+   
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function liveaccount()
+    {
+        return $this->belongsTo(LiveAccount::class, 'trade_id',  'trade_id');
+    }
+
+    public function demoaccount()
+    {
+        return $this->belongsTo(LiveAccount::class, 'trade_id', 'trade_id');
+    }
 }
