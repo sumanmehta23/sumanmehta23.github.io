@@ -26,4 +26,10 @@ class DemoAccount extends Model
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'ac_group');
     }
+
+
+    public function bonusTrans()
+    {
+        return $this->hasMany(BonusTrans::class, 'trade_id',  'trade_id');
+    }
 }

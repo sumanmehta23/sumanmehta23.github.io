@@ -178,10 +178,11 @@
                                                     <div class="flex-shrink-0"><i class="ph-duotone ph-cactus f-20"></i>
                                                     </div>
                                                     <div class="flex-grow-1 ms-2">
-                                                        <p class="mb-0">Credit</p>
+                                                        <p class="mb-0">Bonus</p>
                                                     </div>
                                                 </div>
-                                                <h5 class="mb-0 f-w-400">${{ $account->Credit ?? '' }}</h5>
+                                                {{-- <h5 class="mb-0 f-w-400">${{ $account->Credit ?? '' }}</h5> --}}
+                                                <h5 class="mb-0 f-w-400">${{ $getUser ? ($getUser->bonusTrans->sum('bonus_amount') ?? '') : 0 }}</h5>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">

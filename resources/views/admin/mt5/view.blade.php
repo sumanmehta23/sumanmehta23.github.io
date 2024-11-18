@@ -162,13 +162,13 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Credit</p>
+                                                                <p class="mb-0 f-20">Balance</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->Credit)) {
-                                                                        echo number_format($account->Credit , 2) . "$";
+                                                                    if (isset($getUser->total_bonus_amount)) {
+                                                                        echo "$" . number_format($getUser->total_bonus_amount , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>

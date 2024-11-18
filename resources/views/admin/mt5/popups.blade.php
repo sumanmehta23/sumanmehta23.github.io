@@ -153,13 +153,13 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
+                                        {{-- <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
                                                 REMARK:</label>
                                             <div class="col-lg-8"><input id="description" name="description"
                                                     rows="3" class="mt-2 form-control"
                                                     placeholder="Add a remark" required>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                         <div class="">
                                             <div class="row">
                                                 <div class="col-lg-4"></div>
