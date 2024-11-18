@@ -162,7 +162,7 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Balance</p>
+                                                                <p class="mb-0 f-20">Bonus</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
