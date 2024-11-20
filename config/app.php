@@ -172,7 +172,6 @@ return [
         App\Providers\Mt5ApiServiceProvider::class,
         App\Providers\IbServiceProvider::class,
         RealRashid\SweetAlert\SweetAlertServiceProvider::class,
-        Krlove\EloquentModelGenerator\Provider\GeneratorServiceProvider::class,
 
     ])->toArray(),
 
