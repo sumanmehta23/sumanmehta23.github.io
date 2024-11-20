@@ -359,7 +359,7 @@
                                                                                         <input name="user[deposit]"
                                                                                             id="crypto_deposit_amount"
                                                                                             min="10" type="number"
-                                                                                            value="10"
+                                                                                            {{-- value="10" --}}
                                                                                             class="form-control fill tradedeposit_amount"
                                                                                             placeholder="Minimum $10"
                                                                                             aria-label="Amount" required>
