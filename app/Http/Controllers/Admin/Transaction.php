@@ -83,7 +83,7 @@ class Transaction extends Controller
                 })
                 ->where(function ($query) {
                     $id = request()->id;
-                    $query->where(DB::raw('md5(wd.id)'), $id);
+                    $query->where(DB::raw('wd.id'), $id);
                 })
                 ->selectRaw("
                     cbd.bankName, cbd.branch, cbd.bankDetails, cbd.accountNumber, cbd.code, cbd.swift_code, cbd.ClientName,
