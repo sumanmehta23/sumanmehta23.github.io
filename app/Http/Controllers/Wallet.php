@@ -21,14 +21,12 @@ class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
-
-    protected $callbackToken;
+   
 
     public function __construct(Payment $paymentController)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
-        $this->callbackToken = env('CRYPTOCHILL_CALLBACK_TOKEN');
 
     }
     public function index()
@@ -264,16 +262,17 @@ class Wallet extends Controller
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
         $callback_id = $payload['callback_id'] ?? null;
-
+        $callbackToken=config('services.cryptochill.callbacktoken');
         // Validate the signature
         if ($callback_id !== null) {
-            $is_valid = $signature === $this->encodeHmac($this->callbackToken, $callback_id);
+            $is_valid = $signature === $this->encodeHmac($callbackToken, $callback_id);
         } else {
             $is_valid = false;
         }
 
         // Throw an error if the signature does not match
         if (!$is_valid) {
+            info('Failed to verify CryptoChill callback signature: ' . $callback_id ." and token is  ".$callbackToken);
             throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
         }
 
