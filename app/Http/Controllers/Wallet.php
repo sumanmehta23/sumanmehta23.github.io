@@ -261,7 +261,7 @@ class Wallet extends Controller
 
         // Throw an error if the signature does not match
         if (!$is_valid) {
-            info('Failed to verify CryptoChill callback signature: ' . $callback_id ." ".$callbackToken);
+            info('Failed to verify CryptoChill callback signature: ' . $callback_id ." and token is  ".$callbackToken);
             throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
         }
 
