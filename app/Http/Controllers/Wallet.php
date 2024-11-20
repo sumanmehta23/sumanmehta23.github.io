@@ -248,7 +248,7 @@ class Wallet extends Controller
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
-
+        Log::info($payload);
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
         $callback_id = $payload['callback_id'] ?? null;
