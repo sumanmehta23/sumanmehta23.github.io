@@ -87,7 +87,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
     Route::post('/wallet_withdrawal', [Wallet::class, 'withdrawal'])->name('wallet_withdrawal_store');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
-    Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
     Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
@@ -100,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
+Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
 Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/', [Login::class, 'showLoginForm']);
