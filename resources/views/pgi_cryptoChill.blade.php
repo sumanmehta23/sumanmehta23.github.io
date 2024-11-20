@@ -2,9 +2,9 @@
 <script type="text/javascript">
   window.isCalled = 0;
   localStorage.setItem('isCalled', 'false');
-  $(document).ready(function() {
-    $("#crypto_deposit_amount").val("10");
-  });
+//   $(document).ready(function() {
+//     $("#crypto_deposit_amount").val("10");
+//   });
   $("#paynow").attr("disabled", "true");
   $("#crypto_deposit_amount").on('change keypress keydown keyup', function() {
     if ($(this).val() >= 10) {
