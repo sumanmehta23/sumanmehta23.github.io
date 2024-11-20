@@ -190,7 +190,8 @@ var customerID = "{{auth()->user()->id}}";
       },
       success: function(data) {
         // console.log("data==> ", data);
-        if (data.trim() === "true") {
+       
+        if (data.status === "true") {
           window.isCalled = 1;
           swal.fire({
             icon: "success",
