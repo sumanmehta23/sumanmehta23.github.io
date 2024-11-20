@@ -335,9 +335,8 @@
                                                                     <input type="hidden" name="user[email]"
                                                                         value="{{ session('clogin') }}" min="10"
                                                                         required class="form-control fill">
-                                                                    <input class="user_trade_id" type="hidden"
-                                                                        name="trade_id" value=""
-                                                                        class="form-control fill">
+                                                                    <input class="user_trade_id form-control fill" type="hidden"
+                                                                        name="trade_id" value="">
                                                                     <div class="row">
                                                                         <div class="col-12 mt-2">
                                                                             <input type="hidden"
