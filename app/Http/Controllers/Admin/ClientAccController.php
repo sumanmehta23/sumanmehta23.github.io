@@ -35,7 +35,7 @@ class ClientAccController extends Controller
         $rmCondition->orderBy('liveaccount.id', 'desc');
 
         // Select the fields and execute the query
-        $accounts = $rmCondition->select('liveaccount.*', DB::raw('md5(aspnetusers.id) as enc_id'), 'account_types.ac_group')
+        $accounts = $rmCondition->select('liveaccount.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
             ->get();
         return view('admin.client_accounts.live_accounts', compact("accounts"));
     }

@@ -994,12 +994,12 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('md5(email)'), '=', $email)
+            ->where(DB::raw('email'), '=', $email)
             ->first();
 
         try {
             $updated = DB::table('aspnetusers')
-                ->where(DB::raw('md5(email)'), '=', $email)
+                ->where(DB::raw('email'), '=', $email)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
@@ -1050,7 +1050,7 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select($ib_columns)
-            ->where(DB::raw('md5(email)'), '=', $id)
+            ->where(DB::raw('email'), '=', $id)
             ->first();
 
         echo json_encode((array) $result);
@@ -1061,7 +1061,7 @@ and ib1.status = 0
 
         $results = [];
         // $group_id = DB::table('aspnetusers')
-        //   ->where(DB::raw('md5(email)'), '=', $id)
+        //   ->where(DB::raw('email'), '=', $id)
         //   ->value('group_id');
         // if ($group_id !== null) {
         $results = DB::table('emplist as emp')
@@ -1077,7 +1077,7 @@ and ib1.status = 0
     {
         $result = DB::table('aspnetusers')
             ->select(
-                DB::raw('md5(email) as id'),
+                DB::raw('email as id'),
                 'email',
                 'password',
                 'fullname',
@@ -1088,7 +1088,7 @@ and ib1.status = 0
                 // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
                 // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
             )
-            ->where(DB::raw('md5(email)'), '=', $data['id'])
+            ->where(DB::raw('email'), '=', $data['id'])
             ->first();
 
         echo json_encode((array) $result);
@@ -1100,9 +1100,9 @@ and ib1.status = 0
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::whereRaw('md5(email) = ?', [$clientId])->first();
+            $result = Ib1::whereRaw('email = ?', [$clientId])->first();
             if (!$result) {
-                $user = User::whereRaw('md5(email) = ?', [$clientId])->first();
+                $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
                     $ib1 = new Ib1();
                     $ib1->uid = $user->uid;
@@ -1117,7 +1117,7 @@ and ib1.status = 0
                     $ib1->save();
                 }
             }
-            $updated = Ib1::whereRaw('md5(email) = ?', [$clientId])
+            $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
                     'acc_type' => $ibGroup

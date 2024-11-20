@@ -142,7 +142,7 @@ class ClientController extends Controller
                     return redirect()->back()->withErrors('Some IB fields contain duplicate values.');
                 } else {
                     $currentValues = DB::table('aspnetusers')
-                        ->whereRaw('md5(email) = ?', [$email])
+                        ->whereRaw('email = ?', [$email])
                         ->select('ib1', 'ib2', 'ib3', 'ib4', 'ib5', 'ib6', 'ib7', 'ib8', 'ib9', 'ib10', 'ib11', 'ib12', 'ib13', 'ib14', 'ib15')
                         ->first();
 
@@ -160,7 +160,7 @@ class ClientController extends Controller
 
                     if (!empty($updateFields)) {
                         DB::table('aspnetusers')
-                            ->whereRaw('md5(email) = ?', [$email])
+                            ->whereRaw('email = ?', [$email])
                             ->update($updateFields);
                         $this->addToUserLog([
                             'email' => $email,
@@ -292,7 +292,7 @@ class ClientController extends Controller
             try {
                 // Update user in the database
                 $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('md5(email)'), $code)
+                    ->where(DB::raw('email'), $code)
                     ->update([
                         'fullname' => $fullname,
                         'password' => $password,
@@ -376,8 +376,8 @@ class ClientController extends Controller
         $user = DB::table('aspnetusers as ap')
             ->leftJoin('ib1', 'ib1.email', '=', 'ap.email')
             ->select('ap.*', 'ib1.status as ib_status', 'ib1.acc_type as ib_group')
-            ->where(DB::raw('md5(ap.id)'), $id)
-            ->orWhere(DB::raw('md5(ap.email)'), $id)
+            ->where(DB::raw('ap.id'), $id)
+            ->orWhere(DB::raw('ap.email'), $id)
             ->first();
         $acc_groups = DB::table('ib_plans')
             ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')

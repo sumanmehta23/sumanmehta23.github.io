@@ -388,30 +388,30 @@ class MT5Controller extends Controller
 
         // Total approved deposits
         $total_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('MD5(trade_id)'), $trade_id)
+            ->where(DB::raw('trade_id'), $trade_id)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
         $unapproved_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('MD5(trade_id)'), $trade_id)
+            ->where(DB::raw('trade_id'), $trade_id)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
         $total_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('MD5(trade_id)'), $trade_id)
+            ->where(DB::raw('trade_id'), $trade_id)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
         $unapproved_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('MD5(trade_id)'), $trade_id)
+            ->where(DB::raw('trade_id'), $trade_id)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
         $bonus_trans = BonusTrans::where('status', 1)
-            ->where(DB::raw('MD5(trade_id)'), $trade_id)
+            ->where(DB::raw('trade_id'), $trade_id)
             ->get();
         $account_types = DB::table('account_types')->where('status', 1)->get();
 

@@ -12,7 +12,7 @@ class SearchController extends Controller
     {
         // Initialize the base query.
         $query = DB::table('liveaccount')
-            ->select('liveaccount.*', DB::raw('MD5(aspnetusers.id) as enc_id'), 'account_types.ac_group')
+            ->select('liveaccount.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
             ->leftJoin('aspnetusers', 'aspnetusers.email', '=', 'liveaccount.email')
             ->join('account_types', 'account_types.ac_index', '=', 'liveaccount.account_type');
 

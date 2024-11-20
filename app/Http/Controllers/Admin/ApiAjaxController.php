@@ -31,22 +31,22 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('get_groupcat') && $request->has('id')) {
-            $groupCat = Mt5GroupCategory::where(DB::raw('md5(mt5_grp_cat_id)'), $request->id)->first();
+            $groupCat = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)->first();
             return $groupCat ? response()->json($groupCat) : response()->json(false);
         }
 
         if ($request->has('get_groupMains') && $request->has('id')) {
-            $groupMain = Mt5Group::where(DB::raw('md5(mt5_group_id)'), $request->id)->first();
+            $groupMain = Mt5Group::where(DB::raw('mt5_group_id'), $request->id)->first();
             return $groupMain ? response()->json($groupMain) : response()->json(false);
         }
 
         if ($request->has('get_ibplan') && $request->has('id')) {
-            $ibPlan = IbCategory::where(DB::raw('md5(ib_cat_id)'), $request->id)->first();
+            $ibPlan = IbCategory::where(DB::raw('ib_cat_id'), $request->id)->first();
             return $ibPlan ? response()->json($ibPlan) : response()->json(false);
         }
 
         if ($request->has('group_update') && $request->id) {
-            $updated = Mt5GroupCategory::where(DB::raw('md5(mt5_grp_cat_id)'), $request->id)
+            $updated = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)
                 ->update([
                     'mt5_grp_cat_name' => $request->mt5_grp_cat_name,
                     'mt5_grp_cat_desc' => $request->mt5_grp_cat_desc,
@@ -88,10 +88,10 @@ class ApiAjaxController extends Controller
         $ibStatus = $request->ib_status;
         $ibGroup = $request->ib_group;
 
-        $ib = Ib1::where(DB::raw('md5(email)'), $clientId)->first();
+        $ib = Ib1::where(DB::raw('email'), $clientId)->first();
 
         if (!$ib) {
-            $user = User::where(DB::raw('md5(email)'), $clientId)->first();
+            $user = User::where(DB::raw('email'), $clientId)->first();
             if ($user) {
                 $ib = new Ib1();
                 $ib->uid = $user->uid;
@@ -107,7 +107,7 @@ class ApiAjaxController extends Controller
             }
         }
 
-        $ibUpdate = Ib1::where(DB::raw('md5(email)'), $clientId)
+        $ibUpdate = Ib1::where(DB::raw('email'), $clientId)
             ->update(['status' => $ibStatus, 'acc_type' => $ibGroup]);
 
         return response()->json($ibUpdate ? 'true' : 'false');
@@ -126,7 +126,7 @@ class ApiAjaxController extends Controller
 
     private function updateGroupMain($request)
     {
-        $updated = Mt5Group::where(DB::raw('md5(mt5_group_id)'), $request->id)
+        $updated = Mt5Group::where(DB::raw('mt5_group_id'), $request->id)
             ->update([
                 'mt5_group_name' => $request->mt5_group_name,
                 'mt5_group_desc' => $request->mt5_group_desc,

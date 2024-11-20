@@ -90,7 +90,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallets::where(DB::raw('md5(client_wallet_id)'), $request->id)->first();
+        $wallet = ClientWallets::where(DB::raw('client_wallet_id'), $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
@@ -166,8 +166,8 @@ class Wallet extends Controller
 
     private function createPayment($amount, $currency, $orderId, $paymentId)
     {
-        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . md5($paymentId) . "&status=success";
-        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . md5($paymentId) . "&status=cancel";
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
         $url = 'https://api.nowpayments.io/v1/invoice';
         $data = [
             'price_amount' => $amount,
