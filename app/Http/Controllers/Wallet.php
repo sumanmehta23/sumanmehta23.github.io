@@ -198,49 +198,50 @@ class Wallet extends Controller
     public function processPayment(Request $request)
     {
         if ($request->has('paymentGateway')) {
-            $depositTo = $request->input('deposit_to');
-            if (!$depositTo) {
-                return response()->json(['message' => 'Deposit designation missing..!'], 400);
-            }
-            $amount = $request->input('amount');
-            $tradeId = $request->input('trade_id');
-            $time = $request->input('time');
-            $comment = "Deposit";
-            $depositType = $request->input('deposit_type');
-            $email = auth()->user()->email;
-            try {
-                if ($depositTo == "wallet") {
-                    $callbackData = json_encode($request->input('data'));
-                    $callbackCode = json_encode($request->input('code'));
-                    $walletDeposit = new WalletDeposit();
-                    $walletDeposit->email = $email;
-                    $walletDeposit->deposit_type = $depositType;
-                    $walletDeposit->deposit_amount = $amount;
-                    $walletDeposit->company_bank = $depositType;
-                    $walletDeposit->transaction_id = $time;
-                    $walletDeposit->Status = 1;
-                    $walletDeposit->currency_type = 'USD';
-                    $walletDeposit->callback_data = $callbackData;
-                    $walletDeposit->callback_code = $callbackCode;
-                    $walletDeposit->save();
-                    $totalBalance = TotalBalance::Create(
-                        [
-                            'email' => $email,
-                            'deposit_amount' => $amount
-                        ]
-                    );
-                    $mailData=new \stdClass();
-                    $mailData->payment_amount=$amount;
-                    $mailData->fullname=session('user')['fullname'];
-                    $mailData->payment_type=$depositType;
-                    $mailData->created_at=$formattedDate = Carbon::parse($walletDeposit->created_at)->format('Y-m-d H:i:s');
-                    $mailData->payment_reference_id=$time;
-                    $this->paymentController->sendSuccessEmail($email, $amount, $mailData,$walletDeposit->id);
-                    return response()->json(['status' => true, 'message' => 'Deposit successful!'], 200);
-                }
-            } catch (Exception $e) {
-                return response()->json(['status' => false, 'message' => 'Something went wrong...!'], 500);
-            }
+            return response()->json(['status' => true, 'message' => 'Deposit successful!'], 200);
+            // $depositTo = $request->input('deposit_to');
+            // if (!$depositTo) {
+            //     return response()->json(['message' => 'Deposit designation missing..!'], 400);
+            // }
+            // $amount = $request->input('amount');
+            // $tradeId = $request->input('trade_id');
+            // $time = $request->input('time');
+            // $comment = "Deposit";
+            // $depositType = $request->input('deposit_type');
+            // $email = auth()->user()->email;
+            // try {
+            //     if ($depositTo == "wallet") {
+            //         $callbackData = json_encode($request->input('data'));
+            //         $callbackCode = json_encode($request->input('code'));
+            //         $walletDeposit = new WalletDeposit();
+            //         $walletDeposit->email = $email;
+            //         $walletDeposit->deposit_type = $depositType;
+            //         $walletDeposit->deposit_amount = $amount;
+            //         $walletDeposit->company_bank = $depositType;
+            //         $walletDeposit->transaction_id = $time;
+            //         $walletDeposit->Status = 1;
+            //         $walletDeposit->currency_type = 'USD';
+            //         $walletDeposit->callback_data = $callbackData;
+            //         $walletDeposit->callback_code = $callbackCode;
+            //         $walletDeposit->save();
+            //         $totalBalance = TotalBalance::Create(
+            //             [
+            //                 'email' => $email,
+            //                 'deposit_amount' => $amount
+            //             ]
+            //         );
+            //         $mailData=new \stdClass();
+            //         $mailData->payment_amount=$amount;
+            //         $mailData->fullname=session('user')['fullname'];
+            //         $mailData->payment_type=$depositType;
+            //         $mailData->created_at=$formattedDate = Carbon::parse($walletDeposit->created_at)->format('Y-m-d H:i:s');
+            //         $mailData->payment_reference_id=$time;
+            //         $this->paymentController->sendSuccessEmail($email, $amount, $mailData,$walletDeposit->id);
+            //         return response()->json(['status' => true, 'message' => 'Deposit successful!'], 200);
+            //     }
+            // } catch (Exception $e) {
+            //     return response()->json(['status' => false, 'message' => 'Something went wrong...!'], 500);
+            // }
         }
     }
    
