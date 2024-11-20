@@ -14,16 +14,22 @@ use App\Models\TotalBalance;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Payment;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
+   
+    protected $callbackToken;
 
     public function __construct(Payment $paymentController)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
+        $this->callbackToken = env('CRYPTOCHILL_CALLBACK_TOKEN');
+
     }
     public function index()
     {
@@ -237,6 +243,118 @@ class Wallet extends Controller
             }
         }
     }
+   
+    public function secureProcessPayment(Request $request)
+    {
+        // Get the JSON payload from the request
+        $payload = $request->json()->all();
+
+        // Get signature and callback_id fields from provided data
+        $signature = $payload['signature'] ?? null;
+        $callback_id = $payload['callback_id'] ?? null;
+
+        // Validate the signature
+        if ($callback_id !== null) {
+            $is_valid = $signature === $this->encodeHmac($this->callbackToken, $callback_id);
+        } else {
+            $is_valid = false;
+        }
+
+        // Throw an error if the signature does not match
+        if (!$is_valid) {
+            throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
+        }
+
+        // Log callback data (you can change log storage if needed)
+        $logData = "IP: " . $request->ip() . "\nPayload: " . json_encode($payload, JSON_PRETTY_PRINT) . "\n";
+
+        // Check if the callback status is transaction confirmed or complete
+        if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
+            $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
+            
+            if (isset($passedData['customerID'])) {
+                $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
+            }
+
+            Log::info($logData);
+
+            if (!isset($passedData['depositTo'])) {
+                return response()->json(['error' => 'Deposit designation missing'], 400);
+            }
+
+            $deposit_to = $passedData['depositTo'];
+            $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
+            $email = $passedData['customerEmail'];
+            $transactionId = $payload['transaction']['id'];
+            $deposit_type = "CryptoChill";
+
+            if ($deposit_to === "wallet") {
+                // Check for duplicate transaction
+                $existingDeposit = DB::table('wallet_deposit')->where('transaction_id', $transactionId)->first();
+                if ($existingDeposit) {
+                    return response()->json(['status' => 'true']);
+                }
+
+                // Prepare callback data and insert it into the database
+                $callback_data = json_encode($payload);
+                $callback_code = json_encode($payload['transaction']["status"]);
+
+                try {
+                    DB::beginTransaction();
+
+                    DB::table('wallet_deposit')->insert([
+                        'email' => $email,
+                        'deposit_type' => $deposit_type,
+                        'deposit_amount' => $amount,
+                        'company_bank' => $deposit_type,
+                        'transaction_id' => $transactionId,
+                        'status' => 1,
+                        'currency_type' => 'USD',
+                        'callback_data' => $callback_data,
+                        'callback_code' => $callback_code,
+                    ]);
+
+                    // Update total balance
+                    DB::table('total_balance')->updateOrInsert(
+                        ['email' => $email],
+                        ['deposit_amount' => DB::raw('deposit_amount + ' . $amount)]
+                    );
+
+                    DB::commit();
+                    Log::info('Transaction confirmed successfully.');
+
+                    return response()->json(['status' => 'true']);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('Transaction failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                }
+            } else {
+                // If depositTo is not "wallet", handle other cases
+                if (!isset($passedData['accountID'])) {
+                    return response()->json(['error' => 'Account ID missing'], 400);
+                }
+
+                $logData .= "Credit directly to Account ID: " . $passedData['accountID'] . "\n";
+                Log::info($logData);
+
+                // Direct credit to account logic goes here, for example:
+                // Call external API or perform other operations for direct account credit
+
+                return response()->json(['status' => 'Transaction completed.']);
+            }
+        }
+
+        return response()->json(['error' => 'Invalid callback status'], 400);
+    }
+
+    // Function to generate HMAC signature
+    private function encodeHmac($key, $msg)
+    {
+        return hash_hmac('sha256', $msg, $key);
+    }
+
+
     public function withdrawal(Request $request)
     {
         $request->validate([
