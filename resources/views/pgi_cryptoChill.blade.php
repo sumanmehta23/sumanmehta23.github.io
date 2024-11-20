@@ -94,8 +94,8 @@
   }
 
   CryptoChill.setup({
-    account: 'bc38bb94-e7da-4b56-a07a-cfe3f06bab03',
-    profile: 'f759196c-cf55-4618-b277-9f311ff3efcb',
+    account: '{{config('services.cryptochill.accountid')}}',
+    profile: '{{config('services.cryptochill.profileid')}}',
     // Event callbacks
     // onOpen: onPaymentSuccess,
     // onUpdate: onPaymentUpdate,
