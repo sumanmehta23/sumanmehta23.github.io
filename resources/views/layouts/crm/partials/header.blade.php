@@ -163,7 +163,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center w-75">
                                     <div class="flex-shrink-0">
-                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle">
+                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle" style="object-fit: cover">
                                     </div>
                                     <div class="flex-grow-1 ms-3 me-2 w-75">
                                         @auth
@@ -427,7 +427,7 @@
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
 
-                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar">
+                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar" style="object-fit: cover">
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
@@ -440,7 +440,7 @@
                                                 <div class="flex-shrink-0">
                                                     {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image"
                                                         class="user-avtar wid-35"> --}}
-                                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35">
+                                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35" style="object-fit: cover">
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <h6 class="mb-1">{{ ucfirst(session('user')->fullname) }} 🖖</h6>

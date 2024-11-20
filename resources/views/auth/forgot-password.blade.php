@@ -61,11 +61,10 @@
                                 </div>
                             </div>
                         </form>
-                        <div class="auth-footer" data-v-97e32e5a="">
-                            <p class="m-0 w-100 text-center mobile-left-align" style="font-size: 11px;" data-v-97e32e5a=""> By signing up, I acknowledge that I have read, understood, and<br> agree to the Client Agreement and consent to LQH Markets<br> contacting me with relevant updates and information <br><br> By registering you agree to our <a
-                                    href="#" data-v-97e32e5a="">Privacy Policy</a>, <a href="#"
-                                    data-v-97e32e5a="">Client Agreement</a>&amp; <a href="#"
-                                    data-v-97e32e5a="">Trading Risk Warning</a>.</p>
+                        <div class="auth-footer">
+                            <p class="m-0 w-100 text-center mobile-left-align" style="font-size: 11px;"> By signing up, I acknowledge that I have read, understood, and agree to <br> the Client Agreement and consent to LQH Markets contacting me with <br>relevant updates and information <br><br> By registering you agree to our <a
+                                    href="https://www.lqhmarkets.com/privacy-policy" >Privacy Policy</a>, <a href="https://www.lqhmarkets.com/terms-conditions">Client Agreement</a>&amp; <a href="https://www.lqhmarkets.com/risk-disclaimer"
+                                    >Trading Risk Warning</a>.</p>
                         </div>
                     </div>
                     <div  class="auth-sidecontent"
