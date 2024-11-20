@@ -21,7 +21,7 @@ class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
-   
+
     protected $callbackToken;
 
     public function __construct(Payment $paymentController)
@@ -111,7 +111,18 @@ class Wallet extends Controller
         $totals = LiveAccount::where('email', $email)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals'));
+
+        $total_wd = WalletDeposit::where('email', $email)
+            ->where('Status', 1)
+            ->sum('deposit_amount');
+
+        $total_ww = WalletWithdraw::where('email', $email)
+            ->where('Status', 1)
+            ->sum('withdraw_amount');
+
+        $wallet_balance = (float) $total_wd - (float) $total_ww;
+
+        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals','wallet_balance'));
     }
     public function showWithdrawalForm()
     {
@@ -244,7 +255,7 @@ class Wallet extends Controller
             // }
         }
     }
-   
+
     public function secureProcessPayment(Request $request)
     {
         // Get the JSON payload from the request
@@ -272,7 +283,7 @@ class Wallet extends Controller
         // Check if the callback status is transaction confirmed or complete
         if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
             $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
-            
+
             if (isset($passedData['customerID'])) {
                 $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
             }
