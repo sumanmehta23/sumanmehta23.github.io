@@ -303,7 +303,7 @@ class AjaxController extends Controller
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . md5($row->id) . '">View</a>'
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         echo json_encode(['data' => $data]);
