@@ -51,7 +51,7 @@ class Transaction extends Controller
                 })
                 ->where(function ($query) {
                     $id = request()->id;
-                    $query->where(DB::raw('md5(wd.id)'), $id);
+                    $query->where(DB::raw('wd.id'), $id);
                 })
                 ->selectRaw("
                     COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
@@ -83,7 +83,7 @@ class Transaction extends Controller
                 })
                 ->where(function ($query) {
                     $id = request()->id;
-                    $query->where(DB::raw('md5(wd.id)'), $id);
+                    $query->where(DB::raw('wd.id'), $id);
                 })
                 ->selectRaw("
                     cbd.bankName, cbd.branch, cbd.bankDetails, cbd.accountNumber, cbd.code, cbd.swift_code, cbd.ClientName,
@@ -96,7 +96,15 @@ class Transaction extends Controller
                 ")
                 ->groupBy('u.email')
                 ->first();
-            return view('admin.wallet_withdrawal_details', compact('details'));
+            if($details->client_bank>0){
+                $client_wallet = DB::table('client_wallets')
+                ->where('client_wallet_id', $details->client_bank)
+                ->where('status', 1)
+                ->first();
+            }else{
+                $client_wallet='';
+            }
+            return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
         }
     }
     public function trading_deposit_details(Request $request)
@@ -114,7 +122,7 @@ class Transaction extends Controller
                 })
                 ->where(function ($query) {
                     $id = request()->id;
-                    $query->where(DB::raw('md5(wd.id)'), $id);
+                    $query->where(DB::raw('wd.id'), $id);
                 })
                 ->selectRaw("
                     COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
@@ -144,9 +152,9 @@ class Transaction extends Controller
                 ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
                 ->where(function ($query) {
                     $id = request()->id;
-                    $query->where(DB::raw('md5(wd.id)'), $id);
+                    $query->where(DB::raw('wd.id'), $id);
                 })
-                ->where(DB::raw('md5(wd.id)'), request()->id)
+                ->where(DB::raw('wd.id'), request()->id)
                 ->selectRaw("
                     COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
                     COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
@@ -181,7 +189,7 @@ class Transaction extends Controller
         $depositAmount = $validatedData['amount'];
         $did = $request->input('id');
         $transaction_id = $request->input('transaction_id');
-        $transaction = WalletWithdraw::whereRaw('md5(id) = ?', [$did])->first();
+        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
             $transaction->AdminRemark = $description;
             $transaction->Status = $status;
@@ -200,8 +208,8 @@ class Transaction extends Controller
                     $walletCurrency = $bankDetails->wallet_currency;
                     $walletAddress = $bankDetails->wallet_address;
                     $amount = $transaction->withdraw_amount;
-                    
-                   
+
+
                     $payload = [
                         "profile_id" => env('CRYPTOCHILL_PROFILE_ID'),
                         "passthrough" => json_encode(["trans_id" => $did]),
@@ -224,7 +232,7 @@ class Transaction extends Controller
                         'X-CC-PAYLOAD' => base64_encode(json_encode($payload)),
                         'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), env('CRYPTOCHILL_API_SECRET')),
                     ])->post('https://api.cryptochill.com/v1/payouts/', $payload);
-                
+
                     // Log the response
                     Log::channel('payouts')->info("Request Payload: " . json_encode($payload));
                     Log::channel('payouts')->info("API Response: " . $response->body());
@@ -243,7 +251,7 @@ class Transaction extends Controller
                         DB::transaction(function () use ($request, $response, $payoutResult, $transaction) {
                             // Update wallet_withdraw table with transaction_id and status
                             WalletWithdraw::where('id', $transaction->id)
-                                ->orWhere(DB::raw('MD5(id)'), '=', $request->did)
+                                ->orWhere(DB::raw('id'), '=', $request->did)
                                 ->update([
                                     'transaction_id' => $payoutResult->id,
                                     'payout_res' => $response->body(),
@@ -256,7 +264,7 @@ class Transaction extends Controller
                         DB::transaction(function () use ($request, $response, $responseData, $transaction) {
                             // Update wallet_withdraw table with response and set status to 0 (error state)
                             WalletWithdraw::where('id', $transaction->id)
-                                ->orWhere(DB::raw('MD5(id)'), '=', $request->did)
+                                ->orWhere(DB::raw('id'), '=', $request->did)
                                 ->update([
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($responseData),
@@ -273,7 +281,7 @@ class Transaction extends Controller
                 }
 
                 $deposit_details = WalletWithdraw::with('user')
-                    ->whereRaw('md5(id) = ?', [$did])
+                    ->whereRaw('id = ?', [$did])
                     ->first();
                 $from = $settings['email_from_address'];
                 $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);

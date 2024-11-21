@@ -90,7 +90,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallet::where(DB::raw('md5(client_wallet_id)'), $request->id)->first();
+        $wallet = ClientWallet::where(DB::raw('client_wallet_id'), $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
@@ -109,7 +109,18 @@ class Wallet extends Controller
         $totals = LiveAccount::where('email', $email)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals'));
+
+        $total_wd = WalletDeposit::where('email', $email)
+            ->where('Status', 1)
+            ->sum('deposit_amount');
+
+        $total_ww = WalletWithdraw::where('email', $email)
+            ->where('Status', 1)
+            ->sum('withdraw_amount');
+
+        $wallet_balance = (float) $total_wd - (float) $total_ww;
+
+        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals','wallet_balance'));
     }
     public function showWithdrawalForm()
     {
@@ -166,8 +177,8 @@ class Wallet extends Controller
 
     private function createPayment($amount, $currency, $orderId, $paymentId)
     {
-        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . md5($paymentId) . "&status=success";
-        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . md5($paymentId) . "&status=cancel";
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
         $url = 'https://api.nowpayments.io/v1/invoice';
         $data = [
             'price_amount' => $amount,
@@ -242,7 +253,7 @@ class Wallet extends Controller
             // }
         }
     }
-   
+
     public function secureProcessPayment(Request $request)
     {
         // Get the JSON payload from the request
@@ -271,7 +282,7 @@ class Wallet extends Controller
         // Check if the callback status is transaction confirmed or complete
         if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
             $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
-            
+
             if (isset($passedData['customerID'])) {
                 $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
             }

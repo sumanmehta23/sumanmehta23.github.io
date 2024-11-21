@@ -164,12 +164,12 @@ class StaffManagement extends Controller
     public function rmDashboard(Request $request)
     {
         $clientIndex = $request->query('id');
-        $rm_details = EmployeeList::whereRaw("MD5(client_index) = ?", [$clientIndex])->first();
+        $rm_details = EmployeeList::whereRaw("(client_index) = ?", [$clientIndex])->first();
         if (!$rm_details) {
             return redirect('/admin/admin_users')->with('error', 'Invalid Account / Account Not Found');
         } else {
             $rm_id = $rm_details->email;
-            $rm_email_enc = md5($rm_id);
+            $rm_email_enc = ($rm_id);
         }
         $inactiveUsers = \DB::table('aspnetusers as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')

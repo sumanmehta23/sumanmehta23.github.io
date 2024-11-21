@@ -209,10 +209,10 @@ class AjaxController extends Controller
             }
         }
         if(isset($requestData['rm_id']) && !empty($requestData['rm_id'])){
-            $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where md5(rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
+            $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where (rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT ibs.name as ib_name,c.country_alpha,emp.username as rm_name,rm.rm_id,md5(ap.id) as enc_id,ap.fullname as fullname,ap.*,COALESCE(SUM(tb.deposit_amount), 0) as deposit_amount,COALESCE(SUM(tb.trading_deposited), 0) as trading_deposited,COALESCE(SUM(tb.trading_withdrawal), 0) as trading_withdrawal,COALESCE(SUM(tb.withdraw_amount), 0) as withdraw_amount,ib1.status as ib_status,ib1.acc_type as ib_group from aspnetusers ap
+        $sql = "SELECT ibs.name as ib_name,c.country_alpha,emp.username as rm_name,rm.rm_id,(ap.id) as enc_id,ap.fullname as fullname,ap.*,COALESCE(SUM(tb.deposit_amount), 0) as deposit_amount,COALESCE(SUM(tb.trading_deposited), 0) as trading_deposited,COALESCE(SUM(tb.trading_withdrawal), 0) as trading_withdrawal,COALESCE(SUM(tb.withdraw_amount), 0) as withdraw_amount,ib1.status as ib_status,ib1.acc_type as ib_group from aspnetusers ap
   LEFT JOIN ib1 on ib1.email = ap.email
   LEFT JOIN ib1 as ibs on ibs.email = ap.ib1
   LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
@@ -224,7 +224,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->id,
-                'enc' => md5($row->email),
+                'enc' => ($row->email),
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'created_at' => $row->created_at,
@@ -244,7 +244,7 @@ class AjaxController extends Controller
                 'total_withdraw' => $row->trading_withdrawal + $row->withdraw_amount,
                 'status' => $row->status,
                 'email_confirmed' => $row->email_confirmed,
-                'action' => ' <a class="btn btn-sm btn-secondary me-2 edit-user d-none" data-id="' . $row->email . '"><i class="fa fa-edit"></i></a><a class="btn btn-sm btn-primary" href="/admin/client_details?id=' . md5($row->email) . '"><i class="fa fa-eye"></i></a>'
+                'action' => ' <a class="btn btn-sm btn-secondary me-2 edit-user d-none" data-id="' . $row->email . '"><i class="fa fa-edit"></i></a><a class="btn btn-sm btn-primary" href="/admin/client_details?id=' . ($row->email) . '"><i class="fa fa-eye"></i></a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -260,7 +260,7 @@ class AjaxController extends Controller
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -274,7 +274,7 @@ class AjaxController extends Controller
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . md5($row->id) . '">View</a>'
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -290,7 +290,7 @@ class AjaxController extends Controller
         }
 
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
         $results = DB::select($sql);
         $data = [];
         foreach ($results as $row) {
@@ -303,7 +303,7 @@ class AjaxController extends Controller
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . md5($row->id) . '">View</a>'
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -323,7 +323,7 @@ class AjaxController extends Controller
             $condition = ' where trs.trade_id=' . $_GET['id'];
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -339,7 +339,7 @@ class AjaxController extends Controller
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => '<a href="/admin/trading_deposit_details?id=' . md5($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
+                'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -358,7 +358,7 @@ class AjaxController extends Controller
             $condition = ' where trs.trade_id=' . $_GET['id'];
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -374,7 +374,7 @@ class AjaxController extends Controller
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => '<a href="/admin/trading_withdrawal_details?id=' . md5($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
+                'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -416,7 +416,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -432,7 +432,7 @@ class AjaxController extends Controller
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . md5($row->id) . '">View</a>'
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -447,7 +447,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -492,7 +492,7 @@ class AjaxController extends Controller
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . md5($row->id) . '">View</a>'
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         echo json_encode(['data' => $data]);
@@ -565,7 +565,7 @@ class AjaxController extends Controller
         header('Content-Type: application/json');
         $sql = "SELECT kyc.id as id,kyc.id as id,max(registered_date_js) as date,group_concat(kyc.kyc_type) as kyc_type,
   group_concat(concat(kyc.kyc_type,'=',kyc.Status) SEPARATOR '#') as summary,
-  kyc.email as email,sum(kyc.Status) as status,aspnetusers.fullname,md5(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
+  kyc.email as email,sum(kyc.Status) as status,aspnetusers.fullname,(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
         $query = DB::select($sql);
         $results = $query;
 
@@ -605,7 +605,7 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, md5(e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.role_name,r.role_id
+        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.role_name,r.role_id
                 FROM emplist e
                 LEFT JOIN permissions p ON e.role_id = p.role_id
                 LEFT JOIN roles r ON e.role_id = r.role_id
@@ -641,14 +641,14 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT * from account_types order by display_priority desc";
         } else {
-            $sql = "SELECT * from account_types where md5(ac_category) = '$type' order by display_priority asc";
+            $sql = "SELECT * from account_types where (ac_category) = '$type' order by display_priority asc";
         }
         $query = DB::select($sql);
         $results = $query;
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->enc_id = md5($row->ac_index);
+            $dat->enc_id = ($row->ac_index);
             $dat->ib_status = $row->ib_enabled == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $data[] = $dat;
@@ -663,7 +663,7 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat ";
         } else {
-            $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat where md5(acc_ib_cat) = '$type'";
+            $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat where (acc_ib_cat) = '$type'";
         }
         $query = DB::select($sql);
         $results = $query;
@@ -677,7 +677,7 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where deleted_at is NULL";
         } else {
-            $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where md5(ib_plan_cat_id) = '$type' and deleted_at is NULL";
+            $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where (ib_plan_cat_id) = '$type' and deleted_at is NULL";
         }
         $query = DB::select($sql);
         $results = $query;
@@ -901,7 +901,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->indexId,
-                'enc' => md5($row->email),
+                'enc' => ($row->email),
                 'acc_type' => $row->acc_type,
                 'grp' => $row->grp,
                 'name' => $row->name,
@@ -947,7 +947,7 @@ and ib1.status = 0
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->indexId,
-                'enc' => md5($row->email),
+                'enc' => ($row->email),
                 'acc_type' => $row->acc_type,
                 'grp' => $row->grp,
                 'name' => $row->name,
@@ -994,12 +994,12 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('md5(email)'), '=', $email)
+            ->where(DB::raw('email'), '=', $email)
             ->first();
 
         try {
             $updated = DB::table('aspnetusers')
-                ->where(DB::raw('md5(email)'), '=', $email)
+                ->where(DB::raw('email'), '=', $email)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
@@ -1050,7 +1050,7 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select($ib_columns)
-            ->where(DB::raw('md5(email)'), '=', $id)
+            ->where(DB::raw('email'), '=', $id)
             ->first();
 
         echo json_encode((array) $result);
@@ -1061,7 +1061,7 @@ and ib1.status = 0
 
         $results = [];
         // $group_id = DB::table('aspnetusers')
-        //   ->where(DB::raw('md5(email)'), '=', $id)
+        //   ->where(DB::raw('email'), '=', $id)
         //   ->value('group_id');
         // if ($group_id !== null) {
         $results = DB::table('emplist as emp')
@@ -1077,7 +1077,7 @@ and ib1.status = 0
     {
         $result = DB::table('aspnetusers')
             ->select(
-                DB::raw('md5(email) as id'),
+                DB::raw('email as id'),
                 'email',
                 'password',
                 'fullname',
@@ -1088,7 +1088,7 @@ and ib1.status = 0
                 // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
                 // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
             )
-            ->where(DB::raw('md5(email)'), '=', $data['id'])
+            ->where(DB::raw('email'), '=', $data['id'])
             ->first();
 
         echo json_encode((array) $result);
@@ -1100,9 +1100,9 @@ and ib1.status = 0
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::whereRaw('md5(email) = ?', [$clientId])->first();
+            $result = Ib1::whereRaw('email = ?', [$clientId])->first();
             if (!$result) {
-                $user = User::whereRaw('md5(email) = ?', [$clientId])->first();
+                $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
                     $ib1 = new Ib1();
                     $ib1->uid = $user->uid;
@@ -1117,7 +1117,7 @@ and ib1.status = 0
                     $ib1->save();
                 }
             }
-            $updated = Ib1::whereRaw('md5(email) = ?', [$clientId])
+            $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
                     'acc_type' => $ibGroup

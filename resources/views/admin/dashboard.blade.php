@@ -165,7 +165,7 @@
                                                 <div><?php echo htmlentities($result->id); ?></div>
                                             </td>
                                             <td>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -194,7 +194,7 @@
                                             </td>
                                             <td>
                                                 <?php if ($result->trade_id == 'email') { ?>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -223,7 +223,7 @@
                                                 </a>
                                                 <?php } else { ?>
 
-                                                <a href="/admin/view_account_details?id={{ md5($result->trade_id) }}">
+                                                <a href="/admin/view_account_details?id={{ ($result->trade_id) }}">
                                                     <div class="btn btn-toolbar row">
                                                         <div class="col-auto pe-0 ps-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="" style="width: 25px;">
@@ -279,14 +279,14 @@
                                             <td>
                                                 <?php if ($result->TYPE == "wallet") { ?>
                                                 <div>
-                                                    <a href="/admin/wallet_deposit_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
+                                                    <a href="/admin/wallet_deposit_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
                                                 </div>
                                                 <?php } else { ?>
                                                 <div>
-                                                    <a href="/admin/trading_deposit_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
+                                                    <a href="/admin/trading_deposit_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
@@ -347,7 +347,7 @@
                                                 <div><?php echo htmlentities($result->id); ?></div>
                                             </td>
                                             <td>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -377,7 +377,7 @@
                                             </td>
                                             <td>
                                                 <?php if ($result->trade_id == 'email') { ?>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -405,7 +405,7 @@
                                                     </div>
                                                 </a>
                                                 <?php } else { ?>
-                                                <a href="/admin/view_account_details?id={{ md5($result->trade_id) }}">
+                                                <a href="/admin/view_account_details?id={{ ($result->trade_id) }}">
                                                     <div class="btn btn-toolbar row">
                                                         <div class="col-auto pe-0 ps-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="" style="width: 25px;">
@@ -469,7 +469,7 @@
                                             <td>
                                                 <?php if ($result->type == "trade") { ?>
                                                 <div>
-                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
@@ -477,7 +477,7 @@
 
                                                 <?php } else { ?>
                                                 <div>
-                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo htmlentities($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>

@@ -157,7 +157,7 @@
                                         <div>Ticket Type: <span class="fw-semibold badge bg-outline-primary text-dark">{{ $ticket->ticket_type }}</span></div>
                                         <div>Last Follow-Up Date: <span class="fw-semibold badge bg-outline-info text-dark">{{ $ticket->last_followup }}</span></div>
                                         <div>Last Follow-Up By: <span class="fw-semibold badge bg-outline-success text-dark">{{ $ticket->followup_type == 'admin' ? $ticket->followup_admin : $ticket->followup_user }}</span></div>
-                                        <a href="{{ url('/ticket_details?id=' . md5($ticket->ticket_id)) }}" class="btn bg-info text-white d-grid">
+                                        <a href="{{ url('/ticket_details?id=' . ($ticket->ticket_id)) }}" class="btn bg-info text-white d-grid">
                                             View <i class="ri-arrow-right-line ms-2 d-inline-block align-middle"></i>
                                         </a>
                                     </div>

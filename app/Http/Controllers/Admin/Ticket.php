@@ -167,7 +167,7 @@ class Ticket extends Controller
                 ->leftJoin(DB::raw('(SELECT tf1.* FROM ticket_followup tf1 INNER JOIN (SELECT ticket_id, MAX(added_at) AS latest_followup FROM ticket_followup GROUP BY ticket_id) tf2 ON tf1.ticket_id = tf2.ticket_id AND tf1.added_at = tf2.latest_followup) AS tf'), 't.id', '=', 'tf.ticket_id')
                 ->leftJoin('aspnetusers AS fu', 'tf.user_id', '=', 'fu.id')
                 ->leftJoin('emplist AS fa', 'tf.admin_id', '=', 'fa.client_index')
-                ->where(DB::raw('md5(t.id)'), '=', $id)
+                ->where(DB::raw('t.id'), '=', $id)
                 ->orderBy('t.created_at', 'DESC')
                 ->first();
             $rm_details = DB::table('emplist as emp')
@@ -204,7 +204,7 @@ class Ticket extends Controller
             )
                 ->leftJoin('aspnetusers AS users', 'ticket_followup.user_id', '=', 'users.id')
                 ->leftJoin('emplist AS employees', 'ticket_followup.admin_id', '=', 'employees.client_index')
-                ->where(DB::raw('MD5(ticket_followup.ticket_id)'), $ticket_id)
+                ->where(DB::raw('ticket_followup.ticket_id'), $ticket_id)
                 ->get();
         }
         return view('ticket_followups', compact('followups'));
@@ -216,7 +216,7 @@ class Ticket extends Controller
             'remark' => 'required|string',
             'attachment' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ]);
-        $ticket = Tickets::where(DB::raw('md5(id)'), $ticketId)->first();
+        $ticket = Tickets::where(DB::raw('id'), $ticketId)->first();
         if (!$ticket) {
             return redirect()->back()->with("error", 'Ticket not found.');
         }
@@ -248,14 +248,14 @@ class Ticket extends Controller
         $ticket_id = $request->get('ticket_id');
         $assignee = $request->input('assignee');
         $updated = DB::table('ticket_assignee')
-            ->where(DB::raw('md5(ticket_id)'), $ticket_id)
+            ->where(DB::raw('ticket_id'), $ticket_id)
             ->update([
                 'assignee' => $assignee,
                 'assigned_by' => session('userData')['client_index'],
             ]);
         if ($updated) {
             $original_id = DB::table('tickets')
-                ->where(DB::raw('md5(id)'), $ticket_id)
+                ->where(DB::raw('id'), $ticket_id)
                 ->value('id');
 
             if ($original_id) {
@@ -284,7 +284,7 @@ class Ticket extends Controller
         ]);
 
         $status_id = $request->input('ticket_status_id');
-        $ticket = Tickets::where(DB::raw('md5(id)'), '=', $id)->first();
+        $ticket = Tickets::where(DB::raw('id'), '=', $id)->first();
         if ($ticket) {
             $ticket->ticket_status_id = $status_id;
             $ticket->save();

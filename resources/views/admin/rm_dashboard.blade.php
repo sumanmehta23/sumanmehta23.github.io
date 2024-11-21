@@ -238,7 +238,7 @@
                                                         </td>
                                                         <td>
                                                             <a
-                                                                href="{{ url('/admin/client_details?id=' . md5($deposit->email)) }}">
+                                                                href="{{ url('/admin/client_details?id=' . ($deposit->email)) }}">
                                                                 <div class="d-flex align-items-center">
                                                                     <div class="me-2">
                                                                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -275,7 +275,7 @@
                                                                 WALLET
                                                             @else
                                                                 <a
-                                                                    href="{{ url('/admin/view_account_details?id=' . md5($deposit->trade_id)) }}">
+                                                                    href="{{ url('/admin/view_account_details?id=' . ($deposit->trade_id)) }}">
                                                                     <div class="btn btn-toolbar row">
                                                                         <div class="col-auto pe-0 ps-0">
                                                                             <img src="/assets/images/mt5.png"
@@ -325,13 +325,13 @@
                                                         <td>
                                                             <div>
                                                                 @if ($deposit->TYPE == 'wallet')
-                                                                    <a href="{{ url('/admin/wallet_deposit_details?id=' . htmlentities(md5($deposit->raw_id)) . '&email=' . htmlentities($deposit->email) . '&deposit=' . htmlentities($deposit->deposit_amount)) }}"
+                                                                    <a href="{{ url('/admin/wallet_deposit_details?id=' . htmlentities(($deposit->raw_id)) . '&email=' . htmlentities($deposit->email) . '&deposit=' . htmlentities($deposit->deposit_amount)) }}"
                                                                         class=""
                                                                         style="font-size: 13px; padding: 2px 20px;">
                                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                                     </a>
                                                                 @else
-                                                                    <a href="{{ url('/admin/trading_deposit_details?id=' . htmlentities(md5($deposit->raw_id)) . '&email=' . htmlentities($deposit->email) . '&deposit=' . htmlentities($deposit->deposit_amount)) }}"
+                                                                    <a href="{{ url('/admin/trading_deposit_details?id=' . htmlentities(($deposit->raw_id)) . '&email=' . htmlentities($deposit->email) . '&deposit=' . htmlentities($deposit->deposit_amount)) }}"
                                                                         class=""
                                                                         style="font-size: 13px; padding: 2px 20px;">
                                                                         <i class="fe fe-eye fs-14 text-info"></i>
@@ -385,7 +385,7 @@
                                                         </td>
                                                         <td>
                                                             <a
-                                                                href="{{ url('/admin/client_details?id=' . md5($result->email)) }}">
+                                                                href="{{ url('/admin/client_details?id=' . ($result->email)) }}">
                                                                 <div class="d-flex align-items-center">
                                                                     <div class="me-2">
                                                                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -422,7 +422,7 @@
                                                                 WALLET
                                                             @else
                                                                 <a
-                                                                    href="{{ url('/admin/view_account_details?id=' . md5($result->trade_id)) }}">
+                                                                    href="{{ url('/admin/view_account_details?id=' . ($result->trade_id)) }}">
                                                                     <div class="btn btn-toolbar row">
                                                                         <div class="col-auto pe-0 ps-0">
                                                                             <img src="/assets/images/mt5.png"

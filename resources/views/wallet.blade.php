@@ -133,10 +133,10 @@
                                     <tr class="{{ $transaction->type == 'deposit' ? 'wallet-plus' : 'wallet-minus' }}">
                                         <td>{{ $transaction->type == 'deposit' ? 'WDID'.$transaction->raw_id : 'WWID'.$transaction->raw_id }}</td>
                                         <td>{{ $transaction->date_added }}</td>
-                                        <td class="td-wrap text-end">
+                                        <td class="td-wrap text-left">
                                             {{ $transaction->type == 'deposit' ? '+' : '-' }} ${{ $transaction->amount }}
                                         </td>
-                                        <td class="text-end">{{ $transaction->transfer_type }}</td>
+                                        <td class="text-left">{{ $transaction->transfer_type }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

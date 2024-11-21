@@ -35,7 +35,7 @@ class ClientAccController extends Controller
         $rmCondition->orderBy('liveaccount.id', 'desc');
 
         // Select the fields and execute the query
-        $accounts = $rmCondition->select('liveaccount.*', DB::raw('md5(aspnetusers.id) as enc_id'), 'account_types.ac_group')
+        $accounts = $rmCondition->select('liveaccount.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
             ->get();
         return view('admin.client_accounts.live_accounts', compact("accounts"));
     }
@@ -60,7 +60,7 @@ class ClientAccController extends Controller
         // Apply the group filter
 
         // Select required columns and add ordering
-        $accounts = $rmCondition->select(DB::raw('demoaccount.*,aspnetusers.fullname as name,md5(aspnetusers.email) as enc_id'))
+        $accounts = $rmCondition->select(DB::raw('demoaccount.*,aspnetusers.fullname as name,(aspnetusers.email) as enc_id'))
             ->orderBy('demoaccount.id', 'desc')
             ->get();
         return view('admin.client_accounts.demo_accounts', compact("accounts"));

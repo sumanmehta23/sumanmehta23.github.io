@@ -146,7 +146,7 @@ class Tickets extends Controller
         ) AS last_followup'), 'tickets.id', '=', 'last_followup.ticket_id')
         ->leftJoin('aspnetusers AS followup_user', 'last_followup.user_id', '=', 'followup_user.id')
         ->leftJoin('emplist AS followup_admin', 'last_followup.admin_id', '=', 'followup_admin.client_index')
-        ->where(DB::raw('MD5(tickets.id)'), $id)
+        ->where(DB::raw('tickets.id'), $id)
         ->orderBy('tickets.created_at', 'DESC')
         ->first();
 
@@ -179,7 +179,7 @@ class Tickets extends Controller
             )
             ->leftJoin('aspnetusers AS users', 'ticket_followup.user_id', '=', 'users.id')
             ->leftJoin('emplist AS employees', 'ticket_followup.admin_id', '=', 'employees.client_index')
-            ->where(DB::raw('MD5(ticket_followup.ticket_id)'), $ticket_id)
+            ->where(DB::raw('ticket_followup.ticket_id'), $ticket_id)
             ->get();
         }
         return view('ticket_followups', compact('followups'));
@@ -202,7 +202,7 @@ class Tickets extends Controller
             $file->storeAs($folderName, $fileName);
 
         }
-        $originalTicketId = DB::table('tickets')->where(DB::raw('md5(id)'), $ticketId)->value('id');
+        $originalTicketId = DB::table('tickets')->where(DB::raw('id'), $ticketId)->value('id');
 
         if ($originalTicketId) {
             // add followup remark

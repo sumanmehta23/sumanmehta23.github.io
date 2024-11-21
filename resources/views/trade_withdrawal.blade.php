@@ -124,8 +124,7 @@
                                                                 <div class="row">
                                                                     <div class="col-12 mt-2">
                                                                         <div class="form-group row">
-                                                                            <label class="col-lg-4 col-form-label">ENTER
-                                                                                AMOUNT:
+                                                                            <label class="col-lg-4 col-form-label">ENTER AMOUNT:
                                                                                 <small class="text-muted d-block">Please
                                                                                     enter the amount that you need to
                                                                                     transfer</small>

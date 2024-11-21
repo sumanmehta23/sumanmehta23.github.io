@@ -39,7 +39,7 @@
                     <select class="form-control" disabled required="required">
                       <option value="" default selected disabled>--Select Plan--</option>
                       <?php foreach ($ibCategories as $res) { ?>
-                        <option value="<?= $res->ib_cat_id ?>" <?= (md5($res->ib_cat_id) == $planId) ? "selected" : "" ?>><?= $res->ib_cat_name ?></option>
+                        <option value="<?= $res->ib_cat_id ?>" <?= (($res->ib_cat_id) == $planId) ? "selected" : "" ?>><?= $res->ib_cat_name ?></option>
                       <?php } ?>
                     </select>
                   </div>
@@ -51,7 +51,7 @@
                       <!-- <option value="" default selected disabled>--Select Group--</option> -->
                       <?php $i = 1;
                       foreach ($groups as $res) { ?>
-                        <option value="<?= $res->ac_index ?>" <?= (md5($res->ac_index) != $accType && ($res->status == 0 || $res->ib_enabled == 0)) ? "disabled" : "" ?> <?= (md5($res->ac_index) == $accType) ? "selected" : "" ?>><?= ($res->ac_group) ? $res->ac_group : $res->ac_name ?></option>
+                        <option value="<?= $res->ac_index ?>" <?= (($res->ac_index) != $accType && ($res->status == 0 || $res->ib_enabled == 0)) ? "disabled" : "" ?> <?= (($res->ac_index) == $accType) ? "selected" : "" ?>><?= ($res->ac_group) ? $res->ac_group : $res->ac_name ?></option>
                       <?php  } ?>
                     </select>
                   </div>

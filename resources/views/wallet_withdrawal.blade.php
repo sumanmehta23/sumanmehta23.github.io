@@ -133,7 +133,7 @@
                                                                         <div class="col-lg-8">
                                                                             <div class="input-group mb-3">
                                                                                 <span class="input-group-text">$</span>
-                                                                                <input type="number" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
+                                                                                <input type="number" min="10" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
                                                                                     @if(count($client_banks) > 0) required @endif>
                                                                                 <span class="input-group-text">.00</span>
                                                                             </div>
@@ -274,7 +274,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="card">
+                                                {{-- <div class="card">
                                                     <div class="card-header">
                                                         <h5>MT5 ACCOUNTS SUMMARY</h5>
                                                     </div>
@@ -334,7 +334,19 @@
                                                             </li>
                                                         </ul>
                                                     </div>
-                                                </div>
+                                                </div> --}}
+                                                <div class="card">
+                                                    <div class="py-2 card-body">
+                                                      <ul class="list-group list-group-flush">
+                                                        <li class="px-0 list-group-item">
+                                                          <div class="float-end">
+                                                            <h3 class="mb-0 fw-medium">$ <?= $wallet_balance ?? 0 ?></h3>
+                                                          </div>
+                                                          <h5 class="mb-0 uppercase d-inline-block">CURRENT BALANCE</h5>
+                                                        </li>
+                                                      </ul>
+                                                    </div>
+                                                  </div>
                                             </div>
 
                                         </div>

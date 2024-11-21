@@ -161,7 +161,7 @@ class IBController extends Controller
 
         // Apply the filter if `activeType` is not null
         if ($activeType !== null) {
-            $plans->where(DB::raw('md5(ib_categories.ib_cat_id)'), '=', $activeType);
+            $plans->where(DB::raw('ib_categories.ib_cat_id'), '=', $activeType);
         }
 
         // Group and execute the query for plans
@@ -247,8 +247,8 @@ class IBController extends Controller
             ->join('account_types', 'account_types.ac_index', '=', 'ib_plan_details.acc_type')
             ->join('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
             ->whereNull('ib_plan_details.deleted_at')
-            ->where(DB::raw('md5(ib_plan_details.ib_plan_id)'), $planId)
-            ->where(DB::raw('md5(ib_plan_details.acc_type)'), $accType)
+            ->where(DB::raw('ib_plan_details.ib_plan_id'), $planId)
+            ->where(DB::raw('ib_plan_details.acc_type'), $accType)
             ->select('ib_plan_details.*', 'account_types.ac_group', 'ib_categories.ib_cat_name', DB::raw('count(*) as count'))
             ->groupBy('ib_plan_details.ib_plan_id', 'ib_plan_details.acc_type')
             ->first();
