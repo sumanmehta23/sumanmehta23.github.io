@@ -96,7 +96,15 @@ class Transaction extends Controller
                 ")
                 ->groupBy('u.email')
                 ->first();
-            return view('admin.wallet_withdrawal_details', compact('details'));
+            if($details->client_bank>0){
+                $client_wallet = DB::table('client_wallets')
+                ->where('client_wallet_id', $details->client_bank)
+                ->where('status', 1)
+                ->first();
+            }else{
+                $client_wallet='';
+            }
+            return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
         }
     }
     public function trading_deposit_details(Request $request)
@@ -200,8 +208,8 @@ class Transaction extends Controller
                     $walletCurrency = $bankDetails->wallet_currency;
                     $walletAddress = $bankDetails->wallet_address;
                     $amount = $transaction->withdraw_amount;
-                    
-                   
+
+
                     $payload = [
                         "profile_id" => env('CRYPTOCHILL_PROFILE_ID'),
                         "passthrough" => json_encode(["trans_id" => $did]),
@@ -224,7 +232,7 @@ class Transaction extends Controller
                         'X-CC-PAYLOAD' => base64_encode(json_encode($payload)),
                         'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), env('CRYPTOCHILL_API_SECRET')),
                     ])->post('https://api.cryptochill.com/v1/payouts/', $payload);
-                
+
                     // Log the response
                     Log::channel('payouts')->info("Request Payload: " . json_encode($payload));
                     Log::channel('payouts')->info("API Response: " . $response->body());

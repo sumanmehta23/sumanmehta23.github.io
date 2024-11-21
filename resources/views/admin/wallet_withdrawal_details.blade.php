@@ -208,6 +208,19 @@
                                                 </div>
                                             </div>
                                             <?php endif;?>
+                                            <?php if($client_wallet):?>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <div class="lh-1">
+                                                        <span class="fs-11 text-muted">CLIENT WALLET DETAILS</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                        <div class="mb-1"><span class="text-muted me-1">Address: </span><?= $client_wallet->wallet_address ?></div>
+                                                        <div class="mb-1"><span class="text-muted me-1"> <?= $client_wallet->wallet_currency ?> / <?= $client_wallet->wallet_network ?></span></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endif;?>
                                         </td>
                                         <td style="vertical-align:top">
                                             <div class="d-flex align-items-center">
