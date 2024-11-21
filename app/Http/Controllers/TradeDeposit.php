@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClientBankDetails;
+use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposits;
 use Illuminate\Http\Request;
@@ -33,7 +33,7 @@ class TradeDeposit extends Controller
             ->where('email', $email)
             ->get();
         $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
-        $bank_details = ClientBankDetails::where('email', $email)->first() ?? [];
+        $bank_details = ClientBankDetail::where('email', $email)->first() ?? [];
         $totals = LiveAccount::where('email', $email)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();

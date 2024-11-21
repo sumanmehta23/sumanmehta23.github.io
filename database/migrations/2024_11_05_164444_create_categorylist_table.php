@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categorylist', function (Blueprint $table) {
-            $table->integer('categoryIndex', true);
+            $table->uuid('id')->primary();
+            $table->integer('categoryIndex');
             $table->dateTime('date');
             $table->string('categoryFor', 100);
             $table->string('categoryName');

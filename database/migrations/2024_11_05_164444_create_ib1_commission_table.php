@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib1_commission', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('user_id');
             $table->string('order_id', 100)->nullable();
             $table->string('login', 100)->nullable();

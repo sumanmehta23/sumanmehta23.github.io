@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bonus_trans', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
             $table->string('trade_id', 100)->nullable();
             $table->string('bonus_amount', 100)->nullable();
@@ -24,7 +24,8 @@ return new class extends Migration
             $table->integer('status')->default(1);
             $table->string('adminRemark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->string('created_by')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

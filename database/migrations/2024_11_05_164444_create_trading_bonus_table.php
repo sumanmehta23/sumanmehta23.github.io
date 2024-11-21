@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trading_bonus', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->integer('trade_id')->nullable();
             $table->string('bonus_amount', 100)->nullable();
             $table->string('comments', 100)->nullable();

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('available_payment', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('payment_mode', 100)->nullable();
             $table->string('bank_name', 100)->nullable();
             $table->string('account_holdername', 100)->nullable();
@@ -27,12 +27,11 @@ return new class extends Migration
             $table->string('agent_address', 100)->nullable();
             $table->timestamp('register_date')->useCurrent();
             $table->integer('updated_by');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-            $table->dateTime('deleted_at')->nullable();
             $table->text('api_key')->nullable();
             $table->text('secret_key')->nullable();
             $table->text('additional_key')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

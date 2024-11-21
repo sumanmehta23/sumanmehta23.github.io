@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WalletWithdraw;
 use App\Models\TotalBalance;
-use App\Models\ClientWallets;
+use App\Models\ClientWallet;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -195,7 +195,7 @@ class Transaction extends Controller
 
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_bank > 0) {
 
-                    $bankDetails = ClientWallets::where('client_wallet_id', $transaction->client_bank)->first();
+                    $bankDetails = ClientWallet::where('client_wallet_id', $transaction->client_bank)->first();
                     $walletNetwork = $bankDetails->wallet_network;
                     $walletCurrency = $bankDetails->wallet_currency;
                     $walletAddress = $bankDetails->wallet_address;

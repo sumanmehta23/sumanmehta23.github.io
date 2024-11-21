@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bonusdeposit', function (Blueprint $table) {
-            $table->bigInteger('id', true);
+            $table->uuid('id')->primary();
             $table->string('title', 150)->nullable();
             $table->string('code', 150)->default('noCode');
             $table->string('comment')->nullable();
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('tradeAccId')->nullable();
             $table->string('uid', 200)->nullable();
             $table->string('email', 50)->nullable();
+            $table->timestamps();
         });
     }
 

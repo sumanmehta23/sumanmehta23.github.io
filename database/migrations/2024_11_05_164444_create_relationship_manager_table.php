@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('relationship_manager', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('user_id', 50)->index('user_id');
             $table->string('rm_id', 50)->index('rm_id');
             $table->integer('added_by')->nullable();

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('aspnetusers', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('uid', 50)->nullable();
-            $table->string('email', 50)->default('noEmail');
+            $table->string('email')->default('noEmail');
             $table->boolean('email_confirmed')->default(false);
-            $table->string('password', 100)->nullable();
+            $table->string('password')->nullable();
             $table->string('country_code', 20)->nullable();
             $table->string('number', 100)->nullable();
             $table->boolean('number_confirmed')->default(false);
@@ -96,12 +96,11 @@ return new class extends Migration
             $table->string('ib13')->nullable();
             $table->string('ib14')->nullable();
             $table->string('ib15')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
             $table->integer('wallet_requested')->nullable();
             $table->integer('wallet_enabled')->nullable()->default(1);
             $table->dateTime('wallet_requested_at')->nullable();
             $table->dateTime('wallet_approved_at')->nullable();
+            $table->timestamps();
         });
     }
 

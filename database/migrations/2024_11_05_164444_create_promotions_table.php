@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('promotions', function (Blueprint $table) {
-            $table->integer('index', true);
+            $table->uuid('id')->primary();
+            $table->integer('index');
             $table->string('title', 200)->nullable();
             $table->dateTime('date')->nullable();
             $table->string('subtitle', 200)->nullable();

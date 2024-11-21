@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('login_history', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 100)->nullable();
             $table->string('ip', 100)->nullable();
             $table->string('country', 100)->nullable();

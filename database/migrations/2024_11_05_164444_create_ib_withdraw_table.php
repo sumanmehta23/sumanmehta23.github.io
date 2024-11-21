@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_withdraw', function (Blueprint $table) {
-            $table->bigInteger('w_index', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('w_index');
             $table->string('uid', 150);
             $table->integer('orderId')->nullable();
             $table->dateTime('date')->nullable();
             $table->string('gateway', 150)->nullable();
             $table->string('currency', 5)->default('USD');
-            $table->double('amount', 10, 4)->default(0);
+            $table->double('amount')->default(0);
             $table->string('status', 25)->default('pending');
             $table->string('ib_name', 150);
             $table->string('ib_email', 150);
@@ -31,7 +32,7 @@ return new class extends Migration
             $table->string('invoice_portal', 50)->default('admin');
             $table->dateTime('upload_date')->nullable();
             $table->string('uploaded_by')->nullable();
-            $table->double('updated_amount', 8, 4)->default(0);
+            $table->double('updated_amount')->default(0);
         });
     }
 

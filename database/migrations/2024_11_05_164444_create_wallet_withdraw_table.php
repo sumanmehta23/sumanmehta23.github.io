@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wallet_withdraw', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
             $table->string('withdraw_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
@@ -28,8 +28,7 @@ return new class extends Migration
             $table->string('wallet_id', 100)->nullable();
             $table->string('wallet_qr', 500)->nullable();
             $table->text('client_note')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

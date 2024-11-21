@@ -12,12 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('permissions', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary(   );
             $table->integer('role_id')->index('rolde_id');
             $table->string('page_id', 100);
             $table->string('created_by');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

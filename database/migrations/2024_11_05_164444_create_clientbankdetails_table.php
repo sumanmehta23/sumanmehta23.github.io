@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('clientbankdetails', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('bankName', 150)->nullable();
-            $table->string('branch', 100)->nullable();
+            $table->uuid('id')->primary();
+            $table->uuid('client_id');
+            $table->string('bankName')->nullable();
+            $table->string('branch')->nullable();
             $table->mediumText('bankDetails')->nullable();
             $table->string('accountNumber')->nullable();
             $table->string('status', 50)->default('pending');
@@ -30,6 +31,8 @@ return new class extends Migration
             $table->string('document')->nullable();
             $table->string('userId')->nullable();
             $table->string('comment')->nullable();
+            $table->foreign('client_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
+
         });
     }
 

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('login_details', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('UserId', 150)->nullable();
             $table->dateTime('log_in')->nullable();
             $table->string('IP_address', 100)->nullable();

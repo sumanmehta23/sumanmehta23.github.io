@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib1_withdraw', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
             $table->string('withdraw_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();

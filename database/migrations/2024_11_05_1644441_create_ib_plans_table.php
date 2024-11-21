@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_plans', function (Blueprint $table) {
-            $table->integer('ib_plan_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('ib_plan_id');
             $table->integer('ib_plan_cat_id');
             $table->integer('ib_acc_type_id');
             $table->decimal('ib_commission1', 10)->nullable();
@@ -32,12 +33,10 @@ return new class extends Migration
             $table->decimal('ib_commission15', 10)->nullable();
             $table->boolean('status')->default(true);
             $table->string('updated_by');
-            $table->dateTime('deleted_at')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
             $table->integer('unique_c')->nullable()->storedAs('if((`status` = 1),`status`,NULL)');
-
             $table->unique(['ib_plan_cat_id', 'ib_acc_type_id', 'unique_c'], 'unique_ab_c');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

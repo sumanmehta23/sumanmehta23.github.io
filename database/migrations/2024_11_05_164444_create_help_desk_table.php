@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('help_desk', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
             $table->string('subject', 100)->nullable();
             $table->string('type', 50)->nullable();

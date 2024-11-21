@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('aspnetusers_log', function (Blueprint $table) {
-            $table->integer('id', true)->unique('id');
-            $table->string('email', 100);
-            $table->string('admin_email', 100);
+            $table->uuid('id')->primary();
+            $table->uuid('aspnetusers_id')->nullable();
+            $table->string('email');
+            $table->string('admin_email');
             $table->string('type', 50);
             $table->text('value');
             $table->dateTime('added_at')->useCurrent();
+            $table->timestamps();
         });
     }
 

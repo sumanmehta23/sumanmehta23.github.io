@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\ClientWallets;
+use App\Models\ClientWallet;
 use App\Models\KycUpdate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -16,7 +16,7 @@ class Users extends Controller
     public function profile()
     {
         $email = auth()->user()->email;
-        $bank_accounts = ClientWallets::where('user_id', $email)->get();
+        $bank_accounts = ClientWallet::where('user_id', $email)->get();
         $user = User::where('email', $email)->first();
         $verf_docs = KycUpdate::where('email', $email)->orderBy('id', 'desc')->get();
         return view('profile', compact('bank_accounts', 'user', 'verf_docs'));

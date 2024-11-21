@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kyc_update', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 100)->nullable();
             $table->string('kyc_type', 100)->nullable();
             $table->string('kyc_frontside', 100)->nullable();

@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('activation', function (Blueprint $table) {
-            $table->increments('id');
+            $table->uuid('id')->primary();
             $table->dateTime('create_time')->useCurrent();
             $table->mediumText('activation_key')->nullable();
             $table->boolean('activated')->default(false);
             $table->string('name', 100)->nullable();
             $table->string('email', 100)->nullable();
             $table->string('mobile', 100)->nullable();
+            $table->timestamps();
         });
     }
 

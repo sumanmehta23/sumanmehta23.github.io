@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pages', function (Blueprint $table) {
-            $table->integer('page_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('page_id');
             $table->integer('page_category_id')->nullable()->index('page_category_id');
             $table->string('pagename');
             $table->string('filename');

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LiveAccount;
 use App\Models\User;
-use App\Models\ClientBankDetails;
+use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
 use App\Models\TradeWithdrawals;
@@ -35,7 +35,7 @@ class TradeWithdrawal extends Controller
             ->where('email', $email)
             ->get();
         $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
-        $bank_details = ClientBankDetails::where('email', $email)->first() ?? [];
+        $bank_details = ClientBankDetail::where('email', $email)->first() ?? [];
         $totals = LiveAccount::where('email', $email)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();

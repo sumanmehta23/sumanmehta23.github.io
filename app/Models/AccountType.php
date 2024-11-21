@@ -10,10 +10,10 @@ class AccountType extends Model
     use HasFactory;
     protected $table = 'account_types';
 
-    protected $primaryKey = "ac_index";
+    protected $primaryKey = "id";
     public function mt5Group()
     {
-        return $this->belongsTo(Mt5Group::class, 'ac_type', 'mt5_group_id');
+        return $this->belongsTo(Mt5Group::class, 'ac_type', 'id');
     }
 
 }

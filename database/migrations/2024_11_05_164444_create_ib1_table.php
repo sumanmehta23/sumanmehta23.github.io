@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib1', function (Blueprint $table) {
-            $table->bigInteger('indexId', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('indexId');
             $table->integer('acc_type')->nullable();
             $table->string('uid', 150)->nullable()->unique('uniqueid');
             $table->string('name', 50)->nullable();

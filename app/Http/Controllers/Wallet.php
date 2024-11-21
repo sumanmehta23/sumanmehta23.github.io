@@ -5,7 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
-use App\Models\ClientWallets;
+use App\Models\ClientWallet;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\LiveAccount;
@@ -72,7 +72,7 @@ class Wallet extends Controller
             'wallet_address' => 'required|string|max:255',
             'status' => 'required',
         ]);
-        ClientWallets::create([
+        ClientWallet::create([
             'wallet_name' => $request->wallet_name,
             'wallet_currency' => $request->wallet_currency,
             'wallet_network' => $request->wallet_network,
@@ -90,7 +90,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallets::where(DB::raw('md5(client_wallet_id)'), $request->id)->first();
+        $wallet = ClientWallet::where(DB::raw('md5(client_wallet_id)'), $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
@@ -114,7 +114,7 @@ class Wallet extends Controller
     public function showWithdrawalForm()
     {
         $email = auth()->user()->email;
-        $client_banks = ClientWallets::where('user_id', $email)
+        $client_banks = ClientWallet::where('user_id', $email)
             ->where('status', 1)
             ->get();
         $settings = $this->settings;

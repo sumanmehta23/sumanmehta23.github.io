@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('department', function (Blueprint $table) {
+            $table->uuid('id')->primary();
             $table->string('dep_name', 150)->unique('dep_name');
-            $table->integer('dep_id', true);
+            $table->integer('dep_id');
             $table->boolean('dep_status')->nullable()->default(true);
             $table->dateTime('date');
         });

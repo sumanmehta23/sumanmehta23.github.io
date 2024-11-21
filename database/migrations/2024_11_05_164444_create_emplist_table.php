@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('emplist', function (Blueprint $table) {
-            $table->bigInteger('client_index', true);
-            $table->integer('role_id')->default(1)->index('role_id');
+            $table->uuid('id')->primary();
+            $table->bigInteger('client_index');
+            $table->uuid('role_id')->index('role_id');
             $table->string('username', 30);
             $table->string('email', 100)->unique('email');
             $table->string('gender', 10)->default('0');
@@ -22,7 +23,6 @@ return new class extends Migration
             $table->string('number', 25)->nullable();
             $table->string('address', 200)->nullable();
             $table->string('website', 100)->nullable();
-            $table->dateTime('created_at')->useCurrent();
             $table->string('uid', 100)->index('client_unique_id');
             $table->string('company_name', 100)->nullable();
             $table->binary('company_address')->nullable();
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->integer('zipcode')->nullable();
             $table->string('city', 100)->nullable();
             $table->string('state', 100)->nullable();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

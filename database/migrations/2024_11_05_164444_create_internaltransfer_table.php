@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('internaltransfer', function (Blueprint $table) {
-            $table->bigInteger('itIndex', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('itIndex');
             $table->integer('orderId')->nullable();
             $table->dateTime('date')->nullable()->useCurrent();
             $table->string('fromCurrency', 5)->default('USD');
@@ -24,8 +25,7 @@ return new class extends Migration
             $table->string('clientName');
             $table->string('clientId');
             $table->string('toCurrency', 5)->default('USD');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

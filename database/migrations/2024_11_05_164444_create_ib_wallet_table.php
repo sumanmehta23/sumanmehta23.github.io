@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_wallet', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('ib_wallet', 50)->nullable();
             $table->string('ib_withdraw', 100)->nullable();
             $table->string('email', 50)->nullable();
@@ -21,8 +21,7 @@ return new class extends Migration
             $table->text('remark')->nullable();
             $table->string('ib_level', 100)->nullable();
             $table->timestamp('reg_date')->useCurrentOnUpdate()->useCurrent();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

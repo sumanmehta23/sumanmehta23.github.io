@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_categories', function (Blueprint $table) {
-            $table->integer('ib_cat_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('ib_cat_id');
             $table->string('ib_cat_name');
             $table->string('ib_cat_type', 100)->default('ib');
             $table->text('ib_cat_desc')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 
