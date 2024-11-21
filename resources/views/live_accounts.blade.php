@@ -2,6 +2,9 @@
 @section('content')
 <div class="pc-container">
     <div class="pc-content">
+      @if(session('error'))
+          <div class="alert alert-danger">{{ session('error') }}</div>
+      @endif
       <div class="page-header mb-0 pb-0">
         <div class="page-block">
           <div class="row align-items-center">

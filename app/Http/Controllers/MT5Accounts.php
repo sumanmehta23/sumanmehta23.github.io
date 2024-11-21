@@ -48,11 +48,30 @@ class MT5Accounts extends Controller
         return view('demo_accounts', compact('results'));
     }
     public function viewAccountDetails()
-    {
+    { 
+       
         session()->remove('error');
         $email = $email = auth()->user()->email;
         $trade_id = $_GET['id'];
         $type = $_GET['type'];
+        if ($type == "demo") {
+            $getUser = DemoAccount::with('accountType', 'bonusTrans')
+                ->where('trade_id', $trade_id)
+                ->first();
+            $url = "demoAccounts";
+        } else {
+            $getUser = LiveAccount::with('accountType', 'bonusTrans')
+                ->where('trade_id', $trade_id)
+                ->first();
+            $url = "liveAccounts";
+        }
+        
+        if(!$getUser || ($getUser && $getUser->email != $email)){
+            return redirect('/' . $url)
+            ->with('error', 'Wrong data provided. Please check your details and try again.');
+        }
+       
+       
         $settings = settings();
         $results = [];
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));

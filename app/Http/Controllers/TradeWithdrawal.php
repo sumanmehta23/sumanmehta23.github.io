@@ -42,7 +42,7 @@ class TradeWithdrawal extends Controller
         return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
     }
     public function withdraw(Request $request)
-    {
+    {  
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
@@ -57,6 +57,14 @@ class TradeWithdrawal extends Controller
             ->where('email', $email)
             ->get()->toArray();
         $trade_id = $request->input('trade_id');
+
+        if($trade_id != $liveaccount_details[0]['trade_id']){
+            return response()->json([
+                'success' => false,
+                'message' => 'Wrong data provided. Please check your details and try again.',
+            ], 400);
+        }
+
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
         $withdraw_to = $request->input('withdraw_to', '');
