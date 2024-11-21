@@ -219,7 +219,7 @@ class ApiAjaxController extends Controller
     private function updateGroup($request)
     {
         try {
-            $accountType = AccountType::where(DB::raw("md5(ac_index)"), $request->ac_index)->first();
+            $accountType = AccountType::where(DB::raw("(ac_index)"), $request->ac_index)->first();
             if ($accountType) {
                 $accountType->ac_name = $request->ac_name;
                 $accountType->ac_min_deposit = $request->ac_min_deposit;

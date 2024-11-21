@@ -112,7 +112,7 @@
                                     <tbody>
 
                                         <?php
-                   
+
                       foreach ($ibPendingTrans as $result) {
                         ?>
                                         <tr>
@@ -169,7 +169,7 @@
                                     </thead>
                                     <tbody>
                                         <?php
-                   
+
                     if (count($kycpending) > 0) {
                       foreach ($kycpending as $result) {
                         ?>
@@ -201,14 +201,14 @@
                             if ($stats == 2) { ?>
                                                 <div class="badge btn-sm btn btn-outline-danger">Cancelled</div>
                                                 <?php }
-  
+
                             if ($stats == 0) { ?>
                                                 <div class="badge btn-sm btn btn-outline-warning">Pending</div>
                                                 <?php
                             } ?>
                                             </td>
                                             <td>
-                                                <div> <a href="/admin/client_details.php?id=<?php echo md5($result->email); ?>#tab-info"
+                                                <div> <a href="/admin/client_details.php?id=<?php echo ($result->email); ?>#tab-info"
                                                         style="padding: 5px 20px;font-size: 12px;"
                                                         class="btn btn-dark btn-sm">View</a></div>
                                             </td>

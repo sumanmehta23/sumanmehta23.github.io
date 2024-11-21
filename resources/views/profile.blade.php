@@ -326,14 +326,14 @@
                                                                                 <a class="wallet-action"
                                                                                     data-bs-toggle="tooltip"
                                                                                     title="Inactive Wallet Address"
-                                                                                    data-toggle="{{ md5($acc->client_wallet_id) }}">
+                                                                                    data-toggle="{{ ($acc->client_wallet_id) }}">
                                                                                     <i class="f-24 ti ti-toggle-left"></i>
                                                                                 </a>
                                                                             @else
                                                                                 <a class="wallet-action"
                                                                                     data-bs-toggle="tooltip"
                                                                                     title="Active Wallet Address"
-                                                                                    data-toggle="{{ md5($acc->client_wallet_id) }}">
+                                                                                    data-toggle="{{ ($acc->client_wallet_id) }}">
                                                                                     <i class="f-24 ti ti-toggle-right"></i>
                                                                                 </a>
                                                                             @endif

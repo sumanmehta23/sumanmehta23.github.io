@@ -86,7 +86,7 @@ class AccountHelper
             $settings['mt5_server_web_password']
         );
         $liveAccount = DB::table('liveaccount')
-            ->where(DB::raw('md5(trade_id)'), $id)
+            ->where(DB::raw('(trade_id)'), $id)
             ->first();
 
         // dd($liveAccount,$id);

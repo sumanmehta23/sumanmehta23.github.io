@@ -79,7 +79,7 @@
         <div class="modal-dialog  modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="createMT5Form" method="post">
-                    <input type="hidden" name="client_id" id="client_id" value="{{ md5($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="accountModalLabel">Create New MT5 Account</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -123,7 +123,7 @@
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
                     @csrf
-                    <input type="hidden" name="client_id" id="client_id" value="{{ md5($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -396,7 +396,7 @@
                                                                         </div>
                                                                         <div class="mt-auto mb-auto">
                                                                             <a
-                                                                                href="/admin/view_account_details?id={{ md5($acc->trade_id) }}">
+                                                                                href="/admin/view_account_details?id={{ ($acc->trade_id) }}">
                                                                                 <i class="fa fa-edit fw-bold"
                                                                                     style="font-size: 1rem;color: var(--primary-color);"></i>
                                                                             </a>
@@ -451,7 +451,7 @@
                                                                 data-bs-toggle="modal" data-bs-target="#ibModal"
                                                                 data-fullname="<?= $user->fullname ?>"
                                                                 data-email="<?= $user->email ?>"
-                                                                data-enc="<?= md5($user->email) ?>"
+                                                                data-enc="<?= ($user->email) ?>"
                                                                 data-ib_status="<?= $user->ib_status ?>">
                                                                 Request To become ib
                                                             </button>

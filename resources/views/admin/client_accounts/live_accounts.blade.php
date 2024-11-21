@@ -70,7 +70,7 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="/admin/view_account_details?id=<?= md5($result->trade_id) ?>">
+                                                <a href="/admin/view_account_details?id=<?= ($result->trade_id) ?>">
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="wid-50 hei-50 rounded"></div>

@@ -243,7 +243,7 @@ class MT5Controller extends Controller
                     'bonus_currency' => $deposit_currency,
                     'created_by' => session('alogin')
                 ]);
-   
+
                 $toEmail = $email;
                 $from = settings()['email_from_address'];
                 $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
@@ -365,16 +365,16 @@ class MT5Controller extends Controller
         $type = "live";
 
         $sql = "
-            SELECT 
-                liveaccount.*, 
-                aspnetusers.fullname, 
-                account_types.ac_group, 
+            SELECT
+                liveaccount.*,
+                aspnetusers.fullname,
+                account_types.ac_group,
                 IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
             FROM liveaccount
             LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
             LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
             LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-            WHERE MD5(liveaccount.trade_id) = :trade_id
+            WHERE (liveaccount.trade_id) = :trade_id
             GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
         ";
 
@@ -416,7 +416,7 @@ class MT5Controller extends Controller
         $account_types = DB::table('account_types')->where('status', 1)->get();
 
         $account = AccountHelper::getAccount($trade_id);
-       
+
         return view("admin.mt5.view", [
             "id" => $trade_id,
             "getUser" => $getUser,

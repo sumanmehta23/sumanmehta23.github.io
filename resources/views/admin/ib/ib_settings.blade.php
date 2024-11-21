@@ -66,14 +66,14 @@
                                 <ul class="list-group" id="tableMT5Category">
                                     <?php $i = 1;
                 foreach ($results as $res) { ?>
-                                    <li class="list-group-item <?= $activeType == md5($res->ib_cat_id) ? 'active' : '' ?>"
+                                    <li class="list-group-item <?= $activeType == ($res->ib_cat_id) ? 'active' : '' ?>"
                                         aria-current="true">
                                         <a class="d-flex justify-content-between"
-                                            href="/admin/ib_settings?activeType=<?= md5($res->ib_cat_id) ?>">
+                                            href="/admin/ib_settings?activeType=<?= ($res->ib_cat_id) ?>">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <span class="fs-15">
-                                                        <?php if (md5($res->ib_cat_id) == $activeType) { ?>
+                                                        <?php if (($res->ib_cat_id) == $activeType) { ?>
                                                         <i class="bi category-icon bi-toggle2-on"></i>
                                                         <?php } else { ?>
                                                         <i class="bi category-icon bi-toggle2-off"></i>
@@ -100,7 +100,7 @@
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
                                                 <?php } ?>
-                                                <button class="btn category-edit" data-id="<?= md5($res->ib_cat_id) ?>"><i
+                                                <button class="btn category-edit" data-id="<?= ($res->ib_cat_id) ?>"><i
                                                         class="fa fa-edit category-icon"></i></button>
                                             </div>
                                         </a>
@@ -170,8 +170,8 @@
                                                 <td>
                                                     <button class="btn btn-primary actions"
                                                         data-href="{{ url('/admin/ibCommissionEdit', [
-                                                            'planId' => md5($plan->ib_plan_id),
-                                                            'accType' => md5($plan->acc_type)]) }}">
+                                                            'planId' => ($plan->ib_plan_id),
+                                                            'accType' => ($plan->acc_type)]) }}">
                                                         <i class="ti ti-edit"></i>
                                                     </button>
                                                 </td>

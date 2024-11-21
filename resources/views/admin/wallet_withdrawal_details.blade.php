@@ -29,7 +29,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
-                                data-enc="{{ md5($details->email) }}" data-email="{{ $details->email }}"
+                                data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                 data-fullname="{{ $details->fullname }}">
                                 <div class="wideget-user-desc d-flex align-items-center">
                                     <div class="me-2"><svg xmlns="http://www.w3.org/2000/svg" width="25"
@@ -50,7 +50,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-12 updateIb cursor-pointer" data-enc="{{ md5($details->email) }}"
+                            <div class="col-lg-3 col-md-12 updateIb cursor-pointer" data-enc="{{ ($details->email) }}"
                                 data-email="{{ $details->email }}" data-fullname="{{ $details->fullname }}">
                                 <div class="wideget-user-desc d-flex align-items-center">
                                     <div class="me-2"><svg xmlns="http://www.w3.org/2000/svg" width="24"

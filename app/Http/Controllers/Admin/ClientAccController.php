@@ -60,7 +60,7 @@ class ClientAccController extends Controller
         // Apply the group filter
 
         // Select required columns and add ordering
-        $accounts = $rmCondition->select(DB::raw('demoaccount.*,aspnetusers.fullname as name,md5(aspnetusers.email) as enc_id'))
+        $accounts = $rmCondition->select(DB::raw('demoaccount.*,aspnetusers.fullname as name,(aspnetusers.email) as enc_id'))
             ->orderBy('demoaccount.id', 'desc')
             ->get();
         return view('admin.client_accounts.demo_accounts', compact("accounts"));
