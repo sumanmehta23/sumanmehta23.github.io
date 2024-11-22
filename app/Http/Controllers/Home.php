@@ -73,7 +73,7 @@ class Home extends Controller
         $liveaccount_details = LiveAccount::with('accountType')
             ->where('email', $email)
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id as id', 'trade_id', 'tradePlatform', 'Registered_Date']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id as id', 'trade_id', 'trade_platform', 'registered_date']);
         return $liveaccount_details;
     }
     public function getDemoAccountDetails($email)
@@ -81,7 +81,7 @@ class Home extends Controller
         $demoaccount_details = DemoAccount::with('accountType')
             ->where('email', $email)
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id as id', 'trade_id', 'tradePlatform', 'Registered_Date']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id as id', 'trade_id', 'trade_platform', 'registered_date']);
         return $demoaccount_details;
     }
     public function getIb1Details($email)

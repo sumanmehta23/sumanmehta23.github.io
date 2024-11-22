@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AccountType extends Model
 {
-    use HasFactory;
+    use HasFactory,HasUuids;
     protected $table = 'account_types';
 
     protected $primaryKey = "id";
@@ -15,5 +16,8 @@ class AccountType extends Model
     {
         return $this->belongsTo(Mt5Group::class, 'ac_type', 'id');
     }
-
+    public function account()
+    {
+        return $this->hasMany(LiveAccount::class, 'account_type', 'ac_index');
+    }
 }

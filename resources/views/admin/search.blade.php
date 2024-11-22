@@ -33,7 +33,7 @@
                                             <td>Trade ID</td>
                                             <td>Leverage</td>
                                             <td>Balance</td>
-                                            <td>Registered_Date</td>
+                                            <td>registered_date</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -89,10 +89,10 @@
                                             <td><?php echo htmlentities($result->Balance); ?></td>
                                             <td>
                                                 <div class="lh-1">
-                                                    <?= date('Y-m-d', strtotime($result->Registered_Date)) ?>
+                                                    <?= date('Y-m-d', strtotime($result->registered_date)) ?>
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    <?= date('H:i:s', strtotime($result->Registered_Date)) ?></div>
+                                                    <?= date('H:i:s', strtotime($result->registered_date)) ?></div>
                                             </td>
                                         </tr>
                                         <?php }

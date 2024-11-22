@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('clientbankdetails', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id');
+            // $table->uuid('user_id');
             $table->string('bankName')->nullable();
             $table->string('branch')->nullable();
             $table->mediumText('bankDetails')->nullable();

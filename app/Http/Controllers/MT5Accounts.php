@@ -112,8 +112,8 @@ class MT5Accounts extends Controller
                 $liveAccount->update([
                     'balance' => $account->Balance,
                     'credit' => $account->Credit,
-                    'MarginFree' => $account->MarginFree,
-                    'MarginLevel' => $account->MarginLevel,
+                    'margin_free' => $account->MarginFree,
+                    'margin_level' => $account->MarginLevel,
                     'equity' => $account->Equity
                 ]);
             }
@@ -229,9 +229,9 @@ class MT5Accounts extends Controller
                 'account_type' => $validatedData['options'],
                 'leverage' => $new_user->Leverage,
                 'currency' => $new_user->Currency,
-                'trader_pwd' => $new_user->MainPassword,
-                'invester_pwd' => $new_user->InvestPassword,
-                'phone_pwd' => $new_user->PhonePassword,
+                'trader_password' => $new_user->MainPassword,
+                'invester_password' => $new_user->InvestPassword,
+                'phone_password' => $new_user->PhonePassword,
                 'ib1' => $new_user->LeadSource,
             ]);
             $this->sendMail($new_user, 'Live');
@@ -278,9 +278,9 @@ class MT5Accounts extends Controller
                 'account_type' => $validatedData['options'],
                 'leverage' => $new_user->Leverage,
                 'currency' => $new_user->Currency,
-                'trader_pwd' => $new_user->MainPassword,
-                'invester_pwd' => $new_user->InvestPassword,
-                'phone_pwd' => $new_user->PhonePassword,
+                'trader_password' => $new_user->MainPassword,
+                'invester_password' => $new_user->InvestPassword,
+                'phone_password' => $new_user->PhonePassword,
                 'balance' => $validatedData['demo_deposit']
             ]);
             $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
@@ -315,8 +315,8 @@ class MT5Accounts extends Controller
             'name' => $new_user->Name,
             'type' => $type,
             'trade_id' => $new_user->Login,
-            'trader_pwd' => $new_user->MainPassword,
-            'investor_pwd' => $new_user->InvestPassword,
+            'trader_password' => $new_user->MainPassword,
+            'investor_password' => $new_user->InvestPassword,
             'leverage' => "1:" . $new_user->Leverage,
             'server_name' => $settings['mt5_company_name'],
             'email' => $settings['email_from_address'],
@@ -403,7 +403,7 @@ class MT5Accounts extends Controller
 
         // Update the password in the database
         $model = $type === 'demo' ? new DemoAccount() : new LiveAccount();
-        $model->where('trade_id', $login)->update(['trader_pwd' => $new_password]);
+        $model->where('trade_id', $login)->update(['trader_password' => $new_password]);
 
         // Display success message
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';

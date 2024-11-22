@@ -38,8 +38,8 @@ class AccountHelper
                     ->update([
                         'Balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
-                        'MarginFree' => $accountData->MarginFree,
-                        'MarginLevel' => $accountData->MarginLevel,
+                        'margin_free' => $accountData->MarginFree,
+                        'margin_level' => $accountData->MarginLevel,
                         'equity' => $accountData->Equity,
                     ]);
             } else {
@@ -62,8 +62,8 @@ class AccountHelper
                     ->update([
                         'Balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
-                        'MarginFree' => $accountData->MarginFree,
-                        'MarginLevel' => $accountData->MarginLevel,
+                        'margin_free' => $accountData->MarginFree,
+                        'margin_level' => $accountData->MarginLevel,
                         'equity' => $accountData->Equity,
                     ]);
             } else {
@@ -100,8 +100,8 @@ class AccountHelper
                 ->update([
                     'Balance' => $accountData->Balance,
                     'credit' => $accountData->Credit,
-                    'MarginFree' => $accountData->MarginFree,
-                    'MarginLevel' => $accountData->MarginLevel,
+                    'margin_free' => $accountData->MarginFree,
+                    'margin_level' => $accountData->MarginLevel,
                     'equity' => $accountData->Equity,
                 ]);
         }

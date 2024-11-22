@@ -377,7 +377,7 @@ if ($getUser) {
                                                     <div class="input-group">
                                                         <input class="form-control" type="password" name=""
                                                             placeholder="" readonly aria-label=""
-                                                            value="<?= $getUser->trader_pwd ?>"
+                                                            value="<?= $getUser->trader_password ?>"
                                                             aria-describedby="my-addon">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text showPassword h-100"
@@ -393,7 +393,7 @@ if ($getUser) {
                                                     <label for="">Investor Password</label>
                                                     <div class="input-group">
                                                         <input class="form-control" type="password" name=""
-                                                            value="<?= $getUser->invester_pwd ?>"
+                                                            value="<?= $getUser->invester_password ?>"
                                                             aria-describedby="my-addon">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text showPassword h-100"

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name')->nullable();
             $table->string('email', 50)->nullable();
-            $table->string('trade_id', 50)->nullable();
+            $table->string('code', 50)->nullable();
             $table->integer('account_type')->nullable();
             $table->decimal('credit', 10)->nullable();
             $table->string('leverage');
@@ -35,12 +35,13 @@ return new class extends Migration
             $table->string('trader_pwd', 200)->nullable();
             $table->string('invester_pwd', 200)->nullable();
             $table->string('phone_pwd', 200)->nullable();
-            $table->timestamp('Registered_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
+            $table->timestamp('registered_date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('status', 50)->default('active');
             $table->double('bonusDeposit')->default(0);
             $table->double('wBonusDeposit')->default(0);
             $table->string('ib1', 100)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

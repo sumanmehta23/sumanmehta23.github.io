@@ -18,9 +18,9 @@ class DemoAccount extends Model
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
     ];
     public function accountType()
     {

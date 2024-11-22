@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('bonus_trans', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            // $table->uuid('user_id')->nullable();
             $table->string('email', 50)->nullable();
             $table->string('trade_id', 100)->nullable();
             $table->string('bonus_amount', 100)->nullable();
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->integer('status')->default(1);
             $table->string('adminRemark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

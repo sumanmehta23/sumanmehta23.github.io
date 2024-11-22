@@ -9,10 +9,10 @@ class TradeWithdrawals extends Model
 {
     use HasFactory;
     protected $table = 'trade_withdrawal';
-    public $timestamps = false;
+    // public $timestamps = false;
     protected $fillable = [
         'email',
-        'trade_id',
+        'account_id',
         'withdrawal_amount',
         'withdraw_type',
         'withdraw_to',

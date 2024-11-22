@@ -13,8 +13,8 @@ class LiveAccount extends Model
     protected $fillable = [
         'balance',
         'credit',
-        'MarginFree',
-        'MarginLevel',
+        'margin_free',
+        'margin_level',
         'equity',
         'email',
         'name',
@@ -22,9 +22,9 @@ class LiveAccount extends Model
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
         'ib1'
     ];
     public function accountType()

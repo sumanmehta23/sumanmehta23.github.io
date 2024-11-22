@@ -132,7 +132,7 @@ class MT5Controller extends Controller
                     $table = $type == 'demo' ? 'demoaccount' : 'liveaccount';
                     DB::table($table)
                         ->where('trade_id', $login)
-                        ->update(['trader_pwd' => $new_password]);
+                        ->update(['trader_password' => $new_password]);
                     return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
                 }
             }
@@ -145,7 +145,7 @@ class MT5Controller extends Controller
                     $table = $type == 'demo' ? 'demoaccount' : 'liveaccount';
                     DB::table($table)
                         ->where('trade_id', $login)
-                        ->update(['invester_pwd' => $new_password]);
+                        ->update(['invester_password' => $new_password]);
                     return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
                 }
             }

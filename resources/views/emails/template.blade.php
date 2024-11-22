@@ -898,7 +898,7 @@ $settings=settings();
                                                                                                         align="left"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_pwd }}</span></div></div>
+                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_password }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('kyc_update', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            // $table->uuid('user_id');
             $table->string('email', 100)->nullable();
             $table->string('kyc_type', 100)->nullable();
             $table->string('kyc_frontside', 100)->nullable();
@@ -25,6 +26,9 @@ return new class extends Migration
             $table->integer('Status')->nullable()->default(0);
             $table->integer('added_by')->nullable()->default(0);
             $table->string('approved_by')->nullable()->default('0');
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

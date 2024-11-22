@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('trade_withdrawal', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            // $table->uuid('user_id');
             $table->string('email', 50)->nullable();
-            $table->string('trade_id', 100)->nullable();
+            // $table->uuid('account_id')->nullable();
             $table->string('withdrawal_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
             $table->string('withdraw_to', 100)->nullable();
@@ -24,6 +25,10 @@ return new class extends Migration
             $table->string('AdminRemark', 100)->nullable();
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->string('created_by')->nullable();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

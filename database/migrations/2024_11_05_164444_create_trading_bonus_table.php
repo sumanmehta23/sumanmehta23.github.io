@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('trade_id')->nullable();
             $table->string('bonus_amount', 100)->nullable();
             $table->string('comments', 100)->nullable();
-            $table->timestamp('Registered_Date')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamp('registered_date')->useCurrentOnUpdate()->useCurrent();
         });
     }
 

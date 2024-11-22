@@ -43,6 +43,7 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
+        // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
@@ -52,11 +53,13 @@ class TradeWithdrawal extends Controller
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $email = session('clogin');
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
-            ->get()->toArray();
-        $trade_id = $request->input('trade_id');
+        $user_id = auth()->user()->id;
+        $account_id = $request->input('account_id');
+        $account = LiveAccount::with('accountType')
+            ->where('id', $account_id)
+            ->where('user_id', $user_id)
+            ->firstOrFail();
+        
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
         $withdraw_to = $request->input('withdraw_to', '');
@@ -64,12 +67,11 @@ class TradeWithdrawal extends Controller
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1'
         ]);
+
         // Get the account balance
-        $account = array_filter($liveaccount_details, function ($obj) use ($trade_id) {
-            return $obj['trade_id'] == $trade_id;
-        });
+       
         // Check for sufficient balance
-        if (isset($account[0]) && $amount > $account[0]['Balance']) {
+        if ($amount > $amount->Balance) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',
@@ -79,7 +81,7 @@ class TradeWithdrawal extends Controller
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
-            $login = $trade_id;
+            $login = $account->code;
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
@@ -92,8 +94,8 @@ class TradeWithdrawal extends Controller
                 DB::beginTransaction();
                 try {
                     TradeWithdrawals::create([
-                        'email' => $email,
-                        'trade_id' => $trade_id,
+                        'user_id' => $user_id,
+                        'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
                         'withdraw_type' => $withdraw_type,
                         'withdraw_to' => $withdraw_to,
