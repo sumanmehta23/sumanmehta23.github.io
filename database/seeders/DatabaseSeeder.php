@@ -4,6 +4,11 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\PageSeeder;
+use Database\Seeders\RoleSeeder;
+use Database\Seeders\CountrySeeder;
+use Database\Seeders\SettingSeeder;
+use Database\Seeders\SuperAdminSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +22,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             SuperAdminSeeder::class,
             PageSeeder::class,
+            CountrySeeder::class,
           ]);
     }
 }

@@ -101,6 +101,7 @@ return new class extends Migration
             $table->dateTime('wallet_requested_at')->nullable();
             $table->dateTime('wallet_approved_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

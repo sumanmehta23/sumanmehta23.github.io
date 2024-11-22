@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('clientbankdetails', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // $table->uuid('client_id');
+            $table->uuid('user_id');
             $table->string('bankName')->nullable();
             $table->string('branch')->nullable();
             $table->mediumText('bankDetails')->nullable();
@@ -31,7 +31,9 @@ return new class extends Migration
             $table->string('document')->nullable();
             $table->string('userId')->nullable();
             $table->string('comment')->nullable();
-            $table->foreignUuid('client_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
 
         });
     }

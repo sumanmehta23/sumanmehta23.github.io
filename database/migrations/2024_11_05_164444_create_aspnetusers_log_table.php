@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('value');
             $table->dateTime('added_at')->useCurrent();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
