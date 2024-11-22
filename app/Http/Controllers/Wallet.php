@@ -72,13 +72,19 @@ class Wallet extends Controller
             'wallet_address' => 'required|string|max:255',
             'status' => 'required',
         ]);
+
+        $user = DB::table('aspnetusers')->where('email', session('clogin'))->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
         ClientWallet::create([
             'wallet_name' => $request->wallet_name,
             'wallet_currency' => $request->wallet_currency,
             'wallet_network' => $request->wallet_network,
             'wallet_address' => $request->wallet_address,
-            'created_by' => session('clogin'),
-            'user_id' => session('clogin'),
+            'user_id' =>  $user->id,
             'status' => $request->status,
         ]);
 

@@ -17,10 +17,10 @@ class Users extends Controller
 {
     public function profile()
     {
-        $email = auth()->user()->email;
-        $bank_accounts = ClientWallet::where('user_id', $email)->get();
-        $user = User::where('email', $email)->first();
-        $verf_docs = KycUpdate::where('email', $email)->orderBy('id', 'desc')->get();
+        $user_id = auth()->user()->id;
+        $bank_accounts = ClientWallet::where('user_id', $user_id)->get();
+        $user = User::find($user_id)->first();
+        $verf_docs = KycUpdate::where('email', auth()->user()->email)->orderBy('id', 'desc')->get();
         return view('profile', compact('bank_accounts', 'user', 'verf_docs'));
 
     }

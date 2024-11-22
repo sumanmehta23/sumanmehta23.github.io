@@ -18,10 +18,8 @@ return new class extends Migration
             $table->string('wallet_currency', 50);
             $table->string('wallet_network', 500);
             $table->text('wallet_address');
-            $table->string('created_by')->nullable();
             $table->tinyInteger('status')->default(1);
-            $table->string('user_id')->nullable();
-            $table->foreignUuid('client_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignUuid('user_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
             $table->string('admin_action_by')->nullable();
             $table->timestamps();
         });
