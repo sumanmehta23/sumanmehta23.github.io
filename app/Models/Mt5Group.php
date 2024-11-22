@@ -4,21 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Mt5Group extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
-    protected $fillable = [
-        'mt5_group_id',
-        'mt5_group_name',
-        'mt5_group_type',
-        'mt5_group_desc',
-        'is_active',
-        'updated_by',
-        'created_at',
-        'updated_at'
-    ];
+    protected $guarded = [];
+    
     public function accountTypes()
     {
         return $this->hasMany(AccountType::class, 'ac_type', 'mt5_group_id');

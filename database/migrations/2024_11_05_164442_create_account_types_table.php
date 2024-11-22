@@ -23,7 +23,7 @@ return new class extends Migration
             $table->double('ac_lot_size')->nullable();
             $table->string('ac_group')->nullable();
             $table->double('ac_spread')->nullable();
-            $table->uuid('ac_type')->nullable()->index('ac_type');
+            $table->uuid('mt5_group_id')->nullable()->index('mt5_group_id');
             $table->integer('acc_ib_cat')->nullable();
             $table->boolean('ib_enabled')->default(true);
             $table->enum('ac_swap', ['yes', 'no'])->default('yes');
