@@ -46,7 +46,7 @@
                                                                     class="btn-check acc-types"
                                                                     {{ $i == 0 ? 'checked' : '' }} name="options"
                                                                     id="option{{ $acc->ac_index }}"
-                                                                    value="{{ $acc->ac_index }}">
+                                                                    value="{{ $acc->id }}">
                                                                 <label class="auth-megaoption"
                                                                     for="option{{ $acc->ac_index }}"
                                                                     style="height: 230px !important;">
