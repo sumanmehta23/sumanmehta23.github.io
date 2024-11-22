@@ -1,0 +1,22 @@
+[
+    {
+        "mt5_group_id": 9,
+        "mt5_group_name": "LQH MARKETS",
+        "mt5_group_type": "live",
+        "mt5_group_desc": "LQH MARKETS - LIVE",
+        "is_active": 1,
+        "updated_by": "admin@bridgingfx.net",
+        "created_at": "2024-09-04 19:54:40",
+        "updated_at": "2024-09-04 19:54:40"
+    },
+    {
+        "mt5_group_id": 10,
+        "mt5_group_name": "LQH MARKETS",
+        "mt5_group_type": "demo",
+        "mt5_group_desc": "LQH MARKETS - DEMO",
+        "is_active": 1,
+        "updated_by": "admin@bridgingfx.net",
+        "created_at": "2024-09-04 19:55:01",
+        "updated_at": "2024-09-04 19:55:01"
+    }
+]

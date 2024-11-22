@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
 class AccountType extends Model
 {
@@ -14,7 +14,7 @@ class AccountType extends Model
     protected $primaryKey = "id";
     public function mt5Group()
     {
-        return $this->belongsTo(Mt5Group::class, 'ac_type', 'id');
+        return $this->belongsTo(Mt5Group::class, 'mt5_group_id', 'id');
     }
     public function account()
     {

@@ -188,6 +188,7 @@ class MT5Accounts extends Controller
     public function getLeverage(Request $request)
     {
         $accountTypeId = $request->query('id');
+
         $leverage = Leverage::where('account_type_id', $accountTypeId)->get();
         return response()->json($leverage);
     }
