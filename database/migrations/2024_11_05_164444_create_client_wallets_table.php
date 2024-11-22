@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignUuid('user_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
             $table->string('admin_action_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

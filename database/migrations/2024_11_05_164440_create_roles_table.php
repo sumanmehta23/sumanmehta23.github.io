@@ -18,8 +18,8 @@ return new class extends Migration
             $table->text('role_desc');
             $table->boolean('is_active')->default(true);
             $table->integer('created_by');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

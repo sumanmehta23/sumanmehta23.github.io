@@ -574,9 +574,9 @@ class AjaxController extends Controller
     public function getBankDetails()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=clientbankdetails.userId) ";
+        $rmCondition = " left join aspnetusers user on(user.id=clientbankdetails.user_id) ";
         if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.userId) where rm.rm_id='" . session('alogin') . "'";
+            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1)";
         }

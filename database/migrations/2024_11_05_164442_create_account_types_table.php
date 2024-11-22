@@ -32,6 +32,7 @@ return new class extends Migration
             $table->boolean('status')->default(true);
             $table->integer('display_priority')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

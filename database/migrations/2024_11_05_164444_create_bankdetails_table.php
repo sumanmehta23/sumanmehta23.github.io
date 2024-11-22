@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('swiftCode')->nullable();
             $table->string('ifscCode')->nullable();
             $table->string('accountName', 200)->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

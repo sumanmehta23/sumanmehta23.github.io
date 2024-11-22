@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('uid', 200)->nullable();
             $table->string('email', 50)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
