@@ -4,7 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Roles;
+use App\Models\Role;
 use App\Models\Page;
 use App\Models\Permissions;
 use App\Models\EmployeeList;
@@ -17,18 +17,18 @@ class StaffManagement extends Controller
     }
     public function rolePermissions()
     {
-        $roles = Roles::all();
+        $roles = Role::all();
         return view('admin.role_permissions', compact('roles'));
     }
     public function adminUsers()
     {
-        $roles = Roles::where('is_active', 1)->get();
+        $roles = Role::where('is_active', 1)->get();
         return view('admin.admin_users', compact('roles'));
     }
     public function permissionsList(Request $request)
     {
         $id = $request->id;
-        $roles = Roles::where('role_id', $id)->first();
+        $roles = Role::where('role_id', $id)->first();
         $pages = Page::all();
         $permissions = Permissions::where('role_id', $id)->get()->toArray();
         $rolePermissions = array_values(array_column($permissions, 'page_id'));
@@ -52,12 +52,12 @@ class StaffManagement extends Controller
     public function addRole(Request $request)
     {
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'role_desc' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
-        $role = new Roles();
-        $role->role_name = $request->input('role_name');
-        $role->role_desc = $request->input('role_desc');
+        $role = new Role();
+        $role->name = $request->input('name');
+        $role->description = $request->input('description');
         $role->created_by = session('userData')['client_index'];
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
@@ -68,13 +68,13 @@ class StaffManagement extends Controller
     public function updateRole(Request $request)
     {
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'role_desc' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
         $id = $request->input('role_id');
-        $role = Roles::where('role_id', $id)->firstOrFail();
-        $role->role_name = $request->input('role_name');
-        $role->role_desc = $request->input('role_desc');
+        $role = Role::where('role_id', $id)->firstOrFail();
+        $role->name = $request->input('name');
+        $role->description = $request->input('description');
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
             return redirect()->back()->with("success", "Role Details Updated");
@@ -87,7 +87,7 @@ class StaffManagement extends Controller
             'status' => 'required|boolean',
         ]);
         $id = $request->input('role_id');
-        $role = Roles::where('role_id', $id)->firstOrFail();
+        $role = Role::where('role_id', $id)->firstOrFail();
         $role->is_active = $request->input('status');
         if ($role->save()) {
             return redirect()->back()->with("success", "Status Updated Successfully");
@@ -158,8 +158,8 @@ class StaffManagement extends Controller
     }
     protected function getRoleName($roleId)
     {
-        $role = Roles::find($roleId);
-        return $role ? $role->role_name : 'Unknown';
+        $role = Role::find($roleId);
+        return $role ? $role->name : 'Unknown';
     }
     public function rmDashboard(Request $request)
     {

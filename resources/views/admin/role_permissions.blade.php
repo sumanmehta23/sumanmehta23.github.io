@@ -15,26 +15,26 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <div class="card-title mb-3">
+                                    <div class="mb-3 card-title">
                                         USER GROUPS
                                     </div>
                                     <div class="nav flex-column nav-pills me-3 tab-style-7" id="v-pills-tab" role="tablist"
                                         aria-orientation="vertical">
                                         <?php foreach ($roles as $k => $role):
-                      $rolename = str_replace(' ', '-', $role->role_name) ?>
+                      $rolename = str_replace(' ', '-', $role->name) ?>
                                         <button data-tab="{{  $rolename }}" data-id="{{  $role->role_id }}"
                                             class="user-group nav-link text-start {{  $k == 0 ? 'active' : '' }}"
                                             id="{{  $rolename }}-tab" data-bs-toggle="pill"
                                             data-bs-target="#{{  $rolename }}" type="button" role="tab"
                                             aria-controls="{{  $rolename }}" aria-selected="false" tabindex="-1"><i
-                                                class="ri-shield-user-line me-1 align-middle d-inline-block"></i>{{  $role->role_name }}</button>
+                                                class="align-middle ri-shield-user-line me-1 d-inline-block"></i>{{  $role->name }}</button>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
                                 <div class="col-md-9">
                                     <div class="tab-content" id="v-pills-tabContent">
                                         <?php foreach ($roles as $k => $role):
-                      $rolename = str_replace(' ', '-', $role->role_name) ?>
+                      $rolename = str_replace(' ', '-', $role->name) ?>
                                         <div class="tab-pane permissions-tab {{  $k == 0 ? 'active show' : '' }}"
                                             id="{{  $rolename }}" role="tabpanel" tabindex="0"
                                             aria-labelledby="{{  $rolename }}-tab">

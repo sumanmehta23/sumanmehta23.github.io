@@ -1,14 +1,14 @@
 <form method="POST" action="{{route('admin.update_role_permissions')}}">
     @csrf
     <div>
-        <div class="d-flex justify-content-between mb-3">
-            <h2 class="text-secondary">PAGES LIST - {{ $roles->role_name }}</h2>
+        <div class="mb-3 d-flex justify-content-between">
+            <h2 class="text-secondary">PAGES LIST - {{ $roles->name }}</h2>
             <input type="hidden" name="role_id" value="{{ $roles->role_id }}">
             <input type="submit" class="btn btn-primary" name="update_permissions" value="Update">
         </div>
-        <div class="row justify-content-between px-3">
+        <div class="px-3 row justify-content-between">
             @foreach ($menu as $page)
-                <div class="row border-bottom py-2 mt-2">
+                <div class="py-2 mt-2 row border-bottom">
                     <div class="d-flex align-items-center">
                         <input
                             data-page="{{ $page['page_id'] }}"
@@ -19,11 +19,11 @@
                             id="checkebox-lg-{{ $page['page_id'] }}"
                             {{ in_array($page['page_id'], $rolePermissions) ? 'checked' : '' }}
                         >
-                        <h4 class="text-secondary mb-0">{{ $page['page_name'] }}</h4>
+                        <h4 class="mb-0 text-secondary">{{ $page['page_name'] }}</h4>
                     </div>
                 </div>
                 @if (!empty($page['submenu']))
-                    <div class="row mb-5">
+                    <div class="mb-5 row">
                         @foreach ($page['submenu'] as $subpage)
                             <div class="col-4">
                                 <input

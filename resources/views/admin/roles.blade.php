@@ -20,11 +20,11 @@
                         <div class="row gy-4">
                             <div class="col-12">
                                 <label for="input-label" class="form-label">Role Name</label>
-                                <input type="text" class="form-control" name="role_name" required>
+                                <input type="text" class="form-control" name="name" required>
                             </div>
                             <div class="col-12">
                                 <label for="input-file" class="form-label">Description</label>
-                                <textarea class="form-control" required name="role_desc" rows="3"></textarea>
+                                <textarea class="form-control" required name="description" rows="3"></textarea>
                             </div>
                             <div class="col-12">
                                 <div class="form-check form-switch">
@@ -59,11 +59,11 @@
                             <div class="col-12">
                                 <input type="hidden" name="role_id" required id="roleid">
                                 <label for="input-label" class="form-label">Role Name</label>
-                                <input type="text" class="form-control" name="role_name" required id="rolename">
+                                <input type="text" class="form-control" name="name" required id="rolename">
                             </div>
                             <div class="col-12">
                                 <label for="input-file" class="form-label">Description</label>
-                                <textarea class="form-control" required name="role_desc" rows="3" id="roledesc"></textarea>
+                                <textarea class="form-control" required name="description" rows="3" id="roledesc"></textarea>
                             </div>
                             <div class="col-12">
                                 <div class="form-check form-switch">
@@ -92,7 +92,7 @@
                     <li class="breadcrumb-item active" aria-current="page">Roles</li>
                 </ol>
             </div>
-            <div class="d-flex justify-content-end mb-3">
+            <div class="mb-3 d-flex justify-content-end">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
                     Add New Role
                 </button>
@@ -102,7 +102,7 @@
                     <div class="card custom-card">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="tableRoles" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                <table id="tableRoles" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
@@ -141,11 +141,11 @@
                         name: 'id'
                     },
                     {
-                        data: 'role_name',
+                        data: 'name',
                         name: 'group'
                     },
                     {
-                        data: 'role_desc',
+                        data: 'description',
                         name: 'deposit'
                     },
                     {
@@ -209,8 +209,8 @@
                     success: function(response) {
                         response = JSON.parse(response.trim());
                         $('#roleid').val(response.role_id);
-                        $('#rolename').val(response.role_name);
-                        $('#roledesc').text(response.role_desc);
+                        $('#rolename').val(response.name);
+                        $('#roledesc').text(response.description);
                         $('#rolestatus').prop('checked', response.is_active == 1);
                         $('#updateRoleModal').modal('show');
                     },

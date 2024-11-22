@@ -12,14 +12,14 @@ class IBController extends Controller
 
     public function index(Request $request)
     {
-        $userRoleId = $request->session()->get('userData.role_id');
+        $userRole = $request->session()->get('userData.role_id');
         $alogin = $request->session()->get('alogin');
 
 
         $rmCondition = DB::table('ib1 as ib')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
-        if ($userRoleId == 2) {
+        if ($userRole == "Relationship Manager") {
             $rmCondition->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
@@ -37,7 +37,7 @@ class IBController extends Controller
             ->join('aspnetusers as t2', 'ib.email', '=', 't2.ib1')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
-        if ($userRoleId == 2) {
+        if ($userRole == "Relationship Manager") {
             $totalClients->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
@@ -49,7 +49,7 @@ class IBController extends Controller
             ->join('kyc_update as kyc', 'ib.email', '=', 'kyc.email')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
-        if ($userRoleId == 2) {
+            if ($userRole == "Relationship Manager") {
             $pendingKyc->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
@@ -61,7 +61,7 @@ class IBController extends Controller
         $ibInternal = DB::table('ib_internal as ib')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
-        if ($userRoleId == 2) {
+            if ($userRole == "Relationship Manager") {
             $ibInternal->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
@@ -73,7 +73,7 @@ class IBController extends Controller
         $ibPendingTrans = DB::table('ib_internal as ib')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
-        if ($userRoleId == 2) {
+            if ($userRole == "Relationship Manager") {
             $ibPendingTrans->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
@@ -85,7 +85,7 @@ class IBController extends Controller
             ->join('kyc_update as kyc', 'ib1.email', '=', 'kyc.email');
 
         // Applying dynamic conditions
-        if ($userRoleId == 2) {
+        if ($userRole == "Relationship Manager") {
             $rmCondition->leftJoin('relationship_manager as rm', 'ib1.email', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }

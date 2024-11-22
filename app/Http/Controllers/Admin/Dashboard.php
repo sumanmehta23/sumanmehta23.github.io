@@ -18,18 +18,18 @@ class Dashboard extends Controller
     public function index()
     {
         $rmCondition = '';
-        if (session('userData')['role_id'] != 1) {
+        if (session('userData')['userRole'] != "Super Admin") {
             $rmCondition .= " left join aspnetusers user on(user.email=trs.email) ";
         } else {
             $rmCondition .= " where (1) and ";
         }
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=trs.email) where rm.rm_id='" . session('alogin') . "' and ";
         }
 
         $userCondition = " ";
-        if (session('userData')['role_id'] != 1) {
-            if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] != "Super Admin") {
+            if (session('userData')['userRole'] == "Relationship Manager") {
                 $userCondition = "  left join relationship_manager rm on(rm.user_id=asp.email) where rm.rm_id='" . session('alogin') . "'";
             }
         }

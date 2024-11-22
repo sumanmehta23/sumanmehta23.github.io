@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('created_by')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->string('user_id')->nullable();
-            $table->foreign('client_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignUuid('client_id')->references('id')->on('aspnetusers')->onUpdate('cascade')->onDelete('cascade');
             $table->string('admin_action_by')->nullable();
             $table->timestamps();
         });

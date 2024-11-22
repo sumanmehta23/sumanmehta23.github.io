@@ -69,7 +69,7 @@ class Ticket extends Controller
         $ticket_types = DB::table('ticket_types')->get();
         $assign_details = DB::table('emplist as e')
             ->leftJoin('roles as r', 'r.role_id', '=', 'e.role_id')
-            ->whereIn('r.role_name', ['Superadmin', 'Relationship Manager'])
+            ->whereIn('r.name', ['Superadmin', 'Relationship Manager'])
             ->select('e.client_index', 'e.username')
             ->first();
 
@@ -172,10 +172,10 @@ class Ticket extends Controller
                 ->first();
             $rm_details = DB::table('emplist as emp')
                 ->leftJoin('roles as r', 'emp.role_id', '=', 'r.role_id')
-                ->select('emp.client_index', 'emp.role_id', 'r.role_name', 'emp.username')
+                ->select('emp.client_index', 'emp.role_id', 'r.name', 'emp.username')
                 ->where(function ($query) {
-                    $query->where('r.role_name', 'Relationship Manager')
-                        ->orWhere('r.role_name', 'Superadmin');
+                    $query->where('r.name', 'Relationship Manager')
+                        ->orWhere('r.name', 'Superadmin');
                 })
                 ->get();
             $ticket_status = TicketStatus::all();
@@ -238,10 +238,10 @@ class Ticket extends Controller
     {
         $rm_details = DB::table('emplist as emp')
             ->leftJoin('roles as r', 'emp.role_id', '=', 'r.role_id')
-            ->select('emp.client_index', 'emp.role_id', 'r.role_name', 'emp.username')
+            ->select('emp.client_index', 'emp.role_id', 'r.name', 'emp.username')
             ->where(function ($query) {
-                $query->where('r.role_name', 'Relationship Manager')
-                    ->orWhere('r.role_name', 'Superadmin');
+                $query->where('r.name', 'Relationship Manager')
+                    ->orWhere('r.name', 'Superadmin');
             })
             ->get()->toArray();
 

@@ -31,7 +31,7 @@
                                 @foreach ($rm_details as $rm)
                                     <option value="{{ $rm->client_index }}"
                                         {{ isset($assignee_details->assignee) && $rm->client_index == $assign_details->assignee ? 'selected' : '' }}
->{{ $rm->username }} ({{ $rm->role_name }})
+>{{ $rm->username }} ({{ $rm->name }})
                                     </option>
                                 @endforeach
                             </select>
@@ -88,16 +88,16 @@
                 </ol>
             </div>
 
-            <div class="row chat p-3">
+            <div class="p-3 row chat">
                 <div class="card" id="chat-card">
-                    <div class="action-header clearfix">
-                        <div class="col-12 mt-3">
-                            <div class="card custom-card shadow-none mb-0 ribbon-card">
-                                <div class="card-body p-4">
+                    <div class="clearfix action-header">
+                        <div class="mt-3 col-12">
+                            <div class="mb-0 shadow-none card custom-card ribbon-card">
+                                <div class="p-4 card-body">
                                     <div class="ribbon ribbon-{{ $ticket->ticket_label }} ribbon-top-left">
                                         <span>{{ $ticket->ticket_status }}</span>
                                     </div>
-                                    <div class="card-subtitle fw-semibold mb-2">
+                                    <div class="mb-2 card-subtitle fw-semibold">
                                         <div class="row">
                                             <div class="col-7">
                                                 <div class="ms-5">
@@ -116,8 +116,8 @@
                                                 <div class="d-flex w-100 justify-content-end">
                                                     <div class="d-flex align-items-center text-start">
                                                         <div class="ms-5 text-start">
-                                                            <p class="text-muted mb-0">{{ $ticket->fullname }}</p>
-                                                            <p class="fw-medium fs-16 mb-0">{{ $ticket->email_id }}</p>
+                                                            <p class="mb-0 text-muted">{{ $ticket->fullname }}</p>
+                                                            <p class="mb-0 fw-medium fs-16">{{ $ticket->email_id }}</p>
                                                         </div>
                                                     </div>
                                                     <div class="ms-2">
@@ -130,7 +130,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row mt-4">
+                                    <div class="mt-4 row">
                                         <div class="col-8">
                                             <!-- Additional Content can be added here -->
                                         </div>
@@ -163,7 +163,7 @@
 
                     <div class="card-footer">
                         <div id="file-display" style="margin-top: 10px;"></div>
-                        <form class="msb-reply d-flex bg-transparent" method="POST" enctype="multipart/form-data"
+                        <form class="bg-transparent msb-reply d-flex" method="POST" enctype="multipart/form-data"
                             action="">
                             @csrf
                             <label class="input-group-text attach_btn" for="file-upload">

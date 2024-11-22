@@ -1,0 +1,310 @@
+[
+    {
+        "name": "admin_title",
+        "value": "LIQUIDITY HOUSE"
+    },
+    {
+        "name": "favicon",
+        "value": "images\/Icon .png"
+    },
+    {
+        "name": "sidebar_color",
+        "value": "#003e40"
+    },
+    {
+        "name": "admin_sidebar_logo",
+        "value": "images\/Full Logo.png"
+    },
+    {
+        "name": "admin_sidebar_dropdown_color",
+        "value": "#ffffff"
+    },
+    {
+        "name": "admin_sidebar_dropdown_txtcolor",
+        "value": "#18bae2"
+    },
+    {
+        "name": "admin_sidebar_dropdown_hover",
+        "value": "#04487e"
+    },
+    {
+        "name": "sidebar_flaticon",
+        "value": "#ffffff"
+    },
+    {
+        "name": "sidebar_nav_item_name",
+        "value": "#cb1010"
+    },
+    {
+        "name": "scrollup_background_hover_color",
+        "value": "#f033e0"
+    },
+    {
+        "name": "breadcrumb_color",
+        "value": "#0e1cdd"
+    },
+    {
+        "name": "navbar_header_one",
+        "value": "#09497a"
+    },
+    {
+        "name": "navbar_header_text",
+        "value": "#ffffff"
+    },
+    {
+        "name": "navbar_hamburger_menu",
+        "value": "#b0cd1d"
+    },
+    {
+        "name": "dropdown_panel_color",
+        "value": "#d75923"
+    },
+    {
+        "name": "textColor",
+        "value": "text-light"
+    },
+    {
+        "name": "pastel_green_color",
+        "value": "#c7a845"
+    },
+    {
+        "name": "orange_peel_color",
+        "value": "#567fa0"
+    },
+    {
+        "name": "copyright_site_name_text",
+        "value": "https:\/\/my.lqhmarkets.com"
+    },
+    {
+        "name": "admin_settings_update_password_tab_txtcolor",
+        "value": "#37c5e1"
+    },
+    {
+        "name": "admin_settings_update_password_tab_bgcolor",
+        "value": "#29c72b"
+    },
+    {
+        "name": "admin_login_submit_button",
+        "value": "#ccc61e"
+    },
+    {
+        "name": "email_from_address",
+        "value": "support@lqhmarkets.com"
+    },
+    {
+        "name": "open_live_tab_color",
+        "value": "#d1b86d"
+    },
+    {
+        "name": "open_demo_tab_color",
+        "value": "#09497a"
+    },
+    {
+        "name": "download_platform_tab_color",
+        "value": "#c7a845"
+    },
+    {
+        "name": "custom_header_page_header",
+        "value": "#1db0cd"
+    },
+    {
+        "name": "form_check_label_input",
+        "value": ""
+    },
+    {
+        "name": "download_platform_tab_color",
+        "value": "#c7a845"
+    },
+    {
+        "name": "custom_header_page_header",
+        "value": "#1db0cd"
+    },
+    {
+        "name": "form_check_label_input",
+        "value": ""
+    },
+    {
+        "name": "client_nav_item_menu_icon",
+        "value": "#d2d520"
+    },
+    {
+        "name": "client_sub_menu_nav_item",
+        "value": "#e96016"
+    },
+    {
+        "name": "client_login_button_color",
+        "value": "#e01ab5"
+    },
+    {
+        "name": "client_login_button_hover_txt_color",
+        "value": "#2a14cc"
+    },
+    {
+        "name": "client_login_button_hover_bgcolor",
+        "value": "#1bd03f"
+    },
+    {
+        "name": "client_login_button_hover_brcolor",
+        "value": "#d4ea34"
+    },
+    {
+        "name": "horizontal_menu_bottom_navbar",
+        "value": "#6baab3"
+    },
+    {
+        "name": "horizontal_menu_title_color_hover",
+        "value": "#d11a8e"
+    },
+    {
+        "name": "client_registration_page_input_border_color",
+        "value": "#421dc9"
+    },
+    {
+        "name": "client_registration_button_txtcolor",
+        "value": "#14eb4a"
+    },
+    {
+        "name": "client_registration_button_bgcolor",
+        "value": "#d4e83b"
+    },
+    {
+        "name": "client_registration_button_brcolor",
+        "value": "#c94418"
+    },
+    {
+        "name": "client_registration_button_txtcolor_hover",
+        "value": "#e10e9f"
+    },
+    {
+        "name": "client_registration_button_bgcolor_hover",
+        "value": "#100dce"
+    },
+    {
+        "name": "client_registration_button_brcolor_hover",
+        "value": "#1bda3b"
+    },
+    {
+        "name": "latest_live_trading_account_active_button_txtcolor",
+        "value": "#d1e000"
+    },
+    {
+        "name": "latest_live_trading_account_active_button_bgcolor",
+        "value": "#ec4d09"
+    },
+    {
+        "name": "open_live_account_button_class",
+        "value": "btn-danger"
+    },
+    {
+        "name": "privacy_policy_hover_color",
+        "value": "#000000"
+    },
+    {
+        "name": "mt5_windows_platform",
+        "value": "https:\/\/download.metatrader.com\/cdn\/web\/lqh.integrated.ltd\/mt5\/lqhintegrated5setup.exe"
+    },
+    {
+        "name": "mt5_android_platform",
+        "value": "https:\/\/download.metatrader.com\/cdn\/mobile\/mt5\/android?server=LQHIntegrated-Live"
+    },
+    {
+        "name": "mt5_ios_platform",
+        "value": "https:\/\/download.metatrader.com\/cdn\/mobile\/mt5\/ios?server=LQHIntegrated-Live"
+    },
+    {
+        "name": "sender_name",
+        "value": "LQH Markets"
+    },
+    {
+        "name": "client_favicon",
+        "value": ""
+    },
+    {
+        "name": "mt5_server_ip",
+        "value": "173.234.139.122"
+    },
+    {
+        "name": "mt5_server_port",
+        "value": "443"
+    },
+    {
+        "name": "mt5_server_web_login",
+        "value": "2000"
+    },
+    {
+        "name": "sender_email_address",
+        "value": "support@lqhmarkets.com"
+    },
+    {
+        "name": "mt5_server_web_password",
+        "value": "Lqh@2024#"
+    },
+    {
+        "name": "title",
+        "value": "364575467657"
+    },
+    {
+        "name": "logo_url",
+        "value": ""
+    },
+    {
+        "name": "client_nav_menu_color",
+        "value": "#e734f4"
+    },
+    {
+        "name": "client_login_checkbox_input_color",
+        "value": ""
+    },
+    {
+        "name": "reg_logo_url",
+        "value": ""
+    },
+    {
+        "name": "gb_textColor",
+        "value": "text-light"
+    },
+    {
+        "name": "api_key",
+        "value": "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"
+    },
+    {
+        "name": "partner_key",
+        "value": "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"
+    },
+    {
+        "name": "open_live_tab_txt_color",
+        "value": "text-light"
+    },
+    {
+        "name": "open_demo_tab_txt_color",
+        "value": "text-light"
+    },
+    {
+        "name": "open_platform_tab_txt_color",
+        "value": "text-light"
+    },
+    {
+        "name": "admin_sidebar_dropdown_hover_text",
+        "value": "#ffffff"
+    },
+    {
+        "name": "admin_login_background_image",
+        "value": "images\/admin.jpg"
+    },
+    {
+        "name": "client_login_background_image",
+        "value": "images\/login_bg4.jpg"
+    },
+    {
+        "name": "mt5_company_name",
+        "value": "LQH Integrated Ltd."
+    },
+    {
+        "name": "admin_sidebar_logo_dark",
+        "value": "images\/Full Logo.png"
+    },
+    {
+        "name": "now_payment_api_key",
+        "value": "3ATGP0S-8PD472V-JKV7NKF-N77X4E7"
+    }
+]

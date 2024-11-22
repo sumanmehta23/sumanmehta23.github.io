@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->integer('page_id');
-            $table->integer('page_category_id')->nullable()->index('page_category_id');
+            $table->uuid('page_category_id');
             $table->string('pagename');
             $table->string('filename');
             $table->boolean('is_submenu')->default(false);
@@ -22,6 +22,8 @@ return new class extends Migration
             $table->integer('page_order');
             $table->string('icon', 50);
             $table->integer('show_in_menu')->nullable()->default(1);
+            $table->foreign('page_category_id')->references('id')->on('page_categories')->cascadeOnDelete();
+            $table->timestamps();
         });
     }
 

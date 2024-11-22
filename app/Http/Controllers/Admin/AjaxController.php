@@ -193,16 +193,16 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " ";
-        if (session('userData')['role_id'] != 1) {
+        if (session('userData')['userRole'] != "Super Admin") {
             $rmCondition .= " left join aspnetusers user on(user.email=ap.email) ";
         } else {
             $rmCondition .= " where";
         }
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where rmgr.rm_id='" . session('alogin') . "' and ";
         }
-        if (session('userData')['role_id'] != 1) {
-            if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] != "Super Admin") {
+            if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmCondition .= " (1) and ";
             } else {
                 $rmCondition .= " where (1) and";
@@ -253,7 +253,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where ";
@@ -283,7 +283,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
         }else{
             $rmCondition .= " where ";
@@ -314,7 +314,7 @@ class AjaxController extends Controller
         $condition = "";
 
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
             } else {
             }
@@ -349,7 +349,7 @@ class AjaxController extends Controller
         $condition = '';
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
             } else {
             }
@@ -382,7 +382,7 @@ class AjaxController extends Controller
     public function getInternalTransfer()
     {
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where ";
@@ -410,7 +410,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -441,7 +441,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -471,7 +471,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -501,7 +501,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -530,7 +530,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -559,7 +559,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=kyc.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (rm.user_id=kyc.email) where rm.rm_id='" . session('alogin') . "' and";
         }
         header('Content-Type: application/json');
@@ -575,7 +575,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=clientbankdetails.userId) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.userId) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1)";
@@ -605,19 +605,20 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.role_name,r.role_id
+        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN permissions p ON e.role_id = p.role_id
-                LEFT JOIN roles r ON e.role_id = r.role_id
+                LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.client_index";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
+        
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = (session('userData')['role_id'] == 1 ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
+            $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
         echo json_encode(['data' => $data]);
@@ -706,7 +707,7 @@ class AjaxController extends Controller
 
 
         header('Content-Type: application/json');
-        $sql = "SELECT p.id,r.role_name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
+        $sql = "SELECT p.id,r.name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -878,7 +879,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = "";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
         }
         header('Content-Type: application/json');
@@ -921,7 +922,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1) ";

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('roles', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->integer('role_id');
-            $table->string('role_name');
+            $table->string('name');
             $table->text('role_desc');
             $table->boolean('is_active')->default(true);
             $table->integer('created_by');

@@ -5,8 +5,9 @@ $requestUri = parse_url($requestUri, PHP_URL_PATH);
 $categories = page_categories();
 
 $userRoleID = session('userRoleID');
-$rolePermissionsList = rolePermissions($userRoleID);
-$filePermissions = filePermissions($userRoleID);
+$userRole = session('userRole');
+$rolePermissionsList = rolePermissions($userRole);
+$filePermissions = filePermissions($userRole);
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="light" data-theme-mode="light"
@@ -106,7 +107,7 @@ $filePermissions = filePermissions($userRoleID);
     <div class="page">
 
         <!-- app-header -->
-        <header class="app-header sticky sticky-pin" id="header">
+        <header class="sticky app-header sticky-pin" id="header">
 
             <!-- Start::main-header-container -->
             <div class="main-header-container container-fluid">
@@ -126,7 +127,7 @@ $filePermissions = filePermissions($userRoleID);
                     <!-- End::header-element -->
 
                     <!-- Start::header-element -->
-                    <div class="header-element mx-lg-0 mx-2">
+                    <div class="mx-2 header-element mx-lg-0">
                         <a aria-label="Hide Sidebar"
                             class="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle"
                             data-bs-toggle="sidebar" href="javascript:void(0);"><span></span></a>
@@ -134,7 +135,7 @@ $filePermissions = filePermissions($userRoleID);
                     <!-- End::header-element -->
 
                     <!-- Start::header-element -->
-                    <div class="header-element header-search my-auto">
+                    <div class="my-auto header-element header-search">
                         <form action="/admin/search" method="get" class="w-100">
                             <div class="input-group">
                                 <input type="search" name="search"
@@ -182,12 +183,12 @@ $filePermissions = filePermissions($userRoleID);
                             </div>
                         </a>
                         <!-- End::header-link|dropdown-toggle -->
-                        <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
+                        <ul class="pt-0 overflow-hidden main-header-dropdown dropdown-menu header-profile-dropdown dropdown-menu-end"
                             aria-labelledby="mainHeaderProfile">
                             <li class="drop-heading border-bottom">
-                                <p class="text-center d-grid mb-0">Welcome
+                                <p class="mb-0 text-center d-grid">Welcome
                                     <span
-                                        class="text-dark mb-0 fs-14 fw-semibold">{{ ucfirst(session('userData')['username']) }}</span>
+                                        class="mb-0 text-dark fs-14 fw-semibold">{{ ucfirst(session('userData')['username']) }}</span>
                                 </p>
                             </li>
                             <!-- <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i
@@ -208,7 +209,7 @@ $filePermissions = filePermissions($userRoleID);
         </header>
         <!-- /app-header -->
         <!-- Start::app-sidebar -->
-        <aside class="app-sidebar sticky sticky-pin" id="sidebar">
+        <aside class="sticky app-sidebar sticky-pin" id="sidebar">
 
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
