@@ -45,4 +45,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(BonusTrans::class);
     }
+   // Has many live accounts
+   public function liveAccounts()
+   {
+       return $this->hasMany(Account::class)->where('demo', false);
+   }
+
+   // Has many demo accounts
+   public function demoAccounts()
+   {
+       return $this->hasMany(Account::class)->where('demo', true);
+   }
 }

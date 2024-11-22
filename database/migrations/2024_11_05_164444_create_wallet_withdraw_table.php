@@ -28,7 +28,9 @@ return new class extends Migration
             $table->string('wallet_id', 100)->nullable();
             $table->string('wallet_qr', 500)->nullable();
             $table->text('client_note')->nullable();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

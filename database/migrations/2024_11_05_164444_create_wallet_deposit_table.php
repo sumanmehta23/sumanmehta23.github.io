@@ -25,11 +25,12 @@ return new class extends Migration
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('btc_amount', 100)->nullable();
             $table->string('currency_type', 50)->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrent();
             $table->longText('callback_data')->nullable();
             $table->longText('callback_code')->nullable();
-        });
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
+    });
     }
 
     /**

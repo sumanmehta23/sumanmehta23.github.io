@@ -16,17 +16,17 @@ return new class extends Migration
             $table->bigInteger('indexId');
             $table->integer('acc_type')->nullable();
             $table->string('uid', 150)->nullable()->unique('uniqueid');
-            $table->string('name', 50)->nullable();
-            $table->string('email', 50)->nullable()->unique('email');
+            $table->string('name')->nullable();
+            $table->string('email')->nullable()->unique('email');
             $table->string('number', 50)->nullable();
             $table->string('username', 100)->nullable();
             $table->string('country', 100)->nullable();
-            $table->string('password', 50)->nullable();
+            $table->string('password')->nullable();
             $table->integer('status')->default(0);
-            $table->string('website', 100)->default('Zara FX');
-            $table->string('company_name', 50)->nullable()->default('Zara FX');
+            $table->string('website', 100)->nullable();
+            $table->string('company_name')->nullable();
             $table->date('dob')->nullable();
-            $table->string('profile_pic', 200)->nullable();
+            $table->string('profile_pic')->nullable();
             $table->string('accountCurrencyBase', 5)->default('USD');
             $table->string('address')->nullable();
             $table->boolean('email_confirmed')->default(false);
@@ -68,6 +68,9 @@ return new class extends Migration
             $table->string('ib14')->nullable();
             $table->string('ib15')->nullable();
             $table->string('ib_wallet', 100)->nullable();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

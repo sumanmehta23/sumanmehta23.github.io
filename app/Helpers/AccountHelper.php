@@ -5,14 +5,15 @@ namespace App\Helpers;
 use DB;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
+use App\Models\Account;
 use App\MT5\MTEnDealAction;
 
 class AccountHelper
 {
-    public static function updateLiveAndDemoAccounts($email = "", $api = new MTWebAPI())
+    public static function updateLiveAndDemoAccounts($userId = "", $api = new MTWebAPI())
     {
-        if ($email == "") {
-            $email = session("clogin");
+        if ($userId == "") {
+            $userId = auth()->user()->id;
         }
 
         $settings = settings();
@@ -25,18 +26,13 @@ class AccountHelper
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $liveAccounts = DB::table('liveaccount')
-            ->where('email', $email)
-            ->orderBy('id', 'desc')
-            ->get();
+        $liveAccounts = auth()->user()->liveAccounts;
 
         foreach ($liveAccounts as $account) {
-            $apiResponse = $api->UserAccountGet($account->trade_id, $accountData);
+            $apiResponse = $api->UserAccountGet($account->code, $accountData);
             if ($apiResponse === MTRetCode::MT_RET_OK) {
-                DB::table('liveaccount')
-                    ->where('trade_id', $account->trade_id)
-                    ->update([
-                        'Balance' => $accountData->Balance,
+                $account->update([
+                        'balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
                         'margin_free' => $accountData->MarginFree,
                         'margin_level' => $accountData->MarginLevel,
@@ -48,18 +44,13 @@ class AccountHelper
         }
 
         // Update Demo Accounts
-        $demoAccounts = DB::table('demoaccount')
-            ->where('email', $email)
-            ->orderBy('id', 'desc')
-            ->get();
+        $demoAccounts = auth()->user()->demoAccounts;
 
         foreach ($demoAccounts as $account) {
             $apiResponse = $api->UserAccountGet($account->trade_id, $accountData);
 
             if ($apiResponse === MTRetCode::MT_RET_OK) {
-                DB::table('demoaccount')
-                    ->where('trade_id', $account->trade_id)
-                    ->update([
+                $account->update([
                         'Balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
                         'margin_free' => $accountData->MarginFree,
@@ -85,20 +76,16 @@ class AccountHelper
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $liveAccount = DB::table('liveaccount')
-            ->where(DB::raw('(trade_id)'), $id)
-            ->first();
+        $liveAccount = Account::where('code',$id)->first();
 
         // dd($liveAccount,$id);
         $accountData = NULL;
 
-        $apiResponse = $api->UserAccountGet($liveAccount->trade_id, $accountData);
+        $apiResponse = $api->UserAccountGet($liveAccount->code, $accountData);
 
         if ($apiResponse === MTRetCode::MT_RET_OK) {
-            DB::table('liveaccount')
-                ->where('trade_id', $liveAccount->trade_id)
-                ->update([
-                    'Balance' => $accountData->Balance,
+            $liveAccount->update([
+                    'balance' => $accountData->Balance,
                     'credit' => $accountData->Credit,
                     'margin_free' => $accountData->MarginFree,
                     'margin_level' => $accountData->MarginLevel,

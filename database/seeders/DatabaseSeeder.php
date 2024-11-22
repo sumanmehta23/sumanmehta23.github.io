@@ -23,6 +23,11 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             PageSeeder::class,
             CountrySeeder::class,
+            Mt5GroupCategoriesSeeder::class,
+            Mt5GroupsSeeder::class,
+            AccountTypesSeeder::class,
+            LeverageSeeder::class,
+            UserSeeder::class,
           ]);
     }
 }

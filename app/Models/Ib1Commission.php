@@ -17,4 +17,8 @@ class Ib1Commission extends Model
         'volume',
         'time_closed'
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

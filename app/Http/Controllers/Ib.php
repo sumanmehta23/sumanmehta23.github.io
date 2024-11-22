@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\IbWallet;
-use App\Models\LiveAccount;
-use App\Models\IbClientList;
+use Exception;
 use App\Models\Ib1;
-use App\Models\IbPlanDetails;
-use App\Models\TradeDeposits;
+use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
-use App\MT5\MTEnDealAction;
-use App\Models\Ib1Commission;
-use App\Services\MT5Service;
-use Illuminate\Support\Facades\DB;
-use App\Helpers\AccountHelper;
+use App\Models\Account;
 use App\Models\Country;
-use Exception;
+use App\Models\IbWallet;
+use App\Models\LiveAccount;
+use App\MT5\MTEnDealAction;
+use App\Models\IbClientList;
+use App\Services\MT5Service;
+use Illuminate\Http\Request;
+use App\Models\Ib1Commission;
+use App\Models\IbPlanDetails;
+use App\Models\TradeDeposits;
+use App\Helpers\AccountHelper;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class Ib extends Controller
 {
@@ -66,9 +67,9 @@ class Ib extends Controller
     }
     public function ib_profile()
     {
-        $email = auth()->user()->email;
-        AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
-        $ib = Ib1::where('email', session('clogin'))
+        $userId = auth()->user()->id;
+        AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
+        $ib = Ib1::where('user_id', $userId)
             ->whereNotNull('acc_type')
             ->first();
 
@@ -77,7 +78,7 @@ class Ib extends Controller
             return redirect()->route('ib');
         }
         $plan_id = $ib->acc_type;
-        $ib_email = $email;
+        $ib_email = auth()->user()->email;
         if ($plan_id) {
             $ibPlans = IbPlanDetails::where('ib_plan_id', $plan_id)
                 ->where('status', 1)
@@ -94,13 +95,14 @@ class Ib extends Controller
             }
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
-                $clientLiveAccs = LiveAccount::select('liveaccount.trade_id', 'liveaccount.email', 'liveaccount.account_type')
-                    ->join('aspnetusers', 'aspnetusers.email', '=', 'liveaccount.email')
-                    ->where('aspnetusers.status', 1)
-                    ->where('aspnetusers.ib' . $i, $ib_email)
+                $clientLiveAccs = Account::select('code', 'user_id', 'account_type')
+                    ->where('demo',false)
+                    ->whereHas('user', function ($query) use ($ib_email, $i) {
+                        $query->where("ib$i", $ib_email)->where('status', 1);
+                    })
                     ->get();
                 foreach ($clientLiveAccs as $client) {
-                    $login = $client->trade_id;
+                    $login = $client->code;
                     $from = 'September 01,2024';
                     $to = 'March 31,2080';
                     $total = 0;
@@ -127,7 +129,7 @@ class Ib extends Controller
                                 $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
                                 try {
                                     Ib1Commission::create([
-                                        'user_id' => $client->email,
+                                        'user_id' => $client->user_id,
                                         'order_id' => $order,
                                         'login' => $login,
                                         // 'init_volume' => $init_volume,
