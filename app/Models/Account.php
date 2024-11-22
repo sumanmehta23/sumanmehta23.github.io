@@ -10,8 +10,26 @@ class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */
     use HasFactory,HasUuids;
+    protected $guarded = [];
+    public function casts()
+    {
+        return [
+            'trader_password' => 'encrypted',
+            'invester_password' => 'encrypted',
+            'phone_password' => 'encrypted',
+        ];
+    }
     public function ib1Commission()
     {
         return $this->hasMany(Ib1Commission::class);
     }
+    public function accountType()
+    {
+        return $this->belongsTo(AccountType::class);
+    }
+    public function bonusTrans()
+    {
+        return $this->hasMany(BonusTrans::class);
+    }
+
 }

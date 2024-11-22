@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\LiveAccount;
-use App\Models\DemoAccount;
-use App\Models\AccountType;
-use App\Models\Leverage;
 use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
-use App\MT5\MTEnDealAction;
-use App\MT5\MTProtocolConsts;
-use App\Services\MT5Service;
-use Illuminate\Support\Facades\DB;
-use App\Services\MailService as MailService;
+use App\Models\Account;
+use App\Models\Leverage;
+use App\Models\AccountType;
+use App\Models\DemoAccount;
 use App\Models\DemoDeposit;
+use App\Models\LiveAccount;
+use App\MT5\MTEnDealAction;
+use App\Services\MT5Service;
+use Illuminate\Http\Request;
+use App\Models\Ib1Commission;
+use App\MT5\MTProtocolConsts;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Services\MailService as MailService;
 
 class MT5Accounts extends Controller
 {
@@ -33,26 +35,30 @@ class MT5Accounts extends Controller
     public function liveAccounts()
     {
         $email = auth()->user()->email;
-        $results = LiveAccount::with('accountType')
-            ->where('email', $email)
+        $results = Account::with('accountType')
+            ->where('user_id', auth()->user()->id)
+            ->where('demo', false)
             ->orderBy('id', 'desc')
             ->get();
         return view('live_accounts', compact('results'));
     }
     public function demoAccounts()
     {
-        $email = $email = auth()->user()->email;
-        $results = DemoAccount::where('email', $email)
+        
+        $results = Account::where('user_id', auth()->user()->id)
+            ->where('demo', true)
             ->orderBy('id', 'desc')
             ->get();
         return view('demo_accounts', compact('results'));
     }
-    public function viewAccountDetails()
+    public function viewAccountDetails(Account $account)
     {
+        
         session()->remove('error');
-        $email = $email = auth()->user()->email;
-        $trade_id = $_GET['id'];
-        $type = $_GET['type'];
+        $user= auth()->user();
+        $code=$account->code;
+        $type=$account->demo ? 'Demo' : 'Live';
+        // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
         $settings = settings();
         $results = [];
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -71,7 +77,7 @@ class MT5Accounts extends Controller
         $freemargin = '';
         $profit = '';
         try {
-            $login = $trade_id;
+            $login = $code;
             // Fetch positions
             if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -84,37 +90,36 @@ class MT5Accounts extends Controller
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
             // Fetch user account details
-            if (($error_code = $this->api->UserAccountGet($login, $account)) != MTRetCode::MT_RET_OK) {
+            if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
-            if ($account) {
+            if ($mt5account) {
                 // account login get
-                $account->Login;
+                $mt5account->Login;
                 // balance get
-                $balance = $account->Balance;
+                $balance = $mt5account->Balance;
                 // balance get
-                $balance = $account->Balance;
+                $balance = $mt5account->Balance;
                 // Credit get
-                $credit = $account->Credit;
+                $credit = $mt5account->Credit;
                 // profit get
-                $profit = $account->Floating;
+                $profit = $mt5account->Floating;
                 // Free Margin get
-                $freemargin = $account->MarginFree;
+                $freemargin = $mt5account->MarginFree;
                 // credit get
-                $credit = $account->Credit;
+                $credit = $mt5account->Credit;
                 // equity --  $balance + $Credit+$Profit
                 $equity = ($balance + $credit + $profit);
                 // margin level get
-                $margin = $account->Margin;
+                $margin = $mt5account->Margin;
                 $marginlevel = round((($balance - $freemargin) / (1000)), 2);
                 // Update live account with new data
-                $liveAccount = LiveAccount::where('trade_id', $trade_id)->firstOrFail();
-                $liveAccount->update([
-                    'balance' => $account->Balance,
-                    'credit' => $account->Credit,
-                    'margin_free' => $account->MarginFree,
-                    'margin_level' => $account->MarginLevel,
-                    'equity' => $account->Equity
+                $account->update([
+                    'balance' => $mt5account->Balance,
+                    'credit' => $mt5account->Credit,
+                    'margin_free' => $mt5account->MarginFree,
+                    'margin_level' => $mt5account->MarginLevel,
+                    'equity' => $mt5account->Equity
                 ]);
             }
             // Fetch order history
@@ -128,15 +133,9 @@ class MT5Accounts extends Controller
             if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
             }
-            if ($type == "demo") {
-                $getUser = DemoAccount::with('accountType', 'bonusTrans')
-                    ->where('trade_id', $trade_id)
-                    ->first();
-            } else {
-                $getUser = LiveAccount::with('accountType', 'bonusTrans')
-                    ->where('trade_id', $trade_id)
-                    ->first();
-            }
+            $getUser =Account::with('accountType', 'bonusTrans')
+            ->where('id', $account->id)
+            ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
             // Process orders
             if (!empty($orders)) {
@@ -144,8 +143,9 @@ class MT5Accounts extends Controller
                     $volume = $item->VolumeInitial * 0.00001;
                     $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
                     // Insert commission data into DB
-                    DB::table('ib1_commission')->insert([
-                        'user_id' => session('clogin'),
+                    Ib1Commission::create([
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $account->id,
                         'order_id' => $item->Order,
                         'login' => $item->Login,
                         'volume' => $volume,
@@ -154,15 +154,16 @@ class MT5Accounts extends Controller
                 }
             }
         } catch (\Exception $e) {
+            dd($e->getMessage().$e->getTraceAsString());
             session()->flash('error', 'Exception: ' . $e->getMessage());
         }
-        return view('view-account-details', compact('results', 'trade_id', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
+        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
 
     }
     public function showLiveAccountForm()
     {
-        $email = $email = auth()->user()->email;
-        $user = User::where('email', $email)->first();
+        $user=auth()->user();
+        $email  = $user->email;
         $results = AccountType::whereHas('mt5Group', function ($query) {
             $query->where('mt5_group_type', 'live')
                 ->orWhere('mt5_group_type', 'real');
@@ -174,8 +175,9 @@ class MT5Accounts extends Controller
     }
     public function showDemoAccountForm()
     {
-        $email = $email = auth()->user()->email;
-        $user = User::where('email', $email)->first();
+        $user=auth()->user();
+        $email  = $user->email;
+        // $user = User::where('email', $email)->first();
         $results = AccountType::with('mt5Group')
             ->whereHas('mt5Group', function ($query) {
                 $query->where('mt5_group_type', 'demo');
@@ -199,8 +201,8 @@ class MT5Accounts extends Controller
             'options' => 'required|string',
             'leverage' => 'required|string',
         ]);
-        $user = User::where('email', session('clogin'))->firstOrFail();
-        $group = AccountType::where('ac_index', $validatedData['options'])->firstOrFail();
+        $user = auth()->user();
+        $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
@@ -223,11 +225,13 @@ class MT5Accounts extends Controller
         $new_user->Login = $this->generateRandomNumber();
         $response = $this->CreateAccount($new_user, $user_server, 'Live');
         if ($response['status']) {
-            LiveAccount::create([
+            Account::create([
+                'user_id' => $user->id,
+                'demo'=> false,
                 'email' => $new_user->Email,
                 'name' => $new_user->Name,
-                'trade_id' => $new_user->Login,
-                'account_type' => $validatedData['options'],
+                'code' => $new_user->Login,
+                'account_type_id' => $validatedData['options'],
                 'leverage' => $new_user->Leverage,
                 'currency' => $new_user->Currency,
                 'trader_password' => $new_user->MainPassword,
@@ -249,8 +253,8 @@ class MT5Accounts extends Controller
             'leverage' => 'required|string',
             'demo_deposit' => 'required'
         ]);
-        $user = User::where('email', session('clogin'))->firstOrFail();
-        $group = AccountType::where('ac_index', $validatedData['options'])->firstOrFail();
+        $user = auth()->user();
+        $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
@@ -273,10 +277,12 @@ class MT5Accounts extends Controller
         $new_user->Login = $this->generateRandomNumber();
         $response = $this->CreateAccount($new_user, $user_server, 'Demo');
         if ($response['status']) {
-            DemoAccount::create([
+            $account=Account::create([
+                'user_id' => $user->id,
+                'demo' => true,
                 'email' => $new_user->Email,
-                'trade_id' => $new_user->Login,
-                'account_type' => $validatedData['options'],
+                'code' => $new_user->Login,
+                'account_type_id' => $validatedData['options'],
                 'leverage' => $new_user->Leverage,
                 'currency' => $new_user->Currency,
                 'trader_password' => $new_user->MainPassword,
@@ -290,6 +296,8 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('success', $error);
             } else {
                 $data = [
+                    'user_id' => $user->id,
+                    'account_id'=>$account->id,
                     'email' => $new_user->Email,
                     'trade_id' => $new_user->Login,
                     'deposit_amount' => $validatedData['demo_deposit'],
@@ -349,6 +357,7 @@ class MT5Accounts extends Controller
         }
         // Shuffle the password to avoid predictable patterns
         $password = str_shuffle($password);
+        
         return $password;
     }
     function generateRandomNumber($length = 6)
@@ -380,31 +389,34 @@ class MT5Accounts extends Controller
             return ["status" => true, "message" => $type . " Account Created Successfully"];
         }
     }
-    public function changeMt5Password(Request $request)
+    public function changeMt5Password(Request $request,Account $account)
     {
         $request->validate([
-            'trade_id' => 'required',
+            'account_id' => 'required',
             'password_type' => 'required|in:main,investor',
             'password' => 'required|min:6',
         ]);
-        $login = $request->input('trade_id');
+        $code = $account->code;
         $pass_type = $request->input('password_type');
         $new_password = $request->input('password');
         $type = $request->input('type', 'live');
         if ($pass_type == 'main') {
-            $error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN);
+            $error_code = $this->api->UserPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN);
         } else {
-            $error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR);
+            $error_code = $this->api->UserPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR);
         }
 
         // Check if the password change was successful
         if ($error_code != MTRetCode::MT_RET_OK) {
             return redirect()->back()->with('error', 'MT5: ' . MTRetCode::GetError($error_code));
         }
-
+// 'trader_password' => $new_user->MainPassword,
+// 'investor_password' => $new_user->InvestPassword,
         // Update the password in the database
-        $model = $type === 'demo' ? new DemoAccount() : new LiveAccount();
-        $model->where('trade_id', $login)->update(['trader_password' => $new_password]);
+        $account->update([
+            $pass_type == 'main' ? 'trader_password' : 'invester_password' => $new_password
+        ]);
+        
 
         // Display success message
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';

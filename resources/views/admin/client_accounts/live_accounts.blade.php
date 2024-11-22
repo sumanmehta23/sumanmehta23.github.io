@@ -26,7 +26,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="ajaxDatatable" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
                                             <td>Client</td>
@@ -70,15 +70,15 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="/admin/view_account_details?id=<?= ($result->trade_id) ?>">
+                                                <a href="{{route('admin-view-account-details',$result->id)}}">
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
-                                                                alt="user-image" class="wid-50 hei-50 rounded"></div>
+                                                                alt="user-image" class="rounded wid-50 hei-50"></div>
                                                         <div class="col ps-2">
                                                             <h6 class="mb-0"><span
                                                                     class="text-truncate w-100"><?= $result->trade_id ?></span>
                                                             </h6>
-                                                            <p class="text-muted f-12 mb-0"><span
+                                                            <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"><?= $result->ac_group ?></span>
                                                             </p>
                                                         </div>

@@ -12,6 +12,9 @@ class AccountHelper
 {
     public static function updateLiveAndDemoAccounts($userId = "", $api = new MTWebAPI())
     {
+        if(!auth()->check()) {
+            return;
+        }
         if ($userId == "") {
             $userId = auth()->user()->id;
         }

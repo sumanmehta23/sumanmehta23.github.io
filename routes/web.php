@@ -29,20 +29,20 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 Route::get("/se",function(){
-    $settings = DB::table('page_categories')->get()->toArray();
-    file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('pages')->get()->toArray();
-    file_put_contents('pages.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('countries')->get()->toArray();
-    file_put_contents('countries.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('account_types')->get()->toArray();
-    file_put_contents('account_types.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('mt5_groups')->get()->toArray();
-    file_put_contents('mt5_groups.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('mt5_group_categories')->get()->toArray();
-    file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
-    $settings = DB::table('leverage')->get()->toArray();
-    file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('page_categories')->get()->toArray();
+    // file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('pages')->get()->toArray();
+    // file_put_contents('pages.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('countries')->get()->toArray();
+    // file_put_contents('countries.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('account_types')->get()->toArray();
+    // file_put_contents('account_types.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('mt5_groups')->get()->toArray();
+    // file_put_contents('mt5_groups.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('mt5_group_categories')->get()->toArray();
+    // file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('leverage')->get()->toArray();
+    // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
@@ -73,12 +73,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
-    Route::get('/view-account-details', [MT5Accounts::class, 'viewAccountDetails'])->name('view-account-details');
+    Route::get('/view-account-details/{account}', [MT5Accounts::class, 'viewAccountDetails'])->where('account', '.*')->name('view-account-details');
     Route::get('/createLiveAccount', [MT5Accounts::class, 'showLiveAccountForm'])->name('show-live-account-form');
     Route::post('/createLiveAccount', [MT5Accounts::class, 'createLiveAccount'])->name('create-live-account');
     Route::get('/createDemoAccount', [MT5Accounts::class, 'showDemoAccountForm'])->name('show-demo-account-form');
     Route::post('/createDemoAccount', [MT5Accounts::class, 'createDemoAccount'])->name('create-demo-account');
-    Route::post('/view-account-details', [MT5Accounts::class, 'changeMt5Password'])->name('change-mt5-password');
+    Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
 
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
 
@@ -196,7 +196,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
 
-        Route::get("/view_account_details", [MT5Controller::class, 'view']);
+        Route::get("/view_account_details", [MT5Controller::class, 'view'])->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');

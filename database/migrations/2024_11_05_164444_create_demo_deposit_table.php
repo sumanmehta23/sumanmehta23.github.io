@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('demo_deposit', function (Blueprint $table) {
             $table->uuid('id')->primary();
             // $table->integer('id', true);
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
             $table->string('trade_id', 100)->nullable();
             $table->string('deposit_amount', 100)->nullable();
@@ -25,6 +27,7 @@ return new class extends Migration
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->text('deposit_proof')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

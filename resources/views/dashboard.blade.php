@@ -2,17 +2,17 @@
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
-            <div class="row mb-4">
+            <div class="mb-4 row">
                 @include('trading-view')
             </div>
             <div class="row">
                 <div class="col-md-6 col-lg-3">
-                    <div class="card bg-gray-800 dropbox-card">
+                    <div class="bg-gray-800 card dropbox-card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <h5 class="text-white">WALLET </h5>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
+                            <div class="mt-2 mb-2 d-flex align-items-center justify-content-between">
                                 <div>
                                     <div class="avtar avtar-s"><svg class="pc-icon">
                                             <use xlink:href="#custom-security-safe"></use>
@@ -20,7 +20,7 @@
                                 </div>
                                 <?php if (session('user')->wallet_enabled == 0 || session('user')->wallet_enabled == NULL) { ?>
                                 <div>
-                                    <button class="btn btn-sm btn-outline-light bg-transparent activate-wallet"
+                                    <button class="bg-transparent btn btn-sm btn-outline-light activate-wallet"
                                         type="button"><i class="ti ti-plus me-2"></i><!---->
                                         Activate Wallet</button>
                                 </div>
@@ -37,7 +37,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="mb-3 d-flex align-items-center justify-content-between">
                             <div class="avtar avtar-s bg-light-primary"><i class="ti ti-database-import f-18"></i></div>
                             <div class="dropdown"><a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
                                     href="/dashboard" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -48,14 +48,14 @@
                             </div>
                         </div>
                         <h4 class="mb-1 f-w-400">${{ $totalDeposit }}</h4>
-                        <p class="text-muted mb-0">Total Deposits</p>
+                        <p class="mb-0 text-muted">Total Deposits</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="mb-3 d-flex align-items-center justify-content-between">
                             <div class="avtar avtar-s bg-light-primary"><i class="ti ti-database-export f-18"></i></div>
                             <div class="dropdown"><a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
                                     href="/dashboard" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -67,14 +67,14 @@
                             </div>
                         </div>
                         <h4 class="mb-1 f-w-400">${{ $totalWithdrawal }}</h4>
-                        <p class="text-muted mb-0">Total Withdrawals</p>
+                        <p class="mb-0 text-muted">Total Withdrawals</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="mb-3 d-flex align-items-center justify-content-between">
                             <div class="avtar avtar-s bg-light-primary"><i class="ti ti-shield-check f-18"></i></div>
                             <div class="dropdown">
                                 <a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none" href="/dashboard" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -88,7 +88,7 @@
 
                         </div>
                         <h3 class="mb-0 f-w-400">{{ $liveAccounts }}</h3>
-                        <p class="text-muted mb-0">Live MT5 Accounts</p>
+                        <p class="mb-0 text-muted">Live MT5 Accounts</p>
                     </div>
                 </div>
             </div>
@@ -96,7 +96,7 @@
         <div class="row">
             <div class="col-md-12 col-lg-9">
                 <div class="card">
-                    <div class="card-body border-bottom pb-0">
+                    <div class="pb-0 card-body border-bottom">
                         <div class="d-flex align-items-center justify-content-between">
                             <h5 class="mb-0">My Trading Accounts</h5>
                             <div class="dropdown"><a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
@@ -143,14 +143,14 @@
                                                             <div class="row align-items-center">
                                                                 <div class="col-auto pe-0">
                                                                     <img src="/assets/images/mt5.png" alt="user-image"
-                                                                        class="wid-50 hei-50 rounded">
+                                                                        class="rounded wid-50 hei-50">
                                                                 </div>
                                                                 <div class="col">
                                                                     <h4 class="mb-2 ms-2">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $liveAccount->trade_id }}</span>
                                                                     </h4>
-                                                                    <p class="text-muted ms-2 f-12 mb-0">
+                                                                    <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $liveAccount->account_type }}</span>
                                                                     </p>
@@ -163,7 +163,7 @@
                                                         <td class="text-end f-w-400 f-16">$ {{ $liveAccount->equity }}</td>
                                                         <td class="text-end f-w-200">
                                                             <div class="d-flex align-items-center">
-                                                                <a href="{{ route('view-account-details', ['type' => 'live', 'id' => $liveAccount->trade_id]) }}"
+                                                                <a href="{{ route('view-account-details', $liveAccount->id) }}"
                                                                     class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                                     <span>View <svg class="pc-icon">
                                                                             <use xlink:href="#custom-login"></use>
@@ -191,7 +191,7 @@
                                                     <a href="/dashboard"><img src="/assets/images/empty.png"
                                                             class="w-25" alt="img"></a>
                                                 </div>
-                                                <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Live Accounts
+                                                <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Live Accounts
                                                     Found</h6>
                                             </div>
                                         </div>
@@ -226,14 +226,14 @@
                                                             <div class="row align-items-center">
                                                                 <div class="col-auto pe-0">
                                                                     <img src="/assets/images/mt5.png" alt="user-image"
-                                                                        class="wid-50 hei-50 rounded">
+                                                                        class="rounded wid-50 hei-50">
                                                                 </div>
                                                                 <div class="col">
                                                                     <h4 class="mb-2 ms-2">
                                                                         <span
-                                                                            class="text-truncate w-100">{{ $demoAccount->trade_id }}</span>
+                                                                            class="text-truncate w-100">{{ $demoAccount->code }}</span>
                                                                     </h4>
-                                                                    <p class="text-muted ms-2 f-12 mb-0">
+                                                                    <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $demoAccount->account_type }}</span>
                                                                     </p>
@@ -247,7 +247,7 @@
                                                         </td>
                                                         <td class="text-end f-w-200">
                                                             <div class="d-flex align-items-center">
-                                                                <a href="{{ route('view-account-details', ['type' => 'demo', 'id' => $demoAccount->trade_id]) }}"
+                                                                <a href="{{ route('view-account-details', $demoAccount->id) }}"
                                                                     class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                                     <span>View <svg class="pc-icon">
                                                                             <use xlink:href="#custom-login"></use>
@@ -271,7 +271,7 @@
                                                             src="/assets/images/empty.png" class="w-25"
                                                             alt="img"></a>
                                                 </div>
-                                                <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Demo Accounts
+                                                <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Demo Accounts
                                                     Found</h6>
                                             </div>
                                         </div>
@@ -290,7 +290,7 @@
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card">
-                    <div class="card-body p-3"><a href="/trade-deposit"
+                    <div class="p-3 card-body"><a href="/trade-deposit"
                             class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="mb-0 text-white text-opacity-75"></p>
@@ -300,7 +300,7 @@
                         </a></div>
                 </div>
                 <div class="card">
-                    <div class="card-body p-3"><a href="/trade-withdrawal"
+                    <div class="p-3 card-body"><a href="/trade-withdrawal"
                             class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="mb-0 text-white text-opacity-75"></p>
@@ -314,7 +314,7 @@
                 @endphp
                 <a href="{{ $ib }}" class="">
                     <div class="card bg-primary available-balance-card">
-                        <div class="card-body p-3">
+                        <div class="p-3 card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
                                     <h4 class="mb-0 text-white">Introducing Broker</h4>

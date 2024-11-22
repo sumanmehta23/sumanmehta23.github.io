@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\AccountType::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->boolean('demo')->default(true);
             $table->string('name')->nullable();//missing
             $table->string('email', 50)->nullable();
@@ -32,16 +34,15 @@ return new class extends Migration
             $table->double('withdraw')->default(0);
             $table->double('internal_transfer')->default(0);
             $table->double('internal_deposit')->default(0);
-            $table->string('trader_password', 200)->nullable();
-            $table->string('invester_password', 200)->nullable();
-            $table->string('phone_password', 200)->nullable();
+            $table->text('trader_password')->nullable();
+            $table->text('invester_password')->nullable();
+            $table->text('phone_password')->nullable();
             $table->timestamp('registered_date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('status', 50)->default('active');
             $table->double('bonus_deposit')->default(0);
             $table->double('w_bonus_deposit')->default(0);
             $table->string('ib1', 100)->nullable();
-            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\AccountType::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            
             $table->timestamps();
             $table->softDeletes();
         });

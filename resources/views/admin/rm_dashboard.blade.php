@@ -24,7 +24,7 @@
                                                             <img src="{{ asset('admin_assets/assets/images/users/client.jpeg') }}"
                                                                 alt="img" style="width:100px">
                                                         </div>
-                                                        <h3 class="username mb-2">{{ $rm_details->username }}</h3>
+                                                        <h3 class="mb-2 username">{{ $rm_details->username }}</h3>
                                                         <p class="mb-1 text-muted">{{ $rm_details->email }}</p>
                                                     </div>
                                                 </div>
@@ -38,11 +38,11 @@
                                                                     <h2 class="mb-0 number-font text-fixed-white">
                                                                         {{ $pending_wd + $pending_td }}
                                                                     </h2>
-                                                                    <p class="text-fixed-white mb-0">Pending Deposits</p>
+                                                                    <p class="mb-0 text-fixed-white">Pending Deposits</p>
                                                                 </div>
                                                                 <div class="ms-auto">
                                                                     <i
-                                                                        class="fa fa-bank text-fixed-white fs-30 me-2 mt-2"></i>
+                                                                        class="mt-2 fa fa-bank text-fixed-white fs-30 me-2"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -60,7 +60,7 @@
                                                                 </div>
                                                                 <div class="ms-auto">
                                                                     <i
-                                                                        class="fa fa-usd text-fixed-white fs-30 me-2 mt-2"></i>
+                                                                        class="mt-2 fa fa-usd text-fixed-white fs-30 me-2"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -75,11 +75,11 @@
                                                                     <h2 class="mb-0 number-font text-fixed-white">
                                                                         {{ $pending_ib }}
                                                                     </h2>
-                                                                    <p class="text-fixed-white mb-0">Pending IB Requests</p>
+                                                                    <p class="mb-0 text-fixed-white">Pending IB Requests</p>
                                                                 </div>
                                                                 <div class="ms-auto">
                                                                     <i
-                                                                        class="fa fa-dollar text-fixed-white fs-30 me-2 mt-2"></i>
+                                                                        class="mt-2 fa fa-dollar text-fixed-white fs-30 me-2"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -94,11 +94,11 @@
                                                                     <h2 class="mb-0 number-font text-fixed-white">
                                                                         {{ $wallet_users }}
                                                                     </h2>
-                                                                    <p class="text-fixed-white mb-0">Activated Wallets</p>
+                                                                    <p class="mb-0 text-fixed-white">Activated Wallets</p>
                                                                 </div>
                                                                 <div class="ms-auto">
                                                                     <i
-                                                                        class="ri-wallet-3-fill text-fixed-white fs-30 me-2 mt-2"></i>
+                                                                        class="mt-2 ri-wallet-3-fill text-fixed-white fs-30 me-2"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -179,7 +179,7 @@
                                     <div class="card-body">
                                         <div class="table-responsive">
                                             <table id="ajaxDatatable"
-                                                class="tableClient ajaxDataTable table table-bordered text-nowrap w-100">
+                                                class="table tableClient ajaxDataTable table-bordered text-nowrap w-100">
                                                 <thead>
                                                     <tr>
                                                         <th>#CID</th>
@@ -204,7 +204,7 @@
                     <div class="col-6">
                         <div class="card custom-card product-sales">
                             <div class="card-header">
-                                <div class="card-title d-flex justify-content-between mb-0 w-100">
+                                <div class="mb-0 card-title d-flex justify-content-between w-100">
                                     <div>
                                         Latest Pending Deposit
                                     </div>
@@ -275,7 +275,7 @@
                                                                 WALLET
                                                             @else
                                                                 <a
-                                                                    href="{{ url('/admin/view_account_details?id=' . ($deposit->trade_id)) }}">
+                                                                    href="{{ route('admin-view-account-details',$deposit->account_id) }}">
                                                                     <div class="btn btn-toolbar row">
                                                                         <div class="col-auto pe-0 ps-0">
                                                                             <img src="/assets/images/mt5.png"
@@ -309,15 +309,15 @@
                                                             <div class="mt-sm-1 d-block">
                                                                 @if ($deposit->status == 1)
                                                                     <div
-                                                                        class="badge bg-success-transparent text-success p-2 px-3 rounded-pill">
+                                                                        class="p-2 px-3 badge bg-success-transparent text-success rounded-pill">
                                                                         Approved</div>
                                                                 @elseif($deposit->status == 2)
                                                                     <div
-                                                                        class="badge bg-danger-transparent text-danger p-2 px-3 rounded-pill">
+                                                                        class="p-2 px-3 badge bg-danger-transparent text-danger rounded-pill">
                                                                         Rejected</div>
                                                                 @elseif($deposit->status == 0)
                                                                     <div
-                                                                        class="badge bg-primary-transparent text-primary p-2 px-3 rounded-pill">
+                                                                        class="p-2 px-3 badge bg-primary-transparent text-primary rounded-pill">
                                                                         Pending</div>
                                                                 @endif
                                                             </div>
@@ -351,7 +351,7 @@
                     <div class="col-6">
                         <div class="card custom-card product-sales">
                             <div class="card-header">
-                                <div class="card-title d-flex justify-content-between mb-0 w-100">
+                                <div class="mb-0 card-title d-flex justify-content-between w-100">
                                     <div>
                                         Latest Pending Withdrawals
                                     </div>
@@ -422,7 +422,7 @@
                                                                 WALLET
                                                             @else
                                                                 <a
-                                                                    href="{{ url('/admin/view_account_details?id=' . ($result->trade_id)) }}">
+                                                                    href="{{ route('admin-view-account-details',$result->account_id) }}">
                                                                     <div class="btn btn-toolbar row">
                                                                         <div class="col-auto pe-0 ps-0">
                                                                             <img src="/assets/images/mt5.png"
@@ -457,19 +457,19 @@
                                                                 @switch($result->status)
                                                                     @case(1)
                                                                         <div
-                                                                            class="badge bg-success-transparent text-success p-2 px-3 rounded-pill">
+                                                                            class="p-2 px-3 badge bg-success-transparent text-success rounded-pill">
                                                                             Success</div>
                                                                     @break
 
                                                                     @case(2)
                                                                         <div
-                                                                            class="badge bg-danger-transparent text-danger p-2 px-3 rounded-pill">
+                                                                            class="p-2 px-3 badge bg-danger-transparent text-danger rounded-pill">
                                                                             Cancelled</div>
                                                                     @break
 
                                                                     @case(0)
                                                                         <div
-                                                                            class="badge bg-primary-transparent text-primary p-2 px-3 rounded-pill">
+                                                                            class="p-2 px-3 badge bg-primary-transparent text-primary rounded-pill">
                                                                             Pending</div>
                                                                     @break
                                                                 @endswitch

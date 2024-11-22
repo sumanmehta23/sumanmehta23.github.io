@@ -70,7 +70,7 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="/admin/view_account_details?id=<?= ($result->trade_id) ?>">
+                                                <a href="{{route('admin-view-account-details',$result->id)}}">
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="rounded wid-50 hei-50"></div>

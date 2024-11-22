@@ -947,7 +947,7 @@ $settings=settings();
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_pwd }}</span></div></div>
+                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_password }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>

@@ -3,7 +3,7 @@
 
 <div class="pc-container">
     <div class="pc-content">
-        <div class="page-header mb-0 pb-0">
+        <div class="pb-0 mb-0 page-header">
             <div class="page-block">
                 <div class="row align-items-center">
                     <div class="col-md-12">
@@ -18,7 +18,7 @@
             @include('mt5_accounts_tab') <!-- Adjust the path according to your structure -->
             <div class="col-md-12 col-lg-9">
                 <div class="card">
-                    <div class="card-body border-bottom pb-0">
+                    <div class="pb-0 card-body border-bottom">
                         <div class="d-flex align-items-center justify-content-between">
                             <h5 class="mb-0">My Trading Demo Accounts</h5>
                             <div class="dropdown">
@@ -50,11 +50,11 @@
                                                 <td>
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0">
-                                                            <img src="/assets/images/mt5.png" alt="user-image" class="wid-50 hei-50 rounded">
+                                                            <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                                                         </div>
                                                         <div class="col">
-                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->trade_id }}</span></h4>
-                                                            <p class="text-muted ms-2 f-12 mb-0"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
+                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code }}</span></h4>
+                                                            <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -63,7 +63,7 @@
                                                 <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}</td>
                                                 <td class="text-end f-w-200">
                                                     <div class="d-flex align-items-center">
-                                                        <a href="{{ url('/view_account_details?type=demo&id=' . $acc->trade_id) }}"
+                                                        <a href="{{ url('/view-account-details/' . $acc->id) }}"
                                                            class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                            <span>View <svg class="pc-icon">
                                                                <use xlink:href="#custom-login"></use>
@@ -83,7 +83,7 @@
             <div class="col-md-6 col-lg-3">
                 <a href="/createDemoAccount">
                     <div class="card bg-primary available-balance-card">
-                        <div class="card-body p-3">
+                        <div class="p-3 card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
                                     <h4 class="mb-0 text-white">Create Account</h4>
@@ -96,7 +96,7 @@
                 </a>
                 <a href="/liveAccounts#">
                     <div class="card">
-                        <div class="card-body p-3">
+                        <div class="p-3 card-body">
                             <a href="user-profile" class="d-flex align-items-center justify-content-between">
                                 <div>
                                     <h4 class="mb-0 text-black">My Profile</h4>
