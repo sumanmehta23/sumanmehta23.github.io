@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ib1Commission extends Model
 {
-    use HasFactory;
+    use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'ib1_commission';
     protected $fillable = [
         'user_id',
         'order_id',
+        'account_id',
         'login',
         'init_volume',
         'volume',
@@ -21,4 +24,13 @@ class Ib1Commission extends Model
     {
         return $this->belongsTo(User::class);
     }
+        public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
+    public function ibWallet()
+    {
+        return $this->hasOne(IbWallet::class, 'order_id', 'order_id');
+    }
+    
 }

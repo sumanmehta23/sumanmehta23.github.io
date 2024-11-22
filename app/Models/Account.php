@@ -10,4 +10,8 @@ class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */
     use HasFactory,HasUuids;
+    public function ib1Commission()
+    {
+        return $this->hasMany(Ib1Commission::class);
+    }
 }

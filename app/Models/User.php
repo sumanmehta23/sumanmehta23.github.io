@@ -56,4 +56,8 @@ class User extends Authenticatable
    {
        return $this->hasMany(Account::class)->where('demo', true);
    }
+   public function ib1Commissions()
+    {
+        return $this->hasMany(Ib1Commission::class);
+    }
 }

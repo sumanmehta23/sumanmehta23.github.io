@@ -217,7 +217,7 @@ class MT5Accounts extends Controller
         $new_user->Company = $settings['mt5_company_name'];
         $new_user->Name = $user->fullname;
         $new_user->Email = session('clogin');
-        $new_user->LeadSource = ($user->ib1 == 'noIB') ? "" : $user->ib1;
+        $new_user->LeadSource = $user->ib1?? "" ;
         $new_user->PhonePassword = $this->generatePassword();
         $new_user->InvestPassword = $this->generatePassword();
         $new_user->Login = $this->generateRandomNumber();
@@ -267,7 +267,7 @@ class MT5Accounts extends Controller
         $new_user->Company = $settings['mt5_company_name'];
         $new_user->Name = $user->fullname;
         $new_user->Email = session('clogin');
-        $new_user->LeadSource = ($user->ib1 == 'noIB') ? "" : $user->ib1;
+        $new_user->LeadSource = $user->ib1 ?? "" ;
         $new_user->PhonePassword = $this->generatePassword();
         $new_user->InvestPassword = $this->generatePassword();
         $new_user->Login = $this->generateRandomNumber();

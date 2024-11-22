@@ -623,7 +623,7 @@
                         var ibValues = JSON.parse(response);
                         $('.ib-select').val(null).trigger('change');
                         $.each(ibValues, function(key, value) {
-                            if ((value != "noIB" && value != "" && value != null) || key ==
+                            if (( value != "" && value != null) || key ==
                                 'ib1') {
                                 if (value == 'noIB') {
                                     value = '';
@@ -753,7 +753,7 @@
                         let ib_name = row_data.ib_name;
                         let svg =
                             "<svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z' /><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z' /><path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707' /></svg>";
-                        if (data === '' || data == null || data == 'noIB') {
+                        if (data === '' || data == null ) {
                             ib_email = "";
                             ib_name = "noIB";
                             svg = '';
@@ -765,7 +765,7 @@
 
                     }
                     // render: function (data, row, row_data) {
-                    // if (data === '' || data == null || data == 'noIB') {
+                    // if (data === '' || data == null ) {
                     //   return '<span class="cursor-pointer updateIb btn-sm btn btn-outline-dark">noIB</span>';
                     // } else {
                     //   return '<span class="cursor-pointer updateIb"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="28" color="#000000" class="tabler-icon tabler-icon-user-square-rounded"><path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path><path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05"></path></svg>'+data+'</span>';

@@ -18,10 +18,12 @@ return new class extends Migration
             $table->string('volume', 100)->nullable();
             $table->string('time_closed', 100)->nullable();
             $table->integer('status')->default(0);
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            
             $table->unique(['order_id', 'code'], 'closed_order');
             $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
