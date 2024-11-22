@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\ClientWallet;
 use App\Models\KycUpdate;
+use App\Models\ClientWallet;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
 class Users extends Controller
 {
     public function profile()
@@ -30,8 +32,9 @@ class Users extends Controller
         ]);
         $email = auth()->user()->email;
         $user = DB::table('aspnetusers')->where('email', $email)->first();
-        if ($user && $user->password === $request->current_password) {
-            DB::table('aspnetusers')->where('email', $email)->update(['password' => $request->new_password]);
+
+        if ($user &&(Hash::check($request->current_password, $user->password))) {
+            User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
             return response()->json(['success' => 'Password Successfully Changed']);
         } else {
             return response()->json(['message' => 'Current Password is not matched'], 422);

@@ -33,7 +33,8 @@ Route::get("/se",function(){
     file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     $settings = DB::table('pages')->get()->toArray();
     file_put_contents('pages.json', json_encode($settings, JSON_PRETTY_PRINT));
-
+    $settings = DB::table('countries')->get()->toArray();
+    file_put_contents('countries.json', json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');

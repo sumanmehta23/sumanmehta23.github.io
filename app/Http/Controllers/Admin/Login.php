@@ -36,6 +36,11 @@ class Login extends Controller
         // Attempt to log the user in
         $user = EmployeeList::where('email', $credentials['username'])
             ->first();
+            
+        if (!$user) {
+            return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+        }
+        
         if (Hash::needsRehash($user->password)) {
             if ($user->password === $request->input('password')) {
                 $user->password = Hash::make($request->input('password'));

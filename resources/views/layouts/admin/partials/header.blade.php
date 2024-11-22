@@ -4,10 +4,12 @@ $requestUri = parse_url($requestUri, PHP_URL_PATH);
 
 $categories = page_categories();
 
-$userRoleID = session('userRoleID');
+// $userRoleID = session('userRoleID');
+$userRoleID = session('userID');
 $userRole = session('userRole');
 $rolePermissionsList = rolePermissions($userRole);
 $filePermissions = filePermissions($userRole);
+
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="light" data-theme-mode="light"
@@ -242,7 +244,7 @@ $filePermissions = filePermissions($userRole);
                             @php
                                 $main_menus = DB::table('pages')
                                     ->where('is_submenu', 0)
-                                    ->where('page_category_id', $category->page_category_id)
+                                    ->where('page_category_id', $category->id)
                                     ->where('active', 1)
                                     ->orderBy('page_order', 'asc')
                                     ->get();
@@ -250,6 +252,7 @@ $filePermissions = filePermissions($userRole);
 
                             @foreach ($main_menus as $main)
                                 @php
+                               
                                     $sub_menus = DB::table('pages')
                                         ->where('is_submenu', $main->page_id)
                                         ->where('active', 1)

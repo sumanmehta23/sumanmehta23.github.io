@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MailService as MailService;
+use App\Models\LoginHistory;
 
 class LoginController extends Controller
 {
@@ -208,7 +209,7 @@ class LoginController extends Controller
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
-        $lastInsertId = DB::table('aspnetusers')->insertGetId([
+        $user = User::create([
             'email' => $request->email,
             'fullname' => $request->fullname,
             'password' => Hash::make($request->password), // Ensure this is hashed if required
@@ -219,7 +220,8 @@ class LoginController extends Controller
             'country' => $request->country,
             'ib1' => $ib1
         ]);
-        if ($lastInsertId) {
+        
+        if ($user) {
             $settings = settings();
             $from = $settings['email_from_address'];
             $toEmail = $request->email;
@@ -237,7 +239,7 @@ class LoginController extends Controller
             $templateVars = [
                 'name' => $request->fullname,
                 'server_name' => $settings['mt5_company_name'],
-                'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id=$lastInsertId&code=$code",
+                'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$user->id}&code=$code",
                 'email' => $settings['email_from_address'],
                 "content" => $content,
                 "title_right" => "Activate",
@@ -301,7 +303,7 @@ class LoginController extends Controller
             'ip' => $ip
         ])->json();
 
-        DB::table('login_history')->insert([
+        LoginHistory::create([
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
             'country' => $geoData['country_name'] ?? 'Unknown',

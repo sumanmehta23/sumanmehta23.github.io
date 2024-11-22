@@ -64,7 +64,7 @@ class Wallet extends Controller
         return $walletBalance;
     }
     public function storeClientWallet(Request $request)
-    {
+    { 
         $request->validate([
             'wallet_name' => 'required|string|max:255',
             'wallet_currency' => 'required|string|max:10',
