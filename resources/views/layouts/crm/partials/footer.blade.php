@@ -40,11 +40,11 @@
                         <div class="col-sm-12">
                             <div class="form-group"><label class="form-label">Wallet Name</label><input type="text"
                                     class="form-control" autofocus name="wallet_name" required></div>
-                            <div class="form-group"><label class="form-label">Select Your Cryptocurrency</label>
+                            {{-- <div class="form-group"><label class="form-label">Select Your Cryptocurrency</label>
                                 <select id="my-select" class="form-control" name="wallet_currency" required>
                                     <option value="USDT">USDT</option>
                                 </select>
-                            </div>
+                            </div> --}}
                             <div class="form-group"><label class="form-label">Wallet Network</label>
                                 <select id="my-select" class="form-control" name="wallet_network" required>
                                     <option value="USDT-TRX">ERC20</option>

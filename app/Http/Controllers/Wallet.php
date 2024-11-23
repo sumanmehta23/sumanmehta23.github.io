@@ -70,7 +70,7 @@ class Wallet extends Controller
         ]);
         ClientWallets::create([
             'wallet_name' => $request->wallet_name,
-            'wallet_currency' => $request->wallet_currency,
+            'wallet_currency' => 'USDT',
             'wallet_network' => $request->wallet_network,
             'wallet_address' => $request->wallet_address,
             'created_by' => session('clogin'),
