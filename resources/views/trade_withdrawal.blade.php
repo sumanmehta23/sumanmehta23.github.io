@@ -29,7 +29,7 @@
                                             <div class="col-xl-8">
                                                 <div class="card">
                                                     <div class="card-body border-bottom">
-                                                        <h6>CREATE WITHDRAW TICKET</h6>
+                                                        <h6>Withdraw Funds</h6>
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="divider my-4"><span>SELECT MT5 ACCOUNT</span></div>
@@ -39,11 +39,11 @@
                                                                     <div class="address-check border rounded">
                                                                         <div class="form-check paycard">
                                                                             <input
-                                                                                id="liveaccount{{ $liveaccount->trade_id }}"
+                                                                                id="liveaccount{{ $liveaccount->code }}"
                                                                                 type="radio" name="live-account"
                                                                                 class="select-liveaccount form-check-input input-primary"
-                                                                                data-balance="{{ $liveaccount->Balance }}"
-                                                                                value="{{ $liveaccount->trade_id }}">
+                                                                                data-balance="{{ $liveaccount->balance }}"
+                                                                                value="{{ $liveaccount->code }}">
                                                                             <label class="form-check-label d-block"
                                                                                 required>
                                                                                 <div class="p-1 my-1">
@@ -54,14 +54,14 @@
                                                                                                 <img src="{{ asset('assets/images/mt5.png') }}"
                                                                                                     alt="user-image"
                                                                                                     class="wid-25 me-1 ms-1">
-                                                                                                {{ $liveaccount->trade_id }}
+                                                                                                {{ $liveaccount->code }}
                                                                                             </span>
                                                                                         </span>
                                                                                         <span
                                                                                             class="col-6 text-end mb-0 pb-0 pe-3">
                                                                                             <span
                                                                                                 class="h5 mb-0 d-block f-w-500">
-                                                                                                ${{ $liveaccount->Balance ?? '0.0000' }}
+                                                                                                ${{ $liveaccount->balance ?? '0.0000' }}
                                                                                             </span>
                                                                                             <span
                                                                                                 class="text-muted mb-0 f-10">Current

@@ -43,6 +43,8 @@ Route::get("/se",function(){
     // file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('leverage')->get()->toArray();
     // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
+     $settings = DB::table('accounts')->get()->toArray();
+    file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
@@ -134,7 +136,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/{id}', [Transaction::class, 'pending']);
 
         Route::get('/client_list', [ClientController::class, 'index'])->name('client_list');
-        Route::get('/client_details', [ClientController::class, 'clientDetails'])->name('client_details');
+        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details');
         Route::post('/updateIB', [ClientController::class, 'updateIB'])->name('updateIB');
         Route::post('/updateRM', [ClientController::class, 'updateRM'])->name('updateRM');
         Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser');
@@ -196,7 +198,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
 
-        Route::get("/view_account_details", [MT5Controller::class, 'view'])->name('admin-view-account-details');
+        Route::get("/view_account_details/{accountId}", [MT5Controller::class, 'view'])->where('account', '.*')->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');

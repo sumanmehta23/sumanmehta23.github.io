@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\RelationshipManager;
 use App\Services\MailService;
 use App\Models\IbClientList;
+use App\Models\Account;
 
 class ClientController extends Controller
 {

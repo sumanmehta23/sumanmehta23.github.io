@@ -44,7 +44,7 @@
                                     ?>
                                         <tr>
                                             <td>
-                                                <a href='/admin/client_details?id=<?= $result->enc_id ?>'>
+                                                <a href='{{route('admin.admin-view-client-details',$result->user->id)}}'>
                                                     <div class='d-flex align-items-center'>
                                                         <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
                                                                 width='28' height='28' viewBox='0 0 24 24'
@@ -70,16 +70,16 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="{{route('admin-view-account-details',$result->id)}}">
+                                                <a href="{{route('admin.admin-view-account-details',$result->id)}}">
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="rounded wid-50 hei-50"></div>
                                                         <div class="col ps-2">
                                                             <h6 class="mb-0"><span
-                                                                    class="text-truncate w-100"><?= $result->trade_id ?></span>
+                                                                    class="text-truncate w-100"><?= $result->code ?></span>
                                                             </h6>
                                                             <p class="mb-0 text-muted f-12"><span
-                                                                    class="text-truncate w-100"><?= $result->ac_group ?></span>
+                                                                    class="text-truncate w-100"><?= $result->accountType->ac_group ?></span>
                                                             </p>
                                                         </div>
                                                     </div>

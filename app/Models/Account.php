@@ -35,5 +35,8 @@ class Account extends Model
     {
         return $this->hasMany(BonusTrans::class);
     }
-
+    public function relationshipManager()
+    {
+        return $this->belongsTo(RelationshipManager::class);
+    }
 }

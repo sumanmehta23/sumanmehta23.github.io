@@ -55,16 +55,16 @@
                               </div>
                               <div class="col">
                                 <h4 class="mb-2 ms-2">
-                                  <span class="text-truncate w-100">{{ $acc->trade_id }}</span>
+                                  <span class="text-truncate w-100">{{ $acc->code }}</span>
                                 </h4>
                                 <p class="mb-0 text-muted ms-2 f-12">
-                                  <span class="text-truncate w-100">{{ $acc->ac_name }}</span>
+                                  <span class="text-truncate w-100">{{ $acc->email }}</span>
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                          <td class="text-end f-w-400 f-16">$ {{ $acc->Balance }}</td>
+                          <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
                           <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
                           <td class="text-end f-w-200">
                             <div class="d-flex align-items-center">

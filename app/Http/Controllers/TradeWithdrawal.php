@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\LiveAccount;
+use App\Models\Account;
 use App\Models\User;
 use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
@@ -31,12 +31,13 @@ class TradeWithdrawal extends Controller
     {
         $email = auth()->user()->email;
         AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
-        $liveaccount_details = LiveAccount::with('accountType')
+        $liveaccount_details = Account::with('accountType')
             ->where('email', $email)
+            ->where('demo', false)
             ->get();
         $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('email', $email)->first() ?? [];
-        $totals = LiveAccount::where('email', $email)
+        $totals = Account::where('email', $email)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
@@ -59,7 +60,7 @@ class TradeWithdrawal extends Controller
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
-        
+
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
         $withdraw_to = $request->input('withdraw_to', '');
@@ -69,7 +70,7 @@ class TradeWithdrawal extends Controller
         ]);
 
         // Get the account balance
-       
+
         // Check for sufficient balance
         if ($amount > $amount->Balance) {
             return response()->json([

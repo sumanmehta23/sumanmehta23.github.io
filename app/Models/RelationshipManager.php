@@ -16,4 +16,9 @@ class RelationshipManager extends Model
     {
         return $this->hasOne(EmployeeList::class, 'client_index', 'rm_id');
     }
+    // Has many live accounts
+    public function liveAccounts()
+    {
+        return $this->hasMany(Account::class)->where('demo', false);
+    }
 }
