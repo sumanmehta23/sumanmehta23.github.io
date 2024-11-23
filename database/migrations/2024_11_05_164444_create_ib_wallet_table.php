@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('ib_wallet', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('ib_wallet', 50)->nullable();
             $table->string('ib_withdraw', 100)->nullable();
             $table->string('email', 50)->nullable();
@@ -21,8 +23,7 @@ return new class extends Migration
             $table->text('remark')->nullable();
             $table->string('ib_level', 100)->nullable();
             $table->timestamp('reg_date')->useCurrentOnUpdate()->useCurrent();
-            $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            
             $table->timestamps();
         });
     }
