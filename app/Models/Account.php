@@ -19,6 +19,10 @@ class Account extends Model
             'phone_password' => 'encrypted',
         ];
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
     public function ib1Commission()
     {
         return $this->hasMany(Ib1Commission::class);

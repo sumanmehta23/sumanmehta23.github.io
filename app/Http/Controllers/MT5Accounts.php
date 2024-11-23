@@ -8,18 +8,15 @@ use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
 use App\Models\AccountType;
-use App\Models\DemoAccount;
 use App\Models\DemoDeposit;
-use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\MT5\MTProtocolConsts;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\MailService as MailService;
-
+use Illuminate\Support\Facades\Log;
 class MT5Accounts extends Controller
 {
     protected $api;
@@ -154,7 +151,7 @@ class MT5Accounts extends Controller
                 }
             }
         } catch (\Exception $e) {
-            dd($e->getMessage().$e->getTraceAsString());
+            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
         }
         return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
@@ -410,8 +407,7 @@ class MT5Accounts extends Controller
         if ($error_code != MTRetCode::MT_RET_OK) {
             return redirect()->back()->with('error', 'MT5: ' . MTRetCode::GetError($error_code));
         }
-// 'trader_password' => $new_user->MainPassword,
-// 'investor_password' => $new_user->InvestPassword,
+
         // Update the password in the database
         $account->update([
             $pass_type == 'main' ? 'trader_password' : 'invester_password' => $new_password

@@ -13,6 +13,7 @@ class TradeDeposits extends Model
     protected $fillable = [
         'email',
         'trade_id',
+        'account_id',
         'deposit_amount',
         'deposit_type',
         'deposit_from',
@@ -23,5 +24,9 @@ class TradeDeposits extends Model
     public function liveAccount()
     {
         return $this->hasOne(LiveAccount::class, 'trade_id', 'trade_id');
+    }
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 }

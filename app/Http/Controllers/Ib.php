@@ -280,23 +280,24 @@ class Ib extends Controller
     {
         if ($request->has('transfer')) {
             $amount = $request->input('amount');
-            $tradeId = $request->input('tradeId');
+            $accountId = $request->input('account');
+            $userId = auth()->user()->id;
+            $account=Account::where(['id'=>$accountId,'user_id'=>$userId])->firstOrFail();
             $email = auth()->user()->email;
-            $balance = DB::table('ib_wallet')
-                ->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')
-                ->where('email', $email)
-                ->first();
+            
+            $balance=IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
+            
             $availableBalance = $balance->wallet - $balance->withdraw;
             if ($availableBalance >= $amount) {
 
-                if(!$availableBalance || !$amount || !$tradeId){
+                if(!$availableBalance || !$amount || !$account){
                     alert()->warning("Invalid Request","Please Select / Enter valid values");
                     return redirect()->back();
                 }
 
                 $comment = 'IB Comm. - Dep';
                 $ticket = null;
-                $errorCode = $this->api->TradeBalance($tradeId, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
+                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -305,7 +306,8 @@ class Ib extends Controller
                     // Insert into trade_deposit.
                     TradeDeposits::create([
                         'email' => $email,
-                        'trade_id' => $tradeId,
+                        'trade_id' => $account->code,
+                        'account_id' => $account->id,
                         'deposit_amount' => $amount,
                         'deposit_type' => 'IB Withdraw',
                         'deposit_from' => 'IB Commission',
@@ -314,10 +316,11 @@ class Ib extends Controller
                     // Insert into ib_wallet for withdrawal.
                     IbWallet::create([
                         'email' => $email,
+                        'user_id' => $userId,
                         'ib_withdraw' => $amount,
                         'remark' => 'IB Comm. Withdrawl'
                     ]);
-                    return redirect()->back()->with('success', 'IB Balance is Transferred to ' . $tradeId);
+                    return redirect()->back()->with('success', 'IB Balance is Transferred to ' . $account->code);
                 }
             } else {
 
