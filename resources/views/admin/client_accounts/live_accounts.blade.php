@@ -44,7 +44,7 @@
                                     ?>
                                         <tr>
                                             <td>
-                                                <a href='{{route('admin.admin-view-client-details',$result->user->id)}}'>
+                                                <a href='{{route('admin.admin-view-client-details',$result->user_id)}}'>
                                                     <div class='d-flex align-items-center'>
                                                         <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
                                                                 width='28' height='28' viewBox='0 0 24 24'

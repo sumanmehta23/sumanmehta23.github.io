@@ -12,6 +12,20 @@ use App\Models\RelationshipManager;
 use App\Services\MailService;
 use App\Models\IbClientList;
 use App\Models\Account;
+use App\Models\Ib1;
+use App\Models\IBCategory;
+use App\Models\IbPlan;
+use App\Models\AccountType;
+use App\Models\Mt5Group;
+use App\Models\WalletDeposit;
+use App\Models\WalletWithdraw;
+use App\Models\ClientBankDetail;
+use App\Models\KycUpdate;
+use App\Models\IbWallet;
+use App\Models\EmployeeList;
+use App\Models\TicketStatus;
+use App\Models\TotalBalance;
+use App\Models\TicketType;
 
 class ClientController extends Controller
 {
@@ -373,23 +387,36 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
-        $id = request('id');
-        $user = DB::table('aspnetusers as ap')
-            ->leftJoin('ib1', 'ib1.email', '=', 'ap.email')
-            ->select('ap.*', 'ib1.status as ib_status', 'ib1.acc_type as ib_group')
-            ->where(DB::raw('ap.id'), $id)
-            ->orWhere(DB::raw('ap.email'), $id)
+
+        $id = request('userId');
+
+        // $user = DB::table('aspnetusers as ap')
+        //     ->leftJoin('ib1', 'ib1.email', '=', 'ap.email')
+        //     ->select('ap.*', 'ib1.status as ib_status', 'ib1.acc_type as ib_group')
+        //     ->where(DB::raw('ap.id'), $id)
+        //     ->orWhere(DB::raw('ap.email'), $id)
+        //     ->first();
+        $user = Account::with(['ib1'])
+            ->where('user_id', $id)
+            ->orWhere('email', $id)
             ->first();
-        $acc_groups = DB::table('ib_plans')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')
-            ->select('ib_categories.ib_cat_name', 'ib_plans.ib_plan_cat_id', 'ib_plans.ib_plan_id')
-            ->where('ib_plans.status', 1)
-            ->groupBy('ib_plans.ib_plan_cat_id')
+        // $acc_groups = DB::table('ib_plans')
+        //     ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')
+        //     ->select('ib_categories.ib_cat_name', 'ib_plans.ib_plan_cat_id', 'ib_plans.ib_plan_id')
+        //     ->where('ib_plans.status', 1)
+        //     ->groupBy('ib_plans.ib_plan_cat_id')
+        //     ->get();
+        $acc_groups = IBPlan::with('category')
+            ->where('status', 1)
+            ->groupBy('ib_plan_cat_id')
             ->get();
-        $acc_types = DB::table('account_types as ac')
-            ->leftJoin('mt5_groups as m', 'ac.ac_type', '=', 'm.mt5_group_id')
-            ->select('ac.*')
-            ->where('m.mt5_group_type', 'live')
+        // $acc_types = DB::table('account_types as ac')
+        //     ->leftJoin('mt5_groups as m', 'ac.ac_type', '=', 'm.mt5_group_id')
+        //     ->select('ac.*')
+        //     ->where('m.mt5_group_type', 'live')
+        //     ->get();
+        $acc_types = AccountType::with('mt5Group')
+            ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();
         if (!empty($user)) {
             $eid = $user->email;
@@ -398,33 +425,52 @@ class ClientController extends Controller
                 $foundClients = IbClientList::where("ib$i", $user->email)->get();
                 $clients[$i] = $foundClients;
             }
-            $total_wd = DB::table('wallet_deposit')
-                ->where('email', $eid)
-                ->where('deposit_type','!=', 'Internal Transfer')
+            // $total_wd = DB::table('wallet_deposit')
+            //     ->where('email', $eid)
+            //     ->where('deposit_type','!=', 'Internal Transfer')
+            //     ->where('status', 1)
+            //     ->selectRaw('SUM(deposit_amount) as amount')
+            //     ->first();
+            $total_wd = WalletDeposit::where('email', $eid)
+                ->where('deposit_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
-                ->selectRaw('SUM(deposit_amount) as amount')
-                ->first();
-            $total_ww = DB::table('wallet_withdraw')
-                ->where('email', $eid)
-                ->where('withdraw_type','!=', 'Internal Transfer')
+                ->sum('deposit_amount');
+            // $total_ww = DB::table('wallet_withdraw')
+            //     ->where('email', $eid)
+            //     ->where('withdraw_type','!=', 'Internal Transfer')
+            //     ->where('status', 1)
+            //     ->selectRaw('SUM(withdraw_amount) as amount')
+            //     ->first();
+            $total_ww = WalletWithdraw::where('email', $eid)
+                ->where('withdraw_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
-                ->selectRaw('SUM(withdraw_amount) as amount')
-                ->first();
-            $pending_ww = DB::table('wallet_withdraw')
-                ->where('email', $eid)
+                ->sum('withdraw_amount');
+            // $pending_ww = DB::table('wallet_withdraw')
+            //     ->where('email', $eid)
+            //     ->where('status', 0)
+            //     ->selectRaw('SUM(withdraw_amount) as amount')
+            //     ->first();
+            $pending_ww = WalletWithdraw::where('email', $eid)
                 ->where('status', 0)
-                ->selectRaw('SUM(withdraw_amount) as amount')
-                ->first();
+                ->sum('withdraw_amount');
+
             $pendingwalletwithdraw = (float)$pending_ww->amount;
             $wallet_balance = (float) $total_wd->amount - (float) $total_ww->amount - $pendingwalletwithdraw;
-            $total_balance = DB::table('total_balance')
-                ->where('email', $eid)
+            // $total_balance = DB::table('total_balance')
+            //     ->where('email', $eid)
+            //     ->selectRaw('
+            //         SUM(deposit_amount) as deposit_amount,
+            //         SUM(trading_deposited) as trading_deposited,
+            //         SUM(trading_withdrawal) as trading_withdrawal,
+            //         SUM(withdraw_amount) as withdraw_amount
+            //     ')
+            //     ->first();
+            $total_balance = TotalBalance::where('email', $eid)
                 ->selectRaw('
-            SUM(deposit_amount) as deposit_amount,
-            SUM(trading_deposited) as trading_deposited,
-            SUM(trading_withdrawal) as trading_withdrawal,
-            SUM(withdraw_amount) as withdraw_amount
-        ')
+                    SUM(deposit_amount) as deposit_amount,
+                    SUM(trading_deposited) as trading_deposited,
+                    SUM(trading_withdrawal) as trading_withdrawal,
+                    SUM(withdraw_amount) as withdraw_amount')
                 ->first();
             $live_accounts = DB::table('liveaccount')
                 ->where('email', $eid)

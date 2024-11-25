@@ -27,6 +27,10 @@ class Account extends Model
     {
         return $this->hasMany(Ib1Commission::class);
     }
+    public function ib1()
+    {
+        return $this->belongsTo(Ib1::class);
+    }
     public function accountType()
     {
         return $this->belongsTo(AccountType::class);
