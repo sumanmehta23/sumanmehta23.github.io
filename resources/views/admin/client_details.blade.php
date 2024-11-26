@@ -205,7 +205,7 @@
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
                                                     <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower($country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
                                                     |
                                                     <span class="px-2">{!! $user->kyc_verify == 0
                                                         ? '<span class="badge bg-outline-danger">Pending KYC</span>'
@@ -329,13 +329,13 @@
                                                             <div class="col-xl-3">
                                                                 <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
                                                                 <h4 class="fw-normal">
-                                                                    ${{ htmlentities(number_format((float) $total_wd->amount, 2)) }}
+                                                                    ${{ htmlentities(number_format((float) $total_wd, 2)) }}
                                                                 </h4>
                                                             </div>
                                                             <div class="col-xl-3">
                                                                 <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
                                                                 <h4 class="fw-normal">
-                                                                    ${{ htmlentities(number_format((float) $total_ww->amount, 2)) }}
+                                                                    ${{ htmlentities(number_format((float) $total_ww, 2)) }}
                                                                 </h4>
                                                             </div>
                                                             <div class="col-xl-3">
@@ -377,26 +377,23 @@
                                                                             <img src="/admin_assets/assets/images/mt5.png"
                                                                                 alt="card img" style="width:50px;">
                                                                             <div class="mt-1 fs-18 text-black-50 fw-bold">
-                                                                                {{ $acc->trade_id }}</div>
+                                                                                {{ $acc->code }}</div>
                                                                         </div>
                                                                         <div class="d-flex justify-content-end w-50">
                                                                             <span
-                                                                                class="mt-2 h4 fw-normal">${{ $acc->Balance }}</span>
+                                                                                class="mt-2 h4 fw-normal">${{ $acc->balance }}</span>
                                                                         </div>
-                                                                    </div>
-                                                                    <?php
-                                                                    $index = array_search($acc->account_type, array_column((array) $acc_types, 'ac_index'));
-                                                                    ?>
+                                                                    </div>                                                            
                                                                     <div class="d-flex justify-content-between">
                                                                         <div>
                                                                             <div class="fw-bold fs-12">
-                                                                                {{ $acc_types[$index]->ac_name }}</div>
+                                                                                {{ $acc->accountType->ac_name }}</div>
                                                                             <div class="mb-2 fw-normal fs-10">
-                                                                                {{ $acc_types[$index]->ac_group }}</div>
+                                                                                {{ $acc->accountType->ac_group }}</div>
                                                                         </div>
                                                                         <div class="mt-auto mb-auto">
                                                                             <a
-                                                                                href="{{ route('admin-view-account-details',$acc->id) }}">
+                                                                                href="/admin/view_account_details/{{ $acc->id }}">
                                                                                 <i class="fa fa-edit fw-bold"
                                                                                     style="font-size: 1rem;color: var(--primary-color);"></i>
                                                                             </a>

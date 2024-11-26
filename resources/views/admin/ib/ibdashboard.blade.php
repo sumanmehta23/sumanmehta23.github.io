@@ -208,7 +208,7 @@
                             } ?>
                                             </td>
                                             <td>
-                                                <div> <a href="/admin/client_details.php?id=<?php echo ($result->email); ?>#tab-info"
+                                                <div> <a href="/admin/client_details/<?php echo ($result->email); ?>#tab-info"
                                                         style="padding: 5px 20px;font-size: 12px;"
                                                         class="btn btn-dark btn-sm">View</a></div>
                                             </td>

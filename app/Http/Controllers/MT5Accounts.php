@@ -293,8 +293,8 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('success', $error);
             } else {
                 $data = [
-                    'user_id' => $user->id,
-                    'account_id'=>$account->id,
+                    // 'user_id' => $user->id,
+                    // 'account_id'=>$account->id,
                     'email' => $new_user->Email,
                     'trade_id' => $new_user->Login,
                     'deposit_amount' => $validatedData['demo_deposit'],

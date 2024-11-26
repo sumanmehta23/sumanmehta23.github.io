@@ -685,7 +685,7 @@
             });
             $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
-                location.href = "/admin/client_details?id=" + data.enc_id;
+                location.href = "/admin/client_details/" + data.enc_id;
             });
         }
     </script>
@@ -722,7 +722,7 @@
                     data: 'email',
                     name: 'email',
                     render: function(data, row, row_data) {
-                        var return_data = "<a href='/admin/client_details?id=" + row_data.enc_id +
+                        var return_data = "<a href='/admin/client_details/" + row_data.enc_id +
                             "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" +
                             row_data.fullname +
                             "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data

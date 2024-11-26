@@ -454,8 +454,8 @@ class ClientController extends Controller
                 ->where('status', 0)
                 ->sum('withdraw_amount');
 
-            $pendingwalletwithdraw = (float)$pending_ww->amount;
-            $wallet_balance = (float) $total_wd->amount - (float) $total_ww->amount - $pendingwalletwithdraw;
+            $pendingwalletwithdraw = (float)$pending_ww;
+            $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
             // $total_balance = DB::table('total_balance')
             //     ->where('email', $eid)
             //     ->selectRaw('
@@ -472,10 +472,13 @@ class ClientController extends Controller
                     SUM(trading_withdrawal) as trading_withdrawal,
                     SUM(withdraw_amount) as withdraw_amount')
                 ->first();
-            $live_accounts = DB::table('liveaccount')
-                ->where('email', $eid)
-                ->orderByDesc('id')
+                
+            $live_accounts = Account::with('accountType')
+                ->where('user_id', $user->user_id)
+                ->where('demo', false)
+                ->orderBy('id', 'desc')
                 ->get();
+      
             $bank_details = DB::table('clientbankdetails')
                 ->where('userId', $eid)
                 ->first();

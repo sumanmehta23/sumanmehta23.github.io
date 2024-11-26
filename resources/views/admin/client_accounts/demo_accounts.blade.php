@@ -44,7 +44,7 @@
                                     ?>
                                         <tr>
                                             <td>
-                                                <a href='/admin/client_details?id=<?= $result->enc_id ?>'>
+                                                <a href='/admin/client_details/<?= $result->enc_id ?>'>
                                                     <div class='d-flex align-items-center'>
                                                         <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
                                                                 width='28' height='28' viewBox='0 0 24 24'
