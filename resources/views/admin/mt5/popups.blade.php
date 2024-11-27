@@ -4,8 +4,8 @@
         <div class="modal-content">
             <form action="{{route('admin.depositToAccount')}}" id="depositForm" method="post">
                 @csrf
-                <input type="hidden" name="client_id" id="client_id" value="<?= ($id) ?>">
-                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->trade_id??'' ?>">
+                <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
+                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->code??'' ?>">
                 <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
 
                 <div class="modal-header">
@@ -61,8 +61,8 @@
         <div class="modal-content">
             <form action="{{route('admin.withdrawFromAccount')}}" id="withdrawalForm" method="post">
                 @csrf
-                <input type="hidden" name="client_id" id="client_id" value="<?= ($id) ?>">
-                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->trade_id??'' ?>">
+                <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
+                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->code??'' ?>">
                 <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="withdrawalModalLabel">Withdraw From Trade Account</h5>
@@ -118,8 +118,8 @@
         <div class="modal-content">
             <form action="{{route('admin.bonusToAccount')}}" id="bonusForm" method="post">
                 @csrf
-                <input type="hidden" name="client_id" id="client_id" value="<?= ($id) ?>">
-                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->trade_id??'' ?>">
+                <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
+                <input type="hidden" name="trade_id" id="trade_id" value="<?= $getUser->code??'' ?>">
                 <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="bonusModalLabel">Bonus To Trade Account</h5>

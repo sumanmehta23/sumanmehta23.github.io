@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -24,8 +25,11 @@ class BonusTrans extends Model
     /**
      * @var array
      */
+
+     use HasFactory,HasUuids;
+
     public $timestamps=false;
-    protected $fillable = ['email', 'trade_id', 'bonus_amount', 'bonus_currency', 'bonus_type', 'bonus_code_id', 'bonus_code_desc', 'bonus_date', 'status', 'adminRemark', 'Js_Admin_Remark_Date', 'created_by'];
+    protected $guarded = [];
    
     public function user()
     {

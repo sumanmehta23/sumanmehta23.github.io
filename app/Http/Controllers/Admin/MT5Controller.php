@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Helpers\AccountHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\BonusTrans;
 use App\Models\TradeDeposits;
 use App\Models\TradeWithdrawals;
@@ -94,7 +95,7 @@ class MT5Controller extends Controller
             }
             // Fetch account type details
             $acc = DB::table('account_types')
-                ->where('ac_index', $account_type)
+                ->where('id', $account_type)
                 ->first();
 
             $trade_user->Group = $acc->ac_group;
@@ -106,11 +107,11 @@ class MT5Controller extends Controller
                 return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
             } else {
                 // Update leverage and account type in the database
-                DB::table('liveaccount')
-                    ->where('trade_id', $trade_id)
+                DB::table('accounts')
+                    ->where('code', $trade_id)
                     ->update([
                         'leverage' => $leverage,
-                        'account_type' => $account_type
+                        'account_type_id' => $acc->id
                     ]);
                 return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
             }
@@ -129,9 +130,9 @@ class MT5Controller extends Controller
                 if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)) != MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
                 } else {
-                    $table = $type == 'demo' ? 'demoaccount' : 'liveaccount';
+                    $table = 'accounts';
                     DB::table($table)
-                        ->where('trade_id', $login)
+                        ->where('code', $login)
                         ->update(['trader_password' => $new_password]);
                     return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
                 }
@@ -142,9 +143,9 @@ class MT5Controller extends Controller
                 if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR)) != MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
                 } else {
-                    $table = $type == 'demo' ? 'demoaccount' : 'liveaccount';
+                    $table = 'accounts';
                     DB::table($table)
-                        ->where('trade_id', $login)
+                        ->where('code', $login)
                         ->update(['invester_password' => $new_password]);
                     return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
                 }
@@ -155,8 +156,10 @@ class MT5Controller extends Controller
     public function depositToAccount(Request $request)
     {
         $eid = $request->input('email');
-        $user = User::where('email', $eid)->first();
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
         $trade_id = $request->input('trade_id');
+        $account = Account::where('code', $trade_id)->first();
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
@@ -176,7 +179,7 @@ class MT5Controller extends Controller
                     'deposit_amount' => $amount,
                     'deposit_type' => $deposit_type,
                     'status' => 1,
-                    'admin_remark' => $description,
+                    'AdminRemark' => $description,
                     'deposit_currency' => $deposit_currency,
                     'created_by' => session('alogin')
                 ]);
@@ -214,8 +217,10 @@ class MT5Controller extends Controller
     public function bonusToAccount(Request $request)
     {
         $eid = $request->input('email');
-        $user = User::where('email', $eid)->first();
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
         $trade_id = $request->input('trade_id');
+        $account = Account::where('code', $trade_id)->first();
         if ($request->has('bonus_to_account')) {
 
             $amount = $request->input('amount');
@@ -235,13 +240,15 @@ class MT5Controller extends Controller
             } else {
                 $deposit_details = BonusTrans::create([
                     'email' => $email,
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'trade_id' => $trade_id,
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
-                    'admin_remark' => $description,
+                    'adminRemark' => $description,
                     'bonus_currency' => $deposit_currency,
-                    'created_by' => session('alogin')
+                    // 'created_by' => session('alogin')
                 ]);
 
                 $toEmail = $email;
@@ -278,10 +285,13 @@ class MT5Controller extends Controller
     }
 
     public function withdrawFromAccount(Request $request)
-    {
+    {   
         $eid = $request->input('email');
-        $user = User::where('email', $eid)->first();
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
         $trade_id = $request->input('trade_id');
+        $account = Account::where('code', $trade_id)->first();
+       
         if ($request->has('withdraw_from_account')) {
             $amount = $request->input('amount');
             $tw_amount = abs($request->input('amount')) * -1;
@@ -296,10 +306,12 @@ class MT5Controller extends Controller
             } else {
                 $deposit_details = TradeWithdrawals::create([
                     'email' => $email,
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'trade_id' => $trade_id,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
-                    'admin_remark' => $description,
+                    'AdminRemark' => $description,
                     'created_by' => session('alogin')
                 ]);
 
@@ -357,69 +369,74 @@ class MT5Controller extends Controller
     }
 
 
-    public function view(Request $request)
+    public function view(Request $request, $id)
     {
 
-        $trade_id = $request->query('id');
-        AccountHelper::updateLiveAndDemoAccounts($trade_id);
+        $account = Account::find($id);
+        if($account){
+            $trade_id = $account->code;
+        }else{
+            $trade_id ='';
+        }
+       
+        AccountHelper::updateLiveAndDemoAccounts($account->code);
         $type = "live";
+       
+        // $sql = "
+        //     SELECT
+        //         liveaccount.*,
+        //         aspnetusers.fullname,
+        //         account_types.ac_group,
+        //         IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
+        //     FROM liveaccount
+        //     LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
+        //     LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
+        //     LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
+        //     WHERE (liveaccount.trade_id) = :trade_id
+        //     GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
+        // ";
 
-        $sql = "
-            SELECT
-                liveaccount.*,
-                aspnetusers.fullname,
-                account_types.ac_group,
-                IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
-            FROM liveaccount
-            LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
-            LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
-            LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-            WHERE (liveaccount.trade_id) = :trade_id
-            GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
-        ";
-
-        $query = DB::select($sql, ['trade_id' => $trade_id]);
-        $getUser = isset($query[0]) ? $query[0] : [];
-
-        if (!$getUser) {
+        // $query = DB::select($sql, ['trade_id' => $trade_id]);
+        // $getUser = isset($query[0]) ? $query[0] : [];
+        if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
             return redirect("/admin/dashboard");
         }
 
         // Total approved deposits
         $total_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('trade_id'), $trade_id)
+            ->where(DB::raw('trade_id'), $account->code)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
         $unapproved_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('trade_id'), $trade_id)
+            ->where(DB::raw('trade_id'),  $account->code)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
         $total_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('trade_id'), $trade_id)
+            ->where(DB::raw('trade_id'),  $account->code)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
         $unapproved_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('trade_id'), $trade_id)
+            ->where(DB::raw('trade_id'),  $account->code)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
         $bonus_trans = BonusTrans::where('status', 1)
-            ->where(DB::raw('trade_id'), $trade_id)
+            ->where(DB::raw('trade_id'),  $account->code)
             ->get();
         $account_types = DB::table('account_types')->where('status', 1)->get();
 
-        $account = AccountHelper::getAccount($trade_id);
+        // $account = AccountHelper::getAccount( $account->code);
 
         return view("admin.mt5.view", [
             "id" => $trade_id,
-            "getUser" => $getUser,
+            "getUser" =>  $account,
             "account" => $account,
             'total_deposit' => $total_deposit,
             'unapprove_deposit' => $unapproved_deposit,

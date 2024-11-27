@@ -1,8 +1,5 @@
 @extends('layouts.admin.admin')
 @section('content')
-<?php
-$trade_id = $getUser->trade_id;
-?>
     @include('admin.mt5.popups')
     <?php
 
@@ -38,7 +35,8 @@ if ($getUser) {
                                                         <img src="/admin_assets/assets/images/users/client.jpeg"
                                                             alt="img" style="width:100px">
                                                     </div>
-                                                    <h3 class="username mb-2"><?= $getUser->fullname ?></h3>
+                                                   
+                                                    <h3 class="username mb-2"><?= $getUser->name ?></h3>
                                                     <p class="mb-1 text-muted"><?= $getUser->email ?></p>
                                                 </div>
                                             </div>
@@ -50,8 +48,8 @@ if ($getUser) {
                                                         style="width:50px">
                                                 </div>
                                                 <div class="user-wrap mt-auto mb-auto">
-                                                    <h4 class="fw-bold mb-0"><?= $getUser->trade_id ?></h4>
-                                                    <h6 class="fs-12 fw-normal text-muted"><?= $getUser->ac_group ?></h6>
+                                                    <h4 class="fw-bold mb-0"><?= $getUser->code ?></h4>
+                                                    <h6 class="fs-12 fw-normal text-muted"><?= $getUser->accountType->ac_group ?></h6>
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
@@ -143,8 +141,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->Equity)) {
-                                                                        echo "$" . number_format($account->Equity , 2);
+                                                                    if (isset($account->equity)) {
+                                                                        echo "$" . number_format($account->equity , 2);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -167,8 +165,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($getUser->total_bonus_amount)) {
-                                                                        echo "$" . number_format($getUser->total_bonus_amount , 2) ;
+                                                                    if (isset($account->bonusTrans)) {
+                                                                        echo "$" . number_format($account->bonusTrans->sum('bonus_amount') , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -191,8 +189,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->MarginFree)) {
-                                                                        echo "$" . number_format($account->MarginFree , 2);
+                                                                    if (isset($account->margin_free)) {
+                                                                        echo "$" . number_format($account->margin_free , 2);
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -239,8 +237,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->MarginLevel)) {
-                                                                        echo $account->MarginLevel . '%';
+                                                                    if (isset($account->margin_level)) {
+                                                                        echo $account->margin_level . '%';
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -377,7 +375,7 @@ if ($getUser) {
                                                     <div class="input-group">
                                                         <input class="form-control" type="password" name=""
                                                             placeholder="" readonly aria-label=""
-                                                            value="<?= $getUser->trader_password ?>"
+                                                            value="<?= $account->trader_password ?>"
                                                             aria-describedby="my-addon">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text showPassword h-100"
@@ -415,7 +413,7 @@ if ($getUser) {
                             <div class="card">
                                 <form action="{{route('admin.updateAccountDetails')}}" enctype="multipart/form-data" method="post">
                                     @csrf
-                                    <input type="hidden" name="trade_id" value="<?= $getUser->trade_id ?>">
+                                    <input type="hidden" name="trade_id" value="<?= $getUser->code ?>">
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
                                             <div class="mb-auto mt-auto">Group / Leverage</div>
@@ -428,8 +426,8 @@ if ($getUser) {
                                                         <select class="form-control acc-types" name="account_type"
                                                             required id="account_type">
                                                             <?php foreach ($account_types as $grp) { ?>
-                                                            <option value="<?= $grp->ac_index ?>"
-                                                                <?= $getUser->account_type == $grp->ac_index ? 'selected' : '' ?>>
+                                                            <option value="<?= $grp->id ?>"
+                                                                <?= $getUser->account_type_id == $grp->id ? 'selected' : '' ?>>
                                                                 <strong><?= $grp->ac_name . '</strong> [ ' . $grp->ac_group . ' ]' ?>
                                                             </option>
                                                             <?php } ?>
@@ -541,7 +539,7 @@ if ($getUser) {
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <form method="post" id="passwordForm" action="{{route('admin.updatePassword')}}">
                     @csrf
-                    <input type="hidden" name="trade_id" value="<?= $trade_id ?>">
+                    <input type="hidden" name="trade_id" value="<?= $account->code ?>">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalCenterTitle">Update Password</h5><button
@@ -553,7 +551,7 @@ if ($getUser) {
                                     <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
                                 </div>
                                 <div class="col-6">
-                                    <h5 class="p-2 f-w-400"><?= $trade_id ?></h5>
+                                    <h5 class="p-2 f-w-400"><?= $account->code ?></h5>
                                 </div>
                             </div>
                             <p class="f-12 text-gray-500 p-2 text-muted mt-0 mb-2"> You have the ability to update your
@@ -646,7 +644,7 @@ if ($getUser) {
                     "type": "GET",
                     data: {
                         action: 'getTradingDeposit',
-                        id: '<?= $trade_id ?>'
+                        id: '<?= $account->code ?>'
                     },
                 },
                 columns: [{
@@ -698,7 +696,7 @@ if ($getUser) {
                     "type": "GET",
                     data: {
                         action: 'getTradingWithdrawal',
-                        id: '<?= $trade_id ?>'
+                        id: '<?= $account->code ?>'
                     },
                 },
                 columns: [{
@@ -825,8 +823,7 @@ if ($getUser) {
                         $.each(data, function(key, value) {
                             // console.log(value);
                             var isSelected = "";
-                            if (selectedValue == <?= $getUser->account_type ?> && value
-                                .account_leverage == <?= $getUser->leverage ?>) {
+                            if (selectedValue == "<?= addslashes($getUser->account_type_id) ?>" && value.account_leverage == <?= (int) $getUser->leverage ?>) {
                                 isSelected = "selected";
                             }
                             $("#leverage").append("<option value='" + value.account_leverage +

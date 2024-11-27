@@ -310,7 +310,7 @@ class AjaxController extends Controller
     }
     public function getTradingDeposit()
     {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        $rmCondition = " left join accounts user on(user.email=trs.email) ";
         $condition = "";
 
         if (!isset($_GET['id'])) {
@@ -323,7 +323,7 @@ class AjaxController extends Controller
             $condition = ' where trs.trade_id=' . $_GET['id'];
         }
         header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
