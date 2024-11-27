@@ -248,10 +248,18 @@ class MT5Accounts extends Controller
         $validatedData = $request->validate([
             'options' => 'required|string',
             'leverage' => 'required|string',
-            'demo_deposit' => 'required'
+            'demo_deposit' => 'required|numeric|min:1',
         ]);
         $user = auth()->user();
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
+        if($group->ac_min_deposit){
+            $validatedData = $request->validate([
+                'options' => 'required|string',
+                'leverage' => 'required|string',
+                'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
+            ]);
+        }
+        
 
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
@@ -293,8 +301,8 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('success', $error);
             } else {
                 $data = [
-                    // 'user_id' => $user->id,
-                    // 'account_id'=>$account->id,
+                    'user_id' => $user->id,
+                    'account_id'=>$account->id,
                     'email' => $new_user->Email,
                     'trade_id' => $new_user->Login,
                     'deposit_amount' => $validatedData['demo_deposit'],
