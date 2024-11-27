@@ -18,6 +18,7 @@ use App\MT5\MTWebAPI;
 use App\Services\MT5Service;
 use App\Services\MailService as MailService;
 use App\Models\User;
+use App\Models\Account;
 
 
 class MT5Controller extends Controller

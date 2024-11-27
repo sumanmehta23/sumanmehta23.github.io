@@ -41,7 +41,7 @@ class MT5Accounts extends Controller
     }
     public function demoAccounts()
     {
-        
+
         $results = Account::where('user_id', auth()->user()->id)
             ->where('demo', true)
             ->orderBy('id', 'desc')
@@ -50,7 +50,7 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
-        
+
         session()->remove('error');
         $user= auth()->user();
         $code=$account->code;
@@ -224,6 +224,7 @@ class MT5Accounts extends Controller
         if ($response['status']) {
             Account::create([
                 'user_id' => $user->id,
+                'name' => $new_user->Name,
                 'demo'=> false,
                 'email' => $new_user->Email,
                 'name' => $new_user->Name,
@@ -259,7 +260,7 @@ class MT5Accounts extends Controller
                 'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
             ]);
         }
-        
+
 
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
@@ -281,9 +282,11 @@ class MT5Accounts extends Controller
         $new_user->InvestPassword = $this->generatePassword();
         $new_user->Login = $this->generateRandomNumber();
         $response = $this->CreateAccount($new_user, $user_server, 'Demo');
+
         if ($response['status']) {
             $account=Account::create([
                 'user_id' => $user->id,
+                'name' => $new_user->Name,
                 'demo' => true,
                 'email' => $new_user->Email,
                 'code' => $new_user->Login,
@@ -308,6 +311,7 @@ class MT5Accounts extends Controller
                     'deposit_amount' => $validatedData['demo_deposit'],
                     'Status' => 1
                 ];
+
                 DemoDeposit::create($data);
             }
             $this->sendMail($new_user, 'Demo');
@@ -362,7 +366,7 @@ class MT5Accounts extends Controller
         }
         // Shuffle the password to avoid predictable patterns
         $password = str_shuffle($password);
-        
+
         return $password;
     }
     function generateRandomNumber($length = 6)
@@ -420,7 +424,7 @@ class MT5Accounts extends Controller
         $account->update([
             $pass_type == 'main' ? 'trader_password' : 'invester_password' => $new_password
         ]);
-        
+
 
         // Display success message
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';
