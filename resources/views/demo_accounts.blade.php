@@ -59,7 +59,7 @@
                                                     </div>
                                                 </td>
                                                 <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                                                <td class="text-end f-w-400 f-16">$ {{ number_format($acc->Balance, 2) }}</td>
+                                                <td class="text-end f-w-400 f-16">$ {{ number_format($acc->balance, 2) }}</td>
                                                 <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}</td>
                                                 <td class="text-end f-w-200">
                                                     <div class="d-flex align-items-center">

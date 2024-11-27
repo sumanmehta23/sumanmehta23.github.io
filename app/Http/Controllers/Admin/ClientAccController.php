@@ -60,8 +60,8 @@ class ClientAccController extends Controller
         // Start building the query
         // $rmCondition = DB::table('demoaccount')
         //     ->join('aspnetusers', 'aspnetusers.email', '=', 'demoaccount.email');
-        $rmCondition = Account::where('demo',true)->with(['user'])
-            ->where('type', 'demo');
+        $rmCondition = Account::where('demo',true)->with(['user','accountType']);
+
         // If the user's role is 2, add the left join with `relationship_manager` and a condition
         if ($role == "Relationship Manager") {
             // $rmCondition->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'demoaccount.email')

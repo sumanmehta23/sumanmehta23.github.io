@@ -17,6 +17,7 @@ use App\MT5\MTWebAPI;
 use App\Services\MT5Service;
 use App\Services\MailService as MailService;
 use App\Models\User;
+use App\Models\Account;
 
 
 class MT5Controller extends Controller
@@ -373,8 +374,8 @@ class MT5Controller extends Controller
             FROM liveaccount
             LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
             LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
-            LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-            WHERE (liveaccount.trade_id) = :trade_id
+            LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.code  -- Join bonus_trans based on email
+            WHERE (liveaccount.code) = :trade_id
             GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
         ";
 

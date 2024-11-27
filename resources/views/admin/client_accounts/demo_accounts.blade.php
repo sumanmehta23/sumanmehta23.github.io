@@ -44,7 +44,7 @@
                                     ?>
                                         <tr>
                                             <td>
-                                                <a href='/admin/client_details/<?= $result->enc_id ?>'>
+                                                <a href='{{route('admin.admin-view-client-details',$result->user_id)}}'>
                                                     <div class='d-flex align-items-center'>
                                                         <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
                                                                 width='28' height='28' viewBox='0 0 24 24'
@@ -70,18 +70,20 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <div class="row align-items-center">
-                                                    <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
-                                                            alt="user-image" class="wid-50 hei-50 rounded"></div>
-                                                    <div class="col ps-2">
-                                                        <h6 class="mb-0"><span
-                                                                class="text-truncate w-100"><?= $result->trade_id ?></span>
-                                                        </h6>
-                                                        <p class="text-muted f-12 mb-0"><span
-                                                                class="text-truncate w-100"><?= $result->account_type ?></span>
-                                                        </p>
+                                                <a href="{{route('admin.admin-view-account-details',$result->id)}}">
+                                                    <div class="row align-items-center">
+                                                        <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
+                                                                alt="user-image" class="wid-50 hei-50 rounded"></div>
+                                                        <div class="col ps-2">
+                                                            <h6 class="mb-0"><span
+                                                                    class="text-truncate w-100"><?= $result->code ?></span>
+                                                            </h6>
+                                                            <p class="text-muted f-12 mb-0"><span
+                                                                    class="text-truncate w-100"><?= $result->accountType->ac_group ?></span>
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </a>
                                             </td>
                                             <td><?php echo htmlentities($result->leverage); ?></td>
                                             <td><?php echo htmlentities(number_format($result->Balance,2)); ?></td>
