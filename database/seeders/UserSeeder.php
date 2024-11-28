@@ -101,7 +101,7 @@ class UserSeeder extends Seeder
             'ib14' => null,
             'ib15' => null,
             'wallet_requested' => null,
-            'wallet_enabled' => null,
+            'wallet_enabled' => true,
             'wallet_requested_at' => null,
             'wallet_approved_at' => null,
             'created_at' => now(),
