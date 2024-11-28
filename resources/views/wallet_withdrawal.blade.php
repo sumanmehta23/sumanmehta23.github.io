@@ -117,7 +117,7 @@
                                                                                     </button>
                                                                                 </div>
                                                                             @else
-                                                                                <select name="client_bank" required class="form-control fill" style="color:black;">
+                                                                                <select name="client_wallet_id" required class="form-control fill" style="color:black;">
                                                                                     @foreach ($client_banks as $bank)
                                                                                         <option value="{{ $bank->id }}">
                                                                                             {{ $bank->wallet_name }} / {{ $bank->wallet_currency }} / {{ $bank->wallet_network }}
