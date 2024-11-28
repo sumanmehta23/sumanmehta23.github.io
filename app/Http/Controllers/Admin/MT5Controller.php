@@ -313,7 +313,7 @@ class MT5Controller extends Controller
                 $deposit_details = TradeWithdrawals::create([
                     'email' => $email,
                     'user_id' => $user->id,
-                    'account_id' => $account->code,
+                    'account_id' => $account->id,
                     'to_account_id' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
