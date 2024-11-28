@@ -40,13 +40,13 @@ class Transactions extends Controller
             ->get()
             ->map(function ($withdrawal) {
                 return [
-                    'type' => 'withdrawal',
+                    'type' => 'Withdrawal',
                     'amount' => $withdrawal->withdrawal_amount,
                     'transaction_type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
-                    'it_to' => $withdrawal->to_account_id,
-                    'it_from' => $withdrawal->account->code,
+                    'it_to' => $withdrawal->to_account_id ?? 'Wallet',
+                    'it_from' => $withdrawal->account->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
                     'date' => $withdrawal->withdraw_date,
@@ -55,18 +55,18 @@ class Transactions extends Controller
             ;
         // Fetch filtered data from TradeDeposits with deposit_amount
         $tradeDeposits = TradeDeposits::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status') // Select only required columns
+            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') // Select only required columns
             ->with('account')
             ->get()
             ->map(function ($deposit) {
                 return [
-                    'type' => 'deposit',
+                    'type' => 'Deposit',
                     'amount' => $deposit->deposit_amount,
                     'transaction_type' => $deposit->deposit_type,
                     'email' => $deposit->email,
                     'status' => $deposit->status,
                     'it_to' => $deposit->trade_id,
-                    'it_from' => $deposit->deposit_from,
+                    'it_from' => $deposit->deposit_from ?? 'CRM',
                     'source' => 'TDID',
                     'raw_id' => $deposit->id,
                     'date' => $deposit->deposted_date,

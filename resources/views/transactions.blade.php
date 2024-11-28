@@ -242,16 +242,16 @@
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history['type'] == "Wallet Transfer" ? 'Wallet' : $history['it_from'] }}</h6>
+                              <h6 class="mb-0">{{ $history['it_from'] }}</h6>
                             </div>
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history['type'] == "Wallet Withdrawal" ? 'Wallet' : $history['it_to'] }}</h6>
+                              <h6 class="mb-0">{{ $history['it_to'] }}</h6>
                             </div>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{$history['type'] }}</h6>
+                            <h6 class="f-w-500">{{$history['transaction_type'] }}</h6>
                           </td>
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history['amount'], 2) }}</h6>
