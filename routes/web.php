@@ -172,6 +172,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal'])->name('wallet_withdrawal_details');
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
+        Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
 
         Route::prefix('/clientAccounts')->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts']);

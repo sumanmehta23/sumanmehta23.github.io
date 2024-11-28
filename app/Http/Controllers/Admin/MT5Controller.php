@@ -191,8 +191,10 @@ class MT5Controller extends Controller
                 //     'trading_deposited' => $amount
                 // ]);
                 TotalBalance::create([
-                    'user_id' => $user_id,
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'email' => $email,
+                    'code' => $account->code,
                     'trading_deposited' => $amount,
                 ]);
                 $settings = settings();
