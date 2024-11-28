@@ -16,7 +16,7 @@ class Transactions extends Controller
     {
         $email = $email = auth()->user()->email;
         $deposit_history = TradeDeposit::with('liveAccount.accountType')
-            ->where('email', $email)
+            ->where('user_id',  auth()->user()->id)
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
             ->get();
@@ -36,7 +36,8 @@ class Transactions extends Controller
         //     ->get();
 
         $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id') // Select only required columns
+            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id') 
+            ->where('user_id', auth()->user()->id)
             ->get()
             ->map(function ($withdrawal) {
                 return [
@@ -55,7 +56,8 @@ class Transactions extends Controller
             ;
         // Fetch filtered data from TradeDeposit with deposit_amount
         $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') // Select only required columns
+            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') 
+            ->where('user_id', auth()->user()->id)
             ->with('account')
             ->get()
             ->map(function ($deposit) {

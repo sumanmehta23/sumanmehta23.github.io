@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
 use App\Http\Controllers\Admin\Ticket;
-use App\Http\Controllers\TradeDeposit;
+use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
@@ -110,8 +110,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
-    Route::get('/trade-deposit', [TradeDeposit::class, 'index'])->name('trade-deposit');
-    Route::post('/trade-deposit', [TradeDeposit::class, 'deposit'])->name('trade-deposit_store');
+    Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
+    Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
 
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
     Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');

@@ -82,6 +82,7 @@ class InternalTransfer extends Controller
                 } else {
                     // Log deposit
                     TradeDeposit::create([
+                        'user_id' => auth()->user()->id,
                         'email' => $email,
                         'trade_id' => $toAccount,
                         'deposit_amount' => $transferable_amount,

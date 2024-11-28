@@ -305,6 +305,7 @@ class Ib extends Controller
                 } else {
                     // Insert into trade_deposit.
                     TradeDeposit::create([
+                        'user_id' => $userId,
                         'email' => $email,
                         'trade_id' => $account->code,
                         'account_id' => $account->id,

@@ -38,11 +38,11 @@ class BonusTrans extends Model
 
     public function liveaccount()
     {
-        return $this->belongsTo(LiveAccount::class, 'trade_id',  'trade_id');
+        return $this->belongsTo(Account::class)->where('demo',false);
     }
 
     public function demoaccount()
     {
-        return $this->belongsTo(LiveAccount::class, 'trade_id', 'trade_id');
+        return $this->belongsTo(Account::class)->where('demo',true);
     }
 }

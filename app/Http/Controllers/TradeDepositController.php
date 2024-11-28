@@ -18,7 +18,7 @@ use App\Models\ClientBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
-class TradeDeposit extends Controller
+class TradeDepositController extends Controller
 {
     protected $api;
 
@@ -137,6 +137,7 @@ class TradeDeposit extends Controller
                 ]);
                 // Insert into trade deposit
                 TradeDeposit::create([
+                    'user_id' => $user->id,
                     'email' => $email,
                     'trade_id' => $tradeId,
                     'deposit_amount' => $tradingDeposited,

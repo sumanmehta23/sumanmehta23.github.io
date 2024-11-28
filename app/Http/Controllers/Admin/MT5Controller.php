@@ -18,6 +18,7 @@ use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
+use App\Models\AccountType;
 use App\Services\MailService as MailService;
 
 class MT5Controller extends Controller
@@ -175,6 +176,7 @@ class MT5Controller extends Controller
             } else {
 
                 $tradeDeposit = TradeDeposit::create([
+                    'user_id' => $user->id,
                     'email' => $email,
                     'trade_id' => $trade_id,
                     'deposit_amount' => $amount,
@@ -407,29 +409,29 @@ class MT5Controller extends Controller
         //     ->where(DB::raw('trade_id'), $account->code)
         //     ->where('status', 1)
         //     ->sum('deposit_amount');
-        $total_deposit = TradeDeposit::where('trade_id', $account->code)
+        $total_deposit = TradeDeposit::where('account_id', $account->id)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
-        $unapproved_deposit = TradeDeposit::where('trade_id', $account->code)
+        $unapproved_deposit = TradeDeposit::where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
-        $total_withdrawal = TradeWithdrawals::where('account_id', $account->code)
+        $total_withdrawal = TradeWithdrawals::where('account_id', $account->id)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
-        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->code)
+        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
         $bonus_trans = BonusTrans::where('status', 1)
-            ->where(DB::raw('trade_id'),  $account->code)
+            ->where("account_id"  ,$account->id)
             ->get();
-        $account_types = DB::table('account_types')->where('status', 1)->get();
+        $account_types = AccountType::where('status', 1)->get();
 
         // $account = AccountHelper::getAccount( $account->code);
         $accountHelper = AccountHelper::getAccount( $account->code);
