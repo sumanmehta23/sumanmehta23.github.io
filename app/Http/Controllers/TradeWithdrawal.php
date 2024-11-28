@@ -55,8 +55,8 @@ class TradeWithdrawal extends Controller
             $settings['mt5_server_web_password']
         );
         $user_id = auth()->user()->id;
-        $account_id = $request->input('account_id');
-        $account = LiveAccount::with('accountType')
+        $account_id = $request->account_id;
+        $account = Account::with('accountType')
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
@@ -72,7 +72,7 @@ class TradeWithdrawal extends Controller
         // Get the account balance
 
         // Check for sufficient balance
-        if ($amount > $amount->Balance) {
+        if ($amount > $account->balance) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',
@@ -83,6 +83,7 @@ class TradeWithdrawal extends Controller
             $comment = 'Withdraw';
             $ticket = NULL;
             $login = $account->code;
+            $email = $account->email;
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
@@ -99,16 +100,18 @@ class TradeWithdrawal extends Controller
                         'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
                         'withdraw_type' => $withdraw_type,
-                        'withdraw_to' => $withdraw_to,
+                        // 'withdraw_to' => $withdraw_to,
                         'wallet_qr' => '',
                         'Status' => 1
                     ]);
                     TotalBalance::create([
                         'email' => $email,
+                        'user_id' => $user_id,
                         'deposit_amount' => $amount,
                     ]);
                     WalletDeposit::create([
                         'email' => $email,
+                        'user_id' => $user_id,
                         'deposit_amount' => $amount,
                         'deposit_type' => 'Internal Transfer',
                         'Status' => 1,
