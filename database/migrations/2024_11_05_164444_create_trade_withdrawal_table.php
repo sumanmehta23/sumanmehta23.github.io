@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\Account::class, 'to_account_id')->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class, 'to_account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             // $table->uuid('user_id');
             $table->string('email', 50)->nullable();
             // $table->uuid('account_id')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('AdminRemark', 100)->nullable();
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->string('created_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

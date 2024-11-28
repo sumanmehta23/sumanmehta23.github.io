@@ -18,7 +18,7 @@ use App\MT5\MTWebAPI;
 use App\Services\MT5Service;
 use App\Services\MailService as MailService;
 use App\Models\User;
-use App\Models\AccountType;
+use App\Models\TotalBalance;
 
 class MT5Controller extends Controller
 {
@@ -186,9 +186,14 @@ class MT5Controller extends Controller
                 $transid = "TDID" . str_pad($tradeDeposit->id, 4, '0', STR_PAD_LEFT);
 
                 // Store in total_balance table
-                DB::table('total_balance')->insert([
+                // DB::table('total_balance')->insert([
+                //     'email' => $email,
+                //     'trading_deposited' => $amount
+                // ]);
+                TotalBalance::create([
+                    'user_id' => $user_id,
                     'email' => $email,
-                    'trading_deposited' => $amount
+                    'trading_deposited' => $amount,
                 ]);
                 $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
@@ -291,7 +296,8 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $trade_id = $request->input('trade_id');
         $account = Account::where('code', $trade_id)->first();
-
+        // dd($user_id);
+        // dd($user->id);
         if ($request->has('withdraw_from_account')) {
             $amount = $request->input('amount');
             $tw_amount = abs($request->input('amount')) * -1;
@@ -307,8 +313,8 @@ class MT5Controller extends Controller
                 $deposit_details = TradeWithdrawals::create([
                     'email' => $email,
                     'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'trade_id' => $trade_id,
+                    'account_id' => $account->code,
+                    'to_account_id' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
                     'AdminRemark' => $description,

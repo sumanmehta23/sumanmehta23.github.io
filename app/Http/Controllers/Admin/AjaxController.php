@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\Request;
 use App\Models\Ib1;
 use App\Models\User;
+use App\Models\TradeWithdrawals;
 
 class AjaxController extends Controller
 {
@@ -346,23 +347,40 @@ class AjaxController extends Controller
     }
     public function getTradingWithdrawal()
     {
-        $condition = '';
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // $condition = '';
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (!isset($_GET['id'])) {
+        //     if (session('userData')['userRole'] == "Relationship Manager") {
+        //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
+        //     } else {
+        //     }
+        // }
+        // if (isset($_GET['id'])) {
+        //     $condition = ' where trs.trade_id=' . $_GET['id'];
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+        $query = TradeWithdrawals::with(['user', 'withdrawTo']);
+
+        // Add conditions based on session and GET parameters
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
-            } else {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
+        } else {
+            $query->where('account_id', $_GET['id']);
         }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Fetch data
+        $withdrawals = $query->orderByDesc('id')->get();
+
         $data = [];
-        foreach ($results as $row) {
+        foreach ($withdrawals as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
                 'account_no' => $row->trade_id,
@@ -614,7 +632,7 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         $results = $query;
         $data = [];
-        
+
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
