@@ -18,7 +18,7 @@ use App\MT5\MTWebAPI;
 use App\Services\MT5Service;
 use App\Services\MailService as MailService;
 use App\Models\User;
-
+use App\Models\AccountType;
 
 class MT5Controller extends Controller
 {
@@ -382,48 +382,59 @@ class MT5Controller extends Controller
         AccountHelper::updateLiveAndDemoAccounts($account->code);
         $type = "live";
 
-        $sql = "
-            SELECT
-                liveaccount.*,
-                aspnetusers.fullname,
-                account_types.ac_group,
-                IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
-            FROM liveaccount
-            LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
-            LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
-            LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-            WHERE (liveaccount.trade_id) = :trade_id
-            GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
-        ";
+        // $sql = "
+        //     SELECT
+        //         liveaccount.*,
+        //         aspnetusers.fullname,
+        //         account_types.ac_group,
+        //         IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
+        //     FROM liveaccount
+        //     LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
+        //     LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
+        //     LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
+        //     WHERE (liveaccount.trade_id) = :trade_id
+        //     GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
+        // ";
 
-        $query = DB::select($sql, ['trade_id' => $trade_id]);
-        $getUser = isset($query[0]) ? $query[0] : [];
+        // $query = DB::select($sql, ['trade_id' => $trade_id]);
+
+
+        $query = Account::where('demo', false)
+                            ->where('code',$trade_id)
+                            ->with(['accountType','user','bonusTrans'])
+                            ->get();
+
+
+        $account = isset($query[0]) ? $query[0] : [];
+
+        // dd($account);
+
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
             return redirect("/admin/dashboard");
         }
 
         // Total approved deposits
-        $total_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('trade_id'), $account->code)
+        // $total_deposit = DB::table('trade_deposit')
+        //     ->where(DB::raw('trade_id'), $account->code)
+        //     ->where('status', 1)
+        //     ->sum('deposit_amount');
+        $total_deposit = TradeDeposits::where('trade_id', $account->code)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
-        $unapproved_deposit = DB::table('trade_deposit')
-            ->where(DB::raw('trade_id'),  $account->code)
+        $unapproved_deposit = TradeDeposits::where('trade_id', $account->code)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
-        $total_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('trade_id'),  $account->code)
+        $total_withdrawal = TradeWithdrawals::where('account_id', $account->code)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
-        $unapproved_withdrawal = DB::table('trade_withdrawal')
-            ->where(DB::raw('trade_id'),  $account->code)
+        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->code)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
