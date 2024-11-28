@@ -195,7 +195,7 @@ class Transaction extends Controller
 
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_bank > 0) {
 
-                    $bankDetails = ClientWallet::where('client_wallet_id', $transaction->client_bank)->first();
+                    $bankDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
                     $walletNetwork = $bankDetails->wallet_network;
                     $walletCurrency = $bankDetails->wallet_currency;
                     $walletAddress = $bankDetails->wallet_address;

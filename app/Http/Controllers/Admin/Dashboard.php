@@ -35,7 +35,7 @@ class Dashboard extends Controller
         }
 
 
-        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposit trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer')";
+        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer')";
         $trade_deposit = DB::select($sql)[0];
 
         $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from wallet_deposit trs " . $rmCondition . " trs. status=1";
@@ -50,7 +50,7 @@ class Dashboard extends Controller
         $sql = "SELECT count(*) as counts from wallet_deposits trs " . $rmCondition . " trs.Status = 0";
         $pending_wd = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from trade_deposit trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from trade_deposits trs " . $rmCondition . " trs.Status = 0";
         $pending_td = DB::select($sql)[0];
 
         $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.Status = 0";

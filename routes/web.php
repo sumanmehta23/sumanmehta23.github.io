@@ -43,8 +43,8 @@ Route::get("/se",function(){
     // file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('leverage')->get()->toArray();
     // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
-     $settings = DB::table('accounts')->get()->toArray();
-    file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('client_wallets')->get()->toArray();
+    // file_put_contents(storage_path('app/client_wallets.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');

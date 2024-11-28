@@ -96,7 +96,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallet::where(DB::raw('client_wallet_id'), $request->id)->first();
+        $wallet = ClientWallet::where('id', $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
