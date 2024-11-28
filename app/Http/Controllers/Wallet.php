@@ -382,8 +382,8 @@ class Wallet extends Controller
             'withdraw_type' => 'required|string',
             'client_bank' => 'required'
         ]);
-        dd($request->all());
         $userEmail = auth()->user()->email;
+        $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
         $clientBank = $request->input('client_bank');
@@ -401,6 +401,7 @@ class Wallet extends Controller
         }
         WalletWithdraw::create([
             'email' => $userEmail,
+            'user_id' => $user->id,
             'withdraw_amount' => $withdrawAmount,
             'withdraw_type' => $withdrawType,
             'client_bank' => $clientBank,
