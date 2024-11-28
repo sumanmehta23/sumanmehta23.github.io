@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('deposit_type')->nullable();
             $table->string('status', 50)->nullable();
             $table->foreignIdFor(\App\Models\User::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
