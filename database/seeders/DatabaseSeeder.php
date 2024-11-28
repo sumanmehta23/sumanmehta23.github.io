@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             AccountTypesSeeder::class,
             LeverageSeeder::class,
             UserSeeder::class,
+            AccountSeeder::class,
           ]);
     }
 }
