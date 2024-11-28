@@ -21,7 +21,7 @@ class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
-   
+
 
     public function __construct(Payment $paymentController)
     {
@@ -64,10 +64,9 @@ class Wallet extends Controller
         return $walletBalance;
     }
     public function storeClientWallet(Request $request)
-    { 
+    {
         $request->validate([
             'wallet_name' => 'required|string|max:255',
-            'wallet_currency' => 'required|string|max:10',
             'wallet_network' => 'required|string|max:255',
             'wallet_address' => 'required|string|max:255',
             'status' => 'required',
@@ -81,7 +80,7 @@ class Wallet extends Controller
 
         ClientWallet::create([
             'wallet_name' => $request->wallet_name,
-            'wallet_currency' => $request->wallet_currency,
+            'wallet_currency' => 'USDT',
             'wallet_network' => $request->wallet_network,
             'wallet_address' => $request->wallet_address,
             'user_id' =>  $user->id,
@@ -379,6 +378,7 @@ class Wallet extends Controller
             'withdraw_type' => 'required|string',
             'client_bank' => 'required'
         ]);
+        dd($request->all());
         $userEmail = auth()->user()->email;
         $withdrawAmount = $request->input('withdraw_amount');
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
