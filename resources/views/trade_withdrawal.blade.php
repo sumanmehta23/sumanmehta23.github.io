@@ -43,7 +43,7 @@
                                                                                 type="radio" name="live-account"
                                                                                 class="select-liveaccount form-check-input input-primary"
                                                                                 data-balance="{{ $liveaccount->balance }}"
-                                                                                value="{{ $liveaccount->code }}">
+                                                                                value="{{ $liveaccount->id }}">
                                                                             <label class="form-check-label d-block"
                                                                                 required>
                                                                                 <div class="p-1 my-1">
@@ -115,7 +115,7 @@
                                                                 <input type="hidden" name="user[email]"
                                                                     value="{{ session('clogin') }}" required
                                                                     class="form-control fill">
-                                                                <input type="hidden" name="trade_id" value=""
+                                                                <input type="hidden" name="account_id" value=""
                                                                     class="user_trade_id form-control fill" readonly
                                                                     required>
                                                                 <input type="hidden" name="withdraw_type"
@@ -177,7 +177,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="card">
+                                                {{-- <div class="card">
                                                     <div class="card-header">
                                                         <h5>MT5 ACCOUNTS SUMMARY</h5>
                                                     </div>
@@ -238,7 +238,7 @@
                                                             </li>
                                                         </ul>
                                                     </div>
-                                                </div>
+                                                </div> --}}
                                                 <div class="card">
                                                     <div class="card-body py-2">
                                                         <ul class="list-group list-group-flush">

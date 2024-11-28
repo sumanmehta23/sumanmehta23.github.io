@@ -31,6 +31,7 @@ class MT5Accounts extends Controller
     }
     public function liveAccounts()
     {
+
         $email = auth()->user()->email;
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)

@@ -17,11 +17,12 @@ class WalletDeposit extends Model
         'deposit_type',
         'transaction_id',
         'Status',
+        'user_id',
         'created_at',
         'updated_at'
     ];
     public function user()
     {
-        return $this->belongsTo(User::class, 'email');
+        return $this->belongsTo(User::class);
     }
 }

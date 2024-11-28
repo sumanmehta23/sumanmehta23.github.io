@@ -20,7 +20,11 @@ class TotalBalance extends Model
         'withdraw_amount',
         'deposit_amount',
         'status',
-        'reg_date'
+        'reg_date',
+        'trading_deposited',
+        'trading_withdrawal',
+        'refer_commission_amount',
+        'deposit_type'
     ];
     public function user()
     {
