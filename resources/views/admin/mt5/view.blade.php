@@ -36,7 +36,7 @@ if ($getUser) {
                                                             alt="img" style="width:100px">
                                                     </div>
 
-                                                    <h3 class="username mb-2"><?= $getUser->name ?></h3>
+                                                    <h3 class="mb-2 username"><?= $getUser->name ?></h3>
                                                     <p class="mb-1 text-muted"><?= $getUser->email ?></p>
                                                 </div>
                                             </div>
@@ -47,8 +47,8 @@ if ($getUser) {
                                                     <img src="/assets/images/mt5.png" class="me-3" alt="img"
                                                         style="width:50px">
                                                 </div>
-                                                <div class="user-wrap mt-auto mb-auto">
-                                                    <h4 class="fw-bold mb-0"><?= $getUser->code ?></h4>
+                                                <div class="mt-auto mb-auto user-wrap">
+                                                    <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
                                                     <h6 class="fs-12 fw-normal text-muted"><?= $getUser->accountType->ac_group ?></h6>
                                                 </div>
                                             </div>
@@ -82,7 +82,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-line-up f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -104,7 +104,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-line-up f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -130,7 +130,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-line-up f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -154,7 +154,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-line-up f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -178,7 +178,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-butterfly f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -202,7 +202,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-pie f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -226,7 +226,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-chart-pie-slice f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -250,7 +250,7 @@ if ($getUser) {
                                             <li class="list-group-item">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0">
-                                                        <div class="avtar avtar-s border"><i
+                                                        <div class="border avtar avtar-s"><i
                                                                 class="ph-duotone ph-line-segments f-20"></i></div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
@@ -278,11 +278,9 @@ if ($getUser) {
                         </div>
                     </div>
 
-                    <div class="card custom-card mt-2">
+                    <div class="mt-2 card custom-card">
                         <div class="card-header justify-content-between">
-                            <div class="card-title">
-                                Bonus
-                            </div>
+                            <div class="card-title">Bonus</div>
                             <div class="prism-toggle">
                             </div>
                         </div>
@@ -317,38 +315,38 @@ if ($getUser) {
                 </div>
                 <div class="col-xl-8">
                     <div class="card">
-                        <div class="card-body p-0">
+                        <div class="p-0 card-body">
                             <div class="row">
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="card-body text-center">
+                                    <div class="text-center card-body">
                                         <h6 class="mb-0">Total Deposit</h6>
-                                        <h2 class="mb-1 mt-2 number-font text-primary">$<span
+                                        <h2 class="mt-2 mb-1 number-font text-primary">$<span
                                                 class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
                                 </div>
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="card-body text-center">
+                                    <div class="text-center card-body">
                                         <h6 class="mb-0">Unapproved Deposit</h6>
-                                        <h2 class="mb-1 mt-2 number-font text-secondary">$<span
+                                        <h2 class="mt-2 mb-1 number-font text-secondary">$<span
                                                 class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
                                         </h2>
                                     </div>
                                 </div>
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="card-body text-center">
+                                    <div class="text-center card-body">
                                         <h6 class="mb-0">Total Withdrawl</h6>
-                                        <h2 class="mb-1 mt-2 number-font text-primary">$<span
+                                        <h2 class="mt-2 mb-1 number-font text-primary">$<span
                                                 class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 2) : '0' ?></span>
                                         </h2>
                                         <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                     </div>
                                 </div>
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="card-body text-center">
+                                    <div class="text-center card-body">
                                         <h6 class="mb-0">Unapproved Withdrawl</h6>
-                                        <h2 class="mb-1 mt-2 number-font text-secondary">$<span
+                                        <h2 class="mt-2 mb-1 number-font text-secondary">$<span
                                                 class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 2) : '0' ?></span>
                                         </h2>
                                     </div>
@@ -363,7 +361,7 @@ if ($getUser) {
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title d-flex justify-content-between">
-                                        <div class="mb-auto mt-auto">Security / Passwords</div>
+                                        <div class="mt-auto mb-auto">Security / Passwords</div>
                                         <div class="updatePassword"><button class="btn btn-primary">Update
                                                 Credentials</button></div>
                                     </h5>
@@ -416,9 +414,9 @@ if ($getUser) {
                                     <input type="hidden" name="trade_id" value="<?= $getUser->code ?>">
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
-                                            <div class="mb-auto mt-auto">Group / Leverage</div>
+                                            <div class="mt-auto mb-auto">Group / Leverage</div>
                                         </h5>
-                                        <div class="card-body pb-0">
+                                        <div class="pb-0 card-body">
                                             <div class="row">
                                                 <div class="col-lg-6">
                                                     <div class="form-group">
@@ -523,7 +521,7 @@ if ($getUser) {
             </div>
         </div>
         <?php } else { ?>
-        <div class="text-center error-page p-2">
+        <div class="p-2 text-center error-page">
             <div class="error-template">
                 <h1 class="error-details text-primary">
                     Sorry, No Data Found !!!!!
@@ -554,12 +552,12 @@ if ($getUser) {
                                     <h5 class="p-2 f-w-400"><?= $account->code ?></h5>
                                 </div>
                             </div>
-                            <p class="f-12 text-gray-500 p-2 text-muted mt-0 mb-2"> You have the ability to update your
+                            <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your
                                 Investor and
                                 Master passwords for your trading accounts here.</p>
-                            <div class="row mt-0 mb-0">
+                            <div class="mt-0 mb-0 row">
                                 <div class="col-lg-6">
-                                    <div class="border card p-3">
+                                    <div class="p-3 border card">
                                         <div class="form-check"><input type="radio" name="password_type"
                                                 class="form-check-input input-primary" id="customCheckdefhor1"
                                                 value="investor" checked><label class="form-check-label d-block"
@@ -568,7 +566,7 @@ if ($getUser) {
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
-                                    <div class="border card p-3">
+                                    <div class="p-3 border card">
                                         <div class="form-check"><input type="radio" name="password_type"
                                                 class="form-check-input input-primary" id="customCheckdefhor2"
                                                 value="main"><label class="form-check-label d-block"
@@ -577,12 +575,12 @@ if ($getUser) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mt-0 mb-0">
+                            <div class="mt-0 mb-0 row">
                                 <div class="form-group"><label class="form-label" for="exampleInputPassword1">New
                                         Password</label><input type="password" class="form-control" name="password"
                                         required id="password" placeholder="Password">
                                 </div>
-                                <div class="row mb-2 mt-3">
+                                <div class="mt-3 mb-2 row">
                                     <div class="col-6"><span class="pc-micon me-2"><i
                                                 class="ti ti-point"></i></span><span class="pc-mtext f-12">Minimum 8
                                             characters</span><br><span class="pc-micon me-2"><i
@@ -597,7 +595,7 @@ if ($getUser) {
                                                 class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
                                             digit</span></div>
                                 </div>
-                                <div class="form-group mb-2"><label class="form-label"
+                                <div class="mb-2 form-group"><label class="form-label"
                                         for="exampleInputPassword1">Confirm
                                         Password</label><input type="password" class="form-control"
                                         name="confirm_password" required id="confirm_password" placeholder="Password">

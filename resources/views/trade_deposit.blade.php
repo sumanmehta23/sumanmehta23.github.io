@@ -64,7 +64,7 @@
                                                                                     </span>
                                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                                         <span class="mb-0 h5 d-block f-w-500">
-                                                                                            ${{ $liveaccount->Balance ?? 0.0 }}
+                                                                                            ${{ $liveaccount->balance ?? 0.0 }}
                                                                                         </span>
                                                                                         <span
                                                                                             class="mb-0 text-muted f-10">Current
@@ -233,7 +233,7 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="flex-shrink-0">
-                                                                        <h4 class="f-w-500">${{ $liveaccount->Balance??0 }}
+                                                                        <h4 class="f-w-500">${{ $liveaccount->balance??0 }}
                                                                         </h4>
                                                                         <p class="mb-2 text-sm text-muted text-end">Balance
                                                                         </p>

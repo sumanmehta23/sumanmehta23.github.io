@@ -175,7 +175,7 @@
                                                                 for="<?= $acc->id ?>"><span><span
                                                                         class="h5 d-block"><span
                                                                             class="float-end badge bg-light-primary f-14 fw-medium">$
-                                                                            <?= $acc->Balance ?></span><span>
+                                                                            <?= $acc->balance ?></span><span>
                                                                             <img src="/assets/images/mt5.png"
                                                                                 class="hei-30">
                                                                             <?= $acc->id ?></span></span><span

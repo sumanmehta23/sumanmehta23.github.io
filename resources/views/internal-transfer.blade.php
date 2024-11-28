@@ -39,7 +39,7 @@
                                                                 <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="fromAccount"
-                                                                            data-balance="{{ $acc->Balance }}"
+                                                                            data-balance="{{ $acc->balance }}"
                                                                             class="form-check-input input-primary"
                                                                             id="fA{{ $acc->id }}"
                                                                             value="{{ $acc->id }}">
@@ -56,7 +56,7 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->Balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
                                                                                     <span
                                                                                         class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
@@ -80,7 +80,7 @@
                                                                 <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="toAccount"
-                                                                            data-balance="{{ $acc->Balance }}"
+                                                                            data-balance="{{ $acc->balance }}"
                                                                             class="form-check-input input-primary"
                                                                             id="tA{{ $acc->id }}"
                                                                             value="{{ $acc->id }}">
@@ -97,7 +97,7 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->Balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
                                                                                     <span
                                                                                         class="mb-0 text-muted">Transferable
                                                                                         Balance</span>

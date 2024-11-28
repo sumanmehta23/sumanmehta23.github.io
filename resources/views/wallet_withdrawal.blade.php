@@ -320,7 +320,7 @@
                                                                             </div>
                                                                         </div>
                                                                         <div class="flex-shrink-0">
-                                                                            <h4 class="f-w-500">${{ $liveaccount->Balance }}</h4>
+                                                                            <h4 class="f-w-500">${{ $liveaccount->balance }}</h4>
                                                                             <p class="mb-2 text-sm text-muted text-end">Balance</p>
                                                                         </div>
                                                                     </div>
