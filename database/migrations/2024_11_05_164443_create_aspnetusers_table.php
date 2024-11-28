@@ -97,7 +97,7 @@ return new class extends Migration
             $table->uuid('ib14')->nullable();
             $table->uuid('ib15')->nullable();
             $table->integer('wallet_requested')->nullable();
-            $table->integer('wallet_enabled')->nullable()->default(1);
+            $table->boolean('wallet_enabled')->nullable()->default(true);
             $table->dateTime('wallet_requested_at')->nullable();
             $table->dateTime('wallet_approved_at')->nullable();
             $table->timestamps();
