@@ -13,19 +13,8 @@ class TotalBalance extends Model
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'total_balance';
     public $timestamps = false;
-    protected $fillable = [
-        'email',
-        'user_id',
-        'code',
-        'withdraw_amount',
-        'deposit_amount',
-        'status',
-        'reg_date',
-        'trading_deposited',
-        'trading_withdrawal',
-        'refer_commission_amount',
-        'deposit_type'
-    ];
+    protected $guarded = [];
+
     public function user()
     {
         return $this->belongsTo(User::class);
