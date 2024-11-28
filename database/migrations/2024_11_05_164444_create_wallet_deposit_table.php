@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('transaction_id', 100)->nullable()->unique('transaction_id');
             $table->timestamp('deposted_date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->integer('Status')->default(0);
-            $table->string('AdminRemark', 100)->nullable();
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('btc_amount', 100)->nullable();
             $table->string('currency_type', 50)->nullable();

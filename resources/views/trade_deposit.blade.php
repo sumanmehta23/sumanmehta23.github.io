@@ -127,7 +127,7 @@
                                                                 value="{{ session('clogin') }}" required
                                                                 class="form-control fill">
                                                             <input class="user_trade_id" type="hidden"
-                                                                name="user[trade_id]" value="" readonly required>
+                                                                name="user[account_id]" value="" readonly required>
 
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">

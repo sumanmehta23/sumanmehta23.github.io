@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;

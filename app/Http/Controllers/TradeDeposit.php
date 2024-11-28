@@ -10,7 +10,7 @@ use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use Illuminate\Http\Request;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
@@ -73,7 +73,9 @@ class TradeDeposit extends Controller
         $email = session('clogin');
         $trading_deposited1 = $user['deposit'];
         $email = $user['email'];
-        $trade_id = $user['trade_id'];
+        $account_id = $user['account_id'];
+        $user=auth()->user();
+        $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
         $deposit_type = $user['deposit_type'];
         $deposit_from = NULL;
 
@@ -98,7 +100,7 @@ class TradeDeposit extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
-        $errorCode = $this->api->TradeBalance($trade_id, $type = MTEnDealAction::DEAL_BALANCE, $trading_deposited1, $comment, $ticket, $margin_check=true);
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $trading_deposited1, $comment, $ticket, $margin_check=true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
@@ -111,12 +113,13 @@ class TradeDeposit extends Controller
         } else {
 
             // Start a database transaction
-            DB::transaction(function () use ($user, $email, $depositProofPath) {
+            DB::transaction(function () use ($user, $email,$account, $depositProofPath) {
                 $tradingDeposited = $user['deposit'];
-                $tradeId = $user['trade_id'];
+                $tradeId = $account->code;
                 $depositType = $user['deposit_type'];
                 // Insert into wallet withdraw
                 WalletWithdraw::create([
+                    'user_id' => $user->id,
                     'email' => $email,
                     'withdraw_amount' => $tradingDeposited,
                     'withdraw_type' => $depositType,
@@ -125,13 +128,15 @@ class TradeDeposit extends Controller
                 ]);
                 // Insert into total balance
                 TotalBalance::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'email' => $email,
                     'trade_id' => $tradeId,
                     'withdraw_amount' => $tradingDeposited,
                     'status' => 1,
                 ]);
                 // Insert into trade deposit
-                TradeDeposits::create([
+                TradeDeposit::create([
                     'email' => $email,
                     'trade_id' => $tradeId,
                     'deposit_amount' => $tradingDeposited,

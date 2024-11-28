@@ -30,14 +30,16 @@ class TradeWithdrawal extends Controller
     public function index()
     {
         $email = auth()->user()->email;
+        $user=auth()->user();
         AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
         $liveaccount_details = Account::with('accountType')
             ->where('email', $email)
             ->where('demo', false)
             ->get();
-        $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
-        $bank_details = ClientBankDetail::where('email', $email)->first() ?? [];
-        $totals = Account::where('email', $email)
+        $walletenabled = $user->wallet_enabled ?? false;
+        $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
+        $totals = Account::where('user_id', $user->id)
+            ->where('demo', false)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
@@ -105,6 +107,7 @@ class TradeWithdrawal extends Controller
                         'Status' => 1
                     ]);
                     TotalBalance::create([
+                        'account_id' => $account->id,
                         'email' => $email,
                         'user_id' => $user_id,
                         'deposit_amount' => $amount,

@@ -183,7 +183,7 @@ class Transaction extends Controller
         $transaction_id = $request->input('transaction_id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
-            $transaction->AdminRemark = $description;
+            $transaction->admin_remark = $description;
             $transaction->Status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
@@ -366,7 +366,7 @@ class Transaction extends Controller
           echo "<script>console.log('TradingDeposit Error==> ".$error."')</script>";
         } else {
     
-          $sql = "update trade_withdrawal set AdminRemark=:description,Status=:status where md5(id)=:did";
+          $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
           $query = $dbh->prepare($sql);
           $query->bindParam(':description', $description, PDO::PARAM_STR);
           $query->bindParam(':status', $status, PDO::PARAM_STR);
@@ -423,7 +423,7 @@ class Transaction extends Controller
           phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
         }
       } else {
-        $sql = "update trade_withdrawal set AdminRemark=:description,Status=:status where md5(id)=:did";
+        $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
         $query = $dbh->prepare($sql);
         $query->bindParam(':description', $description, PDO::PARAM_STR);
         $query->bindParam(':status', $status, PDO::PARAM_STR);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
 use App\Models\InternalTransfer;
 use App\Models\WalletWithdraw;
@@ -15,7 +15,7 @@ class Transactions extends Controller
     public function index()
     {
         $email = $email = auth()->user()->email;
-        $deposit_history = TradeDeposits::with('liveAccount.accountType')
+        $deposit_history = TradeDeposit::with('liveAccount.accountType')
             ->where('email', $email)
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
@@ -53,8 +53,8 @@ class Transactions extends Controller
                 ];
             })
             ;
-        // Fetch filtered data from TradeDeposits with deposit_amount
-        $tradeDeposits = TradeDeposits::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
+        // Fetch filtered data from TradeDeposit with deposit_amount
+        $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
             ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') // Select only required columns
             ->with('account')
             ->get()

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $bonus_code_desc
  * @property string $bonus_date
  * @property integer $status
- * @property string $adminRemark
+ * @property string $admin_remark
  * @property string $Js_Admin_Remark_Date
  * @property string $created_by
  */

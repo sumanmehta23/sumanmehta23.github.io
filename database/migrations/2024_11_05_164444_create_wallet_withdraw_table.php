@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('Status')->default(0);
             $table->longText('payout_req')->nullable();
             $table->longText('payout_res')->nullable();
-            $table->string('AdminRemark', 100)->nullable();
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('wallet_id', 100)->nullable();
             $table->string('wallet_qr', 500)->nullable();
