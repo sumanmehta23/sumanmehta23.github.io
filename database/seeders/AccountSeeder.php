@@ -17,14 +17,13 @@ class AccountSeeder extends Seeder
      */
     public function run(): void
     {
-         $accounts = json_decode(File::get(database_path('seeders/data/accounts.json')), true);
-         foreach ($accounts as $account) {
+        $accounts = json_decode(File::get(database_path('seeders/data/accounts.json')), true);
+        foreach ($accounts as $account) {
             $user=User::where('email',$account['email'])->first();
             $account['user_id']=$user->id;
             $accountTypeId=AccountType::first()->value('id');
-            // $userId=User::where('email',$account['email'])->value('id');
             $account['account_type_id']=$accountTypeId;
-             Account::create($account);
-         }
+            Account::create($account);
+        }
     }
 }
