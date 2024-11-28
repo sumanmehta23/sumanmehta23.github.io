@@ -1,21 +1,22 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Controllers\Controller;
+use Exception;
+use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Account;
+use App\Models\PaymentLog;
+use App\Models\LiveAccount;
+use App\Models\ClientWallet;
+use App\Models\TotalBalance;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
-use App\Models\ClientWallet;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\LiveAccount;
-use App\Models\PaymentLog;
-use App\Models\TotalBalance;
-use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Payment;
-use Carbon\Carbon;
-use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class Wallet extends Controller
 {
@@ -131,20 +132,23 @@ class Wallet extends Controller
     public function showWithdrawalForm()
     {
         $email = auth()->user()->email;
-        $client_banks = ClientWallet::where('user_id', $email)
+        $userId=auth()->user()->id;
+        $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->get();
         $settings = $this->settings;
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
+        $liveaccount_details = Account::with('accountType')
+            ->where('demo', false)
+            ->where('user_id', $userId)
             ->get();
-        $totals = LiveAccount::where('email', $email)
+        $totals = Account::where('user_id', $userId)
+            ->where('demo', false)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        $total_wd = WalletDeposit::where('email', $email)
+        $total_wd = WalletDeposit::where('user_id', $userId)
             ->where('status', 1)
             ->sum('deposit_amount');
-        $total_ww = WalletWithdraw::where('email', $email)
+        $total_ww = WalletWithdraw::where('user_id', $userId)
             ->where('status','<>', 2)
             ->sum('withdraw_amount');
         $wallet_balance = (float) $total_wd - (float) $total_ww;
