@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('message', 300)->nullable();
             $table->timestamp('created_date_js')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->integer('Status')->default(0);
-            $table->string('AdminRemark', 100)->nullable();
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->nullable()->useCurrent();
         });
     }

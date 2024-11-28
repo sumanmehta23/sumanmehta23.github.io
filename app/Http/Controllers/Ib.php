@@ -17,7 +17,7 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -304,7 +304,8 @@ class Ib extends Controller
                     return redirect()->back()->with('error', 'Something went wrong on Deposit. ' . $error);
                 } else {
                     // Insert into trade_deposit.
-                    TradeDeposits::create([
+                    TradeDeposit::create([
+                        'user_id' => $userId,
                         'email' => $email,
                         'trade_id' => $account->code,
                         'account_id' => $account->id,

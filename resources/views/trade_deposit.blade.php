@@ -64,7 +64,7 @@
                                                                                     </span>
                                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                                         <span class="mb-0 h5 d-block f-w-500">
-                                                                                            ${{ $liveaccount->Balance ?? 0.0 }}
+                                                                                            ${{ $liveaccount->balance ?? 0.0 }}
                                                                                         </span>
                                                                                         <span
                                                                                             class="mb-0 text-muted f-10">Current
@@ -127,7 +127,7 @@
                                                                 value="{{ session('clogin') }}" required
                                                                 class="form-control fill">
                                                             <input class="user_trade_id" type="hidden"
-                                                                name="user[trade_id]" value="" readonly required>
+                                                                name="user[account_id]" value="" readonly required>
 
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">
@@ -233,7 +233,7 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="flex-shrink-0">
-                                                                        <h4 class="f-w-500">${{ $liveaccount->Balance??0 }}
+                                                                        <h4 class="f-w-500">${{ $liveaccount->balance??0 }}
                                                                         </h4>
                                                                         <p class="mb-2 text-sm text-muted text-end">Balance
                                                                         </p>

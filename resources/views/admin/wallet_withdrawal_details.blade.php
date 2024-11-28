@@ -255,7 +255,7 @@
                                                         <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                     </div>
                                                     <div class="mt-2 lh-1">
-                                                        <span>{{ $details->AdminRemark }}</span>
+                                                        <span>{{ $details->admin_remark }}</span>
                                                     </div>
                                                 </div>
                                             </div>

@@ -96,7 +96,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallet::where(DB::raw('client_wallet_id'), $request->id)->first();
+        $wallet = ClientWallet::where('id', $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
@@ -380,13 +380,15 @@ class Wallet extends Controller
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1',
             'withdraw_type' => 'required|string',
-            'client_bank' => 'required'
+            'client_wallet_id' => 'required'
         ]);
         $userEmail = auth()->user()->email;
         $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
-        $clientBank = $request->input('client_bank');
+        $clientWalletId= $request->input('client_wallet_id');
+        $clientWallet=ClientWallet::where('id', $clientWalletId)->where('user_id',$user->id)->firstOrFail();
+
         $totalDeposits = WalletDeposit::where('email', $userEmail)
             ->where('status', 1)
             ->sum('deposit_amount');
@@ -400,11 +402,11 @@ class Wallet extends Controller
             return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
         }
         WalletWithdraw::create([
+            'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,
             'user_id' => $user->id,
             'withdraw_amount' => $withdrawAmount,
             'withdraw_type' => $withdrawType,
-            'client_bank' => $clientBank,
             'status' => 0
         ]);
         return redirect()->back()->with('Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');

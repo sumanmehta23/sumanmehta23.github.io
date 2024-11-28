@@ -13,13 +13,15 @@ return new class extends Migration
     {
         Schema::create('ib1_withdraw', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->foreignIdFor(\App\Models\ClientWallet::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
             $table->string('withdraw_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
             $table->string('client_bank', 100)->nullable();
+
             $table->timestamp('withdraw_date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->integer('Status')->default(0);
-            $table->string('AdminRemark', 100)->nullable();
+            $table->string('admin_remark', 100)->nullable();
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->string('transaction_id', 100)->nullable();
         });

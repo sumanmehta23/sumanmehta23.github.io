@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('bonus_code_desc', 100)->nullable();
             $table->timestamp('bonus_date')->nullable()->useCurrent();
             $table->integer('status')->default(1);
-            $table->string('adminRemark', 100)->nullable();
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->timestamps();
             $table->softDeletes();

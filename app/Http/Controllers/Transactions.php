@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
 use App\Models\InternalTransfer;
 use App\Models\WalletWithdraw;
@@ -15,8 +15,8 @@ class Transactions extends Controller
     public function index()
     {
         $email = $email = auth()->user()->email;
-        $deposit_history = TradeDeposits::with('liveAccount.accountType')
-            ->where('email', $email)
+        $deposit_history = TradeDeposit::with('liveAccount.accountType')
+            ->where('user_id',  auth()->user()->id)
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
             ->get();
@@ -36,7 +36,8 @@ class Transactions extends Controller
         //     ->get();
 
         $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id') // Select only required columns
+            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id') 
+            ->where('user_id', auth()->user()->id)
             ->get()
             ->map(function ($withdrawal) {
                 return [
@@ -46,16 +47,17 @@ class Transactions extends Controller
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
                     'it_to' => $withdrawal->to_account_id ?? 'Wallet',
-                    'it_from' => $withdrawal->account->code ?? 'Wallet',
+                    'it_from' => optional($withdrawal->account)->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
                     'date' => $withdrawal->withdraw_date,
                 ];
             })
             ;
-        // Fetch filtered data from TradeDeposits with deposit_amount
-        $tradeDeposits = TradeDeposits::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') // Select only required columns
+        // Fetch filtered data from TradeDeposit with deposit_amount
+        $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
+            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') 
+            ->where('user_id', auth()->user()->id)
             ->with('account')
             ->get()
             ->map(function ($deposit) {
@@ -66,15 +68,21 @@ class Transactions extends Controller
                     'email' => $deposit->email,
                     'status' => $deposit->status,
                     'it_to' => $deposit->trade_id,
-                    'it_from' => $deposit->deposit_from ?? 'CRM',
+                    'it_from' => optional($deposit->account)->code ?? 'CRM', // Safe access
                     'source' => 'TDID',
                     'raw_id' => $deposit->id,
                     'date' => $deposit->deposted_date,
                 ];
             });
-
+        if($tradeDeposits->isEmpty() && $tradeWithdrawals->isEmpty()){
+            $internal_transfer = [];
+        }elseif($tradeDeposits->isEmpty()){
+            $internal_transfer = $tradeWithdrawals;
+        }else{
+            $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
+        }
         // Combine data into a single variable
-        $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
+        // $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
         // Optional: Sort by date
         $internal_transfer = $internal_transfer->sortBy('date');
         // dd($internal_transfer);

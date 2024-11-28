@@ -324,7 +324,7 @@ class AjaxController extends Controller
             $condition = ' where trs.trade_id=' . $_GET['id'];
         }
         header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposits trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -381,7 +381,7 @@ class AjaxController extends Controller
         // Fetch data
         $withdrawals = $query->orderByDesc('id')->get();
         $data = [];
-    
+
         foreach ($withdrawals as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
@@ -408,7 +408,7 @@ class AjaxController extends Controller
             $rmCondition .= " where ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_deposit trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
+        $sql = "SELECT trs.* from trade_deposits trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -497,7 +497,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -855,14 +855,18 @@ class AjaxController extends Controller
     }
     public function getLatestWithdrawal($id)
     {
-
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
-        $query = DB::select($sql);
+        // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeWithdrawals::with('account')
+                            ->where('email',$id)
+                            ->where('withdraw_type',['Internal Transfer'])
+                            ->get();
+
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-
+            dd($row);
             $data[] = [
                 'created_on' => $row->withdraw_date,
                 'from_to' => $row->trade_id,
@@ -877,7 +881,7 @@ class AjaxController extends Controller
     public function getLatestTransfer($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
+        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];

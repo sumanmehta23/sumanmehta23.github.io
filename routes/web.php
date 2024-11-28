@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
 use App\Http\Controllers\Admin\Ticket;
-use App\Http\Controllers\TradeDeposit;
+use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
@@ -43,8 +43,25 @@ Route::get("/se",function(){
     // file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('leverage')->get()->toArray();
     // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
-     $settings = DB::table('accounts')->get()->toArray();
-    file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = DB::table('client_wallets')->get()->toArray();
+    // file_put_contents(storage_path('app/client_wallets.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    // TradeWithdrawals::create([
+    //     'user_id' => $user_id,
+    //     'account_id' => $account->id,
+    //     'withdrawal_amount' => $amount,
+    //     'withdraw_type' => $withdraw_type,
+    //     // 'withdraw_to' => $withdraw_to,
+    //     'wallet_qr' => '',
+    //     'Status' => 1
+    // ]);
+    // $settings = \App\Models\TradeWithdrawals::get()->toArray();
+    // file_put_contents(storage_path('app/trade_withdrawals.json'), json_encode($settings, JSON_PRETTY_PRINT));
+   
+    // $settings = \App\Models\TotalBalance::get()->toArray();
+    // file_put_contents(storage_path('app/total_balance.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    
+    // $settings = \App\Models\WalletDeposit::get()->toArray();
+    // file_put_contents(storage_path('app/wallet_deposit.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
@@ -110,8 +127,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
-    Route::get('/trade-deposit', [TradeDeposit::class, 'index'])->name('trade-deposit');
-    Route::post('/trade-deposit', [TradeDeposit::class, 'deposit'])->name('trade-deposit_store');
+    Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
+    Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
 
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
     Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');

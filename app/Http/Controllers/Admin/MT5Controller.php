@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Helpers\AccountHelper;
-use App\Http\Controllers\Controller;
-use App\Models\Account;
-use App\Models\BonusTrans;
-use App\Models\TradeDeposits;
-use App\Models\TradeWithdrawals;
-use App\MT5\MTEnDealAction;
-use App\MT5\MTProtocolConsts;
-use App\MT5\MTRetCode;
-use Illuminate\Http\Request;
 use DB;
 use Mail;
-use App\MT5\MTWebAPI;
-use App\Services\MT5Service;
-use App\Services\MailService as MailService;
 use App\Models\User;
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\Models\BonusTrans;
+use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
+use App\Services\MT5Service;
+use Illuminate\Http\Request;
+use App\MT5\MTProtocolConsts;
+use App\Helpers\AccountHelper;
+use App\Models\TradeWithdrawals;
+use App\Http\Controllers\Controller;
+use App\Models\AccountType;
+use App\Services\MailService as MailService;
 
 class MT5Controller extends Controller
 {
@@ -173,13 +174,15 @@ class MT5Controller extends Controller
             if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
             } else {
-                $tradeDeposit = TradeDeposits::create([
+
+                $tradeDeposit = TradeDeposit::create([
+                    'user_id' => $user->id,
                     'email' => $email,
                     'trade_id' => $trade_id,
                     'deposit_amount' => $amount,
                     'deposit_type' => $deposit_type,
                     'status' => 1,
-                    'AdminRemark' => $description,
+                    'admin_remark' => $description,
                     'deposit_currency' => $deposit_currency,
                     'created_by' => session('alogin')
                 ]);
@@ -253,7 +256,7 @@ class MT5Controller extends Controller
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
-                    'adminRemark' => $description,
+                    'admin_remark' => $description,
                     'bonus_currency' => $deposit_currency,
                     // 'created_by' => session('alogin')
                 ]);
@@ -407,29 +410,29 @@ class MT5Controller extends Controller
         //     ->where(DB::raw('trade_id'), $account->code)
         //     ->where('status', 1)
         //     ->sum('deposit_amount');
-        $total_deposit = TradeDeposits::where('trade_id', $account->code)
+        $total_deposit = TradeDeposit::where('account_id', $account->id)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
-        $unapproved_deposit = TradeDeposits::where('trade_id', $account->code)
+        $unapproved_deposit = TradeDeposit::where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
-        $total_withdrawal = TradeWithdrawals::where('account_id', $account->code)
+        $total_withdrawal = TradeWithdrawals::where('account_id', $account->id)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
-        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->code)
+        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
         $bonus_trans = BonusTrans::where('status', 1)
-            ->where(DB::raw('trade_id'),  $account->code)
+            ->where("account_id"  ,$account->id)
             ->get();
-        $account_types = DB::table('account_types')->where('status', 1)->get();
+        $account_types = AccountType::where('status', 1)->get();
 
         // $account = AccountHelper::getAccount( $account->code);
         $accountHelper = AccountHelper::getAccount( $account->code);

@@ -2,30 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Country;
-use App\Models\User;
-use Illuminate\Http\Request;
 use DB;
-use Illuminate\Support\Facades\Session;
-use App\Models\RelationshipManager;
-use App\Services\MailService;
-use App\Models\IbClientList;
-use App\Models\Account;
 use App\Models\Ib1;
-use App\Models\IBCategory;
+use App\Models\User;
 use App\Models\IbPlan;
-use App\Models\AccountType;
-use App\Models\Mt5Group;
-use App\Models\WalletDeposit;
-use App\Models\WalletWithdraw;
-use App\Models\ClientBankDetail;
-use App\Models\KycUpdate;
+use App\Models\Account;
+use App\Models\Country;
 use App\Models\IbWallet;
+use App\Models\Mt5Group;
+use App\Models\KycUpdate;
+use App\Models\IBCategory;
+use App\Models\TicketType;
+use App\Models\AccountType;
 use App\Models\EmployeeList;
+use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
-use App\Models\TicketType;
+use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
+use App\Services\MailService;
+use App\Models\WalletWithdraw;
+use App\Models\ClientBankDetail;
+use App\Models\RelationshipManager;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
 {
@@ -53,8 +54,7 @@ class ClientController extends Controller
         $countries = Country::all();
 
         // Fetch Deposits and Withdrawals
-        $trade_deposit = DB::table('trade_deposit')
-            ->where('status', 1)
+        $trade_deposit = TradeDeposit::where('status', 1)
             ->whereNotIn('deposit_type', ['Wallet Transfer'])
             ->sum('deposit_amount');
 

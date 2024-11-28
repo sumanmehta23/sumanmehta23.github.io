@@ -9,7 +9,7 @@ use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use Illuminate\Http\Request;
-use App\Models\TradeDeposits;
+use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
@@ -81,7 +81,8 @@ class InternalTransfer extends Controller
                     return redirect()->back()->with('error', 'Deposit Failed.');
                 } else {
                     // Log deposit
-                    TradeDeposits::create([
+                    TradeDeposit::create([
+                        'user_id' => auth()->user()->id,
                         'email' => $email,
                         'trade_id' => $toAccount,
                         'deposit_amount' => $transferable_amount,

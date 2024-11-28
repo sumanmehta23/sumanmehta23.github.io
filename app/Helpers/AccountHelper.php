@@ -53,7 +53,7 @@ class AccountHelper
 
             if ($apiResponse === MTRetCode::MT_RET_OK) {
                 $account->update([
-                        'Balance' => $accountData->Balance,
+                        'balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
                         'margin_free' => $accountData->MarginFree,
                         'margin_level' => $accountData->MarginLevel,

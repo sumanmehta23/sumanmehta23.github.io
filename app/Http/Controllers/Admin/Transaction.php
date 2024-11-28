@@ -101,9 +101,8 @@ class Transaction extends Controller
                 ")
                 ->groupBy('u.email')
                 ->first();
-            if($details->client_bank>0){
-                $client_wallet = DB::table('client_wallets')
-                ->where('client_wallet_id', $details->client_bank)
+            if($details->client_wallet_id){
+                $client_wallet = ClientWallet::where('id', $details->client_wallet_id)
                 ->where('status', 1)
                 ->first();
             }else{
@@ -188,7 +187,7 @@ class Transaction extends Controller
         $transaction_id = $request->input('transaction_id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
-            $transaction->AdminRemark = $description;
+            $transaction->admin_remark = $description;
             $transaction->Status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
@@ -198,12 +197,12 @@ class Transaction extends Controller
                     'withdraw_amount' => $depositAmount,
                 ]);
 
-                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_bank > 0) {
+                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
 
-                    $bankDetails = ClientWallet::where('client_wallet_id', $transaction->client_bank)->first();
-                    $walletNetwork = $bankDetails->wallet_network;
-                    $walletCurrency = $bankDetails->wallet_currency;
-                    $walletAddress = $bankDetails->wallet_address;
+                    $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+                    $walletNetwork = $walletDetails->wallet_network;
+                    $walletCurrency = $walletDetails->wallet_currency;
+                    $walletAddress = $walletDetails->wallet_address;
                     $amount = $transaction->withdraw_amount;
 
 
@@ -374,7 +373,7 @@ class Transaction extends Controller
           echo "<script>console.log('TradingDeposit Error==> ".$error."')</script>";
         } else {
     
-          $sql = "update trade_withdrawal set AdminRemark=:description,Status=:status where md5(id)=:did";
+          $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
           $query = $dbh->prepare($sql);
           $query->bindParam(':description', $description, PDO::PARAM_STR);
           $query->bindParam(':status', $status, PDO::PARAM_STR);
@@ -431,7 +430,7 @@ class Transaction extends Controller
           phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
         }
       } else {
-        $sql = "update trade_withdrawal set AdminRemark=:description,Status=:status where md5(id)=:did";
+        $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
         $query = $dbh->prepare($sql);
         $query->bindParam(':description', $description, PDO::PARAM_STR);
         $query->bindParam(':status', $status, PDO::PARAM_STR);

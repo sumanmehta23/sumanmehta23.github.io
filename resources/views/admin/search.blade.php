@@ -86,7 +86,7 @@
                                                 </a>
                                             </td>
                                             <td><?php echo htmlentities($result->leverage); ?></td>
-                                            <td><?php echo htmlentities($result->Balance); ?></td>
+                                            <td><?php echo htmlentities($result->balance); ?></td>
                                             <td>
                                                 <div class="lh-1">
                                                     <?= date('Y-m-d', strtotime($result->registered_date)) ?>

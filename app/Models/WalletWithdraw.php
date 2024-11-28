@@ -14,6 +14,7 @@ class WalletWithdraw extends Model
     protected $fillable = [
         'email',
         'user_id',
+        'client_wallet_id',
         'withdraw_amount',
         'withdraw_type',
         'client_bank',
@@ -26,5 +27,9 @@ class WalletWithdraw extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function clientWallet()
+    {
+        return $this->belongsTo(ClientWallet::class);
     }
 }

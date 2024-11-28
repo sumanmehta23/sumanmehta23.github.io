@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 
 class ClientWallet extends Model
 {
-    use HasFactory,HasUuids;
+    use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'client_wallets';
     protected $guarded = [];
    

@@ -86,7 +86,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="divider my-4"><span>WITHDRAW DETAILS</span></div>
+                                                    <div class="my-4 divider"><span>WITHDRAW DETAILS</span></div>
                                                     @if ($errors->any())
                                                         <div class="alert alert-danger">
                                                             <ul>
@@ -117,9 +117,9 @@
                                                                                     </button>
                                                                                 </div>
                                                                             @else
-                                                                                <select name="client_bank" required class="form-control fill" style="color:black;">
+                                                                                <select name="client_wallet_id" required class="form-control fill" style="color:black;">
                                                                                     @foreach ($client_banks as $bank)
-                                                                                        <option value="{{ $bank->client_wallet_id }}">
+                                                                                        <option value="{{ $bank->id }}">
                                                                                             {{ $bank->wallet_name }} / {{ $bank->wallet_currency }} / {{ $bank->wallet_network }}
                                                                                         </option>
                                                                                     @endforeach
@@ -320,7 +320,7 @@
                                                                             </div>
                                                                         </div>
                                                                         <div class="flex-shrink-0">
-                                                                            <h4 class="f-w-500">${{ $liveaccount->Balance }}</h4>
+                                                                            <h4 class="f-w-500">${{ $liveaccount->balance }}</h4>
                                                                             <p class="mb-2 text-sm text-muted text-end">Balance</p>
                                                                         </div>
                                                                     </div>
