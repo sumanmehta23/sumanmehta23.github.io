@@ -450,11 +450,13 @@ class MT5Controller extends Controller
         $account_types = DB::table('account_types')->where('status', 1)->get();
 
         // $account = AccountHelper::getAccount( $account->code);
-
+        $accountHelper = AccountHelper::getAccount( $account->code);
+        
         return view("admin.mt5.view", [
             "id" => $trade_id,
             "getUser" =>  $account,
             "account" => $account,
+            "accountHelper" => $accountHelper,
             'total_deposit' => $total_deposit,
             'unapprove_deposit' => $unapproved_deposit,
             'total_withdrawl' => $total_withdrawal,

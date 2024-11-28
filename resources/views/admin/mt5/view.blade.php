@@ -115,8 +115,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->Balance)) {
-                                                                        echo "$" . number_format($account->Balance, 2);
+                                                                    if (isset($accountHelper->Balance)) {
+                                                                        echo "$" . number_format($accountHelper->Balance, 2);
                                                                     } else {
                                                                         echo "$0.00";
                                                                     }
@@ -213,8 +213,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->Margin)) {
-                                                                        echo $account->Margin;
+                                                                    if (isset($accountHelper->Margin)) {
+                                                                        echo $accountHelper->Margin;
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -261,8 +261,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->Floating)) {
-                                                                        echo $account->Floating;
+                                                                    if (isset($accountHelper->Floating)) {
+                                                                        echo $accountHelper->Floating;
                                                                     }
                                                                     ?>
                                                                 </h4>
