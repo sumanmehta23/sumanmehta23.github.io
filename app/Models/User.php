@@ -19,6 +19,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $table = 'aspnetusers';
+    
     protected $primaryKey = 'id';
      protected $guarded = [];
 
