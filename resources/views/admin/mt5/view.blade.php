@@ -35,7 +35,7 @@ if ($getUser) {
                                                         <img src="/admin_assets/assets/images/users/client.jpeg"
                                                             alt="img" style="width:100px">
                                                     </div>
-                                                   
+
                                                     <h3 class="username mb-2"><?= $getUser->name ?></h3>
                                                     <p class="mb-1 text-muted"><?= $getUser->email ?></p>
                                                 </div>
@@ -696,7 +696,7 @@ if ($getUser) {
                     "type": "GET",
                     data: {
                         action: 'getTradingWithdrawal',
-                        id: '<?= $account->code ?>'
+                        id: '<?= $account->id ?>'
                     },
                 },
                 columns: [{

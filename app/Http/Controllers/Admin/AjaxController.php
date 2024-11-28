@@ -347,6 +347,7 @@ class AjaxController extends Controller
     }
     public function getTradingWithdrawal()
     {
+
         // $condition = '';
         // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
         // if (!isset($_GET['id'])) {
@@ -362,7 +363,8 @@ class AjaxController extends Controller
         // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
         // $query = DB::select($sql);
         // $results = $query;
-        $query = TradeWithdrawals::with(['user', 'withdrawTo']);
+
+        $query = TradeWithdrawals::with(['user', 'withdrawTo','account']);
 
         // Add conditions based on session and GET parameters
         if (!isset($_GET['id'])) {
@@ -378,12 +380,11 @@ class AjaxController extends Controller
 
         // Fetch data
         $withdrawals = $query->orderByDesc('id')->get();
-
         $data = [];
         foreach ($withdrawals as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
+                'account_no' => $row->account->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
