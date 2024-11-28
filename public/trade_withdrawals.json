@@ -1,0 +1,20 @@
+[
+    {
+        "id": "9d98fc63-833a-4cee-b014-ab4ccc90b341",
+        "user_id": "9d8e3512-3fd8-4c51-9804-a6c58a305a3c",
+        "account_id": "9d8e368d-c455-4b66-b56e-a420734e8e24",
+        "to_account_id": null,
+        "email": null,
+        "withdrawal_amount": "20",
+        "withdraw_type": "Wallet Withdrawal",
+        "wallet_qr": "",
+        "withdraw_date": "2024-11-28 19:55:49",
+        "Status": 1,
+        "admin_remark": null,
+        "Js_Admin_Remark_Date": null,
+        "created_by": null,
+        "created_at": "2024-11-28T14:25:49.000000Z",
+        "updated_at": "2024-11-28T14:25:49.000000Z",
+        "deleted_at": null
+    }
+]

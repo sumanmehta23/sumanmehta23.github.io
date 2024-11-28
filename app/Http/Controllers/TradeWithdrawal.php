@@ -31,9 +31,9 @@ class TradeWithdrawal extends Controller
     {
         $email = auth()->user()->email;
         $user=auth()->user();
-        AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
+        AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
         $liveaccount_details = Account::with('accountType')
-            ->where('email', $email)
+            ->where('user_id', $user->id)
             ->where('demo', false)
             ->get();
         $walletenabled = $user->wallet_enabled ?? false;

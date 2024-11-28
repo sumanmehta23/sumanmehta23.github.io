@@ -45,6 +45,23 @@ Route::get("/se",function(){
     // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('client_wallets')->get()->toArray();
     // file_put_contents(storage_path('app/client_wallets.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    // TradeWithdrawals::create([
+    //     'user_id' => $user_id,
+    //     'account_id' => $account->id,
+    //     'withdrawal_amount' => $amount,
+    //     'withdraw_type' => $withdraw_type,
+    //     // 'withdraw_to' => $withdraw_to,
+    //     'wallet_qr' => '',
+    //     'Status' => 1
+    // ]);
+    // $settings = \App\Models\TradeWithdrawals::get()->toArray();
+    // file_put_contents(storage_path('app/trade_withdrawals.json'), json_encode($settings, JSON_PRETTY_PRINT));
+   
+    // $settings = \App\Models\TotalBalance::get()->toArray();
+    // file_put_contents(storage_path('app/total_balance.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    
+    // $settings = \App\Models\WalletDeposit::get()->toArray();
+    // file_put_contents(storage_path('app/wallet_deposit.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');

@@ -1,0 +1,20 @@
+[
+    {
+        "id": "9d98fc63-8470-420c-a0eb-19be385046b0",
+        "email": "tech2@lqhmarkets.com",
+        "code": null,
+        "deposit_amount": "20",
+        "withdraw_amount": "0",
+        "trading_deposited": "0",
+        "trading_withdrawal": "0",
+        "refer_commission_amount": "0",
+        "reg_date": "2024-11-28 19:55:49",
+        "deposit_type": null,
+        "status": null,
+        "user_id": "9d8e3512-3fd8-4c51-9804-a6c58a305a3c",
+        "account_id": "9d8e368d-c455-4b66-b56e-a420734e8e24",
+        "created_at": null,
+        "updated_at": null,
+        "deleted_at": null
+    }
+]

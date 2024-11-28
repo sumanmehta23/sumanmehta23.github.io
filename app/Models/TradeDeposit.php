@@ -14,10 +14,7 @@ class TradeDeposit extends Model
     public $timestamps = true;
     protected $guarded = [];
 
-    public function liveAccount()
-    {
-        return $this->hasOne(Account::class)->where('demo',false);
-    }
+    
     public function account()
     {
         return $this->belongsTo(Account::class);

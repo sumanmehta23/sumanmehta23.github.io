@@ -47,7 +47,7 @@ class Transactions extends Controller
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
                     'it_to' => $withdrawal->to_account_id ?? 'Wallet',
-                    'it_from' => $withdrawal->account->code ?? 'Wallet',
+                    'it_from' => optional($withdrawal->account)->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
                     'date' => $withdrawal->withdraw_date,
@@ -68,15 +68,21 @@ class Transactions extends Controller
                     'email' => $deposit->email,
                     'status' => $deposit->status,
                     'it_to' => $deposit->trade_id,
-                    'it_from' => $deposit->deposit_from ?? 'CRM',
+                    'it_from' => optional($deposit->account)->code ?? 'CRM', // Safe access
                     'source' => 'TDID',
                     'raw_id' => $deposit->id,
                     'date' => $deposit->deposted_date,
                 ];
             });
-
+        if($tradeDeposits->isEmpty() && $tradeWithdrawals->isEmpty()){
+            $internal_transfer = [];
+        }elseif($tradeDeposits->isEmpty()){
+            $internal_transfer = $tradeWithdrawals;
+        }else{
+            $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
+        }
         // Combine data into a single variable
-        $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
+        // $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
         // Optional: Sort by date
         $internal_transfer = $internal_transfer->sortBy('date');
         // dd($internal_transfer);

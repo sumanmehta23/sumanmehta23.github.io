@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('wallet_deposit', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignIdFor(\App\Models\ClientWallet::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\ClientWallet::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
 
             $table->string('deposit_amount', 100)->nullable();
