@@ -18,7 +18,6 @@ use App\MT5\MTWebAPI;
 use App\Services\MT5Service;
 use App\Services\MailService as MailService;
 use App\Models\User;
-use App\Models\Account;
 
 
 class MT5Controller extends Controller
@@ -286,13 +285,13 @@ class MT5Controller extends Controller
     }
 
     public function withdrawFromAccount(Request $request)
-    {   
+    {
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $trade_id = $request->input('trade_id');
         $account = Account::where('code', $trade_id)->first();
-       
+
         if ($request->has('withdraw_from_account')) {
             $amount = $request->input('amount');
             $tw_amount = abs($request->input('amount')) * -1;
@@ -379,26 +378,26 @@ class MT5Controller extends Controller
         }else{
             $trade_id ='';
         }
-       
+
         AccountHelper::updateLiveAndDemoAccounts($account->code);
         $type = "live";
-       
-        // $sql = "
-        //     SELECT
-        //         liveaccount.*,
-        //         aspnetusers.fullname,
-        //         account_types.ac_group,
-        //         IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
-        //     FROM liveaccount
-        //     LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
-        //     LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
-        //     LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-        //     WHERE (liveaccount.trade_id) = :trade_id
-        //     GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
-        // ";
 
-        // $query = DB::select($sql, ['trade_id' => $trade_id]);
-        // $getUser = isset($query[0]) ? $query[0] : [];
+        $sql = "
+            SELECT
+                liveaccount.*,
+                aspnetusers.fullname,
+                account_types.ac_group,
+                IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
+            FROM liveaccount
+            LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
+            LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
+            LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
+            WHERE (liveaccount.trade_id) = :trade_id
+            GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
+        ";
+
+        $query = DB::select($sql, ['trade_id' => $trade_id]);
+        $getUser = isset($query[0]) ? $query[0] : [];
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
             return redirect("/admin/dashboard");
