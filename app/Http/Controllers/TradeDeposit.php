@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\ClientBankDetail;
-use App\Models\TotalBalance;
-use App\Models\TradeDeposits;
-use Illuminate\Http\Request;
-use App\Models\LiveAccount;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use App\Models\WalletDeposit;
-use App\Models\WalletWithdraw;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
+use App\Models\TotalBalance;
+use Illuminate\Http\Request;
+use App\Models\TradeDeposits;
+use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
+use App\Models\WalletWithdraw;
+use App\Models\ClientBankDetail;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class TradeDeposit extends Controller
 {
@@ -28,17 +29,17 @@ class TradeDeposit extends Controller
     public function index()
     {
         $email = auth()->user()->email;
-        AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
-            ->get();
-        $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
-        $bank_details = ClientBankDetail::where('email', $email)->first() ?? [];
-        $totals = LiveAccount::where('email', $email)
+        $user = auth()->user();
+        AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
+        $liveaccount_details =auth()->user()->liveAccounts;
+        $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
+        $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
+        $totals = Account::where('user_id', $user->id)
+            ->where('demo', false)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
-        $totalWd = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
+        $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
+        $totalWw = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_amount');
         $wallet_balance = $totalWd - $totalWw;
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));

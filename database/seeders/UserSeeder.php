@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
+            'id'=>'9d8e3512-3fd8-4c51-9804-a6c58a305a3c',
             'uid' => null,
             'email' => 'tech2@lqhmarkets.com',
             'email_confirmed' => 1,
