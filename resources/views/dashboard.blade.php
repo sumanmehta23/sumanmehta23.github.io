@@ -18,22 +18,13 @@
                                             <use xlink:href="#custom-security-safe"></use>
                                         </svg></div>
                                 </div>
-                                <?php if (session('user')->wallet_enabled == 0 || session('user')->wallet_enabled == NULL) { ?>
                                 <div>
-                                    <button class="bg-transparent btn btn-sm btn-outline-light activate-wallet"
-                                        type="button"><i class="ti ti-plus me-2"></i><!---->
-                                        Activate Wallet</button>
+                                    <h2 class="text-center text-white">${{ $walletBalance }}</h2>
                                 </div>
                             </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
-                            <?php } else { ?>
-                            <div>
-                                <h2 class="text-center text-white">${{ $walletBalance }}</h2>
-                            </div>
-                        </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
-                        <?php } ?>
+                        </div>
                     </div>
                 </div>
-            </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card">
                     <div class="card-body">

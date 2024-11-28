@@ -2,7 +2,7 @@
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
-            <div class="page-header mb-0 pb-0">
+            <div class="pb-0 mb-0 page-header">
                 <div class="page-block">
                     <div class="row align-items-center">
                         <div class="col-md-12">
@@ -16,8 +16,8 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-body p-0">
-                            <ul class="nav nav-tabs checkout-tabs mb-0" id="myTab" role="tablist">
+                        <div class="p-0 card-body">
+                            <ul class="mb-0 nav nav-tabs checkout-tabs" id="myTab" role="tablist">
                                 <li class="nav-item" role="presentation"><a class="nav-link" id="ecomtab-tab-1"
                                         href="/wallet_deposit" role="tab" aria-controls="ecomtab-1"
                                         aria-selected="true" tabindex="-1">
@@ -46,6 +46,15 @@
                     <div class="tab-content">
                         <div>
                             <div>
+                                @if ($errors->any())
+                                    <div class="alert alert-danger">
+                                        <ul>
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="row">
@@ -55,19 +64,19 @@
                                                         <h6>Withdraw Funds</h6>
                                                     </div>
                                                     <div class="card-body">
-                                                        <div class="divider my-4"><span>SELECT WITHDRAW METHOD</span></div>
+                                                        <div class="my-4 divider"><span>SELECT WITHDRAW METHOD</span></div>
                                                     </div>
                                                     <div class="row g-1">
                                                         <div class="col-md-3 col-lg-4 col-xl-4">
-                                                            <div class="address-check border rounded">
+                                                            <div class="border rounded address-check">
                                                                 <div class="form-check"><input type="radio"
                                                                         name="withdraw_type"
                                                                         class="form-check-input input-primary wallet-withdraw"
                                                                         value="1" data-type="Wallet_Withdrawal"><label
                                                                         class="form-check-label d-block"
                                                                         for="payopn-check-1"><span
-                                                                            class="card-body p-2 d-block"><span
-                                                                                class="h6 f-w-500 mb-1 d-block">CRYPTO
+                                                                            class="p-2 card-body d-block"><span
+                                                                                class="mb-1 h6 f-w-500 d-block">CRYPTO
                                                                                 WITHDRAWAL</span><span
                                                                                 class="d-flex align-items-center"><span
                                                                                     class="f-10 badge bg-light-success me-1">CRYPTO
@@ -78,12 +87,21 @@
                                                         </div>
                                                     </div>
                                                     <div class="divider my-4"><span>WITHDRAW DETAILS</span></div>
+                                                    @if ($errors->any())
+                                                        <div class="alert alert-danger">
+                                                            <ul>
+                                                                @foreach ($errors->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
                                                     <div class="wallet-withdrawal Wallet_Withdrawal">
                                                         <form method="post" style="padding:10px;" class="md-float-material form-material">
                                                             @csrf
                                                             <div class="row">
                                                                 <input type="hidden" name="withdraw_type" class="withdraw-type" value="Wallet_Withdrawal">
-                                                                <div class="col-12 mt-2">
+                                                                <div class="mt-2 col-12">
                                                                     <div class="form-group row">
                                                                         <label class="col-lg-4 col-form-label">
                                                                             SELECT WALLET ACCOUNT:
@@ -119,7 +137,7 @@
                                                                             <small class="text-muted d-block">(USD)</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <input type="number" name="wallet_balance" value="{{ $wallet_balance }}" readonly class="form-control fill">
                                                                             </div>
                                                                         </div>
@@ -131,7 +149,7 @@
                                                                             <small class="text-muted d-block">Please enter the amount that you need to withdraw</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <span class="input-group-text">$</span>
                                                                                 <input type="number" min="10" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
                                                                                     @if(count($client_banks) > 0) required @endif>
@@ -158,14 +176,14 @@
                                                             @csrf
                                                             <div class="row">
                                                                 <input type="hidden" name="withdraw_type" class="withdraw-type" value="USDT_Withdrawal">
-                                                                <div class="col-12 mt-2">
+                                                                <div class="mt-2 col-12">
                                                                     <div class="form-group row">
                                                                         <label class="col-lg-4 col-form-label">
                                                                             ENTER AMOUNT:
                                                                             <small class="text-muted d-block">Please enter the amount that you need to transfer</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <span class="input-group-text">$</span>
                                                                                 <input type="number" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
                                                                                     required min="1">
@@ -180,7 +198,7 @@
                                                                             <small class="text-muted d-block">Please enter your Wallet ID</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <input type="text" class="form-control" name="wallet_id" aria-label="Enter your Wallet ID" required>
                                                                             </div>
                                                                         </div>
@@ -215,7 +233,7 @@
                                                             @csrf
                                                             <div class="row">
                                                                 <input type="hidden" name="withdraw_type" class="withdraw-type" value="Other_Withdrawal">
-                                                                <div class="col-12 mt-2">
+                                                                <div class="mt-2 col-12">
                                                                     <div class="form-group row">
                                                                         <label class="col-lg-4 col-form-label">
                                                                             ENTER AMOUNT:
@@ -224,7 +242,7 @@
                                                                             </small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <span class="input-group-text">$</span>
                                                                                 <input type="number" class="form-control" aria-label="Amount (to the nearest dollar)"
                                                                                     required name="withdraw_amount">
@@ -239,7 +257,7 @@
                                                                             <small class="text-muted d-block"></small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="input-group mb-3">
+                                                                            <div class="mb-3 input-group">
                                                                                 <input type="text" class="form-control" aria-label="Client Note" required
                                                                                     name="client_note">
                                                                             </div>
@@ -266,7 +284,7 @@
                                                         <div class="row">
                                                             <div class="col-8 d-flex flex-column align-items-start justify-content-center">
                                                                 <h3 class="text-white f-w-500">Fuel Your Trading Journey</h3>
-                                                                <span class="f-16 py-2 text-white">Deposit now and unlock the gateway to global markets.</span>
+                                                                <span class="py-2 text-white f-16">Deposit now and unlock the gateway to global markets.</span>
                                                             </div>
                                                             <div class="col-4 text-end">
                                                                 <img src="/assets/images/fund_now.png" alt="img" class="img-fluid wid-110">
@@ -278,23 +296,23 @@
                                                     <div class="card-header">
                                                         <h5>MT5 ACCOUNTS SUMMARY</h5>
                                                     </div>
-                                                    <div class="card-body p-0">
+                                                    <div class="p-0 card-body">
                                                         <ul class="list-group list-group-flush">
                                                             @foreach ($liveaccount_details as $liveaccount)
                                                                 <li class="list-group-item">
                                                                     <div class="media align-items-start">
-                                                                        <span class="h4 mb-0 d-block f-w-500 pb-0">
+                                                                        <span class="pb-0 mb-0 h4 d-block f-w-500">
                                                                             <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">
                                                                         </span>
-                                                                        <div class="media-body mx-2">
+                                                                        <div class="mx-2 media-body">
                                                                             <h5 class="mb-1">
-                                                                                <span class="h4 mb-0 d-block f-w-500 pb-0">{{ $liveaccount->trade_id }}</span>
+                                                                                <span class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->trade_id }}</span>
                                                                             </h5>
-                                                                            <p class="text-sm mb-2">
+                                                                            <p class="mb-2 text-sm">
                                                                                 <span class="text-muted">ACCOUNT CATEGORY :</span> ECN
                                                                             </p>
-                                                                            <div class="border-top border-dashed">
-                                                                                <p class="mb-1 mt-2">
+                                                                            <div class="border-dashed border-top">
+                                                                                <p class="mt-2 mb-1">
                                                                                     <span class="text-muted">LEVERAGE :</span> {{ $liveaccount->leverage }}
                                                                                     <span class="text-muted">| CREDIT :</span> $0.0000
                                                                                     <span class="text-muted">| EQUITY : ${{ $liveaccount->equity }}</span>
@@ -303,7 +321,7 @@
                                                                         </div>
                                                                         <div class="flex-shrink-0">
                                                                             <h4 class="f-w-500">${{ $liveaccount->Balance }}</h4>
-                                                                            <p class="text-muted text-sm mb-2 text-end">Balance</p>
+                                                                            <p class="mb-2 text-sm text-muted text-end">Balance</p>
                                                                         </div>
                                                                     </div>
                                                                 </li>
@@ -324,9 +342,9 @@
                                                     </div>
                                                 </div>
                                                 <div class="card">
-                                                    <div class="card-body py-2">
+                                                    <div class="py-2 card-body">
                                                         <ul class="list-group list-group-flush">
-                                                            <li class="list-group-item px-0">
+                                                            <li class="px-0 list-group-item">
                                                                 <div class="float-end">
                                                                     <h3 class="mb-0 fw-medium">${{ $totals->balance }}</h3>
                                                                 </div>

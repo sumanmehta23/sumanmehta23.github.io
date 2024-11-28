@@ -48,9 +48,8 @@ class AccountHelper
 
         // Update Demo Accounts
         $demoAccounts = auth()->user()->demoAccounts;
-
         foreach ($demoAccounts as $account) {
-            $apiResponse = $api->UserAccountGet($account->trade_id, $accountData);
+            $apiResponse = $api->UserAccountGet($account->code, $accountData);
 
             if ($apiResponse === MTRetCode::MT_RET_OK) {
                 $account->update([

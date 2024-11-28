@@ -3,17 +3,18 @@
 namespace App\Http\Controllers;
 
 
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Ib1;
+use App\Models\Account;
+use App\Models\DemoAccount;
+use App\Models\LiveAccount;
+use App\Models\TotalBalance;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
-use App\Models\TotalBalance;
-use App\Models\LiveAccount;
-use App\Models\DemoAccount;
-use App\Models\Account;
 
-use App\Models\Ib1;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class Home extends Controller
 {
@@ -24,6 +25,8 @@ class Home extends Controller
     public function dashboard()
     {
         $userId= auth()->user()->id;
+        $userId = auth()->user()->id;
+        AccountHelper::updateLiveAndDemoAccounts($userId);
         $walletBalance = $this->getWalletBalance($userId);
         $totalDeposit = $this->getTotalDeposit($userId);
         $totalWithdrawal = $this->getTotalWithdrawal($userId);

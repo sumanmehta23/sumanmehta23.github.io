@@ -51,24 +51,24 @@
                                                                 <div class="border rounded address-check">
                                                                     <div class="form-check paycard">
                                                                         <input id="liveaccount{{ $liveaccount->code }}"
-                                                                               type="radio" name="live-account"
-                                                                               class="select-liveaccount form-check-input input-primary"
-                                                                               data-mindep="{{ $liveaccount->mindep }}"
-                                                                               value="{{ $liveaccount->id }}">
+                                                                            type="radio" name="live-account"
+                                                                            class="select-liveaccount form-check-input input-primary"
+                                                                            data-mindep="{{ $liveaccount->mindep }}"
+                                                                            value="{{ $liveaccount->id }}">
                                                                         <label class="form-check-label d-block" required>
                                                                             <div class="p-1 my-1">
                                                                                 <span class="row">
                                                                                     <span class="mt-1 col-6">
                                                                                         <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
-                                                                                            <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">
-                                                                                            {{ $liveaccount->code }}
-                                                                                        </span>
+                                                                                            <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">{{ $liveaccount->code }}</span>
                                                                                     </span>
                                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                                         <span class="mb-0 h5 d-block f-w-500">
                                                                                             ${{ $liveaccount->Balance ?? 0.0 }}
                                                                                         </span>
-                                                                                        <span class="mb-0 text-muted f-10">Current Balance</span>
+                                                                                        <span
+                                                                                            class="mb-0 text-muted f-10">Current
+                                                                                            Balance</span>
                                                                                     </span>
                                                                                 </span>
                                                                             </div>
@@ -83,25 +83,34 @@
                                                     <div class="row g-1">
                                                         @if ($walletenabled)
                                                             <div class="col-6 col-lg-6 col-xl-6">
-                                                                <div class="border rounded address-check trade-deposit-type">
+                                                                <div
+                                                                    class="border rounded address-check trade-deposit-type">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="deposit_type"
-                                                                               class="form-check-input input-primary tradefund-deposit"
-                                                                               id="walletpayment" value="Wallet Transfer"
-                                                                               data-type="Wallet-Transfer">
-                                                                        <label class="form-check-label d-block" for="walletpayment">
+                                                                            class="form-check-input input-primary tradefund-deposit"
+                                                                            id="walletpayment" value="Wallet Transfer"
+                                                                            data-type="Wallet-Transfer">
+                                                                        <label class="form-check-label d-block"
+                                                                            for="walletpayment">
                                                                             <span class="p-2 card-body d-block">
-                                                                                <span class="d-flex justify-content-between">
+                                                                                <span
+                                                                                    class="d-flex justify-content-between">
                                                                                     <span>
-                                                                                        <span class="mb-1 h6 f-w-500 d-block">Wallets</span>
-                                                                                        <span class="f-10 text-muted">Wallet Transfer</span>
+                                                                                        <span
+                                                                                            class="mb-1 h6 f-w-500 d-block">Wallets</span>
+                                                                                        <span class="f-10 text-muted">Wallet
+                                                                                            Transfer</span>
                                                                                     </span>
                                                                                     <span class=" d-flex align-items-end">
                                                                                         <span>
-                                                                                          <span class="mb-1 text-right h6 f-w-500 d-block" style="text-align:end">$<?php echo $wallet_balance ?></span>
-                                                                                          <span class="f-10 text-muted">Current Balance</span>
+                                                                                            <span
+                                                                                                class="mb-1 text-right h6 f-w-500 d-block"
+                                                                                                style="text-align:end">$<?php echo $wallet_balance; ?></span>
+                                                                                            <span
+                                                                                                class="f-10 text-muted">Current
+                                                                                                Balance</span>
                                                                                         </span>
-                                                                                      </span>
+                                                                                    </span>
                                                                                 </span>
                                                                             </span>
                                                                         </label>
@@ -164,7 +173,8 @@
                                                                                 <div class="row g-1">
                                                                                     <input type="submit"
                                                                                         name="a[register]"
-                                                                                        class="btn btn-primary col-12" value="Deposit To Trade Account">
+                                                                                        class="btn btn-primary col-12"
+                                                                                        value="Deposit To Trade Account">
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -216,17 +226,14 @@
                                                                             ECN</p>
                                                                         <div class="border-dashed border-top">
                                                                             <p class="mt-2 mb-1 d-grid">
-                                                                                <span class="text-muted">LEVERAGE:
-                                                                                    {{ $liveaccount->leverage }}</span>
-                                                                                <span class="text-muted">CREDIT:
-                                                                                    ${{ $liveaccount->credit }}</span>
-                                                                                <span class="text-muted">EQUITY:
-                                                                                    ${{ $liveaccount->equity }}</span>
+                                                                                <span class="text-muted">LEVERAGE: {{ $liveaccount->leverage }}</span>
+                                                                                <span class="text-muted">CREDIT: ${{ $liveaccount->credit }}</span>
+                                                                                <span class="text-muted">EQUITY: ${{ $liveaccount->equity }}</span>
                                                                             </p>
                                                                         </div>
                                                                     </div>
                                                                     <div class="flex-shrink-0">
-                                                                        <h4 class="f-w-500">${{ $liveaccount->Balance }}
+                                                                        <h4 class="f-w-500">${{ $liveaccount->Balance??0 }}
                                                                         </h4>
                                                                         <p class="mb-2 text-sm text-muted text-end">Balance
                                                                         </p>
@@ -273,27 +280,27 @@
     </div>
     <script>
         $("#tradeDepositForm").submit(function(e) {
-        e.preventDefault();
-        $.ajax({
-            type: "POST",
-            url: "{{ route('trade-deposit') }}",
-            data: $(this).serialize(),
-            success: function(response) {
-                Swal.fire({
-                    icon: 'success',
-                    title: response.success
-                }).then(() => {
-                    window.location.href = '{{ route("transactions") }}';
-                });
-            },
-            error: function(xhr) {
-                Swal.fire({
-                    icon: 'error',
-                    title: xhr.responseJSON.message,
-                    text:xhr.responseJSON.error
-                });
-            }
+            e.preventDefault();
+            $.ajax({
+                type: "POST",
+                url: "{{ route('trade-deposit') }}",
+                data: $(this).serialize(),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: response.success
+                    }).then(() => {
+                        window.location.href = '{{ route('transactions') }}';
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: xhr.responseJSON.message,
+                        text: xhr.responseJSON.error
+                    });
+                }
+            });
         });
-    });
     </script>
 @endsection

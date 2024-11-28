@@ -49,13 +49,13 @@
                         </div>
                         <div class="d-flex align-items-end justify-content-center mb-5" style="height: 100px;">
                             <img src="{{ asset('assets/images/wallet.png') }}" class="pt-4" alt="logo" style="width: 20%; margin-right: 10px;">
-                            @if (auth()->user()->wallet_enabled == 0 || is_null(auth()->user()->wallet_enabled))
+                            {{-- @if (auth()->user()->wallet_enabled == 0 || is_null(auth()->user()->wallet_enabled))
                                 <button class="btn btn-outline-secondary activate-wallet" type="button">
                                     <i class="ti ti-plus me-2"></i> Activate Wallet
                                 </button>
-                            @else
+                            @else --}}
                                 <span class="text-center h2">${{ $wallet_balance }}</span>
-                            @endif
+                            {{-- @endif --}}
                         </div>
 
                         <a href="{{ url('/wallet_deposit') }}">
