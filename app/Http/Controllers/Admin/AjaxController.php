@@ -381,6 +381,7 @@ class AjaxController extends Controller
         // Fetch data
         $withdrawals = $query->orderByDesc('id')->get();
         $data = [];
+    
         foreach ($withdrawals as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),

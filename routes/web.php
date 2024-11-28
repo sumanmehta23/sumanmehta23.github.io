@@ -169,7 +169,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/wallet_deposit_details', [Transaction::class, 'wallet_deposit_details']);
         Route::get('/wallet_withdrawal_details', [Transaction::class, 'wallet_withdrawal_details']);
-        Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal']);
+        Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal'])->name('wallet_withdrawal_details');
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
 
