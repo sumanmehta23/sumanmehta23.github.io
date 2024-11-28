@@ -86,7 +86,16 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="my-4 divider"><span>WITHDRAW DETAILS</span></div>
+                                                    <div class="divider my-4"><span>WITHDRAW DETAILS</span></div>
+                                                    @if ($errors->any())
+                                                        <div class="alert alert-danger">
+                                                            <ul>
+                                                                @foreach ($errors->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
                                                     <div class="wallet-withdrawal Wallet_Withdrawal">
                                                         <form method="post" style="padding:10px;" class="md-float-material form-material">
                                                             @csrf
