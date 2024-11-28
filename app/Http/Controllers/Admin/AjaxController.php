@@ -381,7 +381,7 @@ class AjaxController extends Controller
         // Fetch data
         $withdrawals = $query->orderByDesc('id')->get();
         $data = [];
-    
+
         foreach ($withdrawals as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
@@ -855,14 +855,18 @@ class AjaxController extends Controller
     }
     public function getLatestWithdrawal($id)
     {
-
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
-        $query = DB::select($sql);
+        // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeWithdrawals::with('account')
+                            ->where('email',$id)
+                            ->where('withdraw_type',['Internal Transfer'])
+                            ->get();
+
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-
+            dd($row);
             $data[] = [
                 'created_on' => $row->withdraw_date,
                 'from_to' => $row->trade_id,
