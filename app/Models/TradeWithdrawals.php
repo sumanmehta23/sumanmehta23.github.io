@@ -12,10 +12,10 @@ class TradeWithdrawals extends Model
     protected $table = 'trade_withdrawal';
     // public $timestamps = false;
     protected $guarded = [];
-    
+
     public function account()
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(Account::class,'account_id');
     }
     public function withdrawTo()
     {
