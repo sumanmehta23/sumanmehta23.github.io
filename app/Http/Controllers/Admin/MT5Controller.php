@@ -320,6 +320,7 @@ class MT5Controller extends Controller
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
                     'AdminRemark' => $description,
+                    'Status'=>1,
                     'created_by' => session('alogin')
                 ]);
 

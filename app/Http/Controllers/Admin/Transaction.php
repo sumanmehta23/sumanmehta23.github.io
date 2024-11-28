@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
+use Exception;
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
+use App\MT5\MTEnDealAction;
+use App\Models\ClientWallet;
+use App\Models\TotalBalance;
 use Illuminate\Http\Request;
 use App\Models\WalletWithdraw;
-use App\Models\TotalBalance;
-use App\Models\ClientWallet;
-use App\Services\MailService as MailService;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use App\Services\MailService as MailService;
+use PDO;
 
 class Transaction extends Controller
 {
@@ -321,7 +326,10 @@ class Transaction extends Controller
         $email = $validatedData['email'];
         $amount = ((float) $validatedData['amount']) * -1;
         $login = $request->code;
-    
+        $transaction_id = $request->transaction_id;
+        
+        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
+
         dd($request->ALL());
         // echo "<script>console.log('TradingDeposit Started')</script>";
         define("PATH_TO_SCRIPTS", "./mt5_api/");
