@@ -49,8 +49,7 @@ class MT5Accounts extends Controller
         return view('demo_accounts', compact('results'));
     }
     public function viewAccountDetails(Account $account)
-    {
-
+    {   
         session()->remove('error');
         $user= auth()->user();
         $code=$account->code;

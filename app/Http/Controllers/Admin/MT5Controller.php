@@ -378,42 +378,21 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::find($id);
+        $account = Account::where('id',$id)->with(['accountType','user','bonusTrans'])->first();
+       
         if($account){
             $trade_id = $account->code;
         }else{
             $trade_id ='';
         }
-
-        AccountHelper::updateLiveAndDemoAccounts($account->code);
-        $type = "live";
-
-        // $sql = "
-        //     SELECT
-        //         liveaccount.*,
-        //         aspnetusers.fullname,
-        //         account_types.ac_group,
-        //         IFNULL(SUM(bonus_trans.bonus_amount), 0) AS total_bonus_amount  -- Sum of bonus_amount from bonus_trans
-        //     FROM liveaccount
-        //     LEFT JOIN account_types ON account_types.ac_index = liveaccount.account_type
-        //     LEFT JOIN aspnetusers ON aspnetusers.email = liveaccount.email
-        //     LEFT JOIN bonus_trans ON bonus_trans.trade_id = liveaccount.trade_id  -- Join bonus_trans based on email
-        //     WHERE (liveaccount.trade_id) = :trade_id
-        //     GROUP BY liveaccount.id, aspnetusers.fullname, account_types.ac_group
-        // ";
-
-        // $query = DB::select($sql, ['trade_id' => $trade_id]);
-
-
-        $query = Account::where('demo', false)
-                            ->where('code',$trade_id)
-                            ->with(['accountType','user','bonusTrans'])
-                            ->get();
-
-
-        $account = isset($query[0]) ? $query[0] : [];
-
-        // dd($account);
+        
+        if($account->demo == false){
+            AccountHelper::updateLiveAndDemoAccounts($account->code);
+            $type = "live";
+        }else{
+            $type = "demo";
+        }
+         
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
