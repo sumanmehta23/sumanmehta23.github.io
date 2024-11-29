@@ -14,7 +14,7 @@ class DemoAccount extends Model
         'balance',
         'email',
         'name',
-        'trade_id',
+        'code',
         'account_type',
         'leverage',
         'currency',
@@ -30,6 +30,6 @@ class DemoAccount extends Model
 
     public function bonusTrans()
     {
-        return $this->hasMany(BonusTrans::class, 'trade_id',  'trade_id');
+        return $this->hasMany(BonusTrans::class, 'code',  'code');
     }
 }

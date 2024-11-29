@@ -128,7 +128,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div><?php echo htmlentities($result->trade_id); ?></div>
+                                                <div><?php echo htmlentities($result->code); ?></div>
                                             </td>
                                             <td>
                                                 <div><?php echo htmlentities($result->transfer_to); ?></div>

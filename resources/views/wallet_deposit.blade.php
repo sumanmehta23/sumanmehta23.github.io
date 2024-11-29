@@ -335,8 +335,8 @@
                                                                     <input type="hidden" name="user[email]"
                                                                         value="{{ session('clogin') }}" min="10"
                                                                         required class="form-control fill">
-                                                                    <input class="user_trade_id form-control fill" type="hidden"
-                                                                        name="trade_id" value="">
+                                                                    <input class="user_code form-control fill" type="hidden"
+                                                                        name="code" value="">
                                                                     <div class="row">
                                                                         <div class="mt-2 col-12">
                                                                             <input type="hidden"
@@ -393,8 +393,8 @@
                                                                     <input type="hidden" name="email"
                                                                         value="{{ session('clogin') }}" min="10"
                                                                         required class="form-control fill">
-                                                                    <input class="user_trade_id" type="hidden"
-                                                                        name="user[trade_id]" value=""
+                                                                    <input class="user_code" type="hidden"
+                                                                        name="user[code]" value=""
                                                                         class="form-control fill" readonly required>
                                                                     <div class="row">
                                                                         <div class="mt-2 col-12">
@@ -501,7 +501,7 @@
                                                                         <div class="mx-2 media-body">
                                                                             <h5 class="mb-1">
                                                                                 <span
-                                                                                    class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->trade_id }}</span>
+                                                                                    class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->code }}</span>
                                                                             </h5>
                                                                             <p class="mb-2 text-sm">
                                                                                 <span class="text-muted">ACCOUNT CATEGORY

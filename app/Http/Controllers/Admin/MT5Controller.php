@@ -76,16 +76,16 @@ class MT5Controller extends Controller
     }
     public function updateAccountDetails(Request $request)
     {
-        if ($request->has(['trade_id', 'account_type'])) {
-            $trade_id = $request->input('trade_id');
+        if ($request->has(['code', 'account_type'])) {
+            $code = $request->input('code');
             $account_type = $request->input('account_type');
             $leverage = $request->input('leverage');
 
             // Fetch user data from API (assume the API method and classes are available)
             // $trade_user = NULL;/
-            // $this->api->UserGet($trade_id,$trade_user);
-            // dd($trade_id);
-            if (($error_code = $this->api->UserGet($trade_id, $trade_user)) != MTRetCode::MT_RET_OK) {
+            // $this->api->UserGet($code,$trade_user);
+            // dd($code);
+            if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
                 //dd(MTRetCode::GetError($error_code));
                 // return response()->json([
                 //     'status' => 'warning',
@@ -109,7 +109,7 @@ class MT5Controller extends Controller
             } else {
                 // Update leverage and account type in the database
                 DB::table('accounts')
-                    ->where('code', $trade_id)
+                    ->where('code', $code)
                     ->update([
                         'leverage' => $leverage,
                         'account_type_id' => $acc->id
@@ -121,8 +121,8 @@ class MT5Controller extends Controller
 
     public function updatePassword(Request $request)
     {
-        if ($request->has(['trade_id', 'password_type'])) {
-            $login = $request->input('trade_id');
+        if ($request->has(['code', 'password_type'])) {
+            $login = $request->input('code');
             $pass_type = $request->input('password_type');
             $new_password = $request->input('password');
             $type = $request->input('type', 'live'); // default to 'live' if 'type' is not provided
@@ -159,15 +159,15 @@ class MT5Controller extends Controller
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
-        $trade_id = $request->input('trade_id');
-        $account = Account::where('code', $trade_id)->first();
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->first();
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
             $deposit_type = 'CRM';
             $email = $eid;
             $deposit_currency = 'USD';
-            $login = $trade_id;
+            $login = $code;
             $comment = 'CRM Deposited';
             $ticket = null;
 
@@ -179,7 +179,7 @@ class MT5Controller extends Controller
                     'user_id' => $user->id,
                     'account_id' => $account->id,
                     'email' => $email,
-                    'trade_id' => $trade_id,
+                    'code' => $code,
                     'deposit_amount' => $amount,
                     'deposit_type' => $deposit_type,
                     'status' => 1,
@@ -206,7 +206,7 @@ class MT5Controller extends Controller
                 $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
           <div><b>Transaction Details</b></div>
           <div><b>Amount: </b>$' . $amount . '</div>
-          <div><b>Account ID: </b>' . $trade_id . '</div>
+          <div><b>Account ID: </b>' . $code . '</div>
           <div><b>Transaction ID: </b>' . $transid . '</div>
           <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
           <div><b>Deposit Type </b>' . $deposit_type . '</div>';
@@ -230,8 +230,8 @@ class MT5Controller extends Controller
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
-        $trade_id = $request->input('trade_id');
-        $account = Account::where('code', $trade_id)->first();
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->first();
         if ($request->has('bonus_to_account')) {
 
             $amount = $request->input('amount');
@@ -241,7 +241,7 @@ class MT5Controller extends Controller
             $amount = $type === 'in' ? $amount : -1 * $amount;
             $email = $eid;
             $deposit_currency = 'USD';
-            $login = $trade_id;
+            $login = $code;
             // $comment = $description;
             $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';;
             $ticket = null;
@@ -253,7 +253,7 @@ class MT5Controller extends Controller
                     'email' => $email,
                     'user_id' => $user->id,
                     'account_id' => $account->id,
-                    'trade_id' => $trade_id,
+                    'code' => $code,
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
@@ -274,7 +274,7 @@ class MT5Controller extends Controller
 
                 $content .= '<div><b>Transaction Details</b></div>
           <div><b>Amount: </b>$' . $deposit_details->bonus_amount . '</div>
-          <div><b>Account ID: </b>' . $deposit_details->trade_id . '</div>
+          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
           <div><b>Transaction ID: </b>' . $transid . '</div>
           <div><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</div>';
 
@@ -300,8 +300,8 @@ class MT5Controller extends Controller
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
-        $trade_id = $request->input('trade_id');
-        $account = Account::where('code', $trade_id)->first();
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->first();
         // dd($user_id);
         // dd($user->id);
         if ($request->has('withdraw_from_account')) {
@@ -310,7 +310,7 @@ class MT5Controller extends Controller
             $description = $request->input('description');
             $withdraw_type = 'CRM';
             $email = $eid;
-            $login = $trade_id;
+            $login = $code;
             $comment = 'CRM Withdrawal';
             $ticket = null;
             if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
@@ -341,7 +341,7 @@ class MT5Controller extends Controller
                 $content = '<div>We are pleased to inform you that funds have been successfully withdrawn from your account.</div>
                 <div><b>Withdrawal Details</b></div>
                 <div><b>Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
-                <div><b>Account ID: </b>' . $deposit_details->trade_id . '</div>
+                <div><b>Account ID: </b>' . $deposit_details->code . '</div>
                 <div><b>Transaction ID: </b>' . $transid . '</div>
                 <div><b>Withdraw Date: </b>' . date("Y-m-d H:i:s") . '</div>
                 <div><b>Withdraw Type </b>' . $deposit_details->withdraw_type . '</div>';
@@ -370,7 +370,7 @@ class MT5Controller extends Controller
             'content' => $content,
             'transid' => $transid,
             'amount' => $transaction->amount,
-            'trade_id' => $transaction->trade_id,
+            'code' => $transaction->code,
             'date' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : date("Y-m-d H:i:s"),
         ];
 
@@ -388,9 +388,9 @@ class MT5Controller extends Controller
         $account = Account::where('id',$id)->with(['accountType','user','bonusTrans'])->first();
        
         if($account){
-            $trade_id = $account->code;
+            $code = $account->code;
         }else{
-            $trade_id ='';
+            $code ='';
         }
         
         if($account->demo == false){
@@ -408,7 +408,7 @@ class MT5Controller extends Controller
 
         // Total approved deposits
         // $total_deposit = DB::table('trade_deposit')
-        //     ->where(DB::raw('trade_id'), $account->code)
+        //     ->where(DB::raw('code'), $account->code)
         //     ->where('status', 1)
         //     ->sum('deposit_amount');
         $total_deposit = TradeDeposit::where('account_id', $account->id)
@@ -439,7 +439,7 @@ class MT5Controller extends Controller
         $accountHelper = AccountHelper::getAccount( $account->code);
         
         return view("admin.mt5.view", [
-            "id" => $trade_id,
+            "id" => $code,
             "getUser" =>  $account,
             "account" => $account,
             "accountHelper" => $accountHelper,

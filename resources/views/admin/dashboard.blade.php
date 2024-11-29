@@ -193,7 +193,7 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <?php if ($result->trade_id == 'email') { ?>
+                                                <?php if ($result->code == 'email') { ?>
                                                 <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
@@ -376,7 +376,7 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <?php if ($result->trade_id == 'email') { ?>
+                                                <?php if ($result->code == 'email') { ?>
                                                 <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
@@ -412,7 +412,7 @@
                                                         </div>
                                                         <div class="col">
                                                             <h4 class="mb-2 text-start"><span
-                                                                    class="">{{ $result->trade_id }}</span>
+                                                                    class="">{{ $result->code }}</span>
                                                             </h4>
                                                         </div>
                                                     </div>

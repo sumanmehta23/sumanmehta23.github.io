@@ -66,7 +66,7 @@ class InternalTransfer extends Controller
                 TradeWithdrawals::create([
                     'email' => $email,
                     'user_id' => auth()->user()->id,
-                    'trade_id' => $fromAccount->code,
+                    'code' => $fromAccount->code,
                     'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
@@ -84,7 +84,7 @@ class InternalTransfer extends Controller
                     TradeDeposit::create([
                         'user_id' => auth()->user()->id,
                         'email' => $email,
-                        'trade_id' => $toAccount,
+                        'code' => $toAccount,
                         'deposit_amount' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
                         'deposit_from' => $fromAccount,
@@ -92,7 +92,7 @@ class InternalTransfer extends Controller
                     ]);
                     TotalBalance::create([
                         'email' => $email,
-                        'trade_id' => $toAccount,
+                        'code' => $toAccount,
                         'trading_deposited' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
                     ]);

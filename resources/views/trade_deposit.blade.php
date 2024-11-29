@@ -135,7 +135,7 @@
                                                             <input type="hidden" name="user[email]"
                                                                 value="{{ session('clogin') }}" required
                                                                 class="form-control fill">
-                                                            <input class="user_trade_id" type="hidden"
+                                                            <input class="user_code" type="hidden"
                                                                 name="user[account_id]" value="" readonly required>
 
                                                             <div class="row">

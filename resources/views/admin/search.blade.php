@@ -76,7 +76,7 @@
                                                                 alt="user-image" class="rounded wid-50 hei-50"></div>
                                                         <div class="col ps-2">
                                                             <h6 class="mb-0"><span
-                                                                    class="text-truncate w-100"><?= $result->trade_id ?></span>
+                                                                    class="text-truncate w-100"><?= $result->code ?></span>
                                                             </h6>
                                                             <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"><?= $result->ac_group ?></span>

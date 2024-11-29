@@ -163,7 +163,7 @@ class Ib extends Controller
                     ->orderByDesc('id')->get();
                 
                     // $client_live_accs = DB::table('ib1_commission')
-                    // ->join('liveaccount', 'liveaccount.trade_id', '=', 'ib1_commission.login')
+                    // ->join('liveaccount', 'liveaccount.code', '=', 'ib1_commission.login')
                     // ->join('aspnetusers', 'aspnetusers.email', '=', 'ib1_commission.user_id')
                     // ->leftJoin('ib_wallet', function ($join) use ($ib_email) {
                     //     $join->on('ib_wallet.order_id', '=', 'ib1_commission.order_id')
@@ -307,7 +307,7 @@ class Ib extends Controller
                     TradeDeposit::create([
                         'user_id' => $userId,
                         'email' => $email,
-                        'trade_id' => $account->code,
+                        'code' => $account->code,
                         'account_id' => $account->id,
                         'deposit_amount' => $amount,
                         'deposit_type' => 'IB Withdraw',

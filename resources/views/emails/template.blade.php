@@ -851,7 +851,7 @@ $settings=settings();
                                                                                                         <div
                                                                                                             style="color:#000000; text-align-last:left; line-height:26px; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;font-size:18px; font-variant-ligatures:normal;">
                                                                                                             <div>
-                                                                                                                <span>{{ $trade_id }}</span>
+                                                                                                                <span>{{ $code }}</span>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </td>

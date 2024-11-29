@@ -411,7 +411,7 @@ if ($getUser) {
                             <div class="card">
                                 <form action="{{route('admin.updateAccountDetails')}}" enctype="multipart/form-data" method="post">
                                     @csrf
-                                    <input type="hidden" name="trade_id" value="<?= $getUser->code ?>">
+                                    <input type="hidden" name="code" value="<?= $getUser->code ?>">
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
                                             <div class="mt-auto mb-auto">Group / Leverage</div>
@@ -537,7 +537,7 @@ if ($getUser) {
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <form method="post" id="passwordForm" action="{{route('admin.updatePassword')}}">
                     @csrf
-                    <input type="hidden" name="trade_id" value="<?= $account->code ?>">
+                    <input type="hidden" name="code" value="<?= $account->code ?>">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalCenterTitle">Update Password</h5><button

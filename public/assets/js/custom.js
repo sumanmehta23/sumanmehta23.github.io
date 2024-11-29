@@ -17,7 +17,7 @@ $(document).ready(function () {
     var minDep = $(this).data('mindep');
     $('#deposit_amount').attr('min', minDep);
     $('.tradedeposit_amount').attr('min', minDep);
-    $('.user_trade_id').val(tradeID);
+    $('.user_code').val(tradeID);
   });
   $('.address-check').click(function () {
     $(this).find('input[type="radio"]').prop('checked', true);

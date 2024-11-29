@@ -215,7 +215,7 @@ class Wallet extends Controller
             //     return response()->json(['message' => 'Deposit designation missing..!'], 400);
             // }
             // $amount = $request->input('amount');
-            // $tradeId = $request->input('trade_id');
+            // $tradeId = $request->input('code');
             // $time = $request->input('time');
             // $comment = "Deposit";
             // $depositType = $request->input('deposit_type');

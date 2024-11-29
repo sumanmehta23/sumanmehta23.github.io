@@ -86,7 +86,7 @@
                                 <div class="avtar avtar-s border"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->trade_id }}</h6>
+                                <h6 class="mb-0">{{ $history->code }}</h6>
                                 <p class="text-muted mb-0"><small>{{ $history->ac_name }}</small></p>
                               </div>
                             </div>

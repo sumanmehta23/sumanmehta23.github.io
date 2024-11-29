@@ -306,7 +306,7 @@
                                                                         </span>
                                                                         <div class="mx-2 media-body">
                                                                             <h5 class="mb-1">
-                                                                                <span class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->trade_id }}</span>
+                                                                                <span class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->code }}</span>
                                                                             </h5>
                                                                             <p class="mb-2 text-sm">
                                                                                 <span class="text-muted">ACCOUNT CATEGORY :</span> ECN
