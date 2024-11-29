@@ -13,17 +13,22 @@ class ClientWallet extends Model
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'client_wallets';
     protected $guarded = [];
-   
+    
+    public function casts(){
+        return [
+            'wallet_address' => 'encrypted',
+        ];
+    }
 
-     public function setWalletAddressAttribute($value)
-     {
-         $this->attributes['wallet_address'] = Crypt::encryptString($value);
-     }
+    //  public function setWalletAddressAttribute($value)
+    //  {
+    //      $this->attributes['wallet_address'] = Crypt::encryptString($value);
+    //  }
  
-     public function getWalletAddressAttribute($value)
-     {
-         return Crypt::decryptString($value);
-     }
+    //  public function getWalletAddressAttribute($value)
+    //  {
+    //      return Crypt::decryptString($value);
+    //  }
 
     public function user()
     {

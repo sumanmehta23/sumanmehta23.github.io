@@ -66,7 +66,6 @@ class InternalTransfer extends Controller
                 TradeWithdrawals::create([
                     'email' => $email,
                     'user_id' => auth()->user()->id,
-                    'code' => $fromAccount->code,
                     'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
