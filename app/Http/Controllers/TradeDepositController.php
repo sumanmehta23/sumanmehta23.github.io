@@ -50,13 +50,13 @@ class TradeDepositController extends Controller
         // die;
         $request->validate(
             [
-                'user.trade_id' => 'required',
+                'user.account_id' => 'required',
                 'user.deposit' => 'required|numeric',
                 'user.deposit_type' => 'required',
                 'deposit_proof' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:2048',
             ],
             [
-                'user.trade_id.required' => 'You have to select an account to proceed.'
+                'user.account_id.required' => 'You have to select an account to proceed.'
             ]
         );
         $settings = settings();
@@ -71,7 +71,7 @@ class TradeDepositController extends Controller
 
         $user = $request->input('user');
         $email = session('clogin');
-        $trading_deposited1 = $user['deposit'];
+        $depositamount = $user['deposit'];
         $email = $user['email'];
         $account_id = $user['account_id'];
         $user=auth()->user();
@@ -84,9 +84,8 @@ class TradeDepositController extends Controller
         $ticket = NULL;
 
         // Calculate wallet balance
-        $totalWd = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
-        $walletBalance = $totalWd - $totalWw;
+        
+        $walletBalance = $user->wallet_balance ;
         // Check if there's enough balance
         if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {
             return response()->json([
@@ -100,7 +99,7 @@ class TradeDepositController extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $trading_deposited1, $comment, $ticket, $margin_check=true);
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
@@ -113,16 +112,15 @@ class TradeDepositController extends Controller
         } else {
 
             // Start a database transaction
-            DB::transaction(function () use ($user, $email,$account, $depositProofPath) {
-                $tradingDeposited = $user['deposit'];
+            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
                 $tradeId = $account->code;
-                $depositType = $user['deposit_type'];
+                
                 // Insert into wallet withdraw
                 WalletWithdraw::create([
                     'user_id' => $user->id,
                     'email' => $email,
-                    'withdraw_amount' => $tradingDeposited,
-                    'withdraw_type' => $depositType,
+                    'withdraw_amount' => $depositamount,
+                    'withdraw_type' => "Internal Transfer",
                     'transaction_id' => $tradeId,
                     'status' => 1,
                 ]);
@@ -131,18 +129,18 @@ class TradeDepositController extends Controller
                     'user_id' => $user->id,
                     'account_id' => $account->id,
                     'email' => $email,
-                    'trade_id' => $tradeId,
-                    'withdraw_amount' => $tradingDeposited,
+                    'withdraw_amount' => $depositamount,
                     'status' => 1,
                 ]);
                 // Insert into trade deposit
                 TradeDeposit::create([
                     'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'email' => $email,
                     'trade_id' => $tradeId,
-                    'deposit_amount' => $tradingDeposited,
-                    'deposit_type' => $depositType,
-                    'deposit_from' => ($depositType == 'CRM') ? $depositType : null,
+                    'deposit_amount' => $depositamount,
+                    'deposit_type' => $deposit_type,
+                    'deposit_from' => ($deposit_type == 'CRM') ? $deposit_type : null,
                     'deposit_proof' => $depositProofPath,
                     'status' => 1,
                 ]);

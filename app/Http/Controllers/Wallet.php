@@ -34,7 +34,7 @@ class Wallet extends Controller
     {
         $email = auth()->user()->email;
         $wallet_history = $this->getWalletHistory($email);
-        $wallet_balance = $this->getWalletBalance($email);
+        $wallet_balance =auth()->user()->wallet_balance;;
         return view('wallet', compact('wallet_balance', 'wallet_history'));
     }
     public function getWalletHistory($email)
@@ -56,14 +56,7 @@ class Wallet extends Controller
 
         return $wallethistory;
     }
-    public function getWalletBalance($email)
-    {
-        $totalDeposit = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWithdraw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
-
-        $walletBalance = (float) $totalDeposit - (float) $totalWithdraw;
-        return $walletBalance;
-    }
+    
     public function storeClientWallet(Request $request)
     {
         $request->validate([

@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('wallet_withdraw', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\ClientWallet::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\ClientWallet::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
             $table->string('withdraw_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();

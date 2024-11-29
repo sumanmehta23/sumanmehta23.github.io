@@ -38,11 +38,12 @@ class TradeWithdrawal extends Controller
             ->get();
         $walletenabled = $user->wallet_enabled ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
+        $walletBalance=auth()->user()->wallet_balance;
         $totals = Account::where('user_id', $user->id)
             ->where('demo', false)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','walletBalance'));
     }
     public function withdraw(Request $request)
     {

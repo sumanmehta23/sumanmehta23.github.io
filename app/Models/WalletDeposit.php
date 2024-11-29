@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -21,8 +22,20 @@ class WalletDeposit extends Model
         'created_at',
         'updated_at'
     ];
+    protected static function boot()
+    {
+        parent::boot();
+        static::created(function ($walletDeposit) {
+            Cache::forget("user:{$walletDeposit->user_id}:wallet_balance");
+        });
+        static::updated(function ($walletDeposit) {
+            Cache::forget("user:{$walletDeposit->user_id}:wallet_balance");
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+    
 }

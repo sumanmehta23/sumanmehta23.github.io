@@ -3,11 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class User extends Authenticatable
 {
@@ -64,5 +65,28 @@ class User extends Authenticatable
     public function accounts()
     {
         return $this->hasMany(Account::class);
+    }
+    public function walletDeposits()
+    {
+        return $this->hasMany(WalletDeposit::class);
+    }
+
+    public function walletWithdraws()
+    {
+        return $this->hasMany(WalletWithdraw::class);
+    }
+    public function getWalletBalanceAttribute()
+    {
+        return Cache::remember("user:{$this->id}:wallet_balance", now()->addMinutes(10), function () {
+            $totalDeposit = WalletDeposit::where('user_id', $this->id)
+                ->where('status', 1)
+                ->sum('deposit_amount');
+
+            $totalWithdraw = WalletWithdraw::where('user_id', $this->id)
+                ->where('status', '<>', 2)
+                ->sum('withdraw_amount');
+
+            return (float) $totalDeposit - (float) $totalWithdraw;
+        });
     }
 }
