@@ -2,9 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Account;
-use App\Models\AccountType;
 use Illuminate\Database\Seeder;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\File;

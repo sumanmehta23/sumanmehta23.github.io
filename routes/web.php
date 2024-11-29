@@ -50,7 +50,7 @@ Route::get("/se",function(){
     //     'account_id' => $account->id,
     //     'withdrawal_amount' => $amount,
     //     'withdraw_type' => $withdraw_type,
-    //     // 'withdraw_to' => $withdraw_to,
+    //     // 'to_account_id' => $to_account_id,
     //     'wallet_qr' => '',
     //     'Status' => 1
     // ]);
@@ -62,6 +62,8 @@ Route::get("/se",function(){
     
     // $settings = \App\Models\WalletDeposit::get()->toArray();
     // file_put_contents(storage_path('app/wallet_deposit.json'), json_encode($settings, JSON_PRETTY_PRINT));
+    // $settings = \App\Models\Account::get()->toArray();
+    // file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');

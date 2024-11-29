@@ -70,6 +70,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Account::class);
     }
+    public function wallets()
+    {
+        return $this->hasMany(ClientWallet::class);
+    }
     public function walletDeposits()
     {
         return $this->hasMany(WalletDeposit::class);
