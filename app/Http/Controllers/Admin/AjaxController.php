@@ -391,7 +391,7 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to ? $row->withdraw_to : $row->withdraw_type,
+                'to_account_id' => $row->to_account_id ? $row->to_account_id : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -538,7 +538,7 @@ class AjaxController extends Controller
                 'account_no' => $row->code,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to,
+                'to_account_id' => $row->to_account_id,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),

@@ -20,7 +20,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $table = 'aspnetusers';
-    
+
     protected $primaryKey = 'id';
      protected $guarded = [];
 
@@ -62,9 +62,17 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ib1Commission::class);
     }
+    public function ib1()
+    {
+        return $this->hasMany(Ib1::class);
+    }
     public function accounts()
     {
         return $this->hasMany(Account::class);
+    }
+    public function wallets()
+    {
+        return $this->hasMany(ClientWallet::class);
     }
     public function walletDeposits()
     {

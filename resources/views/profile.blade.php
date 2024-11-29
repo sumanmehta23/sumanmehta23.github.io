@@ -70,7 +70,7 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card social-profile">
-                        <div class="card-body pt-0">
+                        <div class="pt-0 card-body">
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
                                     <div class="profile-image-container">
@@ -98,7 +98,7 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <div class="card">
-                                <div class="card-body py-0">
+                                <div class="py-0 card-body">
                                     <ul class="nav nav-tabs profile-tabs" id="myTab" role="tablist">
                                         <li class="nav-item" role="presentation">
                                             <a class="nav-link active" id="profile-tab-3" data-bs-toggle="tab"
@@ -181,7 +181,7 @@
                                                 @endif
                                             </div>
                                         </div>
-                                        <div class="card-body table-card text-center">
+                                        <div class="text-center card-body table-card">
                                             @if ($user->kyc_verify == 0)
                                                 <div class="auth-main">
                                                     <div class="card-body">
@@ -190,7 +190,7 @@
                                                                     src="{{ asset('assets/images/KYC.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
-                                                        <h6 class="text-center text-secondary f-w-400 mb-4 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
+                                                        <h6 class="mb-4 text-center text-secondary f-w-400 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
                                                         <a id="verify-user-kyc" href="#" class="mt-3">
                                                             <button class="btn btn-outline-primary"><span
                                                                     class="text-truncate">Process To Verify Now </span></button>
@@ -205,7 +205,7 @@
                                                                     src="{{ asset('assets/images/kyc_verified.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
-                                                        <h6 class="text-center btn btn-light-success font-bold ps-5 pe-5">
+                                                        <h6 class="font-bold text-center btn btn-light-success ps-5 pe-5">
                                                             KYC Verified</h6>
                                                     </div>
                                                 </div>
@@ -217,7 +217,7 @@
                                                                     src="{{ asset('assets/images/empty.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
-                                                        <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No
+                                                        <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No
                                                             documents
                                                             added</h6>
                                                     </div>
@@ -257,7 +257,7 @@
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 8 characters</li>
-                                                            <li class="list-group-item mb-0"><i
+                                                            <li class="mb-0 list-group-item"><i
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 lowercase letter (a-z)</li>
                                                             <li class="list-group-item"><i
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 uppercase letter (A-Z)</li>
@@ -303,7 +303,7 @@
                                                         <table class="table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>#</th>
+                                                                    {{-- <th>#</th> --}}
                                                                     <th>Wallet Name</th>
                                                                     <th>Currency</th>
                                                                     <th>Network</th>
@@ -314,8 +314,7 @@
                                                             <tbody>
                                                                 @foreach ($bank_accounts as $acc)
                                                                     <tr>
-                                                                        <td>CWA{{ sprintf('%04u', $acc->client_wallet_id) }}
-                                                                        </td>
+                                                                        {{-- <td>CWA{{ sprintf('%04u', $acc->id) }}</td> --}}
                                                                         <td>{{ $acc->wallet_name }}</td>
                                                                         <td>{{ $acc->wallet_currency }}</td>
                                                                         <td>{{ $acc->wallet_network }}</td>
@@ -326,14 +325,14 @@
                                                                                 <a class="wallet-action"
                                                                                     data-bs-toggle="tooltip"
                                                                                     title="Inactive Wallet Address"
-                                                                                    data-toggle="{{ ($acc->client_wallet_id) }}">
+                                                                                    data-toggle="{{ ($acc->id) }}">
                                                                                     <i class="f-24 ti ti-toggle-left"></i>
                                                                                 </a>
                                                                             @else
                                                                                 <a class="wallet-action"
                                                                                     data-bs-toggle="tooltip"
                                                                                     title="Active Wallet Address"
-                                                                                    data-toggle="{{ ($acc->client_wallet_id) }}">
+                                                                                    data-toggle="{{ ($acc->id) }}">
                                                                                     <i class="f-24 ti ti-toggle-right"></i>
                                                                                 </a>
                                                                             @endif
@@ -351,7 +350,7 @@
                                                                         src="{{ asset('assets/images/empty.png') }}"
                                                                         class="w-25" alt="img"></a>
                                                             </div>
-                                                            <h6 class="text-center text-secondary f-w-400 mb-0 f-16">Please Add Your Wallet Details</h6>
+                                                            <h6 class="mb-0 text-center text-secondary f-w-400 f-16">Please Add Your Wallet Details</h6>
                                                         </div>
                                                     </div>
                                                 @endif

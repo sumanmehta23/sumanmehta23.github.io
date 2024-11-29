@@ -56,7 +56,7 @@ class Wallet extends Controller
 
         return $wallethistory;
     }
-    
+
     public function storeClientWallet(Request $request)
     {
         $request->validate([
@@ -402,7 +402,7 @@ class Wallet extends Controller
             'withdraw_type' => $withdrawType,
             'status' => 0
         ]);
-        return redirect()->back()->with('Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
+        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
     }
 
 }

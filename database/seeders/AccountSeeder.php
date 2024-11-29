@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Account;
-use App\Models\Mt5Group;
 use App\Models\AccountType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
