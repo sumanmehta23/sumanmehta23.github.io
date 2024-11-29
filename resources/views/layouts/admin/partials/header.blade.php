@@ -6,7 +6,7 @@ $categories = page_categories();
 
 // $userRoleID = session('userRoleID');
 $userRoleID = session('userID');
-$userRole = session('userRole');
+$userRole = session('role_id');
 $rolePermissionsList = rolePermissions($userRole);
 $filePermissions = filePermissions($userRole);
 
@@ -262,7 +262,7 @@ $filePermissions = filePermissions($userRole);
 
                                 @if (
                                     (!empty($sub_menus->toArray()) ||
-                                        in_array($main->page_id, $rolePermissionsList) ||
+                                        in_array($main->id, $rolePermissionsList) ||
                                         $userRoleID == 1 ||
                                         $userRoleID == 2) &&
                                         $main->show_in_menu == 1)

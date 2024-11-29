@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class EmployeeList extends Authenticatable
 {
-    use HasUuids;
+    use HasUuids,HasUuids ;
     protected $table = 'emplist';
     protected $primaryKey = 'id';
     protected $fillable = [];
