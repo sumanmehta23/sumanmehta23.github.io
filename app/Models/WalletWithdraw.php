@@ -39,6 +39,18 @@ class WalletWithdraw extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function totalBalance()
+    {
+        return $this->belongsTo(TotalBalance::class,'email','email');
+    }
+    public function relationshipManager()
+    {
+        return $this->belongsToMany(RelationshipManager::class,'relationship_manager', 'user_id','rm_id');
+    }
+    public function emplist()
+    {
+        return $this->belongsTo(EmployeeList::class);
+    }
     public function clientWallet()
     {
         return $this->belongsTo(ClientWallet::class);
