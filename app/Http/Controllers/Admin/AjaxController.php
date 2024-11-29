@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Ib1;
 use App\Models\User;
 use App\Models\TradeWithdrawals;
+use App\Models\TradeDeposit;
 
 class AjaxController extends Controller
 {
@@ -312,21 +313,35 @@ class AjaxController extends Controller
     public function getTradingDeposit()
     {
         $rmCondition = " left join accounts user on(user.email=trs.email) ";
-        $condition = "";
+        // $condition = "";
 
+        // if (!isset($_GET['id'])) {
+        //     if (session('userData')['userRole'] == "Relationship Manager") {
+        //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
+        //     } else {
+        //     }
+        // }
+        // if (isset($_GET['id'])) {
+        //     $condition = ' where trs.code=' . $_GET['id'];
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposits trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = TradeDeposit::with(['user','account']);
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
-            } else {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
+        } else {
+            $query->where('account_id', $_GET['id']);
         }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.code=' . $_GET['id'];
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposits trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+        $results = $query->orderByDesc('id')->get();
+        
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -343,6 +358,7 @@ class AjaxController extends Controller
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
+
         echo json_encode(['data' => $data]);
     }
     public function getTradingWithdrawal()

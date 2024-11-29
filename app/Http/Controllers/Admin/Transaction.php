@@ -18,6 +18,7 @@ use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\TradeDeposit;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
 use PDO;
@@ -135,29 +136,42 @@ class Transaction extends Controller
     public function trading_deposit_details(Request $request)
     {
         if (request()->has('id')) {
-            $details = DB::table('trade_deposit as wd')
-                ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
-                ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
-                ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
-                ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
-                ->when(session('userData.role_id') == 2, function ($query) {
-                    $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
-                        ->where('rm.rm_id', session('alogin'));
-                })
-                ->where(function ($query) {
-                    $id = request()->id;
-                    $query->where(DB::raw('wd.id'), $id);
-                })
-                ->selectRaw("
-                    COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
-                    COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
-                    COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
-                    COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
-                    wd.*, u.fullname, u.number, u.email, ib1.name as parent_ib,
-                    ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name,'' as deposit_currency_amount,'' as deposit_currency_in_usd
-                ")
-                ->groupBy('u.email')
+            // $details = DB::table('trade_deposit as wd')
+            //     ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
+            //     ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
+            //     ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
+            //     ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
+            //     ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+            //     ->when(session('userData.role_id') == 2, function ($query) {
+            //         $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
+            //             ->where('rm.rm_id', session('alogin'));
+            //     })
+            //     ->where(function ($query) {
+            //         $id = request()->id;
+            //         $query->where(DB::raw('wd.id'), $id);
+            //     })
+            //     ->selectRaw("
+            //         COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
+            //         COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
+            //         COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
+            //         COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
+            //         wd.*, u.fullname, u.number, u.email, ib1.name as parent_ib,
+            //         ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name,'' as deposit_currency_amount,'' as deposit_currency_in_usd
+            //     ")
+            //     ->groupBy('u.email')
+            //     ->first();
+            $details = TradeDeposit::with([
+                    'clientWallet',
+                    'user',
+                    'totalBalance',
+                    // 'relationshipManager.emplist',
+                    'user.ib1',
+                ])
+
+                ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+                ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+                ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+                ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
             return view('admin.trading_deposit_details', compact('details'));
         }
