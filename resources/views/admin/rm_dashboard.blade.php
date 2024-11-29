@@ -271,7 +271,7 @@
                                                             </a>
                                                         </td>
                                                         <td>
-                                                            @if ($deposit->trade_id == 'email')
+                                                            @if ($deposit->code == 'email')
                                                                 WALLET
                                                             @else
                                                                 <a
@@ -283,7 +283,7 @@
                                                                         </div>
                                                                         <div class="col">
                                                                             <h4 class="mb-2 text-start">
-                                                                                <span>{{ $deposit->trade_id }}</span>
+                                                                                <span>{{ $deposit->code }}</span>
                                                                             </h4>
                                                                         </div>
                                                                     </div>
@@ -418,7 +418,7 @@
                                                             </a>
                                                         </td>
                                                         <td>
-                                                            @if ($result->trade_id == 'email')
+                                                            @if ($result->code == 'email')
                                                                 WALLET
                                                             @else
                                                                 <a
@@ -430,7 +430,7 @@
                                                                         </div>
                                                                         <div class="col">
                                                                             <h4 class="mb-2 text-start">
-                                                                                <span>{{ $result->trade_id }}</span></h4>
+                                                                                <span>{{ $result->code }}</span></h4>
                                                                         </div>
                                                                     </div>
                                                                 </a>

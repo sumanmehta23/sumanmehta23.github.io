@@ -17,7 +17,7 @@ class DemoDeposit extends Model
     protected $fillable = [
         'user_id',
         'email',
-        'trade_id',
+        'code',
         'account_id',
         'deposit_amount',
         'Status'

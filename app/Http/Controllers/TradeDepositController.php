@@ -137,7 +137,7 @@ class TradeDepositController extends Controller
                     'user_id' => $user->id,
                     'account_id' => $account->id,
                     'email' => $email,
-                    'trade_id' => $tradeId,
+                    'code' => $tradeId,
                     'deposit_amount' => $depositamount,
                     'deposit_type' => $deposit_type,
                     'deposit_from' => ($deposit_type == 'CRM') ? $deposit_type : null,

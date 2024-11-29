@@ -307,7 +307,7 @@ class MT5Accounts extends Controller
                     'user_id' => $user->id,
                     'account_id'=>$account->id,
                     'email' => $new_user->Email,
-                    'trade_id' => $new_user->Login,
+                    'code' => $new_user->Login,
                     'deposit_amount' => $validatedData['demo_deposit'],
                     'Status' => 1
                 ];
@@ -332,7 +332,7 @@ class MT5Accounts extends Controller
         $templateVars = [
             'name' => $new_user->Name,
             'type' => $type,
-            'trade_id' => $new_user->Login,
+            'code' => $new_user->Login,
             'trader_password' => $new_user->MainPassword,
             'investor_password' => $new_user->InvestPassword,
             'leverage' => "1:" . $new_user->Leverage,

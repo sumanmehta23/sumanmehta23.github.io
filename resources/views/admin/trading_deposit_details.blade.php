@@ -164,7 +164,7 @@
                                                             <span class="fs-11 text-muted">TRADE ID</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                            <span>{{ $details->trade_id }}</span>
+                                                            <span>{{ $details->code }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -209,11 +209,11 @@
                                             <td>
                                                 <div class="my-auto btn-list ms-auto">
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',1,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',1,{{ $details->code }})"
                                                         type="button"
                                                         class="m-1 btn btn-success btn-space">Approve</button>
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',2,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',2,{{ $details->code }})"
                                                         type="submit"
                                                         class="m-1 btn btn-danger btn-space">Reject</button>
                                                 </div>

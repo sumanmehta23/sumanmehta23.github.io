@@ -108,7 +108,7 @@
                                                 <input type="hidden" name="user[email]" value="{{ session('clogin') }}"
                                                     required class="form-control fill">
                                                 <input type="hidden" name="account_id" value=""
-                                                    class="user_trade_id form-control fill" readonly required>
+                                                    class="user_code form-control fill" readonly required>
                                                 <input type="hidden" name="withdraw_type" value="Wallet Withdrawal">
 
                                                 <div class="row">

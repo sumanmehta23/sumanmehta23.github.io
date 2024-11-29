@@ -56,7 +56,7 @@ class Transactions extends Controller
             ;
         // Fetch filtered data from TradeDeposit with deposit_amount
         $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','trade_id') 
+            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','code') 
             ->where('user_id', auth()->user()->id)
             ->with('account')
             ->get()
@@ -67,7 +67,7 @@ class Transactions extends Controller
                     'transaction_type' => $deposit->deposit_type,
                     'email' => $deposit->email,
                     'status' => $deposit->status,
-                    'it_to' => $deposit->trade_id,
+                    'it_to' => $deposit->code,
                     'it_from' => optional($deposit->account)->code ?? 'CRM', // Safe access
                     'source' => 'TDID',
                     'raw_id' => $deposit->id,

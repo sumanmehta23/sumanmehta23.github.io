@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property integer $id
  * @property string $email
- * @property string $trade_id
+ * @property string $code
  * @property string $bonus_amount
  * @property string $bonus_currency
  * @property string $bonus_type

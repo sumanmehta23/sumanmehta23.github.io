@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('ib_wallet', 50)->nullable();
             $table->string('ib_withdraw', 100)->nullable();
             $table->string('email', 50)->nullable();
-            $table->string('trade_id', 100)->nullable();
+            $table->string('code', 100)->nullable();
             $table->string('order_id', 100)->nullable();
             $table->text('remark')->nullable();
             $table->string('ib_level', 100)->nullable();

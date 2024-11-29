@@ -43,7 +43,7 @@ class SearchController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('liveaccount.trade_id', 'like', '%' . $search . '%')
+                $q->where('liveaccount.code', 'like', '%' . $search . '%')
                     ->orWhere('liveaccount.email', 'like', '%' . $search . '%')
                     ->orWhere('aspnetusers.fullname', 'like', '%' . $search . '%');
             });

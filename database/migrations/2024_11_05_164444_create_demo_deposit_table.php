@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
-            $table->string('trade_id', 100)->nullable();
+            $table->string('code', 100)->nullable();
             $table->string('deposit_amount', 100)->nullable();
             $table->string('deposit_type', 100)->nullable();
             $table->string('deposit_from', 100)->nullable();

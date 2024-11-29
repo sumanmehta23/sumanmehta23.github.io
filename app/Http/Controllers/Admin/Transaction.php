@@ -388,7 +388,7 @@ class Transaction extends Controller
     
     
     
-          $sql = "Select td.id,ap.fullname,td.email,td.trade_id,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where (md5(td.id)=:did || td.id=:did)";
+          $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where (md5(td.id)=:did || td.id=:did)";
           $query = $dbh->prepare($sql);
           $query->bindParam(':did', $did, PDO::PARAM_STR);
           $query->execute();
@@ -414,7 +414,7 @@ class Transaction extends Controller
             <div>The approved amount has been withdrawn to your wallet.</div>
             <div><b>Transaction Details</b></div>
             <div><b>Approved Amount: </b>$' . $deposit_details->amount . '</div>
-            <div><b>Account ID: </b>' . $deposit_details->trade_id . '</div>
+            <div><b>Account ID: </b>' . $deposit_details->code . '</div>
             <div><b>Transaction ID: </b>' . $transid . '</div>
             <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
             <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>';
@@ -437,7 +437,7 @@ class Transaction extends Controller
         $query->bindParam(':did', $did, PDO::PARAM_STR);
         $query->execute();
     
-        $sql = "Select td.id,ap.fullname,td.email,td.trade_id,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where md5(td.id)=:did";
+        $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where md5(td.id)=:did";
         $query = $dbh->prepare($sql);
         $query->bindParam(':did', $did, PDO::PARAM_STR);
         $query->execute();
@@ -454,7 +454,7 @@ class Transaction extends Controller
         $content = '<div>This email to inform you that your transaction has been Rejected. </div>
           <div><b>Transaction Details</b></div>
           <div><b>Rejected Amount: </b>$' . $deposit_details->amount . '</div>
-          <div><b>Account ID: </b>' . $deposit_details->trade_id . '</div>
+          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
           <div><b>Transaction ID: </b>' . $transid . '</div>
           <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
           <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>
