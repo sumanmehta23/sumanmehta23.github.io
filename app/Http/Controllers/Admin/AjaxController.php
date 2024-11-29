@@ -338,11 +338,12 @@ class AjaxController extends Controller
                 'deposit_type' => $row->deposit_type,
                 'deposit_from' => $row->deposit_from ?? $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
+
         echo json_encode(['data' => $data]);
     }
     public function getTradingWithdrawal()

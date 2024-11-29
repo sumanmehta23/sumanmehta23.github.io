@@ -12,21 +12,21 @@ class CheckUserPermissions
 {
     public function handle(Request $request, Closure $next)
     {
-        $userRole = session('userData')['userRole'];
-        
+        $userRole = session('userData')['role_id'];
         if ($userRole == "Super Admin") {
             return $next($request);
         }
-        $userRoleID=Cache::remember('userRoleId', 60*60*24, function () use($userRole) {
-            return DB::table('roles')->where('name', $userRole)->first()->role_id;
-        });
-        $requestUri = $request->path();
+        // $userRoleID=Cache::remember('role_id', 60*60*24, function () use($userRole) {
+        //     return DB::table('roles')->where('name', $userRole)->first()->role_id;
+        // });
+        $requestUri = $request->getPathInfo();
         $rolePermissions = DB::table('permissions as p')
-            ->leftJoin('pages as pg', 'p.page_id', '=', 'pg.page_id')
-            ->where('p.role_id', $userRoleID)
+            ->leftJoin('pages as pg', 'p.page_id', '=', 'pg.id')
+            ->where('p.role_id', $userRole)
             ->pluck('pg.filename')
             ->toArray();
-        if (!in_array($requestUri, $rolePermissions) && $userRoleID != 2) {
+      
+        if (!in_array($requestUri, $rolePermissions) && $userRole != 2) {
             return response()->view('errors.401', [], 401);
         }
         return $next($request);

@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Permission extends Model
 {
     use HasFactory,HasUuids;
+
+    protected $guarded = [];
+
     public function page(){
         return $this->belongsTo(Page::class);
     }
