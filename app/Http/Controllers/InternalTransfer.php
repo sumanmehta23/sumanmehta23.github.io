@@ -83,16 +83,19 @@ class InternalTransfer extends Controller
                     // Log deposit
                     TradeDeposit::create([
                         'user_id' => auth()->user()->id,
+                        'account_id' => $toAccount->id,
                         'email' => $email,
-                        'code' => $toAccount,
+                        'code' => $toAccount->code,
                         'deposit_amount' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
                         'deposit_from' => $fromAccount,
                         'status' => 1,
                     ]);
                     TotalBalance::create([
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $toAccount->id,
                         'email' => $email,
-                        'code' => $toAccount,
+                        'code' => $toAccount->code,
                         'trading_deposited' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
                     ]);
