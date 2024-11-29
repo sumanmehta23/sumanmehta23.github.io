@@ -57,7 +57,7 @@ class InternalTransfer extends Controller
         $ticket = NULL;
 
         // Withdraw from the first account
-        $errorCode = $this->api->TradeBalance($fromAccount, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
+        $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
             return redirect()->back()->with('error', 'Failed to withdraw from the account.');
@@ -70,12 +70,12 @@ class InternalTransfer extends Controller
                     'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
-                    'withdraw_to' => $toAccount->id,
+                    'to_account_id' => $toAccount->id,
                     'withdraw_date' => now(),
                     'Status' => 1
                 ]);
                 // Deposit to the second account
-                $errorCode = $this->api->TradeBalance($toAccount, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
+                $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     return redirect()->back()->with('error', 'Deposit Failed.');

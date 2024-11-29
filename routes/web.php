@@ -50,7 +50,7 @@ Route::get("/se",function(){
     //     'account_id' => $account->id,
     //     'withdrawal_amount' => $amount,
     //     'withdraw_type' => $withdraw_type,
-    //     // 'withdraw_to' => $withdraw_to,
+    //     // 'to_account_id' => $to_account_id,
     //     'wallet_qr' => '',
     //     'Status' => 1
     // ]);
