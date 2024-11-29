@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
+    
     public function index(Request $request)
     {
+
         // Initialize the base query.
         $query = DB::table('liveaccount')
             ->select('liveaccount.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
