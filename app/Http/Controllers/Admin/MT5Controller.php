@@ -177,6 +177,7 @@ class MT5Controller extends Controller
 
                 $tradeDeposit = TradeDeposit::create([
                     'user_id' => $user->id,
+                    'account_id' => $account->id,
                     'email' => $email,
                     'code' => $code,
                     'deposit_amount' => $amount,
@@ -322,7 +323,7 @@ class MT5Controller extends Controller
                     'to_account_id' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
-                    'AdminRemark' => $description,
+                    'admin_remark' => $description,
                     'Status'=>1,
                     'created_by' => session('alogin')
                 ]);
