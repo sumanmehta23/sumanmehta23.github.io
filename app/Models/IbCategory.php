@@ -10,7 +10,7 @@ class IbCategory extends Model
 {
     use HasFactory, SoftDeletes, HasUuids;
     protected $table = 'ib_categories';
-    protected $guarded = [];+
+    protected $guarded = [];
 
     public function plans(){
         return $this->hasMany(IbPlan::class);

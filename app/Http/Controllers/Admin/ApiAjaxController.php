@@ -9,7 +9,7 @@ use App\Models\Leverage;
 use App\Models\Ib1;
 use App\Models\MT5GroupCategory;
 use App\Models\Mt5Group;
-use App\Models\IBCategory;
+use App\Models\IbCategory;
 use App\Models\AccountType;
 use App\Models\User;
 use DB;
@@ -115,7 +115,7 @@ class ApiAjaxController extends Controller
 
     private function createIbPlan($request)
     {
-        $ibPlan = IBCategory::create([
+        $ibPlan = IbCategory::create([
             'ib_cat_name' => $request->ib_cat_name,
             'ib_cat_desc' => $request->ib_cat_desc,
             'is_active' => $request->is_active
