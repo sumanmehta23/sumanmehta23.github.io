@@ -92,10 +92,11 @@
                             <div class="col-lg-8">
                                 <select class="form-select acc-types" required name="acc-types">
                                     <option value="" selected>Choose Account Type</option>
-                                        @foreach ($acc_types as $item)
-                                        <option value="{{ $gp->id }}">{{ $gp->ac_name }}</option>
+                                        @foreach ($acc_types as $gp)
+                                        <option value="{{ $gp->ac_index }}">{{ $gp->ac_name }}</option>
                                         @endforeach
-                                 </select>
+                                    
+                                </select>
                             </div>
                         </div>
                         <div class="mt-3 row">
@@ -163,10 +164,9 @@
                                     <select class="form-select" required name="ib_group"
                                         aria-label="Default select example">
                                         <option value="" selected>--Group--</option>
-                                            @foreach ($acc_groups as $gp)
-                                            <option value="{{ $gp->ib_plan_cat_id }}">{{ $gp->ib_cat_name }}</option>                                                
-                                            @endforeach
-
+                                        <?php foreach ($acc_groups as $gp) { ?>
+                                        <option value="{{ $gp->ib_plan_cat_id }}">{{ $gp->ib_cat_name }}</option>
+                                        <?php } ?>
                                     </select>
                                 </div>
                             </div>
