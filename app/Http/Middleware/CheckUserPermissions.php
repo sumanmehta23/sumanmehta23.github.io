@@ -14,7 +14,8 @@ class CheckUserPermissions
     public function handle(Request $request, Closure $next)
     {
         $userRole = session('userData')['role_id'];
-        if ($userRole == "Super Admin") {
+        $role= Role::find($userRole);
+        if ($role->name == "Super Admin") {
             return $next($request);
         }
         // $userRoleID=Cache::remember('role_id', 60*60*24, function () use($userRole) {
@@ -27,11 +28,8 @@ class CheckUserPermissions
             ->pluck('pg.filename')
             ->toArray();
 
-        $role= Role::find($userRole);
-   
-        if (($requestUri == '/admin/update_role_permissions' || $requestUri == '/admin/search') && $role && $role->name =='Super Admin') {
-            return $next($request);
-        }
+        
+       
         
         if (!in_array($requestUri, $rolePermissions) && $userRole != 2) {
             return response()->view('errors.401', [], 401);

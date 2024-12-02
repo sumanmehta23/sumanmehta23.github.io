@@ -396,10 +396,9 @@ class ClientController extends Controller
         //     ->where(DB::raw('ap.id'), $id)
         //     ->orWhere(DB::raw('ap.email'), $id)
         //     ->first();
-        $user = Account::with(['ib1'])
-            ->where('user_id', $id)
-            ->orWhere('email', $id)
-            ->first();
+        $user = User::with(['ib1'])
+            ->where('id', $id)
+            ->firstOrFail();
         // $acc_groups = DB::table('ib_plans')
         //     ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')
         //     ->select('ib_categories.ib_cat_name', 'ib_plans.ib_plan_cat_id', 'ib_plans.ib_plan_id')
@@ -419,10 +418,10 @@ class ClientController extends Controller
             ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();
         if (!empty($user)) {
-            $eid = $user->email;
+            $eid = $user->id;
             $clients = [];
             for ($i = 1; $i <= 15; $i++) {
-                $foundClients = IbClientList::where("ib$i", $user->email)->get();
+                $foundClients = IbClientList::where("ib$i", $eid)->get();
                 $clients[$i] = $foundClients;
             }
             // $total_wd = DB::table('wallet_deposit')
@@ -431,17 +430,18 @@ class ClientController extends Controller
             //     ->where('status', 1)
             //     ->selectRaw('SUM(deposit_amount) as amount')
             //     ->first();
-            $total_wd = WalletDeposit::where('email', $eid)
+            $total_wd = WalletDeposit::where('user_id', $eid)
                 ->where('deposit_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
                 ->sum('deposit_amount');
+                
             // $total_ww = DB::table('wallet_withdraw')
             //     ->where('email', $eid)
             //     ->where('withdraw_type','!=', 'Internal Transfer')
             //     ->where('status', 1)
             //     ->selectRaw('SUM(withdraw_amount) as amount')
             //     ->first();
-            $total_ww = WalletWithdraw::where('email', $eid)
+            $total_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('withdraw_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
                 ->sum('withdraw_amount');
@@ -450,7 +450,7 @@ class ClientController extends Controller
             //     ->where('status', 0)
             //     ->selectRaw('SUM(withdraw_amount) as amount')
             //     ->first();
-            $pending_ww = WalletWithdraw::where('email', $eid)
+            $pending_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('status', 0)
                 ->sum('withdraw_amount');
 
@@ -465,7 +465,7 @@ class ClientController extends Controller
             //         SUM(withdraw_amount) as withdraw_amount
             //     ')
             //     ->first();
-            $total_balance = TotalBalance::where('email', $eid)
+            $total_balance = TotalBalance::where('user_id', $eid)
                 ->selectRaw('
                     SUM(deposit_amount) as deposit_amount,
                     SUM(trading_deposited) as trading_deposited,
@@ -474,7 +474,7 @@ class ClientController extends Controller
                 ->first();
                 
             $live_accounts = Account::with('accountType')
-                ->where('user_id', $user->user_id)
+                ->where('user_id', $eid)
                 ->where('demo', false)
                 ->orderBy('id', 'desc')
                 ->get();

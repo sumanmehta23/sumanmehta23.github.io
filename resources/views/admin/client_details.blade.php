@@ -32,10 +32,10 @@
                                 <label for="input-label" class="form-label">Assignee</label>
                                 <select class="form-control" name="assignee_id" required>
                                     <?php if (isset($rm_details) && !empty($rm_details)): ?>
-                                    <option selected value="{{ $rm_details->client_index }}">{{ $rm_details->username }}
+                                    <option selected value="{{ $rm_details->id }}">{{ $rm_details->username }}
                                     </option>
                                     <?php elseif (isset($superadmin_details) && !empty($superadmin_details)): ?>
-                                    <option selected value="{{ $superadmin_details->client_index }}">Super Admin</option>
+                                    <option selected value="{{ $superadmin_details->id }}">Super Admin</option>
                                     <?php endif; ?>
                                 </select>
                             </div>
@@ -79,7 +79,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="createMT5Form" method="post">
-                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->id) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="accountModalLabel">Create New MT5 Account</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -92,10 +92,10 @@
                             <div class="col-lg-8">
                                 <select class="form-select acc-types" required name="acc-types">
                                     <option value="" selected>Choose Account Type</option>
-                                    <?php foreach ($acc_types as $gp) { ?>
-                                    <option value="{{ $gp->ac_index }}">{{ $gp->ac_name }}</option>
-                                    <?php } ?>
-                                </select>
+                                        @foreach ($acc_types as $item)
+                                        <option value="{{ $gp->id }}">{{ $gp->ac_name }}</option>
+                                        @endforeach
+                                 </select>
                             </div>
                         </div>
                         <div class="mt-3 row">
@@ -123,7 +123,7 @@
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
                     @csrf
-                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->id) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -163,9 +163,10 @@
                                     <select class="form-select" required name="ib_group"
                                         aria-label="Default select example">
                                         <option value="" selected>--Group--</option>
-                                        <?php foreach ($acc_groups as $gp) { ?>
-                                        <option value="{{ $gp->ib_plan_cat_id }}">{{ $gp->ib_cat_name }}</option>
-                                        <?php } ?>
+                                            @foreach ($acc_groups as $gp)
+                                            <option value="{{ $gp->ib_plan_cat_id }}">{{ $gp->ib_cat_name }}</option>                                                
+                                            @endforeach
+
                                     </select>
                                 </div>
                             </div>
@@ -974,7 +975,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestDeposit',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1005,7 +1006,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestWithdrawal',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1036,7 +1037,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestTransfer',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1163,7 +1164,7 @@
                 type: 'GET',
                 data: {
                     action: 'getIbTierData',
-                    id: '{{ $user->email }}',
+                    id: '{{ $user->id }}',
                     tier: tier
                 },
                 success: function(response) {
