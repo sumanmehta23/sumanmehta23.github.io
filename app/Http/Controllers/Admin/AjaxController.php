@@ -338,10 +338,9 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('account_id', $_GET['id']);
+            $query->where('code', $_GET['id']);
         }
         $results = $query->orderByDesc('id')->get();
-        
         $data = [];
         foreach ($results as $row) {
             $data[] = [
