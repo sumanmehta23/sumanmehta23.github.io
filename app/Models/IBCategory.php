@@ -1,14 +1,20 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class IBCategory extends Model
+class IbCategory extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, SoftDeletes, HasUuids;
     protected $table = 'ib_categories';
+    protected $guarded = [];+
 
-    protected $guarded = [];
+    public function plans(){
+        return $this->hasMany(IbPlan::class);
+    }
+
+
 }

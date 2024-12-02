@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('ib_plan_details', function (Blueprint $table) {
             $table->uuid('id')->primary();
            
-            $table->foreignUuid('ib_plan_id')->constrained('ib_plans')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\IbPlan::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\AccountType::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('acc_type');
             $table->integer('level_id');
             $table->decimal('d1', 10)->nullable()->default(0);

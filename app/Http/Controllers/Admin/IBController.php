@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use DB;
 use Exception;
+use App\Models\IBCategory;
+use App\Models\AccountType;
+use Illuminate\Http\Request;
+use App\Models\IbPlanDetails;
+use App\Http\Controllers\Controller;
 
 class IBController extends Controller
 {
@@ -136,41 +139,29 @@ class IBController extends Controller
         $activeType = request()->get('activeType');
 
         // Step 1: Query for categories with counts of distinct account types
-        $results = DB::table('ib_categories')
-            ->select('ib_categories.*', DB::raw('count(DISTINCT ib_plan_details.acc_type) as count'))
-            ->leftJoin('ib_plan_details', function ($join) {
-                $join->on('ib_plan_details.ib_plan_id', '=', 'ib_categories.ib_cat_id')
-                    ->whereNull('ib_plan_details.deleted_at');
-            })
-            ->groupBy('ib_categories.ib_cat_id')
-            ->orderBy('ib_categories.ib_cat_id')
+        $results = IBCategory::with('plans')
             ->get();
-
         // Step 2: Query for ib_plan_details with account types and category names
-        $plans = DB::table('ib_plan_details')
-            ->select(
+        $plans = IbPlanDetails::select(
                 'ib_plan_details.*',
-                'account_types.ac_group',
-                'ib_categories.ib_cat_name',
-                DB::raw('count(*) as count')
             )
-            ->join('account_types', 'account_types.ac_index', '=', 'ib_plan_details.acc_type')
-            ->join('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
-            ->whereNull('ib_plan_details.deleted_at');
+            ->with(['accountType:ac_group','plan.ibCategory:id,ib_cat_name'])
+;
 
         // Apply the filter if `activeType` is not null
         if ($activeType !== null) {
-            $plans->where(DB::raw('ib_categories.ib_cat_id'), '=', $activeType);
+            $plans->whereHas('accountType', function ($query) use ($activeType) {
+                $query->where('id', $activeType);
+            });
         }
 
         // Group and execute the query for plans
         $plans = $plans
-            ->groupBy('ib_plan_details.ib_plan_id', 'ib_plan_details.acc_type')
+            ->groupBy('account_type_id')
             ->get();
 
         // Step 3: Query for all account types
-        $groups = DB::table('account_types')->get();
-
+        $groups =AccountType::get();
         // Combine all results into a single array if you want to return or process them together
         $data = [
             'results' => $results,
