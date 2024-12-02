@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use DB;
 use Exception;
-use App\Models\IBCategory;
+use App\Models\IbCategory;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
@@ -139,7 +139,7 @@ class IBController extends Controller
         $activeType = request()->get('activeType');
 
         // Step 1: Query for categories with counts of distinct account types
-        $results = IBCategory::with('plans')
+        $results = IbCategory::with('plans')
             ->get();
         // Step 2: Query for ib_plan_details with account types and category names
         $plans = IbPlanDetails::select(

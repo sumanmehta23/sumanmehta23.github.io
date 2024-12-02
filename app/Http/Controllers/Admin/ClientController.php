@@ -11,7 +11,7 @@ use App\Models\Country;
 use App\Models\IbWallet;
 use App\Models\Mt5Group;
 use App\Models\KycUpdate;
-use App\Models\IBCategory;
+use App\Models\IbCategory;
 use App\Models\TicketType;
 use App\Models\AccountType;
 use App\Models\EmployeeList;
