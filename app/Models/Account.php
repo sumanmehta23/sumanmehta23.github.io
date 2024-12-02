@@ -43,4 +43,8 @@ class Account extends Model
     {
         return $this->belongsTo(RelationshipManager::class);
     }
+    public function totalBalance()
+    {
+        return $this->hasMany(TotalBalance::class);
+    }
 }

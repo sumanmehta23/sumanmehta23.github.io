@@ -14,7 +14,7 @@ class TradeDeposit extends Model
     public $timestamps = true;
     protected $guarded = [];
 
-    
+
     public function account()
     {
         return $this->belongsTo(Account::class);
@@ -22,5 +22,13 @@ class TradeDeposit extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function totalBalance()
+    {
+        return $this->belongsTo(TotalBalance::class,'email','email');
+    }
+    public function clientWallet()
+    {
+        return $this->belongsTo(ClientWallet::class);
     }
 }

@@ -198,6 +198,17 @@
         "show_in_menu": 1
     },
     {
+        "page_id": 18,
+        "page_category_id": 4,
+        "pagename": "Permissions List",
+        "filename": "\/admin\/permissionsList",
+        "is_submenu": 16,
+        "active": 1,
+        "page_order": 2,
+        "icon": "",
+        "show_in_menu": 1
+    },
+    {
         "page_id": 19,
         "page_category_id": 4,
         "pagename": "Staffs Management",

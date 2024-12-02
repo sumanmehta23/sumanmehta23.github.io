@@ -3,7 +3,7 @@
     <div>
         <div class="mb-3 d-flex justify-content-between">
             <h2 class="text-secondary">PAGES LIST - {{ $roles->name }}</h2>
-            <input type="hidden" name="role_id" value="{{ $roles->role_id }}">
+            <input type="hidden" name="role_id" value="{{ $roles->id }}">
             <input type="submit" class="btn btn-primary" name="update_permissions" value="Update">
         </div>
         <div class="px-3 row justify-content-between">
