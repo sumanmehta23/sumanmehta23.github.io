@@ -116,7 +116,6 @@ class IBController extends Controller
             ->where('ib_plan_details.status', 1)
             ->groupBy('ib_plan_details.ib_plan_id')
             ->get(); // Use get() to retrieve results
-        // dd($accGroups);
         return view("admin.ib.iblist", ["acc_groups" => $accGroups]);
     }
     public function list_active()
@@ -186,7 +185,6 @@ class IBController extends Controller
     public function ibCommission()
     {
         $ibCategories = DB::table('ib_categories')->get();
-
         $accountTypes = DB::table('account_types')
             ->orderBy('ac_index', 'desc')
             ->get();
@@ -198,7 +196,6 @@ class IBController extends Controller
 
     public function updateIbPlan(Request $request)
     {
-
         $ib_plan_id = $request->input('ib_plan_id');
         $acc_type = $request->input('acc_type');
         $status = $request->input('status');
@@ -293,7 +290,6 @@ class IBController extends Controller
         $accountTypes = DB::table('account_types')
             ->orderBy('ac_index', 'desc')
             ->get();
-        // dd($selected);
         // Return data to the view
         return view('admin.ib.ibCommissionEdit', [
             'selected' => $selected,

@@ -7,7 +7,7 @@ use App\Models\IbPlanDetails;
 use Illuminate\Http\Request;
 use App\Models\Leverage;
 use App\Models\Ib1;
-use App\Models\Mt5GroupCategory;
+use App\Models\MT5GroupCategory;
 use App\Models\Mt5Group;
 use App\Models\IBCategory;
 use App\Models\AccountType;
@@ -31,7 +31,7 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('get_groupcat') && $request->has('id')) {
-            $groupCat = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)->first();
+            $groupCat = MT5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)->first();
             return $groupCat ? response()->json($groupCat) : response()->json(false);
         }
 
@@ -46,7 +46,7 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('group_update') && $request->id) {
-            $updated = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)
+            $updated = MT5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)
                 ->update([
                     'mt5_grp_cat_name' => $request->mt5_grp_cat_name,
                     'mt5_grp_cat_desc' => $request->mt5_grp_cat_desc,

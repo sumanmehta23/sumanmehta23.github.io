@@ -26,7 +26,7 @@ class StaffManagement extends Controller
         return view('admin.admin_users', compact('roles'));
     }
     public function permissionsList(Request $request)
-    {
+    {  
         $id = $request->id;
         $roles = Role::where('id', $id)->first();
         $pages = Page::all();

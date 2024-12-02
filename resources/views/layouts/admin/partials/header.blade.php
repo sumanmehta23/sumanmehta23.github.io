@@ -266,8 +266,14 @@ $filePermissions = filePermissions($userRole);
                                         $userRoleID == 1 ||
                                         $userRoleID == 2) &&
                                         $main->show_in_menu == 1)
+                                    @php
+                                        $requestUri = request()->getPathInfo();
+                                        $open = $sub_menus->contains(function ($item) use ($requestUri) {
+                                            return $item->filename == $requestUri;
+                                        }) ? 'open' : '';
+                                    @endphp
                                     <li
-                                        class="slide {{ !empty($sub_menus->toArray()) ? 'has-sub' : '' }} menu-item-main">
+                                        class="slide {{ !empty($sub_menus->toArray()) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
                                         <a href="{{ $main->filename }}" class="side-menu__item">
                                             <i class="side-menu__icon {{ $main->icon }}"></i>
                                             <span class="side-menu__label">{{ $main->pagename }}</span>
@@ -277,12 +283,17 @@ $filePermissions = filePermissions($userRole);
                                         </a>
                                         <ul class="slide-menu child1">
                                             @foreach ($sub_menus as $sub)
+                                                @php
+                                                    $active = ($requestUri == $sub->filename) ? 'active':'';
+                                                @endphp
                                                 @if (in_array($sub->page_id, $rolePermissionsList) || $userRoleID == 1 || $userRoleID == 2)
-                                                    <li class="slide menu-item-sub">
-                                                        <a href="{{ $sub->filename }}"
-                                                            class="side-menu__item">{{ $sub->pagename }}</a>
-                                                    </li>
-                                                @endif
+                                                    @if($sub->pagename != 'Permissions List')    
+                                                        <li class="slide menu-item-sub">
+                                                            <a href="{{ $sub->filename }}"
+                                                                class="side-menu__item {{ $active }}">{{ $sub->pagename }}</a>
+                                                        </li>
+                                                    @endif
+                                                @endif    
                                             @endforeach
                                         </ul>
                                     </li>

@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-end">
-                            <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-primary btn-sm">Show All</a>
+                            <a href="{{ url()->current() }}" class="btn btn-outline-primary btn-sm">Show All</a>
                         </div>
                     </div>
 
@@ -152,7 +152,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-end">
-                            <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-primary btn-sm">Show All</a>
+                            <a href="{{ url()->current() }}" class="btn btn-outline-primary btn-sm">Show All</a>
                         </div>
                     </div>
 

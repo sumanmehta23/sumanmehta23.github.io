@@ -43,7 +43,7 @@
     <div class="main-content app-content">
         <div class="container-fluid">
             <div class="page-header">
-                <h1 class="page-title">IB Com., Settings</h1>
+                <h1 class="page-title">IB Commission Settings</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
                     <li class="breadcrumb-item" aria-current="page">IB Settings</li>

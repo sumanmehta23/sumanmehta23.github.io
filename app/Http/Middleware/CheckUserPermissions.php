@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Role;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,13 @@ class CheckUserPermissions
             ->where('p.role_id', $userRole)
             ->pluck('pg.filename')
             ->toArray();
-      
+
+        $role= Role::find($userRole);
+   
+        if (($requestUri == '/admin/update_role_permissions' || $requestUri == '/admin/search') && $role && $role->name =='Super Admin') {
+            return $next($request);
+        }
+        
         if (!in_array($requestUri, $rolePermissions) && $userRole != 2) {
             return response()->view('errors.401', [], 401);
         }
