@@ -55,7 +55,7 @@
                 <div class="col-xl-4 col-lg-4">
                     <div class="card custom-card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="mb-auto mt-auto page-title">IB Plans</h4>
+                            <h4 class="mt-auto mb-auto page-title">IB Plans</h4>
                             <button class="btn btn-primary addGrpCat">
                                 <i class="fa fa-plus"></i>
                                 Add IB Plan
@@ -66,10 +66,10 @@
                                 <ul class="list-group" id="tableMT5Category">
                                     <?php $i = 1;
                 foreach ($results as $res) { ?>
-                                    <li class="list-group-item <?= $activeType == ($res->ib_cat_id) ? 'active' : '' ?>"
+                                    <li class="list-group-item <?= $activeType == ($res->id) ? 'active' : '' ?>"
                                         aria-current="true">
                                         <a class="d-flex justify-content-between"
-                                            href="/admin/ib_settings?activeType=<?= ($res->ib_cat_id) ?>">
+                                            href="/admin/ib_settings?activeType=<?= ($res->id) ?>">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <span class="fs-15">
@@ -86,16 +86,16 @@
                                             </div>
                                             <div class="d-flex align-items-end">
                                                 <?php if ($res->is_active == 0) { ?>
-                                                <span class="badge bg-light border custom-badge d-flex m-auto text-default"
+                                                <span class="m-auto border badge bg-light custom-badge d-flex text-default"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Disabled Group Category"><i
                                                         class="d-inline-block fe fe-eye-off me-2"></i>
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
-                                                <!-- <div class="badge m-auto bg-gray-600">Inactive</div> -->
+                                                <!-- <div class="m-auto bg-gray-600 badge">Inactive</div> -->
                                                 <?php } else { ?>
                                                 <span
-                                                    class="badge bg-light border custom-badge d-flex m-auto text-default"><i
+                                                    class="m-auto border badge bg-light custom-badge d-flex text-default"><i
                                                         class="d-inline-block fe fe-eye me-2"></i>
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
@@ -120,7 +120,7 @@
                     <div class="card custom-card position-sticky" style="top: 80px;">
                         <div class="card-header">
                             <div class="d-flex justify-content-between w-100">
-                                <h4 class="mb-auto mt-auto page-title">IB Commissions</h4>
+                                <h4 class="mt-auto mb-auto page-title">IB Commissions</h4>
                                 <a href="/admin/ibCommission">
                                     <button class="btn btn-primary">
                                         <i class="fa fa-plus"></i>
@@ -132,7 +132,7 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table id="tableMT5Groups"
-                                    class="ajaxDataTable table table-bordered stripe row-border order-column text-nowrap w-100">
+                                    class="table ajaxDataTable table-bordered stripe row-border order-column text-nowrap w-100">
                                     <thead>
                                         <tr>
                                             <th>Group</th>
@@ -191,7 +191,7 @@
     <!-- Modal -->
     <div class="modal fade" id="groupCat" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="groupCatForm" method="post" class="mb-0" enctype="multipart/form">
                     @csrf
@@ -201,10 +201,10 @@
                         <h5 class="modal-title" id="ibModalLabel">IB Plan</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0 pb-0">
+                    <div class="pb-0 mb-0 modal-body custom-card card">
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Name Of the Plan</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -212,15 +212,15 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Description</label>
                                 </div>
                                 <div class="col-lg-8">
                                     <input type="text" class="form-control" name="ib_cat_desc">
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-lg-4 m-auto">
+                            <div class="mb-3 row">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Status</label>
                                 </div>
                                 <div class="col-lg-8">

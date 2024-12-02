@@ -21,6 +21,7 @@ use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Str;
 
 class Ib extends Controller
 {
@@ -45,16 +46,17 @@ class Ib extends Controller
     {
         if ($request->isMethod('post')) {
             $uid = uniqid();
-            $code = md5(uniqid(rand()));
-            $user = session('user');
+            $code = Str::random(32);
+            $user = auth()->user();
             try {
                 Ib1::create([
                     'uid' => $uid,
-                    'email' => $user['email'],
-                    'name' => $user['fullname'],
-                    'password' => $user['password'],
-                    'number' => $user['number'],
-                    'username' => $user['email'],
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->fullname,
+                    'password' => $user->password,
+                    'number' => $user->number,
+                    'username' => $user->email,
                     'emailToken' => $code,
                     'status' => 0,
                 ]);

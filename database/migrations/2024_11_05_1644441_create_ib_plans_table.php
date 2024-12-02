@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ib_plans', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->integer('ib_plan_id');
+            $table->foreignIdFor(\App\Models\IbCategory::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('ib_plan_cat_id');
             $table->integer('ib_acc_type_id');
             $table->decimal('ib_commission1', 10)->nullable();
