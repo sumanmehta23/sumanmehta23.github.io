@@ -434,7 +434,6 @@ class ClientController extends Controller
                 ->where('deposit_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
                 ->sum('deposit_amount');
-                
             // $total_ww = DB::table('wallet_withdraw')
             //     ->where('email', $eid)
             //     ->where('withdraw_type','!=', 'Internal Transfer')

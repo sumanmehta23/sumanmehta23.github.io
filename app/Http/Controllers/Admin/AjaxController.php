@@ -851,7 +851,7 @@ class AjaxController extends Controller
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where email='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
+        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -875,14 +875,13 @@ class AjaxController extends Controller
         // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         // $query = DB::select($sql);
         $query = TradeWithdrawals::with('account')
-                            ->where('email',$id)
+                            ->where('user_id',$id)
                             ->where('withdraw_type',['Internal Transfer'])
                             ->get();
 
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-            dd($row);
             $data[] = [
                 'created_on' => $row->withdraw_date,
                 'from_to' => $row->code,
@@ -897,7 +896,7 @@ class AjaxController extends Controller
     public function getLatestTransfer($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
+        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -909,7 +908,7 @@ class AjaxController extends Controller
                 'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
