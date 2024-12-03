@@ -416,18 +416,38 @@ class AjaxController extends Controller
     }
     public function getInternalTransfer()
     {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // } else {
+        //     $rmCondition .= " where ";
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT trs.* from trade_deposits trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = TradeDeposit::with(['user','account']);
+
+        // Add conditions based on session and GET parameters
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
         } else {
-            $rmCondition .= " where ";
+            $query->where('account_id', $_GET['id']);
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_deposits trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Fetch data
+        $deposits = $query->orderByDesc('id')->get();
+
+
         $data = [];
-        foreach ($results as $row) {
+        foreach ($deposits as $row) {
+            dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,

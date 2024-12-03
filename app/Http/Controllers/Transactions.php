@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
@@ -36,27 +37,30 @@ class Transactions extends Controller
         //     ->get();
 
         $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id') 
+            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id')
             ->where('user_id', auth()->user()->id)
             ->get()
             ->map(function ($withdrawal) {
+                if($withdrawal->to_account_id){
+                    $acc = Account::where('id',$withdrawal->to_account_id)->first();
+                }
                 return [
-                    'type' => 'Withdrawal',
+                    'type' => $withdrawal->to_account_id ? 'Internal Transfer' : 'Withdrawal',
                     'amount' => $withdrawal->withdrawal_amount,
                     'transaction_type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
-                    'it_to' => $withdrawal->to_account_id ?? 'Wallet',
+                    'it_to' => $withdrawal->to_account_id ? $acc->code : 'Wallet',
                     'it_from' => optional($withdrawal->account)->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
                     'date' => $withdrawal->withdraw_date,
                 ];
-            })
-            ;
+            });
+            // dd($tradeWithdrawals);
         // Fetch filtered data from TradeDeposit with deposit_amount
         $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','code') 
+            ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','code')
             ->where('user_id', auth()->user()->id)
             ->with('account')
             ->get()
@@ -74,6 +78,7 @@ class Transactions extends Controller
                     'date' => $deposit->deposted_date,
                 ];
             });
+            // dd($tradeDeposits);
         if($tradeDeposits->isEmpty() && $tradeWithdrawals->isEmpty()){
             $internal_transfer = [];
         }elseif($tradeDeposits->isEmpty()){
