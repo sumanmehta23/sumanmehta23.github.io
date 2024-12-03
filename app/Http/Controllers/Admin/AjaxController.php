@@ -12,7 +12,6 @@ use App\Models\UserLog;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\TradeWithdrawals;
-use App\Http\Controllers\Controller;
 
 class AjaxController extends Controller
 {
