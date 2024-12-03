@@ -939,13 +939,15 @@ class AjaxController extends Controller
     }
     public function getLatestTransfer($id)
     {
-        header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
-        $query = DB::select($sql);
+        // header('Content-Type: application/json');
+        // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer'])
+                                ->where('user_id',$id)
+                                ->get();
         $results = $query;
         $data = [];
-        // var_dump($results);
-        // die;
+        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->deposted_date,
@@ -1128,7 +1130,7 @@ and ib1.status = 0
             'type' => $data['field'],
             'value' => $data['value']
         ]);
-        
+
     }
     public function getIbList($id)
     {
