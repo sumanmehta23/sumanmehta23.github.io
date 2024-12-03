@@ -719,7 +719,7 @@ if ($getUser) {
                         name: 'withdraw_type'
                     },
                     {
-                        data: 'to_account_id',
+                        data: 'withdraw_to',
                         name: 'withdraw_from'
                     },
                     {

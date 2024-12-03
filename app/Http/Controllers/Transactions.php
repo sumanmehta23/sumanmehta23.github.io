@@ -37,20 +37,20 @@ class Transactions extends Controller
         //     ->get();
 
         $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
-            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','to_account_id','account_id')
+            ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','withdraw_to','account_id')
             ->where('user_id', auth()->user()->id)
             ->get()
             ->map(function ($withdrawal) {
-                if($withdrawal->to_account_id){
-                    $acc = Account::where('id',$withdrawal->to_account_id)->first();
+                if($withdrawal->withdraw_to){
+                    $acc = Account::where('id',$withdrawal->withdraw_to)->first();
                 }
                 return [
-                    'type' => $withdrawal->to_account_id ? 'Internal Transfer' : 'Withdrawal',
+                    'type' => $withdrawal->withdraw_to ? 'Internal Transfer' : 'Withdrawal',
                     'amount' => $withdrawal->withdrawal_amount,
                     'transaction_type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
-                    'it_to' => $withdrawal->to_account_id ? $acc->code : 'Wallet',
+                    'it_to' => $withdrawal->withdraw_to ? $acc->code : 'Wallet',
                     'it_from' => optional($withdrawal->account)->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
