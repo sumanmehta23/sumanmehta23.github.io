@@ -391,7 +391,7 @@ class MT5Controller extends Controller
                     'email' => $email,
                     'user_id' => $user->id,
                     'account_id' => $account->id,
-                    'to_account_id' => null,
+                    'withdraw_to' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
                     'admin_remark' => $description,
@@ -457,7 +457,7 @@ class MT5Controller extends Controller
     {
 
         $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
-       
+
         if($account){
             $code = $account->code;
         }else{

@@ -304,6 +304,7 @@ class LoginController extends Controller
         ])->json();
 
         LoginHistory::create([
+            'user_id' => $user->id,
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
             'country' => $geoData['country_name'] ?? 'Unknown',

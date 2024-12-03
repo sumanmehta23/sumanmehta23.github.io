@@ -42,6 +42,7 @@ return new class extends Migration
             $table->integer('zipcode')->nullable();
             $table->string('city', 100)->nullable();
             $table->string('state', 100)->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
     }

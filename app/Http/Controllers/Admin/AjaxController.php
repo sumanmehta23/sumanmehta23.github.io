@@ -10,6 +10,7 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\UserLog;
 use App\Models\TradeDeposit;
+use App\Models\WalletWithdraw;
 use Illuminate\Http\Request;
 use App\Models\TradeWithdrawals;
 
@@ -400,8 +401,8 @@ class AjaxController extends Controller
         $data = [];
 
         foreach ($withdrawals as $row) {
-            if($row->to_account_id){
-                $acc = Account::where('id',$row->to_account_id)->first();
+            if($row->withdraw_to){
+                $acc = Account::where('id',$row->withdraw_to)->first();
             }
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
@@ -410,7 +411,7 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'to_account_id' => $row->to_account_id ? $acc->code : $row->withdraw_type,
+                'withdraw_to' => $row->withdraw_to ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -443,7 +444,7 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('account_id', $_GET['id']);
+            $query->where('deposit_type', 'Internal Transfer');;
         }
 
         // Fetch data
@@ -500,23 +501,42 @@ class AjaxController extends Controller
     public function getPendingWalletWithdrawal()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // } else {
+        //     $rmCondition .= " where (1) and ";
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = WalletWithdraw::with(['user']);
+
+        // Add conditions based on session and GET parameters
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
+            else {
+                $query->where('Status', 0);
+            }
+
+        // Fetch data
+        $results = $query->orderByDesc('id')->get();
+
         $data = [];
+
         foreach ($results as $row) {
+            // dd($row);
             $data[] = [
                 'id' => 'WWID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
+                'fullname' => $row->user->fullname,
                 'amount' => '$' . $row->withdraw_amount,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
@@ -577,7 +597,7 @@ class AjaxController extends Controller
                 'account_no' => $row->code,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'to_account_id' => $row->to_account_id,
+                'withdraw_to' => $row->withdraw_to,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -919,13 +939,15 @@ class AjaxController extends Controller
     }
     public function getLatestTransfer($id)
     {
-        header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
-        $query = DB::select($sql);
+        // header('Content-Type: application/json');
+        // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer'])
+                                ->where('user_id',$id)
+                                ->get();
         $results = $query;
         $data = [];
-        // var_dump($results);
-        // die;
+        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->deposted_date,
@@ -1108,7 +1130,7 @@ and ib1.status = 0
             'type' => $data['field'],
             'value' => $data['value']
         ]);
-        
+
     }
     public function getIbList($id)
     {

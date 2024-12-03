@@ -11,5 +11,10 @@ class LoginHistory extends Model
     use HasFactory, HasUuids;
     protected $table="login_history";
     public $timestamps=false;
-    protected $fillable=['email','ip','country','action','status'];
+    protected $guarded=[];
+   
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

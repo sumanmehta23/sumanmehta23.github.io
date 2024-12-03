@@ -13,7 +13,12 @@ class CheckUserPermissions
 {
     public function handle(Request $request, Closure $next)
     {
+        
+       if(!Auth::check()){
+            return redirect()->route('login');
+        }
         $userRole = session('userData')['role_id'];
+
         $role= Role::find($userRole);
         if ($role->name == "Super Admin") {
             return $next($request);

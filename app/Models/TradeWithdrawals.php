@@ -19,7 +19,7 @@ class TradeWithdrawals extends Model
     }
     public function withdrawTo()
     {
-        return $this->belongsTo(Account::class, 'to_account_id', 'id');
+        return $this->belongsTo(Account::class, 'withdraw_to', 'id');
     }
     public function user()
     {

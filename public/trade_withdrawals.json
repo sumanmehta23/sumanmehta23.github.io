@@ -3,7 +3,7 @@
         "id": "9d98fc63-833a-4cee-b014-ab4ccc90b341",
         "user_id": "9d8e3512-3fd8-4c51-9804-a6c58a305a3c",
         "account_id": "9d8e368d-c455-4b66-b56e-a420734e8e24",
-        "to_account_id": null,
+        "withdraw_to": null,
         "email": null,
         "withdrawal_amount": "20",
         "withdraw_type": "Wallet Withdrawal",
