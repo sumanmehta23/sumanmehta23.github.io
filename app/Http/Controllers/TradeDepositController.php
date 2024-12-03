@@ -140,7 +140,7 @@ class TradeDepositController extends Controller
                     'code' => $tradeId,
                     'deposit_amount' => $depositamount,
                     'deposit_type' => $deposit_type,
-                    'deposit_from' => ($deposit_type == 'CRM') ? $deposit_type : null,
+                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
                     'deposit_proof' => $depositProofPath,
                     'status' => 1,
                 ]);
