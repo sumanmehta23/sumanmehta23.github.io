@@ -16,13 +16,13 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignIdFor(\App\Models\Account::class, 'to_account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreignIdFor(\App\Models\Account::class, 'to_account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             // $table->uuid('user_id');
             $table->string('email', 50)->nullable();
             // $table->uuid('account_id')->nullable();
             $table->string('withdrawal_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
-            // $table->string('to_account_id', 100)->nullable();
+            $table->string('withdraw_to', 100)->nullable();
             $table->string('wallet_qr', 250)->nullable();
             $table->timestamp('withdraw_date')->nullable()->useCurrent();
             $table->integer('Status')->default(0);

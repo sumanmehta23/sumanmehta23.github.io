@@ -69,7 +69,7 @@ class InternalTransfer extends Controller
                     'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
-                    'to_account_id' => $toAccount->id,
+                    'withdraw_to' => $toAccount->code,
                     'withdraw_date' => now(),
                     'Status' => 1
                 ]);
