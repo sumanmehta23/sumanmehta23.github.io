@@ -50,7 +50,6 @@ class Ib extends Controller
             $user = auth()->user();
             try {
                 Ib1::create([
-                    'uid' => $uid,
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'name' => $user->fullname,

@@ -34,7 +34,6 @@
 
         table.ajaxDataTable.table.table-bordered.stripe.row-border.order-column.text-nowrap.w-100.dataTable.no-footer.DTFC_Cloned {
             margin-top: 0 !important;
-            margin-bottom: 7px !important;
         }
     </style>
 @endsection
@@ -137,7 +136,7 @@
                                         <tr>
                                             <th>Group</th>
                                             <th>Plan</th>
-                                            <?php for ($i = 1; $i <= 1; $i++) { ?>
+                                            <?php for ($i = 1; $i <= 2; $i++) { ?>
                                             <?php for ($ii = 1; $ii <= $i; $ii++) { ?>
                                             <th>L<?= $i ?>|D<?= $ii ?></th>
                                             <?php } ?>
@@ -148,14 +147,14 @@
                                     <tbody>
                                         @foreach ($plans as $plan)
                                             <tr>
-                                                <td>{{ $plan->ac_group }}</td>
-                                                <td>{{ $plan->ib_cat_name }}</td>
-                                                @for ($i = 1; $i <= 1; $i++)
+                                                <td>{{ $plan->accountType->ac_group }}</td>
+                                                <td>{{ $plan->plan->ib_cat_name }}</td>
+                                                @for ($i = 1; $i <= 2; $i++)
                                                     @php
                                                         // Fetch the details for the current level
                                                         $data = DB::table('ib_plan_details')
                                                             ->where('ib_plan_id', $plan->ib_plan_id)
-                                                            ->where('acc_type', $plan->acc_type)
+                                                            ->where('account_type_id', $plan->account_type_id)
                                                             ->where('level_id', $i)
                                                             ->whereNull('deleted_at')
                                                             ->first();
@@ -171,7 +170,7 @@
                                                     <button class="btn btn-primary actions"
                                                         data-href="{{ url('/admin/ibCommissionEdit', [
                                                             'planId' => ($plan->ib_plan_id),
-                                                            'accType' => ($plan->acc_type)]) }}">
+                                                            'accType' => ($plan->account_type_id)]) }}">
                                                         <i class="ti ti-edit"></i>
                                                     </button>
                                                 </td>

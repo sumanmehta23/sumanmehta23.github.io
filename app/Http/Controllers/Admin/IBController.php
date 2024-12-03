@@ -115,7 +115,7 @@ class IBController extends Controller
     {
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.ib_plan_id')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
+            ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_plan_id')
             ->where('ib_plan_details.status', 1)
             ->groupBy('ib_plan_details.ib_plan_id')
             ->get(); // Use get() to retrieve results
@@ -125,11 +125,10 @@ class IBController extends Controller
     {
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.ib_plan_id')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
+            ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_plan_id')
             ->where('ib_plan_details.status', 1)
             ->groupBy('ib_plan_details.ib_plan_id')
             ->get(); // Use get() to retrieve results
-        // dd($accGroups);
         return view("admin.ib.iblist_active", ["acc_groups" => $accGroups]);
     }
 
@@ -147,19 +146,20 @@ class IBController extends Controller
         $plans = IbPlanDetails::select(
                 'ib_plan_details.*',
             )
-            ->with(['accountType:ac_group','plan.ibCategory:id,ib_cat_name']);
+            ->with(['accountType','plan']);
 
         // Apply the filter if `activeType` is not null
         if ($activeType !== null) {
-            $plans->whereHas('accountType', function ($query) use ($activeType) {
+            $plans->whereHas('plan', function ($query) use ($activeType) {
                 $query->where('id', $activeType);
             });
         }
 
         // Group and execute the query for plans
         $plans = $plans
-            ->groupBy('account_type_id')
+            ->groupBy('created_at')
             ->get();
+           
         // Step 3: Query for all account types
         $groups =AccountType::get();
         // Combine all results into a single array if you want to return or process them together
@@ -232,42 +232,42 @@ class IBController extends Controller
     {
         // Retrieve selected IB plan details
         $selected = DB::table('ib_plan_details')
-            ->join('account_types', 'account_types.ac_index', '=', 'ib_plan_details.acc_type')
-            ->join('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
+            ->join('account_types', 'account_types.id', '=', 'ib_plan_details.account_type_id')
+            ->join('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_plan_id')
             ->whereNull('ib_plan_details.deleted_at')
             ->where(DB::raw('ib_plan_details.ib_plan_id'), $planId)
-            ->where(DB::raw('ib_plan_details.acc_type'), $accType)
+            ->where(DB::raw('ib_plan_details.account_type_id'), $accType)
             ->select('ib_plan_details.*', 'account_types.ac_group', 'ib_categories.ib_cat_name', DB::raw('count(*) as count'))
-            ->groupBy('ib_plan_details.ib_plan_id', 'ib_plan_details.acc_type')
+            ->groupBy('ib_plan_details.ib_plan_id', 'ib_plan_details.account_type_id')
             ->first();
 
         // dd($selected,$request->all());
         // If the form is submitted (for example, via POST request)
         if ($request->isMethod('post') && $request->has('action')) {
             $ibPlanId = $request->input('ib_plan_id');
-            $accType = $request->input('acc_type');
+            $accType = $request->input('account_type_id');
             $level = $request->input('level');
             $email = $request->session()->get('alogin');
 
             // Update existing plan details (soft delete by setting `deleted_at`)
-            DB::table('ib_plan_details')
-                ->where('ib_plan_id', $ibPlanId)
-                ->where('acc_type', $accType)
+            IbPlanDetails::where('ib_plan_id', $ibPlanId)
+                ->where('account_type_id', $accType)
                 ->update(['deleted_at' => now()]);
 
             // Insert new plan details
             foreach ($level as $key => $divs) {
-                $data = [];
+                $data = [
+                    'ib_plan_id' => $ibPlanId,
+                    'account_type_id' => $accType,
+                    'level_id' => $key,
+                    'updated_by' => $email,
+                ];
+
                 foreach ($divs as $d => $val) {
                     $data[$d] = $val;
                 }
-                $data['ib_plan_id'] = $ibPlanId;
-                $data['acc_type'] = $accType;
-                $data['level_id'] = $key;
-                $data['updated_by'] = $email;
-
-                // Insert new record into ib_plan_details
-                DB::table('ib_plan_details')->insert($data);
+          
+               IbPlanDetails::create($data);
             }
 
             // Return a success message using SweetAlert or any preferred method
