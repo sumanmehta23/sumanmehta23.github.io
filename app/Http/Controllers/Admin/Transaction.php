@@ -78,8 +78,9 @@ class Transaction extends Controller
     }
     public function wallet_withdrawal_details(Request $request)
     {
+        // dd($request->all());
         if (request()->has('id') && !empty(request()->id)) {
-            DB::enableQueryLog();
+            // DB::enableQueryLog();
             // $details = DB::table('wallet_withdraw as wd')
             //     ->leftJoin('clientbankdetails as cbd', 'wd.client_bank', '=', 'cbd.id')
             //     ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
@@ -108,6 +109,8 @@ class Transaction extends Controller
             //     ->first();
 
             // dd($details);
+
+            $id = request()->id;
             $details = WalletWithdraw::with([
                 'clientWallet',
                 'user',
@@ -115,13 +118,12 @@ class Transaction extends Controller
                 // 'relationshipManager.emplist',
                 'user.ib1',
             ])
-
+            ->where('id',$id)
             ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
             ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
             ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
             ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
             ->first();
-
 
             if($details->client_wallet_id){
                 $client_wallet = ClientWallet::where('id', $details->client_wallet_id)

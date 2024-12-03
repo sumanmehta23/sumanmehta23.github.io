@@ -11,6 +11,7 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\TradeWithdrawals;
 use App\Models\TradeDeposit;
+use App\Models\WalletWithdraw;
 
 class AjaxController extends Controller
 {
@@ -442,7 +443,7 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('account_id', $_GET['id']);
+            $query->where('deposit_type', 'Internal Transfer');;
         }
 
         // Fetch data
@@ -499,23 +500,42 @@ class AjaxController extends Controller
     public function getPendingWalletWithdrawal()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // } else {
+        //     $rmCondition .= " where (1) and ";
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = WalletWithdraw::with(['user']);
+
+        // Add conditions based on session and GET parameters
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
+            else {
+                $query->where('Status', 0);
+            }
+
+        // Fetch data
+        $results = $query->orderByDesc('id')->get();
+
         $data = [];
+
         foreach ($results as $row) {
+            // dd($row);
             $data[] = [
                 'id' => 'WWID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
+                'fullname' => $row->user->fullname,
                 'amount' => '$' . $row->withdraw_amount,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
