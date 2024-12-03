@@ -66,7 +66,7 @@ class TradeWithdrawal extends Controller
 
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
-        $to_account_id = $request->input('to_account_id', '');
+        $to_account_id = $request->input('withdraw_to', '');
 
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1'
@@ -103,7 +103,7 @@ class TradeWithdrawal extends Controller
                         'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
                         'withdraw_type' => $withdraw_type,
-                        // 'to_account_id' => $to_account_id,
+                        // 'withdraw_to' => $to_account_id,
                         'wallet_qr' => '',
                         'Status' => 1
                     ]);

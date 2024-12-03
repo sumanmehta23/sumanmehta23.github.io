@@ -103,7 +103,7 @@
           { data: 'account_no', name: 'account_no' },
           { data: 'amount', name: 'amount' },
           { data: 'withdraw_type', name: 'withdraw_type' },
-          { data: 'to_account_id', name: 'withdraw_from' },
+          { data: 'withdraw_to', name: 'withdraw_from' },
           {
             data: 'withdraw_date', name: 'withdraw_date', render: function (data, type, row) {
               var dateTime = row.withdraw_date.split(' ');
