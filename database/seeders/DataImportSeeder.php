@@ -30,24 +30,24 @@ class DataImportSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 3000);
-        // $this->users();
-        // $this->userLogs();
-        // $this->liveaccounts();
-        // $this->demoaccounts();
-        // $this->bonusTransaction();
-        // $this->clientWallets();
-        // $this->demoDeposit();
-        // // $this->ib1(); 
-        // // $this->ib1_commission();
-        // // $this->ib1_withdraw();
-        // // $this->ib_categories();
-        // // $this->ib_plans();
-        // // $this->ib_plan_details();
-        // // $this->ib_users();
-        // $this->kyc_logs();
-        // $this->loginHistory();
-        // $this->totalBalance();
-        // $this->tradeDeposit();
+        $this->users();
+        $this->userLogs();
+        $this->liveaccounts();
+        $this->demoaccounts();
+        $this->bonusTransaction();
+        $this->clientWallets();
+        $this->demoDeposit();
+        // $this->ib1(); 
+        // $this->ib1_commission();
+        // $this->ib1_withdraw();
+        // $this->ib_categories();
+        // $this->ib_plans();
+        // $this->ib_plan_details();
+        // $this->ib_users();
+        $this->kyc_logs();
+        $this->loginHistory();
+        $this->totalBalance();
+        $this->tradeDeposit();
         $this->tradeWithdrawal();
     }
     private function users()
@@ -305,7 +305,8 @@ class DataImportSeeder extends Seeder
 
             }
             
-            
+            $withdrawal['admin_remark'] = $withdrawal['AdminRemark'];
+            unset($withdrawal['AdminRemark']);
             $withdrawal['code'] = $withdrawal['trade_id'];
             unset($withdrawal['trade_id']);
             TradeWithdrawals::updateOrCreate([

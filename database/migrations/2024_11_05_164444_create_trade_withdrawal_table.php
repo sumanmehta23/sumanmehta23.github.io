@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('withdrawal_amount', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
             $table->string('withdraw_to', 100)->nullable();
+            $table->string('code', 50)->nullable();
             $table->string('wallet_qr', 250)->nullable();
             $table->timestamp('withdraw_date')->nullable()->useCurrent();
             $table->integer('Status')->default(0);
