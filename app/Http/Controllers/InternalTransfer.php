@@ -87,7 +87,7 @@ class InternalTransfer extends Controller
                         'code' => $toAccount->code,
                         'deposit_amount' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
-                        'deposit_from' => $fromAccount,
+                        'deposit_from' => $fromAccount->id,
                         'status' => 1,
                     ]);
                     TotalBalance::create([

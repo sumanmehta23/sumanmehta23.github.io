@@ -43,9 +43,9 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function bonusTrans()
+    public function BonusTransaction()
     {
-        return $this->hasMany(BonusTrans::class);
+        return $this->hasMany(BonusTransaction::class);
     }
    // Has many live accounts
    public function liveAccounts()

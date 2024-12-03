@@ -32,8 +32,8 @@ class LiveAccount extends Model
         return $this->belongsTo(AccountType::class, 'account_type', 'ac_index');
     }
 
-    public function bonusTrans()
+    public function BonusTransaction()
     {
-        return $this->hasMany(BonusTrans::class, 'code', 'code');
+        return $this->hasMany(BonusTransaction::class, 'code', 'code');
     }
 }

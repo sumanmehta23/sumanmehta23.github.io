@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use DB;
 use Exception;
-use Illuminate\Http\Request;
 use App\Models\Ib1;
 use App\Models\User;
-use App\Models\TradeWithdrawals;
+use App\Models\UserLog;
 use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
+use App\Models\TradeWithdrawals;
+use App\Http\Controllers\Controller;
 
 class AjaxController extends Controller
 {
@@ -1051,16 +1052,19 @@ and ib1.status = 0
                 if ($result->status != $user_status) {
                     $data['field'] = 'status';
                     $data['value'] = $user_status;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->email_confirmed != $email_confirmed) {
                     $data['field'] = 'email_confirmed';
                     $data['value'] = $email_confirmed;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->kyc_verify != $kyc_verify) {
                     $data['field'] = 'kyc_verify';
                     $data['value'] = $kyc_verify;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 echo json_encode(['success' => true]);
@@ -1074,13 +1078,14 @@ and ib1.status = 0
 
     public function add_to_user_log($data)
     {
-
-        DB::table('aspnetusers_log')->insert([
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => session('alogin'),
             'type' => $data['field'],
             'value' => $data['value']
         ]);
+        
     }
     public function getIbList($id)
     {
