@@ -1180,7 +1180,7 @@ and ib1.status = 0
             $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
-                    'acc_type' => $ibGroup
+                    'account_type_id' => $ibGroup
                 ]);
             if ($updated) {
                 echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);

@@ -39,7 +39,7 @@
                     <select class="form-control" disabled required="required">
                       <option value="" default selected disabled>--Select Plan--</option>
                       <?php foreach ($ibCategories as $res) { ?>
-                        <option value="<?= $res->ib_cat_id ?>" <?= (($res->ib_cat_id) == $planId) ? "selected" : "" ?>><?= $res->ib_cat_name ?></option>
+                        <option value="<?= $res->id ?>" <?= (($res->id) == $planId) ? "selected" : "" ?>><?= $res->ib_cat_name ?></option>
                       <?php } ?>
                     </select>
                   </div>
@@ -67,14 +67,18 @@
                 </div>
               </div>
               <div class="levels">
-                <?php for ($i = 1; $i <= 1; $i++) {
+                <?php for ($i = 1; $i <= 15; $i++) {
+                  $data = "SELECT * FROM ib_plan_details 
+                  WHERE ib_plan_id = '$selected->ib_plan_id' 
+                  AND account_type_id = '$selected->account_type_id' 
+                  AND level_id = $i 
+                  AND deleted_at IS NULL";
 
-                  $data = "SELECT * FROM ib_plan_details where ib_plan_id=$selected->ib_plan_id and acc_type = $selected->acc_type and level_id = $i and deleted_at is NULL";
                   // echo $data . "<br>";
                   $data =DB::select($data);
-                  $data = (array)$data[0];
                   // dd($data);
                   if ($data) {
+                  $data = (array)$data[0];
                 ?>
                     <section data-level="<?= $i ?>" class="level-cards">
                       <div class="card">
@@ -136,7 +140,7 @@
             </div>
           </div>
           <input type="hidden" name="ib_plan_id" value="<?= $selected->ib_plan_id ?>">
-          <input type="hidden" name="acc_type" value="<?= $selected->acc_type ?>">
+          <input type="hidden" name="account_type_id" value="<?= $selected->account_type_id ?>">
 
         </form>
       </div>
@@ -165,8 +169,10 @@
     e.preventDefault();
     var level = $(this).data("level");
     var newLevel = level + 1;
+   
     var target = $("section[data-level='" + newLevel + "']");
     var current = $("section[data-level='" + level + "']");
+    console.log('asddf', target);
     if (target.length) {
       current.find(".actions").addClass("d-none");
       target.find("input").removeAttr("disabled");
