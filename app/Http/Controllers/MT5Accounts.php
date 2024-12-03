@@ -130,7 +130,7 @@ class MT5Accounts extends Controller
             if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
             }
-            $getUser =Account::with('accountType', 'bonusTrans')
+            $getUser =Account::with('accountType', 'BonusTransaction')
             ->where('id', $account->id)
             ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;

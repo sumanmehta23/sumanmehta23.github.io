@@ -12,7 +12,7 @@ class Ib1 extends Model
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'ib1';
 
-    protected $fillable=['uid','email','user_id','name','password','number','username','emailToken','status'];
+    protected $guarded=[];
     /**
      * The attributes that should be cast.
      *

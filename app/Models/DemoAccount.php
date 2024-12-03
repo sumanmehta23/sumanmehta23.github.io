@@ -28,8 +28,8 @@ class DemoAccount extends Model
     }
 
 
-    public function bonusTrans()
+    public function BonusTransaction()
     {
-        return $this->hasMany(BonusTrans::class, 'code',  'code');
+        return $this->hasMany(BonusTransaction::class, 'code',  'code');
     }
 }

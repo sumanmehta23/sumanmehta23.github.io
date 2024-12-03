@@ -8,7 +8,7 @@ use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Models\BonusTrans;
+use App\Models\BonusTransaction;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -249,7 +249,7 @@ class MT5Controller extends Controller
             if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
             } else {
-                $deposit_details = BonusTrans::create([
+                $deposit_details = BonusTransaction::create([
                     'email' => $email,
                     'user_id' => $user->id,
                     'account_id' => $account->id,
@@ -456,8 +456,8 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::where('id',$id)->with(['accountType','user','bonusTrans'])->first();
-
+        $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
+       
         if($account){
             $code = $account->code;
         }else{
@@ -501,7 +501,7 @@ class MT5Controller extends Controller
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
-        $bonus_trans = BonusTrans::where('status', 1)
+        $bonus_trans = BonusTransaction::where('status', 1)
             ->where("account_id"  ,$account->id)
             ->get();
         $account_types = AccountType::where('status', 1)->get();

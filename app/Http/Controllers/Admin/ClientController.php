@@ -26,6 +26,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
+use App\Models\UserLog;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
@@ -178,6 +179,7 @@ class ClientController extends Controller
                             ->whereRaw('email = ?', [$email])
                             ->update($updateFields);
                         $this->addToUserLog([
+                            'user_id'=> $currentValues->id,
                             'email' => $email,
                             'type' => 'ib',
                             'value' => json_encode($logdata)
@@ -244,6 +246,7 @@ class ClientController extends Controller
                     if ($lastInsertId) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
+                            'user_id' => $lastInsertId,
                             'email' => $email,
                             'type' => 'client_add',
                             'value' => json_encode($request->except(['addUser', 'password', 'confirm_password']))
@@ -319,6 +322,7 @@ class ClientController extends Controller
                 // If update is successful
                 if ($affectedRows > 0) {
                     $updateData = [
+                        'user_id' => $code,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))
@@ -369,12 +373,15 @@ class ClientController extends Controller
 
     private function addToUserLog($data)
     {
-        DB::table('aspnetusers_log')->insert([
+        
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => Session::get('alogin'),
             'type' => $data['type'],
             'value' => $data['value']
         ]);
+       
     }
     function add_to_user_log($data)
     {
@@ -434,7 +441,6 @@ class ClientController extends Controller
                 ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
                 ->where('status', 1)
                 ->sum('deposit_amount');
-
             // $total_ww = DB::table('wallet_withdraw')
             //     ->where('email', $eid)
             //     ->where('withdraw_type','!=', 'Internal Transfer')

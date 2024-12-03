@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('deposit_amount', 100)->nullable();
             $table->string('deposit_currency', 50)->nullable()->default('USD');
             $table->string('deposit_type', 100)->nullable();
-            $table->string('deposit_from', 100)->nullable();
+            // $table->string('deposit_from', 100)->nullable();
+            $table->foreignIdFor(\App\Models\Account::class,'deposit_from')->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamp('deposted_date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->integer('status')->default(0);
             $table->string('admin_remark', 100)->nullable();

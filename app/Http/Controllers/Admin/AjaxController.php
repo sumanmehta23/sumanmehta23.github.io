@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use DB;
 use Exception;
-use Illuminate\Http\Request;
 use App\Models\Ib1;
 use App\Models\User;
-use App\Models\TradeWithdrawals;
+use App\Models\UserLog;
 use App\Models\TradeDeposit;
 use App\Models\WalletWithdraw;
+use Illuminate\Http\Request;
+use App\Models\TradeWithdrawals;
 
 class AjaxController extends Controller
 {
@@ -894,7 +895,7 @@ class AjaxController extends Controller
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where email='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
+        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -918,14 +919,13 @@ class AjaxController extends Controller
         // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         // $query = DB::select($sql);
         $query = TradeWithdrawals::with('account')
-                            ->where('email',$id)
+                            ->where('user_id',$id)
                             ->where('withdraw_type',['Internal Transfer'])
                             ->get();
 
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-            dd($row);
             $data[] = [
                 'created_on' => $row->withdraw_date,
                 'from_to' => $row->code,
@@ -940,7 +940,7 @@ class AjaxController extends Controller
     public function getLatestTransfer($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
+        $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -952,7 +952,7 @@ class AjaxController extends Controller
                 'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
@@ -1095,16 +1095,19 @@ and ib1.status = 0
                 if ($result->status != $user_status) {
                     $data['field'] = 'status';
                     $data['value'] = $user_status;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->email_confirmed != $email_confirmed) {
                     $data['field'] = 'email_confirmed';
                     $data['value'] = $email_confirmed;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->kyc_verify != $kyc_verify) {
                     $data['field'] = 'kyc_verify';
                     $data['value'] = $kyc_verify;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 echo json_encode(['success' => true]);
@@ -1118,13 +1121,14 @@ and ib1.status = 0
 
     public function add_to_user_log($data)
     {
-
-        DB::table('aspnetusers_log')->insert([
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => session('alogin'),
             'type' => $data['field'],
             'value' => $data['value']
         ]);
+        
     }
     public function getIbList($id)
     {
@@ -1204,7 +1208,7 @@ and ib1.status = 0
             $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
-                    'acc_type' => $ibGroup
+                    'account_type_id' => $ibGroup
                 ]);
             if ($updated) {
                 echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);

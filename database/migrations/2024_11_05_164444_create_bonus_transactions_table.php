@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bonus_trans', function (Blueprint $table) {
+        Schema::create('bonus_transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
@@ -26,6 +26,7 @@ return new class extends Migration
             $table->timestamp('bonus_date')->nullable()->useCurrent();
             $table->integer('status')->default(1);
             $table->string('admin_remark', 100)->nullable();
+            $table->string('created_by', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->timestamps();
             $table->softDeletes();
@@ -37,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bonus_trans');
+        Schema::dropIfExists('bonus_transactions');
     }
 };

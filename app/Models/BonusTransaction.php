@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $Js_Admin_Remark_Date
  * @property string $created_by
  */
-class BonusTrans extends Model
+class BonusTransaction extends Model
 {
     /**
      * @var array
