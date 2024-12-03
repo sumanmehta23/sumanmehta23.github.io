@@ -15,6 +15,4 @@ class IbCategory extends Model
     public function plans(){
         return $this->hasMany(IbPlan::class);
     }
-
-
 }

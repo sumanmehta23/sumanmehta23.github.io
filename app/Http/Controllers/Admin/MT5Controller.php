@@ -294,6 +294,77 @@ class MT5Controller extends Controller
             }
         }
     }
+    public function creditBonusToAccount(Request $request)
+    {
+
+        $eid = $request->input('email');
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->first();
+
+        if ($request->has('bonus_to_account_credit')) {
+
+            $amount = $request->input('amount');
+            $description = $request->input('description');
+            $type = $request->input('type');
+            $deposit_type = $type === 'in' ? 'Bonus In' : 'Bonus Out';
+            $amount = $type === 'in' ? $amount : -1 * $amount;
+            $email = $eid;
+            $deposit_currency = 'USD';
+            $login = $code;
+            // $comment = $description;
+            $comment = $type === 'in' ? 'Bonus Credit In' : 'Bonus Credit Out';
+            $ticket = null;
+            // dd($comment);
+            if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+            } else {
+                $deposit_details = BonusTrans::create([
+                    'email' => $email,
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'code' => $code,
+                    'bonus_amount' => $amount,
+                    'bonus_type' => $deposit_type,
+                    'status' => 1,
+                    'admin_remark' => $description,
+                    'bonus_currency' => $deposit_currency,
+                    // 'created_by' => session('alogin')
+                ]);
+
+                $toEmail = $email;
+                $from = settings()['email_from_address'];
+                $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+                $emailSubject = settings()['admin_title'] . ' - Bonus Transaction';
+                if ($type == "in") {
+                    $content = '<div>We are pleased to inform your that Bonus have been successfully deposited into your account.</div>';
+                } else {
+                    $content = '<div>This email to inform you, that Bonus credited out from your account.</div>';
+                }
+
+                $content .= '<div><b>Transaction Details</b></div>
+          <div><b>Amount: </b>$' . $deposit_details->bonus_amount . '</div>
+          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
+          <div><b>Transaction ID: </b>' . $transid . '</div>
+          <div><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</div>';
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'site_link' => settings()['copyright_site_name_text'],
+                    'email' => settings()['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Bonus",
+                    "subtitle_right" => "Credit Out",
+                    "btn_text" => "Go To Dashboard",
+                ];
+                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+
+
+                return redirect()->back()->with('success', 'Bonus ' . ($type === 'in' ? 'Credited' : 'Debited') . ' Successfully');
+            }
+        }
+    }
 
     public function withdrawFromAccount(Request $request)
     {
@@ -392,14 +463,14 @@ class MT5Controller extends Controller
         }else{
             $code ='';
         }
-        
+
         if($account->demo == false){
             AccountHelper::updateLiveAndDemoAccounts($account->code);
             $type = "live";
         }else{
             $type = "demo";
         }
-         
+
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
@@ -437,7 +508,7 @@ class MT5Controller extends Controller
 
         // $account = AccountHelper::getAccount( $account->code);
         $accountHelper = AccountHelper::getAccount( $account->code);
-        
+
         return view("admin.mt5.view", [
             "id" => $code,
             "getUser" =>  $account,

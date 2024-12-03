@@ -11,9 +11,11 @@ class IbPlanDetails extends Model
 {
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'ib_plan_details';
+    protected $guarded = [];
+
     public function plan()
     {
-        return $this->belongsTo(IbPlan::class);
+        return $this->belongsTo(IbPlan::class, 'ib_plan_id');
     }
     public function accountType()
     {

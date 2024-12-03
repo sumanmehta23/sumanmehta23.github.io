@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use DB;
 use Exception;
 use App\Models\IbCategory;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class IBController extends Controller
 {
@@ -141,12 +141,13 @@ class IBController extends Controller
         // Step 1: Query for categories with counts of distinct account types
         $results = IbCategory::with('plans')
             ->get();
+          
+
         // Step 2: Query for ib_plan_details with account types and category names
         $plans = IbPlanDetails::select(
                 'ib_plan_details.*',
             )
-            ->with(['accountType:ac_group','plan.ibCategory:id,ib_cat_name'])
-;
+            ->with(['accountType:ac_group','plan.ibCategory:id,ib_cat_name']);
 
         // Apply the filter if `activeType` is not null
         if ($activeType !== null) {
@@ -159,7 +160,6 @@ class IBController extends Controller
         $plans = $plans
             ->groupBy('account_type_id')
             ->get();
-
         // Step 3: Query for all account types
         $groups =AccountType::get();
         // Combine all results into a single array if you want to return or process them together
@@ -186,7 +186,7 @@ class IBController extends Controller
     }
 
     public function updateIbPlan(Request $request)
-    {
+    {   
         $ib_plan_id = $request->input('ib_plan_id');
         $acc_type = $request->input('acc_type');
         $status = $request->input('status');
@@ -196,16 +196,17 @@ class IBController extends Controller
         try {
 
             DB::beginTransaction();
+            $IbPlanDetails = IbPlanDetails::where('ib_plan_id', $ib_plan_id)
+            ->where('account_type_id', $acc_type)->first();
 
-            DB::table('ib_plan_details')
-                ->where('ib_plan_id', $ib_plan_id)
-                ->where('acc_type', $acc_type)
-                ->update(['deleted_at' => now()]);
+            if($IbPlanDetails){
+                $IbPlanDetails->update(['deleted_at' => now()]);
+            }                
 
             foreach ($levels as $key => $divs) {
                 $data = [
                     'ib_plan_id' => $ib_plan_id,
-                    'acc_type' => $acc_type,
+                    'account_type_id' => $acc_type,
                     'level_id' => $key,
                     'updated_by' => $email,
                 ];
@@ -213,15 +214,14 @@ class IBController extends Controller
                 foreach ($divs as $d => $val) {
                     $data[$d] = $val;
                 }
-                DB::table('ib_plan_details')->insert($data);
+          
+               IbPlanDetails::create($data);
             }
-
             DB::commit();
 
             alert()->success("IB Plan Successfully Updated");
             return redirect("/admin/ib_settings");
         } catch (Exception $e) {
-
             DB::rollBack();
             alert()->error("Failed to update IB Plan", "Please try again or Contact Support.");
             return redirect("/admin/ib_settings");

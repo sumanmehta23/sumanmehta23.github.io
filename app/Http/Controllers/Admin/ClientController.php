@@ -438,7 +438,7 @@ class ClientController extends Controller
             //     ->selectRaw('SUM(deposit_amount) as amount')
             //     ->first();
             $total_wd = WalletDeposit::where('user_id', $eid)
-                ->where('deposit_type', '!=', 'Internal Transfer')
+                ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
                 ->where('status', 1)
                 ->sum('deposit_amount');
             // $total_ww = DB::table('wallet_withdraw')
@@ -478,13 +478,13 @@ class ClientController extends Controller
                     SUM(trading_withdrawal) as trading_withdrawal,
                     SUM(withdraw_amount) as withdraw_amount')
                 ->first();
-                
+
             $live_accounts = Account::with('accountType')
                 ->where('user_id', $eid)
                 ->where('demo', false)
                 ->orderBy('id', 'desc')
                 ->get();
-      
+
             $bank_details = DB::table('clientbankdetails')
                 ->where('userId', $eid)
                 ->first();

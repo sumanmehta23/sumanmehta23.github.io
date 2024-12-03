@@ -95,7 +95,7 @@
                                         @foreach ($acc_types as $gp)
                                         <option value="{{ $gp->ac_index }}">{{ $gp->ac_name }}</option>
                                         @endforeach
-                                    
+
                                 </select>
                             </div>
                         </div>
@@ -384,7 +384,7 @@
                                                                             <span
                                                                                 class="mt-2 h4 fw-normal">${{ $acc->balance }}</span>
                                                                         </div>
-                                                                    </div>                                                            
+                                                                    </div>
                                                                     <div class="d-flex justify-content-between">
                                                                         <div>
                                                                             <div class="fw-bold fs-12">

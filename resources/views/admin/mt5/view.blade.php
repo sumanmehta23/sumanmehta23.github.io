@@ -53,21 +53,27 @@ if ($getUser) {
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
-                                                <div class="col-4">
+                                                <div class="col-6 mb-2">
                                                     <span class="badge btn btn-primary" data-bs-toggle="modal"
                                                         data-bs-target="#depositModal">Deposit
                                                         <i class="ti ti-database-import"></i>
                                                     </span>
                                                 </div>
-                                                <div class="col-4">
+                                                <div class="col-6 mb-2">
                                                     <span class="badge btn btn-info" data-bs-toggle="modal"
                                                         data-bs-target="#withdrawalModal">Withdraw
                                                         <i class="ti ti-square-rounded-arrow-down"></i>
                                                     </span>
                                                 </div>
-                                                <div class="col-4">
+                                                <div class="col-6 mb-2">
                                                     <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                        data-bs-target="#bonusModal">Bonus
+                                                        data-bs-target="#bonusModalCredit">Bonus Credit
+                                                        <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                        data-bs-target="#bonusModal">Bonus Deposit
                                                         <i class="ti ti-plus" style="font-weight: bold"></i>
                                                     </span>
                                                 </div>
@@ -503,7 +509,7 @@ if ($getUser) {
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
                                                     <th>Withdrawal Type</th>
-                                                    <th>Withdrawal From</th>
+                                                    <th>Withdraw To</th>
                                                     <th>Withdrawal Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>

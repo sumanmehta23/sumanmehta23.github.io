@@ -76,7 +76,7 @@ class TradeDepositController extends Controller
         $account_id = $user['account_id'];
         $user=auth()->user();
         $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
-        $deposit_type = $user['deposit_type'];
+        $deposit_type = $user['deposit_type']??$request['user']['deposit_type'];
         $deposit_from = NULL;
 
 
@@ -84,7 +84,7 @@ class TradeDepositController extends Controller
         $ticket = NULL;
 
         // Calculate wallet balance
-        
+
         $walletBalance = $user->wallet_balance ;
         // Check if there's enough balance
         if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {
@@ -114,7 +114,7 @@ class TradeDepositController extends Controller
             // Start a database transaction
             DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
                 $tradeId = $account->code;
-                
+
                 // Insert into wallet withdraw
                 WalletWithdraw::create([
                     'user_id' => $user->id,
@@ -140,7 +140,7 @@ class TradeDepositController extends Controller
                     'code' => $tradeId,
                     'deposit_amount' => $depositamount,
                     'deposit_type' => $deposit_type,
-                    'deposit_from' => ($deposit_type == 'CRM') ? $deposit_type : null,
+                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
                     'deposit_proof' => $depositProofPath,
                     'status' => 1,
                 ]);
