@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use DB;
 use Exception;
 use Illuminate\Http\Request;
@@ -398,6 +399,9 @@ class AjaxController extends Controller
         $data = [];
 
         foreach ($withdrawals as $row) {
+            if($row->to_account_id){
+                $acc = Account::where('id',$row->to_account_id)->first();
+            }
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
                 'account_no' => $row->account->code,
@@ -405,7 +409,7 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'to_account_id' => $row->to_account_id ? $row->to_account_id : $row->withdraw_type,
+                'to_account_id' => $row->to_account_id ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -447,7 +451,7 @@ class AjaxController extends Controller
 
         $data = [];
         foreach ($deposits as $row) {
-            dd($row);
+            // dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
