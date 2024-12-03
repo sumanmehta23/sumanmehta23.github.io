@@ -21,9 +21,9 @@ class Login extends Controller
     }
     public function showLoginForm()
     {
-        // if (Auth::check()) {
-        //     return redirect()->route('admin.dashboard');
-        // }
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
         return view('admin.login');
     }
     public function adminLogin(Request $request)
@@ -33,6 +33,11 @@ class Login extends Controller
             'password' => 'required',
         ]);
         $credentials = $request->only('username', 'password');
+        $remember=$request->remember;
+        if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password'],'status'=>1])) {
+            $request->session()->regenerate();
+            // return redirect()->intended('dashboard');
+        }
         // Attempt to log the user in
         $user = EmployeeList::where('email', $credentials['username'])
             ->first();
@@ -54,8 +59,16 @@ class Login extends Controller
             }
         }
             if ($user->status == '1') {
+                // $credentials = $request->only('email', 'password');
+// dd($credentials);
+                if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
+                    $request->session()->regenerate();
+                    // return redirect()->intended('dashboard');
+                }
+                
                 // Store user details in session
-                Auth::login($user);
+                // Auth::login($user);
+                // $request->session()->regenerate();
                 Session::put('alogin', $user->email);
                 Session::put('userRoleID', $user->role_id);
                 Session::put('userRole', $user->userRole);
@@ -81,8 +94,9 @@ class Login extends Controller
                     }
                 }
                 Session::put('current_permissions', $current_permissions);
+                
                 // Log user in
-                if ($user->userRole == 'Super admin' || $user->userRole == 'Relationship Manager') {
+                if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
                     $this->logLoginHistory($user->email);
                     return redirect('admin/dashboard');
                 }
@@ -113,13 +127,14 @@ class Login extends Controller
     {
         $country = '';
         $ip = request()->ip();
-        LoginHistory::create([
-            'email' => $email,
-            'ip' => $ip,
-            'country' => $country,
-            'action' => 'login',
-            'status' => 1
-        ]);
+        // LoginHistory::create([
+        //     'user_id' => Auth::user()->id,
+        //     'email' => $email,
+        //     'ip' => $ip,
+        //     'country' => $country,
+        //     'action' => 'login',
+        //     'status' => 1
+        // ]);
     }
     public function logout(Request $request)
     {

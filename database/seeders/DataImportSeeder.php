@@ -13,6 +13,8 @@ use App\Models\ClientWallet;
 use App\Models\LoginHistory;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\Models\WalletDeposit;
+use App\Models\WalletWithdraw;
 use Illuminate\Database\Seeder;
 use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
@@ -49,10 +51,12 @@ class DataImportSeeder extends Seeder
         $this->totalBalance();
         $this->tradeDeposit();
         $this->tradeWithdrawal();
+        $this->walletDeposit();
+        $this->walletWithdraw();
     }
     private function users()
     {
-        $usersdata = json_decode(File::get(storage_path('app/olddata/aspnetusers.json')), true);
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_aspnetusers.json')), true);
 
         foreach ($usersdata as $user) {
             $user['uid'] = $user['id'];
@@ -60,58 +64,10 @@ class DataImportSeeder extends Seeder
             $newuser = User::create($user);
         }
     }
-    private function liveaccounts()
-    {
-        $usersdata = json_decode(File::get(storage_path('app/olddata/liveaccounts.json')), true);
-
-        foreach ($usersdata as $account) {
-            //$user['uid'] = $account['id'];
-            unset($account['id']);
-            $account['demo'] = false;
-            $account['code'] = $account['trade_id'];
-            unset($account['trade_id']);
-            $account['account_type_id'] = AccountType::where('ac_index', $account['account_type'])->value('id');
-            if (!$account['account_type_id']) {
-                dd($account);
-            }
-            unset($account['account_type']);
-            $account['trade_platform'] = $account['tradePlatform'];
-            unset($account['tradePlatform']);
-            $account['lots_completed'] = $account['lotsCompleted'];
-            unset($account['lotsCompleted']);
-            $account['margin_free'] = $account['MarginFree'];
-            unset($account['MarginFree']);
-            $account['margin_level'] = $account['MarginLevel'];
-            unset($account['MarginLevel']);
-            $account['margin_level_type'] = $account['MarginLevelType'];
-            unset($account['MarginLevelType']);
-            $account['adjustment'] = $account['adj'];
-            unset($account['adj']);
-            $account['trader_password'] = $account['trader_pwd'];
-            unset($account['trader_pwd']);
-
-            $account['invester_password'] = $account['invester_pwd'];
-            unset($account['invester_pwd']);
-
-            $account['phone_password'] = $account['phone_pwd'];
-            unset($account['phone_pwd']);
-
-            $account['internal_deposit'] = $account['internalDeposit'];
-            unset($account['internalDeposit']);
-            $account['bonus_deposit'] = $account['bonusDeposit'];
-            unset($account['bonusDeposit']);
-            $account['w_bonus_deposit'] = $account['wBonusDeposit'];
-            unset($account['wBonusDeposit']);
-
-            $account['user_id'] = User::where('email', $account['email'])->value('id');
-
-            $newuser = Account::create($account);
-        }
-    }
     private function demoaccounts()
     {
         $replacementgroups = ['LQH MARKETS\NO-COMMISION-B-USD' => 'LM\B-Book\NC\DF-B', "LQH MARKETS\LM-STANDARD-A-USD" => "LM\A-Book\STD\DF-A"];
-        $usersdata = json_decode(File::get(storage_path('app/olddata/demoaccounts.json')), true);
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_liveaccount.json')), true);
         $missingaccountcodes = ['125717', 855017, 540606, 123831, 768456];
 
         foreach ($usersdata as $account) {
@@ -165,13 +121,65 @@ class DataImportSeeder extends Seeder
             ], $account);
         }
     }
+    private function liveaccounts()
+    {
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_liveaccount.json')), true);
+
+        foreach ($usersdata as $account) {
+            //$user['uid'] = $account['id'];
+            unset($account['id']);
+            $account['demo'] = false;
+            $account['code'] = $account['trade_id'];
+            unset($account['trade_id']);
+            $account['account_type_id'] = AccountType::where('ac_index', $account['account_type'])->value('id');
+            if (!$account['account_type_id']) {
+                dd($account);
+            }
+            unset($account['account_type']);
+            $account['trade_platform'] = $account['tradePlatform'];
+            unset($account['tradePlatform']);
+            $account['lots_completed'] = $account['lotsCompleted'];
+            unset($account['lotsCompleted']);
+            $account['margin_free'] = $account['MarginFree'];
+            unset($account['MarginFree']);
+            $account['margin_level'] = $account['MarginLevel'];
+            unset($account['MarginLevel']);
+            $account['margin_level_type'] = $account['MarginLevelType'];
+            unset($account['MarginLevelType']);
+            $account['adjustment'] = $account['adj'];
+            unset($account['adj']);
+            $account['trader_password'] = $account['trader_pwd'];
+            unset($account['trader_pwd']);
+
+            $account['invester_password'] = $account['invester_pwd'];
+            unset($account['invester_pwd']);
+
+            $account['phone_password'] = $account['phone_pwd'];
+            unset($account['phone_pwd']);
+
+            $account['internal_deposit'] = $account['internalDeposit'];
+            unset($account['internalDeposit']);
+            $account['bonus_deposit'] = $account['bonusDeposit'];
+            unset($account['bonusDeposit']);
+            $account['w_bonus_deposit'] = $account['wBonusDeposit'];
+            unset($account['wBonusDeposit']);
+
+            $account['user_id'] = User::where('email', $account['email'])->value('id');
+
+            $newuser = Account::create($account);
+        }
+    }
+    
     private function userLogs()
     {
-        $userlogsdata = json_decode(File::get(storage_path('app/olddata/user_logs.json')), true);
+        $userlogsdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_aspnetusers_log.json')), true);
 
         foreach ($userlogsdata as $userlog) {
             unset($userlog['id']);
             $user = User::where('email', $userlog['email'])->first();
+            if(!$user){
+                continue;
+            }   
             $userlog['user_id'] = $user->id;
             UserLog::create($userlog);
         }
@@ -179,7 +187,7 @@ class DataImportSeeder extends Seeder
     // BonusTransaction
     private function bonusTransaction()
     {
-        $bonusTransactiondata = json_decode(File::get(storage_path('app/olddata/bonus_transactions.json')), true);
+        $bonusTransactiondata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_bonus_trans.json')), true);
 
         foreach ($bonusTransactiondata as $bonusTransaction) {
             unset($bonusTransaction['id']);
@@ -194,7 +202,7 @@ class DataImportSeeder extends Seeder
     }
     private function clientWallets()
     {
-        $clientWalletsdata = json_decode(File::get(storage_path('app/olddata/client_wallets.json')), true);
+        $clientWalletsdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_client_wallets.json')), true);
 
         foreach ($clientWalletsdata as $clientWallet) {
             unset($clientWallet['id']);
@@ -217,7 +225,7 @@ class DataImportSeeder extends Seeder
     }
     private function demoDeposit()
     {
-        $demoDeposits = json_decode(File::get(storage_path('app/olddata/demo_deposit.json')), true);
+        $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
         foreach ($demoDeposits as $deposit) {
             $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
             $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
@@ -233,7 +241,7 @@ class DataImportSeeder extends Seeder
     }
     private function kyc_logs()
     {
-        $kycData = json_decode(File::get(storage_path('app/olddata/kyc_logs.json')), true);
+        $kycData = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_kyc_logs.json')), true);
         foreach ($kycData as $kyc) {
             $kyc['user_id'] = User::where('email', $kyc['client_id'])->value('id');
             KycLog::create($kyc);
@@ -242,7 +250,7 @@ class DataImportSeeder extends Seeder
     // loginHistory
     private function loginHistory()
     {
-        $loginHistoryData = json_decode(File::get(storage_path('app/olddata/login_history.json')), true);
+        $loginHistoryData = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_login_history.json')), true);
         foreach ($loginHistoryData as $loginHistory) {
             $loginHistory['user_id'] = User::where('email', $loginHistory['email'])->value('id');
             if(!$loginHistory['user_id']){
@@ -254,7 +262,7 @@ class DataImportSeeder extends Seeder
     }
     private function totalBalance()
     {
-        $balances = json_decode(File::get(storage_path('app/olddata/total_balance.json')), true);
+        $balances = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_total_balance.json')), true);
         foreach ($balances as $key => $balance) {
             unset($balance['id']);
             $balance['user_id'] = User::where('email', $balance['email'])->value('id');
@@ -270,7 +278,7 @@ class DataImportSeeder extends Seeder
     }
     private function tradeDeposit()
     {
-        $tradeDeposits = json_decode(File::get(storage_path('app/olddata/trade_deposit.json')), true);
+        $tradeDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_trade_deposit.json')), true);
         foreach ($tradeDeposits as $deposit) {
             unset($deposit['id']);
             $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
@@ -295,7 +303,7 @@ class DataImportSeeder extends Seeder
     }
     private function tradeWithdrawal()
     {
-        $tradeWithdrawals = json_decode(File::get(storage_path('app/olddata/trade_withdrawal.json')), true);
+        $tradeWithdrawals = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_trade_withdrawal.json')), true);
         foreach ($tradeWithdrawals as $withdrawal) {
             unset($withdrawal['id']);
             $withdrawal['user_id'] = User::where('email', $withdrawal['email'])->value('id');
@@ -314,6 +322,42 @@ class DataImportSeeder extends Seeder
                 'account_id' => $withdrawal['account_id'],
                 'withdraw_date' => $withdrawal['withdraw_date'],
             ], $withdrawal);
+        }
+    }
+    private function walletDeposit()
+    {
+        $walletDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_wallet_deposit.json')), true);
+        foreach ($walletDeposits as $deposit) {
+            unset($deposit['id']);
+            $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+            
+            if($deposit['client_bank']){
+                $deposit['client_wallet_id'] =  ClientWallet::where('client_wallet_id', $deposit['client_bank'])->value('id');
+            }
+            $deposit['admin_remark'] = $deposit['AdminRemark'];
+            unset($deposit['AdminRemark']);
+            WalletDeposit::updateOrCreate([
+                'user_id' => $deposit['user_id'],
+                'deposted_date' => $deposit['deposted_date'],
+            ], $deposit);
+        }
+    }
+    private function walletWithdraw()
+    {
+        $walletWithdraws = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_wallet_withdraw.json')), true);
+        foreach ($walletWithdraws as $withdraw) {
+            unset($withdraw['id']);
+            $withdraw['user_id'] = User::where('email', $withdraw['email'])->value('id');
+            
+            if($withdraw['client_bank']){
+                $withdraw['client_wallet_id'] =  ClientWallet::where('client_wallet_id', $withdraw['client_bank'])->value('id');
+            }
+            $withdraw['admin_remark'] = $withdraw['AdminRemark'];
+            unset($withdraw['AdminRemark']);
+            WalletWithdraw::updateOrCreate([
+                'user_id' => $withdraw['user_id'],
+                'withdraw_date' => $withdraw['withdraw_date'],
+            ], $withdraw);
         }
     }
 

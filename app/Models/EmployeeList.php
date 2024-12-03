@@ -10,8 +10,8 @@ class EmployeeList extends Authenticatable
 {
     use HasUuids,HasUuids ;
     protected $table = 'emplist';
-    protected $primaryKey = 'id';
-    protected $fillable = [];
+    // protected $primaryKey = 'id';
+    protected $guarded = [];
     public function role()
     {
         return $this->belongsTo(Role::class);
