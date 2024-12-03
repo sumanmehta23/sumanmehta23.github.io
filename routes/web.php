@@ -56,10 +56,10 @@ Route::get("/se",function(){
     // ]);
     // $settings = \App\Models\TradeWithdrawals::get()->toArray();
     // file_put_contents(storage_path('app/trade_withdrawals.json'), json_encode($settings, JSON_PRETTY_PRINT));
-   
+
     // $settings = \App\Models\TotalBalance::get()->toArray();
     // file_put_contents(storage_path('app/total_balance.json'), json_encode($settings, JSON_PRETTY_PRINT));
-    
+
     // $settings = \App\Models\WalletDeposit::get()->toArray();
     // file_put_contents(storage_path('app/wallet_deposit.json'), json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = \App\Models\Account::get()->toArray();
@@ -224,6 +224,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount');
         Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount');
+        Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount');
 
         Route::get("/search", [SearchController::class, 'index']);
     });

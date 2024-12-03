@@ -65,6 +65,14 @@ class Transactions extends Controller
             ->with('account')
             ->get()
             ->map(function ($deposit) {
+                // dd($deposit);
+                if(optional($deposit->account)->code){
+                    $it_from = optional($deposit->account)->code;
+                }elseif($deposit->deposit_type == 'Wallet Transfer'){
+                    $it_from = 'Wallet';
+                }else{
+                    $it_from = 'CRM';
+                }
                 return [
                     'type' => 'Deposit',
                     'amount' => $deposit->deposit_amount,
@@ -72,7 +80,7 @@ class Transactions extends Controller
                     'email' => $deposit->email,
                     'status' => $deposit->status,
                     'it_to' => $deposit->code,
-                    'it_from' => optional($deposit->account)->code ?? 'CRM', // Safe access
+                    'it_from' => $it_from, // Safe access
                     'source' => 'TDID',
                     'raw_id' => $deposit->id,
                     'date' => $deposit->deposted_date,

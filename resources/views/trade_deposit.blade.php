@@ -158,8 +158,7 @@
                                                                     </div>
 
                                                                     <div class="form-group row">
-                                                                        <label class="col-lg-4 col-form-label">ENTER
-                                                                            AMOUNT:
+                                                                        <label class="col-lg-4 col-form-label">ENTER AMOUNT:
                                                                             <small class="text-muted d-block"> Please enter
                                                                                 the amount to be deposited in selected
                                                                                 currency</small>
