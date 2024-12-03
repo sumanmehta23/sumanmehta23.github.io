@@ -69,9 +69,10 @@ class Ib extends Controller
     public function ib_profile()
     {
         $userId = auth()->user()->id;
+        $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::where('user_id', $userId)
-            ->whereNotNull('acc_type')
+            ->whereNotNull('ib_category_id')
             ->first();
 
         // dd($ib);
@@ -96,7 +97,7 @@ class Ib extends Controller
             }
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
-                $clientLiveAccs = Account::select('code', 'user_id', 'account_type')
+                $clientLiveAccs = Account::select('code', 'user_id', 'account_type_id')
                     ->where('demo',false)
                     ->whereHas('user', function ($query) use ($userId, $i) {
                         $query->where("ib$i", $userId)->where('status', 1);
@@ -228,7 +229,7 @@ class Ib extends Controller
         $ib_wallet_raw = IbWallet::where('user_id', $userId)
             ->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')
             ->first();
-        $ib_wallet = 0.00;
+     
         if ($ib_wallet_raw) {
             $ib_wallet = $ib_wallet_raw->wallet - $ib_wallet_raw->withdraw;
         }
@@ -240,6 +241,7 @@ class Ib extends Controller
             $ib_clients[$i] = IbClientList::where("ib$i", $userId)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
+        // dd($ib_wallet);
         return view('ib-profile', compact('ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }
     public function ibReference(Request $request)

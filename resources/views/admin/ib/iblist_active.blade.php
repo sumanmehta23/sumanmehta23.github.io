@@ -47,6 +47,7 @@
   <div class="modal-dialog  modal-dialog-centered">
     <div class="modal-content">
       <form action="#" id="ibRequestForm" method="post">
+        @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
           <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
@@ -115,13 +116,13 @@
     $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
       var data = dTtable.row($(this).closest("tr")).data();
       // console.log(data);
-      $("#ibRequestForm input,#ibRequestForm select").val("").trigger("change");
+      $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
       $("#clientName,#clientEmail").html("");
       $("#clientName").html(data.name)
       $("#clientEmail").html(data.email)
       $("#client_id").val(data.enc)
       $("[name='ib_status']").val(data.status).trigger("change");
-      $("[name='ib_group']").val(data.acc_type).trigger("change");
+      $("[name='ib_group']").val(data.ib_category_id).trigger("change");
       myModal.show();
       // swal.fire({
       //   icon: "info",

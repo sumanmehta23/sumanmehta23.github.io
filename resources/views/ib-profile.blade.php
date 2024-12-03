@@ -178,7 +178,7 @@
                                                                             <?= $acc->balance ?></span><span>
                                                                             <img src="/assets/images/mt5.png"
                                                                                 class="hei-30">
-                                                                            <?= $acc->id ?></span></span><span
+                                                                            <?= $acc->code ?></span></span><span
                                                                         class="mt-2 mb-0 text-muted"><span class="mt-2 float-end text-muted f-12"> Current Balance</span></span></span></label></div>
                                                     </div>
                                                 </div>

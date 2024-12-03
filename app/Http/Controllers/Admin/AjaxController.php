@@ -964,9 +964,9 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         $data = [];
         foreach ($results as $row) {
             $data[] = [
-                'id' => $row->indexId,
+                'id' => $row->id,
                 'enc' => ($row->email),
-                'acc_type' => $row->acc_type,
+                'ib_category_id' => $row->ib_category_id,
                 'grp' => $row->grp,
                 'name' => $row->name,
                 'email' => $row->email,
@@ -1188,7 +1188,7 @@ and ib1.status = 0
             $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
-                    'account_type_id' => $ibGroup
+                    'ib_category_id' => $ibGroup
                 ]);
             if ($updated) {
                 echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);
