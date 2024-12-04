@@ -30,10 +30,10 @@ class DatabaseSeeder extends Seeder
             LeverageSeeder::class,
             UserSeeder::class,
             AccountSeeder::class,
-            ClientWalletSeeder::class,
-            TradeWithdrawalsSeeder::class,
-            TotalBalanceSeeder::class,
-            WalletDepositSeeder::class,
+            // ClientWalletSeeder::class,
+            // TradeWithdrawalsSeeder::class,
+            // TotalBalanceSeeder::class,
+            // WalletDepositSeeder::class,
           ]);
     }
 }

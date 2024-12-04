@@ -7,6 +7,7 @@ use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnDealAction;
+use Illuminate\Support\Facades\Auth;
 
 class AccountHelper
 {
@@ -29,25 +30,36 @@ class AccountHelper
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $liveAccounts = auth()->user()->liveAccounts;
-
-        foreach ($liveAccounts as $account) {
-            $apiResponse = $api->UserAccountGet($account->code, $accountData);
-            if ($apiResponse === MTRetCode::MT_RET_OK) {
-                $account->update([
-                        'balance' => $accountData->Balance,
-                        'credit' => $accountData->Credit,
-                        'margin_free' => $accountData->MarginFree,
-                        'margin_level' => $accountData->MarginLevel,
-                        'equity' => $accountData->Equity,
-                    ]);
-            } else {
-                // Logger::error
+        if(Auth::guard('admin')->check() && $userId != ""){
+            $liveAccounts = Account::where('user_id', $userId)->where('demo', false)->get();
+        }else{
+            $liveAccounts = auth()->user()->liveAccounts;
+        }
+   
+        
+        if($liveAccounts){
+            foreach ($liveAccounts as $account) {
+                $apiResponse = $api->UserAccountGet($account->code, $accountData);
+                if ($apiResponse === MTRetCode::MT_RET_OK) {
+                    $account->update([
+                            'balance' => $accountData->Balance,
+                            'credit' => $accountData->Credit,
+                            'margin_free' => $accountData->MarginFree,
+                            'margin_level' => $accountData->MarginLevel,
+                            'equity' => $accountData->Equity,
+                        ]);
+                } else {
+                    // Logger::error
+                }
             }
         }
-
+        if(Auth::guard('admin')->check() && $userId != ""){
+            $demoAccounts = Account::where('user_id', $userId)->where('demo', true)->get();
+        }else{
+            $demoAccounts = auth()->user()->demoAccounts;
+        }
         // Update Demo Accounts
-        $demoAccounts = auth()->user()->demoAccounts;
+       
         foreach ($demoAccounts as $account) {
             $apiResponse = $api->UserAccountGet($account->code, $accountData);
 
