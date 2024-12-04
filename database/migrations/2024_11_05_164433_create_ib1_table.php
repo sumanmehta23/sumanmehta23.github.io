@@ -16,11 +16,12 @@ return new class extends Migration
         Schema::create('ib1', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->bigInteger('indexId');
-            $table->foreignIdFor(IbCategory::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(IbCategory::class)->constrained()->onUpdate('cascade')->onDelete('cascade')->nullable();
             $table->integer('acc_type')->nullable();
             $table->string('uid', 150)->nullable()->unique('uniqueid');
             $table->string('name')->nullable();
             $table->string('email')->nullable()->unique('email');
+            $table->string('referral_code', 25)->nullable()->unique('referral_code');
             $table->string('number', 50)->nullable();
             $table->string('username', 100)->nullable();
             $table->string('country', 100)->nullable();
