@@ -339,5 +339,3 @@ class MT5CryptAes256
     $w &= 0x00000000FFFFFFFF;
     }
   }
-
-?>

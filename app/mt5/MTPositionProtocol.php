@@ -480,5 +480,3 @@ class MTPositionJson
     return $info;
     }
   }
-
-?>

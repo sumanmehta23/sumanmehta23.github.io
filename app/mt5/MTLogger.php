@@ -148,5 +148,3 @@ class MTLoggerType
   const DEBUG = 1;
   const ERROR = 2;
   }
-
-?>

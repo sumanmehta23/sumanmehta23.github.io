@@ -89,5 +89,3 @@ class MTCustomProtocol
     return MTRetCode::MT_RET_OK;
     }
   }
-
-?>

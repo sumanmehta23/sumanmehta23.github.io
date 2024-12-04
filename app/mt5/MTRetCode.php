@@ -281,4 +281,3 @@ namespace App\MT5;
        return "unknown error";
      }
    }
-?>

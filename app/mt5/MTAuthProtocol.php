@@ -238,6 +238,3 @@ class MTAuthAnswer
   public $CliRand = 'none';
   public $CryptRand = '';
   }
-
-?>
-

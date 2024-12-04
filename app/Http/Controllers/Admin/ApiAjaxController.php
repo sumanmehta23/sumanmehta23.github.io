@@ -21,6 +21,7 @@ class ApiAjaxController extends Controller
 {
     public function handleRequest(Request $request)
     {
+        
         if ($request->has('type') && $request->type == 'leverage') {
             $leverage = Leverage::where('account_type_id', $request->id)->get();
             return response()->json($leverage);

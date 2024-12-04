@@ -556,5 +556,3 @@ class MTOrderJson
     return $info;
     }
   }
-
-?>
