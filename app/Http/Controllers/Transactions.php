@@ -50,7 +50,7 @@ class Transactions extends Controller
                     'transaction_type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'status' => $withdrawal->status,
-                    'it_to' => $withdrawal->withdraw_to ? $acc->code : 'Wallet',
+                    'it_to' => ($withdrawal->withdraw_to && $acc)  ? $acc->code : 'Wallet',
                     'it_from' => optional($withdrawal->account)->code ?? 'Wallet',
                     'source' => 'TDID',
                     'raw_id' => $withdrawal->id,
