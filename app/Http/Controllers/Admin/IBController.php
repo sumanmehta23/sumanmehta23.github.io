@@ -7,8 +7,9 @@ use App\Models\IbCategory;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 class IBController extends Controller
 {
@@ -223,6 +224,7 @@ class IBController extends Controller
             return redirect("/admin/ib_settings");
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(),'trace' => $e->getTraceAsString()]);
             alert()->error("Failed to update IB Plan", "Please try again or Contact Support.");
             return redirect("/admin/ib_settings");
         }
