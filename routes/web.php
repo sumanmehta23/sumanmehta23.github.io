@@ -113,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ib', [Ib::class, 'index'])->name('ib');
     Route::post('/ib-profile', [Ib::class, 'processTransfer'])->name('ib-profile-store');
     Route::post('/ib-enroll', [Ib::class, 'ibEnroll'])->name('ib-enroll');
+    Route::post('/ib-update-referral', [Ib::class, 'ibUpdateReferral'])->name('ib-update-referral');
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
