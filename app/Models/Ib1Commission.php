@@ -11,15 +11,7 @@ class Ib1Commission extends Model
 {
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'ib1_commission';
-    protected $fillable = [
-        'user_id',
-        'order_id',
-        'account_id',
-        'login',
-        'init_volume',
-        'volume',
-        'time_closed'
-    ];
+    protected $guarded = [];
     public function user()
     {
         return $this->belongsTo(User::class);
