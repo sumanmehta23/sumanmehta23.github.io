@@ -219,64 +219,22 @@ class Ib extends Controller
             //Calculate IB Wallet
             for ($i = 1; $i <= 15; $i++) {
                 DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
-                $client_live_accs=Ib1Commission::where('status', 0)
-                ->with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type_id','ibWallet'])
+                $client_live_accs=Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type_id','ibWallet'])
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
-                        $query->where('user_id', $userId)->whereNull('order_id');
+                        $query->where('user_id', $userId);
                     })
                     ->where('status', 0)
                     
                     ->groupBy('order_id')
                     ->orderByDesc('id')->get();
                  
-
-                
-                    // $client_live_accs = DB::table('ib1_commission')
-                    // ->join('liveaccount', 'liveaccount.code', '=', 'ib1_commission.login')
-                    // ->join('aspnetusers', 'aspnetusers.email', '=', 'ib1_commission.user_id')
-                    // ->leftJoin('ib_wallet', function ($join) use ($ib_email) {
-                    //     $join->on('ib_wallet.order_id', '=', 'ib1_commission.order_id')
-                    //         ->where('ib_wallet.email', '=', $ib_email);
-                    // })
-                    // ->select(
-                    //     'aspnetusers.email as client_email',
-                    //     'aspnetusers.ib1',
-                    //     'aspnetusers.ib2',
-                    //     'aspnetusers.ib3',
-                    //     'aspnetusers.ib4',
-                    //     'aspnetusers.ib5',
-                    //     'aspnetusers.ib6',
-                    //     'aspnetusers.ib7',
-                    //     'aspnetusers.ib8',
-                    //     'aspnetusers.ib9',
-                    //     'aspnetusers.ib10',
-                    //     'aspnetusers.ib11',
-                    //     'aspnetusers.ib12',
-                    //     'aspnetusers.ib13',
-                    //     'aspnetusers.ib14',
-                    //     'aspnetusers.ib15',
-                    //     'ib1_commission.*',
-                    //     'liveaccount.account_type'
-                    // )
-                    // ->where('ib1_commission.status', 0)
-                    // ->whereNull('ib_wallet.order_id')
-                    // ->where('aspnetusers.status', 1)
-                    // ->where('aspnetusers.ib' . $i, '=', $ib_email)
-                    // ->groupBy(
-                    //     'ib1_commission.order_id'
-                    // )
-                    // ->orderByDesc('ib1_commission.id')
-                    // ->get();
                 foreach ($client_live_accs as $ca) {
                     $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
                     $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-dump($ca->account->account_type_id);
-dump($commission);
-dump($ib_acc_plans);
-dd($ib_level);
+
                     if ($commission) {
                         $ib_level_name = "IB Level $ib_level - D$i";
                         $ib_wallet = ((float) $commission / 2) * $ca->volume;
@@ -284,19 +242,34 @@ dd($ib_level);
                         IbWallet::create([
                             'ib_wallet' => $ib_wallet,
                             'email' => $referral_code,
+                            'code' => $ca->code,
                             'user_id' => $userId,
                             'account_id' => $ca->account->id,
                             'order_id' => $ca->order_id,
                             // 'remark' => $ca->client_email,
                             'ib_level' => $ib_level_name,
                         ]);
+
+                        // $ca->status= 1;
+                        // $ca->save();
                     }
                 }
+                // $client_live_accs=Ib1Commission::whereHas('user', function ($query) use ($referral_code, $i) {
+                //     $query->where("ib$i", $referral_code)->where('status', 1);
+                // })
+                // ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
+                //     $query->where('user_id', $userId)->whereNull('order_id');
+                // })
+                // ->where('status', 0)
+                // ->update(['status'=>1]);
             }
+            
+                 
         }
-        $ib_clients_total = User::where(function ($query) use ($userId) {
+        $refercode =auth()->user()->ib->referral_code;
+        $ib_clients_total = User::where(function ($query) use ($refercode) {
             for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib{$i}", $userId);
+                $query->orWhere("ib{$i}", $refercode);
             }
         })->distinct('email')->count('email');
         $ib_wallet_raw = IbWallet::where('user_id', $userId)
@@ -316,7 +289,7 @@ dd($ib_level);
         }
         $histories = IbWallet::where('user_id', $userId)->get();
         // dd($ib_wallet);
-        return view('ib-profile', compact('ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
+        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }
     public function ibReference(Request $request)
     {
