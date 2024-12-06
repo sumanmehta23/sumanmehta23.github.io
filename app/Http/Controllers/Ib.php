@@ -43,15 +43,20 @@ class Ib extends Controller
         return view('ib', compact('ib_result'));
     }
     public function ibEnroll(Request $request)
-    {
+    {   
         if ($request->isMethod('post')) {
             $uid = uniqid();
             $code = Str::random(32);
+            do {
+                $referral_code = Str::random(6);
+            } while (Ib1::where('referral_code', $referral_code)->exists());
+            
             $user = auth()->user();
             try {
                 Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'referral_code' =>$referral_code,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
@@ -66,6 +71,55 @@ class Ib extends Controller
         }
         return response()->json(['status' => 'false', 'message' => 'Invalid request method']);
     }
+
+    public function ibUpdateReferral(Request $request)
+    {   
+        $ib1_id = $request->ib1_id;
+        $referral_code = $request->referral_code;
+
+        $ib1 = Ib1::find($ib1_id);
+        if ($ib1) {
+            
+            try {
+                if ($ib1->referral_code == $referral_code) {
+                    session()->flash('error', 'Referral code already saved.');
+                    return back();             }
+
+                $existingReferralCode = Ib1::where('referral_code', $referral_code)->first();
+                if ($existingReferralCode) {
+                    session()->flash('error', 'Referral code already registered.');
+                    return back();               }
+                
+               
+                $ib1_referral = $ib1->referral_code;
+                User::where(function ($query) use ($ib1_referral) {
+                    for ($i = 1; $i <= 15; $i++) {
+                        $query->orWhere("ib$i", $ib1_referral);
+                    }
+                })
+                ->get()
+                ->each(function ($user) use ($ib1_referral, $referral_code) {
+                    for ($i = 1; $i <= 15; $i++) {
+                        $column = "ib$i";
+                        if ($user->$column == $ib1_referral) {
+                            $user->$column = $referral_code;
+                        }
+                    }
+                    $user->save();
+                });
+                $ib1->referral_code = $referral_code;
+                $ib1->save();
+
+                session()->flash('success', 'Referral code updated successfully.');
+                return back();
+            } catch (\Exception $e) {
+                session()->flash('error', $e->getMessage());
+                return back();            }
+        }
+        session()->flash('error', 'Ib1 record not found.');
+        return back();
+    }
+
     public function ib_profile()
     {
         $userId = auth()->user()->id;
@@ -242,36 +296,18 @@ class Ib extends Controller
         }
         $histories = IbWallet::where('user_id', $userId)->get();
         // dd($ib_wallet);
-        return view('ib-profile', compact('ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
+        return view('ib-profile', compact('ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }
     public function ibReference(Request $request)
     {
         if ($request->has('refercode')) {
             $refercode = $request->query('refercode');
-            $decodedEmail = base64_decode($refercode);
-
-            // Fetch the IB record using Eloquent or DB facade
-            $result = DB::table('ib1')->where('email', $decodedEmail)->first();
+            $result = DB::table('ib1')->where('referral_code', $refercode)->first();
 
             if ($result) {
-                // Encode the IB details as required
-                $ib1 = base64_encode($result->email);
-                $ib2 = base64_encode($result->ib1);
-                $ib3 = base64_encode($result->ib2);
-                $ib4 = base64_encode($result->ib3);
-                $ib5 = base64_encode($result->ib4);
-                $ib6 = base64_encode($result->ib5);
-                $ib7 = base64_encode($result->ib6);
-                $ib8 = base64_encode($result->ib7);
-                $ib9 = base64_encode($result->ib8);
-                $ib10 = base64_encode($result->ib9);
-                $ib11 = base64_encode($result->ib10);
-                $ib12 = base64_encode($result->ib11);
-                $ib13 = base64_encode($result->ib12);
-                $ib14 = base64_encode($result->ib13);
-                $ib15 = base64_encode($result->ib14);
+                $referral_code = $result->referral_code;
                 $countries = Country::all();
-                return view('auth.ib_ref', compact('countries'));
+                return view('auth.register', compact('countries', 'referral_code'));
             } else {
                 return redirect()->route('register')->with('error', 'Invalid Refer Code');
             }

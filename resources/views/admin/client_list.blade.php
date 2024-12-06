@@ -384,7 +384,8 @@
                                         name="ib<?= $i ?>" disabled>
                                         <option value="" selected>--Select--</option>
                                         <?php foreach ($ib_details as $ib) { ?>
-                                        <option value="<?php echo $ib->email; ?>"><?php echo $ib->name; ?></option>
+                                            <option value="<?php echo isset($ib->referral_code) && !empty($ib->referral_code) ? $ib->referral_code : $ib->email; ?>">
+                                                <?php echo $ib->name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -749,6 +750,8 @@
                     data: 'ib',
                     name: 'ib',
                     render: function(data, row, row_data) {
+                        console.log(JSON.stringify(row_data));
+                        console.log(JSON.stringify(data));
                         let ib_email = row_data.ib;
                         let ib_name = row_data.ib_name;
                         let svg =

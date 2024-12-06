@@ -223,13 +223,28 @@
                                     <hr style="opacity:.1;"><label class="col-form-label col-12 text-lg-start">Your personal referral link is now available! Share it to help new clients sign up and kick-start their trading journey.</label>
                                     <div class="mb-4 col-12">
                                         {{ session('email') }}
+                                        <div class="mb-2 input-group">
+                                            <input type="text" value="{{ $ib->referral_code }}" class="form-control" id="referral-code" placeholder="Generated code will appear here">
+                                            
+                                            <button type="button" class="btn btn-lg btn-primary" id="generate-btn">Generate</button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4 col-12">
+                                        {{ session('email') }}
                                         <div class="mb-2 input-group"><input type="text" class="form-control"
                                                 id="pc-clipboard-1" placeholder="Type some value to copy"
-                                                value="{{ url('/ib-ref?refercode=' . base64_encode(session('clogin'))) }}"
+                                                value="{{ url('/ib-ref?refercode=' .  $ib->referral_code) }}"
                                                 readonly=""><button class="btn btn-lg btn-primary cb"
                                                 data-clipboard-target="#pc-clipboard-1"><i
-                                                    class="feather icon-copy"></i></button></div>
-                                        <!---->
+                                                class="feather icon-copy"></i></button></div>
+                                    </div>
+                                    <div class="mb-4 col-12">
+                                        <form id="referral-form" action="{{ route('ib-update-referral') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="referral_code" id="hidden-referral-code"  value="{{ $ib->referral_code }}">
+                                            <input type="hidden" name="ib1_id" value="{{ $ib->id }}">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -477,5 +492,22 @@
         });
 
         $("#commissionTbl").dataTable();
+
+        function updateReferralLink() {
+            let referralCode = document.getElementById('referral-code').value;
+            let newUrl = "{{ url('/ib-ref?refercode=') }}" + referralCode;
+            document.getElementById('pc-clipboard-1').value = newUrl;
+            document.getElementById('hidden-referral-code').value = referralCode;
+        }
+
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            let referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('referral-code').value = referralCode;
+            updateReferralLink();
+        });
+
+        document.getElementById('referral-code').addEventListener('input', function() {
+            updateReferralLink();
+        });
     </script>
 @endsection

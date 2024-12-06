@@ -41,9 +41,10 @@ class ClientController extends Controller
 
         // Fetch IB details
         $ib_details = DB::table('ib1')
-            ->select('name', 'email')
+            ->select('name', 'email', 'referral_code')
             ->orderBy('name')
             ->get();
+
 
         // Fetch RM details
         $rm_details = DB::table('emplist as emp')
@@ -403,7 +404,7 @@ class ClientController extends Controller
         //     ->where(DB::raw('ap.id'), $id)
         //     ->orWhere(DB::raw('ap.email'), $id)
         //     ->first();
-        $user = User::with(['ib1'])
+        $user = User::with('ib')
             ->where('id', $id)
             ->firstOrFail();
         // $acc_groups = DB::table('ib_plans')
@@ -428,7 +429,11 @@ class ClientController extends Controller
             $eid = $user->id;
             $clients = [];
             for ($i = 1; $i <= 15; $i++) {
-                $foundClients = IbClientList::where("ib$i", $eid)->get();
+                if($user->ib){
+                    $foundClients = IbClientList::where("ib$i", $user->ib->referral_code)->get();
+                }else{
+                    $foundClients='';
+                }
                 $clients[$i] = $foundClients;
             }
             // $total_wd = DB::table('wallet_deposit')
@@ -496,10 +501,11 @@ class ClientController extends Controller
                 ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
                 ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
                 ->where('ib1.status', 1)
-                ->where('ib1.email', $eid)
+                ->where('ib1.email', $user->email)
                 ->groupBy('ib1.email')
                 ->havingRaw('COUNT(ib1.email) > 0')
                 ->first();
+
             $rm_details = DB::table('relationship_manager as rm')
                 ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
                 ->select('emp.client_index', 'emp.username', 'rm.*')

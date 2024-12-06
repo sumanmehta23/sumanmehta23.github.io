@@ -62,9 +62,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ib1Commission::class);
     }
-    public function ib1()
+    public function ib()
     {
-        return $this->hasMany(Ib1::class);
+        return $this->hasOne(Ib1::class);
     }
     public function accounts()
     {

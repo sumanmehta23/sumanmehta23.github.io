@@ -217,14 +217,32 @@ class AjaxController extends Controller
             $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where (rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT ibs.name as ib_name,c.country_alpha,emp.username as rm_name,rm.rm_id,(ap.id) as enc_id,ap.fullname as fullname,ap.*,COALESCE(SUM(tb.deposit_amount), 0) as deposit_amount,COALESCE(SUM(tb.trading_deposited), 0) as trading_deposited,COALESCE(SUM(tb.trading_withdrawal), 0) as trading_withdrawal,COALESCE(SUM(tb.withdraw_amount), 0) as withdraw_amount,ib1.status as ib_status,ib1.acc_type as ib_group from aspnetusers ap
-  LEFT JOIN ib1 on ib1.email = ap.email
-  LEFT JOIN ib1 as ibs on ibs.email = ap.ib1
-  LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
-  LEFT JOIN emplist emp on(rm.rm_id =emp.email)
-  LEFT JOIN countries c on(ap.country =c.country_name)
-  LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
+        $sql = " SELECT 
+        ibs.name AS ib_name,
+        c.country_alpha,
+        emp.username AS rm_name,
+        rm.rm_id,
+        ap.id AS enc_id,
+        ap.fullname AS fullname,
+        ap.*, 
+        COALESCE(SUM(tb.deposit_amount), 0) AS deposit_amount,
+        COALESCE(SUM(tb.trading_deposited), 0) AS trading_deposited,
+        COALESCE(SUM(tb.trading_withdrawal), 0) AS trading_withdrawal,
+        COALESCE(SUM(tb.withdraw_amount), 0) AS withdraw_amount,
+        ib1.status AS ib_status,
+        ib1.acc_type AS ib_group,
+        parent_ib.name AS parent_name,
+        parent_ib.email AS parent_email
+        from aspnetusers ap
+        LEFT JOIN ib1 on ib1.user_id = ap.id
+        LEFT JOIN ib1 as ibs on ibs.user_id = ap.id
+        LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
+        LEFT JOIN emplist emp on(rm.rm_id =emp.email)
+        LEFT JOIN countries c on(ap.country =c.country_name)
+        LEFT JOIN ib1 AS parent_ib ON (parent_ib.referral_code = ap.ib1 || parent_ib.email = ap.ib1)
+        LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
         $results = DB::select($sql);
+     
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -238,8 +256,8 @@ class AjaxController extends Controller
                 'email' => $row->email,
                 'phone' => $row->number,
                 'country' => $row->country_alpha,
-                'ib' => $row->ib1,
-                'ib_name' => $row->ib_name,
+                'ib' => $row->parent_email,
+                'ib_name' => $row->parent_name,
                 'ib_status' => $row->ib_status,
                 'kyc_verify' => $row->kyc_verify,
                 'rm_id' => $row->rm_name ?? '',
