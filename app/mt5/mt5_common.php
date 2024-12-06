@@ -186,5 +186,3 @@ class MTConCommon
   //--- Account auto-allocation
   public $AccountAuto;
 }
-
-?>

@@ -851,7 +851,7 @@ $settings=settings();
                                                                                                         <div
                                                                                                             style="color:#000000; text-align-last:left; line-height:26px; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;font-size:18px; font-variant-ligatures:normal;">
                                                                                                             <div>
-                                                                                                                <span>{{ $trade_id }}</span>
+                                                                                                                <span>{{ $code }}</span>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </td>
@@ -898,7 +898,7 @@ $settings=settings();
                                                                                                         align="left"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_pwd }}</span></div></div>
+                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_password }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -947,7 +947,7 @@ $settings=settings();
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_pwd }}</span></div></div>
+                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_password }}</span></div></div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>

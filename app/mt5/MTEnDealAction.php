@@ -613,5 +613,3 @@ class MTDealJson
     return $info;
     }
   }
-
-?>

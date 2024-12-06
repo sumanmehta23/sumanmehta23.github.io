@@ -17,6 +17,8 @@ return new class extends Migration
             $table->dateTime('date');
             $table->string('categoryFor', 100);
             $table->string('categoryName');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

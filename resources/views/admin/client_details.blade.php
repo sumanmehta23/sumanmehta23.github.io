@@ -32,10 +32,10 @@
                                 <label for="input-label" class="form-label">Assignee</label>
                                 <select class="form-control" name="assignee_id" required>
                                     <?php if (isset($rm_details) && !empty($rm_details)): ?>
-                                    <option selected value="{{ $rm_details->client_index }}">{{ $rm_details->username }}
+                                    <option selected value="{{ $rm_details->id }}">{{ $rm_details->username }}
                                     </option>
                                     <?php elseif (isset($superadmin_details) && !empty($superadmin_details)): ?>
-                                    <option selected value="{{ $superadmin_details->client_index }}">Super Admin</option>
+                                    <option selected value="{{ $superadmin_details->id }}">Super Admin</option>
                                     <?php endif; ?>
                                 </select>
                             </div>
@@ -76,30 +76,31 @@
     </div>
     <div class="modal fade" id="accountModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="accountModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="createMT5Form" method="post">
-                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->id) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="accountModalLabel">Create New MT5 Account</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="col-lg-4 m-auto">
+                            <div class="m-auto col-lg-4">
                                 <label class="form-label">Account Type</label>
                             </div>
                             <div class="col-lg-8">
                                 <select class="form-select acc-types" required name="acc-types">
                                     <option value="" selected>Choose Account Type</option>
-                                    <?php foreach ($acc_types as $gp) { ?>
-                                    <option value="{{ $gp->ac_index }}">{{ $gp->ac_name }}</option>
-                                    <?php } ?>
+                                        @foreach ($acc_types as $gp)
+                                        <option value="{{ $gp->ac_index }}">{{ $gp->ac_name }}</option>
+                                        @endforeach
+
                                 </select>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-lg-4 m-auto">
+                        <div class="mt-3 row">
+                            <div class="m-auto col-lg-4">
                                 <label class="form-label">Leverage</label>
                             </div>
                             <div class="col-lg-8">
@@ -119,16 +120,16 @@
     </div>
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
                     @csrf
-                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->email) }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ ($user->id) }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -143,7 +144,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">IB Request Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -156,7 +157,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Account Group</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -182,7 +183,7 @@
     <div class="main-content app-content">
         <div class="container-fluid">
             <!-- Start:: row-1 -->
-            <div class="row mt-5" id="user-profile">
+            <div class="mt-5 row" id="user-profile">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header justify-content-between">
@@ -205,7 +206,7 @@
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
                                                     <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower($country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
                                                     |
                                                     <span class="px-2">{!! $user->kyc_verify == 0
                                                         ? '<span class="badge bg-outline-danger">Pending KYC</span>'
@@ -226,40 +227,40 @@
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
-                                                                class="btn btn-icon  bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                 <i class="ri-mail-line"></i>
                                                             </button>
                                                             <div>
-                                                                <div class="text-muted fs-11 mb-0">Email:</div>
-                                                                <div class="fs-12 mb-1">{{ $user->email }}</div>
+                                                                <div class="mb-0 text-muted fs-11">Email:</div>
+                                                                <div class="mb-1 fs-12">{{ $user->email }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
-                                                                class="btn btn-icon  bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                 <i class="ri-phone-line"></i>
                                                             </button>
                                                             <div>
-                                                                <div class="text-muted fs-11 mb-0">Phone:</div>
-                                                                <div class="fs-12 mb-1">{{ $user->number }}</div>
+                                                                <div class="mb-0 text-muted fs-11">Phone:</div>
+                                                                <div class="mb-1 fs-12">{{ $user->number }}</div>
                                                             </div>
                                                         </div>
 
                                                     </div>
                                                 </div>
-                                                <div class="row mt-1 border-top border-2 border-default pt-1">
+                                                <div class="pt-1 mt-1 border-2 row border-top border-default">
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
-                                                                class="btn btn-icon  bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                 <i class="ri-user-2-fill"></i>
                                                             </button>
                                                             <div>
-                                                                <div class="text-muted fs-11 mb-0">Relationship Manager:
+                                                                <div class="mb-0 text-muted fs-11">Relationship Manager:
                                                                 </div>
-                                                                <div class="fs-12 mb-1">{{ $rm_details->username ?? '' }}
+                                                                <div class="mb-1 fs-12">{{ $rm_details->username ?? '' }}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -267,12 +268,12 @@
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
-                                                                class="btn btn-icon  bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                 <i class="ri-user-line"></i>
                                                             </button>
                                                             <div>
-                                                                <div class="text-muted fs-11 mb-0">Parent IB:</div>
-                                                                <div class="fs-12 mb-1">{{ $user->ib1 }}</div>
+                                                                <div class="mb-0 text-muted fs-11">Parent IB:</div>
+                                                                <div class="mb-1 fs-12">{{ $user->ib1 }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -281,11 +282,11 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-xl-12" style="display:none">
-                                        <button type="button" class="btn btn-outline-light shadow-sm"><i
+                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
                                                 class="ri-mail-line text-primary me-1"></i>Send Mail</button>
-                                        <button type="button" class="btn btn-outline-light shadow-sm"><i
+                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
                                                 class="ri-share-line"></i></button>
-                                        <button type="button" class="btn btn-outline-light shadow-sm"><i
+                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
                                                 class="ri-flag-line"></i></button>
                                     </div>
                                 </div>
@@ -293,7 +294,7 @@
                         </div>
                         <div class="border-top">
                             <div class="wideget-user-tab">
-                                <div class="tab-menu-heading border-0">
+                                <div class="border-0 tab-menu-heading">
                                     <div class="tabs-menu1">
                                         <ul class="nav clienttabs">
                                             <li class=""><a href="#tab-overview" class="active show"
@@ -317,7 +318,7 @@
                         <div class="">
                             <div class="border-0">
                                 <div class="tab-content clienttabs">
-                                    <div class="tab-pane p-0 active show" id="tab-overview">
+                                    <div class="p-0 tab-pane active show" id="tab-overview">
                                         <div class="row">
                                             <div class="col-12 col-xl-9">
                                                 <div class="card custom-card">
@@ -325,21 +326,21 @@
                                                         <div class="card-title">SUMMARY</div>
                                                     </div>
                                                     <div class="card-body">
-                                                        <div class="row pb-3 border-bottom">
+                                                        <div class="pb-3 row border-bottom">
                                                             <div class="col-xl-3">
-                                                                <h4 class="text-muted mb-3 fw-normal">TOTAL DEPOSIT</h4>
+                                                                <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
                                                                 <h4 class="fw-normal">
-                                                                    ${{ htmlentities(number_format((float) $total_wd->amount, 2)) }}
+                                                                    ${{ htmlentities(number_format((float) $total_wd, 2)) }}
                                                                 </h4>
                                                             </div>
                                                             <div class="col-xl-3">
-                                                                <h4 class="text-muted mb-3 fw-normal">TOTAL WITHDRAW</h4>
+                                                                <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
                                                                 <h4 class="fw-normal">
-                                                                    ${{ htmlentities(number_format((float) $total_ww->amount, 2)) }}
+                                                                    ${{ htmlentities(number_format((float) $total_ww, 2)) }}
                                                                 </h4>
                                                             </div>
                                                             <div class="col-xl-3">
-                                                                <h4 class="text-muted mb-3 fw-normal">WALLET</h4>
+                                                                <h4 class="mb-3 text-muted fw-normal">WALLET</h4>
                                                                 <?php if ($user->wallet_enabled): ?>
                                                                 <h4 class="fw-normal">
                                                                     ${{ htmlentities(number_format($wallet_balance, 2)) }}
@@ -353,7 +354,7 @@
                                                             </div>
 
                                                         </div>
-                                                        <div class="row mt-3">
+                                                        <div class="mt-3 row">
                                                             <div class="d-flex justify-content-between">
                                                                 <h4>LIVE MT5 ACCOUNTS</h4>
                                                                 <!-- <button type="button" class="d-none btn btn-outline-dark btn-sm bg-light"
@@ -363,40 +364,37 @@
                                                                             </button> -->
                                                             </div>
                                                         </div>
-                                                        <div class="row px-2">
+                                                        <div class="px-2 row">
                                                             <?php if (empty($live_accounts)) { ?>
-                                                            <div class="text-muted my-4">No Live Accounts Found.</div>
+                                                            <div class="my-4 text-muted">No Live Accounts Found.</div>
                                                             <?php } ?>
                                                             <?php foreach ($live_accounts as $acc): ?>
                                                             <div
-                                                                class="col-xl-4 col-lg-6 my-2 border border-3 border-dashed">
+                                                                class="my-2 border border-dashed col-xl-4 col-lg-6 border-3">
                                                                 <div>
                                                                     <div
-                                                                        class="row mb-2 mt-2 border-2 border-bottom pb-2 border-bottom-dashed">
+                                                                        class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                         <div class="d-flex w-50 flex-column">
                                                                             <img src="/admin_assets/assets/images/mt5.png"
                                                                                 alt="card img" style="width:50px;">
-                                                                            <div class="fs-18 mt-1 text-black-50 fw-bold">
-                                                                                {{ $acc->trade_id }}</div>
+                                                                            <div class="mt-1 fs-18 text-black-50 fw-bold">
+                                                                                {{ $acc->code }}</div>
                                                                         </div>
                                                                         <div class="d-flex justify-content-end w-50">
                                                                             <span
-                                                                                class="h4 mt-2 fw-normal">${{ $acc->Balance }}</span>
+                                                                                class="mt-2 h4 fw-normal">${{ $acc->balance }}</span>
                                                                         </div>
                                                                     </div>
-                                                                    <?php
-                                                                    $index = array_search($acc->account_type, array_column((array) $acc_types, 'ac_index'));
-                                                                    ?>
                                                                     <div class="d-flex justify-content-between">
                                                                         <div>
                                                                             <div class="fw-bold fs-12">
-                                                                                {{ $acc_types[$index]->ac_name }}</div>
+                                                                                {{ $acc->accountType->ac_name }}</div>
                                                                             <div class="mb-2 fw-normal fs-10">
-                                                                                {{ $acc_types[$index]->ac_group }}</div>
+                                                                                {{ $acc->accountType->ac_group }}</div>
                                                                         </div>
                                                                         <div class="mt-auto mb-auto">
                                                                             <a
-                                                                                href="/admin/view_account_details?id={{ ($acc->trade_id) }}">
+                                                                                href="/admin/view_account_details/{{ $acc->id }}">
                                                                                 <i class="fa fa-edit fw-bold"
                                                                                     style="font-size: 1rem;color: var(--primary-color);"></i>
                                                                             </a>
@@ -412,7 +410,7 @@
                                             <div class="col-12 col-xl-3">
                                                 <div>
                                                     <button type="button"
-                                                        class="my-2 py-3 btn btn-outline-dark btn-sm w-100"
+                                                        class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
                                                         data-bs-toggle="modal" data-bs-target="#addTicketModal">
                                                         CREATE TICKET
                                                     </button>
@@ -441,13 +439,13 @@
                                                             <?php if ($user->ib_status != 1): ?>
                                                             <?php if ($user->ib_status == '0'): ?>
                                                             <button type="button"
-                                                                class="ib-enroll my-2 py-3 btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
                                                                 data-bs-toggle="modal" data-bs-target="#ibModal">
                                                                 Approve Request
                                                             </button>
                                                             <?php else: ?>
                                                             <button type="button"
-                                                                class="ibToggle ib-enroll my-2 py-3 btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
                                                                 data-bs-toggle="modal" data-bs-target="#ibModal"
                                                                 data-fullname="<?= $user->fullname ?>"
                                                                 data-email="<?= $user->email ?>"
@@ -461,8 +459,8 @@
                                                             <label class="col-form-label col-12 text-lg-start">
                                                                 Copy this IB referral link to share with potential clients!
                                                             </label>
-                                                            <div class="col-12 mb-4">
-                                                                <div class="input-group mb-2"><input type="text"
+                                                            <div class="mb-4 col-12">
+                                                                <div class="mb-2 input-group"><input type="text"
                                                                         class="form-control" id="pc-clipboard-1"
                                                                         value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
                                                                         readonly=""><button
@@ -478,7 +476,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane p-0" id="tab-transactions">
+                                    <div class="p-0 tab-pane" id="tab-transactions">
                                         <div class="row">
                                             <div class="col-xl-6">
                                                 <div class="card custom-card">
@@ -574,16 +572,16 @@
                                         </div>
                                     </div>
                                     <?php if (!empty($ib_details)): ?>
-                                    <div class="tab-pane p-0" id="tab-ib">
+                                    <div class="p-0 tab-pane" id="tab-ib">
                                         <div class="row">
-                                            <div class="col-sm-12 col-xl-3 col-lg-3 col-xl-3">
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
                                                 <div class="card custom-card">
                                                     <div class="card-body">
                                                         <div class="card-order">
                                                             <div class="row">
                                                                 <div class="col-4">
                                                                     <button
-                                                                        class="w-100 h-75 btn btn-icon  btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                         <i class="fa fa-list-alt" aria-hidden="true"></i>
                                                                     </button>
                                                                 </div>
@@ -597,14 +595,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-12 col-xl-3 col-lg-3 col-xl-3">
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
                                                 <div class="card custom-card">
                                                     <div class="card-body">
                                                         <div class="card-order">
                                                             <div class="row">
                                                                 <div class="col-4">
                                                                     <button
-                                                                        class="w-100 h-75 btn btn-icon  btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                         <i class="fa fa-credit-card"
                                                                             aria-hidden="true"></i>
                                                                     </button>
@@ -619,14 +617,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-12 col-xl-3 col-lg-3 col-xl-3">
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
                                                 <div class="card custom-card">
                                                     <div class="card-body">
                                                         <div class="card-order">
                                                             <div class="row">
                                                                 <div class="col-4">
                                                                     <button
-                                                                        class=" w-100 h-75 btn btn-icon  btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        class=" w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                         <i class="fa fa-credit-card-alt"
                                                                             aria-hidden="true"></i>
                                                                     </button>
@@ -641,14 +639,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-12 col-xl-3 col-lg-3 col-xl-3">
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
                                                 <div class="card custom-card">
                                                     <div class="card-body">
                                                         <div class="card-order">
                                                             <div class="row">
                                                                 <div class="col-4">
                                                                     <button
-                                                                        class="w-100 h-75  btn btn-icon  btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
                                                                         <i class="fa fa-usd" aria-hidden="true"></i>
                                                                     </button>
                                                                 </div>
@@ -666,7 +664,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="card">
-                                                    <div class="card-body p-3">
+                                                    <div class="p-3 card-body">
                                                         <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
                                                             <?php for ($i = 1; $i <= 15; $i++) { ?>
                                                             <li class="nav-item"
@@ -713,7 +711,7 @@
                                                                                         <div class="col-auto pe-0"><img
                                                                                                 src="/assets/images/ib_avatar.png"
                                                                                                 alt="user-image"
-                                                                                                class="wid-55 hei-55 rounded"
+                                                                                                class="rounded wid-55 hei-55"
                                                                                                 style="height:50px">
                                                                                         </div>
                                                                                         <div class="col">
@@ -721,7 +719,7 @@
                                                                                                     class="text-truncate w-100">{{ $client->fullname }}</span>
                                                                                             </h6>
                                                                                             <p
-                                                                                                class="text-muted f-12 mb-0">
+                                                                                                class="mb-0 text-muted f-12">
                                                                                                 <span
                                                                                                     class="text-truncate w-100">{{ $client->email }}</span>
                                                                                             </p>
@@ -755,7 +753,7 @@
                                         </div>
                                     </div>
                                     <?php endif; ?>
-                                    <div class="tab-pane p-0" id="tab-info">
+                                    <div class="p-0 tab-pane" id="tab-info">
                                         <div class="row">
                                             <div class="col-6">
                                                 <div class="card custom-card">
@@ -824,14 +822,14 @@
 
                                                         <?php if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
                                                         <div
-                                                            class="media card-body media-xs overflow-visible d-sm-flex d-block m-0 justify-content-between">
-                                                            <div class="d-flex mb-2 mb-sm-0">
-                                                                <div class="media-body valign-middle my-auto"
+                                                            class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
+                                                            <div class="mb-2 d-flex mb-sm-0">
+                                                                <div class="my-auto media-body valign-middle"
                                                                     style="max-width: 100px; display: flex; flex-direction: column;">
                                                                     <?php foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
                                                                     <?php if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
                                                                     <button
-                                                                        class="btn btn-lg btn-icon btn-light text-info me-2 mt-1"
+                                                                        class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
                                                                         data-bs-toggle="modal" data-bs-target="#kycModal"
                                                                         data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
                                                                         data-bs-type="{{ $mimeTypes[$extension] }}">
@@ -841,22 +839,22 @@
                                                                     <?php endif; ?>
                                                                     <?php endforeach; ?>
                                                                 </div>
-                                                                <div class="media-body valign-middle my-auto">
+                                                                <div class="my-auto media-body valign-middle">
                                                                     <a href=""
                                                                         class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
-                                                                    <p class="text-muted m-0">
+                                                                    <p class="m-0 text-muted">
                                                                         {{ $kyc->registered_date_js }}</p>
                                                                 </div>
                                                             </div>
                                                             <div
-                                                                class="media-body valign-middle text-sm-end overflow-visible my-auto">
+                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
                                                                 <span
                                                                     class="badge {{ $badgeClass }}">{!! $icon !!}
                                                                     <?= $statusText ?>
                                                                 </span>
                                                             </div>
                                                             <div
-                                                                class="media-body valign-middle text-sm-end overflow-visible my-auto">
+                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
                                                                 <?php if ($kyc->Status == 2 || $kyc->Status == 0) { ?>
                                                                 <button class="btn btn-lg btn-icon btn-light text-success"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
@@ -919,7 +917,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane p-0" id="tab-profile">
+                                    <div class="p-0 tab-pane" id="tab-profile">
                                         <div class="row">
                                             <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
                                                 <div class="card">
@@ -930,7 +928,7 @@
                                                                     <img src="/admin_assets/assets/images/users/client.jpeg"
                                                                         alt="img" style="width:100px">
                                                                 </div>
-                                                                <h3 class="username mb-2">{{ $user->fullname }}</h3>
+                                                                <h3 class="mb-2 username">{{ $user->fullname }}</h3>
                                                                 <p class="mb-1 text-muted">{{ $user->email }}</p>
                                                                 <form method="post"
                                                                     action="{{ route('admin.sendPasswordResetLink') }}">
@@ -977,7 +975,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestDeposit',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1008,7 +1006,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestWithdrawal',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1039,7 +1037,7 @@
                     "type": "GET",
                     data: {
                         action: 'getLatestTransfer',
-                        id: '{{ $user->email }}'
+                        id: '{{ $user->id }}'
                     },
                 },
                 columns: [{
@@ -1136,7 +1134,7 @@
               <input type="hidden" name="email" value="${email}">
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_kyc">
-              <div class="col-12 mt-2 text-start">
+              <div class="mt-2 col-12 text-start">
                   <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
               </div>
               </form>
@@ -1166,7 +1164,7 @@
                 type: 'GET',
                 data: {
                     action: 'getIbTierData',
-                    id: '{{ $user->email }}',
+                    id: '{{ $user->id }}',
                     tier: tier
                 },
                 success: function(response) {

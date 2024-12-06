@@ -29,4 +29,3 @@ class MTPingProtocol
     return MTRetCode::MT_RET_OK;
     }
   }
-?>

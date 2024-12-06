@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -14,7 +15,7 @@ return new class extends Migration
         Schema::create('total_balance', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
-            $table->string('trade_id', 50)->nullable();
+            $table->string('code', 50)->nullable();
             $table->string('deposit_amount', 50)->nullable()->default('0');
             $table->string('withdraw_amount', 50)->nullable()->default('0');
             $table->string('trading_deposited', 50)->nullable()->default('0');
@@ -23,6 +24,10 @@ return new class extends Migration
             $table->timestamp('reg_date')->useCurrentOnUpdate()->useCurrent();
             $table->string('deposit_type')->nullable();
             $table->string('status', 50)->nullable();
+            $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

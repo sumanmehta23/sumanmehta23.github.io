@@ -82,7 +82,7 @@
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Confirm Password</label><input
+                                                        class="form-label">Confirm Password </label><input
                                                         data-v-97e32e5a="" id="confirmpassword" type="password"
                                                         class="form-control" placeholder="Confirm Password"
                                                         required="" name="password_confirmation"><!----></div>
@@ -160,6 +160,14 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            @if(request()->has('refercode') && $referral_code)
+                                            <div data-v-97e32e5a="" class="col-sm-12">
+                                                <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
+                                                        class="form-label">Referral Code</label><input data-v-97e32e5a=""
+                                                        type="text" class="form-control" value="{{ $referral_code }}"
+                                                        required readonly disabled name="refercode"><!----><small data-v-97e32e5a="">*your referral link code provided.</small></div>
+                                            </div>
+                                            @endif
                                             <!-- <div data-v-97e32e5a="" class="col-sm-12">
                                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                                         class="form-label">Referral Code<small data-v-97e32e5a="">(if

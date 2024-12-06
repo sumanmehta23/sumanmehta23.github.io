@@ -33,7 +33,7 @@
                                             <td>Trade ID</td>
                                             <td>Leverage</td>
                                             <td>Balance</td>
-                                            <td>Registered_Date</td>
+                                            <td>registered_date</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -44,7 +44,7 @@
                                     ?>
                                         <tr>
                                             <td>
-                                                <a href='/admin/client_details.php?id=<?= $result->enc_id ?>'>
+                                                <a href='/admin/client_details/<?= $result->enc_id ?>'>
                                                     <div class='d-flex align-items-center'>
                                                         <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
                                                                 width='28' height='28' viewBox='0 0 24 24'
@@ -70,13 +70,13 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="/admin/view_account_details?id=<?= ($result->trade_id) ?>">
+                                                <a href="{{url('/view_account_details/',$result->id)}}">
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="rounded wid-50 hei-50"></div>
                                                         <div class="col ps-2">
                                                             <h6 class="mb-0"><span
-                                                                    class="text-truncate w-100"><?= $result->trade_id ?></span>
+                                                                    class="text-truncate w-100"><?= $result->code ?></span>
                                                             </h6>
                                                             <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"><?= $result->ac_group ?></span>
@@ -86,13 +86,13 @@
                                                 </a>
                                             </td>
                                             <td><?php echo htmlentities($result->leverage); ?></td>
-                                            <td><?php echo htmlentities($result->Balance); ?></td>
+                                            <td><?php echo htmlentities($result->balance); ?></td>
                                             <td>
                                                 <div class="lh-1">
-                                                    <?= date('Y-m-d', strtotime($result->Registered_Date)) ?>
+                                                    <?= date('Y-m-d', strtotime($result->registered_date)) ?>
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    <?= date('H:i:s', strtotime($result->Registered_Date)) ?></div>
+                                                    <?= date('H:i:s', strtotime($result->registered_date)) ?></div>
                                             </td>
                                         </tr>
                                         <?php }

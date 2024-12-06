@@ -13,18 +13,18 @@ class LiveAccount extends Model
     protected $fillable = [
         'balance',
         'credit',
-        'MarginFree',
-        'MarginLevel',
+        'margin_free',
+        'margin_level',
         'equity',
         'email',
         'name',
-        'trade_id',
+        'code',
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
         'ib1'
     ];
     public function accountType()
@@ -32,8 +32,8 @@ class LiveAccount extends Model
         return $this->belongsTo(AccountType::class, 'account_type', 'ac_index');
     }
 
-    public function bonusTrans()
+    public function BonusTransaction()
     {
-        return $this->hasMany(BonusTrans::class, 'trade_id', 'trade_id');
+        return $this->hasMany(BonusTransaction::class, 'code', 'code');
     }
 }

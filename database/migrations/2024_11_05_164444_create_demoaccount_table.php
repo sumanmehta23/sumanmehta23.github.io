@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('demoaccount', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('email')->nullable();
-            $table->string('trade_id', 50)->nullable();
+            $table->string('code', 50)->nullable();
             $table->string('account_type', 55)->nullable();
+            $table->decimal('credit', 15)->nullable()->default(0);
             $table->string('leverage');
             $table->string('currency', 20)->default('USD');
             $table->decimal('Balance', 15)->default(0);
-            $table->decimal('credit', 15)->nullable()->default(0);
             $table->double('equity')->nullable()->default(0);
             $table->string('tradePlatform', 100)->default('MetaTrader5');
             $table->integer('lotsCompleted')->default(0);
@@ -34,11 +34,12 @@ return new class extends Migration
             $table->string('trader_pwd', 200)->nullable();
             $table->string('invester_pwd', 200)->nullable();
             $table->string('phone_pwd', 200)->nullable();
-            $table->dateTime('Registered_Date')->useCurrent();
+            $table->dateTime('registered_date')->useCurrent();
             $table->string('status', 50)->default('active');
             $table->double('bonusDeposit')->default(0);
             $table->double('wBonusDeposit')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

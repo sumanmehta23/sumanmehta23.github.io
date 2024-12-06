@@ -23,7 +23,7 @@ var customerID = "{{auth()->user()->id}}";
       return true;
     }
     localStorage.setItem('isCalled', 'true');
-    var trade_id = $('[name="trade_id"]').val();
+    var code = $('[name="code"]').val();
     var amount = $("#crypto_deposit_amount").val();
     $.ajax({
       url: "{{ route('wallet_payment') }}",
@@ -113,7 +113,7 @@ var customerID = "{{auth()->user()->id}}";
     // // }
     // // localStorage.setItem('isCalled', 'true');
 
-    // // var trade_id = $('[name="trade_id"]').val();
+    // // var code = $('[name="code"]').val();
     // var amoutnToDeposit = $("#crypto_deposit_amount").val();
     // // alert("Triggered");
     // $.ajax({
@@ -161,7 +161,7 @@ var customerID = "{{auth()->user()->id}}";
     localStorage.setItem('isCalled', 'true');
 
 
-    var trade_id = $('[name="trade_id"]').val();
+    var code = $('[name="code"]').val();
     var amount = $("#crypto_deposit_amount").val();
     // alert("Triggered");
     $.ajax({

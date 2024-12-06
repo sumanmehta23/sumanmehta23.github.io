@@ -233,7 +233,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->AdminRemark }}</span>
+                                                            <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>

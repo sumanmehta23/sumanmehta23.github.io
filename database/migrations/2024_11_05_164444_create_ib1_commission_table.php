@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -13,16 +14,17 @@ return new class extends Migration
     {
         Schema::create('ib1_commission', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('user_id');
             $table->string('order_id', 100)->nullable();
-            $table->string('login', 100)->nullable();
+            $table->string('code', 100)->nullable();
             $table->string('volume', 100)->nullable();
             $table->string('time_closed', 100)->nullable();
             $table->integer('status')->default(0);
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-
-            $table->unique(['order_id', 'login'], 'closed_order');
+            
+            $table->unique(['order_id', 'code'], 'closed_order');
+            $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

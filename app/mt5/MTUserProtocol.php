@@ -1264,5 +1264,3 @@ class MTAccount
    */
   public $MarginMaintenance;
   }
-
-?>

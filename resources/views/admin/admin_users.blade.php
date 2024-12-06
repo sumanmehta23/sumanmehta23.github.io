@@ -34,7 +34,7 @@
                                     <select class="form-control" name="role_id" required>
                                         <option value="">Select Role</option>
                                         @foreach ($roles as $role)
-                                            <option value="{{ $role->role_id }}">{{ $role->role_name }}</option>
+                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -93,7 +93,7 @@
                                     <select class="form-control" name="role_id" id="role_id" required>
                                         <option value="">Select Role</option>
                                         @foreach ($roles as $role)
-                                            <option value="{{ $role->role_id }}">{{ $role->role_name }}</option>
+                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -126,7 +126,7 @@
               <li class="breadcrumb-item active" aria-current="page">Admin Users</li>
             </ol>
           </div>
-          <div class="d-flex justify-content-end mb-3">
+          <div class="mb-3 d-flex justify-content-end">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
               Add New User
             </button>
@@ -136,7 +136,7 @@
               <div class="card custom-card">
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="tableAdminUsers" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                    <table id="tableAdminUsers" class="table ajaxDataTable table-bordered text-nowrap w-100">
                     </table>
                   </div>
                 </div>
@@ -160,7 +160,7 @@
           { data: 'client_index', title: '#' },
           { data: 'username', title: 'Name' },
           { data: 'email', title: 'Email / Username' },
-          { data: 'role_name', title: 'Role' },
+          { data: 'name', title: 'Role' },
           { data: 'permissions_count', title: 'Per. Count' },
           { data: 'status', title: 'status' },
           {
@@ -168,8 +168,9 @@
           title: 'Action',
           render: function(data, row, row_data) {
             var return_data = '';
+            var admin_role = @json(session('userData')['role_id']);
             var admin_role_id = @json(session('userData')['role_id']);
-            if (admin_role_id == 1 || true) {
+            if (admin_role == "Super Admin" || true) {
               return_data += '<a data-id="' + row_data.client_index + '" class="update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path><path d="M16 5l3 3"></path></svg></a>';
               if (row_data.role_id == 2) {
                 return_data += '<a href="/admin/rm_dashboard?id=' + row_data.enc_id + '" class="ms-2" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path class="text-primary" stroke="none" d="M0 0h24v24H0z" fill="none"></path><path class="text-primary" d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path class="text-primary" d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path></svg></a>';

@@ -1,27 +1,28 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Controllers\Controller;
+use Exception;
+use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Account;
+use App\Models\PaymentLog;
+use App\Models\LiveAccount;
+use App\Models\ClientWallet;
+use App\Models\TotalBalance;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
-use App\Models\ClientWallet;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\LiveAccount;
-use App\Models\PaymentLog;
-use App\Models\TotalBalance;
-use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Payment;
-use Carbon\Carbon;
-use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
-   
+
 
     public function __construct(Payment $paymentController)
     {
@@ -33,7 +34,7 @@ class Wallet extends Controller
     {
         $email = auth()->user()->email;
         $wallet_history = $this->getWalletHistory($email);
-        $wallet_balance = $this->getWalletBalance($email);
+        $wallet_balance =auth()->user()->wallet_balance;;
         return view('wallet', compact('wallet_balance', 'wallet_history'));
     }
     public function getWalletHistory($email)
@@ -55,30 +56,28 @@ class Wallet extends Controller
 
         return $wallethistory;
     }
-    public function getWalletBalance($email)
-    {
-        $totalDeposit = WalletDeposit::where('email', $email)->where('status', 1)->sum('deposit_amount');
-        $totalWithdraw = WalletWithdraw::where('email', $email)->where('status','<>', 2)->sum('withdraw_amount');
 
-        $walletBalance = (float) $totalDeposit - (float) $totalWithdraw;
-        return $walletBalance;
-    }
     public function storeClientWallet(Request $request)
     {
         $request->validate([
             'wallet_name' => 'required|string|max:255',
-            'wallet_currency' => 'required|string|max:10',
             'wallet_network' => 'required|string|max:255',
             'wallet_address' => 'required|string|max:255',
             'status' => 'required',
         ]);
+
+        $user = DB::table('aspnetusers')->where('email', session('clogin'))->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
         ClientWallet::create([
             'wallet_name' => $request->wallet_name,
-            'wallet_currency' => $request->wallet_currency,
+            'wallet_currency' => 'USDT',
             'wallet_network' => $request->wallet_network,
             'wallet_address' => $request->wallet_address,
-            'created_by' => session('clogin'),
-            'user_id' => session('clogin'),
+            'user_id' =>  $user->id,
             'status' => $request->status,
         ]);
 
@@ -90,7 +89,7 @@ class Wallet extends Controller
             'toggle_wallet' => 'required',
             'id' => 'required|string',
         ]);
-        $wallet = ClientWallet::where(DB::raw('client_wallet_id'), $request->id)->first();
+        $wallet = ClientWallet::where('id', $request->id)->first();
         if ($wallet) {
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
@@ -125,20 +124,23 @@ class Wallet extends Controller
     public function showWithdrawalForm()
     {
         $email = auth()->user()->email;
-        $client_banks = ClientWallet::where('user_id', $email)
+        $userId=auth()->user()->id;
+        $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->get();
         $settings = $this->settings;
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
+        $liveaccount_details = Account::with('accountType')
+            ->where('demo', false)
+            ->where('user_id', $userId)
             ->get();
-        $totals = LiveAccount::where('email', $email)
+        $totals = Account::where('user_id', $userId)
+            ->where('demo', false)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        $total_wd = WalletDeposit::where('email', $email)
+        $total_wd = WalletDeposit::where('user_id', $userId)
             ->where('status', 1)
             ->sum('deposit_amount');
-        $total_ww = WalletWithdraw::where('email', $email)
+        $total_ww = WalletWithdraw::where('user_id', $userId)
             ->where('status','<>', 2)
             ->sum('withdraw_amount');
         $wallet_balance = (float) $total_wd - (float) $total_ww;
@@ -213,7 +215,7 @@ class Wallet extends Controller
             //     return response()->json(['message' => 'Deposit designation missing..!'], 400);
             // }
             // $amount = $request->input('amount');
-            // $tradeId = $request->input('trade_id');
+            // $tradeId = $request->input('code');
             // $time = $request->input('time');
             // $comment = "Deposit";
             // $depositType = $request->input('deposit_type');
@@ -371,12 +373,15 @@ class Wallet extends Controller
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1',
             'withdraw_type' => 'required|string',
-            'client_bank' => 'required'
+            'client_wallet_id' => 'required'
         ]);
         $userEmail = auth()->user()->email;
+        $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
-        $clientBank = $request->input('client_bank');
+        $clientWalletId= $request->input('client_wallet_id');
+        $clientWallet=ClientWallet::where('id', $clientWalletId)->where('user_id',$user->id)->firstOrFail();
+
         $totalDeposits = WalletDeposit::where('email', $userEmail)
             ->where('status', 1)
             ->sum('deposit_amount');
@@ -390,13 +395,14 @@ class Wallet extends Controller
             return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
         }
         WalletWithdraw::create([
+            'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,
+            'user_id' => $user->id,
             'withdraw_amount' => $withdrawAmount,
             'withdraw_type' => $withdrawType,
-            'client_bank' => $clientBank,
             'status' => 0
         ]);
-        return redirect()->back()->with('Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
+        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
     }
 
 }

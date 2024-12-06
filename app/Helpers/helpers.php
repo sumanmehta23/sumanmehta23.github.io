@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Role;
+use Illuminate\Support\Facades\Cache;
+
 // use DB;
 
 function hexToRGB($hex)
@@ -45,11 +48,14 @@ function page_categories()
     return $query;
 }
 
-function filePermissions($userRoleID)
+function filePermissions($userRole)
 {
     $filePermissions = [];
-    if ($userRoleID != 1) {
-        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.page_id) WHERE p.role_id=" . $userRoleID;
+    if ($userRole != "Super Admin") {
+        $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
+            return Role::where('name', $userRole)->value('id');
+        });
+        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
         $role_permissions = DB::select($sql);
         $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
         $filePermissions = array_values(array_column($role_permissions, 'filename'));
@@ -57,11 +63,15 @@ function filePermissions($userRoleID)
     return $filePermissions;
 }
 
-function rolePermissions($userRoleID)
+function rolePermissions($userRole)
 {
     $rolePermissionsList = [];
-    if ($userRoleID != 1) {
-        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.page_id) WHERE p.role_id=" . $userRoleID;
+    if ($userRole != 'Super Admin') {
+        $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
+            return Role::where('name', $userRole)->value('id');
+        });
+       
+        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
         $role_permissions = DB::select($sql);
         $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
     }

@@ -127,7 +127,7 @@ class PaymentCallbackController extends Controller
         DB::transaction(function () use ($email, $tradingDeposited, $login) {
             DB::table('trade_deposit')->insert([
                 'email' => $email,
-                'trade_id' => $login,
+                'code' => $login,
                 'deposit_amount' => $tradingDeposited,
                 'deposit_type' => 'CryptoChill'
             ]);

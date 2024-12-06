@@ -2,16 +2,26 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\WalletWithdraw;
-use App\Models\TotalBalance;
-use App\Models\ClientWallet;
-use App\Services\MailService as MailService;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
+use App\MT5\MTEnDealAction;
+use App\Models\TotalBalance;
+use App\Models\Ib1;
+use App\Models\EmployeeList;
+use App\Models\RelationshipManager;
+use App\Models\WalletWithdraw;
+use App\Models\Account;
+use App\Models\ClientWallet;
+use Illuminate\Http\Request;
+use App\Models\TradeWithdrawals;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Models\TradeDeposit;
+use Illuminate\Support\Facades\Http;
+use App\Services\MailService as MailService;
+use PDO;
 
 class Transaction extends Controller
 {
@@ -68,37 +78,55 @@ class Transaction extends Controller
     }
     public function wallet_withdrawal_details(Request $request)
     {
+        // dd($request->all());
         if (request()->has('id') && !empty(request()->id)) {
-            DB::enableQueryLog();
-            $details = DB::table('wallet_withdraw as wd')
-                ->leftJoin('clientbankdetails as cbd', 'wd.client_bank', '=', 'cbd.id')
-                ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
-                ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
-                ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
-                ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
-                ->when(session('userData.role_id') == 2, function ($query) {
-                    $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
-                        ->where('rm.rm_id', session('alogin'));
-                })
-                ->where(function ($query) {
-                    $id = request()->id;
-                    $query->where(DB::raw('wd.id'), $id);
-                })
-                ->selectRaw("
-                    cbd.bankName, cbd.branch, cbd.bankDetails, cbd.accountNumber, cbd.code, cbd.swift_code, cbd.ClientName,
-                    COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
-                    COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
-                    COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
-                    COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
-                    wd.*, u.fullname, u.number, ib1.name as parent_ib,
-                    ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name, '' as currency_type
-                ")
-                ->groupBy('u.email')
-                ->first();
-            if($details->client_bank>0){
-                $client_wallet = DB::table('client_wallets')
-                ->where('client_wallet_id', $details->client_bank)
+            // DB::enableQueryLog();
+            // $details = DB::table('wallet_withdraw as wd')
+            //     ->leftJoin('clientbankdetails as cbd', 'wd.client_bank', '=', 'cbd.id')
+            //     ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
+            //     ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
+            //     ->leftJoin('relationship_manager as r', 'wd.user_id', '=', 'r.user_id')
+            //     ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
+            //     ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+            //     ->when(session('userData.role_id') == 2, function ($query) {
+            //         $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
+            //             ->where('rm.rm_id', session('alogin'));
+            //     })
+            //     ->where(function ($query) {
+            //         $id = request()->id;
+            //         $query->where(DB::raw('wd.id'), $id);
+            //     })
+            //     ->selectRaw("
+            //         cbd.bankName, cbd.branch, cbd.bankDetails, cbd.accountNumber, cbd.code, cbd.swift_code, cbd.ClientName,
+            //         COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
+            //         COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
+            //         COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
+            //         COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
+            //         wd.*, u.fullname, u.number, ib1.name as parent_ib,
+            //         ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name, '' as currency_type
+            //     ")
+            //     ->groupBy('u.email')
+            //     ->first();
+
+            // dd($details);
+
+            $id = request()->id;
+            $details = WalletWithdraw::with([
+                'clientWallet',
+                'user',
+                'totalBalance',
+                // 'relationshipManager.emplist',
+                'user.ib1',
+            ])
+            ->where('id',$id)
+            ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+            ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+            ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+            ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
+            ->first();
+
+            if($details->client_wallet_id){
+                $client_wallet = ClientWallet::where('id', $details->client_wallet_id)
                 ->where('status', 1)
                 ->first();
             }else{
@@ -110,29 +138,42 @@ class Transaction extends Controller
     public function trading_deposit_details(Request $request)
     {
         if (request()->has('id')) {
-            $details = DB::table('trade_deposit as wd')
-                ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
-                ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
-                ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
-                ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
-                ->when(session('userData.role_id') == 2, function ($query) {
-                    $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
-                        ->where('rm.rm_id', session('alogin'));
-                })
-                ->where(function ($query) {
-                    $id = request()->id;
-                    $query->where(DB::raw('wd.id'), $id);
-                })
-                ->selectRaw("
-                    COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
-                    COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
-                    COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
-                    COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
-                    wd.*, u.fullname, u.number, u.email, ib1.name as parent_ib,
-                    ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name,'' as deposit_currency_amount,'' as deposit_currency_in_usd
-                ")
-                ->groupBy('u.email')
+            // $details = DB::table('trade_deposit as wd')
+            //     ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
+            //     ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
+            //     ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
+            //     ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
+            //     ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+            //     ->when(session('userData.role_id') == 2, function ($query) {
+            //         $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
+            //             ->where('rm.rm_id', session('alogin'));
+            //     })
+            //     ->where(function ($query) {
+            //         $id = request()->id;
+            //         $query->where(DB::raw('wd.id'), $id);
+            //     })
+            //     ->selectRaw("
+            //         COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
+            //         COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
+            //         COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
+            //         COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
+            //         wd.*, u.fullname, u.number, u.email, ib1.name as parent_ib,
+            //         ib1.email as parent_ib_email, r.rm_id, emp.username as rm_name,'' as deposit_currency_amount,'' as deposit_currency_in_usd
+            //     ")
+            //     ->groupBy('u.email')
+            //     ->first();
+            $details = TradeDeposit::with([
+                    'clientWallet',
+                    'user',
+                    'totalBalance',
+                    // 'relationshipManager.emplist',
+                    'user.ib1',
+                ])
+
+                ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+                ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+                ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+                ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
             return view('admin.trading_deposit_details', compact('details'));
         }
@@ -141,10 +182,6 @@ class Transaction extends Controller
     {
         if (request()->has('id') && !empty(request()->id)) {
             $details = DB::table('trade_withdrawal as wd')
-                ->leftJoin('clientbankdetails', function ($join) {
-                    $join->on('clientbankdetails.accountNumber', '=', 'wd.withdraw_to')
-                        ->on('clientbankdetails.userId', '=', 'wd.email');
-                })
                 ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
                 ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
                 ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
@@ -162,15 +199,11 @@ class Transaction extends Controller
                     COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
                     wd.*, u.fullname, u.number, u.email,
                     ib1.name as parent_ib, ib1.email as parent_ib_email,
-                    r.rm_id, emp.username as rm_name,
-                    clientbankdetails.ClientName as account_holder_name,
-                    clientbankdetails.accountNumber as bank_account_no,
-                    clientbankdetails.code as ifsc_code,
-                    clientbankdetails.swift_code as swift_code,
-                    clientbankdetails.bankName as bank_name
+                    r.rm_id, emp.username as rm_name, tb.code
                 ")
                 ->groupBy('u.email')
                 ->first();
+
             return view('admin.trading_withdrawal_details', compact('details'));
         }
     }
@@ -191,22 +224,23 @@ class Transaction extends Controller
         $transaction_id = $request->input('transaction_id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
-            $transaction->AdminRemark = $description;
+            $transaction->admin_remark = $description;
             $transaction->Status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
                 TotalBalance::create([
+                    'user_id' => $transaction->user_id,
                     'email' => $email,
                     'withdraw_amount' => $depositAmount,
                 ]);
 
-                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_bank > 0) {
+                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
 
-                    $bankDetails = ClientWallet::where('client_wallet_id', $transaction->client_bank)->first();
-                    $walletNetwork = $bankDetails->wallet_network;
-                    $walletCurrency = $bankDetails->wallet_currency;
-                    $walletAddress = $bankDetails->wallet_address;
+                    $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+                    $walletNetwork = $walletDetails->wallet_network;
+                    $walletCurrency = $walletDetails->wallet_currency;
+                    $walletAddress = $walletDetails->wallet_address;
                     $amount = $transaction->withdraw_amount;
 
 
@@ -312,5 +346,167 @@ class Transaction extends Controller
         } else {
             return redirect()->back()->with('error', 'Transaction Not Found');
         }
+    }
+
+    public function update_trading_withdrawal(Request $request)
+    {
+        $settings = settings();
+        $validatedData = $request->validate([
+            'description' => 'required|string|max:255',
+            'status' => 'required|integer',
+            'email' => 'required|email',
+            'amount' => 'required|numeric',
+        ]);
+        $description = $validatedData['description'];
+        $status = $validatedData['status'];
+        $did = $request->id;
+        $email = $validatedData['email'];
+        $amount = ((float) $validatedData['amount']) * -1;
+        $login = $request->code;
+        $transaction_id = $request->transaction_id;
+
+        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
+
+        dd($request->ALL());
+        // echo "<script>console.log('TradingDeposit Started')</script>";
+        define("PATH_TO_SCRIPTS", "./mt5_api/");
+        include PATH_TO_SCRIPTS . "mt5_api.php";
+        define('T_QUOTES', 'EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD'); //symbols list for publication
+        define("MT5_CRYPT_PROTOCOL", true); // enable crypt protocol
+        define("IS_WRITE_DEBUG_LOG", true); // Write all in logs
+        define("MT5_CONNECTION_TIMEOUT", 3);
+        // define("PATH_TO_LOGS", "./logs"); // Write all in logs
+        // define("AGENT", "WebAPITesterArt");
+        $api = new MTWebAPI(AGENT, PATH_TO_LOGS, MT5_CRYPT_PROTOCOL);
+        $api->SetLoggerWriteDebug(IS_WRITE_DEBUG_LOG);
+
+        if (($error_code = $api->Connect(MT5_SERVER_IP, MT5_SERVER_PORT, MT5_CONNECTION_TIMEOUT, MT5_SERVER_WEB_LOGIN, MT5_SERVER_WEB_PASSWORD)) != MTRetCode::MT_RET_OK) {
+        ?>
+        <script>
+          console.log("MT5 Connectivity Error: <?= MTRetCode::GetError($error_code) ?>");
+          $(document).ready(function() {
+            Sweetalert2.fire({
+              icon: 'error',
+              title: 'Something went wrong.',
+              text: 'Please try again after sometime or contact support. '
+            }).then((val) => {
+              location.href = "<?= $_SERVER['SCRIPT_NAME'] ?>"
+            });
+          });
+        </script>
+      <?php
+      }
+
+      // print_r($api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket = null, $margin_check = true));
+      // exit();
+      // print_r($data);
+      $ticket = null;
+      $comment = "Withdrawal";
+      // echo $login."==>". $type = MTEnDealAction::DEAL_BALANCE."==>". $amount."==>". $comment."==>". $ticket = null."==>". $margin_check = true;
+      // echo "<script>console.log('TradingDeposit Inited')</script>";
+
+      if ($status == 1) {
+        if (($error_code = $api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true)) != MTRetCode::MT_RET_OK) {
+          $error = MTRetCode::GetError($error_code);
+          echo "<script>console.log('TradingDeposit Error==> ".$error."')</script>";
+        } else {
+
+          $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
+          $query = $dbh->prepare($sql);
+          $query->bindParam(':description', $description, PDO::PARAM_STR);
+          $query->bindParam(':status', $status, PDO::PARAM_STR);
+          $query->bindParam(':did', $did, PDO::PARAM_STR);
+          $query->execute();
+
+          $sql = "INSERT INTO total_balance(email,trading_withdrawal) VALUES(:email,:amount)";
+          $query = $dbh->prepare($sql);
+          $query->bindParam(':email', $email, PDO::PARAM_STR);
+          $query->bindParam(':amount', $amount, PDO::PARAM_STR);
+          $query->execute();
+
+
+
+          $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where (md5(td.id)=:did || td.id=:did)";
+          $query = $dbh->prepare($sql);
+          $query->bindParam(':did', $did, PDO::PARAM_STR);
+          $query->execute();
+          $deposit_details = $query->fetch(PDO::FETCH_OBJ);
+
+          if ($deposit_details->type == "Wallet Withdrawal") {
+            $sql = "INSERT INTO total_balance(email,deposit_amount) VALUES(:email,:amount)";
+            $query = $dbh->prepare($sql);
+            $query->bindParam(':email', $email, PDO::PARAM_STR);
+            $query->bindParam(':amount', $amount, PDO::PARAM_STR);
+            $query->execute();
+          }
+
+          $toEmail = $email;
+          $from = $email_from_address;
+          $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+          $emailSubject = $title . ' - Transaction Approved';
+          $htmlContent = "";
+          $headers = "MIME-Version: 1.0" . "\r\n";
+          $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+          $headers .= 'From:' . $title . '<' . $from . '>' . "\r\n";
+          $content = '<div>We are pleased to inform you that your transaction has been successfully approved. </div>
+            <div>The approved amount has been withdrawn to your wallet.</div>
+            <div><b>Transaction Details</b></div>
+            <div><b>Approved Amount: </b>$' . $deposit_details->amount . '</div>
+            <div><b>Account ID: </b>' . $deposit_details->code . '</div>
+            <div><b>Transaction ID: </b>' . $transid . '</div>
+            <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
+            <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>';
+          $templateVars = [
+            'name' => $deposit_details->fullname,
+            'site_link' => $copyright_site_name_text,
+            'email' => $email_from_address,
+            "content" => $content,
+            "title_right" => "Transaction",
+            "subtitle_right" => "Approved",
+            "btn_text" => "Go To Dashboard",
+          ];
+          phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
+        }
+      } else {
+        $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':description', $description, PDO::PARAM_STR);
+        $query->bindParam(':status', $status, PDO::PARAM_STR);
+        $query->bindParam(':did', $did, PDO::PARAM_STR);
+        $query->execute();
+
+        $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where md5(td.id)=:did";
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':did', $did, PDO::PARAM_STR);
+        $query->execute();
+        $deposit_details = $query->fetch(PDO::FETCH_OBJ);
+
+        $toEmail = $email;
+        $from = $email_from_address;
+        $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+        $emailSubject = $title . ' - Transaction Approved';
+        $htmlContent = "";
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $title . '<' . $from . '>' . "\r\n";
+        $content = '<div>This email to inform you that your transaction has been Rejected. </div>
+          <div><b>Transaction Details</b></div>
+          <div><b>Rejected Amount: </b>$' . $deposit_details->amount . '</div>
+          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
+          <div><b>Transaction ID: </b>' . $transid . '</div>
+          <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
+          <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>
+          <div><b>Rejection Remark </b>' . $description . '</div>';
+        $templateVars = [
+          'name' => $deposit_details->fullname,
+          'site_link' => $copyright_site_name_text,
+          'email' => $email_from_address,
+          "content" => $content,
+          "title_right" => "Transaction",
+          "subtitle_right" => "Rejected",
+          "btn_text" => "Go To Dashboard",
+        ];
+        phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
+      }
     }
 }

@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use DB;
 use Exception;
-use Illuminate\Http\Request;
 use App\Models\Ib1;
 use App\Models\User;
+use App\Models\UserLog;
+use App\Models\TradeDeposit;
+use App\Models\WalletWithdraw;
+use Illuminate\Http\Request;
+use App\Models\TradeWithdrawals;
 
 class AjaxController extends Controller
 {
@@ -193,16 +198,16 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " ";
-        if (session('userData')['role_id'] != 1) {
+        if (session('userData')['userRole'] != "Super Admin") {
             $rmCondition .= " left join aspnetusers user on(user.email=ap.email) ";
         } else {
             $rmCondition .= " where";
         }
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where rmgr.rm_id='" . session('alogin') . "' and ";
         }
-        if (session('userData')['role_id'] != 1) {
-            if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] != "Super Admin") {
+            if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmCondition .= " (1) and ";
             } else {
                 $rmCondition .= " where (1) and";
@@ -212,14 +217,32 @@ class AjaxController extends Controller
             $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where (rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT ibs.name as ib_name,c.country_alpha,emp.username as rm_name,rm.rm_id,(ap.id) as enc_id,ap.fullname as fullname,ap.*,COALESCE(SUM(tb.deposit_amount), 0) as deposit_amount,COALESCE(SUM(tb.trading_deposited), 0) as trading_deposited,COALESCE(SUM(tb.trading_withdrawal), 0) as trading_withdrawal,COALESCE(SUM(tb.withdraw_amount), 0) as withdraw_amount,ib1.status as ib_status,ib1.acc_type as ib_group from aspnetusers ap
-  LEFT JOIN ib1 on ib1.email = ap.email
-  LEFT JOIN ib1 as ibs on ibs.email = ap.ib1
-  LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
-  LEFT JOIN emplist emp on(rm.rm_id =emp.email)
-  LEFT JOIN countries c on(ap.country =c.country_name)
-  LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
+        $sql = " SELECT 
+        ibs.name AS ib_name,
+        c.country_alpha,
+        emp.username AS rm_name,
+        rm.rm_id,
+        ap.id AS enc_id,
+        ap.fullname AS fullname,
+        ap.*, 
+        COALESCE(SUM(tb.deposit_amount), 0) AS deposit_amount,
+        COALESCE(SUM(tb.trading_deposited), 0) AS trading_deposited,
+        COALESCE(SUM(tb.trading_withdrawal), 0) AS trading_withdrawal,
+        COALESCE(SUM(tb.withdraw_amount), 0) AS withdraw_amount,
+        ib1.status AS ib_status,
+        ib1.acc_type AS ib_group,
+        parent_ib.name AS parent_name,
+        parent_ib.email AS parent_email
+        from aspnetusers ap
+        LEFT JOIN ib1 on ib1.user_id = ap.id
+        LEFT JOIN ib1 as ibs on ibs.user_id = ap.id
+        LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
+        LEFT JOIN emplist emp on(rm.rm_id =emp.email)
+        LEFT JOIN countries c on(ap.country =c.country_name)
+        LEFT JOIN ib1 AS parent_ib ON (parent_ib.referral_code = ap.ib1 || parent_ib.email = ap.ib1)
+        LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
         $results = DB::select($sql);
+     
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -233,8 +256,8 @@ class AjaxController extends Controller
                 'email' => $row->email,
                 'phone' => $row->number,
                 'country' => $row->country_alpha,
-                'ib' => $row->ib1,
-                'ib_name' => $row->ib_name,
+                'ib' => $row->parent_email,
+                'ib_name' => $row->parent_name,
                 'ib_status' => $row->ib_status,
                 'kyc_verify' => $row->kyc_verify,
                 'rm_id' => $row->rm_name ?? '',
@@ -253,7 +276,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where ";
@@ -283,7 +306,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
         }else{
             $rmCondition .= " where ";
@@ -310,67 +333,103 @@ class AjaxController extends Controller
     }
     public function getTradingDeposit()
     {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        $condition = "";
+        $rmCondition = " left join accounts user on(user.email=trs.email) ";
+        // $condition = "";
 
+        // if (!isset($_GET['id'])) {
+        //     if (session('userData')['userRole'] == "Relationship Manager") {
+        //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
+        //     } else {
+        //     }
+        // }
+        // if (isset($_GET['id'])) {
+        //     $condition = ' where trs.code=' . $_GET['id'];
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposits trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = TradeDeposit::with(['user','account']);
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
-            } else {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
+        } else {
+            $query->where('code', $_GET['id']);
         }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+        $results = $query->orderByDesc('id')->get();
         $data = [];
         foreach ($results as $row) {
             $data[] = [
                 'id' => 'TDID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
+                'account_no' => $row->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->deposit_amount,
                 'deposit_type' => $row->deposit_type,
                 'deposit_from' => $row->deposit_from ?? $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
+
         echo json_encode(['data' => $data]);
     }
     public function getTradingWithdrawal()
     {
-        $condition = '';
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+
+        // $condition = '';
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (!isset($_GET['id'])) {
+        //     if (session('userData')['userRole'] == "Relationship Manager") {
+        //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
+        //     } else {
+        //     }
+        // }
+        // if (isset($_GET['id'])) {
+        //     $condition = ' where trs.code=' . $_GET['id'];
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = TradeWithdrawals::with(['user', 'withdrawTo','account']);
+
+        // Add conditions based on session and GET parameters
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
-            } else {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
+        } else {
+            $query->where('account_id', $_GET['id']);
         }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Fetch data
+        $withdrawals = $query->orderByDesc('id')->get();
         $data = [];
-        foreach ($results as $row) {
+
+        foreach ($withdrawals as $row) {
+            if($row->withdraw_to){
+                $acc = Account::where('id',$row->withdraw_to)->first();
+            }
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
+                'account_no' => $row->account->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to ? $row->withdraw_to : $row->withdraw_type,
+                'withdraw_to' => ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -381,24 +440,44 @@ class AjaxController extends Controller
     }
     public function getInternalTransfer()
     {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // } else {
+        //     $rmCondition .= " where ";
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT trs.* from trade_deposits trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = TradeDeposit::with(['user','account']);
+
+        // Add conditions based on session and GET parameters
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
         } else {
-            $rmCondition .= " where ";
+            $query->where('deposit_type', 'Internal Transfer');;
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_deposit trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Fetch data
+        $deposits = $query->orderByDesc('id')->get();
+
+
         $data = [];
-        foreach ($results as $row) {
+        foreach ($deposits as $row) {
+            // dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'amount' => '$' . $row->deposit_amount,
                 'transfer_from' => $row->deposit_from,
-                'transfer_to' => $row->trade_id,
+                'transfer_to' => $row->code,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details">View</a>'
@@ -410,7 +489,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -440,23 +519,42 @@ class AjaxController extends Controller
     public function getPendingWalletWithdrawal()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
+        // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        // } else {
+        //     $rmCondition .= " where (1) and ";
+        // }
+        // header('Content-Type: application/json');
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        // $query = DB::select($sql);
+        // $results = $query;
+
+        $query = WalletWithdraw::with(['user']);
+
+        // Add conditions based on session and GET parameters
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
+            else {
+                $query->where('Status', 0);
+            }
+
+        // Fetch data
+        $results = $query->orderByDesc('id')->get();
+
         $data = [];
+
         foreach ($results as $row) {
+            // dd($row);
             $data[] = [
                 'id' => 'WWID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
+                'fullname' => $row->user->fullname,
                 'amount' => '$' . $row->withdraw_amount,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
@@ -471,13 +569,13 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -485,7 +583,7 @@ class AjaxController extends Controller
             $data[] = [
                 'id' => 'TDID' . sprintf("%05d", $row->id),
                 'enc_id' => $row->raw_erc,
-                'account_no' => $row->trade_id,
+                'account_no' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
                 'deposit_type' => $row->deposit_type,
                 'deposit_from' => $row->deposit_from,
@@ -501,7 +599,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -514,7 +612,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $data[] = [
                 'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
+                'account_no' => $row->code,
                 'amount' => '$' . $row->withdrawal_amount,
                 'withdraw_type' => $row->withdraw_type,
                 'withdraw_to' => $row->withdraw_to,
@@ -530,7 +628,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -559,7 +657,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=kyc.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (rm.user_id=kyc.email) where rm.rm_id='" . session('alogin') . "' and";
         }
         header('Content-Type: application/json');
@@ -574,9 +672,9 @@ class AjaxController extends Controller
     public function getBankDetails()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=clientbankdetails.userId) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.userId) where rm.rm_id='" . session('alogin') . "'";
+        $rmCondition = " left join aspnetusers user on(user.id=clientbankdetails.user_id) ";
+        if (session('userData')['userRole'] == "Relationship Manager") {
+            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1)";
         }
@@ -605,19 +703,20 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.role_name,r.role_id
+        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN permissions p ON e.role_id = p.role_id
-                LEFT JOIN roles r ON e.role_id = r.role_id
+                LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.client_index";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
+
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = (session('userData')['role_id'] == 1 ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
+            $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
         echo json_encode(['data' => $data]);
@@ -706,7 +805,7 @@ class AjaxController extends Controller
 
 
         header('Content-Type: application/json');
-        $sql = "SELECT p.id,r.role_name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
+        $sql = "SELECT p.id,r.name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -814,7 +913,7 @@ class AjaxController extends Controller
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where email='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
+        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -822,7 +921,7 @@ class AjaxController extends Controller
 
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from_to' => $row->trade_id ?? 'Wallet',
+                'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
@@ -834,17 +933,20 @@ class AjaxController extends Controller
     }
     public function getLatestWithdrawal($id)
     {
-
         header('Content-Type: application/json');
-        $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
-        $query = DB::select($sql);
+        // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeWithdrawals::with('account')
+                            ->where('user_id',$id)
+                            ->where('withdraw_type',['Internal Transfer'])
+                            ->get();
+
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => $row->trade_id,
+                'from_to' => $row->code,
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdrawal_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
@@ -855,20 +957,22 @@ class AjaxController extends Controller
     }
     public function getLatestTransfer($id)
     {
-        header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
-        $query = DB::select($sql);
+        // header('Content-Type: application/json');
+        // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer'])
+                                ->where('user_id',$id)
+                                ->get();
         $results = $query;
         $data = [];
-        // var_dump($results);
-        // die;
+        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->deposted_date,
                 'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
-                'to' => $row->trade_id,
+                'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
@@ -878,7 +982,7 @@ class AjaxController extends Controller
     {
 
         $rmCondition = "";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
         }
         header('Content-Type: application/json');
@@ -900,9 +1004,9 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         $data = [];
         foreach ($results as $row) {
             $data[] = [
-                'id' => $row->indexId,
+                'id' => $row->id,
                 'enc' => ($row->email),
-                'acc_type' => $row->acc_type,
+                'ib_category_id' => $row->ib_category_id,
                 'grp' => $row->grp,
                 'name' => $row->name,
                 'email' => $row->email,
@@ -921,7 +1025,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1) ";
@@ -1011,16 +1115,19 @@ and ib1.status = 0
                 if ($result->status != $user_status) {
                     $data['field'] = 'status';
                     $data['value'] = $user_status;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->email_confirmed != $email_confirmed) {
                     $data['field'] = 'email_confirmed';
                     $data['value'] = $email_confirmed;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 if ($result->kyc_verify != $kyc_verify) {
                     $data['field'] = 'kyc_verify';
                     $data['value'] = $kyc_verify;
+                    $data['user_id']=$result->id;
                     $this->add_to_user_log($data);
                 }
                 echo json_encode(['success' => true]);
@@ -1034,13 +1141,14 @@ and ib1.status = 0
 
     public function add_to_user_log($data)
     {
-
-        DB::table('aspnetusers_log')->insert([
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => session('alogin'),
             'type' => $data['field'],
             'value' => $data['value']
         ]);
+
     }
     public function getIbList($id)
     {
@@ -1120,7 +1228,7 @@ and ib1.status = 0
             $updated = Ib1::whereRaw('email = ?', [$clientId])
                 ->update([
                     'status' => $ibStatus,
-                    'acc_type' => $ibGroup
+                    'ib_category_id' => $ibGroup
                 ]);
             if ($updated) {
                 echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);

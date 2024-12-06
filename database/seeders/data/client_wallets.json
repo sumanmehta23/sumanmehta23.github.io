@@ -1,0 +1,16 @@
+[
+    {
+        "id": "9d98f1d5-4fe9-4ce2-a8c2-d45da94ff990",
+        "client_wallet_id": 0,
+        "wallet_name": "Trust Wallet",
+        "wallet_currency": "USDT",
+        "wallet_network": "ETH_USDT",
+        "wallet_address": "0x8f30x4d9b51ED31AeF6d305Cdd2c80395bf17246945ce",
+        "status": 1,
+        "user_id": "9d8e3512-3fd8-4c51-9804-a6c58a305a3c",
+        "admin_action_by": null,
+        "created_at": "2024-11-28 13:56:18",
+        "updated_at": "2024-11-28 13:56:18",
+        "deleted_at": null
+    }
+]

@@ -166,7 +166,7 @@
                                                             <span class="fs-11 text-muted">TRADE ID</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->trade_id }}</span>
+                                                            <span>{{ $details->code }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -211,11 +211,11 @@
                                             <td>
                                                 <div class="btn-list ms-auto my-auto">
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->code }})"
                                                         type="button"
                                                         class="btn btn-success btn-space m-1">Approve</button>
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
                                                         type="submit"
                                                         class="btn btn-danger btn-space m-1">Reject</button>
                                                 </div>
@@ -228,7 +228,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->AdminRemark }}</span>
+                                                            <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -263,12 +263,13 @@
         @endif
     </div>
     <script>
-        function takeAction(email, amount, status) {
+        function takeAction(code, email, amount, status) {
           Swal.fire({
             title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
             html: `
             <form id="updateTransactionForm" method="post">
               @csrf
+              <input type="hidden" name="code" value="${code}">
               <input type="hidden" name="email" value="${email}">
               <input type="hidden" name="amount" value="${amount}">
               <input type="hidden" name="status" value="${status}">

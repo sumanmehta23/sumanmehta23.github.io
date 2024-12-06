@@ -7,9 +7,9 @@ use App\Models\IbPlanDetails;
 use Illuminate\Http\Request;
 use App\Models\Leverage;
 use App\Models\Ib1;
-use App\Models\Mt5GroupCategory;
+use App\Models\MT5GroupCategory;
 use App\Models\Mt5Group;
-use App\Models\IBCategory;
+use App\Models\IbCategory;
 use App\Models\AccountType;
 use App\Models\User;
 use DB;
@@ -21,6 +21,7 @@ class ApiAjaxController extends Controller
 {
     public function handleRequest(Request $request)
     {
+        
         if ($request->has('type') && $request->type == 'leverage') {
             $leverage = Leverage::where('account_type_id', $request->id)->get();
             return response()->json($leverage);
@@ -31,7 +32,7 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('get_groupcat') && $request->has('id')) {
-            $groupCat = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)->first();
+            $groupCat = MT5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)->first();
             return $groupCat ? response()->json($groupCat) : response()->json(false);
         }
 
@@ -41,12 +42,12 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('get_ibplan') && $request->has('id')) {
-            $ibPlan = IbCategory::where(DB::raw('ib_cat_id'), $request->id)->first();
+            $ibPlan = IbCategory::where('id', $request->id)->first();
             return $ibPlan ? response()->json($ibPlan) : response()->json(false);
         }
 
         if ($request->has('group_update') && $request->id) {
-            $updated = Mt5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)
+            $updated = MT5GroupCategory::where(DB::raw('mt5_grp_cat_id'), $request->id)
                 ->update([
                     'mt5_grp_cat_name' => $request->mt5_grp_cat_name,
                     'mt5_grp_cat_desc' => $request->mt5_grp_cat_desc,
@@ -115,7 +116,17 @@ class ApiAjaxController extends Controller
 
     private function createIbPlan($request)
     {
-        $ibPlan = IBCategory::create([
+        $ibPlan = IbCategory::create([
+            'ib_cat_name' => $request->ib_cat_name,
+            'ib_cat_desc' => $request->ib_cat_desc,
+            'is_active' => $request->is_active
+        ]);
+
+        return response()->json($ibPlan ? 'true' : 'false');
+    }
+    private function updateIbPlan($request)
+    {
+        $ibPlan = IbCategory::where('id',$request->id)->update([
             'ib_cat_name' => $request->ib_cat_name,
             'ib_cat_desc' => $request->ib_cat_desc,
             'is_active' => $request->is_active

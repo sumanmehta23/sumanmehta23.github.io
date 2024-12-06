@@ -14,7 +14,7 @@
     </style>
     <div class="modal fade" id="addUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="addUserLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{route('admin.addUser')}}" id="addUserForm" method="post">
                     @csrf
@@ -22,17 +22,17 @@
                         <h5 class="modal-title" id="addUserLabel">Create User</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Email:</label>
                                 <input type="text" class="form-control" name="email" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Full Name:</label>
                                 <input type="text" class="form-control" name="fullname" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Phone:</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend w-25">
@@ -52,7 +52,7 @@
                                         placeholder="Enter phone number">
                                 </div>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Country:</label>
                                 <select class="form-select" id="country" name="country" required>
                                     <option value="">Select Country</option>
@@ -63,11 +63,11 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Password:</label>
                                 <input type="password" class="form-control" name="password" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Confirm Password:</label>
                                 <input type="password" class="form-control" id="input" name="confirm_password" required>
                             </div>
@@ -82,7 +82,7 @@
     </div>
     <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="editUserLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="{{route('admin.updateUser')}}" id="editUserForm" method="post">
                     @csrf
@@ -90,7 +90,7 @@
                         <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <input type="hidden" name="id">
                         <div class="row">
                             <div class="col-6">
@@ -162,7 +162,7 @@
 
     <div class="modal fade" id="statusModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="statusModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="statusUpdateForm" method="post">
                     @csrf
@@ -172,7 +172,7 @@
                         <h5 class="modal-title" id="statusModalLabel">Update Status</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -187,7 +187,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">User Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -198,8 +198,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-lg-4 m-auto">
+                            <div class="mb-3 row">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Email Confirmed</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -212,7 +212,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">KYC Verification</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -257,9 +257,9 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">{{ $total_clients }}</h2>
-                                    <p class="text-fixed-white mb-0">Total Clients </p>
+                                    <p class="mb-0 text-fixed-white">Total Clients </p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-users text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-users text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -270,25 +270,25 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white"><?= $total_ib ?></h2>
-                                    <p class="text-fixed-white mb-0">Introducing Brokers</p>
+                                    <p class="mb-0 text-fixed-white">Introducing Brokers</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-user-circle text-fixed-white fs-30 me-2 mt-2"></i>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-user-circle text-fixed-white fs-30 me-2"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div><!-- COL END -->
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                    <div class="card custom-card  bg-success img-card box-success-shadow">
+                    <div class="card custom-card bg-success img-card box-success-shadow">
                         <div class="card-body">
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         $<?= $total_balance->deposit_amount + $total_balance->trading_deposited ?>
                                     </h2>
-                                    <p class="text-fixed-white mb-0">Total Deposit</p>
+                                    <p class="mb-0 text-fixed-white">Total Deposit</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-credit-card text-fixed-white fs-30 me-2 mt-2"></i>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-credit-card text-fixed-white fs-30 me-2"></i>
                                 </div>
                             </div>
                         </div>
@@ -301,10 +301,10 @@
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         $<?= $total_balance->withdraw_amount + $total_balance->trading_withdrawal ?></h2>
-                                    <p class="text-fixed-white mb-0">Total Withdraw</p>
+                                    <p class="mb-0 text-fixed-white">Total Withdraw</p>
                                 </div>
                                 <div class="ms-auto"> <i
-                                        class="fa fa-arrow-circle-down text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                        class="mt-2 fa fa-arrow-circle-down text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -317,7 +317,7 @@
                             <div class="card-title">
                                 Listed Count : {{ $total_clients }}
                             </div>
-                            <?php if (session('userData')['role_id'] == 1) { ?>
+                            <?php if (session('userData')['userRole'] == "Super Admin") { ?>
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                 data-bs-target="#addUserModal">
                                 Add New Client
@@ -326,7 +326,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="ajaxDatatable" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
                                             <th>#CID</th>
@@ -354,7 +354,7 @@
     <!-- Modal -->
     <div class="modal fade" id="updateIbModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="updateIbModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="{{ route('admin.updateIB') }}" id="ibUpdateForm" method="post">
                     @csrf
@@ -363,7 +363,7 @@
                         <h5 class="modal-title" id="updateIbModalLabel">Update IB</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0" style="max-height:500px;overflow-y: auto;">
+                    <div class="mb-0 modal-body custom-card card" style="max-height:500px;overflow-y: auto;">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -384,7 +384,8 @@
                                         name="ib<?= $i ?>" disabled>
                                         <option value="" selected>--Select--</option>
                                         <?php foreach ($ib_details as $ib) { ?>
-                                        <option value="<?php echo $ib->email; ?>"><?php echo $ib->name; ?></option>
+                                            <option value="<?php echo isset($ib->referral_code) && !empty($ib->referral_code) ? $ib->referral_code : $ib->email; ?>">
+                                                <?php echo $ib->name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -402,7 +403,7 @@
     </div>
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
                      @csrf
@@ -411,7 +412,7 @@
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -426,7 +427,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">IB Request Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -440,7 +441,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">IB Plan</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -465,7 +466,7 @@
     </div>
     <div class="modal fade" id="rmModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="rmModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.updateRM') }}" id="rmRequestForm" method="post">
                     @csrf
@@ -474,7 +475,7 @@
                         <h5 class="modal-title" id="rmModalLabel">Assign/Reassign RM</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -489,7 +490,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Relationship Manager</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -623,7 +624,7 @@
                         var ibValues = JSON.parse(response);
                         $('.ib-select').val(null).trigger('change');
                         $.each(ibValues, function(key, value) {
-                            if ((value != "noIB" && value != "" && value != null) || key ==
+                            if (( value != "" && value != null) || key ==
                                 'ib1') {
                                 if (value == 'noIB') {
                                     value = '';
@@ -685,7 +686,7 @@
             });
             $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
-                location.href = "/admin/client_details?id=" + data.enc_id;
+                location.href = "/admin/client_details/" + data.enc_id;
             });
         }
     </script>
@@ -722,7 +723,7 @@
                     data: 'email',
                     name: 'email',
                     render: function(data, row, row_data) {
-                        var return_data = "<a href='/admin/client_details?id=" + row_data.enc_id +
+                        var return_data = "<a href='/admin/client_details/" + row_data.enc_id +
                             "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" +
                             row_data.fullname +
                             "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data
@@ -749,26 +750,28 @@
                     data: 'ib',
                     name: 'ib',
                     render: function(data, row, row_data) {
+                        console.log(JSON.stringify(row_data));
+                        console.log(JSON.stringify(data));
                         let ib_email = row_data.ib;
                         let ib_name = row_data.ib_name;
                         let svg =
                             "<svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z' /><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z' /><path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707' /></svg>";
-                        if (data === '' || data == null || data == 'noIB') {
+                        if (data === '' || data == null ) {
                             ib_email = "";
                             ib_name = "noIB";
                             svg = '';
                         }
-                        return "<div class='updateIb cursor-pointer d-flex align-items-center'><div class='me-2'>" +
+                        return "<div class='cursor-pointer updateIb d-flex align-items-center'><div class='me-2'>" +
                             svg + "</div><div><div class='lh-1'><span>" + ib_name +
                             "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + ib_email +
                             "</span></div></div></div></a>";
 
                     }
                     // render: function (data, row, row_data) {
-                    // if (data === '' || data == null || data == 'noIB') {
-                    //   return '<span class="updateIb btn-sm btn btn-outline-dark cursor-pointer">noIB</span>';
+                    // if (data === '' || data == null ) {
+                    //   return '<span class="cursor-pointer updateIb btn-sm btn btn-outline-dark">noIB</span>';
                     // } else {
-                    //   return '<span class="updateIb cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="28" color="#000000" class="tabler-icon tabler-icon-user-square-rounded"><path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path><path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05"></path></svg>'+data+'</span>';
+                    //   return '<span class="cursor-pointer updateIb"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="28" color="#000000" class="tabler-icon tabler-icon-user-square-rounded"><path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path><path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05"></path></svg>'+data+'</span>';
                     // }
                     // }
                 },
@@ -792,12 +795,12 @@
                     name: 'rm',
                     render: function(data, row, row_data) {
                         let html = '';
-                        var roleId = <?php echo json_encode(session('userData')['role_id']); ?>;
+                        var role = <?php echo json_encode(session('userData')['userRole']); ?>;
                         if (row_data.rmid == "") {
-                            html = '<button class="' + (roleId == 1 ? 'rmToggle ' : '') +
+                            html = '<button class="' + (role == "Super Admin" ? 'rmToggle ' : '') +
                                 'badge  btn-sm btn btn-outline-dark">RM Not Mapped</button>';
                         } else {
-                            html = '<span class="' + (roleId == 1 ? 'rmToggle ' : '') +
+                            html = '<span class="' + (role == "Super Admin" ? 'rmToggle ' : '') +
                                 ' text-primary"> <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan"><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg>' +
                                 row_data.rm_id + '</span>';
                         }
@@ -856,13 +859,11 @@
                 this.api()
                     .columns()
                     .every(function(index) {
-
                         if (needs.indexOf(index) == -1) {
                             return false;
                         }
                         let column = this;
                         let title = column.header().textContent;
-
                         // Create input element
                         let input = document.createElement('input');
                         input.placeholder = title;

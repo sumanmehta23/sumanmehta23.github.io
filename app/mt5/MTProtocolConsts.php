@@ -162,5 +162,3 @@ class MTProtocolConsts
   //--- server restart
   const WEB_CMD_SERVER_RESTART = "SERVER_RESTART";
 }
-
-?>

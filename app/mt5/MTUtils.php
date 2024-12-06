@@ -125,5 +125,3 @@ class MTUtils
      return (int)$old_volume * 10000;
     }
   }
-
-?>

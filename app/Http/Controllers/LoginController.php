@@ -2,9 +2,11 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Country;
 use Illuminate\Support\Str;
+use App\Models\LoginHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -196,30 +198,60 @@ class LoginController extends Controller
             'country_code' => 'required',
             'telephone' => 'required',
         ]);
-        // If validation fails, return errors
+
         if ($validator->fails()) {
             return redirect()->route('register')->with('errors', $validator->errors());
         }
-        $ib1 = '';
+       
+        $userData = [];
+
         if ($request->has('refercode')) {
-            $ib1 = base64_decode($request->query('refercode'));
+            $refercode = $request->query('refercode');
+            $referrals = [];
+            $nextReferral = $refercode;
+
+            for ($i = 1; $i <= 15; $i++) {
+                if (!$nextReferral) {
+                    break;
+                }
+                $result = Ib1::where('referral_code', $nextReferral)->first();
+                if (!$result || empty($result->email)) {
+                    $nextReferral = null;
+                    break;
+                }
+                $email2 = $result->email;
+                $referrals["ib{$i}"] = $nextReferral;
+                $parentUser = User::where('email', $email2)->first();
+                $nextReferral = $parentUser ? $parentUser->ib1 : null;
+            }
+
+            for ($i = 1; $i <= 15; $i++) {
+                $ibKey = "ib{$i}";
+                if (!array_key_exists($ibKey, $referrals)) {
+                    $referrals[$ibKey] = null;
+                }
+            }
+
+            foreach ($referrals as $key => $referralCode) {
+                $userData[$key] = $referralCode;
+            }
         }
-        // Create the user
+
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
-        $lastInsertId = DB::table('aspnetusers')->insertGetId([
-            'email' => $request->email,
-            'fullname' => $request->fullname,
-            'password' => Hash::make($request->password), // Ensure this is hashed if required
-            'number' => $number,
-            'username' => $request->email,
-            'referral' => '',
-            'emailToken' => $code,
-            'country' => $request->country,
-            'ib1' => $ib1
-        ]);
-        if ($lastInsertId) {
+        $userData['email'] =$request->email;
+        $userData['fullname'] =$request->fullname;
+        $userData['password'] =Hash::make($request->password);
+        $userData['number'] =$number;
+        $userData['username'] =$request->email;
+        $userData['referral'] ='';
+        $userData['emailToken'] =$code;
+        $userData['country'] =$request->country;
+      
+        $user = User::create($userData);
+        
+        if ($user) {
             $settings = settings();
             $from = $settings['email_from_address'];
             $toEmail = $request->email;
@@ -237,7 +269,7 @@ class LoginController extends Controller
             $templateVars = [
                 'name' => $request->fullname,
                 'server_name' => $settings['mt5_company_name'],
-                'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id=$lastInsertId&code=$code",
+                'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$user->id}&code=$code",
                 'email' => $settings['email_from_address'],
                 "content" => $content,
                 "title_right" => "Activate",
@@ -301,7 +333,8 @@ class LoginController extends Controller
             'ip' => $ip
         ])->json();
 
-        DB::table('login_history')->insert([
+        LoginHistory::create([
+            'user_id' => $user->id,
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
             'country' => $geoData['country_name'] ?? 'Unknown',

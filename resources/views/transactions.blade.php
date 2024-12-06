@@ -86,7 +86,7 @@
                                 <div class="avtar avtar-s border"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->trade_id }}</h6>
+                                <h6 class="mb-0">{{ $history->code }}</h6>
                                 <p class="text-muted mb-0"><small>{{ $history->ac_name }}</small></p>
                               </div>
                             </div>
@@ -230,31 +230,31 @@
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->source }}{{ sprintf("%04d", $history->raw_id) }}</h6>
+                                <h6 class="mb-0">{{ $history['source'] }}{{ sprintf("%04d", $history['raw_id']) }}</h6>
                               </div>
                             </div>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{ Carbon::parse($history->date)->format('Y-m-d') }}</h6>
+                            <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
                             <p class="text-muted mb-0">
-                              <small>{{ Carbon::parse($history->date)->format('H:i A') }}</small>
+                              <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
                             </p>
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history->type == "Wallet Transfer" ? 'Wallet' : $history->it_from }}</h6>
+                              <h6 class="mb-0">{{ $history['it_from'] }}</h6>
                             </div>
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history->type == "Wallet Withdrawal" ? 'Wallet' : $history->it_to }}</h6>
+                              <h6 class="mb-0">{{ $history['it_to'] }}</h6>
                             </div>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{ $history->type }}</h6>
+                            <h6 class="f-w-500">{{$history['type'] }}</h6>
                           </td>
                           <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->amount, 2) }}</h6>
+                            <h6 class="f-w-500 f-16">${{ number_format($history['amount'], 2) }}</h6>
                           </td>
                         </tr>
                       @endforeach

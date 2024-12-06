@@ -3,21 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class TradeWithdrawals extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
     protected $table = 'trade_withdrawal';
-    public $timestamps = false;
-    protected $fillable = [
-        'email',
-        'trade_id',
-        'withdrawal_amount',
-        'withdraw_type',
-        'withdraw_to',
-        'wallet_qr',
-        'Status',
-        'withdraw_date'
-    ];
+    // public $timestamps = false;
+    protected $guarded = [];
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
+    public function withdrawTo()
+    {
+        return $this->belongsTo(Account::class, 'withdraw_to', 'id');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

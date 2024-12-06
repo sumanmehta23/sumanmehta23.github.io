@@ -14,13 +14,13 @@ class DemoAccount extends Model
         'balance',
         'email',
         'name',
-        'trade_id',
+        'code',
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
     ];
     public function accountType()
     {
@@ -28,8 +28,8 @@ class DemoAccount extends Model
     }
 
 
-    public function bonusTrans()
+    public function BonusTransaction()
     {
-        return $this->hasMany(BonusTrans::class, 'trade_id',  'trade_id');
+        return $this->hasMany(BonusTransaction::class, 'code',  'code');
     }
 }

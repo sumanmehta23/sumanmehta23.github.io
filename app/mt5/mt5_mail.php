@@ -83,5 +83,3 @@ class MTMailAnswer
   {
   public $RetCode = '-1';
   }
-
-?>
