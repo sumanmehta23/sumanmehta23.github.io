@@ -170,7 +170,6 @@ class IBController extends Controller
             'groups' => $groups,
             'activeType' => $activeType
         ];
-
         return view("admin.ib.ib_settings", $data);
     }
 

@@ -42,7 +42,7 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('get_ibplan') && $request->has('id')) {
-            $ibPlan = IbCategory::where(DB::raw('ib_cat_id'), $request->id)->first();
+            $ibPlan = IbCategory::where('id', $request->id)->first();
             return $ibPlan ? response()->json($ibPlan) : response()->json(false);
         }
 
@@ -117,6 +117,16 @@ class ApiAjaxController extends Controller
     private function createIbPlan($request)
     {
         $ibPlan = IbCategory::create([
+            'ib_cat_name' => $request->ib_cat_name,
+            'ib_cat_desc' => $request->ib_cat_desc,
+            'is_active' => $request->is_active
+        ]);
+
+        return response()->json($ibPlan ? 'true' : 'false');
+    }
+    private function updateIbPlan($request)
+    {
+        $ibPlan = IbCategory::where('id',$request->id)->update([
             'ib_cat_name' => $request->ib_cat_name,
             'ib_cat_desc' => $request->ib_cat_desc,
             'is_active' => $request->is_active

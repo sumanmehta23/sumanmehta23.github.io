@@ -1,4 +1,4 @@
-@extends('layouts.admin.admin').
+@extends('layouts.admin.admin')
 @section('noDatatable', true)
 @section('styles')
     <style>
@@ -72,7 +72,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <span class="fs-15">
-                                                        <?php if (($res->ib_cat_id) == $activeType) { ?>
+                                                        <?php if (($res->id) == $activeType) { ?>
                                                         <i class="bi category-icon bi-toggle2-on"></i>
                                                         <?php } else { ?>
                                                         <i class="bi category-icon bi-toggle2-off"></i>
@@ -99,7 +99,7 @@
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
                                                 <?php } ?>
-                                                <button class="btn category-edit" data-id="<?= ($res->ib_cat_id) ?>"><i
+                                                <button class="btn category-edit" data-id="<?= ($res->id) ?>"><i
                                                         class="fa fa-edit category-icon"></i></button>
                                             </div>
                                         </a>
@@ -285,19 +285,27 @@
                 url: "/admin/api/ajax",
                 type: "get",
                 data: "get_ibplan=true&id=" + id,
-                success: function(data) {
-                    if (data == "fasle") {
+                success: function(response) {
+                    if (response == "fasle") {
                         swal.fire({
                             icon: "error",
                             title: "Something went wrong",
                             text: "Please try again later or contact support.",
                         });
                     } else {
-                        data = JSON.parse(data);
-                        $("#groupCat #groupCatId").val(data.enc_id);
-                        $("#groupCat [name='ib_cat_name']").val(data.ib_cat_name);
-                        $("#groupCat [name='ib_cat_desc']").val(data.ib_cat_desc);
-                        $("#groupCat [name='is_active']").val(data.is_active).trigger("change");
+                        console.log(typeof response); 
+                        if(typeof response != "object") {
+                            const cleanResponse = response.trim();
+                            const data = JSON.parse(cleanResponse);
+                        }else{
+                            const data = response;
+                        }
+                        
+                        // console.log(response);
+                        $("#groupCat #groupCatId").val(response.id);
+                        $("#groupCat [name='ib_cat_name']").val(response.ib_cat_name);
+                        $("#groupCat [name='ib_cat_desc']").val(response.ib_cat_desc);
+                        $("#groupCat [name='is_active']").val(response.is_active).trigger("change");
                         // $("#groupCat [name='user_group_id']").val(data.group_id).trigger("change");
                         myModal.show();
 
