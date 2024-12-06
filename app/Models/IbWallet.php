@@ -10,7 +10,7 @@ class IbWallet extends Model
 {
     use HasFactory,HasUuids;
     protected $table = 'ib_wallet';
-    protected $fillable = ['email','ib_withdraw','remark','user_id'];
+    protected $guarded = [];
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -21,7 +21,7 @@ use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Str;
+use Str;use Carbon\Carbon;
 
 class Ib extends Controller
 {
@@ -128,13 +128,16 @@ class Ib extends Controller
         $ib = Ib1::where('user_id', $userId)
             ->whereNotNull('ib_category_id')
             ->first();
+            
 
-        // dd($ib);
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->acc_type;
+        $plan_id = $ib->ib_category_id;
+       
+
         $ib_email = auth()->user()->email;
+        
         if ($plan_id) {
             $ibPlans = IbPlanDetails::where('ib_plan_id', $plan_id)
                 ->where('status', 1)
@@ -144,19 +147,22 @@ class Ib extends Controller
             // Prepare the commission structure
             $ib_acc_plans = [];
             foreach ($ibPlans as $plan) {
-                $ib_acc_plans[$plan['acc_type']][$plan['level_id']] = [];
+                $ib_acc_plans[$plan['account_type_id']][$plan['level_id']] = [];
                 for ($i = 1; $i <= $plan['level_id']; $i++) {
-                    $ib_acc_plans[$plan['acc_type']][$plan['level_id']]["d$i"] = $plan["d$i"];
+                    $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
                 }
             }
+             
+            $referral_code= auth()->user()->ib->referral_code;
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
-                $clientLiveAccs = Account::select('code', 'user_id', 'account_type_id')
+                $clientLiveAccs = Account::select('id', 'code', 'user_id', 'account_type_id')
                     ->where('demo',false)
-                    ->whereHas('user', function ($query) use ($userId, $i) {
-                        $query->where("ib$i", $userId)->where('status', 1);
-                    })
+                    ->whereHas('user', function ($query) use ($referral_code, $i) {
+                        $query->where("ib$i", $referral_code)->where('status', 1);
+                    })  
                     ->get();
+                   
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
                     $from = 'September 01,2024';
@@ -165,39 +171,47 @@ class Ib extends Controller
                     if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
                         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                     }
+                   
                     $closedOrderHistory = $total;
+                  
                     if ($closedOrderHistory == 0) {
                         continue;
                     }
-                    $offset = Ib1Commission::where('login', $login)->count();
+                    $offset = Ib1Commission::where('code', $login)->count();
+                    
                     $total = $closedOrderHistory;
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                         }
                         $result2 = $orders;
+                     
                         if ($result2) {
                             foreach ($result2 as $item) {
+                               
                                 $order = $item->Order;
                                 $login = $item->Login;
                                 $init_volume = $item->VolumeInitial;
                                 $volume = $init_volume * 0.0001;
-                                $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
+                                $time_closed = Carbon::createFromTimestamp($item->TimeDone);
+
                                 try {
                                     Ib1Commission::create([
                                         'user_id' => $client->user_id,
+                                        'account_id' => $client->id,
                                         'order_id' => $order,
-                                        'login' => $login,
+                                        'code' => $login,
                                         // 'init_volume' => $init_volume,
                                         'volume' => $volume,
                                         'time_closed' => $time_closed
                                     ]);
                                 } catch (Exception $e) {
+                                    dd($e);
                                     logger()->error('Error inserting commission: ' . $e->getMessage());
                                 }
                             }
                         }
-                        $offset = Ib1Commission::where('login', $login)->count();
+                        $offset = Ib1Commission::where('code', $login)->count();
                     }
                 }
             }
@@ -206,9 +220,9 @@ class Ib extends Controller
             for ($i = 1; $i <= 15; $i++) {
                 DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
                 $client_live_accs=Ib1Commission::where('status', 0)
-                ->with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type','ibWallet'])
-                    ->whereHas('user', function ($query) use ($userId, $i) {
-                        $query->where("ib$i", $userId)->where('status', 1);
+                ->with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type_id','ibWallet'])
+                    ->whereHas('user', function ($query) use ($referral_code, $i) {
+                        $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
                         $query->where('user_id', $userId)->whereNull('order_id');
@@ -217,6 +231,8 @@ class Ib extends Controller
                     
                     ->groupBy('order_id')
                     ->orderByDesc('id')->get();
+                 
+
                 
                     // $client_live_accs = DB::table('ib1_commission')
                     // ->join('liveaccount', 'liveaccount.code', '=', 'ib1_commission.login')
@@ -254,21 +270,24 @@ class Ib extends Controller
                     // )
                     // ->orderByDesc('ib1_commission.id')
                     // ->get();
-                foreach ($clientLiveAccs as $ca) {
-                    $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->{'ib' . $iter} !== null)->count();
-                    $commission = $ib_acc_plans[$ca->account_type][$ib_level]["d$i"] ?? null;
-
+                foreach ($client_live_accs as $ca) {
+                    $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
+                    $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
+dump($ca->account->account_type_id);
+dump($commission);
+dump($ib_acc_plans);
+dd($ib_level);
                     if ($commission) {
                         $ib_level_name = "IB Level $ib_level - D$i";
                         $ib_wallet = ((float) $commission / 2) * $ca->volume;
 
                         IbWallet::create([
                             'ib_wallet' => $ib_wallet,
-                            'email' => $ib_email,
+                            'email' => $referral_code,
                             'user_id' => $userId,
                             'account_id' => $ca->account->id,
                             'order_id' => $ca->order_id,
-                            'remark' => $ca->client_email,
+                            // 'remark' => $ca->client_email,
                             'ib_level' => $ib_level_name,
                         ]);
                     }
@@ -291,8 +310,9 @@ class Ib extends Controller
             ->where('demo', false)
             ->orderBy('id', 'desc')
             ->get();
+            
         for ($i = 1; $i <= 7; $i++) {
-            $ib_clients[$i] = IbClientList::where("ib$i", $userId)->get();
+            $ib_clients[$i] = IbClientList::where("ib$i", auth()->user()->ib->referral_code)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
         // dd($ib_wallet);
