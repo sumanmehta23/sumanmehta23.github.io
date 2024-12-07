@@ -42530,4 +42530,12 @@ h2 {
     }
 }
 
+@media (max-width: 550px) {
+    .mob_logo_center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
 /*!

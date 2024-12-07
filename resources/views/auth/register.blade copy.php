@@ -29,7 +29,7 @@
             <div  class="auth-wrapper v3">
                 <div data-v-97e32e5a="" class="auth-form" style="justify-content: unset;">
                     <div  class="auth-header row">
-                        <div  class="col my-1"><a  href="/login"><img
+                        <div  class="col my-1" style="display: flex; justify-content: center; align-items: center;"><a  href="/login"><img
                                      src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
