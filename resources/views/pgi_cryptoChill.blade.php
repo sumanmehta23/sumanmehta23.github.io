@@ -49,8 +49,8 @@ var customerID = "{{auth()->user()->id}}";
         });
       },
       success: function(data) {
-        console.log(data);
-        console.log(data.status);
+        console.log("onPaymentSuccess",data);
+        console.log("onPaymentSuccess status ",data.status);
         if (data.status === true) {
           window.isCalled = 1;
           swal.fire({
@@ -189,9 +189,9 @@ var customerID = "{{auth()->user()->id}}";
         });
       },
       success: function(data) {
-        // console.log("data==> ", data);
+        console.log(" onWalletPaymentUpdate data==> ", data);
        
-        if (data.status === "true") {
+        if (data.status === true) {
           window.isCalled = 1;
           swal.fire({
             icon: "success",
