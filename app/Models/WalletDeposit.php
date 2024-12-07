@@ -12,16 +12,7 @@ class WalletDeposit extends Model
 {
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'wallet_deposit';
-    protected $fillable = [
-        'email',
-        'deposit_amount',
-        'deposit_type',
-        'transaction_id',
-        'Status',
-        'user_id',
-        'created_at',
-        'updated_at'
-    ];
+    protected $guarded = [];
     protected static function boot()
     {
         parent::boot();
