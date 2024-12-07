@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
 use App\Models\InternalTransfer;
+use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 
 
@@ -21,7 +22,13 @@ class Transactions extends Controller
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
             ->get();
-
+        $wallet_deposit_history = WalletDeposit::with('liveAccount.accountType')
+            ->where('user_id',  auth()->user()->id)
+            ->where('deposit_type', 'CryptoChill')
+            ->orderBy('id', 'desc')
+            ->get();
+            // dd($wallet_deposit_history);
+            $deposit_history = $deposit_history->merge($wallet_deposit_history);
         // Fetching withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
             ->where('withdraw_type', 'Wallet Withdrawal')
