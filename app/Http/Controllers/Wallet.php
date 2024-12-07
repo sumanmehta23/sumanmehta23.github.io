@@ -332,7 +332,7 @@ class Wallet extends Controller
 
                     // Update total balance
                     TotalBalance::create(
-                        ['email' => $email,'user_id'=>$customerID,'deposit_amount' => DB::raw('deposit_amount + ' . $amount)]
+                        ['email' => $email,'user_id'=>$customerID,'deposit_amount' => $amount]
                     );
 
                     DB::commit();
