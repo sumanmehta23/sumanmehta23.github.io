@@ -40,7 +40,7 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
          // Find the user by email
-         $user = User::where('email', $request->input('email'))->first();
+         $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
 
          // Check if user exists
          if (!$user) {
@@ -202,7 +202,7 @@ class LoginController extends Controller
         if ($validator->fails()) {
             return redirect()->route('register')->with('errors', $validator->errors());
         }
-       
+
         $userData = [];
 
         if ($request->has('refercode')) {
@@ -248,9 +248,9 @@ class LoginController extends Controller
         $userData['referral'] ='';
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
-      
+
         $user = User::create($userData);
-        
+
         if ($user) {
             $settings = settings();
             $from = $settings['email_from_address'];
