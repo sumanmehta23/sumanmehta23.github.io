@@ -84,8 +84,15 @@ class TradeDepositController extends Controller
         $ticket = NULL;
 
         // Calculate wallet balance
+        $totalDeposits = WalletDeposit::where('user_id', $user->id)
+        ->where('status', 1)
+        ->sum('deposit_amount');
 
-        $walletBalance = $user->wallet_balance ;
+        $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
+            ->where('status',"<>", 2)
+            ->sum('withdraw_amount');
+
+        $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
         // Check if there's enough balance
         if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {
             return response()->json([
