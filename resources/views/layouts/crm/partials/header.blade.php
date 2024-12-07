@@ -320,18 +320,18 @@
             <header class="pc-header">
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
-                        {{-- <ul class="list-unstyled">
-                            <li class="pc-h-item pc-sidebar-collapse">
+                        <ul class="list-unstyled">
+                            {{-- <li class="pc-h-item pc-sidebar-collapse">
                                 <a href="/dashboard" class="pc-head-link ms-0" id="sidebar-hide">
                                     <i class="ti ti-menu-2"></i>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li class="pc-h-item pc-sidebar-popup">
-                                <a href="/dashboard" class="pc-head-link ms-0" id="mobile-collapse">
+                                <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
                                     <i class="ti ti-menu-2"></i>
                                 </a>
                             </li>
-                            <li class="dropdown pc-h-item">
+                            {{-- <li class="dropdown pc-h-item">
                                 <a class="pc-head-link dropdown-toggle arrow-none m-0 trig-drp-search"
                                     data-bs-toggle="dropdown" href="/dashboard" role="button"
                                     aria-haspopup="false" aria-expanded="false">
@@ -345,8 +345,8 @@
                                             placeholder="Search here. . .">
                                     </form>
                                 </div>
-                            </li>
-                        </ul> --}}
+                            </li> --}}
+                        </ul>
                     </div>
                     <div class="ms-auto">
                         <ul class="list-unstyled">
