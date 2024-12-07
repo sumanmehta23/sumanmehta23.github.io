@@ -226,11 +226,21 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
+                      {{-- {{ dd($history->it_from) }} --}}
+                        @php
+                            if($history['type']=='CRM'){
+                                $from = 'CRM';
+                            }elseif($history->accountFrom->code){
+                                $from = $history->accountFrom->code;
+                            }else{
+                                $from = $history->it_from;
+                            }
+                        @endphp
                         <tr>
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history['source'] }}{{ sprintf("%04d", $history['raw_id']) }}</h6>
+                                <h6 class="mb-0">{{ $history['source'] }}</h6>
                               </div>
                             </div>
                           </td>
@@ -242,12 +252,12 @@
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history['it_from'] }}</h6>
+                              <h6 class="mb-0">{{ $from }}</h6>
                             </div>
                           </td>
                           <td>
                             <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history['it_to'] }}</h6>
+                              <h6 class="mb-0">{{ $history->accountTo->code  ?? ''}}</h6>
                             </div>
                           </td>
                           <td>

@@ -17,7 +17,7 @@ class TradeDeposit extends Model
 
     public function account()
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(Account::class,'deposit_from');
     }
     public function user()
     {
