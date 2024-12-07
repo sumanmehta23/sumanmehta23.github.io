@@ -261,7 +261,7 @@ class Wallet extends Controller
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
-        Log::info($payload);
+        Log::channel("cryptochillcallback")->info(json_encode($payload));
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
         $callback_id = $payload['callback_id'] ?? null;
@@ -337,12 +337,12 @@ class Wallet extends Controller
 
                     DB::commit();
                     Cache::forget("user:{$customerID}:wallet_balance");
-                    Log::info('Transaction confirmed successfully.');
+                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
 
                     return response()->json(['status' => 'true']);
                 } catch (Exception $e) {
                     DB::rollBack();
-                    Log::error('Transaction failed: ' . $e->getMessage());
+                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
             } else {
@@ -352,7 +352,7 @@ class Wallet extends Controller
                 }
 
                 $logData .= "Credit directly to Account ID: " . $passedData['accountID'] . "\n";
-                Log::info($logData);
+                Log::channel("cryptochillcallback")->info($logData);
 
                 // Direct credit to account logic goes here, for example:
                 // Call external API or perform other operations for direct account credit
