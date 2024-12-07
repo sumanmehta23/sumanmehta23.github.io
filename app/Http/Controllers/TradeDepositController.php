@@ -93,7 +93,6 @@ class TradeDepositController extends Controller
             ->sum('withdraw_amount');
 
         $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
-        dd($walletBalance);
         // Check if there's enough balance
         if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {
             return response()->json([
