@@ -181,18 +181,18 @@
                                                         required readonly disabled name="refercode"><!----><small data-v-97e32e5a="">*your referral link code provided.</small></div>
                                             </div>
                                             @endif
-                                            <!-- <div data-v-97e32e5a="" class="col-sm-12">
+                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                                         class="form-label">Referral Code<small data-v-97e32e5a="">(if
                                                                             any)</small></label><input data-v-97e32e5a="" type="text"
                                                                         class="form-control" placeholder="Referral Code"
                                                                         name="referral"></div>
-                                                            </div> -->
+                                                            </div>
                                         </div>
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button data-v-97e32e5a=""
-                                                        class="btn btn-primary" type="submit" name="register"><!---->
+                                                        class="btn btn-primary" type="submit" name="register">
                                                         Submit</button></div>
                                             </div>
                                         </div>

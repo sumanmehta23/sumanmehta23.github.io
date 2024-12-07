@@ -127,12 +127,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_withdrawal', [Wallet::class, 'withdrawal'])->name('wallet_withdrawal_store');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
-
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
-
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
     Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');
     Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');

@@ -69,14 +69,14 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
 
-        $user = $request->input('user');
+        $depositdata = $request->input('user');
         $email = session('clogin');
-        $depositamount = $user['deposit'];
-        $email = $user['email'];
-        $account_id = $user['account_id'];
+        $depositamount = $depositdata['deposit'];
+        $email = $depositdata['email'];
+        $account_id = $depositdata['account_id'];
         $user=auth()->user();
         $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
-        $deposit_type = $user['deposit_type']??$request['user']['deposit_type'];
+        $deposit_type = $depositdata['deposit_type']??$request['user']['deposit_type'];
         $deposit_from = NULL;
 
 
@@ -84,10 +84,17 @@ class TradeDepositController extends Controller
         $ticket = NULL;
 
         // Calculate wallet balance
+        $totalDeposits = WalletDeposit::where('user_id', $user->id)
+        ->where('status', 1)
+        ->sum('deposit_amount');
 
-        $walletBalance = $user->wallet_balance ;
+        $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
+            ->where('status',"<>", 2)
+            ->sum('withdraw_amount');
+
+        $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
         // Check if there's enough balance
-        if ($user['deposit_type'] === 'Wallet Transfer' && $walletBalance < $user['deposit']) {
+        if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < $depositdata['deposit']) {
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong',

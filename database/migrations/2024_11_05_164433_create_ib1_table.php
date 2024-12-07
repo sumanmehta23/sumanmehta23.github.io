@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('ib1', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->bigInteger('indexId');
-            $table->foreignIdFor(IbCategory::class)->constrained()->onUpdate('cascade')->onDelete('cascade')->nullable();
+            $table->foreignIdFor(IbCategory::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('acc_type')->nullable();
             $table->string('uid', 150)->nullable()->unique('uniqueid');
             $table->string('name')->nullable();
