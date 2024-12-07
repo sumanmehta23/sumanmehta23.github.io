@@ -17,7 +17,7 @@ class CheckUserPermissions
        if(!Auth::check()){
             $requestUri = $request->getPathInfo();
             if(str($requestUri)->contains('admin')){
-                return redirect()->route('/admin/login');
+                return redirect()->route('admin.login');
             }
             return redirect()->route('login');
         }

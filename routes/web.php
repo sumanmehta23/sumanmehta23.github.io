@@ -143,7 +143,7 @@ Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->n
 Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::post('/', [Login::class, 'adminLogin']);
-    Route::get('/login', [Login::class, 'showLoginForm']);
+    Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
     Route::get('/ajax', [AjaxController::class, 'index']);
     Route::post('/ajax', [AjaxController::class, 'index']);
