@@ -23,7 +23,7 @@
     }
     @media (max-width: 750px) {
         .register_mob {
-            margin-top:20% !important;
+            margin-top:10% !important;
         }
     }
     @media (max-width: 550px) {
@@ -31,6 +31,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom:10%
         }
     }
 
