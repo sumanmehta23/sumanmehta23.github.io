@@ -496,6 +496,7 @@ class AjaxController extends Controller
         }
         header('Content-Type: application/json');
         $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        info("getPendingWalletDeposit ".$sql);
         $query = DB::select($sql);
         $results = $query;
         $data = [];
