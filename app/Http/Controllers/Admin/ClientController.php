@@ -101,8 +101,8 @@ class ClientController extends Controller
         $acc_groups = DB::table('ib_plan_details')
             ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.id')
             ->where('ib_plan_details.status', 1)
-            ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.ib_plan_id'))
-            ->groupBy('ib_plan_details.ib_plan_id')
+            ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.id'))
+            ->groupBy('ib_plan_details.id')
             ->get();
 
 
