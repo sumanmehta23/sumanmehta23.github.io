@@ -62,12 +62,12 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             ]);
         });
     }
-    protected function authorization()
-    {
-        Auth::shouldUse('admin');
-        $this->gate();
-        Telescope::auth(function ($request) {
-            return Gate::check('viewTelescope', [$request->user('admin')]);
-        });
-    }
+    // protected function authorization()
+    // {
+    //     Auth::shouldUse('admin');
+    //     $this->gate();
+    //     Telescope::auth(function ($request) {
+    //         return Gate::check('viewTelescope', [$request->user('admin')]);
+    //     });
+    // }
 }
