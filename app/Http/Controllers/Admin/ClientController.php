@@ -99,7 +99,7 @@ class ClientController extends Controller
 
         // Account Groups
         $acc_groups = DB::table('ib_plan_details')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
+            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.id')
             ->where('ib_plan_details.status', 1)
             ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.ib_plan_id'))
             ->groupBy('ib_plan_details.ib_plan_id')
@@ -374,7 +374,7 @@ class ClientController extends Controller
 
     private function addToUserLog($data)
     {
-        
+
         UserLog::create([
             'user_id' => $data['user_id'],
             'email' => $data['email'],
@@ -382,7 +382,7 @@ class ClientController extends Controller
             'type' => $data['type'],
             'value' => $data['value']
         ]);
-       
+
     }
     function add_to_user_log($data)
     {
