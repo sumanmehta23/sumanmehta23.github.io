@@ -16,7 +16,7 @@
         <div class="card custom-card">
           <div class="card-body">
             <div class="table-responsive">
-              <table id="tableIbUsers" class="ajaxDataTable table table-bordered text-nowrap w-100">
+              <table id="tableIbUsers" class="table ajaxDataTable table-bordered text-nowrap w-100">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -44,7 +44,7 @@
 
 <!-- Modal -->
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
-  <div class="modal-dialog  modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form action="#" id="ibRequestForm" method="post">
         @csrf
@@ -53,11 +53,11 @@
           <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body custom-card card mb-0">
+        <div class="mb-0 modal-body custom-card card">
           <div class="d-flex align-items-center card-header w-100">
             <div class="me-2">
               <span class="avatar avatar-rounded">
-                <img src="/admin/assets/images/users/user.png" alt="img">
+                <img src="/admin_assets/assets/images/users/user.png" alt="img">
               </span>
             </div>
             <div class="">
@@ -68,7 +68,7 @@
           </div>
           <div class="card-body">
             <div class="mb-3 row">
-              <div class="col-lg-4 m-auto">
+              <div class="m-auto col-lg-4">
                 <label class="form-label">IB Request Status</label>
               </div>
               <div class="col-lg-8">
@@ -81,7 +81,7 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-lg-4 m-auto">
+              <div class="m-auto col-lg-4">
                 <label class="form-label">Account Group</label>
               </div>
               <div class="col-lg-8">

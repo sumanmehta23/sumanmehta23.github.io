@@ -57,7 +57,7 @@
           <div class="d-flex align-items-center card-header w-100">
             <div class="me-2">
               <span class="avatar avatar-rounded">
-                <img src="/admin/assets/images/users/user.png" alt="img">
+                <img src="/admin_assets/assets/images/users/user.png" alt="img">
               </span>
             </div>
             <div class="">

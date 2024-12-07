@@ -10,7 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="{{ asset('assets/js/sweetalert2.all.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('admin/assets/libs/sweetalert2/sweetalert2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('admin_assets/assets/libs/sweetalert2/sweetalert2.min.css') }}">
 </head>
 
 <body>
