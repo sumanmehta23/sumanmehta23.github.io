@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
@@ -31,6 +32,14 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             return in_array($user->email, [
                 'admin@lqhmarkets.com'
             ]);
+        });
+    }
+    protected function authorization()
+    {
+        Auth::shouldUse('admin');
+        $this->gate();
+        Horizon::auth(function ($request) {
+            return Gate::check('viewTelescope', [$request->user('admin')]);
         });
     }
 }

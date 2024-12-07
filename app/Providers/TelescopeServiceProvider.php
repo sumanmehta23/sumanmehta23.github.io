@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
+use Laravel\Telescope\Telescope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
-use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
 
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
@@ -14,7 +15,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     public function register(): void
     {
-        // Telescope::night();
+        Telescope::night();
 
         $this->hideSensitiveRequestDetails();
 
@@ -59,6 +60,14 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             return in_array($user->email, [
                 'admin@lqhmarkets.com'
             ]);
+        });
+    }
+    protected function authorization()
+    {
+        Auth::shouldUse('admin');
+        $this->gate();
+        Telescope::auth(function ($request) {
+            return Gate::check('viewTelescope', [$request->user('admin')]);
         });
     }
 }
