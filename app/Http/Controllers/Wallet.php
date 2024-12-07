@@ -316,7 +316,7 @@ class Wallet extends Controller
                 try {
                     DB::beginTransaction();
 
-                    WalletDeposit::insert([
+                    WalletDeposit::create([
                         'user_id' => $customerID,
                         'email' => $email,
                         'deposit_type' => $deposit_type,
