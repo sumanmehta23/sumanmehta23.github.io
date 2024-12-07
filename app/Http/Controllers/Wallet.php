@@ -298,12 +298,13 @@ class Wallet extends Controller
             $deposit_to = $passedData['depositTo'];
             $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
             $email = $passedData['customerEmail'];
+            $customerID = $passedData['customerID'];
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
             if ($deposit_to === "wallet") {
                 // Check for duplicate transaction
-                $existingDeposit = DB::table('wallet_deposit')->where('transaction_id', $transactionId)->first();
+                $existingDeposit =WalletDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingDeposit) {
                     return response()->json(['status' => 'true']);
                 }
@@ -315,7 +316,8 @@ class Wallet extends Controller
                 try {
                     DB::beginTransaction();
 
-                    DB::table('wallet_deposit')->insert([
+                    WalletDeposit::insert([
+                        'user_id' => $customerID,
                         'email' => $email,
                         'deposit_type' => $deposit_type,
                         'deposit_amount' => $amount,
@@ -328,8 +330,8 @@ class Wallet extends Controller
                     ]);
 
                     // Update total balance
-                    DB::table('total_balance')->updateOrInsert(
-                        ['email' => $email],
+                    TotalBalance::updateOrInsert(
+                        ['email' => $email,'user_id'=>$customerID],
                         ['deposit_amount' => DB::raw('deposit_amount + ' . $amount)]
                     );
 
