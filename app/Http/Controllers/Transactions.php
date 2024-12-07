@@ -18,8 +18,7 @@ class Transactions extends Controller
     {
         $email = $email = auth()->user()->email;
         
-        $deposit_history = WalletDeposit::with('liveAccount.accountType')
-            ->where('user_id',  auth()->user()->id)
+        $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
             ->get();
