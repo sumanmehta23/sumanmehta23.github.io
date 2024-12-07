@@ -64,9 +64,11 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     }
     protected function authorization()
     {
-        Auth::shouldUse('admin');
         $this->gate();
         Telescope::auth(function ($request) {
+            if (Auth::guard('admin')->check()) {
+                Auth::shouldUse('admin');
+            }
             return Gate::check('viewTelescope', [$request->user('admin')]);
         });
     }
