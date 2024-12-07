@@ -41,4 +41,8 @@ return [
         'profileid'=>env('CRYPTOCHILL_PROFILE_ID'),
         'accountid'=>env('CRYPTOCHILL_ACCOUNT_ID')
     ],
+    'brevo'=>[
+        'url'=>env('BREVO_URL','https://api.brevo.com/v3/'),
+        'api_key'=>env('BREVO_API_KEY')
+    ],
 ];
