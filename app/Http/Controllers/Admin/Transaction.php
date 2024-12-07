@@ -116,7 +116,7 @@ class Transaction extends Controller
                 'user',
                 'totalBalance',
                 // 'relationshipManager.emplist',
-                'user.ib1',
+                'user',
             ])
             ->where('id',$id)
             ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
@@ -124,7 +124,7 @@ class Transaction extends Controller
             ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
             ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
             ->first();
-
+                // dd($details);
             if($details->client_wallet_id){
                 $client_wallet = ClientWallet::where('id', $details->client_wallet_id)
                 ->where('status', 1)
@@ -167,7 +167,7 @@ class Transaction extends Controller
                     'user',
                     'totalBalance',
                     // 'relationshipManager.emplist',
-                    'user.ib1',
+                    'user',
                 ])
 
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
