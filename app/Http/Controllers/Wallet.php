@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class Wallet extends Controller
 {
@@ -335,6 +336,7 @@ class Wallet extends Controller
                     );
 
                     DB::commit();
+                    Cache::forget("user:{$customerID}:wallet_balance");
                     Log::info('Transaction confirmed successfully.');
 
                     return response()->json(['status' => 'true']);
