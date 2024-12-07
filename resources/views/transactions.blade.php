@@ -226,48 +226,54 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
-                      {{-- {{ dd($history->it_from) }} --}}
                         @php
-                            if($history['type']=='CRM'){
+                            if ($history->type == 'CRM') {
                                 $from = 'CRM';
-                            }elseif($history->accountFrom->code){
+                            } elseif (!empty($history->accountFrom->code)) {
                                 $from = $history->accountFrom->code;
-                            }else{
+                            } else {
                                 $from = $history->it_from;
+                            }
+
+                            if ($history->source == "TWID" && $history->it_to == null) {
+                                $to = 'Wallet';
+                            } else {
+                                $to = !empty($history->accountTo->code) ? $history->accountTo->code : '';
                             }
                         @endphp
                         <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="ms-2">
-                                <h6 class="mb-0">{{ $history['source'] }}</h6>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
-                            <p class="text-muted mb-0">
-                              <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
-                            </p>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $from }}</h6>
-                            </div>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history->accountTo->code  ?? ''}}</h6>
-                            </div>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500">{{$history['type'] }}</h6>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history['amount'], 2) }}</h6>
-                          </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="ms-2">
+                                        <h6 class="mb-0">{{ $history['source'] }}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
+                                <p class="text-muted mb-0">
+                                    <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
+                                </p>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0">{{ $from }}</h6>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0">{{ $to }}</h6>
+                                </div>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500">{{ $history['type'] }}</h6>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500 f-16">${{ number_format($history['amount'], 2) }}</h6>
+                            </td>
                         </tr>
-                      @endforeach
+                    @endforeach
+
                     </tbody>
                   </table>
                   <hr>

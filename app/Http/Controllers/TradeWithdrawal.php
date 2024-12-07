@@ -58,6 +58,7 @@ class TradeWithdrawal extends Controller
             $settings['mt5_server_web_password']
         );
         $user_id = auth()->user()->id;
+        $user_email = auth()->user()->email;
         $account_id = $request->account_id;
         $account = Account::with('accountType')
             ->where('id', $account_id)
@@ -99,6 +100,7 @@ class TradeWithdrawal extends Controller
                 DB::beginTransaction();
                 try {
                     TradeWithdrawals::create([
+                        'email' => $user_email,
                         'user_id' => $user_id,
                         'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
