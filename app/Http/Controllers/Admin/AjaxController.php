@@ -1089,6 +1089,8 @@ and ib1.status = 0
     }
     public function updateClientStatus($data)
     {
+        // dd($data);
+
         header('Content-Type: application/json');
 
         $email = $data['client_id'];
@@ -1100,8 +1102,10 @@ and ib1.status = 0
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
             ->where(DB::raw('email'), '=', $email)
             ->first();
-
+            // dd($result);
+            
         try {
+            
             $updated = DB::table('aspnetusers')
                 ->where(DB::raw('email'), '=', $email)
                 ->update([
@@ -1109,31 +1113,35 @@ and ib1.status = 0
                     'email_confirmed' => $email_confirmed,
                     'kyc_verify' => $kyc_verify,
                 ]);
-
-            if ($updated) {
-                $data['email'] = $result->email;
-                if ($result->status != $user_status) {
-                    $data['field'] = 'status';
-                    $data['value'] = $user_status;
-                    $data['user_id']=$result->id;
-                    $this->add_to_user_log($data);
-                }
-                if ($result->email_confirmed != $email_confirmed) {
-                    $data['field'] = 'email_confirmed';
-                    $data['value'] = $email_confirmed;
-                    $data['user_id']=$result->id;
-                    $this->add_to_user_log($data);
-                }
-                if ($result->kyc_verify != $kyc_verify) {
-                    $data['field'] = 'kyc_verify';
-                    $data['value'] = $kyc_verify;
-                    $data['user_id']=$result->id;
-                    $this->add_to_user_log($data);
-                }
+                
                 echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'No rows updated']);
-            }
+                 
+            // if ($updated) {
+            //     // dd($updated);
+            //     $data['client_id'] = $result->email;
+            //     if ($result->status != $user_status) {
+            //         $data['field'] = 'status';
+            //         $data['value'] = $user_status;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     if ($result->email_confirmed != $email_confirmed) {
+            //         $data['field'] = 'email_confirmed';
+            //         $data['value'] = $email_confirmed;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     if ($result->kyc_verify != $kyc_verify) {
+            //         $data['field'] = 'kyc_verify';
+            //         $data['value'] = $kyc_verify;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     echo json_encode(['success' => true]);
+            // } else {
+            //     echo json_encode(['success' => false, 'message' => 'No rows updated']);
+            // }
+            
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
