@@ -26,6 +26,13 @@
             margin-top:20% !important;
         }
     }
+    @media (max-width: 550px) {
+        .mob_logo_center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
 
  </style>
 @section('content')
@@ -34,7 +41,7 @@
             <div  class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
                     <div  class="auth-header row ">
-                        <div  class="col my-1 "><a  href="/login"><img class="mob_logo_center"
+                        <div  class="col my-1 mob_logo_center"><a  href="/login"><img class="mob_logo_center"
                                      src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
