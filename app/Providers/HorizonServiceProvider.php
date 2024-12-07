@@ -34,12 +34,14 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             ]);
         });
     }
-    // protected function authorization()
-    // {
-    //     Auth::shouldUse('admin');
-    //     $this->gate();
-    //     Horizon::auth(function ($request) {
-    //         return Gate::check('viewTelescope', [$request->user('admin')]);
-    //     });
-    // }
+    protected function authorization()
+    {
+        $this->gate();
+        Horizon::auth(function ($request) {
+            if (Auth::guard('admin')->check()) {
+                Auth::shouldUse('admin');
+            }
+            return Gate::check('viewHorizon', [$request->user('admin')]);
+        });
+    }
 }
