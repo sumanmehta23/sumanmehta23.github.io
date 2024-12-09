@@ -3,16 +3,20 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\IbPlan;
 use App\Models\KycLog;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\UserLog;
+use App\Models\IbCategory;
 use App\Models\AccountType;
 use App\Models\DemoDeposit;
+use App\Http\Controllers\Ib;
 use App\Models\ClientWallet;
 use App\Models\LoginHistory;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use Illuminate\Database\Seeder;
@@ -20,6 +24,7 @@ use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\admin\Kyc;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -32,27 +37,27 @@ class DataImportSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 3000);
-        $this->users();
-        $this->userLogs();
-        $this->liveaccounts();
-        $this->demoaccounts();
-        $this->bonusTransaction();
-        $this->clientWallets();
-        $this->demoDeposit();
+        // $this->users();
+        // $this->userLogs();
+        // $this->liveaccounts();
+        // $this->demoaccounts();
+        // $this->bonusTransaction();
+        // $this->clientWallets();
+        // $this->demoDeposit();
         // $this->ib1(); 
         // $this->ib1_commission();
         // $this->ib1_withdraw();
         // $this->ib_categories();
         // $this->ib_plans();
-        // $this->ib_plan_details();
+        $this->ib_plan_details();
         // $this->ib_users();
-        $this->kyc_logs();
-        $this->loginHistory();
-        $this->totalBalance();
-        $this->tradeDeposit();
-        $this->tradeWithdrawal();
-        $this->walletDeposit();
-        $this->walletWithdraw();
+        // $this->kyc_logs();
+        // $this->loginHistory();
+        // $this->totalBalance();
+        // $this->tradeDeposit();
+        // $this->tradeWithdrawal();
+        // $this->walletDeposit();
+        // $this->walletWithdraw();
     }
     private function users()
     {
@@ -239,6 +244,115 @@ class DataImportSeeder extends Seeder
             ], $deposit);
         }
     }
+    private function ib1()
+    {
+        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
+        // foreach ($demoDeposits as $deposit) {
+        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
+        //     $deposit['code'] = $deposit['trade_id'];
+        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
+        //     unset($deposit['AdminRemark']);
+        //     unset($deposit['trade_id']);
+        //     DemoDeposit::updateOrCreate([
+        //         'user_id' => $deposit['user_id'],
+        //         'deposted_date' => $deposit['deposted_date'],
+        //     ], $deposit);
+        // }
+    }
+    private function ib1_commission()
+    {
+        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
+        // foreach ($demoDeposits as $deposit) {
+        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
+        //     $deposit['code'] = $deposit['trade_id'];
+        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
+        //     unset($deposit['AdminRemark']);
+        //     unset($deposit['trade_id']);
+        //     DemoDeposit::updateOrCreate([
+        //         'user_id' => $deposit['user_id'],
+        //         'deposted_date' => $deposit['deposted_date'],
+        //     ], $deposit);
+        // }
+    }
+    private function ib1_withdraw()
+    {
+        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
+        // foreach ($demoDeposits as $deposit) {
+        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
+        //     $deposit['code'] = $deposit['trade_id'];
+        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
+        //     unset($deposit['AdminRemark']);
+        //     unset($deposit['trade_id']);
+        //     DemoDeposit::updateOrCreate([
+        //         'user_id' => $deposit['user_id'],
+        //         'deposted_date' => $deposit['deposted_date'],
+        //     ], $deposit);
+        // }
+    }
+    private function ib_categories()
+    {
+        $ibcategories = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_ib_categories.json')), true);
+        foreach ($ibcategories as $category) {
+            IbCategory::create($category);
+        }
+    }
+    private function ib_plans()
+    {
+        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
+        // foreach ($demoDeposits as $deposit) {
+        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
+        //     $deposit['code'] = $deposit['trade_id'];
+        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
+        //     unset($deposit['AdminRemark']);
+        //     unset($deposit['trade_id']);
+        //     DemoDeposit::updateOrCreate([
+        //         'user_id' => $deposit['user_id'],
+        //         'deposted_date' => $deposit['deposted_date'],
+        //     ], $deposit);
+        // }
+    }
+
+    private function ib_plan_details()
+    {
+        $planDetails = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_ib_plan_details.json')), true);
+        foreach ($planDetails as $plan) {
+            // $plan['ib_plan_id'] = IbPlan::where('ib_plan_name', $plan['ib_plan_name'])->value('id');
+            $plan['ib_category_id'] = IbCategory::where('ib_cat_id', $plan['ib_plan_id'])->value('id');
+            $plan['account_type_id'] = AccountType::where('ac_index', $plan['acc_type'])->value('id');
+            unset($plan['ib_plan_id']);
+            unset($plan['id']);
+            // unset($plan['acc_type']);
+            try {
+                IbPlanDetails::create($plan);
+            } catch (\Throwable $th) {
+                Log::error( $th->getMessage(),$plan);
+                
+            }
+            
+        }
+    }
+    private function ib_users()
+    {
+        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
+        // foreach ($demoDeposits as $deposit) {
+        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
+        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
+        //     $deposit['code'] = $deposit['trade_id'];
+        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
+        //     unset($deposit['AdminRemark']);
+        //     unset($deposit['trade_id']);
+        //     DemoDeposit::updateOrCreate([
+        //         'user_id' => $deposit['user_id'],
+        //         'deposted_date' => $deposit['deposted_date'],
+        //     ], $deposit);
+        // }
+    }
+
+
     private function kyc_logs()
     {
         $kycData = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_kyc_logs.json')), true);

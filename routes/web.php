@@ -1,17 +1,22 @@
 <?php
 
+use App\Models\Account;
 use App\Http\Controllers\Ib;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
 use App\Http\Controllers\Home;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
+use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
-use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
@@ -24,11 +29,15 @@ use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\StaffManagement;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 Route::get("/se",function(){
+//     // Cache::put('test-key', 'test-value', 1000);
+// $value = Cache::get('test-key');
+// dd($value); // Should output 'test-value'
     // $settings = DB::table('page_categories')->get()->toArray();
     // file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('pages')->get()->toArray();
@@ -137,7 +146,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
-
 Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::post('/', [Login::class, 'adminLogin']);

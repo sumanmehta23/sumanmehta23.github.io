@@ -10,18 +10,19 @@ use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\IbWallet;
+use Str;use Carbon\Carbon;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\IbClientList;
+use App\Models\TradeDeposit;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
-use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Str;use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class Ib extends Controller
 {
@@ -35,8 +36,19 @@ class Ib extends Controller
     }
     public function index()
     {
+
         $email = auth()->user()->email;
-        $ib_result = Ib1::where('email', $email)->first();
+        $user=auth()->user();
+        $cacheKey = 'ib1_' . $user->id;
+
+        if (!Cache::has($cacheKey)) {
+            $ib_result =Ib1::where('user_id', $user->id)->first();
+            Cache::put($cacheKey, $ib_result, 60);
+            
+        } else {
+            $ib_result=Cache::get($cacheKey);
+        }
+        // $ib_result = Ib1::where('user_id', $user->id)->first();
         if($ib_result && $ib_result->status == 1) {
             return redirect("/ib-profile");
         }
@@ -57,6 +69,7 @@ class Ib extends Controller
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'referral_code' =>$referral_code,
+                    'ib_category_id' => $request->ib_category_id,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
