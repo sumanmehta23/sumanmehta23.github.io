@@ -170,7 +170,7 @@ class AjaxController extends Controller
             echo json_encode(['error' => $th->getMessage()]);
         }
         } else {
-            echo json_encode(['error' => 'No functions specified']);
+            return  json_encode(['error' => 'No functions specified']);
         }
     }
 
