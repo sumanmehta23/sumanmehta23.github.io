@@ -68,10 +68,10 @@
               </div>
               <div class="levels">
                 <?php for ($i = 1; $i <= 15; $i++) {
-                  $data = "SELECT * FROM ib_plan_details 
-                  WHERE ib_plan_id = '$selected->ib_plan_id' 
-                  AND account_type_id = '$selected->account_type_id' 
-                  AND level_id = $i 
+                  $data = "SELECT * FROM ib_plan_details
+                  WHERE ib_category_id = '$selected->ib_category_id'
+                  AND account_type_id = '$selected->account_type_id'
+                  AND level_id = $i
                   AND deleted_at IS NULL";
 
                   // echo $data . "<br>";
@@ -139,7 +139,7 @@
               <input type="submit" class="btn btn-primary" value="Update IB Commission" name="action">
             </div>
           </div>
-          <input type="hidden" name="ib_plan_id" value="<?= $selected->ib_plan_id ?>">
+          <input type="hidden" name="ib_category_id" value="<?= $selected->ib_category_id ?>">
           <input type="hidden" name="account_type_id" value="<?= $selected->account_type_id ?>">
 
         </form>
@@ -169,7 +169,7 @@
     e.preventDefault();
     var level = $(this).data("level");
     var newLevel = level + 1;
-   
+
     var target = $("section[data-level='" + newLevel + "']");
     var current = $("section[data-level='" + level + "']");
     console.log('asddf', target);

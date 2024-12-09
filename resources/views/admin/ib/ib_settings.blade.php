@@ -153,7 +153,7 @@
                                                     @php
                                                         // Fetch the details for the current level
                                                         $data = DB::table('ib_plan_details')
-                                                            ->where('ib_plan_id', $plan->ib_plan_id)
+                                                            ->where('ib_category_id', $plan->ib_category_id)
                                                             ->where('account_type_id', $plan->account_type_id)
                                                             ->where('level_id', $i)
                                                             ->whereNull('deleted_at')
@@ -169,7 +169,7 @@
                                                 <td>
                                                     <button class="btn btn-primary actions"
                                                         data-href="{{ url('/admin/ibCommissionEdit', [
-                                                            'planId' => ($plan->ib_plan_id),
+                                                            'planId' => ($plan->ib_category_id),
                                                             'accType' => ($plan->account_type_id)]) }}">
                                                         <i class="ti ti-edit"></i>
                                                     </button>
@@ -293,14 +293,14 @@
                             text: "Please try again later or contact support.",
                         });
                     } else {
-                        console.log(typeof response); 
+                        console.log(typeof response);
                         if(typeof response != "object") {
                             const cleanResponse = response.trim();
                             const data = JSON.parse(cleanResponse);
                         }else{
                             const data = response;
                         }
-                        
+
                         // console.log(response);
                         $("#groupCat #groupCatId").val(response.id);
                         $("#groupCat [name='ib_cat_name']").val(response.ib_cat_name);

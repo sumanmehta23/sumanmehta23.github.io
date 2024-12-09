@@ -15,7 +15,7 @@ class IbPlanDetails extends Model
 
     public function plan()
     {
-        return $this->belongsTo(IbCategory::class,'ib_plan_id');
+        return $this->belongsTo(IbCategory::class,'ib_category_id');
     }
     public function accountType()
     {
