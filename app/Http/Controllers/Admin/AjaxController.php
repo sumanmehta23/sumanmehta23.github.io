@@ -26,7 +26,7 @@ class AjaxController extends Controller
     public function index(Request $request)
     {
         if (isset($request->action)) {
-            $action = $request->action;
+            echo $action = $request->action;
             $id = isset($request->id) ? $request->id : null;
             $type = isset($request->type) ? $request->type : null;
             $tier = isset($request->tier) ? $request->tier : null;
@@ -44,6 +44,7 @@ class AjaxController extends Controller
                     break;
                 case 'getWalletDeposit':
                     $this->getWalletDeposit();
+
                     break;
                 case 'getWalletWithdrawal':
                     $this->getWalletWithdrawal();
