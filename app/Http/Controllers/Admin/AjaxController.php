@@ -196,7 +196,6 @@ class AjaxController extends Controller
 
     public function getClientList($requestData)
     {
-
         $rmCondition = " ";
         if (session('userData')['userRole'] != "Super Admin") {
             $rmCondition .= " left join aspnetusers user on(user.email=ap.email) ";
@@ -217,14 +216,14 @@ class AjaxController extends Controller
             $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where (rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
         }
         header('Content-Type: application/json');
-        $sql = " SELECT 
+        $sql = " SELECT
         ibs.name AS ib_name,
         c.country_alpha,
         emp.username AS rm_name,
         rm.rm_id,
         ap.id AS enc_id,
         ap.fullname AS fullname,
-        ap.*, 
+        ap.*,
         COALESCE(SUM(tb.deposit_amount), 0) AS deposit_amount,
         COALESCE(SUM(tb.trading_deposited), 0) AS trading_deposited,
         COALESCE(SUM(tb.trading_withdrawal), 0) AS trading_withdrawal,
@@ -242,7 +241,7 @@ class AjaxController extends Controller
         LEFT JOIN ib1 AS parent_ib ON (parent_ib.referral_code = ap.ib1 || parent_ib.email = ap.ib1)
         LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
         $results = DB::select($sql);
-     
+
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -271,6 +270,7 @@ class AjaxController extends Controller
             ];
         }
         echo json_encode(['data' => $data]);
+        return response()->json(['data' => $data]);
     }
     public function getWalletDeposit()
     {
@@ -1104,9 +1104,9 @@ and ib1.status = 0
             ->where(DB::raw('email'), '=', $email)
             ->first();
             // dd($result);
-            
+
         try {
-            
+
             $updated = DB::table('aspnetusers')
                 ->where(DB::raw('email'), '=', $email)
                 ->update([
@@ -1114,9 +1114,9 @@ and ib1.status = 0
                     'email_confirmed' => $email_confirmed,
                     'kyc_verify' => $kyc_verify,
                 ]);
-                
+
                 echo json_encode(['success' => true]);
-                 
+
             // if ($updated) {
             //     // dd($updated);
             //     $data['client_id'] = $result->email;
@@ -1142,7 +1142,7 @@ and ib1.status = 0
             // } else {
             //     echo json_encode(['success' => false, 'message' => 'No rows updated']);
             // }
-            
+
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
