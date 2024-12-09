@@ -18,6 +18,7 @@ class AjaxController extends Controller
 {
     public function __contract()
     {
+        die("asjkjkjk");
         if (!session("alogin")) {
             return response(["status" => false, "message" => "Please Login or Refresh the Page"], 401);
         }
@@ -26,7 +27,7 @@ class AjaxController extends Controller
     public function index(Request $request)
     {
         if (isset($request->action)) {
-            echo $action = $request->action;
+            $action = $request->action;
             $id = isset($request->id) ? $request->id : null;
             $type = isset($request->type) ? $request->type : null;
             $tier = isset($request->tier) ? $request->tier : null;
