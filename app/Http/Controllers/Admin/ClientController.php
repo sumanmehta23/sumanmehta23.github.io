@@ -106,7 +106,6 @@ class ClientController extends Controller
             ->get();
 
 
-
         return view("admin.client_list", compact(
             'ib_details',
             'rm_details',
