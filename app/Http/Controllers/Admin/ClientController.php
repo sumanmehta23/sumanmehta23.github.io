@@ -99,13 +99,13 @@ class ClientController extends Controller
 
         // Account Groups
         $acc_groups = DB::table('ib_plan_details')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.id')
+            ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
             ->where('ib_plan_details.status', 1)
             ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.id'))
-            ->groupBy('ib_plan_details.id')
+            ->groupBy('ib_plan_details.ib_category_id')
             ->get();
 
-
+// dd($acc_groups);
         return view("admin.client_list", compact(
             'ib_details',
             'rm_details',
