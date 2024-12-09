@@ -34,7 +34,7 @@
                                     <div class="col-lg-4">
                                         <div class="mb-3">
                                             <label class="form-label">IB Plan</label>
-                                            <select name="ib_plan_id" class="form-control" required="required">
+                                            <select name="ib_category_id" class="form-control" required="required">
                                                 <option value="" default selected disabled>--Select Plan--</option>
                                                 <?php foreach ($ibCategories as $res) { ?>
                                                 <option value="<?= $res->id ?>"><?= $res->ib_cat_name ?></option>
@@ -90,7 +90,7 @@
                                                 </div>
                                             </div>
                                             <div class="card-footer actions text-end p-0">
-                                              
+
                                             </div>
                                         </div>
                                     </section>
@@ -115,7 +115,7 @@
             $(this)[0].select();
         });
 
-       
+
 
         function total() {
             $(".level-cards").each(function() {

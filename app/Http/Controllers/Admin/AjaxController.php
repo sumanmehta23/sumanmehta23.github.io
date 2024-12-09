@@ -215,7 +215,7 @@ class AjaxController extends Controller
         if(isset($requestData['rm_id']) && !empty($requestData['rm_id'])){
             $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where (rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
         }
-        header('Content-Type: application/json');
+        // header('Content-Type: application/json');
         $sql = " SELECT
         ibs.name AS ib_name,
         c.country_alpha,
@@ -269,7 +269,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-secondary me-2 edit-user d-none" data-id="' . $row->email . '"><i class="fa fa-edit"></i></a><a class="btn btn-sm btn-primary" href="/admin/client_details?id=' . ($row->email) . '"><i class="fa fa-eye"></i></a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        // echo json_encode(['data' => $data]);
         return response()->json(['data' => $data]);
     }
     public function getWalletDeposit()

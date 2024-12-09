@@ -714,6 +714,10 @@
                     data: 'created_at',
                     name: 'created_at',
                     render: function(data, type, row) {
+                        // console.log(data);
+                        // console.log(type);
+                        // console.log(row);
+                        // console.log('abhayssss');
                         var return_data = "<div class='d-grid'><div class='date'>" + row.created_date +
                             "</div><div class='time text-muted'>" + row.created_time + "</div></div>";
                         return return_data;
@@ -750,8 +754,8 @@
                     data: 'ib',
                     name: 'ib',
                     render: function(data, row, row_data) {
-                        console.log(JSON.stringify(row_data));
-                        console.log(JSON.stringify(data));
+                        // console.log(JSON.stringify(row_data));
+                        // console.log(JSON.stringify(data));
                         let ib_email = row_data.ib;
                         let ib_name = row_data.ib_name;
                         let svg =
