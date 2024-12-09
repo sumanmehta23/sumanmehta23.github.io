@@ -137,7 +137,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
-
+Route::get('/ajasssx', [AjaxController::class, 'index']);
 Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::post('/', [Login::class, 'adminLogin']);
