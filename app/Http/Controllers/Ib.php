@@ -43,14 +43,14 @@ class Ib extends Controller
         return view('ib', compact('ib_result'));
     }
     public function ibEnroll(Request $request)
-    {   
+    {
         if ($request->isMethod('post')) {
             $uid = uniqid();
             $code = Str::random(32);
             do {
                 $referral_code = Str::random(6);
             } while (Ib1::where('referral_code', $referral_code)->exists());
-            
+
             $user = auth()->user();
             try {
                 Ib1::create([
@@ -73,13 +73,13 @@ class Ib extends Controller
     }
 
     public function ibUpdateReferral(Request $request)
-    {   
+    {
         $ib1_id = $request->ib1_id;
         $referral_code = $request->referral_code;
 
         $ib1 = Ib1::find($ib1_id);
         if ($ib1) {
-            
+
             try {
                 if ($ib1->referral_code == $referral_code) {
                     session()->flash('error', 'Referral code already saved.');
@@ -89,8 +89,8 @@ class Ib extends Controller
                 if ($existingReferralCode) {
                     session()->flash('error', 'Referral code already registered.');
                     return back();               }
-                
-               
+
+
                 $ib1_referral = $ib1->referral_code;
                 User::where(function ($query) use ($ib1_referral) {
                     for ($i = 1; $i <= 15; $i++) {
@@ -128,18 +128,18 @@ class Ib extends Controller
         $ib = Ib1::where('user_id', $userId)
             ->whereNotNull('ib_category_id')
             ->first();
-            
+
 
         if (!$ib) {
             return redirect()->route('ib');
         }
         $plan_id = $ib->ib_category_id;
-       
+
 
         $ib_email = auth()->user()->email;
-        
+
         if ($plan_id) {
-            $ibPlans = IbPlanDetails::where('ib_plan_id', $plan_id)
+            $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
                 ->where('status', 1)
                 ->whereNull('deleted_at')
                 ->get()
@@ -152,7 +152,7 @@ class Ib extends Controller
                     $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
                 }
             }
-             
+
             $referral_code= auth()->user()->ib->referral_code;
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
@@ -160,9 +160,9 @@ class Ib extends Controller
                     ->where('demo',false)
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
-                    })  
+                    })
                     ->get();
-                   
+
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
                     $from = 'September 01,2024';
@@ -171,24 +171,24 @@ class Ib extends Controller
                     if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
                         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                     }
-                   
+
                     $closedOrderHistory = $total;
-                  
+
                     if ($closedOrderHistory == 0) {
                         continue;
                     }
                     $offset = Ib1Commission::where('code', $login)->count();
-                    
+
                     $total = $closedOrderHistory;
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                         }
                         $result2 = $orders;
-                     
+
                         if ($result2) {
                             foreach ($result2 as $item) {
-                               
+
                                 $order = $item->Order;
                                 $login = $item->Login;
                                 $init_volume = $item->VolumeInitial;
@@ -227,10 +227,10 @@ class Ib extends Controller
                         $query->where('user_id', $userId);
                     })
                     ->where('status', 0)
-                    
+
                     ->groupBy('order_id')
                     ->orderByDesc('id')->get();
-                 
+
                 foreach ($client_live_accs as $ca) {
                     $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
                     $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
@@ -263,8 +263,8 @@ class Ib extends Controller
                 // ->where('status', 0)
                 // ->update(['status'=>1]);
             }
-            
-                 
+
+
         }
         $refercode =auth()->user()->ib->referral_code;
         $ib_clients_total = User::where(function ($query) use ($refercode) {
@@ -275,7 +275,7 @@ class Ib extends Controller
         $ib_wallet_raw = IbWallet::where('user_id', $userId)
             ->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')
             ->first();
-     
+
         if ($ib_wallet_raw) {
             $ib_wallet = $ib_wallet_raw->wallet - $ib_wallet_raw->withdraw;
         }
@@ -283,7 +283,7 @@ class Ib extends Controller
             ->where('demo', false)
             ->orderBy('id', 'desc')
             ->get();
-            
+
         for ($i = 1; $i <= 7; $i++) {
             $ib_clients[$i] = IbClientList::where("ib$i", auth()->user()->ib->referral_code)->get();
         }
@@ -316,9 +316,9 @@ class Ib extends Controller
             $userId = auth()->user()->id;
             $account=Account::where(['id'=>$accountId,'user_id'=>$userId])->firstOrFail();
             $email = auth()->user()->email;
-            
+
             $balance=IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
-            
+
             $availableBalance = $balance->wallet - $balance->withdraw;
             if ($availableBalance >= $amount) {
 
