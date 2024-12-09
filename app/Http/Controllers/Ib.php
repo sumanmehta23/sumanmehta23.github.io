@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Ib1;
 use App\Models\User;
 use App\MT5\MTWebAPI;
+use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
@@ -202,10 +203,35 @@ class Ib extends Controller
                         if ($result2) {
                             foreach ($result2 as $item) {
 
+                                $symbolWithoutP = rtrim($item->Symbol, '.p');
+                                
+                                if (!isset($symbolmap[$symbolWithoutP])) {
+                                    try {
+                                        $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
+
+                                        if ($symbol) {
+                                            $symbolmap[$symbolWithoutP] = $symbol->path;
+                                        } else {
+                                            $symbolmap[$symbolWithoutP] = 'default/path';
+                                        }
+                                    } catch (\Exception $e) {
+                                        logger()->error('Error fetching symbol: ' . $e->getMessage());
+                                        $symbolmap[$symbolWithoutP] = 'error/path';
+                                    }
+                                }
+                                
+                                $symbolpath = $symbolmap[$symbolWithoutP];
+                                
+                                if (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) {
+                                    $b = 0.00001;
+                                } else {
+                                    $b = 0.0001;
+                                }
+
                                 $order = $item->Order;
                                 $login = $item->Login;
                                 $init_volume = $item->VolumeInitial;
-                                $volume = $init_volume * 0.0001;
+                                $volume = $init_volume * $b;
                                 $time_closed = Carbon::createFromTimestamp($item->TimeDone);
 
                                 try {
