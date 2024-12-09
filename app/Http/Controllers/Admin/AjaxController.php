@@ -1059,7 +1059,7 @@ and ib1.status = 0
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->indexId,
-                'enc' => ($row->email),
+                'enc' => ($row->user_id),
                 'acc_type' => $row->acc_type,
                 'grp' => $row->grp,
                 'name' => $row->name,

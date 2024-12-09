@@ -69,6 +69,7 @@ class Ib extends Controller
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'referral_code' =>$referral_code,
+                    'ib_category_id' => $request->ib_category_id,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
