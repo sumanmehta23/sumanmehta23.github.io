@@ -120,6 +120,7 @@ class IBController extends Controller
             ->where('ib_plan_details.status', 1)
             ->groupBy('ib_plan_details.ib_category_id')
             ->get(); // Use get() to retrieve results
+            // dd($accGroups);
         return view("admin.ib.iblist", ["acc_groups" => $accGroups]);
     }
     public function list_active()
