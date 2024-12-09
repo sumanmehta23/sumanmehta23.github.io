@@ -32,6 +32,9 @@ class AjaxController extends Controller
             $tier = isset($request->tier) ? $request->tier : null;
             $search = isset($request->search) ? $request->search : null;
             $requestData = $request->all();
+            try {
+                //code...
+            
             switch ($action) {
                 case 'getClientList':
                     $this->getClientList($requestData);
@@ -161,6 +164,9 @@ class AjaxController extends Controller
                     echo json_encode(['error' => 'Invalid function call']);
                     break;
             }
+        } catch (\Throwable $th) {
+            echo json_encode(['error' => $th->getMessage()]);
+        }
         } else {
             echo json_encode(['error' => 'No functions specified']);
         }
