@@ -18,7 +18,6 @@ class AjaxController extends Controller
 {
     public function __contract()
     {
-        die("asjkjkjk");
         if (!session("alogin")) {
             return response(["status" => false, "message" => "Please Login or Refresh the Page"], 401);
         }
@@ -35,143 +34,144 @@ class AjaxController extends Controller
             $requestData = $request->all();
             try {
                 //code...
-            
+            $result=[];
             switch ($action) {
                 case 'getClientList':
-                    $this->getClientList($requestData);
+                    $result=$this->getClientList($requestData);
                     break;
                 case 'getClientDetails':
-                    $this->getClientDetails($requestData);
+                    $result=$this->getClientDetails($requestData);
                     break;
                 case 'getWalletDeposit':
-                    $this->getWalletDeposit();
+                    $result=$this->getWalletDeposit();
 
                     break;
                 case 'getWalletWithdrawal':
-                    $this->getWalletWithdrawal();
+                    $result=$this->getWalletWithdrawal();
                     break;
                 case 'getTradingDeposit':
-                    $this->getTradingDeposit();
+                    $result=$this->getTradingDeposit();
                     break;
                 case 'getTradingWithdrawal':
-                    $this->getTradingWithdrawal();
+                    $result=$this->getTradingWithdrawal();
                     break;
                 case 'getInternalTransfer':
-                    $this->getInternalTransfer();
+                    $result= $this->getInternalTransfer();
                     break;
                 case 'getPendingWalletDeposit':
-                    $this->getPendingWalletDeposit();
+                    $result=$this->getPendingWalletDeposit();
                     break;
                 case 'getPendingWalletWithdrawal':
-                    $this->getPendingWalletWithdrawal();
+                    $result=$this->getPendingWalletWithdrawal();
                     break;
                 case 'getPendingTradingDeposit':
-                    $this->getPendingTradingDeposit();
+                    $result=$this->getPendingTradingDeposit();
                     break;
                 case 'getPendingTradingWithdrawal':
-                    $this->getPendingTradingWithdrawal();
+                    $result=$this->getPendingTradingWithdrawal();
                     break;
                 case 'getPendingInternalTransfer':
-                    $this->getPendingInternalTransfer();
+                    $result=$this->getPendingInternalTransfer();
                     break;
                 case 'getKYCHistory':
-                    $this->getKYCHistory();
+                    $result=$this->getKYCHistory();
                     break;
                 case 'getBankDetails':
-                    $this->getBankDetails();
+                    $result=$this->getBankDetails();
                     break;
                 case 'getAdminUsers':
-                    $this->getAdminUsers();
+                    $result= $this->getAdminUsers();
                     break;
                 case 'getMT5Groups':
-                    $this->getMT5Groups($type);
+                    $result=$this->getMT5Groups($type);
                     break;
                 case 'getIbGroups':
-                    $this->getIbGroups($type);
+                    $result= $this->getIbGroups($type);
                     break;
                 case 'getIbPlans':
-                    $this->getIbPlans($type);
+                    $result=$this->getIbPlans($type);
                     break;
                 case 'getMT5Category':
-                    $this->getMT5Category($type);
+                    $result=$this->getMT5Category($type);
                     break;
                 case 'getRoles':
-                    $this->getRoles();
+                    $result= $this->getRoles();
                     break;
                 case 'getRolePermissions':
-                    $this->getRolePermisions();
+                    $result= $this->getRolePermisions();
                     break;
                 case 'getAllTickets':
-                    $this->getAllTickets();
+                    $result= $this->getAllTickets();
                     break;
                 case 'getOpenTickets':
-                    $this->getOpenTickets();
+                    $result=$this->getOpenTickets();
                     break;
                 case 'getClosedTickets':
-                    $this->getClosedTickets();
+                    $result= $this->getClosedTickets();
                     break;
                 case 'getRoleDetails':
-                    $this->getRoleDetails($id);
+                    $result= $this->getRoleDetails($id);
                     break;
                 case 'getPaymentGateways':
-                    $this->getPaymentGateways();
+                    $result= $this->getPaymentGateways();
                     break;
                 case 'ibEnroll':
-                    $this->ibEnroll();
+                    $result=$this->ibEnroll();
                     break;
                 case 'getLatestDeposit':
-                    $this->getLatestDeposit($id);
+                    $result=$this->getLatestDeposit($id);
                     break;
                 case 'getLatestWithdrawal':
-                    $this->getLatestWithdrawal($id);
+                    $result=$this->getLatestWithdrawal($id);
                     break;
                 case 'getLatestTransfer':
-                    $this->getLatestTransfer($id);
+                    $result=$this->getLatestTransfer($id);
                     break;
                 case 'getIbUsers':
-                    $this->getIbUsers();
+                    $result= $this->getIbUsers();
                     break;
                 case 'getPendingIbUsers':
-                    $this->getPendingIbUsers();
+                    $result= $this->getPendingIbUsers();
                     break;
                 case 'getAdminDetails':
-                    $this->getAdminDetails($id);
+                    $result= $this->getAdminDetails($id);
                     break;
                 case 'getPaymentDetails':
-                    $this->getPaymentDetails($id);
+                    $result=$this->getPaymentDetails($id);
                     break;
                 case 'updateClientStatus':
-                    $this->updateClientStatus($requestData);
+                    $result=$this->updateClientStatus($requestData);
                     break;
                 case 'getIbList':
-                    $this->getIbList($id);
+                    $result=$this->getIbList($id);
                     break;
                 case 'getRMbyGroup':
-                    $this->getRMbyGroup($id);
+                    $result= $this->getRMbyGroup($id);
                     break;
                 case 'getListOfGroups':
-                    $this->getListOfGroups($search);
+                    $result=$this->getListOfGroups($search);
                     break;
                 case 'getListOfUsers':
-                    $this->getListOfUsers($search);
+                    $result=$this->getListOfUsers($search);
                     break;
                 case 'getListOfIBs':
-                    $this->getListOfIBs($search);
+                    $result=$this->getListOfIBs($search);
                     break;
                 case 'requestIB':
-                    $this->requestIB($requestData);
+                    $result= $this->requestIB($requestData);
                     break;
 
                 default:
-                    echo json_encode(['error' => 'Invalid function call']);
+                $result= json_encode(['error' => 'Invalid function call']);
                     break;
             }
         } catch (\Throwable $th) {
-            echo json_encode(['error' => $th->getMessage()]);
+            $result= json_encode(['error' => $th->getMessage()]);
         }
         } else {
-            return  json_encode(['error' => 'No functions specified']);
+            $result=  json_encode(['error' => 'No functions specified']);
         }
+       return  response()->json($result);
     }
 
 
@@ -181,7 +181,7 @@ class AjaxController extends Controller
         $sql = "SELECT account_types.ac_index as id,account_types.ac_group as text from account_types where account_types.ac_group like '%$string%' and status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return json_encode($results);
     }
     public function getListOfUsers($string)
     {
@@ -189,7 +189,7 @@ class AjaxController extends Controller
         $sql = "SELECT aspnetusers.email as id,concat(aspnetusers.fullname,' [',aspnetusers.email,']') as text from aspnetusers where (aspnetusers.email like '%$string%' OR aspnetusers.fullname like '%$string%') and status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return json_encode($results);
     }
     public function getListOfIBs($string)
     {
@@ -199,7 +199,7 @@ class AjaxController extends Controller
   where (aspnetusers.email like '%$string%' OR aspnetusers.fullname like '%$string%') and aspnetusers.status = 1 and ib1.status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return json_encode($results);
     }
 
     public function getClientList($requestData)
@@ -277,7 +277,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-secondary me-2 edit-user d-none" data-id="' . $row->email . '"><i class="fa fa-edit"></i></a><a class="btn btn-sm btn-primary" href="/admin/client_details?id=' . ($row->email) . '"><i class="fa fa-eye"></i></a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
         // return response()->json(['data' => $data]);
     }
     public function getWalletDeposit()
@@ -308,7 +308,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getWalletWithdrawal()
     {
@@ -337,7 +337,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getTradingDeposit()
     {
@@ -387,7 +387,7 @@ class AjaxController extends Controller
             ];
         }
 
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getTradingWithdrawal()
     {
@@ -444,7 +444,7 @@ class AjaxController extends Controller
                 'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getInternalTransfer()
     {
@@ -491,7 +491,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getPendingWalletDeposit()
     {
@@ -523,7 +523,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getPendingWalletWithdrawal()
     {
@@ -572,7 +572,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getPendingTradingDeposit()
     {
@@ -602,7 +602,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getPendingTradingWithdrawal()
     {
@@ -631,7 +631,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getPendingInternalTransfer()
     {
@@ -659,7 +659,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details?id=' . $row->itIndex . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
 
     public function getKYCHistory()
@@ -676,7 +676,7 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         $results = $query;
 
-        echo json_encode(['data' => $results]);
+        return json_encode(['data' => $results]);
     }
     public function getBankDetails()
     {
@@ -706,7 +706,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/view_bank_details?id=' . $row->id . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getAdminUsers()
     {
@@ -728,7 +728,7 @@ class AjaxController extends Controller
             $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
 
     public function getMT5Category($type = "category")
@@ -738,7 +738,7 @@ class AjaxController extends Controller
         $sql = "SELECT * from mt5_group_categories where mt5_grp_cat_type = '" . $type . "' order by mt5_grp_cat_id";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return json_encode(['data' => $results]);
     }
 
 
@@ -761,7 +761,7 @@ class AjaxController extends Controller
             $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
 
     public function getIbGroups($type = NULL)
@@ -775,7 +775,7 @@ class AjaxController extends Controller
         }
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return json_encode(['data' => $results]);
     }
 
     public function getIbPlans($type = NULL)
@@ -789,7 +789,7 @@ class AjaxController extends Controller
         }
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return json_encode(['data' => $results]);
     }
 
     public function getRoles()
@@ -807,7 +807,7 @@ class AjaxController extends Controller
 
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getRolePermisions()
     {
@@ -823,7 +823,7 @@ class AjaxController extends Controller
             $dat->action = ' <a class="btn btn-sm btn-danger disabled" href="#">DELETE</a>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getAllTickets()
     {
@@ -839,7 +839,7 @@ class AjaxController extends Controller
             $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getOpenTickets()
     {
@@ -853,7 +853,7 @@ class AjaxController extends Controller
             $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getClosedTickets()
     {
@@ -867,7 +867,7 @@ class AjaxController extends Controller
             $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getRoleDetails($id)
     {
@@ -877,9 +877,9 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         if (count($query)) {
             $result = $query[0];
-            echo json_encode($result);
+            return json_encode($result);
         } else {
-            echo json_encode([]);
+            return json_encode([]);
         }
     }
     public function getPaymentGateways()
@@ -894,7 +894,7 @@ class AjaxController extends Controller
             $dat->action = '<a data-id="' . $row->id . '"  class="btn btn-sm btn-secondary me-1 update-payment" href="#">Edit</a> <a href="#" onclick="deletePayment(`' . $row->id . '`)" data-id="' . $row->id . '"  class="btn btn-sm btn-danger me-1 delete-payment" href="#">Delete</a>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function ibEnroll()
     {
@@ -913,11 +913,10 @@ class AjaxController extends Controller
                 'emailToken' => $code,
                 'status' => 0
             ]);
-            echo "true";
+            return "true";
         } catch (Exception $e) {
-            echo "false";
+            return "false";
         }
-        exit();
     }
     public function getLatestDeposit($id)
     {
@@ -938,7 +937,7 @@ class AjaxController extends Controller
             ];
         }
 
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getLatestWithdrawal($id)
     {
@@ -962,7 +961,7 @@ class AjaxController extends Controller
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getLatestTransfer($id)
     {
@@ -985,7 +984,7 @@ class AjaxController extends Controller
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
     public function getIbUsers()
     {
@@ -1027,7 +1026,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
                 'status' => $row->status
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
 
     public function getPendingIbUsers()
@@ -1073,7 +1072,7 @@ and ib1.status = 0
                 'status' => $row->status
             ];
         }
-        echo json_encode(['data' => $data]);
+        return json_encode(['data' => $data]);
     }
 
 
@@ -1085,7 +1084,7 @@ and ib1.status = 0
         $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
-        echo json_encode($result);
+        return json_encode($result);
     }
     public function getPaymentDetails($id)
     {
@@ -1094,7 +1093,7 @@ and ib1.status = 0
         $sql = "SELECT * FROM  available_payment WHERE id=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
-        echo json_encode($result);
+        return json_encode($result);
     }
     public function updateClientStatus($data)
     {
@@ -1123,7 +1122,7 @@ and ib1.status = 0
                     'kyc_verify' => $kyc_verify,
                 ]);
 
-                echo json_encode(['success' => true]);
+                return json_encode(['success' => true]);
 
             // if ($updated) {
             //     // dd($updated);
@@ -1152,7 +1151,7 @@ and ib1.status = 0
             // }
 
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
@@ -1178,7 +1177,7 @@ and ib1.status = 0
             ->where(DB::raw('email'), '=', $id)
             ->first();
 
-        echo json_encode((array) $result);
+            return json_encode((array) $result);
     }
 
     public function getRMbyGroup($id)
@@ -1195,7 +1194,7 @@ and ib1.status = 0
             ->get()
             ->toArray();
         // }
-        echo json_encode($results);
+        return json_encode($results);
     }
 
     public function getClientDetails($data)
@@ -1216,7 +1215,7 @@ and ib1.status = 0
             ->where(DB::raw('email'), '=', $data['id'])
             ->first();
 
-        echo json_encode((array) $result);
+            return json_encode((array) $result);
     }
 
     public function requestIB($request)
@@ -1248,13 +1247,12 @@ and ib1.status = 0
                     'ib_category_id' => $ibGroup
                 ]);
             if ($updated) {
-                echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);
+                return json_encode(['status' => true, 'message' => 'IB details updated successfully']);
             } else {
-                echo json_encode(['status' => false, 'message' => 'Failed to update IB details']);
+                return json_encode(['status' => false, 'message' => 'Failed to update IB details']);
             }
         } catch (Exception $e) {
-            dd($e->getMessage());
-            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+            return json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
     }
 
