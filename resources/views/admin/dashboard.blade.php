@@ -469,7 +469,7 @@
                                             <td>
                                                 <?php if ($result->type == "trade") { ?>
                                                 <div>
-                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
@@ -477,7 +477,7 @@
 
                                                 <?php } else { ?>
                                                 <div>
-                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo htmlentities($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
