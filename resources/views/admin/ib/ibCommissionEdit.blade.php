@@ -51,7 +51,7 @@
                       <!-- <option value="" default selected disabled>--Select Group--</option> -->
                       <?php $i = 1;
                       foreach ($groups as $res) { ?>
-                        <option value="<?= $res->ac_index ?>" <?= (($res->ac_index) != $accType && ($res->status == 0 || $res->ib_enabled == 0)) ? "disabled" : "" ?> <?= (($res->ac_index) == $accType) ? "selected" : "" ?>><?= ($res->ac_group) ? $res->ac_group : $res->ac_name ?></option>
+                        <option value="<?= $res->id ?>" <?= (($res->ac_index) != $accType && ($res->status == 0 || $res->ib_enabled == 0)) ? "disabled" : "" ?> <?= (($res->id) == $accType) ? "selected" : "" ?>><?= ($res->ac_group) ? $res->ac_group : $res->ac_name ?></option>
                       <?php  } ?>
                     </select>
                   </div>
