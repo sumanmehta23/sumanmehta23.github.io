@@ -449,7 +449,7 @@
                                         aria-label="Default select example">
                                         <option value="" selected>--Plans--</option>
                                         <?php foreach ($acc_groups as $gp) { ?>
-                                        <option value="<?= $gp->id ?>"><?= $gp->ib_cat_name ?></option>
+                                            <option value="<?= $gp->ib_category_id ?>"><?= $gp->ib_cat_name ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -890,8 +890,8 @@
                 cache: false,
                 data: $("#statusUpdateForm").serialize(),
                 success: function(response) {
-                    let resp=JSON.parse(response);
-                    if (resp.success==true) {
+                    // let resp=JSON.parse(response);
+                    if (response.success==true) {
                         swal.fire({
                             icon: "success",
                             title: "Status Successfully Updated",

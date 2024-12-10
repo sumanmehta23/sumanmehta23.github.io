@@ -47,7 +47,7 @@
                 $(this).hide();
             }
         });
-   
+
     $("#ibRequestForm").submit(function(e) {
         e.preventDefault();
         var formData = $("#ibRequestForm").serializeArray();
@@ -62,6 +62,7 @@
             responseType: 'json',
             success: function(data) {
                 data = JSON.parse(data.trim());
+
                 if (data.status == true) {
                     swal.fire({
                         icon: "success",

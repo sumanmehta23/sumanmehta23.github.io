@@ -372,6 +372,9 @@ class AjaxController extends Controller
         $results = $query->orderByDesc('id')->get();
         $data = [];
         foreach ($results as $row) {
+            if($row->deposit_from){
+                $acc = Account::where('id',$row->deposit_from)->first();
+            }
             $data[] = [
                 'id' => 'TDID' . sprintf("%05d", $row->id),
                 'account_no' => $row->code,
@@ -379,14 +382,14 @@ class AjaxController extends Controller
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->deposit_amount,
                 'deposit_type' => $row->deposit_type,
-                'deposit_from' => $row->deposit_from ?? $row->deposit_type,
+                'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
-
+// dd('test');
         return ['data' => $data];
     }
     public function getTradingWithdrawal()
@@ -479,12 +482,15 @@ class AjaxController extends Controller
 
         $data = [];
         foreach ($deposits as $row) {
+            if($row->deposit_from){
+                $acc = Account::where('id',$row->deposit_from)->first();
+            }
             // dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'amount' => '$' . $row->deposit_amount,
-                'transfer_from' => $row->deposit_from,
+                'transfer_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
                 'transfer_to' => $row->code,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -1225,6 +1231,7 @@ and ib1.status = 0
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
             $result = Ib1::whereRaw('email = ?', [$clientId])->first();
+            // dd($result->id);
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
@@ -1241,18 +1248,24 @@ and ib1.status = 0
                     $ib1->save();
                 }
             }
-            $updated = Ib1::whereRaw('email = ?', [$clientId])
+
+            $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
                     'ib_category_id' => $ibGroup
                 ]);
+
+                // dd($updated);
             if ($updated) {
-                return ['status' => true, 'message' => 'IB details updated successfully'];
+                // dd('dddd');
+                return response()->json(['status' => true, 'message' => 'IB details updated successfully.']);
+                // return ['status' => true];
             } else {
-                return ['status' => false, 'message' => 'Failed to update IB details'];
+                // dd('sssss');
+                return response()->json(['status' => false, 'message' => 'Failed to update IB details.']);
             }
         } catch (Exception $e) {
-            return ['status' => false, 'message' => $e->getMessage()];
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
