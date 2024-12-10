@@ -16,7 +16,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('order_id', 100)->nullable();
             $table->string('code', 100)->nullable();
-            $table->string('volume', 100)->nullable();
+            $table->bigInteger('volume')->nullable();
+            $table->bigInteger('init_volume')->nullable();
             $table->string('time_closed', 100)->nullable();
             $table->integer('status')->default(0);
             

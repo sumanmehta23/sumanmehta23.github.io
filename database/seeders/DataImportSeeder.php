@@ -9,13 +9,16 @@ use App\Models\KycLog;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\UserLog;
+use App\Models\IbWallet;
 use App\Models\IbCategory;
 use App\Models\AccountType;
 use App\Models\DemoDeposit;
+use App\Http\Controllers\Ib;
 use App\Models\ClientWallet;
 use App\Models\LoginHistory;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
@@ -37,27 +40,27 @@ class DataImportSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 3000);
-        $this->users();
-        $this->userLogs();
-        $this->liveaccounts();
-        $this->demoaccounts();
-        $this->bonusTransaction();
-        $this->clientWallets();
-        $this->demoDeposit();
-        $this->ib1(); 
+        // $this->users();
+        // $this->userLogs();
+        // $this->liveaccounts();
+        // $this->demoaccounts();
+        // $this->bonusTransaction();
+        // $this->clientWallets();
+        // $this->demoDeposit();
+        // $this->ib1(); 
         $this->ib1_commission();
-        $this->ib1_withdraw();
-        $this->ib_categories();
-        $this->ib_plans();
-        $this->ib_plan_details();
-        $this->ib_users();
-        $this->kyc_logs();
-        $this->loginHistory();
-        $this->totalBalance();
-        $this->tradeDeposit();
-        $this->tradeWithdrawal();
-        $this->walletDeposit();
-        $this->walletWithdraw();
+        // $this->ib1_withdraw();
+        // $this->ib_categories();
+        // $this->ib_plans();
+        // $this->ib_plan_details();
+        $this->ib_wallet();
+        // $this->kyc_logs();
+        // $this->loginHistory();
+        // $this->totalBalance();
+        // $this->tradeDeposit();
+        // $this->tradeWithdrawal();
+        // $this->walletDeposit();
+        // $this->walletWithdraw();
     }
     private function users()
     {
@@ -269,19 +272,19 @@ class DataImportSeeder extends Seeder
     }
     private function ib1_commission()
     {
-        // $demoDeposits = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demo_deposit.json')), true);
-        // foreach ($demoDeposits as $deposit) {
-        //     $deposit['user_id'] = User::where('email', $deposit['email'])->value('id');
-        //     $deposit['account_id'] = Account::where('code', $deposit['trade_id'])->value('id');
-        //     $deposit['code'] = $deposit['trade_id'];
-        //     $deposit['admin_remark'] = $deposit['AdminRemark'];
-        //     unset($deposit['AdminRemark']);
-        //     unset($deposit['trade_id']);
-        //     DemoDeposit::updateOrCreate([
-        //         'user_id' => $deposit['user_id'],
-        //         'deposted_date' => $deposit['deposted_date'],
-        //     ], $deposit);
-        // }
+        $ibcommissions = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_ib1_commission.json')), true);
+        foreach ($ibcommissions as $ibcommission) {
+            $ibcommission['user_id'] = User::where('email', $ibcommission['user_id'])->value('id');
+            $ibcommission['account_id'] = Account::where('code', $ibcommission['login'])->value('id');
+            $ibcommission['code'] = $ibcommission['login'];
+            unset($ibcommission['login']);
+            unset($ibcommission['id']);
+            try {
+                Ib1Commission::create($ibcommission);
+            } catch (\Throwable $th) {
+                Log::error( $th->getMessage(),$ibcommission);
+            }   
+        }
     }
     private function ib1_withdraw()
     {
@@ -342,12 +345,17 @@ class DataImportSeeder extends Seeder
             
         }
     }
-    private function ib_users()
+    private function ib_wallet()
     {
-        // $ibs = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_ib1.json')), true);
-        // foreach ($ibs as $ib) {
-        //     Ib1::create($ib);
-        // }
+        $ibwallets = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_ib_wallet.json')), true);
+        foreach ($ibwallets as $ibwallet) {
+            $ibwallet['user_id'] = Ib1::where(['referral_code'=> $ibwallet['email']])->value('user_id');
+            $ibwallet['account_id'] = Account::where('code', $ibwallet['trade_id'])->value('id');
+            $ibwallet['code'] = $ibwallet['trade_id'];
+            unset($ibwallet['trade_id']);
+            unset($ibwallet['id']);
+            IbWallet::create($ibwallet);
+        }
     }
 
 
