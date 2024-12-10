@@ -203,7 +203,7 @@ class Ib extends Controller
                         if ($result2) {
                             foreach ($result2 as $item) {
 
-                                $symbolWithoutP = rtrim($item->Symbol, '.p');
+                                $symbolWithoutP = $item->Symbol;
                                 
                                 if (!isset($symbolmap[$symbolWithoutP])) {
                                     try {
@@ -240,7 +240,8 @@ class Ib extends Controller
                                         'account_id' => $client->id,
                                         'order_id' => $order,
                                         'code' => $login,
-                                        // 'init_volume' => $init_volume,
+                                        'init_volume' => $init_volume,
+                                        'symbol' => $symbolWithoutP,
                                         'volume' => $volume,
                                         'time_closed' => $time_closed
                                     ]);
