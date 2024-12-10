@@ -890,8 +890,8 @@
                 cache: false,
                 data: $("#statusUpdateForm").serialize(),
                 success: function(response) {
-                    let resp=JSON.parse(response);
-                    if (resp.success==true) {
+                    // let resp=JSON.parse(response);
+                    if (response.success==true) {
                         swal.fire({
                             icon: "success",
                             title: "Status Successfully Updated",
