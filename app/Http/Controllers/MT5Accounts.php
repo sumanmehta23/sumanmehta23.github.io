@@ -50,7 +50,7 @@ class MT5Accounts extends Controller
         return view('demo_accounts', compact('results'));
     }
     public function viewAccountDetails(Account $account)
-    {   
+    {
         session()->remove('error');
         $user= auth()->user();
         $code=$account->code;
@@ -135,16 +135,18 @@ class MT5Accounts extends Controller
             ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
             // Process orders
+            // dd($orders);
             if (!empty($orders)) {
                 foreach ($orders as $item) {
                     $volume = $item->VolumeInitial * 0.00001;
                     $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
                     // Insert commission data into DB
-                    Ib1Commission::create([
+                    Ib1Commission::updateOrCreate(['order_id' => $item->Order,
+                        'code' => $item->Login,],
+                    [
                         'user_id' => auth()->user()->id,
                         'account_id' => $account->id,
-                        'order_id' => $item->Order,
-                        'login' => $item->Login,
+
                         'volume' => $volume,
                         'time_closed' => $time_closed
                     ]);
