@@ -1225,6 +1225,7 @@ and ib1.status = 0
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
             $result = Ib1::whereRaw('email = ?', [$clientId])->first();
+            // dd($result->id);
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
@@ -1241,18 +1242,24 @@ and ib1.status = 0
                     $ib1->save();
                 }
             }
-            $updated = Ib1::whereRaw('email = ?', [$clientId])
+
+            $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
                     'ib_category_id' => $ibGroup
                 ]);
+
+                // dd($updated);
             if ($updated) {
-                return ['status' => true, 'message' => 'IB details updated successfully'];
+                // dd('dddd');
+                return response()->json(['status' => true, 'message' => 'IB details updated successfully.']);
+                // return ['status' => true];
             } else {
-                return ['status' => false, 'message' => 'Failed to update IB details'];
+                // dd('sssss');
+                return response()->json(['status' => false, 'message' => 'Failed to update IB details.']);
             }
         } catch (Exception $e) {
-            return ['status' => false, 'message' => $e->getMessage()];
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
