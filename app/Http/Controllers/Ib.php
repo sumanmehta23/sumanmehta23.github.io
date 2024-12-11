@@ -45,7 +45,7 @@ class Ib extends Controller
         if (!Cache::has($cacheKey)) {
             $ib_result =Ib1::where('user_id', $user->id)->first();
             Cache::put($cacheKey, $ib_result, 60);
-            
+
         } else {
             $ib_result=Cache::get($cacheKey);
         }
@@ -204,7 +204,7 @@ class Ib extends Controller
                             foreach ($result2 as $item) {
 
                                 $symbolWithoutP = $item->Symbol;
-                                
+
                                 if (!isset($symbolmap[$symbolWithoutP])) {
                                     try {
                                         $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
@@ -219,9 +219,9 @@ class Ib extends Controller
                                         $symbolmap[$symbolWithoutP] = 'error/path';
                                     }
                                 }
-                                
+
                                 $symbolpath = $symbolmap[$symbolWithoutP];
-                                
+
                                 if (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) {
                                     $b = 0.00001;
                                 } else {
@@ -270,6 +270,9 @@ class Ib extends Controller
 
                     ->groupBy('order_id')
                     ->orderByDesc('id')->get();
+
+                    // dd($client_live_accs);
+
 
                 foreach ($client_live_accs as $ca) {
                     $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();

@@ -113,7 +113,7 @@
                                                             <p class="mb-0">Deposits</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ 0.00</h5>
+                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00' ?></h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -130,7 +130,7 @@
                                                             <p class="mb-0">Withdrawals</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ 0.00</h5>
+                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00' ?></h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -225,7 +225,7 @@
                                         {{ session('email') }}
                                         <div class="mb-2 input-group">
                                             <input type="text" value="{{ $ib->referral_code }}" class="form-control" id="referral-code" placeholder="Generated code will appear here">
-                                            
+
                                             <button type="button" class="btn btn-lg btn-primary" id="generate-btn">Generate</button>
                                         </div>
                                     </div>
