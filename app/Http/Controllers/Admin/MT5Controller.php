@@ -131,10 +131,12 @@ class MT5Controller extends Controller
                 if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)) != MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
                 } else {
-                    $table = 'accounts';
-                    DB::table($table)
-                        ->where('code', $login)
-                        ->update(['trader_password' => $new_password]);
+
+                    $account = Account::where('code', $login)->first();
+                    if ($account) {
+                        $account->trader_password = $new_password;
+                        $account->save(); // Save will apply casting and encrypt the password
+                    }
                     return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
                 }
             }
@@ -144,10 +146,11 @@ class MT5Controller extends Controller
                 if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR)) != MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
                 } else {
-                    $table = 'accounts';
-                    DB::table($table)
-                        ->where('code', $login)
-                        ->update(['invester_password' => $new_password]);
+                    $account = Account::where('code', $login)->first();
+                    if ($account) {
+                        $account->invester_password = $new_password;
+                        $account->save(); // Save will apply casting and encrypt the password
+                    }
                     return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
                 }
             }
