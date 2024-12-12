@@ -27,6 +27,6 @@ class TradeWithdrawals extends Model
     }
     public function totalBalance()
     {
-        return $this->belongsTo(TotalBalance::class,'email','email');
+        return $this->belongsTo(TotalBalance::class,'code','code');
     }
 }

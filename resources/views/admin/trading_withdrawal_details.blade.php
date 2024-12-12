@@ -113,7 +113,7 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-success-transparent">+</span>
-                                                            <span>${{ $details->total_trading_dp + $details->total_wallet_dp }}</span>
+                                                            <span>${{ @$details->account->tradeDeposits->sum('deposit_amount') }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -126,8 +126,8 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-danger-transparent">-</span>
-                                                            {{-- {{ dd($details)}} --}}
-                                                            <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span>
+                                                            {{-- <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span> --}}
+                                                            <span>${{@$details->account->tradeWithdrawals->sum('withdrawal_amount')}}</span>
                                                         </div>
                                                     </div>
                                                 </div>

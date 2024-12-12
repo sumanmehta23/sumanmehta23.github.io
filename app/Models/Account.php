@@ -47,4 +47,15 @@ class Account extends Model
     {
         return $this->hasMany(TotalBalance::class);
     }
+
+    public function tradeDeposits()
+    {
+        return $this->hasMany(TradeDeposit::class);
+    }
+
+    public function tradeWithdrawals()
+    {
+        return $this->hasMany(TradeWithdrawals::class);
+    }
+
 }

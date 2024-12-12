@@ -17,7 +17,7 @@ class TradeDeposit extends Model
 
     public function account()
     {
-        return $this->belongsTo(Account::class,'deposit_from');
+        return $this->belongsTo(Account::class);
     }
     public function user()
     {
@@ -25,7 +25,7 @@ class TradeDeposit extends Model
     }
     public function totalBalance()
     {
-        return $this->belongsTo(TotalBalance::class,'email','email');
+        return $this->belongsTo(TotalBalance::class,'code','code');
     }
     public function clientWallet()
     {
