@@ -35,7 +35,7 @@
                                 </li>
                             </ul>
                             <div class="tab-content">
-                                <div class="tab-pane text-muted active show" id="walletdeposit" role="tabpanel">
+                                <div class="tab-pane text-muted  {{ $id === 'wallet_deposit' ? 'active show' : '' }}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletDeposit"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -54,7 +54,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="walletwithdrawal" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'wallet_withdrawal' ? 'active show' : '' }}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletWithdrawal"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -73,7 +73,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="tradingdeposit" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'trading_deposit' ? 'active show' : '' }}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingDeposit"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -95,7 +95,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="tradingwithdrawal" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'trading_withdrawal' ? 'active show' : '' }}" id="tradingwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingWithdrawal"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">

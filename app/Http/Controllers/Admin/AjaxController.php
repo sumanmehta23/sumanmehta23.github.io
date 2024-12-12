@@ -579,6 +579,7 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
         }
+        // dd($data);
         return ['data' => $data];
     }
     public function getPendingTradingDeposit()
