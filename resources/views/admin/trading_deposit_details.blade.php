@@ -147,10 +147,10 @@
                                                                 <span>{{ $details->deposit_currency }}</span></span>
                                                             </div>
                                                             <div class="mb-2"><b>Deposit Currency Amount :</b>
-                                                                <span>{{ $details->deposit_currency_amount }}</span></span>
+                                                                <span>{{ '$'.$details->deposit_amount }}</span></span>
                                                             </div>
                                                             <div class="mb-2"><b>Deposit Amount in USD:</b>
-                                                                <span>{{ $details->deposit_currency_in_usd }}</span></span>
+                                                                <span>{{ '$'.$details->deposit_amount }}</span></span>
                                                             </div>
 
                                                         </div>

@@ -165,16 +165,17 @@ class Transaction extends Controller
             $details = TradeDeposit::with([
                     'clientWallet',
                     'user',
+                    'account',
                     'totalBalance',
                     // 'relationshipManager.emplist',
-                    'user',
                 ])
-
+                ->where('id',request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
                 ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
                 ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
+                // dd($details);
             return view('admin.trading_deposit_details', compact('details'));
         }
     }
