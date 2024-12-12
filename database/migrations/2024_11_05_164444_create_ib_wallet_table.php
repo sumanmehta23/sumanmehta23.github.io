@@ -16,6 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->foreignIdFor(\App\Models\Account::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\Ib1Commission::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('ib_wallet', 50)->nullable();
             $table->string('ib_withdraw', 100)->nullable();
             $table->string('email', 50)->nullable();

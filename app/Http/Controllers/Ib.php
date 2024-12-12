@@ -246,7 +246,7 @@ class Ib extends Controller
                                         'time_closed' => $time_closed
                                     ]);
                                 } catch (Exception $e) {
-                                    dd($e);
+                                   
                                     logger()->error('Error inserting commission: ' . $e->getMessage());
                                 }
                             }
