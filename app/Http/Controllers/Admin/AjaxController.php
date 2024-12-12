@@ -964,7 +964,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => $row->withdraw_type,
+                'from_to' => 'Wallet',
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdraw_amount,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
