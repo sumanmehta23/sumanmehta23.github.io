@@ -1018,10 +1018,11 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         $query = DB::select($sql);
         $results = $query;
         $data = [];
+        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->id,
-                'enc' => ($row->email),
+                'enc' => ($row->user_id),
                 'ib_category_id' => $row->ib_category_id,
                 'grp' => $row->grp,
                 'name' => $row->name,
