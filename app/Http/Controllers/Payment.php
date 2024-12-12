@@ -43,7 +43,7 @@ class Payment extends Controller
                     'deposit_amount' => $amount,
                     'deposit_type' => "Now Payment",
                     'currency_type' => "USD",
-                    'Status' => 1,
+                    'status' => 1,
                 ]);
 
                 if ($walletDeposit) {

@@ -12,19 +12,7 @@ class WalletWithdraw extends Model
 {
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'wallet_withdraw';
-    protected $fillable = [
-        'email',
-        'user_id',
-        'client_wallet_id',
-        'withdraw_amount',
-        'withdraw_type',
-        'client_bank',
-        'transaction_id',
-        'status',
-        'created_at',
-        'updated_at',
-        'deleted_at'
-    ];
+    protected $guarded = [];
     protected static function boot()
     {
         parent::boot();
@@ -54,5 +42,12 @@ class WalletWithdraw extends Model
     public function clientWallet()
     {
         return $this->belongsTo(ClientWallet::class);
+    }
+
+    public function getFilteredWithdrawalSumAttribute()
+    {
+        return $this->where('withdraw_type', 'Wallet Withdrawal')
+                    ->where('status', 1)
+                    ->sum('withdraw_amount');
     }
 }

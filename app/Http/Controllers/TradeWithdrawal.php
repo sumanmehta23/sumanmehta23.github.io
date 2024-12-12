@@ -120,7 +120,7 @@ class TradeWithdrawal extends Controller
                         'user_id' => $user_id,
                         'deposit_amount' => $amount,
                         'deposit_type' => 'Internal Transfer',
-                        'Status' => 1,
+                        'status' => 1,
                     ]);
                     DB::commit();
                     return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
