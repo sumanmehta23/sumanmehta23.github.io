@@ -166,7 +166,7 @@ class Transaction extends Controller
                     'clientWallet',
                     'user',
                     'account',
-                    'totalBalance',
+                    'totalBalance'
                     // 'relationshipManager.emplist',
                 ])
                 ->where('id',request()->id)
