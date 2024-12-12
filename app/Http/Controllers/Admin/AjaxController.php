@@ -303,7 +303,7 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->deposit_amount,
                 'payment_mode' => $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
@@ -323,6 +323,7 @@ class AjaxController extends Controller
         header('Content-Type: application/json');
         $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
         $results = DB::select($sql);
+        // dd($results);
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -384,7 +385,7 @@ class AjaxController extends Controller
                 'deposit_type' => $row->deposit_type,
                 'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
@@ -442,7 +443,7 @@ class AjaxController extends Controller
                 'withdraw_type' => $row->withdraw_type,
                 'withdraw_to' => ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
@@ -479,7 +480,6 @@ class AjaxController extends Controller
         // Fetch data
         $deposits = $query->orderByDesc('id')->get();
 
-
         $data = [];
         foreach ($deposits as $row) {
             if($row->deposit_from){
@@ -492,7 +492,7 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->deposit_amount,
                 'transfer_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
                 'transfer_to' => $row->code,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details">View</a>'
             ];
@@ -524,11 +524,12 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->deposit_amount,
                 'payment_mode' => $row->deposit_type,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         }
+
         return ['data' => $data];
     }
     public function getPendingWalletWithdrawal()
@@ -560,7 +561,7 @@ class AjaxController extends Controller
 
         // Fetch data
         $results = $query->orderByDesc('id')->get();
-
+            // dd($results);
         $data = [];
 
         foreach ($results as $row) {
@@ -603,7 +604,7 @@ class AjaxController extends Controller
                 'deposit_type' => $row->deposit_type,
                 'deposit_from' => $row->deposit_from,
                 'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
@@ -632,7 +633,7 @@ class AjaxController extends Controller
                 'withdraw_type' => $row->withdraw_type,
                 'withdraw_to' => $row->withdraw_to,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
@@ -660,7 +661,7 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->amount,
                 'transfer_from' => $row->TransferFromAccountId,
                 'transfer_to' => $row->TransferToAccountId,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details?id=' . $row->itIndex . '">View</a>'
             ];
@@ -842,7 +843,7 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
         return ['data' => $data];
@@ -856,7 +857,7 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
         return ['data' => $data];
@@ -870,7 +871,7 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
         return ['data' => $data];
@@ -938,7 +939,7 @@ class AjaxController extends Controller
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
@@ -963,7 +964,7 @@ class AjaxController extends Controller
                 'from_to' => $row->code,
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdrawal_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }
@@ -986,7 +987,7 @@ class AjaxController extends Controller
                 'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
@@ -1235,7 +1236,7 @@ and ib1.status = 0
             if($result){
                 $clientId=$result->user->id;
             }
-            // dd($clientId);  
+            // dd($clientId);
 
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
