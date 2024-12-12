@@ -227,7 +227,6 @@ class Ib extends Controller
                                 } else {
                                     $b = 0.0001;
                                 }
-
                                 $order = $item->Order;
                                 $login = $item->Login;
                                 $init_volume = $item->VolumeInitial;
@@ -246,11 +245,12 @@ class Ib extends Controller
                                         'time_closed' => $time_closed
                                     ]);
                                 } catch (Exception $e) {
-                                   
+
                                     logger()->error('Error inserting commission: ' . $e->getMessage());
                                 }
                             }
                         }
+                        // dd($result2);
                         $offset = Ib1Commission::where('code', $login)->count();
                     }
                 }
