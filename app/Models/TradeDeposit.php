@@ -19,6 +19,11 @@ class TradeDeposit extends Model
     {
         return $this->belongsTo(Account::class);
     }
+
+    public function accountDepositFrom()
+    {
+        return $this->belongsTo(Account::class, 'deposit_from');
+    }
     public function user()
     {
         return $this->belongsTo(User::class);

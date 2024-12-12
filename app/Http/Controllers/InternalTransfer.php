@@ -52,6 +52,8 @@ class InternalTransfer extends Controller
         $userId=auth()->user()->id;
         $fromAccount = Account::where(['id'=> $fromAccountId,'user_id'=>$userId])->firstOrFail();
         $toAccount = Account::where(['id'=> $toAccountId,'user_id'=>$userId])->firstOrFail();
+        // dump($fromAccount);
+        // dd($toAccount);
         $transferable_amount = $request->input('transferable_amount');
         $email = auth()->user()->email;
         $ticket = NULL;
@@ -62,6 +64,7 @@ class InternalTransfer extends Controller
             $error = MTRetCode::GetError($errorCode);
             return redirect()->back()->with('error', 'Failed to withdraw from the account.');
         } else {
+
             DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
                 TradeWithdrawals::create([
                     'email' => $email,

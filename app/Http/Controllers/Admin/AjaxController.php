@@ -949,23 +949,25 @@ class AjaxController extends Controller
     }
     public function getLatestWithdrawal($id)
     {
-        header('Content-Type: application/json');
+        // header('Content-Type: application/json');
         // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         // $query = DB::select($sql);
-        $query = TradeWithdrawals::with('account')
+        $query = WalletWithdraw::with('user')
                             ->where('user_id',$id)
-                            ->where('withdraw_type',['Internal Transfer'])
+                            ->where('Status',1)
+                            ->where('withdraw_type',['Wallet Withdrawal'])
                             ->get();
 
         $results = $query;
         $data = [];
+        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => $row->code,
+                'from_to' => $row->withdraw_type,
                 'payment_method' => $row->withdraw_type,
-                'amount' => '$' . $row->withdrawal_amount,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'amount' => '$' . $row->withdraw_amount,
+                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }
@@ -977,15 +979,17 @@ class AjaxController extends Controller
         // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
         // $query = DB::select($sql);
         $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer'])
+                                ->with('accountDepositFrom')
                                 ->where('user_id',$id)
                                 ->get();
         $results = $query;
         $data = [];
         // dd($results);
         foreach ($results as $row) {
+
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
+                'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $row->deposit_type,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
