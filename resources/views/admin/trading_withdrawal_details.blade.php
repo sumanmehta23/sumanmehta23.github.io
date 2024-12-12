@@ -126,6 +126,7 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-danger-transparent">-</span>
+                                                            {{-- {{ dd($details)}} --}}
                                                             <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span>
                                                         </div>
                                                     </div>
@@ -166,7 +167,8 @@
                                                             <span class="fs-11 text-muted">TRADE ID</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->code }}</span>
+                                                            {{-- {{dd($details)}} --}}
+                                                            <span>{{ $details->withdraw_to!=null ? $details->withdrawTo->code : $details->withdraw_type}}</span>
                                                         </div>
                                                     </div>
                                                 </div>

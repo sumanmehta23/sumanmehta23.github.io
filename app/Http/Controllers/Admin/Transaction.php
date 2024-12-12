@@ -180,30 +180,38 @@ class Transaction extends Controller
     }
     public function trading_withdrawal_details(Request $request)
     {
+        // dd($request->id);
         if (request()->has('id') && !empty(request()->id)) {
-            $details = DB::table('trade_withdrawal as wd')
-                ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
-                ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
-                ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
-                ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
-                ->where(function ($query) {
-                    $id = request()->id;
-                    $query->where(DB::raw('wd.id'), $id);
-                })
-                ->where(DB::raw('wd.id'), request()->id)
-                ->selectRaw("
-                    COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
-                    COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
-                    COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
-                    COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
-                    wd.*, u.fullname, u.number, u.email,
-                    ib1.name as parent_ib, ib1.email as parent_ib_email,
-                    r.rm_id, emp.username as rm_name, tb.code
-                ")
-                ->groupBy('u.email')
-                ->first();
-
+            // $details = DB::table('trade_withdrawal as wd')
+            //     ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
+            //     ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
+            //     ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
+            //     ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
+            //     ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+            //     ->where(function ($query) {
+            //         $id = request()->id;
+            //         $query->where(DB::raw('wd.id'), $id);
+            //     })
+            //     ->where(DB::raw('wd.id'), request()->id)
+            //     ->selectRaw("
+            //         COALESCE(SUM(tb.deposit_amount), 0) as total_wallet_dp,
+            //         COALESCE(SUM(tb.trading_deposited), 0) as total_trading_dp,
+            //         COALESCE(SUM(tb.trading_withdrawal), 0) as total_trading_wd,
+            //         COALESCE(SUM(tb.withdraw_amount), 0) as total_wallet_wd,
+            //         wd.*, u.fullname, u.number, u.email,
+            //         ib1.name as parent_ib, ib1.email as parent_ib_email,
+            //         r.rm_id, emp.username as rm_name, tb.code
+            //     ")
+            //     ->groupBy('u.email')
+            //     ->first();
+            $details = TradeWithdrawals::with('user','totalBalance', 'withdrawTo')
+                        ->where('id',request()->id)
+                        ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+                        ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+                        ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+                        ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
+                        ->first();
+            // dd($details);
             return view('admin.trading_withdrawal_details', compact('details'));
         }
     }
