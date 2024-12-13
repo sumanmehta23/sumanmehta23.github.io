@@ -226,10 +226,13 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
+                      {{-- {{ dd($history); }} --}}
                         @php
                             if ($history->type == 'CRM') {
                                 $from = 'CRM';
-                            } elseif (!empty($history->accountFrom->code)) {
+                            } elseif($history->type == 'IB Withdraw'){
+                                $from = 'IB Wallet';
+                            }elseif (!empty($history->accountFrom->code)) {
                                 $from = $history->accountFrom->code;
                             } else {
                                 $from = $history->it_from;
