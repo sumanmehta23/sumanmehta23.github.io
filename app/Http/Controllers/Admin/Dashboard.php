@@ -19,7 +19,7 @@ class Dashboard extends Controller
     {
         $rmCondition = '';
         if (session('userData')['userRole'] != "Super Admin") {
-            $rmCondition .= " left join aspnetusers user on(user.email=trs.email) WHERE ";
+            $rmCondition .= " left join aspnetusers user on(user.email=trs.email) ";
         } else {
             $rmCondition .= " where (1) and ";
         }
