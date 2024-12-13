@@ -40,27 +40,27 @@ class DataImportSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 3000);
-        // $this->users();
-        // $this->userLogs();
-        // $this->liveaccounts();
-        // $this->demoaccounts();
-        // $this->bonusTransaction();
-        // $this->clientWallets();
-        // $this->demoDeposit();
-        // $this->ib1(); 
+        $this->users();
+        $this->userLogs();
+        $this->liveaccounts();
+        $this->demoaccounts();
+        $this->bonusTransaction();
+        $this->clientWallets();
+        $this->demoDeposit();
+        $this->ib1(); 
         $this->ib1_commission();
-        // $this->ib1_withdraw();
-        // $this->ib_categories();
-        // $this->ib_plans();
-        // $this->ib_plan_details();
+        $this->ib1_withdraw();
+        $this->ib_categories();
+        $this->ib_plans();
+        $this->ib_plan_details();
         $this->ib_wallet();
-        // $this->kyc_logs();
-        // $this->loginHistory();
-        // $this->totalBalance();
-        // $this->tradeDeposit();
-        // $this->tradeWithdrawal();
-        // $this->walletDeposit();
-        // $this->walletWithdraw();
+        $this->kyc_logs();
+        $this->loginHistory();
+        $this->totalBalance();
+        $this->tradeDeposit();
+        $this->tradeWithdrawal();
+        $this->walletDeposit();
+        $this->walletWithdraw();
     }
     private function users()
     {
@@ -121,7 +121,7 @@ class DataImportSeeder extends Seeder
             unset($account['bonusDeposit']);
             $account['w_bonus_deposit'] = $account['wBonusDeposit'];
             unset($account['wBonusDeposit']);
-
+            unset($account["mt5groupcode"]);
             $account['user_id'] = User::where('email', $account['email'])->value('id');
 
             $newuser = Account::updateOrCreate([
@@ -173,7 +173,7 @@ class DataImportSeeder extends Seeder
             unset($account['bonusDeposit']);
             $account['w_bonus_deposit'] = $account['wBonusDeposit'];
             unset($account['wBonusDeposit']);
-
+            unset($account["mt5groupcode"]);
             $account['user_id'] = User::where('email', $account['email'])->value('id');
 
             $newuser = Account::create($account);

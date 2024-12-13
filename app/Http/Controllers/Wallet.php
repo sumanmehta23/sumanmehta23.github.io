@@ -111,11 +111,11 @@ class Wallet extends Controller
             ->first();
 
         $total_wd = WalletDeposit::where('email', $email)
-            ->where('Status', 1)
+            ->where('status', 1)
             ->sum('deposit_amount');
 
         $total_ww = WalletWithdraw::where('email', $email)
-            ->where('Status', 1)
+            ->where('status', 1)
             ->sum('withdraw_amount');
 
         $wallet_balance = (float) $total_wd - (float) $total_ww;
@@ -231,7 +231,7 @@ class Wallet extends Controller
             //         $walletDeposit->deposit_amount = $amount;
             //         $walletDeposit->company_bank = $depositType;
             //         $walletDeposit->transaction_id = $time;
-            //         $walletDeposit->Status = 1;
+            //         $walletDeposit->status = 1;
             //         $walletDeposit->currency_type = 'USD';
             //         $walletDeposit->callback_data = $callbackData;
             //         $walletDeposit->callback_code = $callbackCode;

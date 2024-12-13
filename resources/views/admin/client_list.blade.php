@@ -448,6 +448,7 @@
                                     <select class="form-select" required name="ib_group"
                                         aria-label="Default select example">
                                         <option value="" selected>--Plans--</option>
+
                                         <?php foreach ($acc_groups as $gp) { ?>
                                         <option value="<?= $gp->ib_category_id ?>"><?= $gp->ib_cat_name ?></option>
                                         <?php } ?>
@@ -891,7 +892,6 @@
                 data: $("#statusUpdateForm").serialize(),
                 success: function(response) {   
                     if (response.success==true) {
-                        swal.fire({ 
                             icon: "success",
                             title: "Status Successfully Updated",
                         }).then((val) => {
