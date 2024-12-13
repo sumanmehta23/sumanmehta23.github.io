@@ -181,6 +181,7 @@
                                                 @endif
                                             </div>
                                         </div>
+                                        {{-- {{ dd($user) }} --}}
                                         <div class="text-center card-body table-card">
                                             @if ($user->kyc_verify == 0)
                                                 <div class="auth-main">
