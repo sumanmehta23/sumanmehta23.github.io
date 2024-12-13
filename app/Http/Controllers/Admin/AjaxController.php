@@ -13,6 +13,7 @@ use App\Models\TradeDeposit;
 use App\Models\WalletWithdraw;
 use Illuminate\Http\Request;
 use App\Models\TradeWithdrawals;
+use App\Models\IbWallet;
 
 class AjaxController extends Controller
 {
@@ -44,7 +45,9 @@ class AjaxController extends Controller
                     break;
                 case 'getWalletDeposit':
                     $result=$this->getWalletDeposit();
-
+                    break;
+                case 'getComissionData':
+                    $result=$this->getComissionData($requestData);
                     break;
                 case 'getWalletWithdrawal':
                     $result=$this->getWalletWithdrawal();
@@ -340,6 +343,28 @@ class AjaxController extends Controller
         }
         return ['data' => $data];
     }
+    public function getComissionData($data)
+    {
+        // Retrieve user ID from request
+        $userId = $data['id'];
+
+        // Fetch histories
+        $histories = IbWallet::where('user_id', $userId)->get();
+
+        // Prepare data
+        $data = $histories->map(function ($row) {
+            return [
+                'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
+                'accounts' => $row->code,
+                'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
+                'amount' => $row->ib_wallet ?? $row->ib_withdraw
+            ];
+        });
+        // dd($data);
+        return ['data' => $data];
+    }
+
+
     public function getTradingDeposit()
     {
         $rmCondition = " left join accounts user on(user.email=trs.email) ";

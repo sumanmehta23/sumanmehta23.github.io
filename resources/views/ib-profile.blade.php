@@ -294,7 +294,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($histories as $history)
+                                                {{-- @foreach ($histories as $history)
                                                     <tr>
                                                         <td>
                                                             {{ \Carbon\Carbon::parse($history->created_at)->format('Y-m-d') }}<br>
@@ -321,7 +321,7 @@
                                                         <td>{{ $history->ib_wallet ? 'Commission' : 'Transfer' }}</td>
                                                         <td>{{ $history->ib_wallet ?? $history->ib_withdraw }}</td>
                                                     </tr>
-                                                @endforeach
+                                                @endforeach --}}
                                             </tbody>
                                         </table>
                                     </div>
@@ -491,7 +491,34 @@
             });
         });
 
-        $("#commissionTbl").dataTable();
+        $(document).ready(function () {
+            let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
+
+            $("#commissionTbl").DataTable({
+                "ajax": {
+                    "url": "/admin/ajax",
+                    "type": "GET",
+                    "data": function (d) {
+                        d.action = "getComissionData";
+                        d.id = userId;
+                    },
+                    "error": function (xhr, status, error) {
+                        console.error("Error fetching data:", xhr.responseText || error);
+                    },
+                },
+                "columns": [
+                    { "data": "date", "name": "date" },
+                    { "data": "accounts", "name": "accounts" },
+                    { "data": "type", "name": "type" },
+                    { "data": "amount", "name": "amount" }
+                ],
+                "processing": true, // Adds a processing indicator
+                "serverSide": false, // Set to true if implementing server-side processing
+                "order": [[0, "desc"]] // Default sorting by date
+            });
+        });
+
+
 
         function updateReferralLink() {
             let referralCode = document.getElementById('referral-code').value;
