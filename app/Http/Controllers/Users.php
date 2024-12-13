@@ -19,7 +19,8 @@ class Users extends Controller
     {
         $user_id = auth()->user()->id;
         $bank_accounts = ClientWallet::where('user_id', $user_id)->get();
-        $user = User::find($user_id)->first();
+        $user = User::where('id',$user_id)->first();
+
         // $verf_docs = KycUpdate::where('user_id', $user_id)->orderBy('id', 'desc')->get();
         return view('profile', compact('bank_accounts', 'user'));
 
