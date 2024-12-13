@@ -23,8 +23,8 @@ class LeverageSeeder extends Seeder
             Leverage::create([
                 'account_type_id' => AccountType::where('ac_index',$leverage['account_type_id'])->value('id'),
                 'account_leverage' => $leverage['account_leverage'],
-                'created_at' => $leverage['created_at'],
-                'updated_at' => $leverage['updated_at'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }
