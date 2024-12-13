@@ -198,7 +198,8 @@ var customerID = "{{auth()->user()->id}}";
             title: "Payment Successful",
             allowEscapeKey: false,
             allowOutsideClick: false,
-            showCancelButton: false
+            showCancelButton: false,
+            showConfirmButton: true
           }).then((val) => {
             if (val.isConfirmed) {
               location.href = location.href;
@@ -211,7 +212,8 @@ var customerID = "{{auth()->user()->id}}";
             text: "Please try again later or contact support.",
             allowEscapeKey: false,
             allowOutsideClick: false,
-            showCancelButton: false
+            showCancelButton: false,
+            showConfirmButton: true
           }).then((val) => {
             if (val.isConfirmed) {
               location.href = location.href;
@@ -232,6 +234,7 @@ var customerID = "{{auth()->user()->id}}";
         icon: "info",
         allowEscapeKey: false,
         allowOutsideClick: false,
+        showConfirmButton: true,
         title: "",
         text: "Once payment is confirmed it will be reflected on your wallet"
       }).then((val) => {
