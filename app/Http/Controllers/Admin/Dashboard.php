@@ -47,16 +47,16 @@ class Dashboard extends Controller
         $sql = "select COALESCE(SUM(trs.withdraw_amount), 0) as withdraw from wallet_withdraw  trs" . $rmCondition . " trs.status=1 and trs.withdraw_type IN('Wallet Withdrawal')";
         $wallet_withdrawal = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from wallet_deposits trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from wallet_deposits trs " . $rmCondition . " trs.status = 0";
         $pending_wd = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from trade_deposits trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from trade_deposits trs " . $rmCondition . " trs.status = 0";
         $pending_td = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.status = 0";
         $pending_tw = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from wallet_withdraw  trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from wallet_withdraw  trs " . $rmCondition . " trs.status = 0";
         $pending_ww = DB::select($sql)[0];
 
         $sql = "SELECT count(*) as counts from ib1 trs " . $rmCondition . " trs.status = 0";
