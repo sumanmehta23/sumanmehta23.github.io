@@ -566,7 +566,7 @@
         // $("#ibModal").modal();
         function dTSelection() {
             // alert("Init");
-            $('.ajaxDataTable tbody tr').off();
+            $('.ajaxDataTable tbody tr').off('click', '.ibToggle');
             $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
                 $("#clientName,#clientEmail").html("");
@@ -582,6 +582,7 @@
                 // });
 
             });
+            $('.ajaxDataTable tbody').off('click', '.editClient')
             $('.ajaxDataTable tbody').on('click', '.editClient', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
                 $.ajax({
@@ -603,6 +604,7 @@
                 });
                 editUserModal.show();
             });
+            $('.ajaxDataTable tbody').off('click', '.updateIb');
             $('.ajaxDataTable tbody').on('click', '.updateIb', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
                 $(".clientName,.clientEmail,.client_id").html("");
@@ -639,6 +641,7 @@
                 });
                 updateIbModal.show();
             });
+            $('.ajaxDataTable tbody').off('click', '.statusToggle');
             $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
                 $("#userName,#userEmail").html("");
@@ -651,6 +654,7 @@
                 $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
                 statusModal.show();
             });
+            $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
             $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
                 $("#customerName,#customerEmail").html("");
