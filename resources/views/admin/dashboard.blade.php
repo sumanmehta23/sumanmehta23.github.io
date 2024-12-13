@@ -87,7 +87,7 @@
                         <div class="card-body">
                             <div class="d-flex">
                                 <div>
-                                    {{ dump($pending_tw); dd($pending_ww); }}
+                                    {{-- {{ dump($pending_tw); dd($pending_ww); }} --}}
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         {{ $pending_tw->counts + $pending_ww->counts }}</h2>
                                     <p class="mb-0 text-fixed-white">Pending Withdraw</p>
