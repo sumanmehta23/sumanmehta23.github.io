@@ -121,7 +121,7 @@ class DataImportSeeder extends Seeder
             unset($account['bonusDeposit']);
             $account['w_bonus_deposit'] = $account['wBonusDeposit'];
             unset($account['wBonusDeposit']);
-
+            unset("mt5groupcode");
             $account['user_id'] = User::where('email', $account['email'])->value('id');
 
             $newuser = Account::updateOrCreate([
@@ -173,7 +173,7 @@ class DataImportSeeder extends Seeder
             unset($account['bonusDeposit']);
             $account['w_bonus_deposit'] = $account['wBonusDeposit'];
             unset($account['wBonusDeposit']);
-
+            unset("mt5groupcode");
             $account['user_id'] = User::where('email', $account['email'])->value('id');
 
             $newuser = Account::create($account);
