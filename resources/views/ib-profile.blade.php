@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="/assets1/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
 <style>
     div.dataTables_wrapper div.dataTables_length select{
-        width: 60px;
+        width: 70px;
     }
 </style>
 @endsection
