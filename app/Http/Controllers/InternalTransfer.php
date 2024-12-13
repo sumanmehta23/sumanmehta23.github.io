@@ -74,7 +74,7 @@ class InternalTransfer extends Controller
                     'withdraw_type' => 'Internal Transfer',
                     'withdraw_to' => $toAccount->id,
                     'withdraw_date' => now(),
-                    'Status' => 1
+                    'status' => 1
                 ]);
                 // Deposit to the second account
                 $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
