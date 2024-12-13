@@ -1,7 +1,11 @@
 @extends('layouts.crm.crm')
 @section('styles')
 <link rel="stylesheet" href="/assets1/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
-
+<style>
+    div.dataTables_wrapper div.dataTables_length select{
+        width: 60px;
+    }
+</style>
 @endsection
 @section('content')
     <div class="pc-container">
