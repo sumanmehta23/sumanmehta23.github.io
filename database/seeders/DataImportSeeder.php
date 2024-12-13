@@ -90,7 +90,7 @@ class DataImportSeeder extends Seeder
     private function demoaccounts()
     {
         $replacementgroups = ['LQH MARKETS\NO-COMMISION-B-USD' => 'LM\B-Book\NC\DF-B', "LQH MARKETS\LM-STANDARD-A-USD" => "LM\A-Book\STD\DF-A"];
-        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_liveaccount.json')), true);
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demoaccount.json')), true);
         $missingaccountcodes = ['125717', 855017, 540606, 123831, 768456];
 
         foreach ($usersdata as $account) {
@@ -105,7 +105,7 @@ class DataImportSeeder extends Seeder
             $group = isset($replacementgroups[$account['account_type']]) ? $replacementgroups[$account['account_type']] : $account['account_type'];
             $account['account_type_id'] = AccountType::where('ac_group', $group)->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found '.__LINE__.$group, $account);
+                Log::error('Account Type not found '.__LINE__." ".$group, $account);
                 continue;
             }
             unset($account['account_type']);
