@@ -489,10 +489,7 @@ class DataImportSeeder extends Seeder
                 $deposit['status'] = $deposit['Status'];
                 unset($deposit['Status']);
             }
-            WalletDeposit::updateOrCreate([
-                'user_id' => $deposit['user_id'],
-                'deposted_date' => $deposit['deposted_date'],
-            ], $deposit);
+            WalletDeposit::create( $deposit);
         }
     }
     private function walletWithdraw()
@@ -511,10 +508,7 @@ class DataImportSeeder extends Seeder
                 $withdraw['status'] = $withdraw['Status'];
                 unset($withdraw['Status']);
             }
-            WalletWithdraw::updateOrCreate([
-                'user_id' => $withdraw['user_id'],
-                'withdraw_date' => $withdraw['withdraw_date'],
-            ], $withdraw);
+            WalletWithdraw::create($withdraw);
         }
     }
 
