@@ -14,6 +14,8 @@ use App\Models\WalletWithdraw;
 use Illuminate\Http\Request;
 use App\Models\TradeWithdrawals;
 use App\Models\IbWallet;
+use Illuminate\Support\Facades\Cache;
+
 
 class AjaxController extends Controller
 {
@@ -1275,7 +1277,6 @@ and ib1.status = 0
             if($result){
                 $clientId=$result->user->id;
             }
-            // dd($clientId);
 
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
@@ -1298,6 +1299,9 @@ and ib1.status = 0
                     'status' => $ibStatus,
                     'ib_category_id' => $ibGroup
                 ]);
+
+            $cacheKey = 'ib1_' . $clientId;
+            Cache::forget($cacheKey);
 
             if ($updated) {
                 // dd('dddd');
