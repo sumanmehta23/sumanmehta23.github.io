@@ -15,6 +15,7 @@ use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\Http\Controllers\Ib;
 use App\Models\ClientWallet;
+use App\Models\EmployeeList;
 use App\Models\LoginHistory;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -27,6 +28,7 @@ use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\admin\Kyc;
+use App\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -61,6 +63,7 @@ class DataImportSeeder extends Seeder
         $this->tradeWithdrawal();
         $this->walletDeposit();
         $this->walletWithdraw();
+        $this->admins();
     }
     private function users()
     {
@@ -70,6 +73,18 @@ class DataImportSeeder extends Seeder
             $user['uid'] = $user['id'];
             unset($user['id']);
             $newuser = User::create($user);
+        }
+    }
+    private function admins()
+    {
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_emplist.json')), true);
+
+        foreach ($usersdata as $user) {
+            // $user['uid'] = $user['id'];
+            $role=Role::where('role_id',$user['role_id'])->first();
+            unset($user['id']);
+            $user['role_id'] = $role->id;
+            $newuser = EmployeeList::create($user);
         }
     }
     private function demoaccounts()
