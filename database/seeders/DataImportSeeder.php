@@ -105,7 +105,7 @@ class DataImportSeeder extends Seeder
             $group = isset($replacementgroups[$account['account_type']]) ? $replacementgroups[$account['account_type']] : $account['account_type'];
             $account['account_type_id'] = AccountType::where('ac_group', $group)->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found '.__LINE__, $account);
+                Log::error('Account Type not found '.__LINE__.$group, $account);
                 continue;
             }
             unset($account['account_type']);
