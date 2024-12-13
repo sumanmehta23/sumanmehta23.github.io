@@ -72,6 +72,7 @@
                         <div class="card-body">
                             <div class="d-flex">
                                 <div>
+                                    {{ dump($pending_wd); dd($pending_td); }}
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         {{ $pending_wd->counts + $pending_td->counts }}</h2>
                                     <p class="mb-0 text-fixed-white">Pending Deposits</p>
