@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\KycLog;
 use App\Models\KycUpdate;
 use App\Models\ClientWallet;
 use Illuminate\Http\Request;
@@ -148,8 +149,9 @@ class Users extends Controller
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
                 // Store callback log in the database
-                DB::table('kyc_logs')->insert([
+                KycLog::create([
                     'client_id' => $email,
+                    'user_id' => auth()->user()->id,
                     'callback_code' => json_encode($type),
                     'callback_payload' => json_encode($payload),
                 ]);
