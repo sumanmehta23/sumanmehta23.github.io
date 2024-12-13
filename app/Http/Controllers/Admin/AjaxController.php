@@ -252,7 +252,7 @@ class AjaxController extends Controller
         LEFT JOIN emplist emp on(rm.rm_id =emp.email)
         LEFT JOIN countries c on(ap.country =c.country_name)
         LEFT JOIN ib1 AS parent_ib ON (parent_ib.referral_code = ap.ib1 || parent_ib.email = ap.ib1)
-        LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
+        LEFT JOIN total_balance tb on (ap.id=tb.user_id) " . $rmCondition . " (1=1) group by ap.email";
         $results = DB::select($sql);
 
         $data = [];
