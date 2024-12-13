@@ -89,7 +89,7 @@
                                 <div>
                                     {{-- {{ dump($pending_tw); dd($pending_ww); }} --}}
                                     <h2 class="mb-0 number-font text-fixed-white">
-                                        {{ $pending_tw->counts + $pending_ww->counts }}</h2>
+                                        {{ $pending_ww->counts }}</h2>
                                     <p class="mb-0 text-fixed-white">Pending Withdraw</p>
                                 </div>
                                 <div class="ms-auto"> <i class="mt-2 fa fa-usd text-fixed-white fs-30 me-2"></i> </div>
