@@ -1270,7 +1270,6 @@ and ib1.status = 0
             if($result){
                 $clientId=$result->user->id;
             }
-            // dd($clientId);
 
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
@@ -1286,9 +1285,6 @@ and ib1.status = 0
                     $ib1->emailToken = $user->emailToken;
                     $ib1->status = 1;
                     $ib1->save();
-
-                    $cacheKey = 'ib1_' . $user->id;
-                    Cache::forget($cacheKey);
                 }
             }
             $updated = Ib1::where('user_id', $clientId)
@@ -1296,6 +1292,9 @@ and ib1.status = 0
                     'status' => $ibStatus,
                     'ib_category_id' => $ibGroup
                 ]);
+
+            $cacheKey = 'ib1_' . $clientId;
+            Cache::forget($cacheKey);
 
             if ($updated) {
                 // dd('dddd');
