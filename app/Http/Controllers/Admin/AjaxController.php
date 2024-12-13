@@ -14,6 +14,8 @@ use App\Models\WalletWithdraw;
 use Illuminate\Http\Request;
 use App\Models\TradeWithdrawals;
 use App\Models\IbWallet;
+use Illuminate\Support\Facades\Cache;
+
 
 class AjaxController extends Controller
 {
@@ -1284,6 +1286,9 @@ and ib1.status = 0
                     $ib1->emailToken = $user->emailToken;
                     $ib1->status = 1;
                     $ib1->save();
+
+                    $cacheKey = 'ib1_' . $user->id;
+                    Cache::forget($cacheKey);
                 }
             }
             $updated = Ib1::where('user_id', $clientId)
