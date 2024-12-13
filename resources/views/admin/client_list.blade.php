@@ -449,7 +449,7 @@
                                         aria-label="Default select example">
                                         <option value="" selected>--Plans--</option>
                                         <?php foreach ($acc_groups as $gp) { ?>
-                                            <option value="<?= $gp->ib_category_id ?>"><?= $gp->ib_cat_name ?></option>
+                                        <option value="<?= $gp->id ?>"><?= $gp->ib_cat_name ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -621,9 +621,9 @@
                         "id": data.enc
                     },
                     success: function(response) {
-                        var ibValues = JSON.parse(response);
+                        // var ibValues = JSON.parse(response);
                         $('.ib-select').val(null).trigger('change');
-                        $.each(ibValues, function(key, value) {
+                        $.each(response, function(key, value) {
                             if (( value != "" && value != null) || key ==
                                 'ib1') {
                                 if (value == 'noIB') {
@@ -890,7 +890,8 @@
                 cache: false,
                 data: $("#statusUpdateForm").serialize(),
                 success: function(response) {
-                    // let resp=JSON.parse(response);
+                    let resp=JSON.parse(response);
+                    console.log(response.success, 'suman');
                     if (response.success==true) {
                         swal.fire({
                             icon: "success",
