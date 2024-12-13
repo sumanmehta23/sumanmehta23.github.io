@@ -222,8 +222,7 @@ class MT5Accounts extends Controller
         }else{
             $groupCode = $group->ac_group;
         }
-        dump($_POST);
-        dd($groupCode);
+        
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
         $new_user->Group = $group->ac_group;
