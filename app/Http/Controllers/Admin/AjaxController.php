@@ -404,14 +404,21 @@ class AjaxController extends Controller
             if($row->deposit_from){
                 $acc = Account::where('id',$row->deposit_from)->first();
             }
+            if($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw'){
+                $deposit_from = 'IB Wallet';
+                $deposit_type = 'IB Deposit';
+            }else{
+                $deposit_from = $row->deposit_type;
+                $deposit_type = $row->deposit_type;
+            }
             $data[] = [
                 'id' => 'TDID' . sprintf("%05d", $row->id),
                 'account_no' => $row->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->deposit_amount,
-                'deposit_type' => $row->deposit_type,
-                'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
+                'deposit_type' => $deposit_type,
+                'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $deposit_from,
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -513,12 +520,17 @@ class AjaxController extends Controller
             if($row->deposit_from){
                 $acc = Account::where('id',$row->deposit_from)->first();
             }
+            if($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw'){
+                $transfer_from = 'IB Wallet';
+            }else{
+                $transfer_from = $row->deposit_type;
+            }
             // dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
                 'amount' => '$' . $row->deposit_amount,
-                'transfer_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
+                'transfer_from' => ($row->deposit_from && $acc) ? $acc->code : $transfer_from,
                 'transfer_to' => $row->code,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
@@ -1006,7 +1018,7 @@ class AjaxController extends Controller
         // header('Content-Type: application/json');
         // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
         // $query = DB::select($sql);
-        $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer'])
+        $query = TradeDeposit::whereIn('deposit_type',['Internal Transfer', 'CRM', 'Wallet Transfer','IB Withdraw'])
                                 ->with('accountDepositFrom')
                                 ->where('user_id',$id)
                                 ->get();
@@ -1014,10 +1026,14 @@ class AjaxController extends Controller
         $data = [];
         // dd($results);
         foreach ($results as $row) {
-
+            if($row->deposit_type == 'IB Withdraw' || $row->deposit_from == 'IB Commission'){
+                $deposit_from = 'IB Wallet';
+            }else{
+                $deposit_from = $row->deposit_type;
+            }
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $row->deposit_type,
+                'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
