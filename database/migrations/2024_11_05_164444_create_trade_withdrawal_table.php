@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('code', 50)->nullable();
             $table->string('wallet_qr', 250)->nullable();
             $table->timestamp('withdraw_date')->nullable()->useCurrent();
-            $table->integer('Status')->default(0);
+            $table->integer('status')->default(0);
             $table->string('admin_remark', 100)->nullable();
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->string('created_by')->nullable();

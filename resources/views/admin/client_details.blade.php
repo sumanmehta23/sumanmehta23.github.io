@@ -816,8 +816,8 @@
                                                             'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
                                                             'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
                                                         ];
-                                                        $statusText = $kyc->Status == '1' ? 'Approved' : ($kyc->Status == '2' ? 'Rejected' : 'Pending');
-                                                        [$badgeClass, $icon] = getBadgeProperties($kyc->Status);
+                                                        $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
+                                                        [$badgeClass, $icon] = getBadgeProperties($kyc->status);
                                                         ?>
 
                                                         <?php if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
@@ -855,7 +855,7 @@
                                                             </div>
                                                             <div
                                                                 class="my-auto overflow-visible media-body valign-middle text-sm-end">
-                                                                <?php if ($kyc->Status == 2 || $kyc->Status == 0) { ?>
+                                                                <?php if ($kyc->status == 2 || $kyc->status == 0) { ?>
                                                                 <button class="btn btn-lg btn-icon btn-light text-success"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                                     title="Approve"
@@ -863,7 +863,7 @@
                                                                     <i class="ri-check-line"></i>
                                                                 </button>
                                                                 <?php }
-                                    if ($kyc->Status == 1 || $kyc->Status == 0) { ?>
+                                    if ($kyc->status == 1 || $kyc->status == 0) { ?>
                                                                 <button class="btn btn-lg btn-icon btn-light text-danger"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                                     title="Reject"

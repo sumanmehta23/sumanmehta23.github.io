@@ -103,8 +103,8 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->deposit_amount, 2) }}</h6>
                           </td>
-                          <td class="{{ $history->Status == 0 ? 'text-warning' : ($history->Status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->Status == 0 ? 'Pending' : ($history->Status == 1 ? 'Success' : 'Cancelled') }}</p>
+                          <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                            <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
                         </tr>
                       @endforeach
@@ -176,8 +176,8 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount, 2) }}</h6>
                           </td>
-                          <td class="{{ $history->Status == 0 ? 'text-warning' : ($history->Status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->Status == 0 ? 'Pending' : ($history->Status == 1 ? 'Success' : 'Cancelled') }}</p>
+                          <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                            <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
                         </tr>
                       @endforeach

@@ -173,11 +173,11 @@
                                                         <span class="fs-11 text-muted">PAYMENT STATUS</span>
                                                     </div>
                                                     <div class="mt-2 lh-1">
-                                                        <?php if ($details->Status == 1) { ?>
+                                                        <?php if ($details->status == 1) { ?>
                                                         <span class="badge bg-success">APPROVED</span>
-                                                        <?php } elseif ($details->Status == 2) { ?>
+                                                        <?php } elseif ($details->status == 2) { ?>
                                                         <span class="badge bg-danger">REJECTED</span>
-                                                        <?php } elseif ($details->Status == 0) { ?>
+                                                        <?php } elseif ($details->status == 0) { ?>
                                                         <span class="badge bg-primary">WAITING FOR APPROVAL</span>
                                                         <?php } ?>
                                                     </div>
@@ -234,7 +234,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <?php if ($details->Status == 0) { ?>
+                                        <?php if ($details->status == 0) { ?>
                                         <td>
                                         </td>
                                         <td style="vertical-align:top">

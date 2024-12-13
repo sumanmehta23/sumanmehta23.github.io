@@ -21,7 +21,7 @@ return new class extends Migration
             $table->mediumText('discription')->nullable();
             $table->dateTime('ticket_open')->nullable();
             $table->dateTime('ticket_close')->nullable();
-            $table->enum('Status', ['Open', 'Closed']);
+            $table->enum('status', ['Open', 'Closed']);
             $table->string('U_Name', 50)->nullable();
             $table->string('U_id', 150)->nullable();
             $table->integer('ticket_type_id')->index('ticket_type_id');

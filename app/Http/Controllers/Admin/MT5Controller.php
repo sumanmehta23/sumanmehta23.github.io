@@ -246,7 +246,7 @@ class MT5Controller extends Controller
             $deposit_currency = 'USD';
             $login = $code;
             // $comment = $description;
-            $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';;
+            $comment = $type === 'in' ? 'Bonus Deposit In' : 'Bonus Deposit Out';;
             $ticket = null;
 
             if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
@@ -260,7 +260,7 @@ class MT5Controller extends Controller
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
-                    'admin_remark' => $description,
+                    'admin_remark' => $comment,
                     'bonus_currency' => $deposit_currency,
                     // 'created_by' => session('alogin')
                 ]);
