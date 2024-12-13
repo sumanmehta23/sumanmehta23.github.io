@@ -202,7 +202,27 @@ class MT5Accounts extends Controller
         ]);
         $user = auth()->user();
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-
+        $referral=$user->referral;
+        $ib=$user->ib1;
+        //wealthytrades
+        if($referral=="wealthytrades" || $ib=="wealthytrades") {
+            $groupCode = str_replace("DF","SNSI",$group->ac_group);
+            $group = AccountType::where('ac_group',addslashes( $groupCode))->firstOrFail();
+           
+            if($group){
+                $_POST["options"] =$group->id;
+            }
+            // $sql = "select ac_index from account_types where ac_group = '" . $groupCode . "'";
+            // $query = $dbh->prepare($sql);
+            // $query->execute();
+            // $group = $query->fetchColumn(PDO::FETCH_OBJ);
+            // if($group){
+            //     $_POST["options"] =$group;
+            // }
+        }else{
+            $groupCode = $group->ac_group;
+        }
+        dd($groupCode);
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
         $new_user->Group = $group->ac_group;
