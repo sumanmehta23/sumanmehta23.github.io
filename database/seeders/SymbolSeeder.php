@@ -15,11 +15,10 @@ class SymbolSeeder extends Seeder
     public function run(): void
     {
         $symbols = json_decode(File::get(database_path('seeders/data/symbols.json')), true);
-// dd($symbols);
-$symbols = array_map(function($symbol) {
-    return array_change_key_case($symbol, CASE_LOWER);
-}, $symbols);
-         // Insert each record into the 'leverage' table
+
+        $symbols = array_map(function($symbol) {
+            return array_change_key_case($symbol, CASE_LOWER);
+        }, $symbols);
          foreach ($symbols as $symbol) {
             DB::table('symbols')->insert([
                 'symbol' => $symbol['symbol'],
