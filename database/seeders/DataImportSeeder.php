@@ -105,7 +105,7 @@ class DataImportSeeder extends Seeder
             $group = isset($replacementgroups[$account['account_type']]) ? $replacementgroups[$account['account_type']] : $account['account_type'];
             $account['account_type_id'] = AccountType::where('ac_group', $group)->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found', $account);
+                Log::error('Account Type not found '.__LINE__, $account);
                 continue;
             }
             unset($account['account_type']);
@@ -157,7 +157,7 @@ class DataImportSeeder extends Seeder
             unset($account['trade_id']);
             $account['account_type_id'] = AccountType::where('ac_index', $account['account_type'])->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found', $account);
+                Log::error('Account Type not found '.__LINE__ , $account);
                 continue;
             }
             unset($account['account_type']);
@@ -236,7 +236,7 @@ class DataImportSeeder extends Seeder
             $clientWallet['user_id'] = User::where('email', $clientWallet['user_id'])->value('id');
             if (!$clientWallet['user_id']) {
                 if ($user == '') {
-                    info('empty user id' . json_encode($clientWallet));
+                    info('empty user id '.__LINE__ . json_encode($clientWallet));
                     continue;
                 }
                 continue;
@@ -268,7 +268,7 @@ class DataImportSeeder extends Seeder
                     'deposted_date' => $deposit['deposted_date'],
                 ], $deposit);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$deposit);
+                Log::error( $th->getMessage() .__LINE__,$deposit);
             }
             
         }
@@ -284,7 +284,7 @@ class DataImportSeeder extends Seeder
             try {
                 Ib1::create($ib);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$ib);
+                Log::error( $th->getMessage().__LINE__,$ib);
             }
             
         }
@@ -301,7 +301,7 @@ class DataImportSeeder extends Seeder
             try {
                 Ib1Commission::create($ibcommission);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$ibcommission);
+                Log::error( $th->getMessage().__LINE__,$ibcommission);
             }   
         }
     }
@@ -358,7 +358,7 @@ class DataImportSeeder extends Seeder
             try {
                 IbPlanDetails::create($plan);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$plan);
+                Log::error( $th->getMessage().__LINE__,$plan);
                 
             }
             
