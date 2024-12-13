@@ -15,6 +15,7 @@ use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\Http\Controllers\Ib;
 use App\Models\ClientWallet;
+use App\Models\EmployeeList;
 use App\Models\LoginHistory;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -27,6 +28,7 @@ use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\admin\Kyc;
+use App\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -61,6 +63,7 @@ class DataImportSeeder extends Seeder
         $this->tradeWithdrawal();
         $this->walletDeposit();
         $this->walletWithdraw();
+        $this->admins();
     }
     private function users()
     {
@@ -72,10 +75,22 @@ class DataImportSeeder extends Seeder
             $newuser = User::create($user);
         }
     }
+    private function admins()
+    {
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_emplist.json')), true);
+
+        foreach ($usersdata as $user) {
+            // $user['uid'] = $user['id'];
+            $role=Role::where('role_id',$user['role_id'])->first();
+            unset($user['id']);
+            $user['role_id'] = $role->id;
+            $newuser = EmployeeList::create($user);
+        }
+    }
     private function demoaccounts()
     {
         $replacementgroups = ['LQH MARKETS\NO-COMMISION-B-USD' => 'LM\B-Book\NC\DF-B', "LQH MARKETS\LM-STANDARD-A-USD" => "LM\A-Book\STD\DF-A"];
-        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_liveaccount.json')), true);
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demoaccount.json')), true);
         $missingaccountcodes = ['125717', 855017, 540606, 123831, 768456];
 
         foreach ($usersdata as $account) {
@@ -90,7 +105,7 @@ class DataImportSeeder extends Seeder
             $group = isset($replacementgroups[$account['account_type']]) ? $replacementgroups[$account['account_type']] : $account['account_type'];
             $account['account_type_id'] = AccountType::where('ac_group', $group)->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found', $account);
+                Log::error('Account Type not found '.__LINE__." ".$group, $account);
                 continue;
             }
             unset($account['account_type']);
@@ -142,7 +157,7 @@ class DataImportSeeder extends Seeder
             unset($account['trade_id']);
             $account['account_type_id'] = AccountType::where('ac_index', $account['account_type'])->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found', $account);
+                Log::error('Account Type not found '.__LINE__ , $account);
                 continue;
             }
             unset($account['account_type']);
@@ -221,7 +236,7 @@ class DataImportSeeder extends Seeder
             $clientWallet['user_id'] = User::where('email', $clientWallet['user_id'])->value('id');
             if (!$clientWallet['user_id']) {
                 if ($user == '') {
-                    info('empty user id' . json_encode($clientWallet));
+                    info('empty user id '.__LINE__ . json_encode($clientWallet));
                     continue;
                 }
                 continue;
@@ -243,13 +258,17 @@ class DataImportSeeder extends Seeder
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
             unset($deposit['trade_id']);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
             try {
                 DemoDeposit::updateOrCreate([
                     'user_id' => $deposit['user_id'],
                     'deposted_date' => $deposit['deposted_date'],
                 ], $deposit);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$deposit);
+                Log::error( $th->getMessage() .__LINE__,$deposit);
             }
             
         }
@@ -265,7 +284,7 @@ class DataImportSeeder extends Seeder
             try {
                 Ib1::create($ib);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$ib);
+                Log::error( $th->getMessage().__LINE__,$ib);
             }
             
         }
@@ -282,7 +301,7 @@ class DataImportSeeder extends Seeder
             try {
                 Ib1Commission::create($ibcommission);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$ibcommission);
+                Log::error( $th->getMessage().__LINE__,$ibcommission);
             }   
         }
     }
@@ -339,7 +358,7 @@ class DataImportSeeder extends Seeder
             try {
                 IbPlanDetails::create($plan);
             } catch (\Throwable $th) {
-                Log::error( $th->getMessage(),$plan);
+                Log::error( $th->getMessage().__LINE__,$plan);
                 
             }
             
@@ -416,6 +435,10 @@ class DataImportSeeder extends Seeder
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
             unset($deposit['trade_id']);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
             TradeDeposit::updateOrCreate([
                 'user_id' => $deposit['user_id'],
                 'deposted_date' => $deposit['deposted_date'],
@@ -439,6 +462,10 @@ class DataImportSeeder extends Seeder
             unset($withdrawal['AdminRemark']);
             $withdrawal['code'] = $withdrawal['trade_id'];
             unset($withdrawal['trade_id']);
+            if(isset($withdrawal['Status'])){
+                $withdrawal['status'] = $withdrawal['Status'];
+                unset($withdrawal['Status']);
+            }
             TradeWithdrawals::updateOrCreate([
                 'user_id' => $withdrawal['user_id'],
                 'account_id' => $withdrawal['account_id'],
@@ -458,10 +485,11 @@ class DataImportSeeder extends Seeder
             }
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
-            WalletDeposit::updateOrCreate([
-                'user_id' => $deposit['user_id'],
-                'deposted_date' => $deposit['deposted_date'],
-            ], $deposit);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
+            WalletDeposit::create( $deposit);
         }
     }
     private function walletWithdraw()
@@ -476,10 +504,11 @@ class DataImportSeeder extends Seeder
             }
             $withdraw['admin_remark'] = $withdraw['AdminRemark'];
             unset($withdraw['AdminRemark']);
-            WalletWithdraw::updateOrCreate([
-                'user_id' => $withdraw['user_id'],
-                'withdraw_date' => $withdraw['withdraw_date'],
-            ], $withdraw);
+            if(isset($withdraw['Status'])){
+                $withdraw['status'] = $withdraw['Status'];
+                unset($withdraw['Status']);
+            }
+            WalletWithdraw::create($withdraw);
         }
     }
 
