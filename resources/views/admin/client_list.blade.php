@@ -593,8 +593,8 @@
                         "action": "getClientDetails",
                         "id": data.enc
                     },
-                    success: function(response) {
-                        let resp = JSON.parse(response);
+                    success: function(resp) {
+                        
                         $.each(resp, function(key, value) {
                             console.log(key, value);
                             $('#editUserForm [name="' + key + '"]').val(value);
@@ -670,7 +670,17 @@
                         "id": data.enc
                     },
                     success: function(response) {
-                        var userGroupIds = JSON.parse(response);
+                        var userGroupIds;
+                        if (typeof response === 'string') {
+                            try {
+                                userGroupIds = JSON.parse(response);
+                            } catch (e) {
+                                console.error("Failed to parse JSON:", e);
+                                return; // Exit if parsing fails
+                            }
+                        } else {
+                            userGroupIds = response;
+                        }
                         var defaultOption = $('<option></option>').val('').text('--Select--').attr(
                             'selected', 'selected');
                         $('#group_rm_list').html(defaultOption);
