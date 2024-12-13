@@ -17,7 +17,7 @@ class Transactions extends Controller
     public function index()
     {
         $email = $email = auth()->user()->email;
-        
+
         $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
             ->where('deposit_type', 'CryptoChill')
             ->orderBy('id', 'desc')
@@ -33,7 +33,7 @@ class Transactions extends Controller
 
         $internal_transfer = InternalTransfer::where('email', $email)
             ->with('accountTo','accountFrom')
-            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
+            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM','IB Withdraw'])
             ->where('status', 1)
             ->orderBy('date', 'desc')
             ->get();
