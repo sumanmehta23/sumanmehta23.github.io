@@ -1152,7 +1152,6 @@ and ib1.status = 0
     }
     public function updateClientStatus($data)
     {
-        // dd($data);
 
         header('Content-Type: application/json');
 
@@ -1165,22 +1164,18 @@ and ib1.status = 0
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
             ->where(DB::raw('email'), '=', $email)
             ->first();
-            // dd($result);
 
         try {
+            $updated = User::where('email', $email)
+            ->update([
+                'status' => $user_status,
+                'email_confirmed' => $email_confirmed,
+                'kyc_verify' => $kyc_verify,
+            ]);
 
-            $updated = DB::table('aspnetusers')
-                ->where(DB::raw('email'), '=', $email)
-                ->update([
-                    'status' => $user_status,
-                    'email_confirmed' => $email_confirmed,
-                    'kyc_verify' => $kyc_verify,
-                ]);
-
-                return ['success' => true];
+            return ['success' => true];
 
             // if ($updated) {
-            //     // dd($updated);
             //     $data['client_id'] = $result->email;
             //     if ($result->status != $user_status) {
             //         $data['field'] = 'status';
@@ -1284,7 +1279,7 @@ and ib1.status = 0
             if($result){
                 $clientId=$result->user->id;
             }
-
+            
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
@@ -1310,12 +1305,10 @@ and ib1.status = 0
             $cacheKey = 'ib1_' . $clientId;
             Cache::forget($cacheKey);
 
-            if ($updated) {
-                // dd('dddd');
+            if ($updated) { 
                 // return response()->json(['status' => true, 'message' => 'IB details updated successfully.']);
                 return ['status' => true];
             } else {
-                // dd('sssss');
                 return response()->json(['status' => false, 'message' => 'Failed to update IB details.']);
             }
         } catch (Exception $e) {
