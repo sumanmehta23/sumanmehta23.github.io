@@ -338,7 +338,7 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->withdraw_amount,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
@@ -478,7 +478,7 @@ class AjaxController extends Controller
                 'withdraw_type' => $row->withdraw_type,
                 'withdraw_to' => ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
@@ -549,7 +549,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.status = 0 order by trs.id desc";
         info("getPendingWalletDeposit ".$sql);
         $query = DB::select($sql);
         $results = $query;
@@ -582,7 +582,7 @@ class AjaxController extends Controller
         //     $rmCondition .= " where (1) and ";
         // }
         // header('Content-Type: application/json');
-        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.status = 0 order by trs.id desc";
         // $query = DB::select($sql);
         // $results = $query;
 
@@ -596,7 +596,7 @@ class AjaxController extends Controller
                 });
             }
             else {
-                $query->where('Status', 0);
+                $query->where('status', 0);
             }
 
         // Fetch data
@@ -614,7 +614,7 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->withdraw_amount,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
@@ -632,7 +632,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -662,7 +662,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+        $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.status = 0 order by trs.id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -691,7 +691,7 @@ class AjaxController extends Controller
             $rmCondition .= " where (1) and ";
         }
         header('Content-Type: application/json');
-        $sql = "SELECT * from internaltransfer trs " . $rmCondition . " trs.Status = 0 order by trs.itIndex desc";
+        $sql = "SELECT * from internaltransfer trs " . $rmCondition . " trs.status = 0 order by trs.itIndex desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -719,8 +719,8 @@ class AjaxController extends Controller
         }
         header('Content-Type: application/json');
         $sql = "SELECT kyc.id as id,kyc.id as id,max(registered_date_js) as date,group_concat(kyc.kyc_type) as kyc_type,
-  group_concat(concat(kyc.kyc_type,'=',kyc.Status) SEPARATOR '#') as summary,
-  kyc.email as email,sum(kyc.Status) as status,aspnetusers.fullname,(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
+  group_concat(concat(kyc.kyc_type,'=',kyc.status) SEPARATOR '#') as summary,
+  kyc.email as email,sum(kyc.status) as status,aspnetusers.fullname,(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
         $query = DB::select($sql);
         $results = $query;
 
@@ -892,7 +892,7 @@ class AjaxController extends Controller
     public function getOpenTickets()
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM  tickets where Status='Open'";
+        $sql = "SELECT * FROM  tickets where status='Open'";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -906,7 +906,7 @@ class AjaxController extends Controller
     public function getClosedTickets()
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM  tickets where Status='Closed'";
+        $sql = "SELECT * FROM  tickets where status='Closed'";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -994,7 +994,7 @@ class AjaxController extends Controller
         // $query = DB::select($sql);
         $query = WalletWithdraw::with('user')
                             ->where('user_id',$id)
-                            ->where('Status',1)
+                            ->where('status',1)
                             ->where('withdraw_type',['Wallet Withdrawal'])
                             ->get();
 
@@ -1007,7 +1007,7 @@ class AjaxController extends Controller
                 'from_to' => 'Wallet',
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdraw_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }

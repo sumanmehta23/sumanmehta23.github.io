@@ -48,12 +48,12 @@ class DataImportSeeder extends Seeder
         // $this->clientWallets();
         // $this->demoDeposit();
         // $this->ib1(); 
-        $this->ib1_commission();
+        // $this->ib1_commission();
         // $this->ib1_withdraw();
-        // $this->ib_categories();
+        $this->ib_categories();
         // $this->ib_plans();
-        // $this->ib_plan_details();
-        $this->ib_wallet();
+        $this->ib_plan_details();
+        // $this->ib_wallet();
         // $this->kyc_logs();
         // $this->loginHistory();
         // $this->totalBalance();
