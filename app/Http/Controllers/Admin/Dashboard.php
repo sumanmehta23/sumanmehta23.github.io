@@ -49,10 +49,10 @@ class Dashboard extends Controller
 
         $sql = "SELECT count(*) as counts from wallet_deposits trs " . $rmCondition . " trs.status = 0";
         $pending_wd = DB::select($sql)[0];
-
+        dump($pending_wd);
         $sql = "SELECT count(*) as counts from trade_deposits trs " . $rmCondition . " trs.status = 0";
         $pending_td = DB::select($sql)[0];
-
+        dd($pending_td);
         $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.status = 0";
         $pending_tw = DB::select($sql)[0];
 
