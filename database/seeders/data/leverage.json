@@ -1,555 +1,150 @@
 [
-    {
-        "id": 61,
-        "account_type_id": 57,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 83,
-        "account_type_id": 54,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 89,
-        "account_type_id": 56,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 90,
-        "account_type_id": 56,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 91,
-        "account_type_id": 56,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 92,
-        "account_type_id": 56,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 93,
-        "account_type_id": 56,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 94,
-        "account_type_id": 51,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 95,
-        "account_type_id": 51,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 96,
-        "account_type_id": 51,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 97,
-        "account_type_id": 51,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 98,
-        "account_type_id": 51,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 99,
-        "account_type_id": 52,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 100,
-        "account_type_id": 52,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 101,
-        "account_type_id": 52,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 102,
-        "account_type_id": 52,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 103,
-        "account_type_id": 52,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 104,
-        "account_type_id": 49,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 105,
-        "account_type_id": 49,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 106,
-        "account_type_id": 49,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 107,
-        "account_type_id": 49,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 108,
-        "account_type_id": 49,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 109,
-        "account_type_id": 50,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 110,
-        "account_type_id": 50,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 111,
-        "account_type_id": 50,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 112,
-        "account_type_id": 50,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 113,
-        "account_type_id": 50,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 114,
-        "account_type_id": 55,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 115,
-        "account_type_id": 55,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 116,
-        "account_type_id": 55,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 117,
-        "account_type_id": 55,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 118,
-        "account_type_id": 55,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 119,
-        "account_type_id": 47,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 120,
-        "account_type_id": 47,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 121,
-        "account_type_id": 47,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 122,
-        "account_type_id": 47,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 123,
-        "account_type_id": 47,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 124,
-        "account_type_id": 48,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 125,
-        "account_type_id": 48,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 126,
-        "account_type_id": 48,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 127,
-        "account_type_id": 48,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 128,
-        "account_type_id": 48,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 129,
-        "account_type_id": 45,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 130,
-        "account_type_id": 45,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 131,
-        "account_type_id": 45,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 132,
-        "account_type_id": 45,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 133,
-        "account_type_id": 45,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 134,
-        "account_type_id": 46,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 135,
-        "account_type_id": 46,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 136,
-        "account_type_id": 46,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 137,
-        "account_type_id": 46,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 138,
-        "account_type_id": 46,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 159,
-        "account_type_id": 60,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 160,
-        "account_type_id": 60,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 161,
-        "account_type_id": 60,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 162,
-        "account_type_id": 60,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 163,
-        "account_type_id": 60,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 164,
-        "account_type_id": 58,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 165,
-        "account_type_id": 58,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 166,
-        "account_type_id": 58,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 167,
-        "account_type_id": 58,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 168,
-        "account_type_id": 58,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 174,
-        "account_type_id": 59,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 175,
-        "account_type_id": 59,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 176,
-        "account_type_id": 59,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 177,
-        "account_type_id": 59,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 178,
-        "account_type_id": 59,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 179,
-        "account_type_id": 53,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 180,
-        "account_type_id": 61,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 181,
-        "account_type_id": 61,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 182,
-        "account_type_id": 61,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 183,
-        "account_type_id": 61,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 184,
-        "account_type_id": 61,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 190,
-        "account_type_id": 63,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 191,
-        "account_type_id": 62,
-        "account_leverage": "100",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 192,
-        "account_type_id": 62,
-        "account_leverage": "200",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 193,
-        "account_type_id": 62,
-        "account_leverage": "300",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 194,
-        "account_type_id": 62,
-        "account_leverage": "400",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    },
-    {
-        "id": 195,
-        "account_type_id": 62,
-        "account_leverage": "500",
-        "created_at": "2024-10-21 10:23:05",
-        "updated_at": "2024-10-21 10:23:05"
-    }
-]
+    {"id":"61","account_type_id":"57","account_leverage":"100"},
+    {"id":"83","account_type_id":"54","account_leverage":"100"},
+    {"id":"89","account_type_id":"56","account_leverage":"100"},
+    {"id":"90","account_type_id":"56","account_leverage":"200"},
+    {"id":"91","account_type_id":"56","account_leverage":"300"},
+    {"id":"92","account_type_id":"56","account_leverage":"400"},
+    {"id":"93","account_type_id":"56","account_leverage":"500"},
+    {"id":"94","account_type_id":"51","account_leverage":"100"},
+    {"id":"95","account_type_id":"51","account_leverage":"200"},
+    {"id":"96","account_type_id":"51","account_leverage":"300"},
+    {"id":"97","account_type_id":"51","account_leverage":"400"},
+    {"id":"98","account_type_id":"51","account_leverage":"500"},
+    {"id":"99","account_type_id":"52","account_leverage":"100"},
+    {"id":"100","account_type_id":"52","account_leverage":"200"},
+    {"id":"101","account_type_id":"52","account_leverage":"300"},
+    {"id":"102","account_type_id":"52","account_leverage":"400"},
+    {"id":"103","account_type_id":"52","account_leverage":"500"},
+    {"id":"104","account_type_id":"49","account_leverage":"100"},
+    {"id":"105","account_type_id":"49","account_leverage":"200"},
+    {"id":"106","account_type_id":"49","account_leverage":"300"},
+    {"id":"107","account_type_id":"49","account_leverage":"400"},
+    {"id":"108","account_type_id":"49","account_leverage":"500"},
+    {"id":"109","account_type_id":"50","account_leverage":"100"},
+    {"id":"110","account_type_id":"50","account_leverage":"200"},
+    {"id":"111","account_type_id":"50","account_leverage":"300"},
+    {"id":"112","account_type_id":"50","account_leverage":"400"},
+    {"id":"113","account_type_id":"50","account_leverage":"500"},
+    {"id":"114","account_type_id":"55","account_leverage":"100"},
+    {"id":"115","account_type_id":"55","account_leverage":"200"},
+    {"id":"116","account_type_id":"55","account_leverage":"300"},
+    {"id":"117","account_type_id":"55","account_leverage":"400"},
+    {"id":"118","account_type_id":"55","account_leverage":"500"},
+    {"id":"119","account_type_id":"47","account_leverage":"100"},
+    {"id":"120","account_type_id":"47","account_leverage":"200"},
+    {"id":"121","account_type_id":"47","account_leverage":"300"},
+    {"id":"122","account_type_id":"47","account_leverage":"400"},
+    {"id":"123","account_type_id":"47","account_leverage":"500"},
+    {"id":"124","account_type_id":"48","account_leverage":"100"},
+    {"id":"125","account_type_id":"48","account_leverage":"200"},
+    {"id":"126","account_type_id":"48","account_leverage":"300"},
+    {"id":"127","account_type_id":"48","account_leverage":"400"},
+    {"id":"128","account_type_id":"48","account_leverage":"500"},
+    {"id":"129","account_type_id":"45","account_leverage":"100"},
+    {"id":"130","account_type_id":"45","account_leverage":"200"},
+    {"id":"131","account_type_id":"45","account_leverage":"300"},
+    {"id":"132","account_type_id":"45","account_leverage":"400"},
+    {"id":"133","account_type_id":"45","account_leverage":"500"},
+    {"id":"134","account_type_id":"46","account_leverage":"100"},
+    {"id":"135","account_type_id":"46","account_leverage":"200"},
+    {"id":"136","account_type_id":"46","account_leverage":"300"},
+    {"id":"137","account_type_id":"46","account_leverage":"400"},
+    {"id":"138","account_type_id":"46","account_leverage":"500"},
+    {"id":"159","account_type_id":"60","account_leverage":"100"},
+    {"id":"160","account_type_id":"60","account_leverage":"200"},
+    {"id":"161","account_type_id":"60","account_leverage":"300"},
+    {"id":"162","account_type_id":"60","account_leverage":"400"},
+    {"id":"163","account_type_id":"60","account_leverage":"500"},
+    {"id":"164","account_type_id":"58","account_leverage":"100"},
+    {"id":"165","account_type_id":"58","account_leverage":"200"},
+    {"id":"166","account_type_id":"58","account_leverage":"300"},
+    {"id":"167","account_type_id":"58","account_leverage":"400"},
+    {"id":"168","account_type_id":"58","account_leverage":"500"},
+    {"id":"174","account_type_id":"59","account_leverage":"100"},
+    {"id":"175","account_type_id":"59","account_leverage":"200"},
+    {"id":"176","account_type_id":"59","account_leverage":"300"},
+    {"id":"177","account_type_id":"59","account_leverage":"400"},
+    {"id":"178","account_type_id":"59","account_leverage":"500"},
+    {"id":"179","account_type_id":"53","account_leverage":"100"},
+    {"id":"180","account_type_id":"61","account_leverage":"100"},
+    {"id":"181","account_type_id":"61","account_leverage":"200"},
+    {"id":"182","account_type_id":"61","account_leverage":"300"},
+    {"id":"183","account_type_id":"61","account_leverage":"400"},
+    {"id":"184","account_type_id":"61","account_leverage":"500"},
+    {"id":"190","account_type_id":"63","account_leverage":"50"},
+    {"id":"191","account_type_id":"62","account_leverage":"100"},
+    {"id":"192","account_type_id":"62","account_leverage":"200"},
+    {"id":"193","account_type_id":"62","account_leverage":"300"},
+    {"id":"194","account_type_id":"62","account_leverage":"400"},
+    {"id":"195","account_type_id":"62","account_leverage":"500"},
+    {"id":"196","account_type_id":"64","account_leverage":"100"},
+    {"id":"197","account_type_id":"64","account_leverage":"200"},
+    {"id":"198","account_type_id":"64","account_leverage":"300"},
+    {"id":"199","account_type_id":"64","account_leverage":"400"},
+    {"id":"200","account_type_id":"64","account_leverage":"500"},
+    {"id":"201","account_type_id":"67","account_leverage":"50"},
+    {"id":"202","account_type_id":"67","account_leverage":"100"},
+    {"id":"203","account_type_id":"67","account_leverage":"250"},
+    {"id":"204","account_type_id":"67","account_leverage":"500"},
+    {"id":"205","account_type_id":"69","account_leverage":"50"},
+    {"id":"206","account_type_id":"69","account_leverage":"100"},
+    {"id":"207","account_type_id":"69","account_leverage":"250"},
+    {"id":"208","account_type_id":"69","account_leverage":"500"},
+    {"id":"209","account_type_id":"63","account_leverage":"100"},
+    {"id":"210","account_type_id":"63","account_leverage":"250"},
+    {"id":"211","account_type_id":"63","account_leverage":"500"},
+    {"id":"213","account_type_id":"70","account_leverage":"400"},
+    {"id":"214","account_type_id":"70","account_leverage":"200"},
+    {"id":"215","account_type_id":"70","account_leverage":"300"},
+    {"id":"216","account_type_id":"70","account_leverage":"500"},
+    {"id":"217","account_type_id":"70","account_leverage":"100"},
+    {"id":"232","account_type_id":"71","account_leverage":"100"},
+    {"id":"233","account_type_id":"71","account_leverage":"200"},
+    {"id":"234","account_type_id":"71","account_leverage":"300"},
+    {"id":"235","account_type_id":"71","account_leverage":"400"},
+    {"id":"236","account_type_id":"71","account_leverage":"500"},
+    {"id":"237","account_type_id":"72","account_leverage":"500"},
+    {"id":"238","account_type_id":"72","account_leverage":"400"},
+    {"id":"239","account_type_id":"72","account_leverage":"300"},
+    {"id":"240","account_type_id":"72","account_leverage":"200"},
+    {"id":"241","account_type_id":"72","account_leverage":"100"},
+    {"id":"242","account_type_id":"73","account_leverage":"100"},
+    {"id":"243","account_type_id":"73","account_leverage":"200"},
+    {"id":"244","account_type_id":"73","account_leverage":"300"},
+    {"id":"245","account_type_id":"73","account_leverage":"400"},
+    {"id":"246","account_type_id":"73","account_leverage":"500"},
+    {"id":"247","account_type_id":"74","account_leverage":"500"},
+    {"id":"248","account_type_id":"74","account_leverage":"400"},
+    {"id":"249","account_type_id":"74","account_leverage":"300"},
+    {"id":"250","account_type_id":"74","account_leverage":"200"},
+    {"id":"251","account_type_id":"74","account_leverage":"100"},
+    {"id":"252","account_type_id":"75","account_leverage":"100"},
+    {"id":"253","account_type_id":"75","account_leverage":"200"},
+    {"id":"254","account_type_id":"75","account_leverage":"300"},
+    {"id":"255","account_type_id":"75","account_leverage":"400"},
+    {"id":"256","account_type_id":"75","account_leverage":"500"},
+    {"id":"257","account_type_id":"76","account_leverage":"500"},
+    {"id":"258","account_type_id":"76","account_leverage":"400"},
+    {"id":"259","account_type_id":"76","account_leverage":"300"},
+    {"id":"260","account_type_id":"76","account_leverage":"200"},
+    {"id":"261","account_type_id":"76","account_leverage":"100"},
+    {"id":"262","account_type_id":"77","account_leverage":"100"},
+    {"id":"263","account_type_id":"77","account_leverage":"200"},
+    {"id":"264","account_type_id":"77","account_leverage":"300"},
+    {"id":"265","account_type_id":"77","account_leverage":"400"},
+    {"id":"266","account_type_id":"77","account_leverage":"500"},
+    {"id":"267","account_type_id":"78","account_leverage":"500"},
+    {"id":"268","account_type_id":"78","account_leverage":"400"},
+    {"id":"269","account_type_id":"78","account_leverage":"300"},
+    {"id":"270","account_type_id":"78","account_leverage":"200"},
+    {"id":"271","account_type_id":"78","account_leverage":"100"},
+    {"id":"272","account_type_id":"71","account_leverage":"50"},
+    {"id":"273","account_type_id":"72","account_leverage":"50"},
+    {"id":"274","account_type_id":"73","account_leverage":"50"},
+    {"id":"275","account_type_id":"74","account_leverage":"50"},
+    {"id":"276","account_type_id":"75","account_leverage":"50"},
+    {"id":"277","account_type_id":"76","account_leverage":"50"},
+    {"id":"278","account_type_id":"77","account_leverage":"50"},
+    {"id":"279","account_type_id":"78","account_leverage":"50"}
+    ]
