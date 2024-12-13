@@ -856,7 +856,7 @@
                 // },
             ],
             initComplete: function() {
-                var needs = [2, 5];
+                var needs = [1, 4];
                 this.api()
                     .columns()
                     .every(function(index) {
