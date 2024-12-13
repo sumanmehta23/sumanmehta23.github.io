@@ -329,7 +329,7 @@
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-                                            <th>#CID</th>
+                                            
                                             <th>Joined On</th>
                                             <th>Name/Email</th>
                                             <th>Phone</th>
@@ -706,10 +706,7 @@
                     action: 'getClientList',
                 },
             },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
+            columns: [
                 {
                     data: 'created_at',
                     name: 'created_at',
