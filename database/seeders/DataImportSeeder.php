@@ -258,6 +258,10 @@ class DataImportSeeder extends Seeder
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
             unset($deposit['trade_id']);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
             try {
                 DemoDeposit::updateOrCreate([
                     'user_id' => $deposit['user_id'],
@@ -431,6 +435,10 @@ class DataImportSeeder extends Seeder
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
             unset($deposit['trade_id']);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
             TradeDeposit::updateOrCreate([
                 'user_id' => $deposit['user_id'],
                 'deposted_date' => $deposit['deposted_date'],
@@ -454,6 +462,10 @@ class DataImportSeeder extends Seeder
             unset($withdrawal['AdminRemark']);
             $withdrawal['code'] = $withdrawal['trade_id'];
             unset($withdrawal['trade_id']);
+            if(isset($withdrawal['Status'])){
+                $withdrawal['status'] = $withdrawal['Status'];
+                unset($withdrawal['Status']);
+            }
             TradeWithdrawals::updateOrCreate([
                 'user_id' => $withdrawal['user_id'],
                 'account_id' => $withdrawal['account_id'],
@@ -473,6 +485,10 @@ class DataImportSeeder extends Seeder
             }
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
+            if(isset($deposit['Status'])){
+                $deposit['status'] = $deposit['Status'];
+                unset($deposit['Status']);
+            }
             WalletDeposit::updateOrCreate([
                 'user_id' => $deposit['user_id'],
                 'deposted_date' => $deposit['deposted_date'],
@@ -491,6 +507,10 @@ class DataImportSeeder extends Seeder
             }
             $withdraw['admin_remark'] = $withdraw['AdminRemark'];
             unset($withdraw['AdminRemark']);
+            if(isset($withdraw['Status'])){
+                $withdraw['status'] = $withdraw['Status'];
+                unset($withdraw['Status']);
+            }
             WalletWithdraw::updateOrCreate([
                 'user_id' => $withdraw['user_id'],
                 'withdraw_date' => $withdraw['withdraw_date'],
