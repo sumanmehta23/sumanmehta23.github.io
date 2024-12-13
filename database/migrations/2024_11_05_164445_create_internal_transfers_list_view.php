@@ -29,7 +29,7 @@ return new class extends Migration
                 `" . DB::getDatabaseName() . "`.`trade_deposits`.`deposit_type` AS `type`
             FROM `" . DB::getDatabaseName() . "`.`trade_deposits`
             WHERE
-                `" . DB::getDatabaseName() . "`.`trade_deposits`.`deposit_type` IN ('Internal Transfer', 'Wallet Transfer', 'CRM')
+                `" . DB::getDatabaseName() . "`.`trade_deposits`.`deposit_type` IN ('Internal Transfer', 'Wallet Transfer', 'CRM','IB Withdraw')
 
             UNION
 
