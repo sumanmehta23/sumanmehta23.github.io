@@ -210,7 +210,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <?php if ($details->Status == 0) { ?>
+                                            <?php if ($details->status == 0) { ?>
                                             <td>
                                             </td>
                                             <td>

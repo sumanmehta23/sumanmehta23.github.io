@@ -248,6 +248,7 @@ class LoginController extends Controller
         $userData['referral'] ='';
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
+        $userData['created_at'] =now();
 
         $user = User::create($userData);
 

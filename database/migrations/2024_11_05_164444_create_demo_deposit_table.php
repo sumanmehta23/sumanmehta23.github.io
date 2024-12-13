@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('deposit_type', 100)->nullable();
             $table->string('deposit_from', 100)->nullable();
             $table->timestamp('deposted_date')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('Status')->default(0);
+            $table->integer('status')->default(0);
             $table->string('admin_remark', 100)->nullable();
             $table->string('Js_Admin_Remark_Date', 100)->nullable();
             $table->text('deposit_proof')->nullable();

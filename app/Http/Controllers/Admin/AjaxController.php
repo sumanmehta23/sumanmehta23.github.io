@@ -352,7 +352,6 @@ class AjaxController extends Controller
 
         // Fetch histories
         $histories = IbWallet::with('account')->where('user_id', $userId)->get();
-
         // Prepare data
         $data = $histories->map(function ($row) {
             return [
@@ -363,7 +362,6 @@ class AjaxController extends Controller
                 'amount' => $row->ib_wallet ?? $row->ib_withdraw
             ];
         });
-        // dd($data);
         return ['data' => $data];
     }
 

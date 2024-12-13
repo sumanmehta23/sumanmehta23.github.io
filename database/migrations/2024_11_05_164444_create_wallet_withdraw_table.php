@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('client_bank', 100)->nullable();
             $table->string('transaction_id', 100)->nullable();
             $table->timestamp('withdraw_date')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('Status')->default(0);
+            $table->integer('status')->default(0);
             $table->longText('payout_req')->nullable();
             $table->longText('payout_res')->nullable();
             $table->string('admin_remark', 100)->nullable();
