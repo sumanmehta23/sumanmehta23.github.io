@@ -327,8 +327,10 @@ if ($getUser) {
                                             <th>Date</th>
                                             <th>Amount</th>
                                             <th>Status</th>
+                                            <th>Remark</th>
                                         </tr>
                                     </thead>
+                                    {{-- {{ dd($bonus_trans) }} --}}
                                     <tbody>
                                         <?php
                                         foreach ($bonus_trans as $bns) {
@@ -338,6 +340,7 @@ if ($getUser) {
                                             </td>
                                             <td><?= $bns->bonus_amount ?></td>
                                             <td><?= $bns->bonus_type ?></td>
+                                            <td><?= $bns->admin_remark ?></td>
                                         </tr>
                                         <?php
                                         }
