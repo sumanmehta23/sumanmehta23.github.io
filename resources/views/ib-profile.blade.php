@@ -491,6 +491,33 @@
             });
         });
 
+        // $(document).ready(function () {
+        //     let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
+
+        //     $("#commissionTbl").DataTable({
+        //         "ajax": {
+        //             "url": "/admin/ajax",
+        //             "type": "GET",
+        //             "data": function (d) {
+        //                 d.action = "getComissionData";
+        //                 d.id = userId;
+        //             },
+        //             "error": function (xhr, status, error) {
+        //                 console.error("Error fetching data:", xhr.responseText || error);
+        //             },
+        //         },
+        //         "columns": [
+        //             { "data": "date", "name": "date" },
+        //             { "data": "accounts", "name": "accounts" },
+        //             { "data": "type", "name": "type" },
+        //             { "data": "amount", "name": "amount" }
+        //         ],
+        //         "processing": true, // Adds a processing indicator
+        //         "serverSide": false, // Set to true if implementing server-side processing
+        //         "order": [[0, "desc"]] // Default sorting by date
+        //     });
+        // });
+
         $(document).ready(function () {
             let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
 
@@ -502,21 +529,57 @@
                         d.action = "getComissionData";
                         d.id = userId;
                     },
-                    "error": function (xhr, status, error) {
-                        console.error("Error fetching data:", xhr.responseText || error);
-                    },
                 },
                 "columns": [
-                    { "data": "date", "name": "date" },
-                    { "data": "accounts", "name": "accounts" },
-                    { "data": "type", "name": "type" },
-                    { "data": "amount", "name": "amount" }
+                    {
+                        "data": "date",
+                        "render": function (data, type, row) {
+                            // Render date with time in separate lines
+                            return `
+                                ${data.split(" ")[0]}<br>
+                                <small>${data.split(" ")[1]}</small>
+                            `;
+                        }
+                    },
+                    {
+                        "data": null, // Combine fields for this column
+                        "render": function (data, type, row) {
+                            return `
+                                <div class="row align-items-center">
+                                    <div class="col-auto pe-0">
+                                        <img src="/assets/images/mt5.png" alt="user-image"
+                                            class="rounded wid-50 hei-50">
+                                    </div>
+                                    <div class="col">
+                                        <h4 class="mb-2 ms-2">
+                                            <span class="text-truncate w-100">${row.accounts}</span>
+                                        </h4>
+                                        <p class="mb-0 text-muted ms-2 f-12">
+                                            <span class="text-truncate w-100">${row.email || ''}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    },
+                    {
+                        "data": "type",
+                        "render": function (data) {
+                            return data; // Render type as is
+                        }
+                    },
+                    {
+                        "data": "amount",
+                        "render": function (data) {
+                            return data; // Render amount as is
+                        }
+                    }
                 ],
-                "processing": true, // Adds a processing indicator
-                "serverSide": false, // Set to true if implementing server-side processing
-                "order": [[0, "desc"]] // Default sorting by date
+                "processing": true,
+                "order": [[0, "desc"]]
             });
         });
+
 
 
 

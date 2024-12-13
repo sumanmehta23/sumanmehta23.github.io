@@ -15,6 +15,10 @@ class IbWallet extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
     public function ib1Commission()
     {
         return $this->belongsTo(Ib1Commission::class, 'order_id', 'order_id');

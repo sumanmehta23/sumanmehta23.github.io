@@ -349,13 +349,14 @@ class AjaxController extends Controller
         $userId = $data['id'];
 
         // Fetch histories
-        $histories = IbWallet::where('user_id', $userId)->get();
+        $histories = IbWallet::with('account')->where('user_id', $userId)->get();
 
         // Prepare data
         $data = $histories->map(function ($row) {
             return [
                 'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
                 'accounts' => $row->code,
+                'email' => $row->account->email,
                 'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
                 'amount' => $row->ib_wallet ?? $row->ib_withdraw
             ];
