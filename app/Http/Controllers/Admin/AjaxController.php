@@ -402,14 +402,21 @@ class AjaxController extends Controller
             if($row->deposit_from){
                 $acc = Account::where('id',$row->deposit_from)->first();
             }
+            if($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw'){
+                $deposit_from = 'IB Wallet';
+                $deposit_type = 'IB Deposit';
+            }else{
+                $deposit_from = $row->deposit_type;
+                $deposit_type = $row->deposit_type;
+            }
             $data[] = [
                 'id' => 'TDID' . sprintf("%05d", $row->id),
                 'account_no' => $row->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->deposit_amount,
-                'deposit_type' => $row->deposit_type,
-                'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $row->deposit_type,
+                'deposit_type' => $deposit_type,
+                'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $deposit_from,
                 'deposit_date' => $row->deposted_date,
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
