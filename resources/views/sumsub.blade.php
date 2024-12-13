@@ -32,6 +32,7 @@
                     adaptIframeHeight: true
                 })
                 .on("idCheck.onStepCompleted", (payload) => {
+                    console.log("Step completed: ", payload);
                     // Handle the step completion event
                 })
                 .on("idCheck.onError", (error) => {
