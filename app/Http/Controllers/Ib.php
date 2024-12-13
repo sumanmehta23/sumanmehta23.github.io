@@ -289,6 +289,7 @@ class Ib extends Controller
                             'user_id' => $userId,
                             'account_id' => $ca->account->id,
                             'order_id' => $ca->order_id,
+                            'ib1_commission_id' => $ca->id,
                             // 'remark' => $ca->client_email,
                             'ib_level' => $ib_level_name,
                         ]);
