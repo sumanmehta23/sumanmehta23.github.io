@@ -193,7 +193,7 @@
                                             </td>
                                             <td>
                                                 <?php
-                            $stats = $result->Status;
+                            $stats = $result->status;
                             if ($stats == 1) {
                               ?>
                                                 <div class="badge btn-sm btn btn-outline-success">Success</div>
