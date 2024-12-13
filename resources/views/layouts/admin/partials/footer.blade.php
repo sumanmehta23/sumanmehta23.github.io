@@ -61,6 +61,8 @@
             data: formData,
             responseType: 'json',
             success: function(data) {
+                // console.log('test');
+                // data = JSON.parse(data.trim());
                 if (data.status == true) {
                     swal.fire({
                         icon: "success",

@@ -26,7 +26,7 @@ class StaffManagement extends Controller
         return view('admin.admin_users', compact('roles'));
     }
     public function permissionsList(Request $request)
-    {
+    {  
         $id = $request->id;
         $roles = Role::where('id', $id)->first();
         $pages = Page::all();
@@ -234,25 +234,25 @@ class StaffManagement extends Controller
         $pending_wd = \DB::table('wallet_deposits as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')
             ->where('rm.rm_id', $rm_id)
-            ->where('trs.status', 0)
+            ->where('trs.Status', 0)
             ->count();
 
         $pending_td = \DB::table('trade_deposit as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')
             ->where('rm.rm_id', $rm_id)
-            ->where('trs.status', 0)
+            ->where('trs.Status', 0)
             ->count();
 
         $pending_ww = \DB::table('wallet_withdraw as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')
             ->where('rm.rm_id', $rm_id)
-            ->where('trs.status', 0)
+            ->where('trs.Status', 0)
             ->count();
 
         $pending_tw = \DB::table('trade_withdrawal as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')
             ->where('rm.rm_id', $rm_id)
-            ->where('trs.status', 0)
+            ->where('trs.Status', 0)
             ->count();
 
         $pending_ib = \DB::table('ib1 as trs')

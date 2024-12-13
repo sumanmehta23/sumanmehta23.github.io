@@ -9,7 +9,7 @@
         "withdraw_type": "Wallet Withdrawal",
         "wallet_qr": "",
         "withdraw_date": "2024-11-28 19:55:49",
-        "status": 1,
+        "Status": 1,
         "admin_remark": null,
         "Js_Admin_Remark_Date": null,
         "created_by": null,

@@ -107,7 +107,7 @@ class TradeWithdrawal extends Controller
                         'withdraw_type' => $withdraw_type,
                         // 'withdraw_to' => $to_account_id,
                         'wallet_qr' => '',
-                        'status' => 1
+                        'Status' => 1
                     ]);
                     TotalBalance::create([
                         'account_id' => $account->id,

@@ -234,7 +234,7 @@ class Transaction extends Controller
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
             $transaction->admin_remark = $description;
-            $transaction->status = $status;
+            $transaction->Status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {

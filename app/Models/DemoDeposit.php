@@ -14,7 +14,14 @@ class DemoDeposit extends Model
     use HasFactory, HasUuids,SoftDeletes;
     protected $table = 'demo_deposit';
     public $timestamps = false;
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'email',
+        'code',
+        'account_id',
+        'deposit_amount',
+        'Status'
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);

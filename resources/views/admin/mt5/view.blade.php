@@ -166,42 +166,13 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Bonus Credit</p>
+                                                                <p class="mb-0 f-20">Bonus</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->BonusTransaction)) {
-                                                                        echo "$" . number_format($account->BonusTransaction()
-                                                                            ->where('admin_remark', 'like', '%Credit%')
-                                                                            ->sum('bonus_amount') , 2) ;
-                                                                    }
-                                                                    ?>
-                                                                </h4>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="border avtar avtar-s"><i
-                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <div class="row g-1">
-                                                            <div class="col-6">
-                                                                <p class="mb-0 f-20">Bonus Deposit</p>
-                                                            </div>
-                                                            <div class="col-6 text-end">
-                                                                <h4 class="mb-1 f-w-400">
-                                                                    {{-- {{ dd($account->BonusTransaction) }} --}}
-                                                                    <?php
-                                                                    if (isset($account->BonusTransaction)) {
-                                                                        echo "$" . number_format($account->BonusTransaction()
-                                                                            ->where('admin_remark', 'like', '%Deposit%')
-                                                                            ->sum('bonus_amount') , 2) ;
+                                                                    if (isset($account->bonusTrans)) {
+                                                                        echo "$" . number_format($account->bonusTrans->sum('bonus_amount') , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -327,10 +298,8 @@ if ($getUser) {
                                             <th>Date</th>
                                             <th>Amount</th>
                                             <th>Status</th>
-                                            <th>Remark</th>
                                         </tr>
                                     </thead>
-                                    {{-- {{ dd($bonus_trans) }} --}}
                                     <tbody>
                                         <?php
                                         foreach ($bonus_trans as $bns) {
@@ -340,7 +309,6 @@ if ($getUser) {
                                             </td>
                                             <td><?= $bns->bonus_amount ?></td>
                                             <td><?= $bns->bonus_type ?></td>
-                                            <td><?= $bns->admin_remark ?></td>
                                         </tr>
                                         <?php
                                         }

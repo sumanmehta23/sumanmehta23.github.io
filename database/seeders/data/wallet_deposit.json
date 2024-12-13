@@ -9,7 +9,7 @@
         "client_bank": null,
         "transaction_id": null,
         "deposted_date": "2024-11-28 19:55:49",
-        "status": 1,
+        "Status": 1,
         "admin_remark": null,
         "Js_Admin_Remark_Date": "2024-11-28 19:55:49",
         "btc_amount": null,

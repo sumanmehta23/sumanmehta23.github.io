@@ -331,7 +331,7 @@ class MT5Accounts extends Controller
                     'email' => $new_user->Email,
                     'code' => $new_user->Login,
                     'deposit_amount' => $validatedData['demo_deposit'],
-                    'status' => 1
+                    'Status' => 1
                 ];
 
                 DemoDeposit::create($data);
