@@ -207,7 +207,7 @@ class MT5Accounts extends Controller
         //wealthytrades
         if($referral=="wealthytrades" || $ib=="wealthytrades") {
             $groupCode = str_replace("DF","SNSI",$group->ac_group);
-            $group = AccountType::where('ac_group',addslashes( $groupCode))->firstOrFail();
+            $group = AccountType::where('ac_group',addslashes( $groupCode))->first();
            
             if($group){
                 $_POST["options"] =$group->id;
