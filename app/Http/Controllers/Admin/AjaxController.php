@@ -357,7 +357,7 @@ class AjaxController extends Controller
         $data = $histories->map(function ($row) {
             return [
                 'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
-                'accounts' => $row->code,
+                'accounts' => $row->account->code,
                 'email' => $row->account->email,
                 'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
                 'amount' => $row->ib_wallet ?? $row->ib_withdraw
