@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             SettingSeeder::class,
+            SymbolSeeder::class,
             RoleSeeder::class,
             SuperAdminSeeder::class,
             PageSeeder::class,
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             LeverageSeeder::class,
             UserSeeder::class,
             AccountSeeder::class,
+            
             // ClientWalletSeeder::class,
             // TradeWithdrawalsSeeder::class,
             // TotalBalanceSeeder::class,
