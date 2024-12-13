@@ -147,6 +147,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 Route::prefix("/admin")->name("admin.")->group(function () {
+
+    Route::get('/memory-limit', function () {
+        return ini_get('memory_limit');
+    });
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
