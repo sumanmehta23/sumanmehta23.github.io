@@ -213,6 +213,31 @@
                                     </div>
                                 </div>
                             </form>
+                            @if ($errors->any())
+                                <script>
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: "Can't Transfer Commission",
+                                        html: `
+                                            <ul>
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        `
+                                    });
+                                </script>
+                            @endif
+
+                            @if (session('error'))
+                                <script>
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: "{{ session('error') }}",
+                                    });
+                                </script>
+                            @endif
                         </div>
                         <div class="pt-0 mt-0 col-xl-6 col-md-6">
                             <div class="pt-0 mt-0 card">

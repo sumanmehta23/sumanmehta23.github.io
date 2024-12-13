@@ -355,6 +355,11 @@ class Ib extends Controller
     public function processTransfer(Request $request)
     {
         if ($request->has('transfer')) {
+            // Validate the request input
+            $request->validate([
+                'amount' => 'required|numeric|min:1', // Ensure amount is a positive number
+                'account' => 'required|exists:accounts,id', // Ensure account ID is valid
+            ]);
             $amount = $request->input('amount');
             $accountId = $request->input('account');
             $userId = auth()->user()->id;
