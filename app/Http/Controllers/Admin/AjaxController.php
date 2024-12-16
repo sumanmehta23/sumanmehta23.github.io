@@ -758,12 +758,12 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN permissions p ON e.role_id = p.role_id
                 LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN pages ON p.page_id = pages.page_id
-                GROUP BY e.client_index";
+                GROUP BY e.id";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
