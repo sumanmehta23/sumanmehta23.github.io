@@ -329,7 +329,7 @@
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-                                            
+
                                             <th>Joined On</th>
                                             <th>Name/Email</th>
                                             <th>Phone</th>
@@ -338,6 +338,10 @@
                                             <th>IB Request</th>
                                             <th>RM</th>
                                             <th>Status / Action</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>IB Email</th>
+                                            <th>IB name</th>
                                             <!-- <th>Actions</th> -->
                                         </tr>
                                     </thead>
@@ -594,7 +598,7 @@
                         "id": data.enc
                     },
                     success: function(resp) {
-                        
+
                         $.each(resp, function(key, value) {
                             console.log(key, value);
                             $('#editUserForm [name="' + key + '"]').val(value);
@@ -708,7 +712,13 @@
         window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
             buttons: [
-                'excel'
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [0,8,9,11,10,2,3,5,6,7] // Exclude the `Name/Email` column (index 2)
+                    }
+                }
             ],
             order: [
                 [0, "desc"]
@@ -862,6 +872,40 @@
                         return html;
                     }
                 },
+                {
+                    data: 'fullname',
+                    name: 'fullname',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        return row_data.fullname;
+                    }
+                },
+                {
+                    data: 'fullemail',
+                    name: 'fullemail',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        return row_data.email;
+                    }
+                },
+                {
+                    data: 'ibemail',
+                    name: 'ibemail',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        let ib_email = row_data.ib;
+                        return ib_email;
+                    }
+                },
+                {
+                    data: 'ibname',
+                    name: 'ibname',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        let ib_name = row_data.ib_name;
+                        return ib_name;
+                    }
+                },
                 // {
                 //   data: 'action',
                 //   name: 'action',
@@ -870,7 +914,7 @@
                 // },
             ],
             initComplete: function() {
-                var needs = [1, 4];
+                var needs = [2, 5];
                 this.api()
                     .columns()
                     .every(function(index) {
@@ -901,7 +945,7 @@
                 cache: false,
                 data: $("#statusUpdateForm").serialize(),
                 success: function(response) {
-                   
+
                     if (response.success==true) {
                         swal.fire({
                             icon: "success",
