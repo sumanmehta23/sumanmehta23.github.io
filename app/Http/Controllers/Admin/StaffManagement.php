@@ -143,11 +143,11 @@ class StaffManagement extends Controller
     }
     public function saveUser(Request $request, $userId = null)
     {
-        $userId = request()->input('user_id');
+        $userId = request()->input('id');
         $request->validate([
             'username' => 'required|string|max:255',
             'role_id' => 'required',
-            'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',client_index',
+            'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',id',
             'number' => 'required|string|max:15',
             'password' => $userId ? 'nullable|string' : 'required|string',
             'company_name' => 'required|string|max:255',

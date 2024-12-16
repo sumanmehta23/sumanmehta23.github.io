@@ -83,7 +83,7 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" name="password" id="password" required>
+                                    <input type="password" class="form-control" name="password" id="password">
                                 </div>
                                 <div class="col-6">
                                     <label for="number" class="form-label">Phone</label>
@@ -158,7 +158,6 @@
           },
         },
         columns: [
-          { data: 'client_index', title: '#' },
           { data: 'username', title: 'Name' },
           { data: 'email', title: 'Email / Username' },
           { data: 'name', title: 'Role' },
@@ -204,6 +203,7 @@
                 if (key == 'user_group_id') {
                   $('#update_admin_form #' + key).val(JSON.parse(value)).trigger("change");
                 } else {
+                  console.log('#update_admin_form #' + key);
                   $('#update_admin_form #' + key).val(value);
                 }
               });
