@@ -6,7 +6,7 @@ $categories = page_categories();
 
 // $userRoleID = session('userRoleID');
 $userRoleID = session('userID');
-$userRole = auth()->user()->role->name;
+$userRole = session('role_id');
 $rolePermissionsList = rolePermissions($userRole);
 $filePermissions = filePermissions($userRole);
 
@@ -263,8 +263,8 @@ $filePermissions = filePermissions($userRole);
                                 @if (
                                     (!empty($sub_menus->toArray()) ||
                                         in_array($main->id, $rolePermissionsList) ||
-                                        $userRole == "Super Admin" ||
-                                        $userRole == "Relationship Manager") &&
+                                        $userRoleID == 1 ||
+                                        $userRoleID == 2) &&
                                         $main->show_in_menu == 1)
                                     @php
                                         $requestUri = request()->getPathInfo();
@@ -286,7 +286,7 @@ $filePermissions = filePermissions($userRole);
                                                 @php
                                                     $active = ($requestUri == $sub->filename) ? 'active':'';
                                                 @endphp
-                                                @if (in_array($sub->page_id, $rolePermissionsList) || $userRoleID == "Super Admin" || $userRoleID == "Relationship Manager")
+                                                @if (in_array($sub->page_id, $rolePermissionsList) || $userRoleID == 1 || $userRoleID == 2)
                                                     @if($sub->pagename != 'Permissions List')    
                                                         <li class="slide menu-item-sub">
                                                             <a href="{{ $sub->filename }}"
