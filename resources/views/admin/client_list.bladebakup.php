@@ -338,6 +338,10 @@
                                             <th>IB Request</th>
                                             <th>RM</th>
                                             <th>Status / Action</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>IB Email</th>
+                                            <th>IB name</th>
                                             <!-- <th>Actions</th> -->
                                         </tr>
                                     </thead>
@@ -705,53 +709,234 @@
         }
     </script>
     <script>
-       $(document).ready(function() {
-    // Initialize DataTable with ajax
-    var table = $('#ajaxDatatable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '/admin/ajax',
-            type: 'GET',
-            data: {
-                action: 'getClientList'  // Your action name
+        window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable({
+            dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [0,8,9,11,10,2,3,5,6,7] // Exclude the `Name/Email` column (index 2)
+                    }
+                }
+            ],
+            order: [
+                [0, "desc"]
+            ],
+            "ajax": {
+                "url": "/admin/ajax",
+                "type": "GET",
+                data: {
+                    action: 'getClientList',
+                },
             },
-            dataSrc: function (json) {
-                console.log(json.original.data);  // Check the structure of your response
-                return json.original.data;
+            columns: [
+                {
+                    data: 'created_at',
+                    name: 'created_at',
+                    render: function(data, type, row) {
+                        // console.log(data);
+                        // console.log(type);
+                        // console.log(row);
+                        // console.log('abhayssss');
+                        var return_data = "<div class='d-grid'><div class='date'>" + row.created_date +
+                            "</div><div class='time text-muted'>" + row.created_time + "</div></div>";
+                        return return_data;
+                    }
+                },
+                {
+                    data: 'email',
+                    name: 'email',
+                    render: function(data, row, row_data) {
+                        var return_data = "<a href='/admin/client_details/" + row_data.enc_id +
+                            "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" +
+                            row_data.fullname +
+                            "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data
+                            .email + "</span></div></div></div></a>";
+                        return return_data;
+                    }
+                },
+                {
+                    data: 'phone',
+                    name: 'phone'
+                },
+                {
+                    data: 'country',
+                    name: 'country',
+                    render: function(data, row, row_data) {
+                        if (data) {
+                            return '<span class="fi fis fi-' + data.toLowerCase() + ' me-2"></span>' + data;
+                        } else {
+                            return "-";
+                        }
+                    }
+                },
+                {
+                    data: 'ib',
+                    name: 'ib',
+                    render: function(data, row, row_data) {
+                        // console.log(JSON.stringify(row_data));
+                        // console.log(JSON.stringify(data));
+                        let ib_email = row_data.ib;
+                        let ib_name = row_data.ib_name;
+                        let svg =
+                            "<svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z' /><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z' /><path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707' /></svg>";
+                        if (data === '' || data == null ) {
+                            ib_email = "";
+                            ib_name = "noIB";
+                            svg = '';
+                        }
+                        return "<div class='cursor-pointer updateIb d-flex align-items-center'><div class='me-2'>" +
+                            svg + "</div><div><div class='lh-1'><span>" + ib_name +
+                            "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + ib_email +
+                            "</span></div></div></div></a>";
+
+                    }
+                    // render: function (data, row, row_data) {
+                    // if (data === '' || data == null ) {
+                    //   return '<span class="cursor-pointer updateIb btn-sm btn btn-outline-dark">noIB</span>';
+                    // } else {
+                    //   return '<span class="cursor-pointer updateIb"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="28" color="#000000" class="tabler-icon tabler-icon-user-square-rounded"><path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path><path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05"></path></svg>'+data+'</span>';
+                    // }
+                    // }
+                },
+                {
+                    data: 'ib_status',
+                    name: 'ib_status',
+                    render: function(data) {
+                        if (data == 1) {
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+                        } else if (data == 2) {
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+                        } else if (data == 0) {
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+                        } else {
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+                        }
+                    }
+                },
+                {
+                    data: 'rm',
+                    name: 'rm',
+                    render: function(data, row, row_data) {
+                        let html = '';
+                        var role = <?php echo json_encode(session('userData')['userRole']); ?>;
+                        if (row_data.rmid == "") {
+                            html = '<button class="' + (role == "Super Admin" ? 'rmToggle ' : '') +
+                                'badge  btn-sm btn btn-outline-dark">RM Not Mapped</button>';
+                        } else {
+                            html = '<span class="' + (role == "Super Admin" ? 'rmToggle ' : '') +
+                                ' text-primary"> <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan"><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg>' +
+                                row_data.rm_id + '</span>';
+                        }
+                        return html;
+                    }
+                },
+                // {
+                //   data: 'total_deposit',
+                //   name: 'total_deposit'
+                // },
+                // {
+                //   data: 'total_withdraw',
+                //   name: 'total_withdraw'
+                // },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, row, row_data) {
+                        let html = '';
+                        var success = '';
+                        if (parseInt(row_data.kyc_verify) >= 1) {
+                            if(row_data.status == 0){
+                                success = 'bg-success';
+                            }else{
+                                success = 'bg-success text-white';
+                            }
+                        }
+                        html +='<span class="statusToggle" data-status="' + row_data.status + '">' + (
+                            row_data.status == 0 ? '<span class="badge text-danger ' + success +
+                            ' " data-bs-toggle="tooltip" title="Inactive User"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan"><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg></span>' :
+                            (row_data.status == 1 ? '<span class="badge text-success ' + success +
+                                '" data-bs-toggle="tooltip" title="Active User"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan" style=""><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg></span>' :
+                                "")) + '</span>';
+                        html += '<span class="statusToggle" data-status="' + row_data.email_confirmed +
+                            '">' + (row_data.email_confirmed == 0 ?
+                                '<span class="badge text-danger" data-bs-toggle="tooltip" title="Email Not Verified"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25"  class="tabler-icon tabler-icon-mail-x"><path d="M13.5 19h-8.5a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"></path><path d="M3 7l9 6l9 -6"></path><path d="M22 22l-5 -5"></path><path d="M17 22l5 -5"></path></svg></span>' :
+                                (row_data.email_confirmed == 1 ?
+                                    '<span class="badge text-success" data-bs-toggle="tooltip" title="Email Verified"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" color="#81C784" class="tabler-icon tabler-icon-mail-check"><path d="M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"></path><path d="M3 7l9 6l9 -6"></path><path d="M15 19l2 2l4 -4"></path></svg></span>' :
+                                    "")) + "</span>";
+                        html += '<span class="viewClient" data-enc="' + row_data.enc_id +
+                            '"><span class="badge text-danger" data-bs-toggle="tooltip" title="View Client"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg></span></span>';
+                        html += '<span class="editClient" data-enc="' + row_data.enc +
+                            '"><span class="badge text-danger" data-bs-toggle="tooltip" title="Edit Client"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg></span></span>';
+                        return html;
+                    }
+                },
+                {
+                    data: 'fullname',
+                    name: 'fullname',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        return row_data.fullname;
+                    }
+                },
+                {
+                    data: 'fullemail',
+                    name: 'fullemail',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        return row_data.email;
+                    }
+                },
+                {
+                    data: 'ibemail',
+                    name: 'ibemail',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        let ib_email = row_data.ib;
+                        return ib_email;
+                    }
+                },
+                {
+                    data: 'ibname',
+                    name: 'ibname',
+                    visible: false,
+                    render: function (data, row, row_data) {
+                        let ib_name = row_data.ib_name;
+                        return ib_name;
+                    }
+                },
+                // {
+                //   data: 'action',
+                //   name: 'action',
+                //   orderable: false,
+                //   searchable: false
+                // },
+            ],
+            initComplete: function() {
+                var needs = [2, 5];
+                this.api()
+                    .columns()
+                    .every(function(index) {
+                        if (needs.indexOf(index) == -1) {
+                            return false;
+                        }
+                        let column = this;
+                        let title = column.header().textContent;
+                        // Create input element
+                        let input = document.createElement('input');
+                        input.placeholder = title;
+                        column.header().replaceChildren(input);
+
+                        // Event listener for user input
+                        input.addEventListener('keyup', () => {
+                            if (column.search() !== this.value) {
+                                column.search(input.value).draw();
+                            }
+                        });
+                    });
             }
-        },
-        columns: [
-            { data: 'created_at', name: 'created_at' },
-            { data: 'email', name: 'email' },
-            { data: 'phone', name: 'phone' },
-            { data: 'country', name: 'country' },
-            { data: 'ib', name: 'ib' },
-            { data: 'ib_status', name: 'ib_status' },
-            { data: 'rm', name: 'rm' },
-            { data: 'status', name: 'status' },
-        ],
-        "initComplete": function() {
-        //     this.api().columns().every(function() {
-        //     var column = this;
-        //     var title = column.header().textContent;
-        //     var input = document.createElement('input');
-        //     input.placeholder = title;
-        //     column.header().replaceChildren(input);
-        //     input.addEventListener('keyup', () => {
-        //         if (column.search() !== input.value) {
-        //             column.search(input.value).draw();
-        //         }
-        //     });
-        // });
-        },
-        "rowCallback": function(row, data) {
-            console.log(data);
-        }
-    })
-});
-
-
+        });
         $("#statusUpdateForm").submit(function(e) {
             e.preventDefault();
             $.ajax({

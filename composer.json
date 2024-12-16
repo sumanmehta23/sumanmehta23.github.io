@@ -14,7 +14,8 @@
         "laravel/telescope": "^5.2",
         "laravel/tinker": "^2.8",
         "predis/predis": "^2.3",
-        "realrashid/sweet-alert": "^7.2"
+        "realrashid/sweet-alert": "^7.2",
+        "yajra/laravel-datatables-oracle": "^11.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",
