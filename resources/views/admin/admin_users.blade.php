@@ -70,6 +70,7 @@
                     <form method="POST" action="{{route('admin.saveUser')}}" id="update_admin_form">
                         @csrf
                         <input type="hidden" name="user_id" id="client_index">
+                        <input type="hidden" name="id" id="id">
                         <div class="modal-body">
                             <div class="row gy-4">
                                 <div class="col-6">
@@ -82,7 +83,7 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" name="password" id="password" required>
+                                    <input type="password" class="form-control" name="password" id="password">
                                 </div>
                                 <div class="col-6">
                                     <label for="number" class="form-label">Phone</label>
@@ -157,7 +158,6 @@
           },
         },
         columns: [
-          { data: 'client_index', title: '#' },
           { data: 'username', title: 'Name' },
           { data: 'email', title: 'Email / Username' },
           { data: 'name', title: 'Role' },
@@ -186,6 +186,7 @@
       });
 
       function dTSelection() {
+        $(document).off("click", ".update-user");
         $(document).on("click", ".update-user", function () {
           let id = $(this).data("id");
           $.ajax({
@@ -196,12 +197,13 @@
               id: id
             },
             success: function (response) {
-              response=JSON.parse(response.trim());
-              console.log(response);
+              // response=JSON.parse(response.trim());
+              // console.log(response);
               $.each(response, function (key, value) {
                 if (key == 'user_group_id') {
                   $('#update_admin_form #' + key).val(JSON.parse(value)).trigger("change");
                 } else {
+                  console.log('#update_admin_form #' + key);
                   $('#update_admin_form #' + key).val(value);
                 }
               });
