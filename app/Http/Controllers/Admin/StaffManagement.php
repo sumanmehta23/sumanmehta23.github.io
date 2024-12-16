@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Role;
 use App\Models\Page;
+use App\Models\Role;
 use App\Models\Permission;
 use App\Models\EmployeeList;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+
 class StaffManagement extends Controller
 {
 
@@ -151,7 +153,7 @@ class StaffManagement extends Controller
             'company_name' => 'required|string|max:255',
         ]);
         if ($userId) {
-            $user = emplist::findOrFail($userId);
+            $user = EmployeeList::findOrFail($userId);
         } else {
             $user = new EmployeeList();
             $user->uid = '';
@@ -166,7 +168,7 @@ class StaffManagement extends Controller
         $user->email = $request->input('email');
         $user->number = $request->input('number');
         if ($request->filled('password')) {
-            $user->password = $request->input('password');
+            $user->password = Hash::make($request->input('password'));;
         }
         $user->company_name = $request->input('company_name');
         $user->userRole = $this->getRoleName($request->input('role_id'));

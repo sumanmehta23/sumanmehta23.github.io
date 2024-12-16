@@ -1139,6 +1139,7 @@ and ib1.status = 0
         $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
+        unset($result->password);
         return $result;
     }
     public function getPaymentDetails($id)

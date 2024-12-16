@@ -70,6 +70,7 @@
                     <form method="POST" action="{{route('admin.saveUser')}}" id="update_admin_form">
                         @csrf
                         <input type="hidden" name="user_id" id="client_index">
+                        <input type="hidden" name="id" id="id">
                         <div class="modal-body">
                             <div class="row gy-4">
                                 <div class="col-6">
@@ -186,6 +187,7 @@
       });
 
       function dTSelection() {
+        $(document).off("click", ".update-user");
         $(document).on("click", ".update-user", function () {
           let id = $(this).data("id");
           $.ajax({
@@ -196,8 +198,8 @@
               id: id
             },
             success: function (response) {
-              response=JSON.parse(response.trim());
-              console.log(response);
+              // response=JSON.parse(response.trim());
+              // console.log(response);
               $.each(response, function (key, value) {
                 if (key == 'user_group_id') {
                   $('#update_admin_form #' + key).val(JSON.parse(value)).trigger("change");
