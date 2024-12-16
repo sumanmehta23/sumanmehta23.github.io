@@ -8,6 +8,8 @@ use App\Models\Role;
 use App\Models\Page;
 use App\Models\Permission;
 use App\Models\EmployeeList;
+use Illuminate\Support\Facades\Cache;
+
 class StaffManagement extends Controller
 {
 
@@ -102,7 +104,7 @@ class StaffManagement extends Controller
         ]);
         $roleId = $request->input('role_id');
         Permission::where('role_id', $roleId)->delete();
-
+        
         $pages = $request->input('pages');
         $createdBy = session('userData')['client_index'];
 
@@ -123,6 +125,13 @@ class StaffManagement extends Controller
                 ]
             );
         }
+        
+        $category_id = Page::find($pageId)->value('page_category_id');
+        // Invalidate cached categories and menus for the specific roleId
+        Cache::forget('page_categories_all_role_' . $roleId); // Invalidate cached categories for this role
+        Cache::forget('main_menus_category_' . $category_id . '_role_' . $roleId); // Invalidate main menus for the category and role
+        Cache::forget('sub_menus_main_' . $pageId . '_role_' . $roleId); // Invalidate submenus for the page and role
+
 
         if (!empty($pagesToRemove)) {
             Permission::where('role_id', $roleId)

@@ -17,4 +17,9 @@ class Page extends Model
     {
         return $this->belongsTo(PageCategory::class);
     }
+
+    public function submenus()
+    {
+        return $this->hasMany(Page::class, 'is_submenu', 'page_id');
+    }
 }

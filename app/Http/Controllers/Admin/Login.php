@@ -11,7 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-
+use Illuminate\Support\Facades\Cache;
 
 class Login extends Controller
 {
@@ -69,6 +69,7 @@ class Login extends Controller
                 // Store user details in session
                 // Auth::login($user);
                 // $request->session()->regenerate();
+                Cache::flush();
                 Session::put('alogin', $user->email);
                 Session::put('userRoleID', $user->role_id);
                 Session::put('userRole', $user->userRole);
