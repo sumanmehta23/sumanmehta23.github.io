@@ -222,7 +222,6 @@ class AjaxController extends Controller
                 $join->on('parent_ib.referral_code', '=', 'ap.ib1')
                     ->orOn('parent_ib.email', '=', 'ap.ib1');
             })
-            ->leftJoin('total_balance AS tb', 'ap.id', '=', 'tb.user_id')
             ->select([
                 'ibs.name AS ib_name',
                 'c.country_alpha',
@@ -230,10 +229,6 @@ class AjaxController extends Controller
                 'rm.rm_id',
                 'ap.id AS enc_id',
                 'ap.*',
-                DB::raw('COALESCE(SUM(tb.deposit_amount), 0) AS deposit_amount'),
-                DB::raw('COALESCE(SUM(tb.trading_deposited), 0) AS trading_deposited'),
-                DB::raw('COALESCE(SUM(tb.trading_withdrawal), 0) AS trading_withdrawal'),
-                DB::raw('COALESCE(SUM(tb.withdraw_amount), 0) AS withdraw_amount'),
                 'ib1.status AS ib_status',
                 'ibpd.id AS ib_group',
                 'parent_ib.name AS parent_name',
