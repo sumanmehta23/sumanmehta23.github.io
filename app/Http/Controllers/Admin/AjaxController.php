@@ -208,6 +208,8 @@ class AjaxController extends Controller
 
     public function getClientList(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', 3000);
         // Start building the query
         $query = DB::table('aspnetusers AS ap')
             ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
