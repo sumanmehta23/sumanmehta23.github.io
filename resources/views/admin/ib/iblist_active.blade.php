@@ -88,7 +88,7 @@
                 <select class="form-select" required name="ib_group" aria-label="Default select example">
                   <option value="" selected>--Plans--</option>
                   <?php foreach ($acc_groups as $gp) { ?>
-                    <option value="<?= $gp->ib_category_id ?>"><?= $gp->ib_cat_name ?></option>
+                    <option value="<?= $gp->id?>"><?= $gp->ib_cat_name ?></option>
                   <?php } ?>
                 </select>
               </div>
@@ -122,7 +122,7 @@
       $("#clientEmail").html(data.email)
       $("#client_id").val(data.enc)
       $("[name='ib_status']").val(data.status).trigger("change");
-      $("[name='ib_group']").val(data.ib_category_id).trigger("change");
+      $("[name='ib_group']").val(data.ib_plan_detail_id).trigger("change");
       myModal.show();
       // swal.fire({
       //   icon: "info",

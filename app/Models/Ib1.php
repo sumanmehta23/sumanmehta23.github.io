@@ -29,4 +29,9 @@ class Ib1 extends Model
     {
         return $this->belongsTo(Account::class);
     }
+
+    public function planDetails()
+    {
+        return $this->hasMany(IbPlanDetails::class,'ib_plan_detail_id');
+    }
 }
