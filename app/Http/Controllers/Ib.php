@@ -140,14 +140,14 @@ class Ib extends Controller
         $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::where('user_id', $userId)
-            ->whereNotNull('ib_plan_detail_id')
+            ->whereNotNull('ib_plan_details_id')
             ->first();
 
 
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->ib_plan_detail_id;
+        $plan_id = $ib->ib_plan_details_id;
 
 
         $ib_email = auth()->user()->email;
