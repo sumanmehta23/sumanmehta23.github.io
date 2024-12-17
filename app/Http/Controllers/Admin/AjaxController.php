@@ -328,7 +328,6 @@ class AjaxController extends Controller
         header('Content-Type: application/json');
         $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
         $results = DB::select($sql);
-        // dd($results);
         $data = [];
         foreach ($results as $row) {
             $data[] = [
@@ -423,7 +422,6 @@ class AjaxController extends Controller
                 'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
         }
-// dd('test');
         return ['data' => $data];
     }
     public function getTradingWithdrawal()
@@ -523,7 +521,6 @@ class AjaxController extends Controller
             }else{
                 $transfer_from = $row->deposit_type;
             }
-            // dd($row);
             $data[] = [
                 'id' => 'ITID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
@@ -599,11 +596,9 @@ class AjaxController extends Controller
 
         // Fetch data
         $results = $query->orderByDesc('id')->get();
-            // dd($results);
         $data = [];
 
         foreach ($results as $row) {
-            // dd($row);
             $data[] = [
                 'id' => 'WWID' . sprintf("%05d", $row->id),
                 'email' => $row->email,
@@ -617,7 +612,6 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
             ];
         }
-        // dd($data);
         return ['data' => $data];
     }
     public function getPendingTradingDeposit()
@@ -998,7 +992,6 @@ class AjaxController extends Controller
 
         $results = $query;
         $data = [];
-        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'created_on' => $row->withdraw_date,
@@ -1022,7 +1015,6 @@ class AjaxController extends Controller
                                 ->get();
         $results = $query;
         $data = [];
-        // dd($results);
         foreach ($results as $row) {
             if($row->deposit_type == 'IB Withdraw' || $row->deposit_from == 'IB Commission'){
                 $deposit_from = 'IB Wallet';
@@ -1064,12 +1056,12 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         $query = DB::select($sql);
         $results = $query;
         $data = [];
-        // dd($results);
         foreach ($results as $row) {
             $data[] = [
                 'id' => $row->id,
                 'enc' => ($row->user_id),
-                'ib_category_id' => $row->ib_category_id,
+                // 'ib_category_id' => $row->ib_category_id,
+                'ib_plan_detail_id' => $row->ib_plan_detail_id,
                 'grp' => $row->grp,
                 'name' => $row->name,
                 'email' => $row->email,
@@ -1153,7 +1145,6 @@ and ib1.status = 0
     }
     public function updateClientStatus($data)
     {
-        // dd($data);
 
         header('Content-Type: application/json');
 
@@ -1166,8 +1157,6 @@ and ib1.status = 0
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
             ->where(DB::raw('email'), '=', $email)
             ->first();
-            // dd($result);
-
         try {
 
             $updated = DB::table('aspnetusers')
@@ -1181,7 +1170,6 @@ and ib1.status = 0
                 return ['success' => true];
 
             // if ($updated) {
-            //     // dd($updated);
             //     $data['client_id'] = $result->email;
             //     if ($result->status != $user_status) {
             //         $data['field'] = 'status';
@@ -1303,18 +1291,16 @@ and ib1.status = 0
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'ib_category_id' => $ibGroup
+                    'ib_plan_detail_id' => $ibGroup
                 ]);
 
             $cacheKey = 'ib1_' . $clientId;
             Cache::forget($cacheKey);
 
             if ($updated) {
-                // dd('dddd');
                 // return response()->json(['status' => true, 'message' => 'IB details updated successfully.']);
                 return ['status' => true];
             } else {
-                // dd('sssss');
                 return response()->json(['status' => false, 'message' => 'Failed to update IB details.']);
             }
         } catch (Exception $e) {
