@@ -122,7 +122,7 @@
       $("#clientEmail").html(data.email)
       $("#client_id").val(data.enc)
       $("[name='ib_status']").val(data.status).trigger("change");
-      $("[name='ib_group']").val(data.ib_plan_detail_id).trigger("change");
+      $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
       myModal.show();
       // swal.fire({
       //   icon: "info",

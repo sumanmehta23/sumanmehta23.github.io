@@ -32,6 +32,6 @@ class Ib1 extends Model
 
     public function planDetails()
     {
-        return $this->hasMany(IbPlanDetails::class,'ib_plan_detail_id');
+        return $this->hasMany(IbPlanDetails::class,'ib_plan_details_id');
     }
 }

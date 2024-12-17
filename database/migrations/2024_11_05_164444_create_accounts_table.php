@@ -43,6 +43,7 @@ return new class extends Migration
             $table->double('bonus_deposit')->default(0);
             $table->double('w_bonus_deposit')->default(0);
             $table->string('ib1', 100)->nullable();
+            $table->string('mt5groupcode')->nullable();
             
             $table->timestamps();
             $table->softDeletes();

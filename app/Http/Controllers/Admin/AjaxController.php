@@ -215,7 +215,7 @@ class AjaxController extends Controller
             ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
             ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
             ->leftJoin('relationship_manager AS rm', 'ap.id', '=', 'rm.user_id')
-            ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_detail_id')
+            ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_details_id')
             ->leftJoin('emplist AS emp', 'rm.rm_id', '=', 'emp.email')
             ->leftJoin('countries AS c', 'ap.country', '=', 'c.country_name')
             ->leftJoin('ib1 AS parent_ib', function ($join) {
@@ -229,7 +229,6 @@ class AjaxController extends Controller
                 'emp.username AS rm_name',
                 'rm.rm_id',
                 'ap.id AS enc_id',
-                'ap.fullname',
                 'ap.*',
                 DB::raw('COALESCE(SUM(tb.deposit_amount), 0) AS deposit_amount'),
                 DB::raw('COALESCE(SUM(tb.trading_deposited), 0) AS trading_deposited'),
@@ -258,13 +257,13 @@ class AjaxController extends Controller
         }
 
         // Execute the query
-        $results = $query->get();
+        // $results = $query->get();
 
         // $results = DB::select(DB::raw($query));
 
         // Processing and formatting the results for DataTables
         if ($request->ajax()) {
-            return DataTables::of($results)
+            return DataTables::of($query)
                 ->editColumn('created_at', function ($row) {
                     $createdAt = Carbon::parse($row->created_at);
                     return "<div class='d-grid'>
@@ -1198,7 +1197,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
                 'id' => $row->id,
                 'enc' => ($row->user_id),
                 // 'ib_category_id' => $row->ib_category_id,
-                'ib_plan_detail_id' => $row->ib_plan_detail_id,
+                'ib_plan_details_id' => $row->ib_plan_details_id,
                 'grp' => $row->grp,
                 'name' => $row->name,
                 'email' => $row->email,
@@ -1422,7 +1421,7 @@ and ib1.status = 0
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'ib_plan_detail_id' => $ibGroup
+                    'ib_plan_details_id' => $ibGroup
                 ]);
 
             $cacheKey = 'ib1_' . $clientId;
