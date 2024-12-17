@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use DB;
 use App\Models\Ib1;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\IbPlan;
 use App\Models\Account;
 use App\Models\Country;
+use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Mt5Group;
 use App\Models\KycUpdate;
@@ -26,7 +28,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
-use App\Models\UserLog;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
@@ -122,23 +124,26 @@ class ClientController extends Controller
         ));
     }
     public function updateRM(Request $request)
-    {
-        if ($request->has('rmUpdate') && Session::get('userData.role_id') == 1) {
-            $email = $request->input('user_id');
+    {  
+        $role = Role::find(Session::get('userData.role_id'));
+       
+        if ($request->has('rmUpdate') && $role && $role->name ="Super Admin") {
+            $user_id = $request->input('user_id');
             // $result = DB::table('aspnetusers')
             //     ->select('id')
             //     ->where('email', '=', $email)
             //     ->first();
             // $user_id = $result->id;
             $rm_id = $request->input('rm_id');
-            $exists = RelationshipManager::where('user_id', $email)->count();
+            $exists = RelationshipManager::where('user_id', $user_id)->count();
             if ($exists > 0) {
-                RelationshipManager::where('user_id', $email)->update(['rm_id' => $rm_id]);
+                RelationshipManager::where('user_id', $user_id  )->update(['rm_id' => $rm_id]);
             } else {
-                RelationshipManager::create(['user_id' => $email, 'rm_id' => $rm_id]);
+                RelationshipManager::create(['user_id' => $user_id, 'rm_id' => $rm_id, 'added_by' => Auth::id() ]);
             }
             return redirect()->back()->with('success', 'RM Details Updated');
         }
+        return redirect()->back()->with('success', 'Only Super Admin can update');
     }
 
     public function updateIB(Request $request)
@@ -146,7 +151,7 @@ class ClientController extends Controller
         if ($request->has('ibUpdate')) {
             try {
                 $ibFields = [];
-                $email = $request->input('client_id');
+                $user_id = $request->input('client_id');
 
                 for ($i = 1; $i <= 15; $i++) {
                     $value = $request->input("ib$i");
@@ -159,7 +164,7 @@ class ClientController extends Controller
                     return redirect()->back()->withErrors('Some IB fields contain duplicate values.');
                 } else {
                     $currentValues = DB::table('aspnetusers')
-                        ->whereRaw('email = ?', [$email])
+                        ->whereRaw('id = ?', [$user_id])
                         ->select('ib1', 'ib2', 'ib3', 'ib4', 'ib5', 'ib6', 'ib7', 'ib8', 'ib9', 'ib10', 'ib11', 'ib12', 'ib13', 'ib14', 'ib15')
                         ->first();
 
@@ -174,17 +179,21 @@ class ClientController extends Controller
                             $logdata[$fieldName] = $newValue;
                         }
                     }
-
+                   
                     if (!empty($updateFields)) {
                         DB::table('aspnetusers')
-                            ->whereRaw('email = ?', [$email])
+                            ->whereRaw('id = ?', [$user_id])
                             ->update($updateFields);
+                        
+                        $user = DB::table('aspnetusers')->where('id', $user_id)->first();
+
                         $this->addToUserLog([
-                            'user_id'=> $currentValues->id,
-                            'email' => $email,
+                            'user_id'=> $user_id,
+                            'email' => $user->email,
                             'type' => 'ib',
                             'value' => json_encode($logdata)
                         ]);
+
                         return redirect()->back()->with('success', 'Client IB Details Updated Successfully');
                     } else {
                         return redirect()->back()->with('success', 'No changes were made. Everything is up to date!');
@@ -288,7 +297,7 @@ class ClientController extends Controller
         ";
     }
     public function updateUser(Request $request)
-    {
+    {   
         if ($request->has('updateUser')) {
             $email = $request->input('email');
             $fullname = $request->input('fullname');
@@ -297,7 +306,7 @@ class ClientController extends Controller
             $country = $request->input('country');
             $country_code = $request->input('country_code');
             $number = $request->input('telephone');
-            $code = $request->input('id');
+            $user_id = $request->input('id');
             $emailNotification = $request->input('email_notification');
             if ($password !== $confirmPassword) {
                 return response()->json([
@@ -311,7 +320,7 @@ class ClientController extends Controller
             try {
                 // Update user in the database
                 $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('email'), $code)
+                    ->where(DB::raw('id'), $user_id)
                     ->update([
                         'fullname' => $fullname,
                         'password' => $password,
@@ -323,7 +332,7 @@ class ClientController extends Controller
                 // If update is successful
                 if ($affectedRows > 0) {
                     $updateData = [
-                        'user_id' => $code,
+                        'user_id' => $user_id,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))

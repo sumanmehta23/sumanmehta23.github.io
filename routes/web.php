@@ -156,6 +156,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
     Route::get('/ajax', [AjaxController::class, 'index']);
+    Route::get('/getClientList', [AjaxController::class, 'getClientList']);
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);

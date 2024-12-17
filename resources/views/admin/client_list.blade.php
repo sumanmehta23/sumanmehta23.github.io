@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <?php
-
+    
     ?>
     <style>
         .statusToggle,
@@ -16,7 +16,7 @@
         aria-labelledby="addUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{route('admin.addUser')}}" id="addUserForm" method="post">
+                <form action="{{ route('admin.addUser') }}" id="addUserForm" method="post">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="addUserLabel">Create User</h5>
@@ -84,7 +84,7 @@
         aria-labelledby="editUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
-                <form action="{{route('admin.updateUser')}}" id="editUserForm" method="post">
+                <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
@@ -338,7 +338,9 @@
                                             <th>IB Request</th>
                                             <th>RM</th>
                                             <th>Status / Action</th>
-                                            <!-- <th>Actions</th> -->
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>IB Name/ Email</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -384,8 +386,8 @@
                                         name="ib<?= $i ?>" disabled>
                                         <option value="" selected>--Select--</option>
                                         <?php foreach ($ib_details as $ib) { ?>
-                                            <option value="<?php echo isset($ib->referral_code) && !empty($ib->referral_code) ? $ib->referral_code : $ib->email; ?>">
-                                                <?php echo $ib->name; ?></option>
+                                        <option value="<?php echo isset($ib->referral_code) && !empty($ib->referral_code) ? $ib->referral_code : $ib->email; ?>">
+                                            <?php echo $ib->name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -406,7 +408,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
-                     @csrf
+                    @csrf
                     <input type="hidden" name="client_id" id="client_id" value="">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
@@ -566,218 +568,310 @@
         // $("#ibModal").modal();
         function dTSelection() {
             // alert("Init");
-            $('.ajaxDataTable tbody tr').off('click', '.ibToggle');
-            $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#clientName,#clientEmail").html("");
-                $("#clientName").html(data.fullname)
-                $("#clientEmail").html(data.email)
-                $("#client_id").val(data.enc)
-                $("[name='ib_status']").val(data.ib_status).trigger("change");
-                $("[name='ib_group']").val(data.ib_group).trigger("change");
-                myModal.show();
-                // swal.fire({
-                //   icon: "info",
-                //   title: "IB Status ==> " + data.ib_status
-                // });
 
-            });
-            $('.ajaxDataTable tbody').off('click', '.editClient')
-            $('.ajaxDataTable tbody').on('click', '.editClient', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    cache: false,
-                    data: {
-                        "action": "getClientDetails",
-                        "id": data.enc
-                    },
-                    success: function(resp) {
-
-                        $.each(resp, function(key, value) {
-                            console.log(key, value);
-                            $('#editUserForm [name="' + key + '"]').val(value);
-                        });
-                        $('#editUserForm [name="country_code"]').trigger('change');
-                    }
-                });
-                editUserModal.show();
-            });
-            $('.ajaxDataTable tbody').off('click', '.updateIb');
-            $('.ajaxDataTable tbody').on('click', '.updateIb', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $(".clientName,.clientEmail,.client_id").html("");
-                $(".clientName").html(data.fullname);
-                $(".clientEmail").html(data.email);
-                $(".client_id").val(data.enc);
-                $('#ibUpdateForm select').each(function() {
-                    this.selectedIndex = 0;
-                });
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    cache: false,
-                    data: {
-                        "action": "getIbList",
-                        "id": data.enc
-                    },
-                    success: function(response) {
-                        // var ibValues = JSON.parse(response);
-                        $('.ib-select').val(null).trigger('change');
-                        $.each(response, function(key, value) {
-                            if (( value != "" && value != null) || key ==
-                                'ib1') {
-                                if (value == 'noIB') {
-                                    value = '';
-                                }
-                                $('#ibUpdateForm select[name="' + key + '"]').prop('disabled',
-                                    false);
-                                $('#ibUpdateForm select[name="' + key + '"]').val(value)
-                                    .trigger('change');
-                            }
-                        })
-                    }
-                });
-                updateIbModal.show();
-            });
-            $('.ajaxDataTable tbody').off('click', '.statusToggle');
-            $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#userName,#userEmail").html("");
-                $("#userName").html(data.fullname);
-                $("#userEmail").html(data.email);
-                $("#user_id").val(data.enc);
-
-                $("#user_status").prop("checked", data.status == 1);
-                $("#email_status").prop("checked", data.email_confirmed == 1);
-                $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
-                statusModal.show();
-            });
-            $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
-            $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#customerName,#customerEmail").html("");
-                $("#customerName").html(data.fullname);
-                $("#customerEmail").html(data.email);
-                $("#customer_id").val(data.email);
-
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    data: {
-                        action: 'getRMbyGroup',
-                        "id": data.enc
-                    },
-                    success: function(response) {
-                        var userGroupIds;
-                        if (typeof response === 'string') {
-                            try {
-                                userGroupIds = JSON.parse(response);
-                            } catch (e) {
-                                console.error("Failed to parse JSON:", e);
-                                return; // Exit if parsing fails
-                            }
-                        } else {
-                            userGroupIds = response;
-                        }
-                        var defaultOption = $('<option></option>').val('').text('--Select--').attr(
-                            'selected', 'selected');
-                        $('#group_rm_list').html(defaultOption);
-                        $.each(userGroupIds, function(index, option) {
-                            var $option = $('<option></option>').val(option.email).text(
-                                option
-                                .username);
-                            if (option.email === data.rmid) {
-                                $option.attr('selected', 'selected');
-                            }
-                            $('#group_rm_list').append($option);
-                        });
-                    }
-                });
-
-                rmModal.show();
-            });
-            $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                location.href = "/admin/client_details/" + data.enc_id;
-            });
         }
     </script>
     <script>
-       $(document).ready(function() {
-    // Initialize DataTable with ajax
-    var table = $('#ajaxDatatable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '/admin/ajax',
-            type: 'GET',
-            data: {
-                action: 'getClientList'  // Your action name
-            },
-            dataSrc: function (json) {
-                console.log(json.original.data);  // Check the structure of your response
-                return json.original.data;
-            }
-        },
-        columns: [
-            { data: 'created_at', name: 'created_at' },
-            { data: 'email', name: 'email' },
-            { data: 'phone', name: 'phone' },
-            { data: 'country', name: 'country' },
-            { data: 'ib', name: 'ib' },
-            { data: 'ib_status', name: 'ib_status' },
-            { data: 'rm', name: 'rm' },
-            { data: 'status', name: 'status' },
-        ],
-        "initComplete": function() {
-        //     this.api().columns().every(function() {
-        //     var column = this;
-        //     var title = column.header().textContent;
-        //     var input = document.createElement('input');
-        //     input.placeholder = title;
-        //     column.header().replaceChildren(input);
-        //     input.addEventListener('keyup', () => {
-        //         if (column.search() !== input.value) {
-        //             column.search(input.value).draw();
-        //         }
-        //     });
-        // });
-        },
-        "rowCallback": function(row, data) {
-            console.log(data);
-        }
-    })
-});
-
-
-        $("#statusUpdateForm").submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: "/admin/ajax",
-                type: "POST",
-                cache: false,
-                data: $("#statusUpdateForm").serialize(),
-                success: function(response) {
-
-                    if (response.success==true) {
-                        swal.fire({
-                            icon: "success",
-                            title: "Status Successfully Updated",
-                        }).then((val) => {
-                            location.reload();
-                        });
-                    } else {
-                        swal.fire({
-                            icon: "error",
-                            title: "Something went wrong.",
-                            text: "Please try again or contact support."
-                        }).then((val) => {
-                            location.reload();
-                        });
+        $(document).ready(function() {
+            var dTtable = $('#ajaxDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/admin/getClientList',
+                    type: 'GET',
+                    data: {},
+                    dataSrc: function(json) {
+                        return json.data;
                     }
-                }
+                },
+                columns: [{
+                        data: 'created_at',
+                        name: 'created_at'
+                    },
+                    {
+                        data: 'user_email',
+                        name: 'user_email'
+                    },
+                    {
+                        data: 'phone',
+                        name: 'phone'
+                    },
+                    {
+                        data: 'user_country',
+                        name: 'user_country'
+                    },
+                    {
+                        data: 'ib',
+                        name: 'ib'
+                    },
+                    {
+                        data: 'user_ib_status',
+                        name: 'user_ib_status'
+                    },
+                    {
+                        data: 'rm',
+                        name: 'rm'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
+                    },
+                    {
+                        data: 'fullname',
+                        name: 'fullname',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            return row_data.fullname;
+                        }
+                    },
+                    {
+                        data: 'fullemail',
+                        name: 'fullemail',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            return row_data.email;
+                        }
+                    },
+                    {
+                        data: 'ibemail',
+                        name: 'ibemail',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            let ib_email = row_data.ib;
+                            return ib_email;
+                        }
+                    },
+                    {
+                        data: 'ibname',
+                        name: 'ibname',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            let ib_name = row_data.ib_name;
+                            return ib_name;
+                        }
+                    },
+                ],
+                "initComplete": function() {
+                    var needs = [2, 5];
+                    this.api()
+                        .columns()
+                        .every(function(index) {
+                            if (needs.indexOf(index) == -1) {
+                                return false;
+                            }
+                            let column = this;
+                            let title = column.header().textContent;
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            column.header().replaceChildren(input);
+
+                            input.addEventListener('keyup', () => {
+                                if (column.search() !== this.value) {
+                                    column.search(input.value).draw();
+                                }
+                            });
+                        });
+                },
+                "rowCallback": function(row, data) {
+
+                },
+
+                "drawCallback": function(settings) {
+
+                },
+                order: [
+                    [0, "desc"]
+                ],
+                lengthChange: true,
+                pageLength: 10,
+                lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
+                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        exportOptions: {
+                            columns: [0,8,9,10,2,3] // Exclude the `Name/Email` column (index 2)
+                        }
+                    }
+                ],
+            })
+
+            dTtable.on('draw', function() {
+
+                $('.ajaxDataTable tbody').off('click', '.updateIb');
+                $('.ajaxDataTable tbody').on('click', '.updateIb', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $(".clientName,.clientEmail,.client_id").html("");
+                    $(".clientName").html(data.fullname);
+                    $(".clientEmail").html(data.email);
+                    $(".client_id").val(data.enc_id);
+                    $('#ibUpdateForm select').each(function() {
+                        this.selectedIndex = 0;
+                    });
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        cache: false,
+                        data: {
+                            "action": "getIbList",
+                            "id": data.enc_id
+                        },
+                        success: function(response) {
+                            // var ibValues = JSON.parse(response);
+                            $('.ib-select').val(null).trigger('change');
+                            $.each(response, function(key, value) {
+                                if ((value != "" && value != null) || key ==
+                                    'ib1') {
+                                    if (value == 'noIB') {
+                                        value = '';
+                                    }
+                                    $('#ibUpdateForm select[name="' + key +
+                                        '"]').prop(
+                                        'disabled',
+                                        false);
+                                    $('#ibUpdateForm select[name="' + key +
+                                            '"]').val(value)
+                                        .trigger('change');
+                                }
+                            })
+                        }
+                    });
+                    updateIbModal.show();
+                });
+
+                $('.ajaxDataTable tbody tr').off('click', '.ibToggle');
+                $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#clientName,#clientEmail").html("");
+                    $("#clientName").html(data.fullname)
+                    $("#clientEmail").html(data.email)
+                    $("#client_id").val(data.enc_id)
+                    $("[name='ib_status']").val(data.ib_status).trigger("change");
+                    $("[name='ib_group']").val(data.ib_group).trigger("change");
+                    myModal.show();
+                    // swal.fire({
+                    //   icon: "info",
+                    //   title: "IB Status ==> " + data.ib_status
+                    // });
+
+                });
+                $('.ajaxDataTable tbody').off('click', '.editClient')
+                $('.ajaxDataTable tbody').on('click', '.editClient', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        cache: false,
+                        data: {
+                            "action": "getClientDetails",
+                            "id": data.enc_id
+                        },
+                        success: function(resp) {
+
+                            $.each(resp, function(key, value) {
+                                console.log(key, value);
+                                $('#editUserForm [name="' + key + '"]').val(
+                                    value);
+                            });
+                            $('#editUserForm [name="country_code"]').trigger('change');
+                        }
+                    });
+                    editUserModal.show();
+                });
+
+                $('.ajaxDataTable tbody').off('click', '.statusToggle');
+                $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#userName,#userEmail").html("");
+                    $("#userName").html(data.fullname);
+                    $("#userEmail").html(data.email);
+                    $("#user_id").val(data.enc_id);
+                    $("#user_status").prop("checked", data.status == 1);
+                    $("#email_status").prop("checked", data.email_confirmed == 1);
+                    $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
+                    statusModal.show();
+                });
+                $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
+                $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#customerName,#customerEmail").html("");
+                    $("#customerName").html(data.fullname);
+                    $("#customerEmail").html(data.email);
+                    $("#customer_id").val(data.enc_id);
+
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        data: {
+                            action: 'getRMbyGroup',
+                            "id": data.enc_id
+                        },
+                        success: function(response) {
+                            var userGroupIds;
+                            if (typeof response === 'string') {
+                                try {
+                                    userGroupIds = JSON.parse(response);
+                                } catch (e) {
+                                    console.error("Failed to parse JSON:", e);
+                                    return; // Exit if parsing fails
+                                }
+                            } else {
+                                userGroupIds = response;
+                            }
+                            var defaultOption = $('<option></option>').val('').text(
+                                '--Select--').attr(
+                                'selected', 'selected');
+                            $('#group_rm_list').html(defaultOption);
+                            $.each(userGroupIds, function(index, option) {
+                                var $option = $('<option></option>').val(option
+                                    .id).text(
+                                    option
+                                    .username);
+                                if (option.id === data.rm_id) {
+                                    $option.attr('selected', 'selected');
+                                }
+                                $('#group_rm_list').append($option);
+                            });
+                        }
+                    });
+
+                    rmModal.show();
+                });
+                $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    location.href = "/admin/client_details/" + data.enc_id;
+                });
+            });
+
+
+            $("#statusUpdateForm").submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "/admin/ajax",
+                    type: "POST",
+                    cache: false,
+                    data: $("#statusUpdateForm").serialize(),
+                    success: function(response) {
+
+                        if (response.success == true) {
+                            swal.fire({
+                                icon: "success",
+                                title: "Status Successfully Updated",
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        } else {
+                            swal.fire({
+                                icon: "error",
+                                title: "Something went wrong.",
+                                text: "Please try again or contact support."
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        }
+                    }
+                });
             });
         });
     </script>

@@ -89,6 +89,10 @@ $filePermissions = filePermissions($userRole);
             color: var(--custom-black);
         }
 
+        .cursor-pointer{
+            cursor: pointer !important;
+        }
+
         /* @media (min-width: 768px) {
       .header-search {
         width: 450px;

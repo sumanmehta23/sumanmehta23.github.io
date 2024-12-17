@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\EmployeeList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletWithdraw;
@@ -40,9 +41,6 @@ class AjaxController extends Controller
                 //code...
                 $result = [];
                 switch ($action) {
-                    case 'getClientList':
-                        $result = $this->getClientList($request);
-                        break;
                     case 'getClientDetails':
                         $result = $this->getClientDetails($requestData);
                         break;
@@ -214,7 +212,8 @@ class AjaxController extends Controller
         $query = DB::table('aspnetusers AS ap')
             ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
             ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
-            ->leftJoin('relationship_manager AS rm', 'ap.email', '=', 'rm.user_id')
+            ->leftJoin('relationship_manager AS rm', 'ap.id', '=', 'rm.user_id')
+            ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_detail_id')
             ->leftJoin('emplist AS emp', 'rm.rm_id', '=', 'emp.email')
             ->leftJoin('countries AS c', 'ap.country', '=', 'c.country_name')
             ->leftJoin('ib1 AS parent_ib', function ($join) {
@@ -235,7 +234,7 @@ class AjaxController extends Controller
                 DB::raw('COALESCE(SUM(tb.trading_withdrawal), 0) AS trading_withdrawal'),
                 DB::raw('COALESCE(SUM(tb.withdraw_amount), 0) AS withdraw_amount'),
                 'ib1.status AS ib_status',
-                'ib1.acc_type AS ib_group',
+                'ibpd.id AS ib_group',
                 'parent_ib.name AS parent_name',
                 'parent_ib.email AS parent_email'
             ])
@@ -271,7 +270,7 @@ class AjaxController extends Controller
                             <div class='time text-muted'>{$createdAt->format('H:i:s')}</div>
                         </div>";
                 })
-                ->editColumn('email', function ($row) {
+                ->editColumn('user_email', function ($row) {
                     return "<a href='/admin/client_details/{$row->id}'>
                             <div class='d-flex align-items-center'>
                                 <div class='me-2'>
@@ -284,7 +283,7 @@ class AjaxController extends Controller
                             </div>
                         </a>";
                 })
-                ->editColumn('country', function ($row) {
+                ->editColumn('user_country', function ($row) {
                     $countryAlpha = strtolower($row->country_alpha);
                     return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->country_alpha}" : '-';
                 })
@@ -295,9 +294,17 @@ class AjaxController extends Controller
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->parent_name ?? 'noIB';
                     $ib_email = $row->parent_email ?? '';
+                    $svg = $ib_name !== 'noIB' ? "<div class='me-2'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'></path>
+                                    <path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z'></path>
+                                    <path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path>
+                                    <path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707'></path>
+                                </svg>
+                            </div>" : '';
                     return "<div class='cursor-pointer updateIb d-flex align-items-center'>
                             <div class='me-2'>
-                                <!-- You can add an icon or SVG here -->
+                            {$svg}
                             </div>
                             <div>
                                 <div class='lh-1'><span>{$ib_name}</span></div>
@@ -305,7 +312,7 @@ class AjaxController extends Controller
                             </div>
                         </div>";
                 })
-                ->editColumn('ib_status', function ($row) {
+                ->editColumn('user_ib_status', function ($row) {
                     switch ($row->ib_status) {
                         case 1:
                             return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
@@ -318,27 +325,94 @@ class AjaxController extends Controller
                     }
                 })
                 ->editColumn('rm', function ($row) {
-                    return $row->rm_name ? "<span class='text-primary'>{$row->rm_name}</span>" : "<button class='badge btn-sm btn btn-outline-dark'>RM Not Mapped</button>";
+                    return $row->rm_name ? "<span class='text-primary'>{$row->rm_name}</span>" : "<button class='rmToggle badge btn-sm btn btn-outline-dark'>RM Not Mapped</button>";
                 })
-                ->editColumn('status', function ($row) {
+                ->editColumn('user_status', function ($row) {
                     return $row->status == 1 ?
                         "<span class='badge text-success'>Active User</span>" :
                         "<span class='badge text-danger'>Inactive User</span>";
                 })
-                ->editColumn('email_confirmed', function ($row) {
+                ->editColumn('user_email_confirmed', function ($row) {
                     return $row->email_confirmed ?
                         "<span class='badge text-success'>Email Verified</span>" :
                         "<span class='badge text-danger'>Email Not Verified</span>";
                 })
                 ->addColumn('action', function ($row) {
-                    return "<span class='viewClient' data-enc='{$row->email}'>
-                            <span class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>View</span>
-                        </span>
-                        <span class='editClient' data-enc='{$row->email}'>
-                            <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>Edit</span>
-                        </span>";
+                    // Initializing HTML string
+                    $html = '';
+                
+                    // For status (Active/Inactive)
+                    $success = '';
+                    if (intval($row->kyc_verify) >= 1) {
+                        $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
+                    }
+                
+                    // Status Badge HTML
+                    $html .= "<span class='statusToggle' data-status='{$row->status}'>";
+                    if ($row->status == 0) {
+                        $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                    </svg>
+                                  </span>";
+                    } elseif ($row->status == 1) {
+                        $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                    </svg>
+                                  </span>";
+                    }
+                    $html .= "</span>";
+                
+                    // For email confirmation (Verified/Not Verified)
+                    $html .= "<span class='statusToggle' data-status='{$row->email_confirmed}'>";
+                    if ($row->email_confirmed == 0) {
+                        $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='#FFCC80' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-mail-x'>
+                                        <path d='M13.5 19h-8.5a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6'></path>
+                                        <path d='M3 7l9 6l9 -6'></path>
+                                        <path d='M22 22l-5 -5'></path>
+                                        <path d='M17 22l5 -5'></path>
+                                    </svg>
+                                  </span>";
+                    } else {
+                        $html .= "<span class='badge text-success' data-bs-toggle='tooltip' title='Email Verified'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='#81C784' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' color='#81C784' class='tabler-icon tabler-icon-mail-check'>
+                                        <path d='M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6'></path>
+                                        <path d='M3 7l9 6l9 -6'></path>
+                                        <path d='M15 19l2 2l4 -4'></path>
+                                    </svg>
+                                  </span>";
+                    }
+                    $html .= "</span>";
+                
+                    // Client Actions (View and Edit)
+                    $html .= "<span class='viewClient' data-enc='{$row->id}'>
+                                <span class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
+                                </span>
+                              </span>";
+                
+                    $html .= "<span class='editClient' data-enc='{$row->id}'>
+                                <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
+                                    <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                </span>
+                              </span>";
+                
+                    return $html;
                 })
-                ->rawColumns(['created_at', 'email', 'ib', 'ib_status', 'rm', 'status', 'email_confirmed', 'action'])
+                
+                ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action'])
                 ->make(true);
         }
 
@@ -1214,25 +1288,24 @@ and ib1.status = 0
     }
     public function updateClientStatus($data)
     {
-        // dd($data);
 
         header('Content-Type: application/json');
 
-        $email = $data['client_id'];
+        $user_id = $data['client_id'];
         $email_confirmed = isset($data['email_confirmed']) && $data['email_confirmed'] === "on" ? 1 : 0;
         $user_status = isset($data['status']) && $data['status'] === "on" ? 1 : 0;
         $kyc_verify = isset($data['kyc_verify']) && $data['kyc_verify'] === "on" ? 1 : 0;
 
         $result = DB::table('aspnetusers')
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('email'), '=', $email)
+            ->where(DB::raw('id'), '=', $user_id)
             ->first();
         // dd($result);
 
         try {
 
             $updated = DB::table('aspnetusers')
-                ->where(DB::raw('email'), '=', $email)
+                ->where(DB::raw('id'), '=', $user_id)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
@@ -1290,7 +1363,7 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select($ib_columns)
-            ->where(DB::raw('email'), '=', $id)
+            ->where(DB::raw('id'), '=', $id)
             ->first();
 
         return (array) $result;
@@ -1299,25 +1372,20 @@ and ib1.status = 0
     public function getRMbyGroup($id)
     {
 
-        $results = [];
-        // $group_id = DB::table('aspnetusers')
-        //   ->where(DB::raw('email'), '=', $id)
-        //   ->value('group_id');
-        // if ($group_id !== null) {
-        $results = DB::table('emplist as emp')
-            ->select('emp.client_index', 'emp.email', 'emp.username')
-            ->where('emp.role_id', 2)
-            ->get()
-            ->toArray();
-        // }
-        return $results;
-    }
+        $results = EmployeeList::with('role')
+        ->whereHas('role', function ($query) {
+            $query->where('name', 'Relationship Manager');
+        })
+        ->select('id','client_index', 'email', 'username')
+        ->get();
+            return $results;
+        }
 
     public function getClientDetails($data)
     {
         $result = DB::table('aspnetusers')
             ->select(
-                DB::raw('email as id'),
+                 'id',
                 'email',
                 'fullname',
                 'country',
@@ -1326,7 +1394,7 @@ and ib1.status = 0
                 // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
                 // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
             )
-            ->where(DB::raw('email'), '=', $data['id'])
+            ->where(DB::raw('id'), '=', $data['id'])
             ->first();
 
         return (array) $result;
@@ -1338,7 +1406,7 @@ and ib1.status = 0
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::with('user')->whereRaw('email = ?', [$clientId])->first();
+            $result = Ib1::with('user')->whereRaw('user_id = ?', [$clientId])->first();
 
             if ($result) {
                 $clientId = $result->user->id;
@@ -1363,7 +1431,7 @@ and ib1.status = 0
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'ib_category_id' => $ibGroup
+                    'ib_plan_detail_id' => $ibGroup
                 ]);
 
             $cacheKey = 'ib1_' . $clientId;

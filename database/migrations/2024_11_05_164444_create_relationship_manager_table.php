@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('user_id', 50)->index('user_id');
             $table->string('rm_id', 50)->index('rm_id');
-            $table->integer('added_by')->nullable();
+            $table->string('added_by',50)->nullable();
             $table->dateTime('created_at')->useCurrent();
         });
     }
