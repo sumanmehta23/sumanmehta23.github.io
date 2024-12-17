@@ -101,9 +101,9 @@
                                                                                         <span>Crypto Payment</span>
                                                                                         <span>
                                                                                             <span
-                                                                                                class="mb-1 h6 f-w-500 d-block">
-                                                                                                <img src="/assets/images/cryptochill.svg"
-                                                                                                    alt="CryptoChill">
+                                                                                                class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                                <img src="/assets/images/crypto_payments2.png"
+                                                                                                    alt="CryptoChill" style="width:25%">
                                                                                             </span>
                                                                                         </span>
                                                                                     </span>

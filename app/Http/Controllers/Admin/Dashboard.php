@@ -23,13 +23,13 @@ class Dashboard extends Controller
         } else {
             $rmCondition .= " where (1) and ";
         }
-        if (session('userData')['userRole'] == "Relationship Manager") {
+        if (session('userData')['userRole'] == "Relationship Managwer") {
             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=trs.email) where rm.rm_id='" . session('alogin') . "' and ";
         }
 
         $userCondition = " ";
         if (session('userData')['userRole'] != "Super Admin") {
-            if (session('userData')['userRole'] == "Relationship Manager") {
+            if (session('userData')['userRole'] == "Relationship Managesr") {
                 $userCondition = "  left join relationship_manager rm on(rm.user_id=asp.email) where rm.rm_id='" . session('alogin') . "'";
             }
         }
@@ -37,7 +37,7 @@ class Dashboard extends Controller
 
         $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer')";
         $trade_deposit = DB::select($sql)[0];
-
+       
         $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from wallet_deposit trs " . $rmCondition . " trs. status=1";
         $wallet_deposit = DB::select($sql)[0];
 

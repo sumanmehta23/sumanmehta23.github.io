@@ -1,15 +1,14 @@
 <?php
 $requestUri = trim($_SERVER['REQUEST_URI']);
 $requestUri = parse_url($requestUri, PHP_URL_PATH);
-
-$categories = page_categories();
+$userRoleID = session('userID');
+$userRole = session('userRole');
+$categories = page_categories(session('userRoleID'));
 
 // $userRoleID = session('userRoleID');
-$userRoleID = session('userID');
-$userRole = session('role_id');
+
 $rolePermissionsList = rolePermissions($userRole);
 $filePermissions = filePermissions($userRole);
-
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="light" data-theme-mode="light"
@@ -237,69 +236,51 @@ $filePermissions = filePermissions($userRole);
                     </div>
                     <ul class="main-menu">
                         @foreach ($categories as $category)
-                            <li class="slide__category menu-item-category">
-                                <span class="category-name">{{ $category->category_name }}</span>
-                            </li>
-
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">{{ $category->category_name }}</span>
+                        </li>
+        
+                        @foreach ($category->main_menus as $main)
                             @php
-                                $main_menus = DB::table('pages')
-                                    ->where('is_submenu', 0)
-                                    ->where('page_category_id', $category->id)
-                                    ->where('active', 1)
-                                    ->orderBy('page_order', 'asc')
-                                    ->get();
+                                // Check if the current menu has submenus
+                                $sub_menus = $main->sub_menus;
+                                $requestUri = request()->getPathInfo();
+                                $open = $sub_menus->contains(function ($item) use ($requestUri) {
+                                    return $item->filename == $requestUri;
+                                }) ? 'open' : '';
                             @endphp
-
-                            @foreach ($main_menus as $main)
-                                @php
-                               
-                                    $sub_menus = DB::table('pages')
-                                        ->where('is_submenu', $main->page_id)
-                                        ->where('active', 1)
-                                        ->orderBy('page_order', 'asc')
-                                        ->get();
-                                @endphp
-
-                                @if (
-                                    (!empty($sub_menus->toArray()) ||
-                                        in_array($main->id, $rolePermissionsList) ||
-                                        $userRoleID == 1 ||
-                                        $userRoleID == 2) &&
-                                        $main->show_in_menu == 1)
-                                    @php
-                                        $requestUri = request()->getPathInfo();
-                                        $open = $sub_menus->contains(function ($item) use ($requestUri) {
-                                            return $item->filename == $requestUri;
-                                        }) ? 'open' : '';
-                                    @endphp
-                                    <li
-                                        class="slide {{ !empty($sub_menus->toArray()) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
-                                        <a href="{{ $main->filename }}" class="side-menu__item">
-                                            <i class="side-menu__icon {{ $main->icon }}"></i>
-                                            <span class="side-menu__label">{{ $main->pagename }}</span>
-                                            @if (!empty($sub_menus->toArray()))
-                                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                                            @endif
-                                        </a>
-                                        <ul class="slide-menu child1">
-                                            @foreach ($sub_menus as $sub)
-                                                @php
-                                                    $active = ($requestUri == $sub->filename) ? 'active':'';
-                                                @endphp
-                                                @if (in_array($sub->page_id, $rolePermissionsList) || $userRoleID == 1 || $userRoleID == 2)
-                                                    @if($sub->pagename != 'Permissions List')    
-                                                        <li class="slide menu-item-sub">
-                                                            <a href="{{ $sub->filename }}"
-                                                                class="side-menu__item {{ $active }}">{{ $sub->pagename }}</a>
-                                                        </li>
-                                                    @endif
-                                                @endif    
-                                            @endforeach
-                                        </ul>
-                                    </li>
-                                @endif
-                            @endforeach
+                            @if (
+                                (in_array($main->id, $rolePermissionsList) || $userRole == "Super Admin") &&
+                                $main->show_in_menu == 1 
+                            )
+                                <li class="slide {{ ($sub_menus->count() > 0) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
+                                    <a href="{{ $main->filename }}" class="side-menu__item">
+                                        <i class="side-menu__icon {{ $main->icon }}"></i>
+                                        <span class="side-menu__label">{{ $main->pagename }}</span>
+                                        @if (!empty($sub_menus->count() > 0))
+                                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                        @endif
+                                    </a>
+                                    <ul class="slide-menu child1">
+                                        @foreach ($sub_menus as $sub)
+                                            @php
+                                                $active = ($requestUri == $sub->filename) ? 'active' : '';
+                                            @endphp
+                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == "Super Admin")
+                                                @if($sub->pagename != 'Permissions List')    
+                                                    <li class="slide menu-item-sub">
+                                                        <a href="{{ $sub->filename }}" class="side-menu__item {{ $active }}">
+                                                            {{ $sub->pagename }}
+                                                        </a>
+                                                    </li>
+                                                @endif
+                                            @endif    
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
                         @endforeach
+                    @endforeach
 
                     </ul>
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
