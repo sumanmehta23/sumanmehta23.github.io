@@ -140,20 +140,20 @@ class Ib extends Controller
         $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::where('user_id', $userId)
-            ->whereNotNull('ib_category_id')
+            ->whereNotNull('ib_plan_detail_id')
             ->first();
 
 
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->ib_category_id;
+        $plan_id = $ib->ib_plan_detail_id;
 
 
         $ib_email = auth()->user()->email;
 
         if ($plan_id) {
-            $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
+            $ibPlans = IbPlanDetails::where('id', $plan_id)
                 ->where('status', 1)
                 ->whereNull('deleted_at')
                 ->get()
