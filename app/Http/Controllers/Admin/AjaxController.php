@@ -414,7 +414,7 @@ class AjaxController extends Controller
                 'account_no' => $row->code,
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
-                'amount' => '$' . $row->deposit_amount,
+                'amount' => "$" . $row->deposit_amount,
                 'deposit_type' => $deposit_type,
                 'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $deposit_from,
                 'deposit_date' => $row->deposted_date,
@@ -1139,6 +1139,7 @@ and ib1.status = 0
         $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
+        unset($result->password);
         return $result;
     }
     public function getPaymentDetails($id)

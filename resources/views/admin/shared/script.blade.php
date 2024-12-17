@@ -2,6 +2,17 @@
     $(document).ready(function () {
       $('#tableWalletDeposit').DataTable({
         // order: [[0, "desc"]],
+        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+          buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                }
+            ],
+        
+        order: [
+          [0, "desc"]
+        ],
         "ajax": {
           "url": "/admin/ajax",
           "type": "GET",
@@ -32,6 +43,14 @@
         ]
       });
       $('#tableWalletWithdrawal').DataTable({
+        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+          buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                }
+            ],
+        
          order: [[3, "desc"]],
         "ajax": {
           "url": "/admin/ajax",
@@ -64,6 +83,20 @@
       });
       $('#tableTradingDeposit').DataTable({
         // order: [[0, "desc"]],
+        // dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+          buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    
+                }
+            ],
+        
+        order: [
+          [0, "desc"]
+        ],
+
         "ajax": {
           "url": "/admin/ajax",
           "type": "GET",
@@ -92,6 +125,18 @@
       });
       $('#tableTradingWithdrawal').DataTable({
         // order: [[0, "desc"]],
+        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+          buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                }
+            ],
+        
+        order: [
+          [0, "desc"]
+        ],
+
         "ajax": {
           "url": "/admin/ajax",
           "type": "GET",
@@ -119,6 +164,17 @@
       });
       $('#tableInternalTransfer').DataTable({
         // order: [[0, "desc"]],
+        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+          buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                }
+            ],
+        
+        order: [
+          [0, "desc"]
+        ],
         "ajax": {
           "url": "/admin/ajax",
           "type": "GET",
