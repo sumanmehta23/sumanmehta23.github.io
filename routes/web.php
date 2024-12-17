@@ -149,6 +149,7 @@ Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->n
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
+        phpinfo();
         return ini_get('memory_limit');
     });
     Route::get('/', [Login::class, 'showLoginForm']);
