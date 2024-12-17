@@ -683,6 +683,7 @@
                     [0, "desc"]
                 ],
                 lengthChange: true,
+                loading: true,
                 pageLength: 10,
                 lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
