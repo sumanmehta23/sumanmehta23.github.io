@@ -33,11 +33,17 @@
                                             <td>Trade ID</td>
                                             <td>Leverage</td>
                                             <td>Balance</td>
-                                            <td>registered_date</td>
+                                            <td>Registered Date</td>
+                                            <td>Name</td>
+                                            <td>Email</td>
+                                            <td>Account Code</td>
+                                            <td>Account Group</td>
+                                            <td>Date</td>
+                                            <td>Time</td>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
+                                        {{-- <?php
                                     foreach ($accounts as $result) {
                                         // print_r($result);
                                         // exit();
@@ -97,7 +103,7 @@
                                         </tr>
                                         <?php }
                                     ?>
-                                        </tr>
+                                        </tr> --}}
                                     </tbody>
                                 </table>
                             </div>
@@ -137,6 +143,112 @@
         });
     }
 
-    window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable();
+    // window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable();
+    var dTtable = $('#ajaxDatatable').DataTable({
+        processing: true,
+        serverSide: true,
+        searching: false,
+        ajax: {
+            url: '/admin/getLiveAccountsList',
+            type: 'GET',
+            data: {}, // Ensure this is populated dynamically if needed.
+            dataSrc: function(json) {
+                return json.data;
+            }
+        },
+        columns: [
+            {
+                data: 'email',
+                name: 'email'
+            },
+            {
+                data: 'code',
+                name: 'code'
+            },
+            {
+                data: 'leverage',
+                name: 'leverage'
+            },
+            {
+                data: 'balance',
+                name: 'balance',
+                orderable: false
+            },
+            {
+                data: 'created_at',
+                name: 'created_at',
+                orderable: false
+            },
+            {
+                data: 'fullname',
+                name: 'fullname',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.fullname;
+                }
+            },
+            {
+                data: 'fullemail',
+                name: 'fullemail',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.email;
+                }
+            },
+            {
+                data: 'account_code',
+                name: 'account_code',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.email;
+                }
+            },
+            {
+                data: 'account_group',
+                name: 'account_group',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.email;
+                }
+            },
+            {
+                data: 'created_date',
+                name: 'created_date',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.email;
+                }
+            },
+            {
+                data: 'created_time',
+                name: 'created_time',
+                visible: false,
+                render: function (data, row, row_data) {
+                    return row_data.email;
+                }
+            },
+        ],
+        rowCallback: function(row, data) {
+            // Optional customization for rows
+        },
+        drawCallback: function(settings) {
+            // Optional customization for draw events
+        },
+        order: [[0, "desc"]],
+        lengthChange: true,
+        pageLength: 10,
+        // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        buttons: [
+            {
+                extend: 'excel',
+                text: 'Export to Excel',
+                exportOptions: {
+                    columns: [5, 6, 7, 8, 3, 9, 10] // Updated column indices to match your use case
+                }
+            }
+        ]
+    });
+
 </script>
 @endsection()

@@ -149,7 +149,7 @@ Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->n
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
-        
+
         return ini_get('memory_limit');
     });
     Route::get('/', [Login::class, 'showLoginForm']);
@@ -158,6 +158,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/login', [Login::class, 'adminLogin']);
     Route::get('/ajax', [AjaxController::class, 'index']);
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
+    Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
