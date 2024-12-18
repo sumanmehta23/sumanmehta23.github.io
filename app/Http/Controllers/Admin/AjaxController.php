@@ -531,6 +531,95 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
+    public function getWalletWithdrawal2(Request $request)
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+        $userGroups = explode(',', session('user_groups'));
+
+        // Base query
+        $rmCondition = WalletWithdraw::where('withdraw_type','!=', 'Internal Transfer')
+            ->select('wallet_withdraw.*')
+            ->with(['user']);
+
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdraw_amount;
+                })
+                ->addColumn('fee', function($row){
+                    return $row->withdraw_transaction_fee;
+                })
+                ->addColumn('payment_mode', function($row){
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->user->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->withdraw_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->withdraw_date));
+                })
+                ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
 
     public function getWalletDeposit()
     {
@@ -1486,7 +1575,7 @@ and ib1.status = 0
 
     public function getClientDetails($data)
     {
-    
+
         $result = DB::table('aspnetusers')
         ->join('countries', 'aspnetusers.country', '=', 'countries.country_name')
         ->select(

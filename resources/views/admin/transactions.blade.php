@@ -72,6 +72,10 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
