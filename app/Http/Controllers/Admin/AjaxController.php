@@ -210,53 +210,64 @@ class AjaxController extends Controller
     {
         // ini_set('memory_limit', '1024M');
         // ini_set('max_execution_time', 3000);
-        // Start building the query
-        $query = DB::table('aspnetusers AS ap')
-            ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
-            ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
-            ->leftJoin('relationship_manager AS rm', 'ap.id', '=', 'rm.user_id')
-            ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_details_id')
-            ->leftJoin('emplist AS emp', 'rm.rm_id', '=', 'emp.email')
-            ->leftJoin('countries AS c', 'ap.country', '=', 'c.country_name')
-            ->leftJoin('ib1 AS parent_ib', function ($join) {
-                $join->on('parent_ib.referral_code', '=', 'ap.ib1')
-                    ->orOn('parent_ib.email', '=', 'ap.ib1');
-            })
-            ->select([
-                'ibs.name AS ib_name',
-                'c.country_alpha',
-                'emp.username AS rm_name',
-                'rm.rm_id',
-                'ap.id AS enc_id',
-                'ap.*',
-                'ib1.status AS ib_status',
-                'ibpd.id AS ib_group',
-                'parent_ib.name AS parent_name',
-                'parent_ib.email AS parent_email'
-            ])
-            ->groupBy('ap.email');
+        $query = User::with([
+            'ib' => function ($query) {
+                $query->select('ib1.id', 'name');
+            },
+            'employee' => function ($query) {
+                $query->select('emplist.id', 'username'); 
+            }
+        ])
+        ->select([
+            'aspnetusers.id',
+            'aspnetusers.email',
+            'aspnetusers.fullname',
+            'aspnetusers.number',
+            'aspnetusers.ib1',
+            'aspnetusers.status',
+            'aspnetusers.email_confirmed',
+            'aspnetusers.country',
+            'aspnetusers.kyc_verify',
+            'aspnetusers.country_code',
+        ])->groupBy('aspnetusers.email');
 
-        // Conditionally add the filter based on user role
+        // $query = DB::table('aspnetusers AS ap')
+        //     ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
+        //     ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
+        //     ->leftJoin('relationship_manager AS rm', 'ap.id', '=', 'rm.user_id')
+        //     ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_details_id')
+        //     ->leftJoin('emplist AS emp', 'rm.rm_id', '=', 'emp.email')
+        //     ->leftJoin('countries AS c', 'ap.country', '=', 'c.country_name')
+        //     ->leftJoin('ib1 AS parent_ib', function ($join) {
+        //         $join->on('parent_ib.referral_code', '=', 'ap.ib1')
+        //             ->orOn('parent_ib.email', '=', 'ap.ib1');
+        //     })
+        //     ->select([
+        //         'ibs.name AS ib_name',
+        //         'c.country_alpha',
+        //         'emp.username AS rm_name',
+        //         'rm.rm_id',
+        //         'ap.id AS enc_id',
+        //         'ap.*',
+        //         'ib1.status AS ib_status',
+        //         'ibpd.id AS ib_group',
+        //         'parent_ib.name AS parent_name',
+        //         'parent_ib.email AS parent_email'
+        //     ])
+        //     ->groupBy('ap.email');
+
         $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
             $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
         });
 
-        // Add Relationship Manager specific filter if the role is "Relationship Manager"
         if (session('userData')['userRole'] == "Relationship Manager") {
             $query->where('rm.rm_id', session('alogin'));
         }
 
-        // Filter by 'rm_id' from the request if it's provided
         if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
             $query->where('rm.rm_id', $request->get('rm_id'));
         }
 
-        // Execute the query
-        // $results = $query->get();
-
-        // $results = DB::select(DB::raw($query));
-
-        // Processing and formatting the results for DataTables
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->editColumn('created_at', function ($row) {
@@ -280,16 +291,21 @@ class AjaxController extends Controller
                         </a>";
                 })
                 ->editColumn('user_country', function ($row) {
-                    $countryAlpha = strtolower($row->country_alpha);
-                    return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->country_alpha}" : '-';
+                    $countryAlpha = strtolower($row->getCountry() ? $row->getCountry()->country_alpha :'');
+                    return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->getCountry()->country_alpha}" : '-';
                 })
                 ->editColumn('phone', function ($row) {
                     return $row->number ?? '-';
                 })
-               
+                ->editColumn('ib_name', function ($row) {
+                    return $row->getParentIb() ? $row->getParentIb()->name : '-';
+                })
+                ->editColumn('ib_email', function ($row) {
+                    return $row->getParentIb() ? $row->getParentIb()->email : '-';
+                })
                 ->editColumn('ib', function ($row) {
-                    $ib_name = $row->parent_name ?? 'noIB';
-                    $ib_email = $row->parent_email ?? '';
+                    $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
+                    $ib_email  =$row->getParentIb() ? $row->getParentIb()->email : '';
                     $svg = $ib_name !== 'noIB' ? "<div class='me-2'>
                                 <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'></path>
@@ -309,7 +325,8 @@ class AjaxController extends Controller
                         </div>";
                 })
                 ->editColumn('user_ib_status', function ($row) {
-                    switch ($row->ib_status) {
+                    $count = $row->ib ? $row->ib->status : 3;
+                    switch ($count) {
                         case 1:
                             return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
                         case 2:
@@ -321,7 +338,7 @@ class AjaxController extends Controller
                     }
                 })
                 ->editColumn('rm', function ($row) {
-                    return $row->rm_name ? "<span class='text-primary'>{$row->rm_name}</span>" : "<button class='rmToggle badge btn-sm btn btn-outline-dark'>RM Not Mapped</button>";
+                    return ($row->employee && $row->employee->first()) ? "<span class='text-primary'>{$row->employee->first()->username}</span>" : "<button class='rmToggle badge btn-sm btn btn-outline-dark'>RM Not Mapped</button>";
                 })
                 ->editColumn('user_status', function ($row) {
                     return $row->status == 1 ?
@@ -334,16 +351,13 @@ class AjaxController extends Controller
                         "<span class='badge text-danger'>Email Not Verified</span>";
                 })
                 ->addColumn('action', function ($row) {
-                    // Initializing HTML string
                     $html = '';
                 
-                    // For status (Active/Inactive)
                     $success = '';
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
                 
-                    // Status Badge HTML
                     $html .= "<span class='statusToggle' data-status='{$row->status}'>";
                     if ($row->status == 0) {
                         $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
@@ -370,7 +384,6 @@ class AjaxController extends Controller
                     }
                     $html .= "</span>";
                 
-                    // For email confirmation (Verified/Not Verified)
                     $html .= "<span class='statusToggle' data-status='{$row->email_confirmed}'>";
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
@@ -392,7 +405,6 @@ class AjaxController extends Controller
                     }
                     $html .= "</span>";
                 
-                    // Client Actions (View and Edit)
                     $html .= "<span class='viewClient' data-enc='{$row->id}'>
                                 <span class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
@@ -408,7 +420,7 @@ class AjaxController extends Controller
                     return $html;
                 })
                 
-                ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action'])
+                ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action','ib_name','ib_email'])
                 ->make(true);
         }
 
@@ -1375,7 +1387,7 @@ and ib1.status = 0
                 'fullname',
                 'country',
                 'number AS telephone',
-                DB::raw('concat("+",country_code) as country_code'),
+                DB::raw('concat("",country_code) as country_code'),
                 // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
                 // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
             )
