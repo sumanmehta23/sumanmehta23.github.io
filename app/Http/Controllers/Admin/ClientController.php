@@ -308,9 +308,21 @@ class ClientController extends Controller
             $confirmPassword = $request->input('confirm_password');
             $country = $request->input('country');
             $country_code = $request->input('country_code');
-            $number = $request->input('telephone');
+            // $number = $request->input('telephone');
+            $number = $request->country_code.$request->telephone;
             $user_id = $request->input('id');
             $emailNotification = $request->input('email_notification');
+
+            $countryCode = Country::where('country_name', $request->country)
+            ->select('country_code')
+            ->first();
+
+            $code = $countryCode ? $countryCode->country_code : 'null';
+
+            if($country_code != $code){
+                return redirect()->back()->with('error', 'Update failed! No changes were made due to a mismatch between the country and its code');                  
+            }
+
             if ($password !== $confirmPassword) {
                 return response()->json([
                     'status' => 'error',
