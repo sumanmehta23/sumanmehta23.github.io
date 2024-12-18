@@ -63,14 +63,13 @@ class Ib extends Controller
             do {
                 $referral_code = Str::random(6);
             } while (Ib1::where('referral_code', $referral_code)->exists());
-
             $user = auth()->user();
             try {
                 Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'referral_code' =>$referral_code,
-                    'ib_category_id' => $request->ib_category_id,
+                    'ib_plan_details_id' => $request->ib_plan_details_id ,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
