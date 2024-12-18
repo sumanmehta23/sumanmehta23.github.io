@@ -16,4 +16,15 @@ class EmployeeList extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function user()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'relationship_manager',
+            'rm_id',
+            'user_id'
+        )
+        ->withPivot('added_by');
+    }
 }

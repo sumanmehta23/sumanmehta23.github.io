@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Country;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Notifications\Notifiable;
@@ -66,6 +67,35 @@ class User extends Authenticatable
     {
         return $this->hasOne(Ib1::class);
     }
+
+    public function employee()
+    {
+        return $this->belongsToMany(
+            EmployeeList::class,
+            'relationship_manager',
+            'user_id',
+            'rm_id'
+        )
+        ->withPivot('added_by');
+    }
+
+    public function getCountry()
+    {
+        return Country::where('country_name', '=', $this->country) 
+            ->first();
+    }
+
+    public function getParentIb()
+    {   
+        if (is_null($this->ib1)) {
+            return null;
+        }
+        
+        return Ib1::where('referral_code', $this->ib1)
+            ->orWhere('referral_code', $this->email)
+            ->first();
+    }
+
     public function accounts()
     {
         return $this->hasMany(Account::class);
