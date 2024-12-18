@@ -87,8 +87,12 @@ class User extends Authenticatable
 
     public function getParentIb()
     {   
-        return Ib1::where('referral_code', '=', $this->ib1)
-            ->orWhere('referral_code', '=', $this->email)
+        if (is_null($this->ib1)) {
+            return null;
+        }
+        
+        return Ib1::where('referral_code', $this->ib1)
+            ->orWhere('referral_code', $this->email)
             ->first();
     }
 
