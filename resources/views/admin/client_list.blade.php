@@ -576,6 +576,7 @@
             var dTtable = $('#ajaxDatatable').DataTable({
                 processing: true,
                 serverSide: true,
+                searching: false,
                 ajax: {
                     url: '/admin/getClientList',
                     type: 'GET',
@@ -590,31 +591,35 @@
                     },
                     {
                         data: 'user_email',
-                        name: 'user_email'
+                        name: 'fullname'
                     },
                     {
                         data: 'phone',
-                        name: 'phone'
+                        name: 'number'
                     },
                     {
                         data: 'user_country',
-                        name: 'user_country'
+                        name: 'country'
                     },
                     {
                         data: 'ib',
-                        name: 'ib'
+                        name: 'ib',
+                        orderable: false 
                     },
                     {
                         data: 'user_ib_status',
-                        name: 'user_ib_status'
+                        name: 'user_ib_status',
+                        orderable: false
                     },
                     {
                         data: 'rm',
-                        name: 'rm'
+                        name: 'rm',
+                        orderable: false
                     },
                     {
                         data: 'action',
-                        name: 'action'
+                        name: 'action',
+                        orderable: false
                     },
                     {
                         data: 'fullname',
@@ -652,7 +657,7 @@
                     },
                 ],
                 "initComplete": function() {
-                    var needs = [2, 5];
+                    var needs = [2];
                     this.api()
                         .columns()
                         .every(function(index) {
@@ -683,7 +688,6 @@
                     [0, "desc"]
                 ],
                 lengthChange: true,
-                loading: true,
                 pageLength: 10,
                 lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -706,7 +710,7 @@
                     $(".clientName,.clientEmail,.client_id").html("");
                     $(".clientName").html(data.fullname);
                     $(".clientEmail").html(data.email);
-                    $(".client_id").val(data.enc_id);
+                    $(".client_id").val(data.id);
                     $('#ibUpdateForm select').each(function() {
                         this.selectedIndex = 0;
                     });
@@ -716,7 +720,7 @@
                         cache: false,
                         data: {
                             "action": "getIbList",
-                            "id": data.enc_id
+                            "id": data.id
                         },
                         success: function(response) {
                             // var ibValues = JSON.parse(response);
@@ -747,7 +751,7 @@
                     $("#clientName,#clientEmail").html("");
                     $("#clientName").html(data.fullname)
                     $("#clientEmail").html(data.email)
-                    $("#client_id").val(data.enc_id)
+                    $("#client_id").val(data.id)
                     $("[name='ib_status']").val(data.ib_status).trigger("change");
                     $("[name='ib_group']").val(data.ib_group).trigger("change");
                     myModal.show();
@@ -766,7 +770,7 @@
                         cache: false,
                         data: {
                             "action": "getClientDetails",
-                            "id": data.enc_id
+                            "id": data.id
                         },
                         success: function(resp) {
 
@@ -794,7 +798,7 @@
                     $("#userName,#userEmail").html("");
                     $("#userName").html(data.fullname);
                     $("#userEmail").html(data.email);
-                    $("#user_id").val(data.enc_id);
+                    $("#user_id").val(data.id);
                     $("#user_status").prop("checked", data.status == 1);
                     $("#email_status").prop("checked", data.email_confirmed == 1);
                     $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
@@ -806,14 +810,14 @@
                     $("#customerName,#customerEmail").html("");
                     $("#customerName").html(data.fullname);
                     $("#customerEmail").html(data.email);
-                    $("#customer_id").val(data.enc_id);
+                    $("#customer_id").val(data.id);
 
                     $.ajax({
                         url: "/admin/ajax",
                         type: "GET",
                         data: {
                             action: 'getRMbyGroup',
-                            "id": data.enc_id
+                            "id": data.id
                         },
                         success: function(response) {
                             var userGroupIds;
@@ -848,7 +852,7 @@
                 });
                 $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
                     var data = dTtable.row($(this).closest("tr")).data();
-                    location.href = "/admin/client_details/" + data.enc_id;
+                    location.href = "/admin/client_details/" + data.id;
                 });
             });
 

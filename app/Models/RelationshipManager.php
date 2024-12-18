@@ -13,10 +13,7 @@ class RelationshipManager extends Model
     protected $table = 'relationship_manager';
     public $timestamps=false;
     protected $fillable=['user_id','rm_id'];
-    public function employee()
-    {
-        return $this->hasOne(EmployeeList::class, 'client_index', 'rm_id');
-    }
+
     // Has many live accounts
     public function liveAccounts()
     {
