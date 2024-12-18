@@ -183,49 +183,37 @@
                 data: 'fullname',
                 name: 'fullname',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.fullname;
-                }
+
             },
             {
                 data: 'fullemail',
                 name: 'fullemail',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.email;
-                }
+
             },
             {
                 data: 'account_code',
                 name: 'account_code',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.email;
-                }
+
             },
             {
                 data: 'account_group',
                 name: 'account_group',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.email;
-                }
+
             },
             {
                 data: 'created_date',
                 name: 'created_date',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.email;
-                }
+
             },
             {
                 data: 'created_time',
                 name: 'created_time',
                 visible: false,
-                render: function (data, row, row_data) {
-                    return row_data.email;
-                }
+
             },
         ],
         rowCallback: function(row, data) {
@@ -244,7 +232,7 @@
                 extend: 'excel',
                 text: 'Export to Excel',
                 exportOptions: {
-                    columns: [5, 6, 7, 8, 3, 9, 10] // Updated column indices to match your use case
+                    columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
                 }
             }
         ]
