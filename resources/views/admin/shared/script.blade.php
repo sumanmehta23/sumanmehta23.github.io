@@ -2,7 +2,7 @@
     $(document).ready(function () {
       $('#tableWalletDeposit').DataTable({
         // order: [[0, "desc"]],
-        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
                     extend: 'excel',
@@ -43,7 +43,7 @@
         ]
       });
       $('#tableWalletWithdrawal').DataTable({
-        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
                     extend: 'excel',
@@ -83,8 +83,8 @@
       });
       $('#tableTradingDeposit').DataTable({
         // order: [[0, "desc"]],
-        // dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        // dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
                     extend: 'excel',
@@ -125,7 +125,7 @@
       });
       $('#tableTradingWithdrawal').DataTable({
         // order: [[0, "desc"]],
-        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
                     extend: 'excel',
@@ -164,7 +164,7 @@
       });
       $('#tableInternalTransfer').DataTable({
         // order: [[0, "desc"]],
-        dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
                     extend: 'excel',

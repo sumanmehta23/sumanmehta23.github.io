@@ -1375,13 +1375,14 @@ and ib1.status = 0
                 'fullname',
                 'country',
                 'number AS telephone',
-                DB::raw('concat("+",country_code) as country_code'),
+                DB::raw('concat(country_code) as country_code'),
                 // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
                 // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
             )
             ->where(DB::raw('id'), '=', $data['id'])
             ->first();
 
+            // dd($result);
         return (array) $result;
     }
 

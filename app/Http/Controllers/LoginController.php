@@ -189,6 +189,7 @@ class LoginController extends Controller
     }
     public function addUser(Request $request)
     {
+        // dd($request->all());
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string|max:255',
@@ -243,6 +244,7 @@ class LoginController extends Controller
         $userData['email'] =$request->email;
         $userData['fullname'] =$request->fullname;
         $userData['password'] =Hash::make($request->password);
+        $userData['country_code'] =$request->country_code;
         $userData['number'] =$number;
         $userData['username'] =$request->email;
         $userData['referral'] ='';
