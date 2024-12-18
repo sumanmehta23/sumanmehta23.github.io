@@ -17,6 +17,11 @@
         --bs-text-opacity: 1;
         color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     }
+
+    .wallet-pending td {
+        --bs-text-opacity: 1;
+        color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+    }
 </style>
 <div class="pc-container">
     <div class="pc-content">
@@ -119,28 +124,57 @@
                         </div>
                     </div>
                     <div class="tab-content" id="wallet_transactions">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">TXN ID</th>
-                                    <th scope="col">DATE</th>
-                                    <th scope="col">AMOUNT</th>
-                                    <th scope="col">TYPE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($wallet_history as $transaction)
-                                    <tr class="{{ $transaction->type == 'deposit' ? 'wallet-plus' : 'wallet-minus' }}">
-                                        <td>{{ $transaction->type == 'deposit' ? 'WDID'.$transaction->raw_id : 'WWID'.$transaction->raw_id }}</td>
-                                        <td>{{ $transaction->date_added }}</td>
-                                        <td class="td-wrap text-left">
-                                            {{ $transaction->type == 'deposit' ? '+' : '-' }} ${{ $transaction->amount }}
-                                        </td>
-                                        <td class="text-left">{{ $transaction->transfer_type }}</td>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        {{-- <th scope="col">TXN ID</th> --}}
+                                        <th scope="col">DATE</th>
+                                        <th scope="col">TXN ID</th>
+                                        <th scope="col">AMOUNT</th>
+                                        <th scope="col">FEE</th>
+                                        <th scope="col">STATUS</th>
+                                        <th scope="col" style="text-align: left;">TYPE</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {{-- {{ dd($wallet_history) }} --}}
+                                    @foreach ($wallet_history as $transaction)
+                                        <?php
+                                            if ($transaction->status == 0) {
+                                                $status = 'Pending';
+                                                $rowClass = 'wallet-pending';
+                                            } else if($transaction->status == 1) {
+                                                $status = 'Approved';
+                                                $rowClass = 'wallet-plus';
+                                            } else if($transaction->status == 2){
+                                                $status = 'Rejected';
+                                                $rowClass = 'wallet-minus';
+                                            }
+                                            $dateTime = explode(' ', $transaction->date_added);
+                                            $date = $dateTime[0]; // Date part
+                                            $time = isset($dateTime[1]) ? $dateTime[1] : '';
+                                        ?>
+                                        <tr class="{{ $rowClass }}">
+                                            {{-- <td>{{ $transaction->type == 'deposit' ? 'WDID'.$transaction->raw_id : 'WWID'.$transaction->raw_id }}</td> --}}
+                                            {{-- <td>{{ $transaction->date_added }}</td> --}}
+                                            <td>
+                                                <?= htmlspecialchars($date); ?><br>
+                                                <?= htmlspecialchars($time); ?>
+
+                                            </td>
+                                            <td class="text-wrap"><?= $transaction->transaction_id; ?></td>
+                                            <td class="td-wrap text-left">
+                                                {{ $transaction->type == 'deposit' ? '+' : '-' }} ${{ $transaction->amount }}
+                                            </td>
+                                            <td class="text-end"><?= isset($transaction->withdraw_transaction_fee) ? ($transaction->type == 'deposit' ? '+' : '-') : '' ?>$<?= $transaction->withdraw_transaction_fee ?? 0; ?></td>
+                                            <td class="text-wrap"><?= $status; ?></td>
+                                            <td class="text-left">{{ $transaction->transfer_type }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="card-footer">
                         <div class="row g-2">

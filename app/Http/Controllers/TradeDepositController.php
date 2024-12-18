@@ -40,14 +40,14 @@ class TradeDepositController extends Controller
             ->first();
         $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
         $totalWw = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_amount');
-        $wallet_balance = $totalWd - $totalWw;
+        $totalWwf = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_transaction_fee');
+        $wallet_balance = $totalWd - ($totalWw + $totalWwf);
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }
     public function deposit(Request $request)
     {
-        // var_dump($request->all());
-        // die;
+        // dd($request->all());
         $request->validate(
             [
                 'user.account_id' => 'required',
@@ -91,8 +91,11 @@ class TradeDepositController extends Controller
         $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
             ->where('status',"<>", 2)
             ->sum('withdraw_amount');
+        $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
+            ->where('status',"<>", 2)
+            ->sum('withdraw_transaction_fee');
 
-        $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
+        $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
         // Check if there's enough balance
         if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < $depositdata['deposit']) {
             return response()->json([
@@ -106,9 +109,9 @@ class TradeDepositController extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
-        
+
         $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
-        
+
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
             // Return a JSON response with the error

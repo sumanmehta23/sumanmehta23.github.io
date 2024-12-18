@@ -286,7 +286,7 @@ class AjaxController extends Controller
                 ->editColumn('phone', function ($row) {
                     return $row->number ?? '-';
                 })
-               
+
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->parent_name ?? 'noIB';
                     $ib_email = $row->parent_email ?? '';
@@ -336,13 +336,13 @@ class AjaxController extends Controller
                 ->addColumn('action', function ($row) {
                     // Initializing HTML string
                     $html = '';
-                
+
                     // For status (Active/Inactive)
                     $success = '';
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
-                
+
                     // Status Badge HTML
                     $html .= "<span class='statusToggle' data-status='{$row->status}'>";
                     if ($row->status == 0) {
@@ -369,7 +369,7 @@ class AjaxController extends Controller
                                   </span>";
                     }
                     $html .= "</span>";
-                
+
                     // For email confirmation (Verified/Not Verified)
                     $html .= "<span class='statusToggle' data-status='{$row->email_confirmed}'>";
                     if ($row->email_confirmed == 0) {
@@ -391,23 +391,23 @@ class AjaxController extends Controller
                                   </span>";
                     }
                     $html .= "</span>";
-                
+
                     // Client Actions (View and Edit)
                     $html .= "<span class='viewClient' data-enc='{$row->id}'>
                                 <span class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                 </span>
                               </span>";
-                
+
                     $html .= "<span class='editClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
                                     <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
                                 </span>
                               </span>";
-                
+
                     return $html;
                 })
-                
+
                 ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action'])
                 ->make(true);
         }
@@ -467,9 +467,10 @@ class AjaxController extends Controller
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->fullname,
                 'amount' => '$' . $row->withdraw_amount,
+                'fee' => '$' . $row->withdraw_transaction_fee,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
@@ -606,7 +607,7 @@ class AjaxController extends Controller
                 'withdraw_type' => $row->withdraw_type,
                 'withdraw_to' => ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
             ];
@@ -736,6 +737,7 @@ class AjaxController extends Controller
                 'enc_id' => $row->enc_id,
                 'fullname' => $row->user->fullname,
                 'amount' => '$' . $row->withdraw_amount,
+                'fee' => '$' . $row->withdraw_transaction_fee,
                 'payment_mode' => $row->withdraw_type,
                 'withdraw_date' => $row->withdraw_date,
                 'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
@@ -1129,7 +1131,8 @@ class AjaxController extends Controller
                 'from_to' => 'Wallet',
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdraw_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'fee' => '$' . $row->withdraw_transaction_fee,
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }

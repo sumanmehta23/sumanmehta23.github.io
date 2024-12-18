@@ -52,7 +52,10 @@ class Home extends Controller
         $totalWithdraw = WalletWithdraw::where('user_id', $userId)
             ->where('status','<>', 2)
             ->sum('withdraw_amount');
-        $walletBalance = $totalDeposit - $totalWithdraw;
+        $totalWithdrawFee = WalletWithdraw::where('user_id', $userId)
+            ->where('status','<>', 2)
+            ->sum('withdraw_transaction_fee');
+        $walletBalance = $totalDeposit - ($totalWithdraw + $totalWithdrawFee);
         return $walletBalance;
     }
     public function getTotalDeposit($userId)

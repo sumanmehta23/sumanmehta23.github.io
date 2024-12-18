@@ -222,7 +222,7 @@
                                                 </div>
                                             <?php endif;?>
                                         </td>
-                                        <td style="vertical-align:top">
+                                        {{-- <td style="vertical-align:top">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <div class="lh-1">
@@ -233,14 +233,27 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </td>
+                                        </td> --}}
+                                        <?php if ($details->withdraw_transaction_fee && $details->status == 0) { ?>
+                                            <td></td>
+                                        <?php } ?>
                                         <?php if ($details->status == 0) { ?>
                                         <td>
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <div class="lh-1">
+                                                    <span class="fs-11 text-muted">WITHDRAW FEE</span>
+                                                    </div>
+                                                    <div class="mt-2 lh-1">
+                                                    <span>$<?= $details->withdraw_transaction_fee ?? 0 ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td style="vertical-align:top">
                                             <div class="my-auto btn-list ms-auto">
                                                 <button
-                                                    onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',1)"
+                                                    onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
                                                     type="button" class="m-1 btn btn-success btn-space">Approve</button>
                                                 <button
                                                     onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
@@ -260,6 +273,18 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        <td style="vertical-align:top">
+                                            <div class="d-flex align-items-center">
+                                              <div>
+                                                  <div class="lh-1">
+                                                      <span class="fs-11 text-muted">WITHDRAW FEE</span>
+                                                  </div>
+                                                  <div class="mt-2 lh-1">
+                                                      <span>$<?= ($details->withdraw_transaction_fee ?? 0) ?></span>
+                                                  </div>
+                                              </div>
+                                            </div>
+                                          </td>
                                         <td style="vertical-align:top">
                                             <div class="d-flex align-items-center">
                                                 <div>
