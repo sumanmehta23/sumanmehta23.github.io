@@ -147,6 +147,7 @@
                         <th scope="col">TRANSACTION DATE</th>
                         <th scope="col">TYPE</th>
                         <th scope="col">AMOUNT</th>
+                        <th scope="col">FEE</th>
                         <th scope="col">STATUS</th>
                       </tr>
                     </thead>
@@ -175,6 +176,9 @@
                           </td>
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount, 2) }}</h6>
+                          </td>
+                          <td>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee, 2) }}</h6>
                           </td>
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>

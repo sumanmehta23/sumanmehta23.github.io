@@ -9,7 +9,7 @@
                     text: 'Export to Excel',
                 }
             ],
-        
+
         order: [
           [0, "desc"]
         ],
@@ -50,7 +50,7 @@
                     text: 'Export to Excel',
                 }
             ],
-        
+
          order: [[3, "desc"]],
         "ajax": {
           "url": "/admin/ajax",
@@ -67,6 +67,7 @@
             }
           },
           { data: 'amount', name: 'amount' },
+          { data: 'fee', name: 'fee' },
           { data: 'payment_mode', name: 'payment_mode' },
           {
             data: 'withdraw_date', name: 'withdraw_date', render: function (data, type, row) {
@@ -89,10 +90,10 @@
                 {
                     extend: 'excel',
                     text: 'Export to Excel',
-                    
+
                 }
             ],
-        
+
         order: [
           [0, "desc"]
         ],
@@ -132,7 +133,7 @@
                     text: 'Export to Excel',
                 }
             ],
-        
+
         order: [
           [0, "desc"]
         ],
@@ -171,7 +172,7 @@
                     text: 'Export to Excel',
                 }
             ],
-        
+
         order: [
           [0, "desc"]
         ],

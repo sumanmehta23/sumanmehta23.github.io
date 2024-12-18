@@ -74,7 +74,10 @@ class ClientController extends Controller
         $wallet_withdrawal = DB::table('wallet_withdraw')
             ->where('status', 1)
             ->sum('withdraw_amount');
-
+        $wallet_withdrawal_fee = DB::table('wallet_withdraw')
+            ->where('status', 1)
+            ->sum('withdraw_transaction_fee');
+        $wallet_withdrawal = $wallet_withdrawal + $wallet_withdrawal_fee;
         // Total Clients & IBs count
         $total_clients = DB::table("aspnetusers")->count();
 
@@ -124,9 +127,9 @@ class ClientController extends Controller
         ));
     }
     public function updateRM(Request $request)
-    {  
+    {
         $role = Role::find(Session::get('userData.role_id'));
-       
+
         if ($request->has('rmUpdate') && $role && $role->name ="Super Admin") {
             $user_id = $request->input('user_id');
             // $result = DB::table('aspnetusers')
@@ -179,12 +182,12 @@ class ClientController extends Controller
                             $logdata[$fieldName] = $newValue;
                         }
                     }
-                   
+
                     if (!empty($updateFields)) {
                         DB::table('aspnetusers')
                             ->whereRaw('id = ?', [$user_id])
                             ->update($updateFields);
-                        
+
                         $user = DB::table('aspnetusers')->where('id', $user_id)->first();
 
                         $this->addToUserLog([
@@ -297,7 +300,7 @@ class ClientController extends Controller
         ";
     }
     public function updateUser(Request $request)
-    {   
+    {
         if ($request->has('updateUser')) {
             $email = $request->input('email');
             $fullname = $request->input('fullname');
@@ -464,7 +467,8 @@ class ClientController extends Controller
             $total_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('withdraw_type', '!=', 'Internal Transfer')
                 ->where('status', 1)
-                ->sum('withdraw_amount');
+                ->selectRaw('SUM(withdraw_amount + withdraw_transaction_fee) as total')
+                ->value('total');
             // $pending_ww = DB::table('wallet_withdraw')
             //     ->where('email', $eid)
             //     ->where('status', 0)
@@ -472,9 +476,12 @@ class ClientController extends Controller
             //     ->first();
             $pending_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('status', 0)
-                ->sum('withdraw_amount');
+                ->selectRaw('SUM(withdraw_amount + withdraw_transaction_fee) as total')
+                ->value('total');
+
 
             $pendingwalletwithdraw = (float)$pending_ww;
+
             $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
             // $total_balance = DB::table('total_balance')
             //     ->where('email', $eid)

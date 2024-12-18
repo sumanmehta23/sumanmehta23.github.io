@@ -48,6 +48,7 @@
             }
           },
           { data: 'amount', name: 'amount' },
+          { data: 'fee', name: 'fee' },
           { data: 'payment_mode', name: 'payment_mode' },
           {
             data: 'withdraw_date', name: 'withdraw_date', render: function (data, type, row) {

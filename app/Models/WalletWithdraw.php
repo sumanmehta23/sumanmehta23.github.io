@@ -48,6 +48,7 @@ class WalletWithdraw extends Model
     {
         return $this->where('withdraw_type', 'Wallet Withdrawal')
                     ->where('status', 1)
-                    ->sum('withdraw_amount');
+                    ->selectRaw('SUM(withdraw_amount + withdraw_transaction_fee) as total')
+                    ->value('total');
     }
 }

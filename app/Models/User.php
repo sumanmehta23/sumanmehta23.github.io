@@ -78,7 +78,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(WalletDeposit::class);
     }
-    
+
     public function walletWithdraws()
     {
         return $this->hasMany(WalletWithdraw::class);
@@ -93,8 +93,11 @@ class User extends Authenticatable
             $totalWithdraw = WalletWithdraw::where('user_id', $this->id)
                 ->where('status', '<>', 2)
                 ->sum('withdraw_amount');
+            $totalWithdrawFee = WalletWithdraw::where('user_id', $this->id)
+                ->where('status', '<>', 2)
+                ->sum('withdraw_transaction_fee');
 
-            return (float) $totalDeposit - (float) $totalWithdraw;
+            return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);
         });
     }
 }

@@ -62,6 +62,7 @@
                                                 <tr>
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
+                                                    <th>Withdrawal Fee</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>

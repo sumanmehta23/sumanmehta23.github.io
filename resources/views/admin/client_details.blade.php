@@ -516,7 +516,7 @@
                                                             Withdrawal
                                                         </div>
                                                         <div class="prism-toggle">
-                                                            <a href="/admin/transactions/trading_withdrawal"
+                                                            <a href="/admin/transactions/wallet_withdrawal"
                                                                 class="btn btn-sm btn-primary-light">View All</a>
                                                         </div>
                                                     </div>
@@ -529,6 +529,7 @@
                                                                         <th scope="col">From</th>
                                                                         <th scope="col">Withdraw Method</th>
                                                                         <th scope="col">Amount</th>
+                                                                        <th scope="col">Fee</th>
                                                                         <th scope="col">Status</th>
                                                                     </tr>
                                                                 </thead>
@@ -1024,6 +1025,10 @@
                     {
                         data: 'amount',
                         name: 'amount'
+                    },
+                    {
+                        data: 'fee',
+                        name: 'fee'
                     },
                     {
                         data: 'status',

@@ -151,9 +151,18 @@
                                                                         <div class="col-lg-8">
                                                                             <div class="mb-3 input-group">
                                                                                 <span class="input-group-text">$</span>
-                                                                                <input type="number" min="10" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
+                                                                                <input type="number" min="10" id="withdrawAmount" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
                                                                                     @if(count($client_banks) > 0) required @endif>
                                                                                 <span class="input-group-text">.00</span>
+                                                                            </div>
+                                                                            <p id="message" style="color: red; display: none;"></p>
+                                                                            <div id="confirmTransaction" style="display: none; margin-top: 10px;">
+                                                                            <label class="col-lg-4 col-form-label" style="display: flex; align-items: center; padding-right: 10px; width: 100%;">
+                                                                                Amount You Will Receive After Transaction:
+                                                                                <span id="amountAfterFee" style="font-weight: bold; margin-left: 10px;">$0.00</span>
+                                                                            </label>
+                                                                                <input type="checkbox" id="confirmCheckbox" name="confirmCheckbox" required>
+                                                                                <label for="confirmCheckbox">I confirm this transaction.</label>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -400,4 +409,37 @@
             });
         </script>
     @endif
+    <script>
+        document.getElementById('withdrawAmount').addEventListener('input', function () {
+            const amount = parseFloat(this.value);
+            const message = document.getElementById('message');
+            const confirmTransaction = document.getElementById('confirmTransaction');
+            const confirmCheckbox = document.getElementById('confirmCheckbox');
+            const amountAfterFee = document.getElementById('amountAfterFee');
+            if (amount >= 10 && amount < 100) {
+                message.style.display = 'block';
+                message.textContent = "A network fee of $5 will be charged for this transaction. To avoid the network fee, the withdrawal amount must be greater than $100.";
+                confirmTransaction.style.display = 'block';
+                confirmCheckbox.required = true;
+                amountAfterFee.textContent = `$${(amount - 5).toFixed(2)}`;
+            } else if (amount < 10) {
+                message.style.display = 'block';
+                message.textContent = "The minimum withdrawal amount is $10.";
+                confirmTransaction.style.display = 'none';
+                confirmCheckbox.checked = false;
+                confirmCheckbox.required = false;
+            } else if (amount >= 100) {
+                message.style.display = 'none';
+                confirmTransaction.style.display = 'none';
+                confirmCheckbox.checked = false;
+                confirmCheckbox.required = false;
+                amountAfterFee.textContent = `$${amount.toFixed(2)}`;
+            } else {
+                message.style.display = 'none';
+                confirmTransaction.style.display = 'none';
+                confirmCheckbox.checked = false;
+                confirmCheckbox.required = false;
+            }
+        });
+    </script>
 @endsection

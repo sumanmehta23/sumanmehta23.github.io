@@ -36,6 +36,7 @@ class Wallet extends Controller
         $email = auth()->user()->email;
         $wallet_history = $this->getWalletHistory($email);
         $wallet_balance =auth()->user()->wallet_balance;
+        // dd($wallet_balance);
         return view('wallet', compact('wallet_balance', 'wallet_history'));
     }
     public function getWalletHistory($email)
@@ -48,7 +49,7 @@ class Wallet extends Controller
             ->get();
         // Fetch withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->select('id as raw_id', 'transaction_id', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
+            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
@@ -118,7 +119,11 @@ class Wallet extends Controller
             ->where('Status', 1)
             ->sum('withdraw_amount');
 
-        $wallet_balance = (float) $total_wd - (float) $total_ww;
+        $total_wwf = WalletWithdraw::where('email', $email)
+            ->where('Status', 1)
+            ->sum('withdraw_transaction_fee');
+
+        $wallet_balance = (float) $total_wd - ((float) $total_ww + (float) $total_wwf);
 
         return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals','wallet_balance'));
     }
@@ -144,7 +149,10 @@ class Wallet extends Controller
         $total_ww = WalletWithdraw::where('user_id', $userId)
             ->where('status','<>', 2)
             ->sum('withdraw_amount');
-        $wallet_balance = (float) $total_wd - (float) $total_ww;
+        $total_wwf = WalletWithdraw::where('user_id', $userId)
+            ->where('status','<>', 2)
+            ->sum('withdraw_transaction_fee');
+        $wallet_balance = (float) $total_wd - ((float) $total_ww + (float) $total_wwf);
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
     public function deposit(Request $request)
@@ -373,14 +381,24 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request)
     {
+
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1',
             'withdraw_type' => 'required|string',
-            'client_wallet_id' => 'required'
+            'client_wallet_id' => 'required',
         ]);
         $userEmail = auth()->user()->email;
         $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
+        $request->validate([
+                'confirmCheckbox' => [
+                    'required_if:withdraw_amount,<,99',
+                ],
+            ],
+            [
+            'confirmCheckbox.required_if' => 'The confirmation checkbox is required when the withdrawal amount is less than 100.',
+            ]
+        );
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
         $clientWalletId= $request->input('client_wallet_id');
         $clientWallet=ClientWallet::where('id', $clientWalletId)->where('user_id',$user->id)->firstOrFail();
@@ -393,15 +411,27 @@ class Wallet extends Controller
             ->where('status',"<>", 2)
             ->sum('withdraw_amount');
 
-        $walletBalance = (float) $totalDeposits - (float) $totalWithdrawals;
+        $totalWithdrawalsFee = WalletWithdraw::where('email', $userEmail)
+            ->where('status',"<>", 2)
+            ->sum('withdraw_transaction_fee');
+
+        $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals +(float) $totalWithdrawalsFee);
         if ($withdrawAmount > $walletBalance) {
             return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
+        }
+        else if($withdrawAmount < 100){
+            $withdrawAmount = $withdrawAmount-5;
+            $withdraw_transaction_fee = 5;
+        }else{
+            $withdrawAmount= $withdrawAmount;
+            $withdraw_transaction_fee = null;
         }
         WalletWithdraw::create([
             'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,
             'user_id' => $user->id,
             'withdraw_amount' => $withdrawAmount,
+            'withdraw_transaction_fee' => $withdraw_transaction_fee,
             'withdraw_type' => $withdrawType,
             'status' => 0
         ]);
