@@ -113,6 +113,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(WalletWithdraw::class);
     }
+    public function countries()
+    {
+        return $this->hasMany(Country::class);
+    }
     public function getWalletBalanceAttribute()
     {
         return Cache::remember("user:{$this->id}:wallet_balance", now()->addMinutes(10), function () {

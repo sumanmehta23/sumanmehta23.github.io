@@ -1486,19 +1486,21 @@ and ib1.status = 0
 
     public function getClientDetails($data)
     {
+    
         $result = DB::table('aspnetusers')
-            ->select(
-                 'id',
-                'email',
-                'fullname',
-                'country',
-                'number AS telephone',
-                DB::raw('concat("",country_code) as country_code'),
-                // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
-                // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
-            )
-            ->where(DB::raw('id'), '=', $data['id'])
-            ->first();
+        ->join('countries', 'aspnetusers.country', '=', 'countries.country_name')
+        ->select(
+            'aspnetusers.id',
+            'aspnetusers.email',
+            'aspnetusers.fullname',
+            'aspnetusers.country',
+            // 'aspnetusers.country_code',
+            // 'aspnetusers.number AS telephone',
+            DB::raw('concat(countries.country_code) as country_code'),
+            DB::raw('REGEXP_REPLACE(aspnetusers.number, concat(countries.country_code), "") AS telephone')
+        )
+        ->where('aspnetusers.id', '=', $data['id'])
+        ->first();
 
             // dd($result);
         return (array) $result;

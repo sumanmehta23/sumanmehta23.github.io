@@ -776,11 +776,11 @@
 
                             $.each(resp, function(key, value) {
 
+                                if (key === 'country_code') {
+                                    value = value.replace('', '+');
+                                }
                                 if (key === 'telephone') {
-                                    // let countryCode = $('#editUserForm [name="country_code"]').val();
-                                    
-                                    // value = value.replace(new RegExp(`^${countryCode}`), '');
-                                    value = value.replace(/^\+\d{1,2}/, ''); 
+                                    value = value.replace('+', '');
                                 }
                                 console.log(key, value);
                                 $('#editUserForm [name="' + key + '"]').val(
