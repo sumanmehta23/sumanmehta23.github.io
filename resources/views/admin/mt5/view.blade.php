@@ -643,13 +643,24 @@ if ($getUser) {
 
             $("#tableBonus").DataTable();
             $('#tableDeposit').DataTable({
-                "ajax": {
-                    "url": "/admin/ajax",
-                    "type": "GET",
-                    data: {
-                        action: 'getTradingDeposit',
-                        id: '<?= $account->code ?>'
-                    },
+                // "ajax": {
+                //     "url": "/admin/ajax",
+                //     "type": "GET",
+                //     data: {
+                //         action: 'getTradingDeposit',
+                //         id: '<?= $account->code ?>'
+                //     },
+                // },
+                processing: true,
+                serverSide: true,
+                searching: false,
+                ajax: {
+                    url: '/admin/getTradingDeposit2',
+                    type: 'GET',
+                    data: {id: '<?= $account->code ?>'}, // Ensure this is populated dynamically if needed.
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
                 },
                 columns: [{
                         data: 'account_no',
@@ -673,14 +684,14 @@ if ($getUser) {
                     {
                         data: 'deposit_date',
                         name: 'deposit_date',
-                        render: function(data, type, row) {
-                            var dateTime = row.deposit_date.split(' ');
-                            var date = dateTime[0];
-                            var time = dateTime[1];
-                            var return_data = "<div class='d-grid'><div class='date'>" + date +
-                                "</div><div class='time text-muted'>" + time + "</div></div>";
-                            return return_data;
-                        }
+                        // render: function(data, type, row) {
+                        //     var dateTime = row.deposit_date.split(' ');
+                        //     var date = dateTime[0];
+                        //     var time = dateTime[1];
+                        //     var return_data = "<div class='d-grid'><div class='date'>" + date +
+                        //         "</div><div class='time text-muted'>" + time + "</div></div>";
+                        //     return return_data;
+                        // }
                     },
                     {
                         data: 'status',
@@ -695,13 +706,24 @@ if ($getUser) {
                 ]
             });
             $('#tableWithdrawal').DataTable({
-                "ajax": {
-                    "url": "/admin/ajax",
-                    "type": "GET",
-                    data: {
-                        action: 'getTradingWithdrawal',
-                        id: '<?= $account->id ?>'
-                    },
+                // "ajax": {
+                //     "url": "/admin/ajax",
+                //     "type": "GET",
+                //     data: {
+                //         action: 'getTradingWithdrawal',
+                //         id: '<?= $account->id ?>'
+                //     },
+                // },
+                processing: true,
+                serverSide: true,
+                searching: false,
+                ajax: {
+                    url: '/admin/getTradingWithdrawal2',
+                    type: 'GET',
+                    data: {id: '<?= $account->id ?>'}, // Ensure this is populated dynamically if needed.
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
                 },
                 columns: [{
                         data: 'account_no',
@@ -710,9 +732,9 @@ if ($getUser) {
                     {
                         data: 'amount',
                         name: 'amount',
-                        render: function(data, type, row) {
-                            return number_format(data);
-                        }
+                        // render: function(data, type, row) {
+                        //     return number_format(data);
+                        // }
                     },
                     {
                         data: 'withdraw_type',
@@ -725,14 +747,14 @@ if ($getUser) {
                     {
                         data: 'withdraw_date',
                         name: 'withdraw_date',
-                        render: function(data, type, row) {
-                            var dateTime = row.withdraw_date.split(' ');
-                            var date = dateTime[0];
-                            var time = dateTime[1];
-                            var return_data = "<div class='d-grid'><div class='date'>" + date +
-                                "</div><div class='time text-muted'>" + time + "</div></div>";
-                            return return_data;
-                        }
+                        // render: function(data, type, row) {
+                        //     var dateTime = row.withdraw_date.split(' ');
+                        //     var date = dateTime[0];
+                        //     var time = dateTime[1];
+                        //     var return_data = "<div class='d-grid'><div class='date'>" + date +
+                        //         "</div><div class='time text-muted'>" + time + "</div></div>";
+                        //     return return_data;
+                        // }
                     },
                     {
                         data: 'status',
