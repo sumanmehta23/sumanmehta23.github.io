@@ -553,7 +553,7 @@ class AjaxController extends Controller
         }
 
         $rmCondition->orderBy('id', 'desc');
-        
+
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
@@ -1518,6 +1518,77 @@ class AjaxController extends Controller
                     return date('H:i:s', strtotime($row->deposted_date));
                 })
                 ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from','deposit_date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getPendingTradingWithdrawal2(Request $request)
+    {
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status',0);
+
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
+        } else {
+            $query->where('account_id', $_GET['id']);
+        }
+
+        // Fetch data
+        $query->orderByDesc('id')->get();
+
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('account_no', function($row){
+                    return $row->account->code;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdrawal_amount;
+                })
+                ->addColumn('withdraw_type', function($row){
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_to', function($row){
+                    if ($row->withdraw_to) {
+                        $acc = Account::where('id', $row->withdraw_to)->first();
+                    }
+                    return ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->withdraw_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->withdraw_date));
+                })
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to','withdraw_date','status','action'])
                 ->make(true);
         }
 
