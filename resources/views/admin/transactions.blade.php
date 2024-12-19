@@ -52,6 +52,10 @@
                                                     <th>Deposit Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -90,7 +94,6 @@
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
-
                                                     <th>Account No</th>
                                                     <th>Deposit Amount</th>
                                                     <th>Deposit Type</th>
@@ -98,6 +101,8 @@
                                                     <th>Deposited Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -118,6 +123,8 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
