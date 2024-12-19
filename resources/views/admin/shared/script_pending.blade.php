@@ -177,30 +177,48 @@
         ]
       });
       $('#tableTradingWithdrawal').DataTable({
-        // order: [[0, "desc"]],
-        "ajax": {
-          "url": "/admin/ajax",
-          "type": "GET",
-          data: {
-            action: 'getPendingTradingWithdrawal',
-          },
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [0,1,2,3,5,7,8] // Updated column indices to match your use case
+                    }
+                }
+            ],
+
+        order: [[3, "desc"]],
+        processing: true,
+        serverSide: true,
+        searching: false,
+        ajax: {
+            url: '/admin/getPendingTradingWithdrawal2',
+            type: 'GET',
+            data: {}, // Ensure this is populated dynamically if needed.
+            dataSrc: function(json) {
+                return json.data;
+            }
         },
         columns: [
           { data: 'account_no', name: 'account_no' },
           { data: 'amount', name: 'amount' },
           { data: 'withdraw_type', name: 'withdraw_type' },
-          { data: 'withdraw_to', name: 'withdraw_from' },
+          { data: 'withdraw_to', name: 'withdraw_to' },
           {
-            data: 'withdraw_date', name: 'withdraw_date', render: function (data, type, row) {
-              var dateTime = row.withdraw_date.split(' ');
-              var date = dateTime[0];
-              var time = dateTime[1];
-              var return_data = "<div class='d-grid'><div class='date'>" + date + "</div><div class='time text-muted'>" + time + "</div></div>";
-              return return_data;
-            }
+            data: 'withdraw_date', name: 'withdraw_date' 
+            // render: function (data, type, row) {
+            //   var dateTime = row.withdraw_date.split(' ');
+            //   var date = dateTime[0];
+            //   var time = dateTime[1];
+            //   var return_data = "<div class='d-grid'><div class='date'>" + date + "</div><div class='time text-muted'>" + time + "</div></div>";
+            //   return return_data;
+            // }
           },
           { data: 'status', name: 'status' },
           { data: 'action', name: 'action', orderable: false, searchable: false },
+          { data: 'created_date', name: 'created_date', visible: false},
+          { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
 
