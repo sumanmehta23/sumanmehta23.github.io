@@ -2193,7 +2193,7 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
                 })
                 ->addColumn('name', function($row){
                     if($row->planDetails){
-                        $small = $row->planDetails->accountType->ac_name != null ? $row->accountType->ac_name : '';
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
                     }else{
                         $small = '';
                     }
