@@ -29,9 +29,13 @@ class Ib1 extends Model
     {
         return $this->belongsTo(Account::class);
     }
-
     public function planDetails()
     {
-        return $this->hasMany(IbPlanDetails::class,'ib_plan_details_id');
+        return $this->belongsTo(IbPlanDetails::class,'ib_plan_details_id');
     }
+    public function ibWallet()
+    {
+        return $this->hasMany(IbWallet::class, 'email','email');
+    }
+
 }

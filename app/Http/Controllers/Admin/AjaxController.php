@@ -1675,65 +1675,65 @@ class AjaxController extends Controller
     //     }
     //     return ['data' => $data];
     // }
-    public function getPendingTradingDeposit()
-    {
+    // public function getPendingTradingDeposit()
+    // {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TDID' . sprintf("%05d", $row->id),
-                'enc_id' => $row->raw_erc,
-                'account_no' => $row->code,
-                'amount' => '$' . $row->deposit_amount,
-                'deposit_type' => $row->deposit_type,
-                'deposit_from' => $row->deposit_from,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
-            ];
-        }
-        return ['data' => $data];
-    }
-    public function getPendingTradingWithdrawal()
-    {
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     } else {
+    //         $rmCondition .= " where (1) and ";
+    //     }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'TDID' . sprintf("%05d", $row->id),
+    //             'enc_id' => $row->raw_erc,
+    //             'account_no' => $row->code,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'deposit_type' => $row->deposit_type,
+    //             'deposit_from' => $row->deposit_from,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getPendingTradingWithdrawal()
+    // {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->code,
-                'amount' => '$' . $row->withdrawal_amount,
-                'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to,
-                'withdraw_date' => $row->withdraw_date,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
-            ];
-        }
-        return ['data' => $data];
-    }
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     } else {
+    //         $rmCondition .= " where (1) and ";
+    //     }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'TWID' . sprintf("%05d", $row->id),
+    //             'account_no' => $row->code,
+    //             'amount' => '$' . $row->withdrawal_amount,
+    //             'withdraw_type' => $row->withdraw_type,
+    //             'withdraw_to' => $row->withdraw_to,
+    //             'withdraw_date' => $row->withdraw_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
     public function getPendingInternalTransfer()
     {
 
@@ -2136,6 +2136,119 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
             ];
         }
         return ['data' => $data];
+    }
+
+    public function getPendingIbUsers2(Request $request)
+    {
+
+
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT
+    //             ib1.*,
+    //             account_types.ac_name as grp,
+    //             sum(ib_wallet.ib_wallet) as deposit,
+    //             sum(ib_wallet.ib_withdraw) as withdraw
+    //         FROM
+    //             ib1
+    //         LEFT JOIN
+    //             ib_wallet
+    //         ON
+    //             ib1.email = ib_wallet.email
+    //         LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+    //         and ib1.status = 0
+    // group by ib1.email";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+
+
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+
+        // Base query
+
+        $rmCondition = Ib1::where('status', 0)
+            ->select('ib1.*')
+            ->with(['user', 'ibWallet','planDetails.accountType'])
+            ->where('status',0);
+
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->addColumn('name', function($row){
+                    if($row->planDetails){
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->accountType->ac_name : '';
+                    }else{
+                        $small = '';
+                    }
+
+                    return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
+                })
+                ->addColumn('total_deposit', function($row){
+                    $total_deposit = $row->ibWallet ? $row->ibWallet->sum('ib_wallet') : '$'+0;
+                    return $total_deposit;
+                })
+                ->addColumn('total_withdrawal', function($row){
+                    $total_withdrawal = $row->ibWallet ? $row->ibWallet->sum('ib_withdraw') : '$'+0;
+                    return $total_withdrawal;
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+                    }elseif($row->status == 2){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+                    }elseif($row->status == 0){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+                    }else{
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
 
     public function getPendingIbUsers()

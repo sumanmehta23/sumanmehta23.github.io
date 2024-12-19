@@ -51,6 +51,7 @@
     $("#ibRequestForm").submit(function(e) {
         e.preventDefault();
         var formData = $("#ibRequestForm").serializeArray();
+        // console.log(formData);
         formData.push({
             name: 'action',
             value: 'requestIB'
