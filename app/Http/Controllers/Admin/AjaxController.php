@@ -918,36 +918,36 @@ class AjaxController extends Controller
     }
 
 
-    public function getWalletDeposit()
-    {
+    // public function getWalletDeposit()
+    // {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
-        } else {
-            $rmCondition .= " where ";
-        }
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
+    //     } else {
+    //         $rmCondition .= " where ";
+    //     }
 
-        header('Content-Type: application/json');
-        $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'email' => $row->email,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->deposit_amount,
-                'payment_mode' => $row->deposit_type,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
-            ];
-        }
-        return ['data' => $data];
-    }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'email' => $row->email,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'payment_mode' => $row->deposit_type,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
     // public function getWalletWithdrawal()
     // {
 
