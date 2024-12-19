@@ -174,6 +174,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
 
     Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
+    Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
 
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);

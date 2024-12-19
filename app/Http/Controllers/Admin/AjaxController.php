@@ -2094,74 +2094,143 @@ class AjaxController extends Controller
         }
         return ['data' => $data];
     }
-    public function getIbUsers()
-    {
+    public function getIbUsers2(Request $request){
 
-        $rmCondition = "";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+
+        // Base query
+
+        $rmCondition = Ib1::where('status', 1)
+            ->select('ib1.*')
+            ->with(['user', 'ibWallet','planDetails.accountType']);
+
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT
-    ib1.*,
-    account_types.ac_name as grp,
-    sum(ib_wallet.ib_wallet) as deposit,
-    sum(ib_wallet.ib_withdraw) as withdraw
-FROM
-    ib1
-LEFT JOIN
-    ib_wallet
-ON
-    ib1.email = ib_wallet.email
-LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-    group by ib1.email";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => $row->id,
-                'enc' => ($row->user_id),
-                // 'ib_category_id' => $row->ib_category_id,
-                'ib_plan_details_id' => $row->ib_plan_details_id,
-                'grp' => $row->grp,
-                'name' => $row->name,
-                'email' => $row->email,
-                'country' => $row->country,
-                'number' => $row->number,
-                'date' => $row->reg_date,
-                'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-                'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-                'status' => $row->status
-            ];
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
         }
-        return ['data' => $data];
+
+        $rmCondition->orderBy('id', 'desc');
+
+        // dd($query);
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->editColumn('name', function ($row) {
+                    if($row->planDetails){
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
+                    }else{
+                        $small = '';
+                    }
+
+                    return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg
+' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
+                })
+
+                ->addColumn('total_deposit', function ($row) {
+                    $total_deposit = $row->ibWallet ? "$".$row->ibWallet->sum('ib_wallet') : "$0";
+                    return $total_deposit;
+                })
+                ->addColumn('total_withdrawal', function ($row) {
+                    $total_withdrawal = $row->ibWallet ? "$".$row->ibWallet->sum('ib_withdraw') : "$0";
+                    return $total_withdrawal;
+
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+                      } else if ($row->status == 2) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+                      } else if ($row->status == 0) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+                      } else {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+                      }
+                })
+                ->addColumn('date', function($row){
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status','date'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
+//     public function getIbUsers()
+//     {
+
+//         $rmCondition = "";
+//         if (session('userData')['userRole'] == "Relationship Manager") {
+//             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+//         }
+//         header('Content-Type: application/json');
+//         $sql = "SELECT
+//     ib1.*,
+//     account_types.ac_name as grp,
+//     sum(ib_wallet.ib_wallet) as deposit,
+//     sum(ib_wallet.ib_withdraw) as withdraw
+// FROM
+//     ib1
+// LEFT JOIN
+//     ib_wallet
+// ON
+//     ib1.email = ib_wallet.email
+// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+//     group by ib1.email";
+//         $query = DB::select($sql);
+//         $results = $query;
+//         $data = [];
+//         foreach ($results as $row) {
+//             $data[] = [
+//                 'id' => $row->id,
+//                 'enc' => ($row->user_id),
+//                 // 'ib_category_id' => $row->ib_category_id,
+//                 'ib_plan_details_id' => $row->ib_plan_details_id,
+//                 'grp' => $row->grp,
+//                 'name' => $row->name,
+//                 'email' => $row->email,
+//                 'country' => $row->country,
+//                 'number' => $row->number,
+//                 'date' => $row->reg_date,
+//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+//                 'status' => $row->status
+//             ];
+//         }
+//         return ['data' => $data];
+//     }
 
     public function getPendingIbUsers2(Request $request)
     {
-
-
-    //     header('Content-Type: application/json');
-    //     $sql = "SELECT
-    //             ib1.*,
-    //             account_types.ac_name as grp,
-    //             sum(ib_wallet.ib_wallet) as deposit,
-    //             sum(ib_wallet.ib_withdraw) as withdraw
-    //         FROM
-    //             ib1
-    //         LEFT JOIN
-    //             ib_wallet
-    //         ON
-    //             ib1.email = ib_wallet.email
-    //         LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-    //         and ib1.status = 0
-    // group by ib1.email";
-    //     $query = DB::select($sql);
-    //     $results = $query;
-    //     $data = [];
-
-
         $role = session('userData')['userRole'];
         $alogin = session('alogin');
 
@@ -2251,51 +2320,51 @@ LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function getPendingIbUsers()
-    {
+//     public function getPendingIbUsers()
+//     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
-        } else {
-            $rmCondition .= " where (1) ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT
-    ib1.*,
-    account_types.ac_name as grp,
-    sum(ib_wallet.ib_wallet) as deposit,
-    sum(ib_wallet.ib_withdraw) as withdraw
-FROM
-    ib1
-LEFT JOIN
-    ib_wallet
-ON
-    ib1.email = ib_wallet.email
-LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-and ib1.status = 0
-    group by ib1.email";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => $row->indexId,
-                'enc' => ($row->user_id),
-                'acc_type' => $row->acc_type,
-                'grp' => $row->grp,
-                'name' => $row->name,
-                'email' => $row->email,
-                'country' => $row->country,
-                'number' => $row->number,
-                'date' => $row->reg_date,
-                'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-                'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-                'status' => $row->status
-            ];
-        }
-        return ['data' => $data];
-    }
+//         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
+//         if (session('userData')['userRole'] == "Relationship Manager") {
+//             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+//         } else {
+//             $rmCondition .= " where (1) ";
+//         }
+//         header('Content-Type: application/json');
+//         $sql = "SELECT
+//     ib1.*,
+//     account_types.ac_name as grp,
+//     sum(ib_wallet.ib_wallet) as deposit,
+//     sum(ib_wallet.ib_withdraw) as withdraw
+// FROM
+//     ib1
+// LEFT JOIN
+//     ib_wallet
+// ON
+//     ib1.email = ib_wallet.email
+// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+// and ib1.status = 0
+//     group by ib1.email";
+//         $query = DB::select($sql);
+//         $results = $query;
+//         $data = [];
+//         foreach ($results as $row) {
+//             $data[] = [
+//                 'id' => $row->indexId,
+//                 'enc' => ($row->user_id),
+//                 'acc_type' => $row->acc_type,
+//                 'grp' => $row->grp,
+//                 'name' => $row->name,
+//                 'email' => $row->email,
+//                 'country' => $row->country,
+//                 'number' => $row->number,
+//                 'date' => $row->reg_date,
+//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+//                 'status' => $row->status
+//             ];
+//         }
+//         return ['data' => $data];
+//     }
 
 
 
