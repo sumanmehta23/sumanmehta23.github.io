@@ -109,6 +109,8 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

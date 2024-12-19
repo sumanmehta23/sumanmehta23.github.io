@@ -160,11 +160,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
     Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
     Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
+
     Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
     Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
     Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
+
+    Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
+    
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
