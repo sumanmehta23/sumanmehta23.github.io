@@ -159,6 +159,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/ajax', [AjaxController::class, 'index']);
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
     Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
+    Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
