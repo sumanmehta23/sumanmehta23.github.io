@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
-    
+
     public function index(Request $request)
     {
 
@@ -22,20 +22,20 @@ class SearchController extends Controller
         // Build the rmCondition based on user roles.
         $userData = session('userData');
         $roleId = $userData['role_id'] ?? null;
-
-        if ($roleId != '9d9aa2bd-2050-474a-a6e5-6d6a66c5d213') {
+        // dd(session('user_groups'));
+        if ($roleId != '9db6f441-3c60-4045-a236-8b7b71fa6e15') {
             $query->leftJoin('aspnetusers as user', 'user.email', '=', 'accounts.email');
         }
 
-        if ($roleId == '9d9aa2bd-2216-4b9d-8b6a-05a754d2f31c') {
+        if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
             $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.email')
                 ->where('rmgr.rm_id', session('alogin'));
         }
-
         // Apply conditions based on user groups.
-        if ($roleId != '9d9aa2bd-2050-474a-a6e5-6d6a66c5d213') {
+        if ($roleId != '9db6f441-3c60-4045-a236-8b7b71fa6e15') {
             $userGroups = session('user_groups');
-            if ($roleId == '9d9aa2bd-2216-4b9d-8b6a-05a754d2f31c') {
+            // dd($userGroups);
+            if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
                 $query->whereIn('user.group_id', explode(',', $userGroups));
             } else {
                 $query->whereIn('user.group_id', explode(',', $userGroups));
