@@ -242,7 +242,7 @@ class IBController extends Controller
             ->groupBy('ib_plan_details.ib_category_id', 'ib_plan_details.account_type_id')
             ->first();
 
-        // dd($selected,$request->all());
+        // dd($request->all());
         // If the form is submitted (for example, via POST request)
         if ($request->isMethod('post') && $request->has('action')) {
             $ibPlanId = $request->input('ib_category_id');
@@ -251,12 +251,13 @@ class IBController extends Controller
             $email = $request->session()->get('alogin');
 
             // Update existing plan details (soft delete by setting `deleted_at`)
-            IbPlanDetails::where('ib_category_id', $ibPlanId)
-                ->where('account_type_id', $accType)
-                ->update(['deleted_at' => now()]);
-
+            // IbPlanDetails::where('ib_category_id', $ibPlanId)
+            //     ->where('account_type_id', $accType)
+            //     ->update(['deleted_at' => now()]);
+            // dd($level);
             // Insert new plan details
             foreach ($level as $key => $divs) {
+                // dd($divs);
                 $data = [
                     'ib_category_id' => $ibPlanId,
                     'account_type_id' => $accType,
@@ -267,8 +268,21 @@ class IBController extends Controller
                 foreach ($divs as $d => $val) {
                     $data[$d] = $val;
                 }
-
-               IbPlanDetails::create($data);
+                // dump($ibPlanId);
+                // dump($accType);
+                // dd($key);
+                $existingPlan = IbPlanDetails::where('ib_category_id', $ibPlanId)
+                ->where('account_type_id', $accType)
+                ->where('level_id', $key)
+                ->first();
+                // dd($existingPlan);
+                if ($existingPlan) {
+                    // Update the record if it exists
+                    $existingPlan->update($data);
+                } else {
+                    // Create a new record if it does not exist
+                    IbPlanDetails::create($data);
+                }
             }
 
             // Return a success message using SweetAlert or any preferred method

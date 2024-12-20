@@ -2136,11 +2136,11 @@ class AjaxController extends Controller
                 })
 
                 ->addColumn('total_deposit', function ($row) {
-                    $total_deposit = $row->ibWallet ? "$".$row->ibWallet->sum('ib_wallet') : "$0";
+                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
                     return $total_deposit;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    $total_withdrawal = $row->ibWallet ? "$".$row->ibWallet->sum('ib_withdraw') : "$0";
+                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
                     return $total_withdrawal;
 
                 })
