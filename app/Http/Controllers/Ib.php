@@ -150,7 +150,7 @@ class Ib extends Controller
 
 
         $ib_email = auth()->user()->email;
-
+        // dd($plan_id);
         if ($plan_id) {
             $ibPlans = IbPlanDetails::where('id', $plan_id)
                 ->where('status', 1)
@@ -275,6 +275,10 @@ class Ib extends Controller
 
                 foreach ($client_live_accs as $ca) {
                     $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
+                    // dump($ib_level);
+                    // dump($ca->account->account_type_id);
+                    // dump($ib_acc_plans);
+                    // dd($ib_level);
                     $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
 
                     if ($commission) {

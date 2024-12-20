@@ -35,7 +35,7 @@ class Ib1 extends Model
     }
     public function ibWallet()
     {
-        return $this->hasMany(IbWallet::class, 'email','email');
+        return $this->hasMany(IbWallet::class, 'user_id','user_id');
     }
 
 }
