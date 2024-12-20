@@ -147,7 +147,7 @@
     var dTtable = $('#ajaxDatatable').DataTable({
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getLiveAccountsList',
             type: 'GET',

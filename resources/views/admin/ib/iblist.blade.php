@@ -161,7 +161,7 @@
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getPendingIbUsers2',
             type: 'GET',

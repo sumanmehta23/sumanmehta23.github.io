@@ -159,7 +159,7 @@
             ],
       processing: true,
       serverSide: true,
-      searching: false,
+      searching: true,
       ajax: {
           url: '/admin/getIbUsers2',
            type: 'GET',

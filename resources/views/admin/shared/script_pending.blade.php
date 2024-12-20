@@ -23,7 +23,7 @@
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getPendingWalletDeposit2',
             type: 'GET',
@@ -81,7 +81,7 @@
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getPendingWalletWithdrawal2',
             type: 'GET',
@@ -143,7 +143,7 @@
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getPendingTradingDeposit2',
             type: 'GET',
@@ -191,7 +191,7 @@
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
-        searching: false,
+        searching: true,
         ajax: {
             url: '/admin/getPendingTradingWithdrawal2',
             type: 'GET',
