@@ -86,9 +86,9 @@
         // window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable() ;
 
             var dTtable = $('#ajaxDatatable').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: true,
+                // processing: true,
+                // serverSide: true,
+                // searching: true,
               
                 ajax: {
                     url: '/admin/getDemoAccountsList',
