@@ -2136,24 +2136,32 @@ class AjaxController extends Controller
                 })
 
                 ->addColumn('total_deposit', function ($row) {
-                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
+                    $total_deposit = $row->ibWallet ? "$".$row->ibWallet->sum('ib_wallet') : "$0";
                     return $total_deposit;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
+                    $total_withdrawal = $row->ibWallet ? "$".$row->ibWallet->sum('ib_withdraw') : "$0";
                     return $total_withdrawal;
 
                 })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
-                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-                      } else if ($row->status == 2) {
-                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-                      } else if ($row->status == 0) {
-                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-                      } else {
-                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-                      }
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>
+                                    <span class='status-value' data-status='1'>Active IB</span>
+                                </button>";
+                    } elseif ($row->status == 2) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>
+                                    <span class='status-value' data-status='2'>Rejected</span>
+                                </button>";
+                    } elseif ($row->status == 0) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>
+                                    <span class='status-value' data-status='0'>IB Requested</span>
+                                </button>";
+                    } else {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>
+                                    <span class='status-value' data-status='null'>Not Requested</span>
+                                </button>";
+                    }
                 })
                 ->addColumn('date', function($row){
                     $date = date('Y-m-d', strtotime($row->created_at));

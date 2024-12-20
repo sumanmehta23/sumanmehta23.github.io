@@ -119,13 +119,19 @@
     $('.ajaxDataTable tbody tr').off();
     $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
       var data = dTtable.row($(this).closest("tr")).data();
+
+      var statusValue = $(this).find('.status-value').data('status'); // Extract the status value from the data attribute of the span
+        if (!statusValue) {
+            console.error("Status value is missing or undefined.");
+            return;
+        }
       // console.log(data);
       $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
       $("#clientName,#clientEmail").html("");
-      $("#clientName").html(data.name)
+      $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
       $("#client_id").val(data.user_id)
-      $("[name='ib_status']").val(data.status).trigger("change");
+      $("[name='ib_status']").val(statusValue).trigger("change");
       $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
       myModal.show();
       // swal.fire({
