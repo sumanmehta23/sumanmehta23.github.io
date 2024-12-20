@@ -1082,25 +1082,79 @@ class AjaxController extends Controller
     //     }
     //     return ['data' => $data];
     // }
-    public function getComissionData($data)
+
+    public function getComissionData2(Request $request)
     {
-        // Retrieve user ID from request
-        $userId = $data['id'];
+        // dd($request->id);
+        $userId = $request->id;
 
         // Fetch histories
-        $histories = IbWallet::with('account')->where('user_id', $userId)->get();
-        // Prepare data
-        $data = $histories->map(function ($row) {
-            return [
-                'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
-                'accounts' => $row->account->code,
-                'email' => $row->account->email,
-                'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
-                'amount' => $row->ib_wallet ?? $row->ib_withdraw
-            ];
-        });
-        return ['data' => $data];
+        $query = IbWallet::with('account')->where('user_id', $userId)->orderBy('created_at', 'desc');
+
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('amount', function ($row) {
+                    return $row->ib_wallet ?? $row->ib_withdraw;
+                })
+                ->addColumn('type', function($row){
+                    return $row->ib_wallet ? 'Commission' : 'Transfer';
+                })
+                ->addColumn('account', function($row){
+                    $code = $row->account->code;
+                    $email = $row->account->email;
+                    return "
+                                <div class='row align-items-center'>
+                                     <div class='col-auto pe-0'>
+                                         <img src='/assets/images/mt5.png' alt='user-image'
+                                             class='rounded wid-50 hei-50'>
+                                     </div>
+                                     <div class='col'>
+                                         <h4 class='mb-2 ms-2'>
+                                             <span class='text-truncate w-100'>$code</span>
+                                         </h4>
+                                         <p class='mb-0 text-muted ms-2 f-12'>
+                                             <span class='text-truncate w-100'>$email</span>
+                                         </p>
+                                     </div>
+                                 </div>";
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <small class='lh-2 text-muted'>
+                                $time
+                            </small>";
+                })
+                ->rawColumns(['date', 'account', 'type', 'amount'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
+
+    // public function getComissionData($data)
+    // {
+    //     // Retrieve user ID from request
+    //     $userId = $data['id'];
+
+    //     // Fetch histories
+    //     $histories = IbWallet::with('account')->where('user_id', $userId)->get();
+    //     // Prepare data
+    //     $data = $histories->map(function ($row) {
+    //         return [
+    //             'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
+    //             'accounts' => $row->account->code,
+    //             'email' => $row->account->email,
+    //             'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
+    //             'amount' => $row->ib_wallet ?? $row->ib_withdraw
+    //         ];
+    //     });
+    //     return ['data' => $data];
+    // }
 
 
     // public function getTradingDeposit()

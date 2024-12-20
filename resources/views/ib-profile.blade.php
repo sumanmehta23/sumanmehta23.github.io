@@ -551,57 +551,71 @@
             let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
 
             $("#commissionTbl").DataTable({
-                "ajax": {
-                    "url": "/admin/ajax",
-                    "type": "GET",
-                    "data": function (d) {
-                        d.action = "getComissionData";
-                        d.id = userId;
-                    },
+                // "ajax": {
+                //     "url": "/admin/ajax",
+                //     "type": "GET",
+                //     "data": function (d) {
+                //         d.action = "getComissionData2";
+                //         d.id = userId;
+                //     },
+                // },
+                serverSide: true,
+                searching: false,
+                ajax: {
+                    url: '/admin/getComissionData2',
+                    type: 'GET',
+                    data: {'id':userId}, // Ensure this is populated dynamically if needed.
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
                 },
                 "columns": [
                     {
-                        "data": "date",
-                        "render": function (data, type, row) {
-                            // Render date with time in separate lines
-                            return `
-                                ${data.split(" ")[0]}<br>
-                                <small>${data.split(" ")[1]}</small>
-                            `;
-                        }
+                        data: 'date', name: 'date'
+                        // "data": "date",
+                        // "render": function (data, type, row) {
+                        //     // Render date with time in separate lines
+                        //     return `
+                        //         ${data.split(" ")[0]}<br>
+                        //         <small>${data.split(" ")[1]}</small>
+                        //     `;
+                        // }
                     },
                     {
-                        "data": null, // Combine fields for this column
-                        "render": function (data, type, row) {
-                            return `
-                                <div class="row align-items-center">
-                                    <div class="col-auto pe-0">
-                                        <img src="/assets/images/mt5.png" alt="user-image"
-                                            class="rounded wid-50 hei-50">
-                                    </div>
-                                    <div class="col">
-                                        <h4 class="mb-2 ms-2">
-                                            <span class="text-truncate w-100">${row.accounts}</span>
-                                        </h4>
-                                        <p class="mb-0 text-muted ms-2 f-12">
-                                            <span class="text-truncate w-100">${row.email || ''}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                        data: 'account', name: 'account'
+                        // "data": null, // Combine fields for this column
+                        // "render": function (data, type, row) {
+                        //     return `
+                        //         <div class="row align-items-center">
+                        //             <div class="col-auto pe-0">
+                        //                 <img src="/assets/images/mt5.png" alt="user-image"
+                        //                     class="rounded wid-50 hei-50">
+                        //             </div>
+                        //             <div class="col">
+                        //                 <h4 class="mb-2 ms-2">
+                        //                     <span class="text-truncate w-100">${row.accounts}</span>
+                        //                 </h4>
+                        //                 <p class="mb-0 text-muted ms-2 f-12">
+                        //                     <span class="text-truncate w-100">${row.email || ''}</span>
+                        //                 </p>
+                        //             </div>
+                        //         </div>
+                        //     `;
+                        // }
                     },
                     {
-                        "data": "type",
-                        "render": function (data) {
-                            return data; // Render type as is
-                        }
+                        data: 'type', name: 'type'
+                        // "data": "type",
+                        // "render": function (data) {
+                        //     return data; // Render type as is
+                        // }
                     },
                     {
-                        "data": "amount",
-                        "render": function (data) {
-                            return data; // Render amount as is
-                        }
+                        data: 'amount', name: 'amount'
+                        // "data": "amount",
+                        // "render": function (data) {
+                        //     return data; // Render amount as is
+                        // }
                     }
                 ],
                 "processing": true,
