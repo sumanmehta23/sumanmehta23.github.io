@@ -320,7 +320,7 @@ class ClientController extends Controller
             $code = $countryCode ? $countryCode->country_code : 'null';
 
             if($country_code != $code){
-                return redirect()->back()->with('error', 'Update failed! No changes were made due to a mismatch between the country and its code');                  
+                return redirect()->back()->with('error', 'Update failed! No changes were made due to a mismatch between the country and its code');
             }
 
             if ($password !== $confirmPassword) {
@@ -525,7 +525,7 @@ class ClientController extends Controller
                 ->where('email', $eid)
                 ->get();
             $ib_details = DB::table('ib1')
-                ->leftJoin('ib_wallet', 'ib1.email', '=', 'ib_wallet.email')
+                ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
                 ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
                 ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
                 ->where('ib1.status', 1)
