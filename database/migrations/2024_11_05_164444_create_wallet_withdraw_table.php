@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignIdFor(\App\Models\ClientWallet::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
             $table->string('withdraw_amount', 100)->nullable();
-            $table->string('withdraw_transaction_fee', 100)->nullable();
             $table->string('withdraw_type', 100)->nullable();
             $table->string('company_bank', 100)->nullable();
             $table->string('client_bank', 100)->nullable();
