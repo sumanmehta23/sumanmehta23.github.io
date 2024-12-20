@@ -21,9 +21,9 @@
             ],
 
         order: [[3, "desc"]],
-        // processing: true,
-        // serverSide: true,
-        // searching: true,
+        processing: true,
+        serverSide: true,
+        searching: true,
         ajax: {
             url: '/admin/getPendingWalletDeposit2',
             type: 'GET',
@@ -79,9 +79,9 @@
             ],
 
         order: [[3, "desc"]],
-        // processing: true,
-        // serverSide: true,
-        // searching: true,
+        processing: true,
+        serverSide: true,
+        searching: true,
         ajax: {
             url: '/admin/getPendingWalletWithdrawal2',
             type: 'GET',
@@ -141,9 +141,9 @@
             ],
 
         order: [[3, "desc"]],
-        // processing: true,
-        // serverSide: true,
-        // searching: true,
+        processing: true,
+        serverSide: true,
+        searching: true,
         ajax: {
             url: '/admin/getPendingTradingDeposit2',
             type: 'GET',
@@ -189,9 +189,9 @@
             ],
 
         order: [[3, "desc"]],
-        // processing: true,
-        // serverSide: true,
-        // searching: true,
+        processing: true,
+        serverSide: true,
+        searching: true,
         ajax: {
             url: '/admin/getPendingTradingWithdrawal2',
             type: 'GET',
@@ -206,7 +206,7 @@
           { data: 'withdraw_type', name: 'withdraw_type' },
           { data: 'withdraw_to', name: 'withdraw_to' },
           {
-            data: 'withdraw_date', name: 'withdraw_date' 
+            data: 'withdraw_date', name: 'withdraw_date'
             // render: function (data, type, row) {
             //   var dateTime = row.withdraw_date.split(' ');
             //   var date = dateTime[0];
