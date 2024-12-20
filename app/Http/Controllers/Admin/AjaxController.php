@@ -212,9 +212,7 @@ class AjaxController extends Controller
         // ini_set('memory_limit', '1024M');
         // ini_set('max_execution_time', 3000);
         $query = User::with([
-            'ib' => function ($query) {
-                $query->select('ib1.id', 'name');
-            },
+            'ib',
             'employee' => function ($query) {
                 $query->select('emplist.id', 'username');
             }
@@ -231,7 +229,7 @@ class AjaxController extends Controller
             'aspnetusers.kyc_verify',
             'aspnetusers.country_code',
         ])->groupBy('aspnetusers.email');
-
+      
         // $query = DB::table('aspnetusers AS ap')
         //     ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
         //     ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
@@ -304,6 +302,12 @@ class AjaxController extends Controller
                 })
                 ->editColumn('ib_email', function ($row) {
                     return $row->getParentIb() ? $row->getParentIb()->email : '-';
+                })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->ib ? $row->ib->status : '';
+                })
+                ->editColumn('ib_group', function ($row) {
+                    return $row->ib ? $row->ib->ib_plan_details_id : '';
                 })
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
