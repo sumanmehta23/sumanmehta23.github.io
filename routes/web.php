@@ -176,6 +176,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
     Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
 
+    Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
+
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
