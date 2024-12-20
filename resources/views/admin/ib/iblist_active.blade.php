@@ -157,9 +157,9 @@
                     }
                 }
             ],
-      // processing: true,
-      // serverSide: true,
-      // searching: true,
+      processing: true,
+      serverSide: true,
+      searching: true,
       ajax: {
           url: '/admin/getIbUsers2',
            type: 'GET',

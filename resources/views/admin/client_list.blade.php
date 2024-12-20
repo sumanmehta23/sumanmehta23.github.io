@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <?php
-    
+
     ?>
     <style>
         .statusToggle,
@@ -604,7 +604,7 @@
                     {
                         data: 'ib',
                         name: 'ib',
-                        orderable: false 
+                        orderable: false
                     },
                     {
                         data: 'user_ib_status',
