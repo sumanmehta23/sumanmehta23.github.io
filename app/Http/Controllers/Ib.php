@@ -146,27 +146,30 @@ class Ib extends Controller
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->ib_plan_details_id;
+        $plan_id = $ib->planDetails->ib_category_id;
 
 
         $ib_email = auth()->user()->email;
-        // dd($plan_id);
+        //  dd($plan_id);
         if ($plan_id) {
-            $ibPlans = IbPlanDetails::where('id', $plan_id)
+            $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
                 ->where('status', 1)
                 ->whereNull('deleted_at')
                 ->get()
                 ->toArray();
             // Prepare the commission structure
+            // dd($ibPlans);
             $ib_acc_plans = [];
             foreach ($ibPlans as $plan) {
                 $ib_acc_plans[$plan['account_type_id']][$plan['level_id']] = [];
+
                 for ($i = 1; $i <= $plan['level_id']; $i++) {
                     $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
                 }
             }
-
+            // dump($ib_acc_plans);
             $referral_code= auth()->user()->ib->referral_code;
+            // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
                 $clientLiveAccs = Account::select('id', 'code', 'user_id', 'account_type_id')
@@ -175,7 +178,7 @@ class Ib extends Controller
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->get();
-
+                    // dd($clientLiveAccs);
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
                     $from = 'September 01,2024';
@@ -193,6 +196,8 @@ class Ib extends Controller
                     $offset = Ib1Commission::where('code', $login)->count();
 
                     $total = $closedOrderHistory;
+                    // dump($login);
+                    // dd($total);
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -270,17 +275,19 @@ class Ib extends Controller
                     ->groupBy('order_id')
                     ->orderByDesc('id')->get();
 
-                    // dd($client_live_accs);
+                    // dump($client_live_accs);
 
 
                 foreach ($client_live_accs as $ca) {
+
                     $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
+                    // dump( $ib_level);
                     // dump($ib_level);
                     // dump($ca->account->account_type_id);
                     // dump($ib_acc_plans);
-                    // dd($ib_level);
+                    // dd($i);
                     $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-
+                    // dd($commission);
                     if ($commission) {
                         $ib_level_name = "IB Level $ib_level - D$i";
                         $ib_wallet = ((float) $commission / 2) * $ca->volume;

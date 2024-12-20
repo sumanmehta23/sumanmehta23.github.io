@@ -136,7 +136,7 @@
                                         <tr>
                                             <th>Group</th>
                                             <th>Plan</th>
-                                            <?php for ($i = 1; $i <= 2; $i++) { ?>
+                                            <?php for ($i = 1; $i <= 3; $i++) { ?>
                                             <?php for ($ii = 1; $ii <= $i; $ii++) { ?>
                                             <th>L<?= $i ?>|D<?= $ii ?></th>
                                             <?php } ?>
@@ -145,37 +145,39 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($plans as $plan)
                                             <tr>
-                                                <td>{{ $plan->accountType->ac_group }}</td>
-                                                <td>{{ $plan->plan->ib_cat_name }}</td>
-                                                @for ($i = 1; $i <= 2; $i++)
-                                                    @php
-                                                        // Fetch the details for the current level
-                                                        $data = DB::table('ib_plan_details')
-                                                            ->where('ib_category_id', $plan->ib_category_id)
-                                                            ->where('account_type_id', $plan->account_type_id)
-                                                            ->where('level_id', $i)
-                                                            ->whereNull('deleted_at')
-                                                            ->first();
-                                                    @endphp
-                                                    @for ($ii = 1; $ii <= $i; $ii++)
+                                                {{-- @foreach ($plans as $plan) --}}
+                                                @if(!empty($plans[0]))
+                                                    <td>{{ $plans[0]->accountType->ac_group }}</td>
+                                                    <td>{{ $plans[0]->plan->ib_cat_name }}</td>
+                                                    @for ($i = 1; $i <= 3; $i++)
                                                         @php
-                                                            $d = 'd' . $ii;
+                                                            // Fetch the details for the current level
+                                                            $data = DB::table('ib_plan_details')
+                                                                ->where('ib_category_id', $plans[0]->ib_category_id)
+                                                                ->where('account_type_id', $plans[0]->account_type_id)
+                                                                ->where('level_id', $i)
+                                                                ->whereNull('deleted_at')
+                                                                ->first();
                                                         @endphp
-                                                        <td>{{ $data->$d ?? '-' }}</td>
+                                                        @for ($ii = 1; $ii <= $i; $ii++)
+                                                            @php
+                                                                $d = 'd' . $ii;
+                                                            @endphp
+                                                            <td>{{ $data->$d ?? '-' }}</td>
+                                                        @endfor
                                                     @endfor
-                                                @endfor
-                                                <td>
-                                                    <button class="btn btn-primary actions"
-                                                        data-href="{{ url('/admin/ibCommissionEdit', [
-                                                            'planId' => ($plan->ib_category_id),
-                                                            'accType' => ($plan->account_type_id)]) }}">
-                                                        <i class="ti ti-edit"></i>
-                                                    </button>
-                                                </td>
+                                                    <td>
+                                                        <button class="btn btn-primary actions"
+                                                            data-href="{{ url('/admin/ibCommissionEdit', [
+                                                                'planId' => ($plans[0]->ib_category_id),
+                                                                'accType' => ($plans[0]->account_type_id)]) }}">
+                                                            <i class="ti ti-edit"></i>
+                                                        </button>
+                                                    </td>
+                                                @endif
+                                                {{-- @endforeach --}}
                                             </tr>
-                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
