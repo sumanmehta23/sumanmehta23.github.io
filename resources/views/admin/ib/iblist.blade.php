@@ -122,10 +122,10 @@
     //   console.log(data.user_id);
       $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
       $("#clientName,#clientEmail").html("");
-      $("#clientName").html(data.name)
+      $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
       $("#client_id").val(data.user_id)
-      $("[name='ib_status']").val(data.status).trigger("change");
+      $("[name='ib_status']").val(data.ib_status).trigger("change");
       $("[name='ib_group']").val(data.acc_type).trigger("change");
       myModal.show();
       // swal.fire({

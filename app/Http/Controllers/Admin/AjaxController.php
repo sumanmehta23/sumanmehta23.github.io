@@ -2148,6 +2148,10 @@ class AjaxController extends Controller
                     return $total_withdrawal;
 
                 })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->status ;
+                })
+
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return "<button class='ibToggle badge btn-sm btn btn-outline-success'>
@@ -2288,6 +2292,9 @@ class AjaxController extends Controller
                 ->addColumn('total_withdrawal', function($row){
                     $total_withdrawal = $row->ibWallet ? $row->ibWallet->sum('ib_withdraw') : '$'+0;
                     return $total_withdrawal;
+                })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->status ;
                 })
                 ->addColumn('date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->created_at));
