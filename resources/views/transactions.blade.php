@@ -238,12 +238,14 @@
                                 $from = 'IB Wallet';
                             }elseif (!empty($history->accountFrom->code)) {
                                 $from = $history->accountFrom->code;
+                            }elseif($history->type == 'Wallet Transfer' && $history->source == 'TDID'){
+                                $from = 'Wallet';
                             } else {
                                 $from = $history->it_from;
                             }
 
                             if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
-                                $to = $history->it_to;
+                                $to = $history->it_to ?? 'Wallet';
                             } else {
                                 $to = !empty($history->accountTo->code) ? $history->accountTo->code : '';
                             }
