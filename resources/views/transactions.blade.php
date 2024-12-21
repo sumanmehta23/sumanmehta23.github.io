@@ -230,7 +230,7 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
-                      {{-- {{ dump($internal_transfer); }} --}}
+                      {{ dump($internal_transfer); }}
                         @php
                             if ($history->type == 'CRM') {
                                 $from = 'CRM';
