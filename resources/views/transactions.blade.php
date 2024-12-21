@@ -230,7 +230,7 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
-                      {{ dump($internal_transfer); }}
+                      {{-- {{ dump($internal_transfer); }} --}}
                         @php
                             if ($history->type == 'CRM') {
                                 $from = 'CRM';
@@ -242,8 +242,8 @@
                                 $from = $history->it_from;
                             }
 
-                            if ($history->source == "TWID" && $history->it_to == null) {
-                                $to = 'Wallet';
+                            if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
+                                $to = $history->it_to;
                             } else {
                                 $to = !empty($history->accountTo->code) ? $history->accountTo->code : '';
                             }
