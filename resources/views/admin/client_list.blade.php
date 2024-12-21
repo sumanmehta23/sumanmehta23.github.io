@@ -818,10 +818,24 @@
                             action: "getClientSwitch",
                             id: clientData.id  // Pass the correct client ID
                         }),
+                        success: function(resp) {
+                            if (resp.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: resp.message,
+                                }).then(() => {
+                                    // Redirect using the URL from the server
+                                    window.location.href = resp.redirectUrl;
+                                });
+                            }
+                        },
                         error: function(xhr) {
-                            const siteUrl = window.location.origin; // Get the base site URL
-                            console.log(siteUrl);
-                            window.location.href = `${siteUrl}/dashboard`;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message || "Can't switch user. Please try again.",
+                            });
                         }
                     });
                 });

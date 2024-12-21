@@ -229,7 +229,8 @@ class AjaxController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Logged in successfully.',
-            ], 500);
+                'redirectUrl' => url('/dashboard'), // Include the redirect URL
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
