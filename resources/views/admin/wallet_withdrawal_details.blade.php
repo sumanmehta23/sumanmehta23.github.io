@@ -14,6 +14,16 @@
         <div class="row">
             <div class="mx-auto col-10">
                 <div class="card custom-card">
+                    <?php
+                        if (($details->status == 0) || ($details->payout_res) != NULL) {
+                            // Decode the JSON string if it's not null or empty
+                            $payout_res = !empty($details->payout_res) ? json_decode($details->payout_res, true) : [];
+                            $message = isset($payout_res['message']) ? $payout_res['message'] : '';
+                            ?>
+                            <div class="card-body">
+                                <span class="fs-14 text-danger"><?php echo htmlspecialchars($message); ?></span>
+                            </div>
+                    <?php } ?>
                     <div class="card-body">
                         <h6 class="card-title fw-medium">WITHDRAW TICKET #{{ $details->id }}</h6>
                         <div class="row">

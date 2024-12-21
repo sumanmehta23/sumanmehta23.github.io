@@ -587,7 +587,8 @@
                 },
                 columns: [{
                         data: 'created_at',
-                        name: 'created_at'
+                        name: 'created_at',
+                        searchable: false
                     },
                     {
                         data: 'user_email',
@@ -604,22 +605,26 @@
                     {
                         data: 'ib',
                         name: 'ib',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'user_ib_status',
                         name: 'user_ib_status',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'rm',
                         name: 'rm',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'action',
                         name: 'action',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'fullname',
@@ -627,7 +632,8 @@
                         visible: false,
                         render: function (data, row, row_data) {
                             return row_data.fullname;
-                        }
+                        },
+                        searchable: false
                     },
                     {
                         data: 'fullemail',
@@ -635,7 +641,8 @@
                         visible: false,
                         render: function (data, row, row_data) {
                             return row_data.email;
-                        }
+                        },
+                        searchable: false
                     },
                     {
                         data: 'ibemail',
@@ -644,7 +651,8 @@
                         render: function (data, row, row_data) {
                             let ib_email = row_data.ib;
                             return ib_email;
-                        }
+                        },
+                        searchable: false
                     },
                     {
                         data: 'ibname',
@@ -653,7 +661,8 @@
                         render: function (data, row, row_data) {
                             let ib_name = row_data.ib_name;
                             return ib_name;
-                        }
+                        },
+                        searchable: false
                     },
                 ],
                 "initComplete": function() {
