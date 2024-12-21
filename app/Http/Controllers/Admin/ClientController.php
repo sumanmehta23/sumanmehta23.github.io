@@ -478,7 +478,7 @@ class ClientController extends Controller
             //     ->selectRaw('SUM(withdraw_amount) as amount')
             //     ->first();
             $total_ww = WalletWithdraw::where('user_id', $eid)
-                ->where('withdraw_type', '!=', 'Internal Transfer')
+                ->where('withdraw_type', 'Internal Transfer')
                 ->where('status', 1)
                 ->selectRaw('SUM(withdraw_amount + withdraw_transaction_fee) as total')
                 ->value('total');
@@ -494,11 +494,11 @@ class ClientController extends Controller
 
 
             $pendingwalletwithdraw = (float)$pending_ww;
-            dump($eid);
-            dump($total_wd);
-            dump($total_ww);
-            dump($pendingwalletwithdraw);
-            dd('ssssssssss');
+            // dump($eid);
+            // dump($total_wd);
+            // dump($total_ww);
+            // dump($pendingwalletwithdraw);
+            // dd('ssssssssss');
 
             $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
             // $total_balance = DB::table('total_balance')
