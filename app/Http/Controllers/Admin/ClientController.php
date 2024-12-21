@@ -494,11 +494,11 @@ class ClientController extends Controller
 
 
             $pendingwalletwithdraw = (float)$pending_ww;
-            dump($eid);
-            dump($total_wd);
-            dump($total_ww);
-            dump($pendingwalletwithdraw);
-            dd('ssssssssss');
+            // dump($eid);
+            // dump($total_wd);
+            // dump($total_ww);
+            // dump($pendingwalletwithdraw);
+            // dd('ssssssssss');
 
             $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
             // $total_balance = DB::table('total_balance')
