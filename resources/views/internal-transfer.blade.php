@@ -113,8 +113,7 @@
                                                     <div class="mt-5 row align-items-center">
                                                         <div class="col-md-6"></div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label" for="exampleFormControlSelect1">Enter
-                                                                Amount</label>
+                                                            <label class="form-label" for="exampleFormControlSelect1">Enter Amount</label>
                                                             <div class="mb-3 input-group">
                                                                 <span class="input-group-text">USD</span>
                                                                 <input type="number" min="1"
