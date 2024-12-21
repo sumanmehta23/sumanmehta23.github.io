@@ -494,6 +494,7 @@ class ClientController extends Controller
 
 
             $pendingwalletwithdraw = (float)$pending_ww;
+            dump($eid);
             dump($total_wd);
             dump($total_ww);
             dump($pendingwalletwithdraw);
