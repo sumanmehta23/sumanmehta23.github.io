@@ -806,41 +806,25 @@
                     editUserModal.show();
                 });
 
-                $('.ajaxDataTable tbody').on('click', '.switchClient', function() {
+                $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
+                    e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
 
                     $.ajax({
-                        url: "/admin/getClientSwitch",  // Update URL to match the route prefix
+                        url: "/admin/getClientSwitch", // Ensure this matches your backend route
                         type: "POST",
-                        cache: false,
                         contentType: "application/json",
                         data: JSON.stringify({
                             action: "getClientSwitch",
-                            id: clientData.id  // Ensure you're sending the correct ID
+                            id: clientData.id  // Pass the correct client ID
                         }),
-                        success: function(resp) {
-                            if (resp.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: resp.message,
-                                }).then(() => {
-                                    location.reload(); // Reload to apply impersonation
-                                });
-                            }
-                        },
                         error: function(xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON.message || "Can't switch user. Please try again.",
-                            });
+                            const siteUrl = window.location.origin; // Get the base site URL
+                            console.log(siteUrl);
+                            window.location.href = `${siteUrl}/dashboard`;
                         }
                     });
-
                 });
-
-
 
 
 

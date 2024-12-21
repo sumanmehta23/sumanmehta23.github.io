@@ -222,18 +222,14 @@ class AjaxController extends Controller
         try {
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
-            // Store the current user's ID in the session for later restoration (if needed)
-            session(['impersonator_id' => Auth::id()]);
-// dd($client);
             // Log in as the new user
             Auth::login($client);
-
-            $request->session()->regenerate();
-            // Set session variables
-            Session::put('clogin', $client->email);
             Session::put('user', $client);
-            $this->recordLoginHistory($client, $request->ip());
-            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
+            // dd('ssss');
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged in successfully.',
+            ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
