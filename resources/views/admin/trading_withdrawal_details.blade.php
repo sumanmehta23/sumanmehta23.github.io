@@ -167,8 +167,8 @@
                                                             <span class="fs-11 text-muted">TRADE ID</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            {{dd($details)}}
-                                                            <span>{{ $details->withdraw_to!=null ? $details->withdrawTo->code : $details->withdraw_type}}</span>
+                                                            {{-- {{dd($details)}} --}}
+                                                            <span>{{ $details->withdraw_to!=null ? $details->withdraw_to : $details->withdraw_type}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
