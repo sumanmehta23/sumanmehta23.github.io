@@ -229,7 +229,7 @@ class AjaxController extends Controller
             'aspnetusers.kyc_verify',
             'aspnetusers.country_code',
         ])->groupBy('aspnetusers.email');
-      
+
         // $query = DB::table('aspnetusers AS ap')
         //     ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
         //     ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
@@ -1613,10 +1613,10 @@ class AjaxController extends Controller
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_to', function($row){
-                    if ($row->withdraw_to) {
-                        $acc = Account::where('id', $row->withdraw_to)->first();
-                    }
-                    return ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type;
+                    // if ($row->withdraw_to) {
+                    //     $acc = Account::where('id', $row->withdraw_to)->first();
+                    // }
+                    return ($row->withdraw_to) ? $row->withdraw_to : $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->withdraw_date));
