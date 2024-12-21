@@ -20,6 +20,9 @@ use App\Http\Controllers\Controller;
 use App\Models\WalletDeposit;
 use Illuminate\Support\Facades\Cache;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+
 class AjaxController extends Controller
 {
     public function __contract()
@@ -205,6 +208,38 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         $results = $query;
         return $results;
+    }
+
+    public function getClientSwitch(Request $request)
+    {
+        // Validate the incoming request
+        $validated = $request->validate([
+            'id' => 'required', // Ensure the ID is valid and exists in the users table
+        ]);
+
+        $clientId = $validated['id'];
+
+        try {
+            // Find the user to impersonate
+            $client = User::findOrFail($clientId);
+            // Store the current user's ID in the session for later restoration (if needed)
+            session(['impersonator_id' => Auth::id()]);
+// dd($client);
+            // Log in as the new user
+            Auth::login($client);
+
+            $request->session()->regenerate();
+            // Set session variables
+            Session::put('clogin', $client->email);
+            Session::put('user', $client);
+            $this->recordLoginHistory($client, $request->ip());
+            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to impersonate the user. Please try again.',
+            ], 500);
+        }
     }
 
     public function getClientList(Request $request)
@@ -420,6 +455,18 @@ class AjaxController extends Controller
                     $html .= "<span class='editClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
                                     <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                </span>
+                              </span>";
+
+                    $html .= "<span class='switchClient' data-enc='{$row->id}'>
+                                <span class='badge text-secondary' data-bs-toggle='tooltip' title='Switch Client'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' class='icon icon-tabler icon-tabler-arrows-shuffle' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                    <path d='M18 4l3 3l-3 3' />
+                                    <path d='M18 20l3 -3l-3 -3' />
+                                    <path d='M3 7h3a4 4 0 0 1 4 4a4 4 0 0 0 4 4h7' />
+                                    <path d='M21 7h-7a4 4 0 0 0 -4 4a4 4 0 0 1 -4 4h-3' />
+                                    </svg>
                                 </span>
                               </span>";
 

@@ -573,6 +573,11 @@
     </script>
     <script>
         $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
             var dTtable = $('#ajaxDatatable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -800,6 +805,44 @@
                     });
                     editUserModal.show();
                 });
+
+                $('.ajaxDataTable tbody').on('click', '.switchClient', function() {
+                    var clientData = dTtable.row($(this).closest("tr")).data();
+
+                    $.ajax({
+                        url: "/admin/getClientSwitch",  // Update URL to match the route prefix
+                        type: "POST",
+                        cache: false,
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            action: "getClientSwitch",
+                            id: clientData.id  // Ensure you're sending the correct ID
+                        }),
+                        success: function(resp) {
+                            if (resp.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: resp.message,
+                                }).then(() => {
+                                    location.reload(); // Reload to apply impersonation
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON.message || "Can't switch user. Please try again.",
+                            });
+                        }
+                    });
+
+                });
+
+
+
+
 
                 $('.ajaxDataTable tbody').off('click', '.statusToggle');
                 $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
