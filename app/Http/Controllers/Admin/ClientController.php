@@ -324,10 +324,11 @@ class ClientController extends Controller
             }
 
             if ($password !== $confirmPassword) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Passwords do not match'
-                ], 400);
+                // return response()->json([
+                //     'status' => 'error',
+                //     'message' => 'Passwords do not match'
+                // ], 400);
+                return redirect()->back()->with('error', 'Passwords do not match');
             }
             $status = 1;
             $emailConfirmed = 1;
