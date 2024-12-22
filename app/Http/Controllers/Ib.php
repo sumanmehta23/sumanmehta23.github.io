@@ -105,6 +105,9 @@ class Ib extends Controller
 
 
                 $ib1_referral = $ib1->referral_code;
+                if(!$ib1_referral){
+                    $ib1_referral = $ib1->email;
+                }
                 User::where(function ($query) use ($ib1_referral) {
                     for ($i = 1; $i <= 15; $i++) {
                         $query->orWhere("ib$i", $ib1_referral);
