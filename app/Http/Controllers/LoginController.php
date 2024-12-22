@@ -206,8 +206,11 @@ class LoginController extends Controller
 
         $userData = [];
 
-        if ($request->has('refercode')) {
-            $refercode = $request->query('refercode');
+        if ($request->has('refercode') || $request->has('referral')) {
+            $refercode = $request->refercode;
+            if(empty($refercode)){
+                $refercode = $request->referral;
+            }
             $referrals = [];
             $nextReferral = $refercode;
 
@@ -238,12 +241,12 @@ class LoginController extends Controller
             }
         }
         $userData['referral'] ='';
-        if($request->has('referral')){
-            $result = Ib1::where(['referral_code'=> $request->referral,'status'=>1])->first();
-            if ($result) {
-                $userData['referral'] = $request->referral;
-            }
-        }
+        // if($request->has('referral')){
+        //     $result = Ib1::where(['referral_code'=> $request->referral,'status'=>1])->first();
+        //     if ($result) {
+        //         $userData['ib1'] = $request->referral;
+        //     }
+        // }
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
