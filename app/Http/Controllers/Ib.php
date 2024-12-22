@@ -184,6 +184,7 @@ class Ib extends Controller
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->get();
+                    info('Total accounts for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($clientLiveAccs) . json_encode($clientLiveAccs->pluck('code')));
                     // dd($clientLiveAccs);
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
