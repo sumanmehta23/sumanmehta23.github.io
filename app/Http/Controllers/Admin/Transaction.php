@@ -254,7 +254,7 @@ class Transaction extends Controller
 
 
                     $payload = [
-                        "profile_id" => env('CRYPTOCHILL_PROFILE_ID'),
+                        "profile_id" => config("services.cryptochill.profileid"),
                         "passthrough" => json_encode(["trans_id" => $did]),
                         "reference_id" => "LQHPRW" . str_pad($transaction->id, 9, '0', STR_PAD_LEFT) . "-" . rand(100, 999),
                         "kind" => $walletNetwork,
@@ -269,11 +269,12 @@ class Transaction extends Controller
                         "request" => "/v1/payouts/",
                         "nonce" => time() * 1000
                     ];
-
+                    // env('CRYPTOCHILL_API_KEY')
+                    // env('CRYPTOCHILL_API_SECRET')
                     $response = Http::withHeaders([
-                        'X-CC-KEY' => env('CRYPTOCHILL_API_KEY'),
+                        'X-CC-KEY' => config('services.cryptochill.key'),
                         'X-CC-PAYLOAD' => base64_encode(json_encode($payload)),
-                        'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), env('CRYPTOCHILL_API_SECRET')),
+                        'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), config('services.cryptochill.secret')),
                     ])->post('https://api.cryptochill.com/v1/payouts/', $payload);
 
                     // Log the response
