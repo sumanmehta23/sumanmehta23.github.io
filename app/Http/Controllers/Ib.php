@@ -358,7 +358,7 @@ class Ib extends Controller
             ->get();
 
         for ($i = 1; $i <= 7; $i++) {
-            $ib_clients[$i] = IbClientList::where("ib$i", auth()->user()->ib->referral_code)->get();
+            $ib_clients[$i] = IbClientList::where("ib$i", $referral_code)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
         info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
