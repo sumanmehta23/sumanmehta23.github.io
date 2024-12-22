@@ -237,7 +237,13 @@ class LoginController extends Controller
                 $userData[$key] = $referralCode;
             }
         }
-
+        $userData['referral'] ='';
+        if($request->has('referral')){
+            $result = Ib1::where('referral_code', $request->refercode)->first();
+            if ($result) {
+                $userData['referral'] = $request->referral;
+            }
+        }
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
@@ -247,7 +253,7 @@ class LoginController extends Controller
         $userData['country_code'] =$request->country_code;
         $userData['number'] =$number;
         $userData['username'] =$request->email;
-        $userData['referral'] ='';
+        
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
         $userData['created_at'] =now();
