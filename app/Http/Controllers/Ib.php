@@ -177,7 +177,7 @@ class Ib extends Controller
             if(!$referral_code){
                 $referral_code = auth()->user()->ib->email;
             }
-            info('Getting accounts for ref code '.$referral_code." for user ".$userId);
+            // info('Getting accounts for ref code '.$referral_code." for user ".$userId);
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
@@ -187,7 +187,7 @@ class Ib extends Controller
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->get();
-                    info('Total accounts for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($clientLiveAccs) . json_encode($clientLiveAccs->pluck('code')));
+                    // info('Total accounts for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($clientLiveAccs) . json_encode($clientLiveAccs->pluck('code')));
                     // dd($clientLiveAccs);
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
@@ -208,7 +208,7 @@ class Ib extends Controller
                     $total = $closedOrderHistory;
                     // dump($login);
                     // dd($total);
-                    info('Getting trades for '.$login);
+                    // info('Getting trades for '.$login);
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -298,7 +298,7 @@ class Ib extends Controller
                     ->orderByDesc('id')->get();
 
                     // dump($client_live_accs);
-                    info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
+                    // info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
 
                 foreach ($client_live_accs as $ca) {
 
@@ -364,7 +364,7 @@ class Ib extends Controller
             $ib_clients[$i] = IbClientList::where("ib$i", $referral_code)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
-        info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
+        // info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
         // dd($ib_wallet);
         return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }
