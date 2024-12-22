@@ -317,7 +317,7 @@ class Transaction extends Controller
                             // Delete total_balance entry
                             TotalBalance::where('id', $transaction->id)->delete();
                         });
-
+                        Log::error("Error Processing Request: " .json_encode([ $responseData]));
                         // Throw an exception with the error message from the response
                         throw new Exception("Error Processing Request: " . $responseData->message);
                     }
