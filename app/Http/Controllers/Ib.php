@@ -152,6 +152,8 @@ class Ib extends Controller
         $ib_email = auth()->user()->email;
         //  dd($plan_id);
         if ($plan_id) {
+            ini_set('max_execution_time', 600);
+            ini_set("memory_limit", "1024M");
             $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
                 ->where('status', 1)
                 ->whereNull('deleted_at')
@@ -201,6 +203,7 @@ class Ib extends Controller
                     $total = $closedOrderHistory;
                     // dump($login);
                     // dd($total);
+                    info('Getting trades for '.$login);
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -252,7 +255,7 @@ class Ib extends Controller
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ];
-                                if(count($ibcommissions) == 100){
+                                if(count($ibcommissions) == 50){
                                     try {
                                         Ib1Commission::insert($ibcommissions);
                                     } catch (Exception $e) {
