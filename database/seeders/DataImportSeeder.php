@@ -47,12 +47,12 @@ class DataImportSeeder extends Seeder
         $this->bonusTransaction();
         $this->clientWallets();
         $this->demoDeposit();
-        $this->ib1(); 
-        $this->ib1_commission();
-        $this->ib1_withdraw();
         $this->ib_categories();
         $this->ib_plans();
         $this->ib_plan_details();
+        $this->ib1(); 
+        $this->ib1_commission();
+        $this->ib1_withdraw();
         $this->ib_wallet();
         $this->kyc_logs();
         $this->loginHistory();
@@ -464,10 +464,7 @@ class DataImportSeeder extends Seeder
             }
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
-            WalletDeposit::updateOrCreate([
-                'user_id' => $deposit['user_id'],
-                'deposted_date' => $deposit['deposted_date'],
-            ], $deposit);
+            WalletDeposit::create($deposit);
         }
     }
     private function walletWithdraw()
