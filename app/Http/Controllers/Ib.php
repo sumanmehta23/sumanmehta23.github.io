@@ -361,6 +361,7 @@ class Ib extends Controller
             $ib_clients[$i] = IbClientList::where("ib$i", auth()->user()->ib->referral_code)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
+        info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
         // dd($ib_wallet);
         return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }
