@@ -12,32 +12,34 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('demoaccount', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('email', 50)->nullable();
-            $table->string('trade_id', 50)->nullable();
+            $table->uuid('id')->primary();
+            $table->string('email')->nullable();
+            $table->string('code', 50)->nullable();
             $table->string('account_type', 55)->nullable();
+            $table->decimal('credit', 15)->nullable()->default(0);
             $table->string('leverage');
             $table->string('currency', 20)->default('USD');
             $table->decimal('Balance', 15)->default(0);
-            $table->decimal('credit', 15)->nullable()->default(0);
-            $table->double('equity', 15, 2)->nullable()->default(0);
+            $table->double('equity')->nullable()->default(0);
             $table->string('tradePlatform', 100)->default('MetaTrader5');
             $table->integer('lotsCompleted')->default(0);
-            $table->double('MarginFree', 15, 2)->default(0);
-            $table->double('MarginLevel', 15, 2)->default(0);
+            $table->double('MarginFree')->default(0);
+            $table->double('MarginLevel')->default(0);
             $table->string('MarginLevelType', 60)->default('ok');
-            $table->double('adj', 10, 4)->default(0);
-            $table->double('deposit', 15, 2)->default(0);
-            $table->double('withdraw', 15, 2)->default(0);
-            $table->double('internal_transfer', 15, 2)->default(0);
-            $table->double('internalDeposit', 15, 2)->default(0);
+            $table->double('adj')->default(0);
+            $table->double('deposit')->default(0);
+            $table->double('withdraw')->default(0);
+            $table->double('internal_transfer')->default(0);
+            $table->double('internalDeposit')->default(0);
             $table->string('trader_pwd', 200)->nullable();
             $table->string('invester_pwd', 200)->nullable();
             $table->string('phone_pwd', 200)->nullable();
-            $table->dateTime('Registered_Date')->useCurrent();
+            $table->dateTime('registered_date')->useCurrent();
             $table->string('status', 50)->default('active');
-            $table->double('bonusDeposit', 15, 2)->default(0);
-            $table->double('wBonusDeposit', 15, 2)->default(0);
+            $table->double('bonusDeposit')->default(0);
+            $table->double('wBonusDeposit')->default(0);
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

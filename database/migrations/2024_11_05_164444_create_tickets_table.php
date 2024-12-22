@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tickets', function (Blueprint $table) {
-            $table->bigInteger('id', true);
+            $table->uuid('id')->primary();
             $table->integer('client_id')->nullable();
             $table->string('ticket_no', 200)->nullable();
             $table->string('subject_name', 200)->nullable();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->mediumText('discription')->nullable();
             $table->dateTime('ticket_open')->nullable();
             $table->dateTime('ticket_close')->nullable();
-            $table->enum('Status', ['Open', 'Closed']);
+            $table->enum('status', ['Open', 'Closed']);
             $table->string('U_Name', 50)->nullable();
             $table->string('U_id', 150)->nullable();
             $table->integer('ticket_type_id')->index('ticket_type_id');

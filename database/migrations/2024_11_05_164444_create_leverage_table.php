@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('leverage', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->integer('account_type_id')->index('account_type_id');
+
+            $table->uuid('id')->primary();
+            $table->uuid('account_type_id')->index('account_type_id');
             $table->string('account_leverage', 100)->nullable();
             $table->dateTime('created_at')->useCurrent();
             $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();

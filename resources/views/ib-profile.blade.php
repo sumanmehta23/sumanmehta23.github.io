@@ -1,15 +1,19 @@
 @extends('layouts.crm.crm')
 @section('styles')
 <link rel="stylesheet" href="/assets1/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
-
+<style>
+    div.dataTables_wrapper div.dataTables_length select{
+        width: 70px;
+    }
+</style>
 @endsection
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
-            <div class="page-header mb-0 pb-0 mt-0 pt-0">
-                <div class="page-block mb-0 pb-0 mt-0 pt-0">
-                    <div class="row align-items-center mb-0 pb-0 mt-0 pt-0">
-                        <div class="col-md-12 mb-0 pb-0 mt-0 pt-0">
+            <div class="pt-0 pb-0 mt-0 mb-0 page-header">
+                <div class="pt-0 pb-0 mt-0 mb-0 page-block">
+                    <div class="pt-0 pb-0 mt-0 mb-0 row align-items-center">
+                        <div class="pt-0 pb-0 mt-0 mb-0 col-md-12">
                             <div class="page-header-title h2">
                                 <h4 class="mb-0">My IB Profile</h4>
                             </div>
@@ -17,11 +21,11 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-0 pb-0 mt-0 pt-0">
-                <div class="col-12 mb-0 pb-0 mt-0 pt-0">
-                    <div class="card mb-0 pb-0 mt-0 pt-0">
-                        <div class="card-body mb-0 pb-0 mt-0 pt-0">
-                            <div class="row mb-0 pb-0 mt-0 pt-0">
+            <div class="pt-0 pb-0 mt-0 mb-0 row">
+                <div class="pt-0 pb-0 mt-0 mb-0 col-12">
+                    <div class="pt-0 pb-0 mt-0 mb-0 card">
+                        <div class="pt-0 pb-0 mt-0 mb-0 card-body">
+                            <div class="pt-0 pb-0 mt-0 mb-0 row">
                                 <ul class="nav nav-tabs profile-tabs" id="myTab" role="tablist">
                                     <li class="nav-item" role="presentation"><a class="nav-link active" id="profile-tab-1"
                                             data-bs-toggle="tab" href="#ib-home" role="tab" aria-selected="true"><i
@@ -35,34 +39,34 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-content mb-0 pb-0 mt-0 pt-0">
-                <div class="tab-pane pt-3 active show mb-0 pb-0 mt-0 pt-0" id="ib-home" role="tabpanel"
+            <div class="pt-0 pb-0 mt-0 mb-0 tab-content">
+                <div class="pt-0 pt-3 pb-0 mt-0 mb-0 tab-pane active show" id="ib-home" role="tabpanel"
                     aria-labelledby="profile-tab-1">
-                    <div class="row mb-0 pb-0 mt-0 pt-0">
-                        <div class="col-lg-9 mb-0 pb-0 mt-0 pt-0">
-                            <div class="card mb-0 pb-0 mt-0 pt-0">
-                                <div class="card-body mb-0 pb-3 mt-0 pt-3">
+                    <div class="pt-0 pb-0 mt-0 mb-0 row">
+                        <div class="pt-0 pb-0 mt-0 mb-0 col-lg-9">
+                            <div class="pt-0 pb-0 mt-0 mb-0 card">
+                                <div class="pt-3 pb-3 mt-0 mb-0 card-body">
                                     <div class="row g-3">
                                         <div class="col-md-6 col-xxl-4">
-                                            <div class="card mb-0">
-                                                <div class="card-body p-3">
-                                                    <div class="d-flex align-items-center justify-content-between gap-1">
-                                                        <div class="d-flex align-items-center gap-1">
+                                            <div class="mb-0 card">
+                                                <div class="p-3 card-body">
+                                                    <div class="gap-1 d-flex align-items-center justify-content-between">
+                                                        <div class="gap-1 d-flex align-items-center">
                                                             <h3 class="mb-0 f-w-500"><?= $ib_clients_total ?></h3>
                                                         </div>
                                                         <div class="avtar avtar-s bg-light-primary"><i
                                                                 class="ti ti-mood-kid f-18"></i></div>
                                                     </div>
-                                                    <p class="mb-0 text-muted d-flex align-items-center gap-2 f-12 mt-3">
+                                                    <p class="gap-2 mt-3 mb-0 text-muted d-flex align-items-center f-12">
                                                         Total Clients </p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-6 col-xxl-4">
-                                            <div class="card mb-0">
-                                                <div class="card-body p-3">
-                                                    <div class="d-flex align-items-center justify-content-between gap-1">
-                                                        <div class="d-flex align-items-center gap-1">
+                                            <div class="mb-0 card">
+                                                <div class="p-3 card-body">
+                                                    <div class="gap-1 d-flex align-items-center justify-content-between">
+                                                        <div class="gap-1 d-flex align-items-center">
                                                             <h5 class="mb-0 f-w-500">$
                                                                 <?= isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00' ?>
                                                             </h5>
@@ -70,17 +74,17 @@
                                                         <div class="avtar avtar-s bg-light-primary"><i
                                                                 class="ti ti-report-money f-18"></i></div>
                                                     </div>
-                                                    <p class="mb-0 text-muted d-flex align-items-center gap-2 f-12 mt-3">
+                                                    <p class="gap-2 mt-3 mb-0 text-muted d-flex align-items-center f-12">
                                                         Generated Commission
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-6 col-xxl-4">
-                                            <div class="card mb-0">
-                                                <div class="card-body p-3">
-                                                    <div class="d-flex align-items-center justify-content-between gap-1">
-                                                        <div class="d-flex align-items-center gap-1">
+                                            <div class="mb-0 card">
+                                                <div class="p-3 card-body">
+                                                    <div class="gap-1 d-flex align-items-center justify-content-between">
+                                                        <div class="gap-1 d-flex align-items-center">
                                                             <h5 class="mb-0 f-w-500">$
                                                                 <?= isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00' ?>
                                                             </h5>
@@ -88,7 +92,7 @@
                                                         <div class="avtar avtar-s bg-light-primary"><i
                                                                 class="ti ti-shield-check f-18"></i></div>
                                                     </div>
-                                                    <p class="mb-0 text-muted d-flex align-items-center gap-2 f-12 mt-3">
+                                                    <p class="gap-2 mt-3 mb-0 text-muted d-flex align-items-center f-12">
                                                         Commission Transferred
                                                     </p>
                                                 </div>
@@ -101,9 +105,9 @@
                         <div class="col-lg-3">
                             <div class="card">
                                 <div class="card-body">
-                                    <div class="row p-1">
+                                    <div class="p-1 row">
                                         <div class="col-12">
-                                            <div class="bg-body p-2 rounded">
+                                            <div class="p-2 rounded bg-body">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0"><span
@@ -113,14 +117,14 @@
                                                             <p class="mb-0">Deposits</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ 0.00</h5>
+                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00' ?></h5>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row p-1">
+                                    <div class="p-1 row">
                                         <div class="col-12">
-                                            <div class="bg-body p-2 rounded">
+                                            <div class="p-2 rounded bg-body">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0"><span
@@ -130,7 +134,7 @@
                                                             <p class="mb-0">Withdrawals</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ 0.00</h5>
+                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00' ?></h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -139,26 +143,26 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row mb-0 pb-0 mt-0 pt-0">
-                        <div class="col-xl-6 col-md-6 mb-0 pb-0 mt-0 pt-0">
+                    <div class="pt-0 pb-0 mt-0 mb-0 row">
+                        <div class="pt-0 pb-0 mt-0 mb-0 col-xl-6 col-md-6">
                             <form method="post" enctype="multipart/form-data">
                                 @csrf
-                                <div class="card mb-0 pb-0 mt-0 pt-0">
+                                <div class="pt-0 pb-0 mt-0 mb-0 card">
                                     <div class="card-body">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <h5 class="mb-0 f-w-500">Transfer My Commission</h5>
-                                            <div class="bg-body p-1 mt-1 rounded">
+                                            <div class="p-1 mt-1 rounded bg-body">
                                                 <div class="mt-1 row align-items-center">
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             $<?= number_format($ib_wallet, 2) ?></h3>
-                                                        <p class="text-warning mb-0 me-2 ms-2"> Transferrable Balance</p>
+                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <hr style="opacity: 0.1;">
-                                        <div class="form"><label class="form-label mt-3"
+                                        <div class="form"><label class="mt-3 form-label"
                                                 for="exampleFormControlSelect1">Select
                                                 Account</label>
                                             <div class="row">
@@ -166,23 +170,20 @@
                         foreach ($live_accs as $acc) {
                       ?>
                                                 <div class="col-lg-6">
-                                                    <div class="border card p-2">
-                                                        <div class="form-check mb-0"><input type="radio" name="tradeId"
+                                                    <div class="p-2 border card">
+                                                        <div class="mb-0 form-check"><input type="radio" name="account"
                                                                 class="form-check-input input-primary"
-                                                                id="<?= $acc->trade_id ?>"
-                                                                value="<?= $acc->trade_id ?>"><label
-                                                                class="form-check-label d-block mb-0"
-                                                                for="<?= $acc->trade_id ?>"><span><span
+                                                                id="<?= $acc->id ?>"
+                                                                value="<?= $acc->id ?>"><label
+                                                                class="mb-0 form-check-label d-block"
+                                                                for="<?= $acc->id ?>"><span><span
                                                                         class="h5 d-block"><span
                                                                             class="float-end badge bg-light-primary f-14 fw-medium">$
-                                                                            <?= $acc->Balance ?></span><span>
+                                                                            <?= $acc->balance ?></span><span>
                                                                             <img src="/assets/images/mt5.png"
                                                                                 class="hei-30">
-                                                                            <?= $acc->trade_id ?></span></span><span
-                                                                        class="text-muted mt-2 mb-0"><span
-                                                                            class="float-end text-muted mt-2 f-12"> Current
-                                                                            Balance
-                                                                        </span></span></span></label></div>
+                                                                            <?= $acc->code ?></span></span><span
+                                                                        class="mt-2 mb-0 text-muted"><span class="mt-2 float-end text-muted f-12"> Current Balance</span></span></span></label></div>
                                                     </div>
                                                 </div>
                                                 <?php }
@@ -198,13 +199,13 @@
                                                 <!---->
                                             </div><label class="form-label" for="exampleFormControlSelect1">Enter
                                                 Amount</label>
-                                            <div class="input-group mb-3"><span class="input-group-text">$</span><input
+                                            <div class="mb-3 input-group"><span class="input-group-text">$</span><input
                                                     type="number" name="amount" max="<?= $ib_wallet ?>"
                                                     class="form-control" required aria-label="Amount (to the nearest dollar)"><span
                                                     class="input-group-text">.00</span>
                                                 <!---->
                                             </div>
-                                            <div class="d-grid mb-5 mt-4"><button class="btn btn-outline-secondary"
+                                            <div class="mt-4 mb-5 d-grid"><button class="btn btn-outline-secondary"
                                                     name="transfer" type="submit"><i
                                                         class="ti ti-shield-check me-2"></i>
                                                     <!----> Process Transfer</button></div>
@@ -212,9 +213,34 @@
                                     </div>
                                 </div>
                             </form>
+                            @if ($errors->any())
+                                <script>
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: "Can't Transfer Commission",
+                                        html: `
+                                            <ul>
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        `
+                                    });
+                                </script>
+                            @endif
+
+                            @if (session('error'))
+                                <script>
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: "{{ session('error') }}",
+                                    });
+                                </script>
+                            @endif
                         </div>
-                        <div class="col-xl-6 col-md-6 mt-0 pt-0">
-                            <div class="card mt-0 pt-0">
+                        <div class="pt-0 mt-0 col-xl-6 col-md-6">
+                            <div class="pt-0 mt-0 card">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <h5 class="mb-0 f-w-500">My Referral Link</h5>
@@ -224,20 +250,35 @@
 
                                     ?>
                                     <hr style="opacity:.1;"><label class="col-form-label col-12 text-lg-start">Your personal referral link is now available! Share it to help new clients sign up and kick-start their trading journey.</label>
-                                    <div class="col-12 mb-4">
+                                    <div class="mb-4 col-12">
                                         {{ session('email') }}
-                                        <div class="input-group mb-2"><input type="text" class="form-control"
+                                        <div class="mb-2 input-group">
+                                            <input type="text" value="{{ $ib->referral_code }}" class="form-control" id="referral-code" placeholder="Generated code will appear here">
+
+                                            <button type="button" class="btn btn-lg btn-primary" id="generate-btn">Generate</button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4 col-12">
+                                        {{ session('email') }}
+                                        <div class="mb-2 input-group"><input type="text" class="form-control"
                                                 id="pc-clipboard-1" placeholder="Type some value to copy"
-                                                value="{{ url('/ib-ref?refercode=' . base64_encode(session('clogin'))) }}"
+                                                value="{{ url('/ib-ref?refercode=' .  $ib->referral_code) }}"
                                                 readonly=""><button class="btn btn-lg btn-primary cb"
                                                 data-clipboard-target="#pc-clipboard-1"><i
-                                                    class="feather icon-copy"></i></button></div>
-                                        <!---->
+                                                class="feather icon-copy"></i></button></div>
+                                    </div>
+                                    <div class="mb-4 col-12">
+                                        <form id="referral-form" action="{{ route('ib-update-referral') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="referral_code" id="hidden-referral-code"  value="{{ $ib->referral_code }}">
+                                            <input type="hidden" name="ib1_id" value="{{ $ib->id }}">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                             <div class="card">
-                                <div class="card-body pb-0">
+                                <div class="pb-0 card-body">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <h4 class="mb-0">Transfer History</h4>
                                         <div class="avtar avtar-s bg-light-primary"><i class="ti ti-list f-18"></i></div>
@@ -260,10 +301,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row mt-2 pb-0">
+                    <div class="pb-0 mt-2 row">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-body pb-0">
+                                <div class="pb-0 card-body">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <h4 class="mb-0">IB Commission History</h4>
                                         <div class="avtar avtar-s bg-light-primary">
@@ -282,7 +323,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($histories as $history)
+                                                {{-- @foreach ($histories as $history)
                                                     <tr>
                                                         <td>
                                                             {{ \Carbon\Carbon::parse($history->created_at)->format('Y-m-d') }}<br>
@@ -292,14 +333,14 @@
                                                             <div class="row align-items-center">
                                                                 <div class="col-auto pe-0">
                                                                     <img src="/assets/images/mt5.png" alt="user-image"
-                                                                        class="wid-50 hei-50 rounded">
+                                                                        class="rounded wid-50 hei-50">
                                                                 </div>
                                                                 <div class="col">
                                                                     <h4 class="mb-2 ms-2">
                                                                         <span
-                                                                            class="text-truncate w-100">{{ $history->trade_id }}</span>
+                                                                            class="text-truncate w-100">{{ $history->code }}</span>
                                                                     </h4>
-                                                                    <p class="text-muted ms-2 f-12 mb-0">
+                                                                    <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $history->remark }}</span>
                                                                     </p>
@@ -309,7 +350,7 @@
                                                         <td>{{ $history->ib_wallet ? 'Commission' : 'Transfer' }}</td>
                                                         <td>{{ $history->ib_wallet ?? $history->ib_withdraw }}</td>
                                                     </tr>
-                                                @endforeach
+                                                @endforeach --}}
                                             </tbody>
                                         </table>
                                     </div>
@@ -318,12 +359,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane pt-3" id="ib-connect" role="tabpanel" aria-labelledby="profile-tab-2">
+                <div class="pt-3 tab-pane" id="ib-connect" role="tabpanel" aria-labelledby="profile-tab-2">
                     <div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="card">
-                                    <div class="card-body p-3">
+                                    <div class="p-3 card-body">
                                         <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
                                             <li class="nav-item" data-target-form="#LEVEL1" role="presentation"><a
                                                     href="/ib-profile#LEVEL1" data-bs-toggle="tab"
@@ -400,12 +441,12 @@
                                                                         <div class="col-auto pe-0"><img
                                                                                 src="/assets/images/ib_avatar.png"
                                                                                 alt="user-image"
-                                                                                class="wid-55 hei-55 rounded"></div>
+                                                                                class="rounded wid-55 hei-55"></div>
                                                                         <div class="col">
                                                                             <h6 class="mb-2"><span
                                                                                     class="text-truncate w-100"><?= $client->fullname ?></span>
                                                                             </h6>
-                                                                            <p class="text-muted f-12 mb-0"><span
+                                                                            <p class="mb-0 text-muted f-12"><span
                                                                                     class="text-truncate w-100"><?= $client->email ?></span>
                                                                             </p>
                                                                         </div>
@@ -479,6 +520,127 @@
             });
         });
 
-        $("#commissionTbl").dataTable();
+        // $(document).ready(function () {
+        //     let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
+
+        //     $("#commissionTbl").DataTable({
+        //         "ajax": {
+        //             "url": "/admin/ajax",
+        //             "type": "GET",
+        //             "data": function (d) {
+        //                 d.action = "getComissionData";
+        //                 d.id = userId;
+        //             },
+        //             "error": function (xhr, status, error) {
+        //                 console.error("Error fetching data:", xhr.responseText || error);
+        //             },
+        //         },
+        //         "columns": [
+        //             { "data": "date", "name": "date" },
+        //             { "data": "accounts", "name": "accounts" },
+        //             { "data": "type", "name": "type" },
+        //             { "data": "amount", "name": "amount" }
+        //         ],
+        //         "processing": true, // Adds a processing indicator
+        //         "serverSide": false, // Set to true if implementing server-side processing
+        //         "order": [[0, "desc"]] // Default sorting by date
+        //     });
+        // });
+
+        $(document).ready(function () {
+            let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
+
+            $("#commissionTbl").DataTable({
+                // "ajax": {
+                //     "url": "/admin/ajax",
+                //     "type": "GET",
+                //     "data": function (d) {
+                //         d.action = "getComissionData2";
+                //         d.id = userId;
+                //     },
+                // },
+                serverSide: true,
+                searching: false,
+                ajax: {
+                    url: '/admin/getComissionData2',
+                    type: 'GET',
+                    data: {'id':userId}, // Ensure this is populated dynamically if needed.
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
+                },
+                "columns": [
+                    {
+                        data: 'date', name: 'date'
+                        // "data": "date",
+                        // "render": function (data, type, row) {
+                        //     // Render date with time in separate lines
+                        //     return `
+                        //         ${data.split(" ")[0]}<br>
+                        //         <small>${data.split(" ")[1]}</small>
+                        //     `;
+                        // }
+                    },
+                    {
+                        data: 'account', name: 'account'
+                        // "data": null, // Combine fields for this column
+                        // "render": function (data, type, row) {
+                        //     return `
+                        //         <div class="row align-items-center">
+                        //             <div class="col-auto pe-0">
+                        //                 <img src="/assets/images/mt5.png" alt="user-image"
+                        //                     class="rounded wid-50 hei-50">
+                        //             </div>
+                        //             <div class="col">
+                        //                 <h4 class="mb-2 ms-2">
+                        //                     <span class="text-truncate w-100">${row.accounts}</span>
+                        //                 </h4>
+                        //                 <p class="mb-0 text-muted ms-2 f-12">
+                        //                     <span class="text-truncate w-100">${row.email || ''}</span>
+                        //                 </p>
+                        //             </div>
+                        //         </div>
+                        //     `;
+                        // }
+                    },
+                    {
+                        data: 'type', name: 'type'
+                        // "data": "type",
+                        // "render": function (data) {
+                        //     return data; // Render type as is
+                        // }
+                    },
+                    {
+                        data: 'amount', name: 'amount'
+                        // "data": "amount",
+                        // "render": function (data) {
+                        //     return data; // Render amount as is
+                        // }
+                    }
+                ],
+                "processing": true,
+                "order": [[0, "desc"]]
+            });
+        });
+
+
+
+
+        function updateReferralLink() {
+            let referralCode = document.getElementById('referral-code').value;
+            let newUrl = "{{ url('/ib-ref?refercode=') }}" + referralCode;
+            document.getElementById('pc-clipboard-1').value = newUrl;
+            document.getElementById('hidden-referral-code').value = referralCode;
+        }
+
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            let referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('referral-code').value = referralCode;
+            updateReferralLink();
+        });
+
+        document.getElementById('referral-code').addEventListener('input', function() {
+            updateReferralLink();
+        });
     </script>
 @endsection

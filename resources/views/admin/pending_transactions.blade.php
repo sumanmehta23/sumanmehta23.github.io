@@ -35,7 +35,7 @@
                                 </li>
                             </ul>
                             <div class="tab-content">
-                                <div class="tab-pane text-muted active show" id="walletdeposit" role="tabpanel">
+                                <div class="tab-pane text-muted  {{ $id === 'wallet_deposit' ? 'active show' : '' }}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletDeposit"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -47,6 +47,10 @@
                                                     <th>Deposit Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -54,7 +58,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="walletwithdrawal" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'wallet_withdrawal' ? 'active show' : '' }}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletWithdrawal"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -62,10 +66,15 @@
                                                 <tr>
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
+                                                    <th>Withdrawal Fee</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -73,14 +82,13 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="tradingdeposit" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'trading_deposit' ? 'active show' : '' }}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingDeposit"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
-
                                                     <th>Account No</th>
                                                     <th>Deposit Amount</th>
                                                     <th>Deposit Type</th>
@@ -88,6 +96,8 @@
                                                     <th>Deposited Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -95,7 +105,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="tab-pane text-muted" id="tradingwithdrawal" role="tabpanel">
+                                <div class="tab-pane text-muted {{ $id === 'trading_withdrawal' ? 'active show' : '' }}" id="tradingwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingWithdrawal"
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
@@ -108,6 +118,8 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

@@ -27,6 +27,10 @@
                     <th>Tot. Withdrawal</th>
                     <th>Status / Action</th>
                     <th>Reg. Date</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Time</th>
                     <!-- <th>Action</th>   -->
                   </tr>
                 </thead>
@@ -57,7 +61,7 @@
           <div class="d-flex align-items-center card-header w-100">
             <div class="me-2">
               <span class="avatar avatar-rounded">
-                <img src="/admin/assets/images/users/user.png" alt="img">
+                <img src="/admin_assets/assets/images/users/user.png" alt="img">
               </span>
             </div>
             <div class="">
@@ -88,7 +92,7 @@
                 <select class="form-select" required name="ib_group" aria-label="Default select example">
                   <option value="" selected>--Plans--</option>
                   <?php foreach ($acc_groups as $gp) { ?>
-                    <option value="<?= $gp->ib_plan_id ?>"><?= $gp->ib_cat_name ?></option>
+                    <option value="<?= $gp->id ?>"><?= $gp->ib_cat_name ?></option>
                   <?php } ?>
                 </select>
               </div>
@@ -115,13 +119,13 @@
     $('.ajaxDataTable tbody tr').off();
     $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
       var data = dTtable.row($(this).closest("tr")).data();
-      // console.log(data);
+    //   console.log(data.user_id);
       $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
       $("#clientName,#clientEmail").html("");
-      $("#clientName").html(data.name)
+      $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
-      $("#client_id").val(data.enc)
-      $("[name='ib_status']").val(data.status).trigger("change");
+      $("#client_id").val(data.user_id)
+      $("[name='ib_status']").val(data.ib_status).trigger("change");
       $("[name='ib_group']").val(data.acc_type).trigger("change");
       myModal.show();
       // swal.fire({
@@ -135,14 +139,37 @@
   $(document).ready(function() {
     window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
       // order: [[0, "desc"]],
-      destroy: true,
-      "ajax": {
-        "url": "/admin/ajax",
-        "type": "GET",
-        data: {
-          action: 'getPendingIbUsers',
+        destroy: true,
+    //   "ajax": {
+    //     "url": "/admin/ajax",
+    //     "type": "GET",
+    //     data: {
+    //       action: 'getPendingIbUsers',
+    //     },
+    //   },
+        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+        buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [6,7,0,2,3,4,8,9] // Updated column indices to match your use case
+                    }
+                }
+            ],
+
+        order: [[3, "desc"]],
+        processing: true,
+        serverSide: true,
+        searching: true,
+        ajax: {
+            url: '/admin/getPendingIbUsers2',
+            type: 'GET',
+            data: {}, // Ensure this is populated dynamically if needed.
+            dataSrc: function(json) {
+                return json.data;
+            }
         },
-      },
       columns: [{
           data: 'id',
           name: 'id'
@@ -150,12 +177,12 @@
         {
           data: 'name',
           name: 'name',
-          render: function(data,row,row_data){
-            var small = "";
-            if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
-            var return_data = "<a href='/admin/client_details?id=" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
-            return return_data;
-          }
+        //   render: function(data,row,row_data){
+        //     var small = "";
+        //     if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
+        //     var return_data = "<a href='/admin/client_details/" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
+        //     return return_data;
+        //   }
         },
         // {
         //   data: 'country',
@@ -176,27 +203,31 @@
         {
           data: 'status',
           name: 'status',
-          render: function(data) {
-            if (data == 1) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-            } else if (data == 2) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-            } else if (data == 0) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-            } else {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-            }
-          }
+        //   render: function(data) {
+        //     if (data == 1) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+        //     } else if (data == 2) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+        //     } else if (data == 0) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+        //     } else {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+        //     }
+        //   }
         },
         {
           data: 'date',
           name: 'date',
-          render: function(data) {
-            var dd = data.split(" ");
-            var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
-            return rend_date;
-          }
-        }
+        //   render: function(data) {
+        //     var dd = data.split(" ");
+        //     var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
+        //     return rend_date;
+        //   }
+        },
+        { data: 'fullname', name: 'fullname', visible: false },
+        { data: 'fullemail', name: 'fullemail', visible: false},
+        { data: 'created_date', name: 'created_date', visible: false},
+        { data: 'created_time', name: 'created_time', visible: false},
         // { data: 'action', name: 'action', orderable: false, searchable: false },
       ]
     });

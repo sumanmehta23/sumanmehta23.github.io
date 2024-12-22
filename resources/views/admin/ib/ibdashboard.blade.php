@@ -112,7 +112,7 @@
                                     <tbody>
 
                                         <?php
-                   
+
                       foreach ($ibPendingTrans as $result) {
                         ?>
                                         <tr>
@@ -128,7 +128,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div><?php echo htmlentities($result->trade_id); ?></div>
+                                                <div><?php echo htmlentities($result->code); ?></div>
                                             </td>
                                             <td>
                                                 <div><?php echo htmlentities($result->transfer_to); ?></div>
@@ -169,7 +169,7 @@
                                     </thead>
                                     <tbody>
                                         <?php
-                   
+
                     if (count($kycpending) > 0) {
                       foreach ($kycpending as $result) {
                         ?>
@@ -193,7 +193,7 @@
                                             </td>
                                             <td>
                                                 <?php
-                            $stats = $result->Status;
+                            $stats = $result->status;
                             if ($stats == 1) {
                               ?>
                                                 <div class="badge btn-sm btn btn-outline-success">Success</div>
@@ -201,14 +201,14 @@
                             if ($stats == 2) { ?>
                                                 <div class="badge btn-sm btn btn-outline-danger">Cancelled</div>
                                                 <?php }
-  
+
                             if ($stats == 0) { ?>
                                                 <div class="badge btn-sm btn btn-outline-warning">Pending</div>
                                                 <?php
                             } ?>
                                             </td>
                                             <td>
-                                                <div> <a href="/admin/client_details.php?id=<?php echo md5($result->email); ?>#tab-info"
+                                                <div> <a href="/admin/client_details/<?php echo ($result->email); ?>#tab-info"
                                                         style="padding: 5px 20px;font-size: 12px;"
                                                         class="btn btn-dark btn-sm">View</a></div>
                                             </td>

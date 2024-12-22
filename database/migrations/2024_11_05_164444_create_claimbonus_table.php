@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('claimbonus', function (Blueprint $table) {
-            $table->bigInteger('indexNo', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('indexNo');
             $table->string('uniqueId', 200)->nullable();
             $table->integer('bonusRdmType')->default(0);
             $table->string('bonusType', 200)->nullable();
@@ -28,6 +29,8 @@ return new class extends Migration
             $table->dateTime('expDate')->nullable();
             $table->integer('expState')->default(0);
             $table->integer('bonusState')->default(0);
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

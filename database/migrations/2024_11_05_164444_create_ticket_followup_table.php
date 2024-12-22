@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_followup', function (Blueprint $table) {
-            $table->integer('id', true)->unique('id');
+            $table->uuid('id')->primary();
             $table->integer('ticket_id')->index('ticket_id');
             $table->text('remarks')->nullable();
             $table->text('attachment')->nullable();

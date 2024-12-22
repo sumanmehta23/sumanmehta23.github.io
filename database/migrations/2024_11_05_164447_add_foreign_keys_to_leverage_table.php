@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('leverage', function (Blueprint $table) {
-            $table->foreign(['account_type_id'], 'leverage_ibfk_1')->references(['ac_index'])->on('account_types')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign(['account_type_id'], 'leverage_ibfk_1')->references(['id'])->on('account_types')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

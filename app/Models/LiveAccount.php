@@ -13,22 +13,27 @@ class LiveAccount extends Model
     protected $fillable = [
         'balance',
         'credit',
-        'MarginFree',
-        'MarginLevel',
+        'margin_free',
+        'margin_level',
         'equity',
         'email',
         'name',
-        'trade_id',
+        'code',
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
         'ib1'
     ];
     public function accountType()
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'ac_index');
+    }
+
+    public function BonusTransaction()
+    {
+        return $this->hasMany(BonusTransaction::class, 'code', 'code');
     }
 }

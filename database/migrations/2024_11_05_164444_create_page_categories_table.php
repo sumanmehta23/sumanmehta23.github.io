@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('page_categories', function (Blueprint $table) {
-            $table->integer('page_category_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('page_category_id');
             $table->string('category_name');
             $table->text('category_desc');
             $table->tinyInteger('is_active');
             $table->integer('order_by');
             $table->integer('created_by');
-            $table->dateTime('created_at')->useCurrentOnUpdate();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

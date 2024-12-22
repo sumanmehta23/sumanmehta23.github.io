@@ -807,5 +807,3 @@ class MTWebAPI
     MTLogger::setWriteDebug($is_write);
     }
   }
-
-?>

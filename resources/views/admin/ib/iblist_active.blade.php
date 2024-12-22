@@ -16,7 +16,7 @@
         <div class="card custom-card">
           <div class="card-body">
             <div class="table-responsive">
-              <table id="tableIbUsers" class="ajaxDataTable table table-bordered text-nowrap w-100">
+              <table id="tableIbUsers" class="table ajaxDataTable table-bordered text-nowrap w-100">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -27,6 +27,10 @@
                     <th>Tot. Withdrawal</th>
                     <th>Status / Action</th>
                     <th>Reg. Date</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Time</th>
                     <!-- <th>Action</th>   -->
                   </tr>
                 </thead>
@@ -44,19 +48,20 @@
 
 <!-- Modal -->
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
-  <div class="modal-dialog  modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form action="#" id="ibRequestForm" method="post">
+        @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
           <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body custom-card card mb-0">
+        <div class="mb-0 modal-body custom-card card">
           <div class="d-flex align-items-center card-header w-100">
             <div class="me-2">
               <span class="avatar avatar-rounded">
-                <img src="/admin/assets/images/users/user.png" alt="img">
+                <img src="/admin_assets/assets/images/users/user.png" alt="img">
               </span>
             </div>
             <div class="">
@@ -67,7 +72,7 @@
           </div>
           <div class="card-body">
             <div class="mb-3 row">
-              <div class="col-lg-4 m-auto">
+              <div class="m-auto col-lg-4">
                 <label class="form-label">IB Request Status</label>
               </div>
               <div class="col-lg-8">
@@ -80,14 +85,14 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-lg-4 m-auto">
+              <div class="m-auto col-lg-4">
                 <label class="form-label">Account Group</label>
               </div>
               <div class="col-lg-8">
                 <select class="form-select" required name="ib_group" aria-label="Default select example">
                   <option value="" selected>--Plans--</option>
                   <?php foreach ($acc_groups as $gp) { ?>
-                    <option value="<?= $gp->ib_plan_id ?>"><?= $gp->ib_cat_name ?></option>
+                    <option value="<?= $gp->id?>"><?= $gp->ib_cat_name ?></option>
                   <?php } ?>
                 </select>
               </div>
@@ -115,13 +120,13 @@
     $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
       var data = dTtable.row($(this).closest("tr")).data();
       // console.log(data);
-      $("#ibRequestForm input,#ibRequestForm select").val("").trigger("change");
+      $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
       $("#clientName,#clientEmail").html("");
-      $("#clientName").html(data.name)
+      $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
-      $("#client_id").val(data.enc)
-      $("[name='ib_status']").val(data.status).trigger("change");
-      $("[name='ib_group']").val(data.acc_type).trigger("change");
+      $("#client_id").val(data.user_id)
+      $("[name='ib_status']").val(data.ib_status).trigger("change");
+      $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
       myModal.show();
       // swal.fire({
       //   icon: "info",
@@ -135,12 +140,33 @@
     window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
       // order: [[0, "desc"]],
       destroy: true,
-      "ajax": {
-        "url": "/admin/ajax",
-        "type": "GET",
-        data: {
-          action: 'getIbUsers',
-        },
+    //   "ajax": {
+    //     "url": "/admin/ajax",
+    //     "type": "GET",
+    //     data: {
+    //       action: 'getIbUsers',
+    //     },
+    //   },
+      dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+      buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [6,7,0,2,3,4,8,9] // Updated column indices to match your use case
+                    }
+                }
+            ],
+      processing: true,
+      serverSide: true,
+      searching: true,
+      ajax: {
+          url: '/admin/getIbUsers2',
+           type: 'GET',
+          data: {}, // Ensure this is populated dynamically if needed.
+          dataSrc: function(json) {
+              return json.data;
+          }
       },
       columns: [{
           data: 'id',
@@ -149,12 +175,12 @@
         {
           data: 'name',
           name: 'name',
-          render: function(data,row,row_data){
-            var small = "";
-            if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
-            var return_data = "<a href='/admin/client_details?id=" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
-            return return_data;
-          }
+        //   render: function(data,row,row_data){
+        //     var small = "";
+        //     if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
+        //     var return_data = "<a href='/admin/client_details/" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
+        //     return return_data;
+        //   }
         },
         // {
         //   data: 'country',
@@ -175,27 +201,31 @@
         {
           data: 'status',
           name: 'status',
-          render: function(data) {
-            if (data == 1) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-            } else if (data == 2) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-            } else if (data == 0) {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-            } else {
-              return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-            }
-          }
+        //   render: function(data) {
+        //     if (data == 1) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+        //     } else if (data == 2) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+        //     } else if (data == 0) {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+        //     } else {
+        //       return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+        //     }
+        //   }
         },
         {
           data: 'date',
           name: 'date',
-          render: function(data) {
-            var dd = data.split(" ");
-            var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
-            return rend_date;
-          }
-        }
+        //   render: function(data) {
+        //     var dd = data.split(" ");
+        //     var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
+        //     return rend_date;
+        //   }
+        },
+        { data: 'fullname', name: 'fullname', visible: false },
+        { data: 'fullemail', name: 'fullemail', visible: false},
+        { data: 'created_date', name: 'created_date', visible: false},
+        { data: 'created_time', name: 'created_time', visible: false},
         // { data: 'action', name: 'action', orderable: false, searchable: false },
       ]
     });

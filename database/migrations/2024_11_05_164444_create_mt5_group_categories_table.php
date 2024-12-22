@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('mt5_group_categories', function (Blueprint $table) {
-            $table->integer('mt5_grp_cat_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('mt5_grp_cat_id');
             $table->string('mt5_grp_cat_name');
             $table->string('mt5_grp_cat_type', 100);
             $table->text('mt5_grp_cat_desc')->nullable();

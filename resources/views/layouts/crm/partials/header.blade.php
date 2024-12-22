@@ -163,7 +163,7 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center w-75">
                                     <div class="flex-shrink-0">
-                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle">
+                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle" style="object-fit: cover">
                                     </div>
                                     <div class="flex-grow-1 ms-3 me-2 w-75">
                                         @auth
@@ -290,26 +290,26 @@
                             <div class="row">
                                 <div class="col-lg-4">
                                     <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
-                                        class="card text-center platform-download">
-                                        <img class="w-100 ps-4 pe-4 pt-3" src="/assets/platform/playstore.png"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png"
                                             alt="Android">
-                                        <span class="pb-3 pt-2">Android</span>
+                                        <span class="pt-2 pb-3">Android</span>
                                     </a>
                                 </div>
                                 <div class="col-lg-4">
                                     <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}"
-                                        class="card text-center platform-download">
-                                        <img class="w-100 ps-4 pe-4 pt-3" src="/assets/platform/appstore.png"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/appstore.png"
                                             alt="Apple iOS">
-                                        <span class="pb-3 pt-2">Apple iOS</span>
+                                        <span class="pt-2 pb-3">Apple iOS</span>
                                     </a>
                                 </div>
                                 <div class="col-lg-4">
                                     <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
-                                        class="card text-center platform-download">
-                                        <img class="w-100 ps-4 pe-4 pt-3" src="/assets/platform/windowslogo.png"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png"
                                             alt="Windows">
-                                        <span class="pb-3 pt-2">Windows</span>
+                                        <span class="pt-2 pb-3">Windows</span>
                                     </a>
                                 </div>
                             </div>
@@ -320,19 +320,19 @@
             <header class="pc-header">
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
-                        {{-- <ul class="list-unstyled">
-                            <li class="pc-h-item pc-sidebar-collapse">
+                        <ul class="list-unstyled">
+                            {{-- <li class="pc-h-item pc-sidebar-collapse">
                                 <a href="/dashboard" class="pc-head-link ms-0" id="sidebar-hide">
                                     <i class="ti ti-menu-2"></i>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li class="pc-h-item pc-sidebar-popup">
-                                <a href="/dashboard" class="pc-head-link ms-0" id="mobile-collapse">
+                                <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
                                     <i class="ti ti-menu-2"></i>
                                 </a>
                             </li>
-                            <li class="dropdown pc-h-item">
-                                <a class="pc-head-link dropdown-toggle arrow-none m-0 trig-drp-search"
+                            {{-- <li class="dropdown pc-h-item">
+                                <a class="m-0 pc-head-link dropdown-toggle arrow-none trig-drp-search"
                                     data-bs-toggle="dropdown" href="/dashboard" role="button"
                                     aria-haspopup="false" aria-expanded="false">
                                     <svg class="pc-icon">
@@ -341,12 +341,12 @@
                                 </a>
                                 <div class="dropdown-menu pc-h-dropdown drp-search">
                                     <form class="px-3 py-2">
-                                        <input type="search" class="form-control border-0 shadow-none"
+                                        <input type="search" class="border-0 shadow-none form-control"
                                             placeholder="Search here. . .">
                                     </form>
                                 </div>
-                            </li>
-                        </ul> --}}
+                            </li> --}}
+                        </ul>
                     </div>
                     <div class="ms-auto">
                         <ul class="list-unstyled">
@@ -389,7 +389,7 @@
                                     <div class="dropdown-body text-wrap header-notification-scroll position-relative"
                                         style="max-height: calc(-215px + 100vh);">
                                         <p class="text-span">Today</p>
-                                        <div class="card mb-2">
+                                        <div class="mb-2 card">
                                             <div class="card-body">
                                                 <div class="d-flex">
                                                     <div class="flex-shrink-0">
@@ -398,9 +398,9 @@
                                                         </svg>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
-                                                        <span class="float-end text-sm text-muted">19 April.
+                                                        <span class="text-sm float-end text-muted">19 April.
                                                             Friday</span>
-                                                        <h5 class="text-body mb-2">We've Upgraded Our Client Portal!
+                                                        <h5 class="mb-2 text-body">We've Upgraded Our Client Portal!
                                                         </h5>
                                                         <p class="mb-0">We're excited to announce that our client
                                                             portal
@@ -415,7 +415,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="text-center py-2"><a href="/dashboard"
+                                    <div class="py-2 text-center"><a href="/dashboard"
                                             class="link-danger">Clear
                                             all
                                             Notifications</a></div>
@@ -427,7 +427,7 @@
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
 
-                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar">
+                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar" style="object-fit: cover">
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
@@ -436,20 +436,20 @@
                                     <div class="dropdown-body">
                                         <div class="profile-notification-scroll position-relative"
                                             style="max-height: calc(-225px + 100vh);">
-                                            <div class="d-flex mb-1">
+                                            <div class="mb-1 d-flex">
                                                 <div class="flex-shrink-0">
                                                     {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image"
                                                         class="user-avtar wid-35"> --}}
-                                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35">
+                                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35" style="object-fit: cover">
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <h6 class="mb-1">{{ ucfirst(session('user')->fullname) }} 🖖</h6>
                                                     <span>{{ session('user')->email }}</span>
                                                 </div>
                                             </div>
-                                            <hr class="border-secondary border-opacity-50">
+                                            <hr class="border-opacity-50 border-secondary">
                                             <div class="card">
-                                                <div class="card-body py-3">
+                                                <div class="py-3 card-body">
                                                     <a href="/user-profile" class="">
                                                         <div class="d-flex align-items-center justify-content-between">
                                                             <h6 class="mb-0 d-inline-flex align-items-center">
@@ -461,8 +461,8 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            <hr class="border-secondary border-opacity-50">
-                                            <div class="d-grid mb-3">
+                                            <hr class="border-opacity-50 border-secondary">
+                                            <div class="mb-3 d-grid">
                                                 <a href="/logout" class="btn btn-primary">
                                                     <svg class="pc-icon me-2">
                                                         <use xlink:href="#custom-logout-1-outline"></use>
@@ -486,9 +486,9 @@
                 </div>
                 {{-- <div class="offcanvas-body">
                     <p class="text-span">Today</p>
-                    <div class="card mb-3">
+                    <div class="mb-3 card">
                         <div class="card-body">
-                            <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                            <div class="flex-wrap gap-2 mb-3 align-items-center d-flex">
                                 <div class="badge bg-light-success f-12">Big News</div>
                                 <p class="mb-0 text-muted">2 min ago</p>
                                 <span class="badge dot bg-warning"></span>
@@ -524,9 +524,9 @@
                     </div>
                     {{-- <div class="offcanvas-body">
                         <p class="text-span">Today</p>
-                        <div class="card mb-3">
+                        <div class="mb-3 card">
                             <div class="card-body">
-                                <div class="align-items-center d-flex flex-wrap gap-2 mb-3">
+                                <div class="flex-wrap gap-2 mb-3 align-items-center d-flex">
                                     <div class="badge bg-light-success f-12">Big News</div>
                                     <p class="mb-0 text-muted">2 min ago</p>
                                     <span class="badge dot bg-warning"></span>

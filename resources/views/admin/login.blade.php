@@ -5,16 +5,16 @@
             <div id="layout-wrapper">
                 <div id="app" class="login-page">
                     <div
-                        class="auth-page-wrapper auth-bg-cover py-5 d-flex justify-content-center align-items-center min-vh-100">
+                        class="py-5 auth-page-wrapper auth-bg-cover d-flex justify-content-center align-items-center min-vh-100">
                         <div class="bg-overlay"></div>
-                        <div class="auth-page-content overflow-hidden pt-lg-5">
+                        <div class="overflow-hidden auth-page-content pt-lg-5">
                             <div class="container">
                                 <div class="row">
                                     <div class="col-lg-12">
-                                        <div class="card overflow-hidden card-bg-fill border-0 card-border-effect-none">
+                                        <div class="overflow-hidden border-0 card card-bg-fill card-border-effect-none">
                                             <div class="row g-0">
                                                 <div class="col-lg-6">
-                                                    <div class="p-lg-5 p-4 auth-one-bg h-100">
+                                                    <div class="p-4 p-lg-5 auth-one-bg h-100">
                                                         <div class="bg-overlay"></div>
                                                         <div class="position-relative h-100 d-flex flex-column">
                                                             <div class="mb-4">
@@ -44,7 +44,7 @@
                                                                             class="bg-primary active"
                                                                             aria-current="true"></button></div>
                                                                     <div
-                                                                        class="carousel-inner text-center text-grey-darken-2 pb-5">
+                                                                        class="pb-5 text-center carousel-inner text-grey-darken-2">
                                                                         <div class="carousel-item">
                                                                             <p class="fs-15 fst-italic">"Welcome to your
                                                                                 gateway for client management, where you can
@@ -73,7 +73,7 @@
                                                 <div class="col-lg-6">
                                                     <form method="POST">
                                                         @csrf <!-- CSRF protection -->
-                                                        <div class="p-lg-5 p-4">
+                                                        <div class="p-4 p-lg-5">
                                                             <div>
                                                                 <h5 class="text-primary">Welcome Back!</h5>
                                                                 <p class="text-muted">Sign in to continue to Staff Portal.
@@ -122,7 +122,7 @@
                                                                         <button class="btn btn-honor w-100 btn-load"
                                                                             disabled style="display: none;">
                                                                             <span class="d-flex align-items-center">
-                                                                                <span class="spinner-border flex-shrink-0"
+                                                                                <span class="flex-shrink-0 spinner-border"
                                                                                     role="status">
                                                                                     <span class="visually-hidden">Logging
                                                                                         In...</span>
@@ -147,7 +147,7 @@
                 </div>
             </div>
         </div>
-        <script src="{{ asset('admin/assets/admin_files/jquery.min.js') }}"></script>
-        <script src="{{ asset('admin/assets/admin_files/sweetalert-2.all.min.js') }}"></script>
+        <script src="{{ asset('admin_assets/assets/admin_files/jquery.min.js') }}"></script>
+        <script src="{{ asset('admin_assets/assets/admin_files/sweetalert-2.all.min.js') }}"></script>
     </body>
 @endsection

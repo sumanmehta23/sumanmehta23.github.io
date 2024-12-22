@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_plan_details', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->integer('ib_plan_id');
+            $table->uuid('id')->primary();
+           
+            $table->foreignIdFor(\App\Models\IbCategory::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignIdFor(\App\Models\AccountType::class)->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('acc_type');
             $table->integer('level_id');
             $table->decimal('d1', 10)->nullable()->default(0);
@@ -33,9 +35,8 @@ return new class extends Migration
             $table->decimal('d15', 10)->nullable()->default(0);
             $table->tinyInteger('status')->default(1);
             $table->string('updated_by');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-            $table->dateTime('deleted_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

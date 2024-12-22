@@ -103,5 +103,3 @@ class MTTradeAnswer
   public $RetCode = '-1';
   public $Ticket = 0;
   }
-
-?>

@@ -30,7 +30,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
-                                    data-enc="{{ md5($details->email) }}" data-email="{{ $details->email }}"
+                                    data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="me-2"><svg xmlns="http://www.w3.org/2000/svg" width="25"
@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-12 updateIb cursor-pointer"
-                                    data-enc="{{ md5($details->email) }}" data-email="{{ $details->email }}"
+                                    data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="me-2"><svg xmlns="http://www.w3.org/2000/svg" width="24"
@@ -173,11 +173,11 @@
                                                             <span class="fs-11 text-muted">PAYMENT STATUS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <?php if ($details->Status == 1) { ?>
+                                                            <?php if ($details->status == 1) { ?>
                                                             <span class="badge bg-success">APPROVED</span>
-                                                            <?php } elseif ($details->Status == 2) { ?>
+                                                            <?php } elseif ($details->status == 2) { ?>
                                                             <span class="badge bg-danger">REJECTED</span>
-                                                            <?php } elseif ($details->Status == 0) { ?>
+                                                            <?php } elseif ($details->status == 0) { ?>
                                                             <span class="badge bg-primary">WAITING FOR APPROVAL</span>
                                                             <?php } ?>
                                                         </div>
@@ -210,7 +210,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <?php if ($details->Status == 0) { ?>
+                                            <?php if ($details->status == 0) { ?>
                                             <td>
                                             </td>
                                             <td>
@@ -233,7 +233,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->AdminRemark }}</span>
+                                                            <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>

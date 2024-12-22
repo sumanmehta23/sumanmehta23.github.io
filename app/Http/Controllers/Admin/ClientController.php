@@ -2,15 +2,34 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Country;
-use App\Models\User;
-use Illuminate\Http\Request;
 use DB;
-use Illuminate\Support\Facades\Session;
-use App\Models\RelationshipManager;
-use App\Services\MailService;
+use App\Models\Ib1;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\IbPlan;
+use App\Models\Account;
+use App\Models\Country;
+use App\Models\UserLog;
+use App\Models\IbWallet;
+use App\Models\Mt5Group;
+use App\Models\KycUpdate;
+use App\Models\IbCategory;
+use App\Models\TicketType;
+use App\Models\AccountType;
+use App\Models\EmployeeList;
 use App\Models\IbClientList;
+use App\Models\TicketStatus;
+use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
+use App\Services\MailService;
+use App\Models\WalletWithdraw;
+use App\Models\ClientBankDetail;
+use App\Models\RelationshipManager;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
 {
@@ -24,9 +43,10 @@ class ClientController extends Controller
 
         // Fetch IB details
         $ib_details = DB::table('ib1')
-            ->select('name', 'email')
+            ->select('name', 'email', 'referral_code')
             ->orderBy('name')
             ->get();
+
 
         // Fetch RM details
         $rm_details = DB::table('emplist as emp')
@@ -38,8 +58,7 @@ class ClientController extends Controller
         $countries = Country::all();
 
         // Fetch Deposits and Withdrawals
-        $trade_deposit = DB::table('trade_deposit')
-            ->where('status', 1)
+        $trade_deposit = TradeDeposit::where('status', 1)
             ->whereNotIn('deposit_type', ['Wallet Transfer'])
             ->sum('deposit_amount');
 
@@ -55,7 +74,10 @@ class ClientController extends Controller
         $wallet_withdrawal = DB::table('wallet_withdraw')
             ->where('status', 1)
             ->sum('withdraw_amount');
-
+        $wallet_withdrawal_fee = DB::table('wallet_withdraw')
+            ->where('status', 1)
+            ->sum('withdraw_transaction_fee');
+        $wallet_withdrawal = $wallet_withdrawal + $wallet_withdrawal_fee;
         // Total Clients & IBs count
         $total_clients = DB::table("aspnetusers")->count();
 
@@ -82,13 +104,13 @@ class ClientController extends Controller
 
         // Account Groups
         $acc_groups = DB::table('ib_plan_details')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plan_details.ib_plan_id')
+            ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
             ->where('ib_plan_details.status', 1)
-            ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.ib_plan_id'))
-            ->groupBy('ib_plan_details.ib_plan_id')
+            ->select(DB::raw('ib_categories.ib_cat_name,ib_plan_details.id,ib_plan_details.ib_category_id'))
+            ->groupBy('ib_plan_details.ib_category_id')
             ->get();
 
-
+        // dd($acc_groups);
 
         return view("admin.client_list", compact(
             'ib_details',
@@ -106,22 +128,25 @@ class ClientController extends Controller
     }
     public function updateRM(Request $request)
     {
-        if ($request->has('rmUpdate') && Session::get('userData.role_id') == 1) {
-            $email = $request->input('user_id');
+        $role = Role::find(Session::get('userData.role_id'));
+
+        if ($request->has('rmUpdate') && $role && $role->name ="Super Admin") {
+            $user_id = $request->input('user_id');
             // $result = DB::table('aspnetusers')
             //     ->select('id')
             //     ->where('email', '=', $email)
             //     ->first();
             // $user_id = $result->id;
             $rm_id = $request->input('rm_id');
-            $exists = RelationshipManager::where('user_id', $email)->count();
+            $exists = RelationshipManager::where('user_id', $user_id)->count();
             if ($exists > 0) {
-                RelationshipManager::where('user_id', $email)->update(['rm_id' => $rm_id]);
+                RelationshipManager::where('user_id', $user_id  )->update(['rm_id' => $rm_id]);
             } else {
-                RelationshipManager::create(['user_id' => $email, 'rm_id' => $rm_id]);
+                RelationshipManager::create(['user_id' => $user_id, 'rm_id' => $rm_id, 'added_by' => Auth::id() ]);
             }
             return redirect()->back()->with('success', 'RM Details Updated');
         }
+        return redirect()->back()->with('success', 'Only Super Admin can update');
     }
 
     public function updateIB(Request $request)
@@ -129,7 +154,7 @@ class ClientController extends Controller
         if ($request->has('ibUpdate')) {
             try {
                 $ibFields = [];
-                $email = $request->input('client_id');
+                $user_id = $request->input('client_id');
 
                 for ($i = 1; $i <= 15; $i++) {
                     $value = $request->input("ib$i");
@@ -142,7 +167,7 @@ class ClientController extends Controller
                     return redirect()->back()->withErrors('Some IB fields contain duplicate values.');
                 } else {
                     $currentValues = DB::table('aspnetusers')
-                        ->whereRaw('md5(email) = ?', [$email])
+                        ->whereRaw('id = ?', [$user_id])
                         ->select('ib1', 'ib2', 'ib3', 'ib4', 'ib5', 'ib6', 'ib7', 'ib8', 'ib9', 'ib10', 'ib11', 'ib12', 'ib13', 'ib14', 'ib15')
                         ->first();
 
@@ -160,13 +185,18 @@ class ClientController extends Controller
 
                     if (!empty($updateFields)) {
                         DB::table('aspnetusers')
-                            ->whereRaw('md5(email) = ?', [$email])
+                            ->whereRaw('id = ?', [$user_id])
                             ->update($updateFields);
+
+                        $user = DB::table('aspnetusers')->where('id', $user_id)->first();
+
                         $this->addToUserLog([
-                            'email' => $email,
+                            'user_id'=> $user_id,
+                            'email' => $user->email,
                             'type' => 'ib',
                             'value' => json_encode($logdata)
                         ]);
+
                         return redirect()->back()->with('success', 'Client IB Details Updated Successfully');
                     } else {
                         return redirect()->back()->with('success', 'No changes were made. Everything is up to date!');
@@ -229,6 +259,7 @@ class ClientController extends Controller
                     if ($lastInsertId) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
+                            'user_id' => $lastInsertId,
                             'email' => $email,
                             'type' => 'client_add',
                             'value' => json_encode($request->except(['addUser', 'password', 'confirm_password']))
@@ -277,14 +308,27 @@ class ClientController extends Controller
             $confirmPassword = $request->input('confirm_password');
             $country = $request->input('country');
             $country_code = $request->input('country_code');
-            $number = $request->input('telephone');
-            $code = $request->input('id');
+            // $number = $request->input('telephone');
+            $number = $request->country_code.$request->telephone;
+            $user_id = $request->input('id');
             $emailNotification = $request->input('email_notification');
+
+            $countryCode = Country::where('country_name', $request->country)
+            ->select('country_code')
+            ->first();
+
+            $code = $countryCode ? $countryCode->country_code : 'null';
+
+            if($country_code != $code){
+                return redirect()->back()->with('error', 'Update failed! No changes were made due to a mismatch between the country and its code');
+            }
+
             if ($password !== $confirmPassword) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Passwords do not match'
-                ], 400);
+                // return response()->json([
+                //     'status' => 'error',
+                //     'message' => 'Passwords do not match'
+                // ], 400);
+                return redirect()->back()->with('error', 'Passwords do not match');
             }
             $status = 1;
             $emailConfirmed = 1;
@@ -292,7 +336,7 @@ class ClientController extends Controller
             try {
                 // Update user in the database
                 $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('md5(email)'), $code)
+                    ->where(DB::raw('id'), $user_id)
                     ->update([
                         'fullname' => $fullname,
                         'password' => $password,
@@ -304,6 +348,7 @@ class ClientController extends Controller
                 // If update is successful
                 if ($affectedRows > 0) {
                     $updateData = [
+                        'user_id' => $user_id,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))
@@ -354,12 +399,15 @@ class ClientController extends Controller
 
     private function addToUserLog($data)
     {
-        DB::table('aspnetusers_log')->insert([
+
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => Session::get('alogin'),
             'type' => $data['type'],
             'value' => $data['value']
         ]);
+
     }
     function add_to_user_log($data)
     {
@@ -372,63 +420,110 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
-        $id = request('id');
-        $user = DB::table('aspnetusers as ap')
-            ->leftJoin('ib1', 'ib1.email', '=', 'ap.email')
-            ->select('ap.*', 'ib1.status as ib_status', 'ib1.acc_type as ib_group')
-            ->where(DB::raw('md5(ap.id)'), $id)
-            ->orWhere(DB::raw('md5(ap.email)'), $id)
-            ->first();
-        $acc_groups = DB::table('ib_plans')
-            ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')
-            ->select('ib_categories.ib_cat_name', 'ib_plans.ib_plan_cat_id', 'ib_plans.ib_plan_id')
-            ->where('ib_plans.status', 1)
-            ->groupBy('ib_plans.ib_plan_cat_id')
+
+        $id = request('userId');
+
+        // $user = DB::table('aspnetusers as ap')
+        //     ->leftJoin('ib1', 'ib1.email', '=', 'ap.email')
+        //     ->select('ap.*', 'ib1.status as ib_status', 'ib1.acc_type as ib_group')
+        //     ->where(DB::raw('ap.id'), $id)
+        //     ->orWhere(DB::raw('ap.email'), $id)
+        //     ->first();
+        $user = User::with('ib')
+            ->where('id', $id)
+            ->firstOrFail();
+        // $acc_groups = DB::table('ib_plans')
+        //     ->leftJoin('ib_categories', 'ib_categories.ib_cat_id', '=', 'ib_plans.ib_plan_cat_id')
+        //     ->select('ib_categories.ib_cat_name', 'ib_plans.ib_plan_cat_id', 'ib_plans.ib_plan_id')
+        //     ->where('ib_plans.status', 1)
+        //     ->groupBy('ib_plans.ib_plan_cat_id')
+        //     ->get();
+        $acc_groups = IBPlan::with('category')
+            ->where('status', 1)
+            ->groupBy('ib_plan_cat_id')
             ->get();
-        $acc_types = DB::table('account_types as ac')
-            ->leftJoin('mt5_groups as m', 'ac.ac_type', '=', 'm.mt5_group_id')
-            ->select('ac.*')
-            ->where('m.mt5_group_type', 'live')
+        // $acc_types = DB::table('account_types as ac')
+        //     ->leftJoin('mt5_groups as m', 'ac.ac_type', '=', 'm.mt5_group_id')
+        //     ->select('ac.*')
+        //     ->where('m.mt5_group_type', 'live')
+        //     ->get();
+        $acc_types = AccountType::with('mt5Group')
+            ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();
         if (!empty($user)) {
-            $eid = $user->email;
+            $eid = $user->id;
             $clients = [];
             for ($i = 1; $i <= 15; $i++) {
-                $foundClients = IbClientList::where("ib$i", $user->email)->get();
+                if($user->ib){
+                    $foundClients = IbClientList::where("ib$i", $user->ib->referral_code)->get();
+                }else{
+                    $foundClients='';
+                }
                 $clients[$i] = $foundClients;
             }
-            $total_wd = DB::table('wallet_deposit')
-                ->where('email', $eid)
-                ->where('deposit_type','!=', 'Internal Transfer')
+            // $total_wd = DB::table('wallet_deposit')
+            //     ->where('email', $eid)
+            //     ->where('deposit_type','!=', 'Internal Transfer')
+            //     ->where('status', 1)
+            //     ->selectRaw('SUM(deposit_amount) as amount')
+            //     ->first();
+            $total_wd = WalletDeposit::where('user_id', $eid)
+                ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
                 ->where('status', 1)
-                ->selectRaw('SUM(deposit_amount) as amount')
-                ->first();
-            $total_ww = DB::table('wallet_withdraw')
-                ->where('email', $eid)
-                ->where('withdraw_type','!=', 'Internal Transfer')
+                ->sum('deposit_amount');
+            // $total_ww = DB::table('wallet_withdraw')
+            //     ->where('email', $eid)
+            //     ->where('withdraw_type','!=', 'Internal Transfer')
+            //     ->where('status', 1)
+            //     ->selectRaw('SUM(withdraw_amount) as amount')
+            //     ->first();
+            $total_ww = WalletWithdraw::where('user_id', $eid)
+                ->where('withdraw_type', 'Internal Transfer')
                 ->where('status', 1)
-                ->selectRaw('SUM(withdraw_amount) as amount')
-                ->first();
-            $pending_ww = DB::table('wallet_withdraw')
-                ->where('email', $eid)
+                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+                ->value('total');
+            // $pending_ww = DB::table('wallet_withdraw')
+            //     ->where('email', $eid)
+            //     ->where('status', 0)
+            //     ->selectRaw('SUM(withdraw_amount) as amount')
+            //     ->first();
+            $pending_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('status', 0)
-                ->selectRaw('SUM(withdraw_amount) as amount')
-                ->first();
-            $pendingwalletwithdraw = (float)$pending_ww->amount;
-            $wallet_balance = (float) $total_wd->amount - (float) $total_ww->amount - $pendingwalletwithdraw;
-            $total_balance = DB::table('total_balance')
-                ->where('email', $eid)
+                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+                ->value('total');
+
+
+            $pendingwalletwithdraw = (float)$pending_ww;
+            // dump($eid);
+            // dump($total_wd);
+            // dump($total_ww);
+            // dump($pendingwalletwithdraw);
+            // dd('ssssssssss');
+
+            $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
+            // $total_balance = DB::table('total_balance')
+            //     ->where('email', $eid)
+            //     ->selectRaw('
+            //         SUM(deposit_amount) as deposit_amount,
+            //         SUM(trading_deposited) as trading_deposited,
+            //         SUM(trading_withdrawal) as trading_withdrawal,
+            //         SUM(withdraw_amount) as withdraw_amount
+            //     ')
+            //     ->first();
+            $total_balance = TotalBalance::where('user_id', $eid)
                 ->selectRaw('
-            SUM(deposit_amount) as deposit_amount,
-            SUM(trading_deposited) as trading_deposited,
-            SUM(trading_withdrawal) as trading_withdrawal,
-            SUM(withdraw_amount) as withdraw_amount
-        ')
+                    SUM(deposit_amount) as deposit_amount,
+                    SUM(trading_deposited) as trading_deposited,
+                    SUM(trading_withdrawal) as trading_withdrawal,
+                    SUM(withdraw_amount) as withdraw_amount')
                 ->first();
-            $live_accounts = DB::table('liveaccount')
-                ->where('email', $eid)
-                ->orderByDesc('id')
+
+            $live_accounts = Account::with('accountType')
+                ->where('user_id', $eid)
+                ->where('demo', false)
+                ->orderBy('id', 'desc')
                 ->get();
+
             $bank_details = DB::table('clientbankdetails')
                 ->where('userId', $eid)
                 ->first();
@@ -436,14 +531,15 @@ class ClientController extends Controller
                 ->where('email', $eid)
                 ->get();
             $ib_details = DB::table('ib1')
-                ->leftJoin('ib_wallet', 'ib1.email', '=', 'ib_wallet.email')
+                ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
                 ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
                 ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
                 ->where('ib1.status', 1)
-                ->where('ib1.email', $eid)
+                ->where('ib1.email', $user->email)
                 ->groupBy('ib1.email')
                 ->havingRaw('COUNT(ib1.email) > 0')
                 ->first();
+
             $rm_details = DB::table('relationship_manager as rm')
                 ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
                 ->select('emp.client_index', 'emp.username', 'rm.*')

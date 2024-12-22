@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('deposittabledemo', function (Blueprint $table) {
-            $table->bigInteger('depositIndex', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('depositIndex');
             $table->integer('orderId')->nullable();
             $table->dateTime('date')->nullable();
             $table->string('gateway', 150)->nullable();

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_service_setting', function (Blueprint $table) {
-            $table->integer('service_id', true);
+            $table->uuid("id")->primary();
+            $table->integer('service_id');
             $table->string('service_name');
         });
     }

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('metatradertradehistorydemo', function (Blueprint $table) {
-            $table->bigInteger('tradeIndex', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('tradeIndex');
             $table->string('closePrice')->nullable();
             $table->bigInteger('closeTime')->nullable();
             $table->bigInteger('openTime')->nullable();

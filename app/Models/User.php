@@ -3,14 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Country;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids;
 
     /**
      * The attributes that are mass assignable.
@@ -18,14 +21,9 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $table = 'aspnetusers';
+
     protected $primaryKey = 'id';
-     protected $fillable = [
-        'email',
-        'password',
-        'email_confirmed',
-        'ib1',
-        'emailToken'
-    ];
+     protected $guarded = [];
 
     public $timestamps = false;
 
@@ -45,4 +43,95 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function BonusTransaction()
+    {
+        return $this->hasMany(BonusTransaction::class);
+    }
+   // Has many live accounts
+   public function liveAccounts()
+   {
+       return $this->hasMany(Account::class)->where('demo', false);
+   }
+
+   // Has many demo accounts
+   public function demoAccounts()
+   {
+       return $this->hasMany(Account::class)->where('demo', true);
+   }
+   public function ib1Commissions()
+    {
+        return $this->hasMany(Ib1Commission::class);
+    }
+    public function ib()
+    {
+        return $this->hasOne(Ib1::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsToMany(
+            EmployeeList::class,
+            'relationship_manager',
+            'user_id',
+            'rm_id'
+        )
+        ->withPivot('added_by');
+    }
+
+    public function getCountry()
+    {
+        return Country::where('country_name', '=', $this->country) 
+            ->first();
+    }
+
+    public function getParentIb()
+    {   
+        if (is_null($this->ib1)) {
+            return null;
+        }
+        
+        return Ib1::where('referral_code', $this->ib1)
+            ->orWhere('referral_code', $this->email)
+            ->first();
+    }
+
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
+    public function wallets()
+    {
+        return $this->hasMany(ClientWallet::class);
+    }
+    public function walletDeposits()
+    {
+        return $this->hasMany(WalletDeposit::class);
+    }
+
+    public function walletWithdraws()
+    {
+        return $this->hasMany(WalletWithdraw::class);
+    }
+    public function countries()
+    {
+        return $this->hasMany(Country::class);
+    }
+    public function getWalletBalanceAttribute()
+    {
+        return Cache::remember("user:{$this->id}:wallet_balance", now()->addMinutes(10), function () {
+            $totalDeposit = WalletDeposit::where('user_id', $this->id)
+                ->where('status', 1)
+                ->sum('deposit_amount');
+
+            $totalWithdraw = WalletWithdraw::where('user_id', $this->id)
+                ->where('status', '<>', 2)
+                ->sum('withdraw_amount');
+            $totalWithdrawFee = WalletWithdraw::where('user_id', $this->id)
+                ->where('status', '<>', 2)
+                ->sum('withdraw_transaction_fee');
+
+            return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);
+        });
+    }
 }

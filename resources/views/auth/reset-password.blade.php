@@ -31,7 +31,7 @@
             <div class="auth-wrapper v3">
                 <div class="auth-form">
                     <div class="auth-header row">
-                        <div class="col my-1">
+                        <div class="col my-1" style="display: flex; justify-content: center; align-items: center;">
                             <a href="{{ url('/login') }}">
                                 <img src="{{ asset($settings['admin_sidebar_logo']) }}" alt="Logo" style="height: 8vh;">
                             </a>

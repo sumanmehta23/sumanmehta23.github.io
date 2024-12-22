@@ -2,7 +2,7 @@
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
-            <div class="page-header mb-0 pb-0">
+            <div class="pb-0 mb-0 page-header">
                 <div class="page-block">
                     <div class="row align-items-center">
                         <div class="col-md-12">
@@ -16,7 +16,7 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-body p-0">
+                        <div class="p-0 card-body">
                             @include('sub_header')
                         </div>
                     </div>
@@ -36,29 +36,29 @@
                                                         <div class="col-md-5">
                                                             <label class="form-label">Select From Account</label>
                                                             @foreach ($liveaccount_details as $acc)
-                                                                <div class="price-check border rounded p-3 my-3">
+                                                                <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="fromAccount"
-                                                                            data-balance="{{ $acc->Balance }}"
+                                                                            data-balance="{{ $acc->balance }}"
                                                                             class="form-check-input input-primary"
-                                                                            id="fA{{ $acc->trade_id }}"
-                                                                            value="{{ $acc->trade_id }}">
+                                                                            id="fA{{ $acc->id }}"
+                                                                            value="{{ $acc->id }}">
                                                                         <label class="form-check-label d-block"
-                                                                            for="fA{{ $acc->trade_id }}">
+                                                                            for="fA{{ $acc->id }}">
                                                                             <span class="row">
                                                                                 <span class="col-6">
-                                                                                    <span class="h4 mb-0 d-block">
+                                                                                    <span class="mb-0 h4 d-block">
                                                                                         <img src="/assets/images/mt5.png"
                                                                                             alt="user-image"
                                                                                             class="user-avtar wid-40">
-                                                                                        {{ $acc->trade_id }}
+                                                                                        {{ $acc->code }}
                                                                                     </span>
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="h4 mb-0 d-block f-w-500">${{ $acc->Balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
                                                                                     <span
-                                                                                        class="text-muted mb-0">Transferable
+                                                                                        class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
                                                                                 </span>
                                                                             </span>
@@ -77,29 +77,29 @@
                                                         <div class="col-md-5">
                                                             <label class="form-label">Select To Account</label>
                                                             @foreach ($liveaccount_details as $acc)
-                                                                <div class="price-check border rounded p-3 my-3">
+                                                                <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="toAccount"
-                                                                            data-balance="{{ $acc->Balance }}"
+                                                                            data-balance="{{ $acc->balance }}"
                                                                             class="form-check-input input-primary"
-                                                                            id="tA{{ $acc->trade_id }}"
-                                                                            value="{{ $acc->trade_id }}">
+                                                                            id="tA{{ $acc->id }}"
+                                                                            value="{{ $acc->id }}">
                                                                         <label class="form-check-label d-block"
-                                                                            for="tA{{ $acc->trade_id }}">
+                                                                            for="tA{{ $acc->id }}">
                                                                             <span class="row">
                                                                                 <span class="col-6">
-                                                                                    <span class="h4 mb-0 d-block">
+                                                                                    <span class="mb-0 h4 d-block">
                                                                                         <img src="/assets/images/mt5.png"
                                                                                             alt="user-image"
                                                                                             class="user-avtar wid-40">
-                                                                                        {{ $acc->trade_id }}
+                                                                                        {{ $acc->code }}
                                                                                     </span>
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="h4 mb-0 d-block f-w-500">${{ $acc->Balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
                                                                                     <span
-                                                                                        class="text-muted mb-0">Transferable
+                                                                                        class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
                                                                                 </span>
                                                                             </span>
@@ -110,19 +110,18 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="row align-items-center mt-5">
+                                                    <div class="mt-5 row align-items-center">
                                                         <div class="col-md-6"></div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label" for="exampleFormControlSelect1">Enter
-                                                                Amount</label>
-                                                            <div class="input-group mb-3">
+                                                            <label class="form-label" for="exampleFormControlSelect1">Enter Amount</label>
+                                                            <div class="mb-3 input-group">
                                                                 <span class="input-group-text">USD</span>
                                                                 <input type="number" min="1"
                                                                     class="form-control transferable_amount"
                                                                     name="transferable_amount" required>
                                                             </div>
                                                             <div class="form-group text-end">
-                                                                <div class="d-grid gap-2 mt-4">
+                                                                <div class="gap-2 mt-4 d-grid">
                                                                     <button class="btn btn-primary" type="submit">
                                                                         <i class="ti ti-archive me-2"></i> Process Transfer
                                                                     </button>

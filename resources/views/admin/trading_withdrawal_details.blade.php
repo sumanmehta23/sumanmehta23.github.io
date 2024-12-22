@@ -30,7 +30,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
-                                    data-enc="{{ md5($details->email) }}" data-email="{{ $details->email }}"
+                                    data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
 
                                     <div class="wideget-user-desc d-flex align-items-center">
@@ -53,7 +53,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-12 updateIb cursor-pointer"
-                                    data-enc="{{ md5($details->email) }}" data-email="{{ $details->email }}"
+                                    data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="me-2"><svg xmlns="http://www.w3.org/2000/svg" width="24"
@@ -113,7 +113,7 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-success-transparent">+</span>
-                                                            <span>${{ $details->total_trading_dp + $details->total_wallet_dp }}</span>
+                                                            <span>${{ @$details->account->tradeDeposits->sum('deposit_amount') }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -126,7 +126,8 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-danger-transparent">-</span>
-                                                            <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span>
+                                                            {{-- <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span> --}}
+                                                            <span>${{@$details->account->tradeWithdrawals->sum('withdrawal_amount')}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -166,7 +167,8 @@
                                                             <span class="fs-11 text-muted">TRADE ID</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->trade_id }}</span>
+                                                            {{-- {{dd($details)}} --}}
+                                                            <span>{{ $details->withdraw_to!=null ? $details->withdraw_to : $details->withdraw_type}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -190,11 +192,11 @@
                                                             <span class="fs-11 text-muted">PAYMENT STATUS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <?php if ($details->Status == 1) { ?>
+                                                            <?php if ($details->status == 1) { ?>
                                                             <span class="badge bg-success">APPROVED</span>
-                                                            <?php } elseif ($details->Status == 2) { ?>
+                                                            <?php } elseif ($details->status == 2) { ?>
                                                             <span class="badge bg-danger">REJECTED</span>
-                                                            <?php } elseif ($details->Status == 0) { ?>
+                                                            <?php } elseif ($details->status == 0) { ?>
                                                             <span class="badge bg-primary">WAITING FOR APPROVAL</span>
                                                             <?php } ?>
                                                         </div>
@@ -205,17 +207,17 @@
                                         <tr>
                                             <td colspan="2">
                                             </td>
-                                            <?php if ($details->Status == 0) { ?>
+                                            <?php if ($details->status == 0) { ?>
                                             <td>
                                             </td>
                                             <td>
                                                 <div class="btn-list ms-auto my-auto">
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->code }})"
                                                         type="button"
                                                         class="btn btn-success btn-space m-1">Approve</button>
                                                     <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->trade_id }})"
+                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
                                                         type="submit"
                                                         class="btn btn-danger btn-space m-1">Reject</button>
                                                 </div>
@@ -228,7 +230,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->AdminRemark }}</span>
+                                                            <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -263,12 +265,13 @@
         @endif
     </div>
     <script>
-        function takeAction(email, amount, status) {
+        function takeAction(code, email, amount, status) {
           Swal.fire({
             title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
             html: `
             <form id="updateTransactionForm" method="post">
               @csrf
+              <input type="hidden" name="code" value="${code}">
               <input type="hidden" name="email" value="${email}">
               <input type="hidden" name="amount" value="${amount}">
               <input type="hidden" name="status" value="${status}">

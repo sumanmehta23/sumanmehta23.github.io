@@ -19,6 +19,10 @@ class IsAdmin
         if (!session('alogin')) {
             return redirect('/admin/login')->with('error','You do not have access to this page.');
         }
+        if (Auth::guard('admin')->check()) {
+            Auth::setDefaultDriver('admin');
+        }
+
         return $next($request);
     }
 }

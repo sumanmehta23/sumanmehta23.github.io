@@ -54,7 +54,7 @@
                             <div class="card-widget">
                                 <h6 class="mb-2">Active Clients</h6>
                                 <h2 class="text-end"><i
-                                        class="icon-size mdi mdi-account-multiple   float-start text-warning text-warning-shadow"></i><span>{{ number_format($total_clients->active_users + $total_clients->inactive_users) }}</span>
+                                        class="icon-size mdi mdi-account-multiple float-start text-warning text-warning-shadow"></i><span>{{ number_format($total_clients->active_users + $total_clients->inactive_users) }}</span>
                                 </h2>
                                 <p class="mb-0">Active Users<span
                                         class="float-end">{{ number_format($total_clients->active_users) }}</span></p>
@@ -74,9 +74,9 @@
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         {{ $pending_wd->counts + $pending_td->counts }}</h2>
-                                    <p class="text-fixed-white mb-0">Pending Deposits</p>
+                                    <p class="mb-0 text-fixed-white">Pending Deposits</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-bank text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-bank text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -87,23 +87,23 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
-                                        {{ $pending_tw->counts + $pending_ww->counts }}</h2>
+                                        {{  $pending_ww->counts }}</h2>
                                     <p class="mb-0 text-fixed-white">Pending Withdraw</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-usd text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-usd text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                    <div class="card  bg-success img-card box-success-shadow">
+                    <div class="card bg-success img-card box-success-shadow">
                         <div class="card-body">
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">{{ $pending_ib->counts }}</h2>
-                                    <p class="text-fixed-white mb-0">Pending IB Requests</p>
+                                    <p class="mb-0 text-fixed-white">Pending IB Requests</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-dollar text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-dollar text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -114,9 +114,9 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">{{ $wallet_users->counts }}</h2>
-                                    <p class="text-fixed-white mb-0">Activated Wallets</p>
+                                    <p class="mb-0 text-fixed-white">Activated Wallets</p>
                                 </div>
-                                <div class="ms-auto"> <i class="ri-wallet-3-fill text-fixed-white fs-30 me-2 mt-2"></i>
+                                <div class="ms-auto"> <i class="mt-2 ri-wallet-3-fill text-fixed-white fs-30 me-2"></i>
                                 </div>
                             </div>
                         </div>
@@ -128,7 +128,7 @@
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
                         <div class="card-header">
-                            <div class="card-title d-flex justify-content-between mb-0 w-100">
+                            <div class="mb-0 card-title d-flex justify-content-between w-100">
                                 <div>
                                     Latest Pending Deposit
                                 </div>
@@ -165,7 +165,7 @@
                                                 <div><?php echo htmlentities($result->id); ?></div>
                                             </td>
                                             <td>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -193,8 +193,8 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <?php if ($result->trade_id == 'email') { ?>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <?php if ($result->code == 'email') { ?>
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -223,14 +223,14 @@
                                                 </a>
                                                 <?php } else { ?>
 
-                                                <a href="/admin/view_account_details?id={{ md5($result->trade_id) }}">
+                                                <a href="{{ route('admin-view-account-details',$result->id) }}">
                                                     <div class="btn btn-toolbar row">
                                                         <div class="col-auto pe-0 ps-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="" style="width: 25px;">
                                                         </div>
                                                         <div class="col">
                                                             <h4 class="mb-2 text-start"><span
-                                                                    class="">{{ $result->trade_id }}</span>
+                                                                    class="">{{ $result->code }}</span>
                                                             </h4>
                                                         </div>
                                                     </div>
@@ -252,24 +252,24 @@
                                                     {{ date('H:i:s', strtotime($result->deposit_date)) }}</div>
                                             <td>
                                                 <div class="mt-sm-1 d-block">
-                                                    <!-- <span class="badge bg-success-transparent rounded-pill text-success p-2 px-3">Shipped</span> -->
+                                                    <!-- <span class="p-2 px-3 badge bg-success-transparent rounded-pill text-success">Shipped</span> -->
                                                     <?php
                               $stats = $result->status;
                               if ($stats == 1) {
                               ?>
                                                     <div
-                                                        class="badge bg-success-transparent text-success p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-success-transparent text-success rounded-pill ">
                                                         Approved</div>
                                                     <?php }
                               if ($stats == 2) { ?>
                                                     <div
-                                                        class="badge bg-danger-transparent text-danger p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-danger-transparent text-danger rounded-pill ">
                                                         Rejected</div>
                                                     <?php }
 
                               if ($stats == 0) { ?>
                                                     <div
-                                                        class="badge bg-primary-transparent text-primary p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-primary-transparent text-primary rounded-pill ">
                                                         Pending</div>
                                                     <?php
                               } ?>
@@ -279,14 +279,14 @@
                                             <td>
                                                 <?php if ($result->TYPE == "wallet") { ?>
                                                 <div>
-                                                    <a href="/admin/wallet_deposit_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
+                                                    <a href="/admin/wallet_deposit_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
                                                 </div>
                                                 <?php } else { ?>
                                                 <div>
-                                                    <a href="/admin/trading_deposit_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
+                                                    <a href="/admin/trading_deposit_details?id=<?php echo htmlentities(($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->deposit_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
@@ -310,7 +310,7 @@
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
                         <div class="card-header">
-                            <div class="card-title d-flex justify-content-between mb-0 w-100">
+                            <div class="mb-0 card-title d-flex justify-content-between w-100">
                                 <div>
                                     Latest Pending Withdrawals
                                 </div>
@@ -347,7 +347,7 @@
                                                 <div><?php echo htmlentities($result->id); ?></div>
                                             </td>
                                             <td>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -376,8 +376,8 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <?php if ($result->trade_id == 'email') { ?>
-                                                <a href="/admin/client_details?id={{ md5($result->email) }}">
+                                                <?php if ($result->code == 'email') { ?>
+                                                <a href="/admin/client_details?id={{ ($result->email) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
@@ -405,14 +405,14 @@
                                                     </div>
                                                 </a>
                                                 <?php } else { ?>
-                                                <a href="/admin/view_account_details?id={{ md5($result->trade_id) }}">
+                                                <a href="{{route('view-account-details',$result->id) }}">
                                                     <div class="btn btn-toolbar row">
                                                         <div class="col-auto pe-0 ps-0"><img src="/assets/images/mt5.png"
                                                                 alt="user-image" class="" style="width: 25px;">
                                                         </div>
                                                         <div class="col">
                                                             <h4 class="mb-2 text-start"><span
-                                                                    class="">{{ $result->trade_id }}</span>
+                                                                    class="">{{ $result->code }}</span>
                                                             </h4>
                                                         </div>
                                                     </div>
@@ -448,18 +448,18 @@
                               if ($stats == 1) {
                               ?>
                                                     <div
-                                                        class="badge bg-success-transparent text-success p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-success-transparent text-success rounded-pill ">
                                                         Success</div>
                                                     <?php }
                               if ($stats == 2) { ?>
                                                     <div
-                                                        class="badge bg-danger-transparent text-danger p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-danger-transparent text-danger rounded-pill ">
                                                         Cancelled</div>
                                                     <?php }
 
                               if ($stats == 0) { ?>
                                                     <div
-                                                        class="badge bg-primary-transparent text-primary p-2 px-3 rounded-pill ">
+                                                        class="p-2 px-3 badge bg-primary-transparent text-primary rounded-pill ">
                                                         Pending</div>
                                                     <?php
                               } ?>
@@ -469,7 +469,7 @@
                                             <td>
                                                 <?php if ($result->type == "trade") { ?>
                                                 <div>
-                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>
@@ -477,7 +477,7 @@
 
                                                 <?php } else { ?>
                                                 <div>
-                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo htmlentities(md5($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
                                                         class="" style="font-size: 13px;padding: 2px 20px;">
                                                         <i class="fe fe-eye fs-14 text-info"></i>
                                                     </a>

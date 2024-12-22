@@ -42,12 +42,14 @@
                                     class="form-control" autofocus name="wallet_name" required></div>
                             {{-- <div class="form-group"><label class="form-label">Select Your Cryptocurrency</label>
                                 <select id="my-select" class="form-control" name="wallet_currency" required>
+                                    <option value="BTC">BTC</option>
                                     <option value="USDT">USDT</option>
                                 </select>
                             </div> --}}
                             <div class="form-group"><label class="form-label">Wallet Network</label>
                                 <select id="my-select" class="form-control" name="wallet_network" required>
-                                    <option value="USDT-TRX">ERC20</option>
+                                    <option value="BTC">BTC</option>
+                                    <option value="ETH_USDT">ERC20</option>
                                     <option value="USDT-TRX">TRC20</option>
                                 </select>
                             </div>

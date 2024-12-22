@@ -14,25 +14,25 @@
     </style>
     <div class="modal fade" id="addUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="addUserLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{route('admin.addUser')}}" id="addUserForm" method="post">
+                <form action="{{ route('admin.addUser') }}" id="addUserForm" method="post">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="addUserLabel">Create User</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Email:</label>
                                 <input type="text" class="form-control" name="email" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Full Name:</label>
                                 <input type="text" class="form-control" name="fullname" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Phone:</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend w-25">
@@ -52,7 +52,7 @@
                                         placeholder="Enter phone number">
                                 </div>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Country:</label>
                                 <select class="form-select" id="country" name="country" required>
                                     <option value="">Select Country</option>
@@ -63,11 +63,11 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Password:</label>
                                 <input type="password" class="form-control" name="password" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Confirm Password:</label>
                                 <input type="password" class="form-control" id="input" name="confirm_password" required>
                             </div>
@@ -82,15 +82,15 @@
     </div>
     <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="editUserLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
-                <form action="{{route('admin.updateUser')}}" id="editUserForm" method="post">
+                <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <input type="hidden" name="id">
                         <div class="row">
                             <div class="col-6">
@@ -162,7 +162,7 @@
 
     <div class="modal fade" id="statusModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="statusModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="statusUpdateForm" method="post">
                     @csrf
@@ -172,7 +172,7 @@
                         <h5 class="modal-title" id="statusModalLabel">Update Status</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -187,7 +187,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">User Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -198,8 +198,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-lg-4 m-auto">
+                            <div class="mb-3 row">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Email Confirmed</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -212,7 +212,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">KYC Verification</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -257,9 +257,9 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">{{ $total_clients }}</h2>
-                                    <p class="text-fixed-white mb-0">Total Clients </p>
+                                    <p class="mb-0 text-fixed-white">Total Clients </p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-users text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-users text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -270,25 +270,25 @@
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white"><?= $total_ib ?></h2>
-                                    <p class="text-fixed-white mb-0">Introducing Brokers</p>
+                                    <p class="mb-0 text-fixed-white">Introducing Brokers</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-user-circle text-fixed-white fs-30 me-2 mt-2"></i>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-user-circle text-fixed-white fs-30 me-2"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div><!-- COL END -->
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                    <div class="card custom-card  bg-success img-card box-success-shadow">
+                    <div class="card custom-card bg-success img-card box-success-shadow">
                         <div class="card-body">
                             <div class="d-flex">
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         $<?= $total_balance->deposit_amount + $total_balance->trading_deposited ?>
                                     </h2>
-                                    <p class="text-fixed-white mb-0">Total Deposit</p>
+                                    <p class="mb-0 text-fixed-white">Total Deposit</p>
                                 </div>
-                                <div class="ms-auto"> <i class="fa fa-credit-card text-fixed-white fs-30 me-2 mt-2"></i>
+                                <div class="ms-auto"> <i class="mt-2 fa fa-credit-card text-fixed-white fs-30 me-2"></i>
                                 </div>
                             </div>
                         </div>
@@ -301,10 +301,10 @@
                                 <div>
                                     <h2 class="mb-0 number-font text-fixed-white">
                                         $<?= $total_balance->withdraw_amount + $total_balance->trading_withdrawal ?></h2>
-                                    <p class="text-fixed-white mb-0">Total Withdraw</p>
+                                    <p class="mb-0 text-fixed-white">Total Withdraw</p>
                                 </div>
                                 <div class="ms-auto"> <i
-                                        class="fa fa-arrow-circle-down text-fixed-white fs-30 me-2 mt-2"></i> </div>
+                                        class="mt-2 fa fa-arrow-circle-down text-fixed-white fs-30 me-2"></i> </div>
                             </div>
                         </div>
                     </div>
@@ -317,7 +317,7 @@
                             <div class="card-title">
                                 Listed Count : {{ $total_clients }}
                             </div>
-                            <?php if (session('userData')['role_id'] == 1) { ?>
+                            <?php if (session('userData')['userRole'] == "Super Admin") { ?>
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                 data-bs-target="#addUserModal">
                                 Add New Client
@@ -326,10 +326,10 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="ajaxDatatable" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-                                            <th>#CID</th>
+
                                             <th>Joined On</th>
                                             <th>Name/Email</th>
                                             <th>Phone</th>
@@ -338,7 +338,9 @@
                                             <th>IB Request</th>
                                             <th>RM</th>
                                             <th>Status / Action</th>
-                                            <!-- <th>Actions</th> -->
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>IB Name/ Email</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -354,7 +356,7 @@
     <!-- Modal -->
     <div class="modal fade" id="updateIbModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="updateIbModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="{{ route('admin.updateIB') }}" id="ibUpdateForm" method="post">
                     @csrf
@@ -363,7 +365,7 @@
                         <h5 class="modal-title" id="updateIbModalLabel">Update IB</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0" style="max-height:500px;overflow-y: auto;">
+                    <div class="mb-0 modal-body custom-card card" style="max-height:500px;overflow-y: auto;">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -384,7 +386,8 @@
                                         name="ib<?= $i ?>" disabled>
                                         <option value="" selected>--Select--</option>
                                         <?php foreach ($ib_details as $ib) { ?>
-                                        <option value="<?php echo $ib->email; ?>"><?php echo $ib->name; ?></option>
+                                        <option value="<?php echo isset($ib->referral_code) && !empty($ib->referral_code) ? $ib->referral_code : $ib->email; ?>">
+                                            <?php echo $ib->name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -402,16 +405,16 @@
     </div>
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="ibRequestForm" method="post">
-                     @csrf
+                    @csrf
                     <input type="hidden" name="client_id" id="client_id" value="">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -426,7 +429,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">IB Request Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -440,7 +443,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">IB Plan</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -448,7 +451,7 @@
                                         aria-label="Default select example">
                                         <option value="" selected>--Plans--</option>
                                         <?php foreach ($acc_groups as $gp) { ?>
-                                        <option value="<?= $gp->ib_plan_id ?>"><?= $gp->ib_cat_name ?></option>
+                                        <option value="<?= $gp->id ?>"><?= $gp->ib_cat_name ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -465,7 +468,7 @@
     </div>
     <div class="modal fade" id="rmModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="rmModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.updateRM') }}" id="rmRequestForm" method="post">
                     @csrf
@@ -474,7 +477,7 @@
                         <h5 class="modal-title" id="rmModalLabel">Assign/Reassign RM</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
                             <div class="me-2">
                                 <span class="avatar avatar-rounded">
@@ -489,7 +492,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Relationship Manager</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -565,344 +568,372 @@
         // $("#ibModal").modal();
         function dTSelection() {
             // alert("Init");
-            $('.ajaxDataTable tbody tr').off();
-            $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#clientName,#clientEmail").html("");
-                $("#clientName").html(data.fullname)
-                $("#clientEmail").html(data.email)
-                $("#client_id").val(data.enc)
-                $("[name='ib_status']").val(data.ib_status).trigger("change");
-                $("[name='ib_group']").val(data.ib_group).trigger("change");
-                myModal.show();
-                // swal.fire({
-                //   icon: "info",
-                //   title: "IB Status ==> " + data.ib_status
-                // });
 
-            });
-            $('.ajaxDataTable tbody').on('click', '.editClient', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    cache: false,
-                    data: {
-                        "action": "getClientDetails",
-                        "id": data.enc
-                    },
-                    success: function(response) {
-                        let resp = JSON.parse(response);
-                        $.each(resp, function(key, value) {
-                            console.log(key, value);
-                            $('#editUserForm [name="' + key + '"]').val(value);
-                        });
-                        $('#editUserForm [name="country_code"]').trigger('change');
-                    }
-                });
-                editUserModal.show();
-            });
-            $('.ajaxDataTable tbody').on('click', '.updateIb', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $(".clientName,.clientEmail,.client_id").html("");
-                $(".clientName").html(data.fullname);
-                $(".clientEmail").html(data.email);
-                $(".client_id").val(data.enc);
-                $('#ibUpdateForm select').each(function() {
-                    this.selectedIndex = 0;
-                });
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    cache: false,
-                    data: {
-                        "action": "getIbList",
-                        "id": data.enc
-                    },
-                    success: function(response) {
-                        var ibValues = JSON.parse(response);
-                        $('.ib-select').val(null).trigger('change');
-                        $.each(ibValues, function(key, value) {
-                            if ((value != "noIB" && value != "" && value != null) || key ==
-                                'ib1') {
-                                if (value == 'noIB') {
-                                    value = '';
-                                }
-                                $('#ibUpdateForm select[name="' + key + '"]').prop('disabled',
-                                    false);
-                                $('#ibUpdateForm select[name="' + key + '"]').val(value)
-                                    .trigger('change');
-                            }
-                        })
-                    }
-                });
-                updateIbModal.show();
-            });
-            $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#userName,#userEmail").html("");
-                $("#userName").html(data.fullname);
-                $("#userEmail").html(data.email);
-                $("#user_id").val(data.enc);
-
-                $("#user_status").prop("checked", data.status == 1);
-                $("#email_status").prop("checked", data.email_confirmed == 1);
-                $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
-                statusModal.show();
-            });
-            $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                $("#customerName,#customerEmail").html("");
-                $("#customerName").html(data.fullname);
-                $("#customerEmail").html(data.email);
-                $("#customer_id").val(data.email);
-
-                $.ajax({
-                    url: "/admin/ajax",
-                    type: "GET",
-                    data: {
-                        action: 'getRMbyGroup',
-                        "id": data.enc
-                    },
-                    success: function(response) {
-                        var userGroupIds = JSON.parse(response);
-                        var defaultOption = $('<option></option>').val('').text('--Select--').attr(
-                            'selected', 'selected');
-                        $('#group_rm_list').html(defaultOption);
-                        $.each(userGroupIds, function(index, option) {
-                            var $option = $('<option></option>').val(option.email).text(
-                                option
-                                .username);
-                            if (option.email === data.rmid) {
-                                $option.attr('selected', 'selected');
-                            }
-                            $('#group_rm_list').append($option);
-                        });
-                    }
-                });
-
-                rmModal.show();
-            });
-            $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
-                var data = dTtable.row($(this).closest("tr")).data();
-                location.href = "/admin/client_details?id=" + data.enc_id;
-            });
         }
     </script>
     <script>
-        window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable({
-            dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                'excel'
-            ],
-            order: [
-                [0, "desc"]
-            ],
-            "ajax": {
-                "url": "/admin/ajax",
-                "type": "GET",
-                data: {
-                    action: 'getClientList',
-                },
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-                {
-                    data: 'created_at',
-                    name: 'created_at',
-                    render: function(data, type, row) {
-                        var return_data = "<div class='d-grid'><div class='date'>" + row.created_date +
-                            "</div><div class='time text-muted'>" + row.created_time + "</div></div>";
-                        return return_data;
-                    }
-                },
-                {
-                    data: 'email',
-                    name: 'email',
-                    render: function(data, row, row_data) {
-                        var return_data = "<a href='/admin/client_details?id=" + row_data.enc_id +
-                            "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" +
-                            row_data.fullname +
-                            "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data
-                            .email + "</span></div></div></div></a>";
-                        return return_data;
-                    }
-                },
-                {
-                    data: 'phone',
-                    name: 'phone'
-                },
-                {
-                    data: 'country',
-                    name: 'country',
-                    render: function(data, row, row_data) {
-                        if (data) {
-                            return '<span class="fi fis fi-' + data.toLowerCase() + ' me-2"></span>' + data;
-                        } else {
-                            return "-";
-                        }
-                    }
-                },
-                {
-                    data: 'ib',
-                    name: 'ib',
-                    render: function(data, row, row_data) {
-                        let ib_email = row_data.ib;
-                        let ib_name = row_data.ib_name;
-                        let svg =
-                            "<svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z' /><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z' /><path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707' /></svg>";
-                        if (data === '' || data == null || data == 'noIB') {
-                            ib_email = "";
-                            ib_name = "noIB";
-                            svg = '';
-                        }
-                        return "<div class='updateIb cursor-pointer d-flex align-items-center'><div class='me-2'>" +
-                            svg + "</div><div><div class='lh-1'><span>" + ib_name +
-                            "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + ib_email +
-                            "</span></div></div></div></a>";
-
-                    }
-                    // render: function (data, row, row_data) {
-                    // if (data === '' || data == null || data == 'noIB') {
-                    //   return '<span class="updateIb btn-sm btn btn-outline-dark cursor-pointer">noIB</span>';
-                    // } else {
-                    //   return '<span class="updateIb cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="28" color="#000000" class="tabler-icon tabler-icon-user-square-rounded"><path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path><path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05"></path></svg>'+data+'</span>';
-                    // }
-                    // }
-                },
-                {
-                    data: 'ib_status',
-                    name: 'ib_status',
-                    render: function(data) {
-                        if (data == 1) {
-                            return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-                        } else if (data == 2) {
-                            return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-                        } else if (data == 0) {
-                            return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-                        } else {
-                            return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-                        }
-                    }
-                },
-                {
-                    data: 'rm',
-                    name: 'rm',
-                    render: function(data, row, row_data) {
-                        let html = '';
-                        var roleId = <?php echo json_encode(session('userData')['role_id']); ?>;
-                        if (row_data.rmid == "") {
-                            html = '<button class="' + (roleId == 1 ? 'rmToggle ' : '') +
-                                'badge  btn-sm btn btn-outline-dark">RM Not Mapped</button>';
-                        } else {
-                            html = '<span class="' + (roleId == 1 ? 'rmToggle ' : '') +
-                                ' text-primary"> <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan"><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg>' +
-                                row_data.rm_id + '</span>';
-                        }
-                        return html;
-                    }
-                },
-                // {
-                //   data: 'total_deposit',
-                //   name: 'total_deposit'
-                // },
-                // {
-                //   data: 'total_withdraw',
-                //   name: 'total_withdraw'
-                // },
-                {
-                    data: 'status',
-                    name: 'status',
-                    render: function(data, row, row_data) {
-                        let html = '';
-                        var success = '';
-                        if (parseInt(row_data.kyc_verify) >= 1) {
-                            if(row_data.status == 0){
-                                success = 'bg-success';
-                            }else{
-                                success = 'bg-success text-white';
-                            }
-                        }
-                        html +='<span class="statusToggle" data-status="' + row_data.status + '">' + (
-                            row_data.status == 0 ? '<span class="badge text-danger ' + success +
-                            ' " data-bs-toggle="tooltip" title="Inactive User"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan"><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg></span>' :
-                            (row_data.status == 1 ? '<span class="badge text-success ' + success +
-                                '" data-bs-toggle="tooltip" title="Active User"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan" style=""><path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path><path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path></svg></span>' :
-                                "")) + '</span>';
-                        html += '<span class="statusToggle" data-status="' + row_data.email_confirmed +
-                            '">' + (row_data.email_confirmed == 0 ?
-                                '<span class="badge text-danger" data-bs-toggle="tooltip" title="Email Not Verified"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25"  class="tabler-icon tabler-icon-mail-x"><path d="M13.5 19h-8.5a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"></path><path d="M3 7l9 6l9 -6"></path><path d="M22 22l-5 -5"></path><path d="M17 22l5 -5"></path></svg></span>' :
-                                (row_data.email_confirmed == 1 ?
-                                    '<span class="badge text-success" data-bs-toggle="tooltip" title="Email Verified"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" color="#81C784" class="tabler-icon tabler-icon-mail-check"><path d="M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"></path><path d="M3 7l9 6l9 -6"></path><path d="M15 19l2 2l4 -4"></path></svg></span>' :
-                                    "")) + "</span>";
-                        html += '<span class="viewClient" data-enc="' + row_data.enc_id +
-                            '"><span class="badge text-danger" data-bs-toggle="tooltip" title="View Client"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg></span></span>';
-                        html += '<span class="editClient" data-enc="' + row_data.enc +
-                            '"><span class="badge text-danger" data-bs-toggle="tooltip" title="Edit Client"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg></span></span>';
-                        return html;
-                    }
-                },
-                // {
-                //   data: 'action',
-                //   name: 'action',
-                //   orderable: false,
-                //   searchable: false
-                // },
-            ],
-            initComplete: function() {
-                var needs = [2, 5];
-                this.api()
-                    .columns()
-                    .every(function(index) {
-
-                        if (needs.indexOf(index) == -1) {
-                            return false;
-                        }
-                        let column = this;
-                        let title = column.header().textContent;
-
-                        // Create input element
-                        let input = document.createElement('input');
-                        input.placeholder = title;
-                        column.header().replaceChildren(input);
-
-                        // Event listener for user input
-                        input.addEventListener('keyup', () => {
-                            if (column.search() !== this.value) {
-                                column.search(input.value).draw();
-                            }
-                        });
-                    });
-            }
-        });
-        $("#statusUpdateForm").submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: "/admin/ajax",
-                type: "POST",
-                cache: false,
-                data: $("#statusUpdateForm").serialize(),
-                success: function(response) {
-                    let resp=JSON.parse(response);
-                    if (resp.success==true) {
-                        swal.fire({
-                            icon: "success",
-                            title: "Status Successfully Updated",
-                        }).then((val) => {
-                            location.reload();
-                        });
-                    } else {
-                        swal.fire({
-                            icon: "error",
-                            title: "Something went wrong.",
-                            text: "Please try again or contact support."
-                        }).then((val) => {
-                            location.reload();
-                        });
-                    }
+        $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
+            });
+            var dTtable = $('#ajaxDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                searching: true,
+                ajax: {
+                    url: '/admin/getClientList',
+                    type: 'GET',
+                    data: {},
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
+                },
+                columns: [{
+                        data: 'created_at',
+                        name: 'created_at',
+                        searchable: false
+                    },
+                    {
+                        data: 'user_email',
+                        name: 'fullname'
+                    },
+                    {
+                        data: 'phone',
+                        name: 'number'
+                    },
+                    {
+                        data: 'user_country',
+                        name: 'country'
+                    },
+                    {
+                        data: 'ib',
+                        name: 'ib',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'user_ib_status',
+                        name: 'user_ib_status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'rm',
+                        name: 'rm',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'fullname',
+                        name: 'fullname',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            return row_data.fullname;
+                        },
+                        searchable: false
+                    },
+                    {
+                        data: 'fullemail',
+                        name: 'fullemail',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            return row_data.email;
+                        },
+                        searchable: false
+                    },
+                    {
+                        data: 'ibemail',
+                        name: 'ibemail',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            let ib_email = row_data.ib;
+                            return ib_email;
+                        },
+                        searchable: false
+                    },
+                    {
+                        data: 'ibname',
+                        name: 'ibname',
+                        visible: false,
+                        render: function (data, row, row_data) {
+                            let ib_name = row_data.ib_name;
+                            return ib_name;
+                        },
+                        searchable: false
+                    },
+                ],
+                "initComplete": function() {
+                    var needs = [2];
+                    this.api()
+                        .columns()
+                        .every(function(index) {
+                            if (needs.indexOf(index) == -1) {
+                                return false;
+                            }
+                            let column = this;
+                            let title = column.header().textContent;
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            column.header().replaceChildren(input);
+
+                            input.addEventListener('keyup', () => {
+                                if (column.search() !== this.value) {
+                                    column.search(input.value).draw();
+                                }
+                            });
+                        });
+                },
+                "rowCallback": function(row, data) {
+
+                },
+
+                "drawCallback": function(settings) {
+
+                },
+                order: [
+                    [0, "desc"]
+                ],
+                lengthChange: true,
+                pageLength: 10,
+                lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
+                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        exportOptions: {
+                            columns: [0,8,9,10,2,3] // Exclude the `Name/Email` column (index 2)
+                        }
+                    }
+                ],
+            })
+
+            dTtable.on('draw', function() {
+
+                $('.ajaxDataTable tbody').off('click', '.updateIb');
+                $('.ajaxDataTable tbody').on('click', '.updateIb', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $(".clientName,.clientEmail,.client_id").html("");
+                    $(".clientName").html(data.fullname);
+                    $(".clientEmail").html(data.email);
+                    $(".client_id").val(data.id);
+                    $('#ibUpdateForm select').each(function() {
+                        this.selectedIndex = 0;
+                    });
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        cache: false,
+                        data: {
+                            "action": "getIbList",
+                            "id": data.id
+                        },
+                        success: function(response) {
+                            // var ibValues = JSON.parse(response);
+                            $('.ib-select').val(null).trigger('change');
+                            $.each(response, function(key, value) {
+                                if ((value != "" && value != null) || key ==
+                                    'ib1') {
+                                    if (value == 'noIB') {
+                                        value = '';
+                                    }
+                                    $('#ibUpdateForm select[name="' + key +
+                                        '"]').prop(
+                                        'disabled',
+                                        false);
+                                    $('#ibUpdateForm select[name="' + key +
+                                            '"]').val(value)
+                                        .trigger('change');
+                                }
+                            })
+                        }
+                    });
+                    updateIbModal.show();
+                });
+
+                $('.ajaxDataTable tbody tr').off('click', '.ibToggle');
+                $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#clientName,#clientEmail").html("");
+                    $("#clientName").html(data.fullname)
+                    $("#clientEmail").html(data.email)
+                    $("#client_id").val(data.id)
+                    $("[name='ib_status']").val(data.ib_status).trigger("change");
+                    $("[name='ib_group']").val(data.ib_group).trigger("change");
+                    myModal.show();
+                    // swal.fire({
+                    //   icon: "info",
+                    //   title: "IB Status ==> " + data.ib_status
+                    // });
+
+                });
+                $('.ajaxDataTable tbody').off('click', '.editClient')
+                $('.ajaxDataTable tbody').on('click', '.editClient', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        cache: false,
+                        data: {
+                            "action": "getClientDetails",
+                            "id": data.id
+                        },
+                        success: function(resp) {
+
+                            $.each(resp, function(key, value) {
+
+                                if (key === 'country_code') {
+                                    value = value.replace('', '+');
+                                }
+                                if (key === 'telephone') {
+                                    value = value.replace('+', '');
+                                }
+                                console.log(key, value);
+                                $('#editUserForm [name="' + key + '"]').val(
+                                    value);
+                            });
+                            $('#editUserForm [name="country_code"]').trigger('change');
+                        }
+                    });
+                    editUserModal.show();
+                });
+
+                $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
+                    e.preventDefault(); // Prevent default behavior
+                    var clientData = dTtable.row($(this).closest("tr")).data();
+
+                    $.ajax({
+                        url: "/admin/getClientSwitch", // Ensure this matches your backend route
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            action: "getClientSwitch",
+                            id: clientData.id  // Pass the correct client ID
+                        }),
+                        success: function(resp) {
+                            if (resp.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: resp.message,
+                                }).then(() => {
+                                    // Redirect using the URL from the server
+                                    window.location.href = resp.redirectUrl;
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message || "Can't switch user. Please try again.",
+                            });
+                        }
+                    });
+                });
+
+
+
+                $('.ajaxDataTable tbody').off('click', '.statusToggle');
+                $('.ajaxDataTable tbody').on('click', '.statusToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#userName,#userEmail").html("");
+                    $("#userName").html(data.fullname);
+                    $("#userEmail").html(data.email);
+                    $("#user_id").val(data.id);
+                    $("#user_status").prop("checked", data.status == 1);
+                    $("#email_status").prop("checked", data.email_confirmed == 1);
+                    $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
+                    statusModal.show();
+                });
+                $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
+                $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#customerName,#customerEmail").html("");
+                    $("#customerName").html(data.fullname);
+                    $("#customerEmail").html(data.email);
+                    $("#customer_id").val(data.id);
+
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "GET",
+                        data: {
+                            action: 'getRMbyGroup',
+                            "id": data.id
+                        },
+                        success: function(response) {
+                            var userGroupIds;
+                            if (typeof response === 'string') {
+                                try {
+                                    userGroupIds = JSON.parse(response);
+                                } catch (e) {
+                                    console.error("Failed to parse JSON:", e);
+                                    return; // Exit if parsing fails
+                                }
+                            } else {
+                                userGroupIds = response;
+                            }
+                            var defaultOption = $('<option></option>').val('').text(
+                                '--Select--').attr(
+                                'selected', 'selected');
+                            $('#group_rm_list').html(defaultOption);
+                            $.each(userGroupIds, function(index, option) {
+                                var $option = $('<option></option>').val(option
+                                    .id).text(
+                                    option
+                                    .username);
+                                if (option.id === data.rm_id) {
+                                    $option.attr('selected', 'selected');
+                                }
+                                $('#group_rm_list').append($option);
+                            });
+                        }
+                    });
+
+                    rmModal.show();
+                });
+                $('.ajaxDataTable tbody tr').on('click', '.viewClient', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    location.href = "/admin/client_details/" + data.id;
+                });
+            });
+
+
+            $("#statusUpdateForm").submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "/admin/ajax",
+                    type: "POST",
+                    cache: false,
+                    data: $("#statusUpdateForm").serialize(),
+                    success: function(response) {
+
+                        if (response.success == true) {
+                            swal.fire({
+                                icon: "success",
+                                title: "Status Successfully Updated",
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        } else {
+                            swal.fire({
+                                icon: "error",
+                                title: "Something went wrong.",
+                                text: "Please try again or contact support."
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        }
+                    }
+                });
             });
         });
     </script>

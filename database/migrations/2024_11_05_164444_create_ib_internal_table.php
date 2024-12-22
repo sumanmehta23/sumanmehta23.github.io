@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ib_internal', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
+            // $table->integer('id', true);
             $table->string('email', 100)->nullable();
-            $table->string('trade_id', 100)->nullable();
+            $table->string('code', 100)->nullable();
             $table->string('ib_amount', 100)->nullable();
             $table->string('transfer_to', 100)->nullable()->default('IB Wallet');
             $table->timestamp('transfer_date')->useCurrentOnUpdate()->useCurrent();

@@ -2,23 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\ClientWallets;
+use App\Models\KycLog;
 use App\Models\KycUpdate;
+use App\Models\ClientWallet;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
 class Users extends Controller
 {
     public function profile()
     {
-        $email = auth()->user()->email;
-        $bank_accounts = ClientWallets::where('user_id', $email)->get();
-        $user = User::where('email', $email)->first();
-        $verf_docs = KycUpdate::where('email', $email)->orderBy('id', 'desc')->get();
-        return view('profile', compact('bank_accounts', 'user', 'verf_docs'));
+        $user_id = auth()->user()->id;
+        $bank_accounts = ClientWallet::where('user_id', $user_id)->get();
+        $user = User::where('id',$user_id)->first();
+
+        // $verf_docs = KycUpdate::where('user_id', $user_id)->orderBy('id', 'desc')->get();
+        return view('profile', compact('bank_accounts', 'user'));
 
     }
     public function changePassword(Request $request)
@@ -29,8 +34,9 @@ class Users extends Controller
         ]);
         $email = auth()->user()->email;
         $user = DB::table('aspnetusers')->where('email', $email)->first();
-        if ($user && $user->password === $request->current_password) {
-            DB::table('aspnetusers')->where('email', $email)->update(['password' => $request->new_password]);
+
+        if ($user &&(Hash::check($request->current_password, $user->password))) {
+            User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
             return response()->json(['success' => 'Password Successfully Changed']);
         } else {
             return response()->json(['message' => 'Current Password is not matched'], 422);
@@ -38,9 +44,18 @@ class Users extends Controller
     }
     public function changeProfileImage(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // If validation fails, return a detailed error response
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $email = auth()->user()->email;
         $user = DB::table('aspnetusers')->where('email', $email)->first();
@@ -135,8 +150,9 @@ class Users extends Controller
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
                 // Store callback log in the database
-                DB::table('kyc_logs')->insert([
+                KycLog::create([
                     'client_id' => $email,
+                    'user_id' => auth()->user()->id,
                     'callback_code' => json_encode($type),
                     'callback_payload' => json_encode($payload),
                 ]);

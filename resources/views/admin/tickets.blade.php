@@ -66,7 +66,7 @@
                                 {{ $ticket->followup_type == 'admin' ? ($ticket->followup_admin ?? 'N/A') : ($ticket->followup_user ?? 'N/A') }}
                             </span>
                         </div>
-                        <a href="{{ route('admin.ticket_details', ['id' => md5($ticket->ticket_id)]) }}" class="btn btn-info">
+                        <a href="{{ route('admin.ticket_details', ['id' => ($ticket->ticket_id)]) }}" class="btn btn-info">
                             View <i class="ri-arrow-right-line ms-2 d-inline-block align-middle"></i>
                         </a>
                     </div>

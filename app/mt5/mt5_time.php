@@ -212,5 +212,3 @@ class MTConTime
   //--- days
   public $Days;
   }
-
-?>

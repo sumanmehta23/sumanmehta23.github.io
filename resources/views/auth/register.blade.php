@@ -21,15 +21,28 @@
         border-radius: 8px;
         transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
     }
+    @media (max-width: 750px) {
+        .register_mob {
+            margin-top:10% !important;
+        }
+    }
+    @media (max-width: 550px) {
+        .mob_logo_center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom:10%
+        }
+    }
 
  </style>
 @section('content')
     <div id="app" data-v-app="">
         <div  class="auth-main">
             <div  class="auth-wrapper v3">
-                <div data-v-97e32e5a="" class="auth-form" style="justify-content: unset;">
-                    <div  class="auth-header row">
-                        <div  class="col my-1"><a  href="/login"><img
+                <div class="auth-form register_mob" style="margin: 0;">
+                    <div  class="auth-header row ">
+                        <div  class="col my-1 mob_logo_center"><a  href="/login"><img class="mob_logo_center"
                                      src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
@@ -82,7 +95,7 @@
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Confirm Password</label><input
+                                                        class="form-label">Confirm Password </label><input
                                                         data-v-97e32e5a="" id="confirmpassword" type="password"
                                                         class="form-control" placeholder="Confirm Password"
                                                         required="" name="password_confirmation"><!----></div>
@@ -160,18 +173,29 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <!-- <div data-v-97e32e5a="" class="col-sm-12">
-                                                                <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                                        class="form-label">Referral Code<small data-v-97e32e5a="">(if
-                                                                            any)</small></label><input data-v-97e32e5a="" type="text"
-                                                                        class="form-control" placeholder="Referral Code"
-                                                                        name="referral"></div>
-                                                            </div> -->
+                                            @if(request()->has('refercode') && $referral_code)
+                                                <div data-v-97e32e5a="" class="col-sm-12">
+                                                    <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
+                                                            class="form-label">Referral Code</label><input data-v-97e32e5a=""
+                                                            type="text" class="form-control" value="{{ $referral_code }}"
+                                                            required readonly disabled name="refercode"><!----><small data-v-97e32e5a="">*your referral link code provided.</small></div>
+                                                </div>
+                                            @else
+                                                <div data-v-97e32e5a="" class="col-sm-12">
+                                                    <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
+                                                        class="form-label">Referral Code<small data-v-97e32e5a="">(if
+                                                            any)</small></label><input data-v-97e32e5a="" type="text"
+                                                        class="form-control" placeholder="Referral Code"
+                                                        name="referral">
+                                                    </div>
+                                                </div>
+                                            @endif
+
                                         </div>
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button data-v-97e32e5a=""
-                                                        class="btn btn-primary" type="submit" name="register"><!---->
+                                                        class="btn btn-primary" type="submit" name="register">
                                                         Submit</button></div>
                                             </div>
                                         </div>

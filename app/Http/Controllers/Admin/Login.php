@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Permissions;
 use App\Models\EmployeeList;
 use App\Models\LoginHistory;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Permissions;
-
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class Login extends Controller
 {
@@ -20,9 +21,9 @@ class Login extends Controller
     }
     public function showLoginForm()
     {
-        // if (Auth::check()) {
-        //     return redirect()->route('admin.dashboard');
-        // }
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
         return view('admin.login');
     }
     public function adminLogin(Request $request)
@@ -32,13 +33,43 @@ class Login extends Controller
             'password' => 'required',
         ]);
         $credentials = $request->only('username', 'password');
+        $remember=$request->remember;
+        if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password'],'status'=>1])) {
+            $request->session()->regenerate();
+            // return redirect()->intended('dashboard');
+        }
         // Attempt to log the user in
         $user = EmployeeList::where('email', $credentials['username'])
             ->first();
-        if ($user && ($credentials['password'] == $user->password)) {
+            
+        if (!$user) {
+            return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+        }
+        
+        if (Hash::needsRehash($user->password)) {
+            if ($user->password === $request->input('password')) {
+                $user->password = Hash::make($request->input('password'));
+                $user->save(); 
+            } else {
+                return redirect()->back()->with('error', 'Login Details are Invalid');
+            }
+        }else {
+            if (!Hash::check($request->input('password'), $user->password)) {
+                return redirect()->back()->with('error', 'Your login details are invalid.');
+            }
+        }
             if ($user->status == '1') {
+                // $credentials = $request->only('email', 'password');
+// dd($credentials);
+                if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
+                    $request->session()->regenerate();
+                    // return redirect()->intended('dashboard');
+                }
+                
                 // Store user details in session
-                Auth::login($user);
+                // Auth::login($user);
+                // $request->session()->regenerate();
+                Cache::flush();
                 Session::put('alogin', $user->email);
                 Session::put('userRoleID', $user->role_id);
                 Session::put('userRole', $user->userRole);
@@ -46,7 +77,7 @@ class Login extends Controller
                 Session::put('userData', $user->toArray());
                 // Fetch permissions
                 $permissions = DB::table('permissions as p')
-                    ->join('pages as pg', 'p.page_id', '=', 'pg.page_id')
+                    ->join('pages as pg', 'p.page_id', '=', 'pg.id')
                     ->where('p.role_id', $user->role_id)
                     ->where('pg.is_submenu', 0)
                     ->orderBy('pg.page_order', 'asc')
@@ -64,8 +95,9 @@ class Login extends Controller
                     }
                 }
                 Session::put('current_permissions', $current_permissions);
+                
                 // Log user in
-                if ($user->userRole == 'Super admin' || $user->userRole == 'Relationship Manager') {
+                if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
                     $this->logLoginHistory($user->email);
                     return redirect('admin/dashboard');
                 }
@@ -90,21 +122,20 @@ class Login extends Controller
             } else {
                 return back()->with('error', 'Your account is inactive. Please contact the administrator.');
             }
-        } else {
-            return back()->with('error', 'Login Details are Invalid');
-        }
+        
     }
     private function logLoginHistory($email)
     {
         $country = '';
         $ip = request()->ip();
-        LoginHistory::create([
-            'email' => $email,
-            'ip' => $ip,
-            'country' => $country,
-            'action' => 'login',
-            'status' => 1
-        ]);
+        // LoginHistory::create([
+        //     'user_id' => Auth::user()->id,
+        //     'email' => $email,
+        //     'ip' => $ip,
+        //     'country' => $country,
+        //     'action' => 'login',
+        //     'status' => 1
+        // ]);
     }
     public function logout(Request $request)
     {

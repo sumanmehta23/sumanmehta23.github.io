@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Roles;
 use App\Models\Page;
-use App\Models\Permissions;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Models\EmployeeList;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+
 class StaffManagement extends Controller
 {
 
@@ -17,47 +20,48 @@ class StaffManagement extends Controller
     }
     public function rolePermissions()
     {
-        $roles = Roles::all();
+        $roles = Role::all();
         return view('admin.role_permissions', compact('roles'));
     }
     public function adminUsers()
     {
-        $roles = Roles::where('is_active', 1)->get();
+        $roles = Role::where('is_active', 1)->get();
         return view('admin.admin_users', compact('roles'));
     }
     public function permissionsList(Request $request)
-    {
+    {  
         $id = $request->id;
-        $roles = Roles::where('role_id', $id)->first();
+        $roles = Role::where('id', $id)->first();
         $pages = Page::all();
-        $permissions = Permissions::where('role_id', $id)->get()->toArray();
+        $permissions = Permission::where('role_id', $id)->get()->toArray();
         $rolePermissions = array_values(array_column($permissions, 'page_id'));
         $menu = [];
         foreach ($pages as $page) {
             if ($page['is_submenu'] == 0) {
                 $menu[$page['page_id']] = [
                     'page_name' => $page['pagename'],
-                    'page_id' => $page['page_id'],
+                    'page_id' => $page['id'],
                     'submenu' => []
                 ];
             } else {
                 $menu[$page['is_submenu']]['submenu'][] = [
-                    'page_id' => $page['page_id'],
+                    'page_id' => $page['id'],
                     'page_name' => $page['pagename']
                 ];
             }
         }
+
         return view('admin.permissions_list', compact('menu', 'rolePermissions', 'pages', 'roles'));
     }
     public function addRole(Request $request)
     {
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'role_desc' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
-        $role = new Roles();
-        $role->role_name = $request->input('role_name');
-        $role->role_desc = $request->input('role_desc');
+        $role = new Role();
+        $role->name = $request->input('name');
+        $role->description = $request->input('description');
         $role->created_by = session('userData')['client_index'];
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
@@ -68,13 +72,13 @@ class StaffManagement extends Controller
     public function updateRole(Request $request)
     {
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'role_desc' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
         $id = $request->input('role_id');
-        $role = Roles::where('role_id', $id)->firstOrFail();
-        $role->role_name = $request->input('role_name');
-        $role->role_desc = $request->input('role_desc');
+        $role = Role::where('role_id', $id)->firstOrFail();
+        $role->name = $request->input('name');
+        $role->description = $request->input('description');
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
             return redirect()->back()->with("success", "Role Details Updated");
@@ -87,7 +91,7 @@ class StaffManagement extends Controller
             'status' => 'required|boolean',
         ]);
         $id = $request->input('role_id');
-        $role = Roles::where('role_id', $id)->firstOrFail();
+        $role = Role::where('role_id', $id)->firstOrFail();
         $role->is_active = $request->input('status');
         if ($role->save()) {
             return redirect()->back()->with("success", "Status Updated Successfully");
@@ -98,31 +102,60 @@ class StaffManagement extends Controller
     {
         $request->validate([
             'pages' => 'required|array',
-            'pages.*' => 'integer',
         ]);
         $roleId = $request->input('role_id');
-        Permissions::where('role_id', $roleId)->delete();
-
+        Permission::where('role_id', $roleId)->delete();
+        
         $pages = $request->input('pages');
         $createdBy = session('userData')['client_index'];
-        $permissions = [];
-        foreach ($pages as $pageId) {
-            $permissions[] = [
-                'page_id' => $pageId,
-                'role_id' => $roleId,
-                'created_by' => $createdBy,
-            ];
+
+        $currentPermissions = Permission::where('role_id', $roleId)->pluck('page_id')->toArray();
+        $pagesToAdd = array_diff($pages, $currentPermissions);
+        $pagesToRemove = array_diff($currentPermissions, $pages);
+
+        foreach ($pagesToAdd as $pageId) {
+            Permission::updateOrCreate(
+                [
+                    'role_id' => $roleId,
+                    'page_id' => $pageId,
+                ],
+                [
+                    'role_id' => $roleId,
+                    'page_id' => $pageId,
+                    'created_by' => $createdBy,
+                ]
+            );
         }
-        Permissions::insert($permissions);
+        
+        $category_id = Page::find($pageId)->value('page_category_id');
+        // Invalidate cached categories and menus for the specific roleId
+        Cache::forget('page_categories_all_role_' . $roleId); // Invalidate cached categories for this role
+        Cache::forget('main_menus_category_' . $category_id . '_role_' . $roleId); // Invalidate main menus for the category and role
+        Cache::forget('sub_menus_main_' . $pageId . '_role_' . $roleId); // Invalidate submenus for the page and role
+
+
+        if (!empty($pagesToRemove)) {
+            Permission::where('role_id', $roleId)
+                    ->whereIn('page_id', $pagesToRemove)
+                    ->delete();
+        }
+        // foreach ($pages as $pageId) {
+        //     $permissions[] = [
+        //         'page_id' => $pageId,
+        //         'role_id' => $roleId,
+        //         'created_by' => $createdBy,
+        //     ];
+        // }
+        // Permission::insert($permissions);
         return redirect()->back()->with('permissions', 'Permissions updated successfully');
     }
     public function saveUser(Request $request, $userId = null)
     {
-        $userId = request()->input('user_id');
+        $userId = request()->input('id');
         $request->validate([
             'username' => 'required|string|max:255',
-            'role_id' => 'required|integer',
-            'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',client_index',
+            'role_id' => 'required',
+            'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',id',
             'number' => 'required|string|max:15',
             'password' => $userId ? 'nullable|string' : 'required|string',
             'company_name' => 'required|string|max:255',
@@ -143,7 +176,7 @@ class StaffManagement extends Controller
         $user->email = $request->input('email');
         $user->number = $request->input('number');
         if ($request->filled('password')) {
-            $user->password = $request->input('password');
+            $user->password = Hash::make($request->input('password'));;
         }
         $user->company_name = $request->input('company_name');
         $user->userRole = $this->getRoleName($request->input('role_id'));
@@ -158,18 +191,18 @@ class StaffManagement extends Controller
     }
     protected function getRoleName($roleId)
     {
-        $role = Roles::find($roleId);
-        return $role ? $role->role_name : 'Unknown';
+        $role = Role::find($roleId);
+        return $role ? $role->name : 'Unknown';
     }
     public function rmDashboard(Request $request)
     {
         $clientIndex = $request->query('id');
-        $rm_details = EmployeeList::whereRaw("MD5(client_index) = ?", [$clientIndex])->first();
+        $rm_details = EmployeeList::whereRaw("(client_index) = ?", [$clientIndex])->first();
         if (!$rm_details) {
             return redirect('/admin/admin_users')->with('error', 'Invalid Account / Account Not Found');
         } else {
             $rm_id = $rm_details->email;
-            $rm_email_enc = md5($rm_id);
+            $rm_email_enc = ($rm_id);
         }
         $inactiveUsers = \DB::table('aspnetusers as trs')
             ->Join('relationship_manager as rm', 'rm.user_id', '=', 'trs.email')

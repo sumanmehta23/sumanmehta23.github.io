@@ -2,12 +2,26 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use DB;
 use Exception;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
+use App\Models\Account;
+use App\Models\UserLog;
+use App\Models\IbWallet;
+use App\Models\EmployeeList;
+use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
+use App\Models\WalletWithdraw;
+use App\Models\TradeWithdrawals;
+use Yajra\DataTables\DataTables;
+use App\Http\Controllers\Controller;
+use App\Models\WalletDeposit;
+use Illuminate\Support\Facades\Cache;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class AjaxController extends Controller
 {
@@ -27,138 +41,145 @@ class AjaxController extends Controller
             $tier = isset($request->tier) ? $request->tier : null;
             $search = isset($request->search) ? $request->search : null;
             $requestData = $request->all();
-            switch ($action) {
-                case 'getClientList':
-                    $this->getClientList($requestData);
-                    break;
-                case 'getClientDetails':
-                    $this->getClientDetails($requestData);
-                    break;
-                case 'getWalletDeposit':
-                    $this->getWalletDeposit();
-                    break;
-                case 'getWalletWithdrawal':
-                    $this->getWalletWithdrawal();
-                    break;
-                case 'getTradingDeposit':
-                    $this->getTradingDeposit();
-                    break;
-                case 'getTradingWithdrawal':
-                    $this->getTradingWithdrawal();
-                    break;
-                case 'getInternalTransfer':
-                    $this->getInternalTransfer();
-                    break;
-                case 'getPendingWalletDeposit':
-                    $this->getPendingWalletDeposit();
-                    break;
-                case 'getPendingWalletWithdrawal':
-                    $this->getPendingWalletWithdrawal();
-                    break;
-                case 'getPendingTradingDeposit':
-                    $this->getPendingTradingDeposit();
-                    break;
-                case 'getPendingTradingWithdrawal':
-                    $this->getPendingTradingWithdrawal();
-                    break;
-                case 'getPendingInternalTransfer':
-                    $this->getPendingInternalTransfer();
-                    break;
-                case 'getKYCHistory':
-                    $this->getKYCHistory();
-                    break;
-                case 'getBankDetails':
-                    $this->getBankDetails();
-                    break;
-                case 'getAdminUsers':
-                    $this->getAdminUsers();
-                    break;
-                case 'getMT5Groups':
-                    $this->getMT5Groups($type);
-                    break;
-                case 'getIbGroups':
-                    $this->getIbGroups($type);
-                    break;
-                case 'getIbPlans':
-                    $this->getIbPlans($type);
-                    break;
-                case 'getMT5Category':
-                    $this->getMT5Category($type);
-                    break;
-                case 'getRoles':
-                    $this->getRoles();
-                    break;
-                case 'getRolePermissions':
-                    $this->getRolePermisions();
-                    break;
-                case 'getAllTickets':
-                    $this->getAllTickets();
-                    break;
-                case 'getOpenTickets':
-                    $this->getOpenTickets();
-                    break;
-                case 'getClosedTickets':
-                    $this->getClosedTickets();
-                    break;
-                case 'getRoleDetails':
-                    $this->getRoleDetails($id);
-                    break;
-                case 'getPaymentGateways':
-                    $this->getPaymentGateways();
-                    break;
-                case 'ibEnroll':
-                    $this->ibEnroll();
-                    break;
-                case 'getLatestDeposit':
-                    $this->getLatestDeposit($id);
-                    break;
-                case 'getLatestWithdrawal':
-                    $this->getLatestWithdrawal($id);
-                    break;
-                case 'getLatestTransfer':
-                    $this->getLatestTransfer($id);
-                    break;
-                case 'getIbUsers':
-                    $this->getIbUsers();
-                    break;
-                case 'getPendingIbUsers':
-                    $this->getPendingIbUsers();
-                    break;
-                case 'getAdminDetails':
-                    $this->getAdminDetails($id);
-                    break;
-                case 'getPaymentDetails':
-                    $this->getPaymentDetails($id);
-                    break;
-                case 'updateClientStatus':
-                    $this->updateClientStatus($requestData);
-                    break;
-                case 'getIbList':
-                    $this->getIbList($id);
-                    break;
-                case 'getRMbyGroup':
-                    $this->getRMbyGroup($id);
-                    break;
-                case 'getListOfGroups':
-                    $this->getListOfGroups($search);
-                    break;
-                case 'getListOfUsers':
-                    $this->getListOfUsers($search);
-                    break;
-                case 'getListOfIBs':
-                    $this->getListOfIBs($search);
-                    break;
-                case 'requestIB':
-                    $this->requestIB($requestData);
-                    break;
+            try {
+                //code...
+                $result = [];
+                switch ($action) {
+                    case 'getClientDetails':
+                        $result = $this->getClientDetails($requestData);
+                        break;
+                    case 'getWalletDeposit':
+                        $result = $this->getWalletDeposit();
+                        break;
+                    case 'getComissionData':
+                        $result = $this->getComissionData($requestData);
+                        break;
+                    case 'getWalletWithdrawal':
+                        $result = $this->getWalletWithdrawal();
+                        break;
+                    case 'getTradingDeposit':
+                        $result = $this->getTradingDeposit();
+                        break;
+                    case 'getTradingWithdrawal':
+                        $result = $this->getTradingWithdrawal();
+                        break;
+                    case 'getInternalTransfer':
+                        $result = $this->getInternalTransfer();
+                        break;
+                    case 'getPendingWalletDeposit':
+                        $result = $this->getPendingWalletDeposit();
+                        break;
+                    case 'getPendingWalletWithdrawal':
+                        $result = $this->getPendingWalletWithdrawal();
+                        break;
+                    case 'getPendingTradingDeposit':
+                        $result = $this->getPendingTradingDeposit();
+                        break;
+                    case 'getPendingTradingWithdrawal':
+                        $result = $this->getPendingTradingWithdrawal();
+                        break;
+                    case 'getPendingInternalTransfer':
+                        $result = $this->getPendingInternalTransfer();
+                        break;
+                    case 'getKYCHistory':
+                        $result = $this->getKYCHistory();
+                        break;
+                    case 'getBankDetails':
+                        $result = $this->getBankDetails();
+                        break;
+                    case 'getAdminUsers':
+                        $result = $this->getAdminUsers();
+                        break;
+                    case 'getMT5Groups':
+                        $result = $this->getMT5Groups($type);
+                        break;
+                    case 'getIbGroups':
+                        $result = $this->getIbGroups($type);
+                        break;
+                    case 'getIbPlans':
+                        $result = $this->getIbPlans($type);
+                        break;
+                    case 'getMT5Category':
+                        $result = $this->getMT5Category($type);
+                        break;
+                    case 'getRoles':
+                        $result = $this->getRoles();
+                        break;
+                    case 'getRolePermissions':
+                        $result = $this->getRolePermisions();
+                        break;
+                    case 'getAllTickets':
+                        $result = $this->getAllTickets();
+                        break;
+                    case 'getOpenTickets':
+                        $result = $this->getOpenTickets();
+                        break;
+                    case 'getClosedTickets':
+                        $result = $this->getClosedTickets();
+                        break;
+                    case 'getRoleDetails':
+                        $result = $this->getRoleDetails($id);
+                        break;
+                    case 'getPaymentGateways':
+                        $result = $this->getPaymentGateways();
+                        break;
+                    case 'ibEnroll':
+                        $result = $this->ibEnroll();
+                        break;
+                    case 'getLatestDeposit':
+                        $result = $this->getLatestDeposit($id);
+                        break;
+                    case 'getLatestWithdrawal':
+                        $result = $this->getLatestWithdrawal($id);
+                        break;
+                    case 'getLatestTransfer':
+                        $result = $this->getLatestTransfer($id);
+                        break;
+                    case 'getIbUsers':
+                        $result = $this->getIbUsers();
+                        break;
+                    case 'getPendingIbUsers':
+                        $result = $this->getPendingIbUsers();
+                        break;
+                    case 'getAdminDetails':
+                        $result = $this->getAdminDetails($id);
+                        break;
+                    case 'getPaymentDetails':
+                        $result = $this->getPaymentDetails($id);
+                        break;
+                    case 'updateClientStatus':
+                        $result = $this->updateClientStatus($requestData);
+                        break;
+                    case 'getIbList':
+                        $result = $this->getIbList($id);
+                        break;
+                    case 'getRMbyGroup':
+                        $result = $this->getRMbyGroup($id);
+                        break;
+                    case 'getListOfGroups':
+                        $result = $this->getListOfGroups($search);
+                        break;
+                    case 'getListOfUsers':
+                        $result = $this->getListOfUsers($search);
+                        break;
+                    case 'getListOfIBs':
+                        $result = $this->getListOfIBs($search);
+                        break;
+                    case 'requestIB':
+                        $result = $this->requestIB($requestData);
+                        break;
 
-                default:
-                    echo json_encode(['error' => 'Invalid function call']);
-                    break;
+                    default:
+                        $result = ['error' => 'Invalid function call'];
+                        break;
+                }
+            } catch (\Throwable $th) {
+                $result = ['error' => $th->getMessage()];
             }
         } else {
-            echo json_encode(['error' => 'No functions specified']);
+            $result =  ['error' => 'No functions specified'];
         }
+        return  response()->json($result);
     }
 
 
@@ -168,7 +189,7 @@ class AjaxController extends Controller
         $sql = "SELECT account_types.ac_index as id,account_types.ac_group as text from account_types where account_types.ac_group like '%$string%' and status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return $results;
     }
     public function getListOfUsers($string)
     {
@@ -176,7 +197,7 @@ class AjaxController extends Controller
         $sql = "SELECT aspnetusers.email as id,concat(aspnetusers.fullname,' [',aspnetusers.email,']') as text from aspnetusers where (aspnetusers.email like '%$string%' OR aspnetusers.fullname like '%$string%') and status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return $results;
     }
     public function getListOfIBs($string)
     {
@@ -186,351 +207,1640 @@ class AjaxController extends Controller
   where (aspnetusers.email like '%$string%' OR aspnetusers.fullname like '%$string%') and aspnetusers.status = 1 and ib1.status = 1";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode($results);
+        return $results;
     }
 
-    public function getClientList($requestData)
+    public function getClientSwitch(Request $request)
     {
+        // Validate the incoming request
+        $validated = $request->validate([
+            'id' => 'required', // Ensure the ID is valid and exists in the users table
+        ]);
 
-        $rmCondition = " ";
-        if (session('userData')['role_id'] != 1) {
-            $rmCondition .= " left join aspnetusers user on(user.email=ap.email) ";
-        } else {
-            $rmCondition .= " where";
+        $clientId = $validated['id'];
+
+        try {
+            // Find the user to impersonate
+            $client = User::findOrFail($clientId);
+            // Log in as the new user
+            Auth::login($client);
+            Session::put('user', $client);
+            // dd('ssss');
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged in successfully.',
+                'redirectUrl' => url('/dashboard'), // Include the redirect URL
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to impersonate the user. Please try again.',
+            ], 500);
         }
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where rmgr.rm_id='" . session('alogin') . "' and ";
-        }
-        if (session('userData')['role_id'] != 1) {
-            if (session('userData')['role_id'] == 2) {
-                $rmCondition .= " (1) and ";
-            } else {
-                $rmCondition .= " where (1) and";
+    }
+
+    public function getClientList(Request $request)
+    {
+        // ini_set('memory_limit', '1024M');
+        // ini_set('max_execution_time', 3000);
+        $query = User::with([
+            'ib',
+            'employee' => function ($query) {
+                $query->select('emplist.id', 'username');
             }
-        }
-        if(isset($requestData['rm_id']) && !empty($requestData['rm_id'])){
-            $rmCondition = "  left join relationship_manager rmgr on(rmgr.user_id=ap.email) where md5(rmgr.rm_id)='" . $requestData['rm_id'] . "' and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT ibs.name as ib_name,c.country_alpha,emp.username as rm_name,rm.rm_id,md5(ap.id) as enc_id,ap.fullname as fullname,ap.*,COALESCE(SUM(tb.deposit_amount), 0) as deposit_amount,COALESCE(SUM(tb.trading_deposited), 0) as trading_deposited,COALESCE(SUM(tb.trading_withdrawal), 0) as trading_withdrawal,COALESCE(SUM(tb.withdraw_amount), 0) as withdraw_amount,ib1.status as ib_status,ib1.acc_type as ib_group from aspnetusers ap
-  LEFT JOIN ib1 on ib1.email = ap.email
-  LEFT JOIN ib1 as ibs on ibs.email = ap.ib1
-  LEFT JOIN relationship_manager rm on(ap.email =rm.user_id)
-  LEFT JOIN emplist emp on(rm.rm_id =emp.email)
-  LEFT JOIN countries c on(ap.country =c.country_name)
-  LEFT JOIN total_balance tb on (ap.email=tb.email) " . $rmCondition . " (1=1) group by ap.email";
-        $results = DB::select($sql);
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => $row->id,
-                'enc' => md5($row->email),
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'created_at' => $row->created_at,
-                'created_date' => date("d-m-Y", strtotime($row->created_at)),
-                'created_time' => date('H:s:i', strtotime($row->created_at)),
-                'email' => $row->email,
-                'phone' => $row->number,
-                'country' => $row->country_alpha,
-                'ib' => $row->ib1,
-                'ib_name' => $row->ib_name,
-                'ib_status' => $row->ib_status,
-                'kyc_verify' => $row->kyc_verify,
-                'rm_id' => $row->rm_name ?? '',
-                'rmid' => $row->rm_id ?? '',
-                'ib_group' => $row->ib_group,
-                'total_deposit' => $row->trading_deposited + $row->deposit_amount,
-                'total_withdraw' => $row->trading_withdrawal + $row->withdraw_amount,
-                'status' => $row->status,
-                'email_confirmed' => $row->email_confirmed,
-                'action' => ' <a class="btn btn-sm btn-secondary me-2 edit-user d-none" data-id="' . $row->email . '"><i class="fa fa-edit"></i></a><a class="btn btn-sm btn-primary" href="/admin/client_details?id=' . md5($row->email) . '"><i class="fa fa-eye"></i></a>'
-            ];
-        }
-        echo json_encode(['data' => $data]);
-    }
-    public function getWalletDeposit()
-    {
+        ])
+        ->select([
+            'aspnetusers.id',
+            'aspnetusers.email',
+            'aspnetusers.fullname',
+            'aspnetusers.number',
+            'aspnetusers.ib1',
+            'aspnetusers.status',
+            'aspnetusers.email_confirmed',
+            'aspnetusers.country',
+            'aspnetusers.kyc_verify',
+            'aspnetusers.country_code',
+        ])->groupBy('aspnetusers.email');
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
+        // $query = DB::table('aspnetusers AS ap')
+        //     ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
+        //     ->leftJoin('ib1 AS ibs', 'ibs.user_id', '=', 'ap.id')
+        //     ->leftJoin('relationship_manager AS rm', 'ap.id', '=', 'rm.user_id')
+        //     ->leftJoin('ib_plan_details AS ibpd', 'ibpd.id', '=', 'ib1.ib_plan_details_id')
+        //     ->leftJoin('emplist AS emp', 'rm.rm_id', '=', 'emp.email')
+        //     ->leftJoin('countries AS c', 'ap.country', '=', 'c.country_name')
+        //     ->leftJoin('ib1 AS parent_ib', function ($join) {
+        //         $join->on('parent_ib.referral_code', '=', 'ap.ib1')
+        //             ->orOn('parent_ib.email', '=', 'ap.ib1');
+        //     })
+        //     ->select([
+        //         'ibs.name AS ib_name',
+        //         'c.country_alpha',
+        //         'emp.username AS rm_name',
+        //         'rm.rm_id',
+        //         'ap.id AS enc_id',
+        //         'ap.*',
+        //         'ib1.status AS ib_status',
+        //         'ibpd.id AS ib_group',
+        //         'parent_ib.name AS parent_name',
+        //         'parent_ib.email AS parent_email'
+        //     ])
+        //     ->groupBy('ap.email');
+
+        $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
+            $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
+        });
+
+        if (session('userData')['userRole'] == "Relationship Manager") {
+            $query->where('rm.rm_id', session('alogin'));
+        }
+
+        if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
+            $query->where('rm.rm_id', $request->get('rm_id'));
+        }
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('created_at', function ($row) {
+                    $createdAt = Carbon::parse($row->created_at);
+                    return "<div class='d-grid'>
+                            <div class='date'>{$createdAt->format('Y-m-d')}</div>
+                            <div class='time text-muted'>{$createdAt->format('H:i:s')}</div>
+                        </div>";
+                })
+                ->editColumn('user_email', function ($row) {
+                    return "<a href='/admin/client_details/{$row->id}'>
+                            <div class='d-flex align-items-center'>
+                                <div class='me-2'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                </div>
+                                <div>
+                                    <div class='lh-1'><span>{$row->fullname}</span></div>
+                                    <div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>
+                                </div>
+                            </div>
+                        </a>";
+                })
+                ->editColumn('user_country', function ($row) {
+                    $countryAlpha = strtolower($row->getCountry() ? $row->getCountry()->country_alpha :'');
+                    return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->getCountry()->country_alpha}" : '-';
+                })
+                ->editColumn('phone', function ($row) {
+                    return $row->number ?? '-';
+                })
+
+                ->editColumn('ib_name', function ($row) {
+                    return $row->getParentIb() ? $row->getParentIb()->name : '-';
+                })
+                ->editColumn('ib_email', function ($row) {
+                    return $row->getParentIb() ? $row->getParentIb()->email : '-';
+                })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->ib ? $row->ib->status : '';
+                })
+                ->editColumn('ib_group', function ($row) {
+                    return $row->ib ? $row->ib->ib_plan_details_id : '';
+                })
+                ->editColumn('ib', function ($row) {
+                    $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
+                    $ib_email  =$row->getParentIb() ? $row->getParentIb()->email : '';
+                    $svg = $ib_name !== 'noIB' ? "<div class='me-2'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'></path>
+                                    <path d='M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z'></path>
+                                    <path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path>
+                                    <path d='M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707'></path>
+                                </svg>
+                            </div>" : '';
+                    return "<div class='cursor-pointer updateIb d-flex align-items-center'>
+                            <div class='me-2'>
+                            {$svg}
+                            </div>
+                            <div>
+                                <div class='lh-1'><span>{$ib_name}</span></div>
+                                <div class='lh-1'><span class='fs-11 text-muted'>{$ib_email}</span></div>
+                            </div>
+                        </div>";
+                })
+                ->editColumn('user_ib_status', function ($row) {
+                    $count = $row->ib ? $row->ib->status : 3;
+                    switch ($count) {
+                        case 1:
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+                        case 2:
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+                        case 0:
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+                        default:
+                            return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+                    }
+                })
+                ->editColumn('rm', function ($row) {
+                    return ($row->employee && $row->employee->first()) ? "<span class='text-primary'>{$row->employee->first()->username}</span>" : "<button class='rmToggle badge btn-sm btn btn-outline-dark'>RM Not Mapped</button>";
+                })
+                ->editColumn('user_status', function ($row) {
+                    return $row->status == 1 ?
+                        "<span class='badge text-success'>Active User</span>" :
+                        "<span class='badge text-danger'>Inactive User</span>";
+                })
+                ->editColumn('user_email_confirmed', function ($row) {
+                    return $row->email_confirmed ?
+                        "<span class='badge text-success'>Email Verified</span>" :
+                        "<span class='badge text-danger'>Email Not Verified</span>";
+                })
+                ->addColumn('action', function ($row) {
+                    $html = '';
+
+                    $success = '';
+                    if (intval($row->kyc_verify) >= 1) {
+                        $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
+                    }
+
+                    $html .= "<span class='statusToggle' data-status='{$row->status}'>";
+                    if ($row->status == 0) {
+                        $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                    </svg>
+                                  </span>";
+                    } elseif ($row->status == 1) {
+                        $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                    </svg>
+                                  </span>";
+                    }
+                    $html .= "</span>";
+
+                    $html .= "<span class='statusToggle' data-status='{$row->email_confirmed}'>";
+                    if ($row->email_confirmed == 0) {
+                        $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='#FFCC80' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-mail-x'>
+                                        <path d='M13.5 19h-8.5a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6'></path>
+                                        <path d='M3 7l9 6l9 -6'></path>
+                                        <path d='M22 22l-5 -5'></path>
+                                        <path d='M17 22l5 -5'></path>
+                                    </svg>
+                                  </span>";
+                    } else {
+                        $html .= "<span class='badge text-success' data-bs-toggle='tooltip' title='Email Verified'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='#81C784' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' color='#81C784' class='tabler-icon tabler-icon-mail-check'>
+                                        <path d='M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6'></path>
+                                        <path d='M3 7l9 6l9 -6'></path>
+                                        <path d='M15 19l2 2l4 -4'></path>
+                                    </svg>
+                                  </span>";
+                    }
+                    $html .= "</span>";
+                    $html .= "<span class='viewClient' data-enc='{$row->id}'>
+                                <span class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
+                                </span>
+                              </span>";
+
+
+                    $html .= "<span class='editClient' data-enc='{$row->id}'>
+                                <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
+                                    <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                </span>
+                              </span>";
+
+                    $html .= "<span class='switchClient' data-enc='{$row->id}'>
+                                <span class='badge text-secondary' data-bs-toggle='tooltip' title='Switch Client'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' class='icon icon-tabler icon-tabler-arrows-shuffle' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                    <path d='M18 4l3 3l-3 3' />
+                                    <path d='M18 20l3 -3l-3 -3' />
+                                    <path d='M3 7h3a4 4 0 0 1 4 4a4 4 0 0 0 4 4h7' />
+                                    <path d='M21 7h-7a4 4 0 0 0 -4 4a4 4 0 0 1 -4 4h-3' />
+                                    </svg>
+                                </span>
+                              </span>";
+
+                    return $html;
+                })
+
+                ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action','ib_name','ib_email'])
+                ->make(true);
+        }
+
+        return response()->json([
+            'message' => 'Invalid request',
+        ]);
+    }
+
+    public function getLiveAccountsList(Request $request)
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+        $userGroups = explode(',', session('user_groups'));
+
+        // Base query
+        $rmCondition = Account::where('demo', false)
+            ->select('accounts.*')
+            ->with(['user', 'accountType']);
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            // dd(DataTables::of($rmCondition));
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('code', function($row) {
+                    $accountGroup = $row->accountType->ac_group;
+                    return "<a href='/admin/view_account_details/{$row->id}'>
+                                <div class='row align-items-center'>
+                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
+                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col ps-2'>
+                                        <h6 class='mb-0'><span
+                                                class='text-truncate w-100'> $row->code </span>
+                                        </h6>
+                                        <p class='mb-0 text-muted f-12'><span
+                                                class='text-truncate w-100'> $accountGroup </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('leverage', function($row){
+                    return $row->leverage;
+                })
+                ->addColumn('balance', function($row){
+                    return $row->balance;
+                })
+                ->addColumn('created_at', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('account_code', function($row){
+                    return $row->code;
+                })
+                ->addColumn('account_group', function($row){
+                    return $row->accountType->ac_group;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+    public function getDemoAccountsList(Request $request)
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+        $userGroups = explode(',', session('user_groups'));
+
+        // Base query
+        $rmCondition = Account::where('demo', true)
+            ->select('accounts.*')
+            ->with(['user', 'accountType']);
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('code', function($row) {
+                    $accountGroup = $row->accountType->ac_group;
+                    return "<a href='/admin/view_account_details/{$row->id}'>
+                                <div class='row align-items-center'>
+                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
+                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col ps-2'>
+                                        <h6 class='mb-0'><span
+                                                class='text-truncate w-100'> $row->code </span>
+                                        </h6>
+                                        <p class='mb-0 text-muted f-12'><span
+                                                class='text-truncate w-100'> $accountGroup </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('leverage', function($row){
+                    return $row->leverage;
+                })
+                ->addColumn('balance', function($row){
+                    return $row->balance;
+                })
+                ->addColumn('created_at', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('account_code', function($row){
+                    return $row->code;
+                })
+                ->addColumn('account_group', function($row){
+                    return $row->accountType->ac_group;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getWalletDeposit2(Request $request)
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+
+        // Base query
+        $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
+            ->select('wallet_deposit.*')
+            ->with(['user']);
+
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdraw_amount;
+                })
+                ->addColumn('payment_mode', function($row){
+                    return $row->deposit_type;
+                })
+                ->addColumn('deposit_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a class='btn btn-sm btn-primary' href='/admin/wallet_deposit_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->user->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->deposted_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->deposted_date));
+                })
+                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getWalletWithdrawal2(Request $request)
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+        $userGroups = explode(',', session('user_groups'));
+
+        // Base query
+        $rmCondition = WalletWithdraw::where('withdraw_type','!=', 'Internal Transfer')
+            ->select('wallet_withdraw.*')
+            ->with(['user']);
+
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+                return DataTables::of($rmCondition)
+                    ->editColumn('email', function ($row) {
+                        $fullname = $row->user
+                            ? ($row->user->fullname)
+                            : 'Unknown';
+                        $email = $row->user ? $row->user->email : 'No Email';
+                        return "<a href='/admin/client_details/{$row->user->id}'>
+                                    <div class='d-flex align-items-center'>
+                                        <div class='me-2'>
+                                            <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                        </div>
+                                        <div>
+                                            <div class='lh-1'><span>{$fullname}</span></div>
+                                            <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                        </div>
+                                    </div>
+                                </a>";
+                    })
+                    ->addColumn('amount', function($row){
+                        return $row->withdraw_amount;
+                    })
+                    ->addColumn('fee', function($row){
+                        return $row->withdraw_transaction_fee;
+                    })
+                    ->addColumn('payment_mode', function($row){
+                        return $row->withdraw_type;
+                    })
+                    ->addColumn('withdraw_date', function ($row) {
+                        $date = date('Y-m-d', strtotime($row->withdraw_date));
+                        $time = date('H:i:s', strtotime($row->withdraw_date));
+                        return "<div class='lh-1'>
+                                    $date
+                                </div>
+                                <div class='lh-2 text-muted'>
+                                    $time
+                                </div>";
+                    })
+                    ->addColumn('status', function($row){
+                        if($row->status == 1){
+                            return "<div class='badge bg-outline-success'>Approved</div>";
+                        }elseif($row->status == 2){
+                            return "<div class='badge bg-outline-danger'>Rejected</div>";
+                        }else{
+                            return "<div class='badge bg-outline-primary'>Pending</div>";
+                        }
+                    })
+                    ->addColumn('action', function($row){
+                        return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
+                    })
+                    ->addColumn('fullname', function($row){
+                        return $row->user->fullname;
+                    })
+                    ->addColumn('fullemail', function($row){
+                        return $row->user->email;
+                    })
+                    ->addColumn('created_date', function($row){
+                        return date('Y-m-d', strtotime($row->withdraw_date));
+                    })
+                    ->addColumn('created_time', function($row){
+                        return date('H:i:s', strtotime($row->withdraw_date));
+                    })
+                    ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
+                    ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getTradingDeposit2(Request $request)
+    {
+        $query = TradeDeposit::with(['user', 'account']);
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
         } else {
-            $rmCondition .= " where ";
+            $query->where('code', $_GET['id']);
         }
 
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'email' => $row->email,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->deposit_amount,
-                'payment_mode' => $row->deposit_type,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . md5($row->id) . '">View</a>'
-            ];
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('id', function ($row) {
+                    return $row->id;
+                })
+                ->addColumn('account_no', function($row){
+                    return $row->code;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->deposit_amount;
+                })
+                ->addColumn('deposit_type', function($row){
+                    if ($row->deposit_from) {
+                        $acc = Account::where('id', $row->deposit_from)->first();
+                    }
+                    if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+                        $deposit_type = 'IB Deposit';
+                    } else {
+                        $deposit_type = $row->deposit_type;
+                    }
+                    return $deposit_type;
+                })
+                ->addColumn('deposit_from', function($row){
+                    if ($row->deposit_from) {
+                        $acc = Account::where('id', $row->deposit_from)->first();
+                    }
+                    if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+                        $deposit_from = 'IB Wallet';
+                    } else {
+                        $deposit_from = $row->deposit_type;
+                    }
+                    return ($row->deposit_from && $acc) ? $acc->code : $deposit_from;
+                })
+                ->addColumn('deposit_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->deposted_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->deposted_date));
+                })
+                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from','deposit_date','status','action'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getWalletWithdrawal()
-    {
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
-        }else{
-            $rmCondition .= " where ";
-        }
-
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
-        $results = DB::select($sql);
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'email' => $row->email,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->withdraw_amount,
-                'payment_mode' => $row->withdraw_type,
-                'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . md5($row->id) . '">View</a>'
-            ];
-        }
-        echo json_encode(['data' => $data]);
-    }
-    public function getTradingDeposit()
+    public function getTradingWithdrawal2(Request $request)
     {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        $condition = "";
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account']);
 
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
-            } else {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
+        } else {
+            $query->where('account_id', $_GET['id']);
         }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
+
+        // Fetch data
+        $query->orderByDesc('id')->get();
+
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('account_no', function($row){
+                    return $row->account->code;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdrawal_amount;
+                })
+                ->addColumn('withdraw_type', function($row){
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_to', function($row){
+                    if ($row->withdraw_to) {
+                        $acc = Account::where('id', $row->withdraw_to)->first();
+                    }
+                    return ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->withdraw_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->withdraw_date));
+                })
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to','withdraw_date','status','action'])
+                ->make(true);
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_deposit trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TDID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->deposit_amount,
-                'deposit_type' => $row->deposit_type,
-                'deposit_from' => $row->deposit_from ?? $row->deposit_type,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => '<a href="/admin/trading_deposit_details?id=' . md5($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
-            ];
-        }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getTradingWithdrawal()
+
+    public function getInternalTransfer2(Request $request)
     {
-        $condition = '';
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+        $query = TradeDeposit::with(['user', 'account']);
+
+        // Add conditions based on session and GET parameters
         if (!isset($_GET['id'])) {
-            if (session('userData')['role_id'] == 2) {
-                $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
-            } else {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
             }
-        }
-        if (isset($_GET['id'])) {
-            $condition = ' where trs.trade_id=' . $_GET['id'];
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->withdrawal_amount,
-                'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to ? $row->withdraw_to : $row->withdraw_type,
-                'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => '<a href="/admin/trading_withdrawal_details?id=' . md5($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
-            ];
-        }
-        echo json_encode(['data' => $data]);
-    }
-    public function getInternalTransfer()
-    {
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
-            $rmCondition .= " where ";
+            $query->where('deposit_type', 'Internal Transfer');;
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_deposit trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'ITID' . sprintf("%05d", $row->id),
-                'email' => $row->email,
-                'amount' => '$' . $row->deposit_amount,
-                'transfer_from' => $row->deposit_from,
-                'transfer_to' => $row->trade_id,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details">View</a>'
-            ];
+
+        // Fetch data
+        $query->orderByDesc('id')->get();
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('email', function($row){
+                    return $row->email;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->deposit_amount;
+                })
+                ->addColumn('transfer_from', function($row){
+                    if ($row->deposit_from) {
+                        $acc = Account::where('id', $row->deposit_from)->first();
+                    }
+                    if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+                        $transfer_from = 'IB Wallet';
+                    } else {
+                        $transfer_from = $row->deposit_type;
+                    }
+                    return ($row->deposit_from && $acc) ? $acc->code : $transfer_from;
+                })
+                ->addColumn('transfer_to', function($row){
+                    return $row->code;
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->rawColumns(['email', 'amount', 'transfer_from', 'transfer_to','status'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getPendingWalletDeposit()
+
+
+    // public function getWalletDeposit()
+    // {
+
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
+    //     } else {
+    //         $rmCondition .= " where ";
+    //     }
+
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.deposit_type!='Internal Transfer' order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'email' => $row->email,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'payment_mode' => $row->deposit_type,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getWalletWithdrawal()
+    // {
+
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'";
+    //     } else {
+    //         $rmCondition .= " where ";
+    //     }
+
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.withdraw_type!='Internal Transfer' order by trs.id desc";
+    //     $results = DB::select($sql);
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'email' => $row->email,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => '$' . $row->withdraw_amount,
+    //             'fee' => '$' . $row->withdraw_transaction_fee,
+    //             'payment_mode' => $row->withdraw_type,
+    //             'withdraw_date' => $row->withdraw_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+
+    public function getComissionData2(Request $request)
     {
+        // dd($request->id);
+        $userId = $request->id;
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'WDID' . sprintf("%05d", $row->id),
+        // Fetch histories
+        $query = IbWallet::with('account')->where('user_id', $userId)->orderBy('created_at', 'desc');
 
-                'email' => $row->email,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->deposit_amount,
-                'payment_mode' => $row->deposit_type,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . md5($row->id) . '">View</a>'
-            ];
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('amount', function ($row) {
+                    return $row->ib_wallet ?? $row->ib_withdraw;
+                })
+                ->addColumn('type', function($row){
+                    return $row->ib_wallet ? 'Commission' : 'Transfer';
+                })
+                ->addColumn('account', function($row){
+                    $code = $row->account->code;
+                    $email = $row->account->email;
+                    return "
+                                <div class='row align-items-center'>
+                                     <div class='col-auto pe-0'>
+                                         <img src='/assets/images/mt5.png' alt='user-image'
+                                             class='rounded wid-50 hei-50'>
+                                     </div>
+                                     <div class='col'>
+                                         <h4 class='mb-2 ms-2'>
+                                             <span class='text-truncate w-100'>$code</span>
+                                         </h4>
+                                         <p class='mb-0 text-muted ms-2 f-12'>
+                                             <span class='text-truncate w-100'>$email</span>
+                                         </p>
+                                     </div>
+                                 </div>";
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <small class='lh-2 text-muted'>
+                                $time
+                            </small>";
+                })
+                ->rawColumns(['date', 'account', 'type', 'amount'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getPendingWalletWithdrawal()
+
+    // public function getComissionData($data)
+    // {
+    //     // Retrieve user ID from request
+    //     $userId = $data['id'];
+
+    //     // Fetch histories
+    //     $histories = IbWallet::with('account')->where('user_id', $userId)->get();
+    //     // Prepare data
+    //     $data = $histories->map(function ($row) {
+    //         return [
+    //             'date' => $row->created_at->format('Y-m-d H:i:s'), // Format date for consistency
+    //             'accounts' => $row->account->code,
+    //             'email' => $row->account->email,
+    //             'type' => $row->ib_wallet ? 'Commission' : 'Transfer',
+    //             'amount' => $row->ib_wallet ?? $row->ib_withdraw
+    //         ];
+    //     });
+    //     return ['data' => $data];
+    // }
+
+
+    // public function getTradingDeposit()
+    // {
+    //     $rmCondition = " left join accounts user on(user.email=trs.email) ";
+    //     // $condition = "";
+
+    //     // if (!isset($_GET['id'])) {
+    //     //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //     //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' ";
+    //     //     } else {
+    //     //     }
+    //     // }
+    //     // if (isset($_GET['id'])) {
+    //     //     $condition = ' where trs.code=' . $_GET['id'];
+    //     // }
+    //     // header('Content-Type: application/json');
+    //     // $sql = "SELECT (user.id) as enc_id,user.name as fullname,trs.* from trade_deposits trs " . $rmCondition . $condition . " group by trs.id order by trs.id desc";
+    //     // $query = DB::select($sql);
+    //     // $results = $query;
+
+    //     $query = TradeDeposit::with(['user', 'account']);
+    //     if (!isset($_GET['id'])) {
+    //         if (session('userData')['userRole'] == "Relationship Manager") {
+    //             $rmId = session('alogin');
+    //             $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+    //                 $q->where('rm_id', $rmId);
+    //             });
+    //         }
+    //     } else {
+    //         $query->where('code', $_GET['id']);
+    //     }
+    //     $results = $query->orderByDesc('id')->get();
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         if ($row->deposit_from) {
+    //             $acc = Account::where('id', $row->deposit_from)->first();
+    //         }
+    //         if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+    //             $deposit_from = 'IB Wallet';
+    //             $deposit_type = 'IB Deposit';
+    //         } else {
+    //             $deposit_from = $row->deposit_type;
+    //             $deposit_type = $row->deposit_type;
+    //         }
+    //         $data[] = [
+    //             'id' => 'TDID' . sprintf("%05d", $row->id),
+    //             'account_no' => $row->code,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => "$" . $row->deposit_amount,
+    //             'deposit_type' => $deposit_type,
+    //             'deposit_from' => ($row->deposit_from && $acc) ? $acc->code : $deposit_from,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => '<a href="/admin/trading_deposit_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getTradingWithdrawal()
+    // {
+
+    //     // $condition = '';
+    //     // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     // if (!isset($_GET['id'])) {
+    //     //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //     //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "'  ";
+    //     //     } else {
+    //     //     }
+    //     // }
+    //     // if (isset($_GET['id'])) {
+    //     //     $condition = ' where trs.code=' . $_GET['id'];
+    //     // }
+    //     // header('Content-Type: application/json');
+    //     // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from trade_withdrawal trs " . $rmCondition . $condition . " order by trs.id desc";
+    //     // $query = DB::select($sql);
+    //     // $results = $query;
+
+    //     $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account']);
+
+    //     // Add conditions based on session and GET parameters
+    //     if (!isset($_GET['id'])) {
+    //         if (session('userData')['userRole'] == "Relationship Manager") {
+    //             $rmId = session('alogin');
+    //             $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+    //                 $q->where('rm_id', $rmId);
+    //             });
+    //         }
+    //     } else {
+    //         $query->where('account_id', $_GET['id']);
+    //     }
+
+    //     // Fetch data
+    //     $withdrawals = $query->orderByDesc('id')->get();
+    //     $data = [];
+
+    //     foreach ($withdrawals as $row) {
+    //         if ($row->withdraw_to) {
+    //             $acc = Account::where('id', $row->withdraw_to)->first();
+    //         }
+    //         $data[] = [
+    //             'id' => 'TWID' . sprintf("%05d", $row->id),
+    //             'account_no' => $row->account->code,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => '$' . $row->withdrawal_amount,
+    //             'withdraw_type' => $row->withdraw_type,
+    //             'withdraw_to' => ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type,
+    //             'withdraw_date' => $row->withdraw_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => '<a href="/admin/trading_withdrawal_details?id=' . ($row->id) . '" class="" style="font-size: 13px;padding: 2px 20px;"><i class="fe fe-eye fs-14 text-info"></i></a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getInternalTransfer()
+    // {
+    //     // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     // if (session('userData')['userRole'] == "Relationship Manager") {
+    //     //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     // } else {
+    //     //     $rmCondition .= " where ";
+    //     // }
+    //     // header('Content-Type: application/json');
+    //     // $sql = "SELECT trs.* from trade_deposits trs " . $rmCondition . " trs.deposit_type = 'Internal Transfer' order by trs.id desc";
+    //     // $query = DB::select($sql);
+    //     // $results = $query;
+
+    //     $query = TradeDeposit::with(['user', 'account']);
+
+    //     // Add conditions based on session and GET parameters
+    //     if (!isset($_GET['id'])) {
+    //         if (session('userData')['userRole'] == "Relationship Manager") {
+    //             $rmId = session('alogin');
+    //             $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+    //                 $q->where('rm_id', $rmId);
+    //             });
+    //         }
+    //     } else {
+    //         $query->where('deposit_type', 'Internal Transfer');;
+    //     }
+
+    //     // Fetch data
+    //     $deposits = $query->orderByDesc('id')->get();
+
+    //     $data = [];
+    //     foreach ($deposits as $row) {
+    //         if ($row->deposit_from) {
+    //             $acc = Account::where('id', $row->deposit_from)->first();
+    //         }
+    //         if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+    //             $transfer_from = 'IB Wallet';
+    //         } else {
+    //             $transfer_from = $row->deposit_type;
+    //         }
+    //         $data[] = [
+    //             'id' => 'ITID' . sprintf("%05d", $row->id),
+    //             'email' => $row->email,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'transfer_from' => ($row->deposit_from && $acc) ? $acc->code : $transfer_from,
+    //             'transfer_to' => $row->code,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+
+    public function getPendingWalletDeposit2(Request $request)
     {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
-        } else {
-            $rmCondition .= " where (1) and ";
+        // Base query
+        $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
+            ->select('wallet_deposit.*')
+            ->where('status',0)
+            ->with(['user']);
+
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT md5(user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'WWID' . sprintf("%05d", $row->id),
-                'email' => $row->email,
-                'enc_id' => $row->enc_id,
-                'fullname' => $row->fullname,
-                'amount' => '$' . $row->withdraw_amount,
-                'payment_mode' => $row->withdraw_type,
-                'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
-            ];
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdraw_amount;
+                })
+                ->addColumn('payment_mode', function($row){
+                    return $row->deposit_type;
+                })
+                ->addColumn('deposit_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a class='btn btn-sm btn-primary' href='/admin/wallet_deposit_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->user->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->deposted_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->deposted_date));
+                })
+                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date','status','action'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getPendingTradingDeposit()
+
+    public function getPendingWalletWithdrawal2(Request $request)
     {
+        $query = WalletWithdraw::with(['user']);
 
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        if (session('userData')['userRole'] == "Relationship Manager") {
+            $rmId = session('alogin');
+            $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                $q->where('rm_id', $rmId);
+            });
         } else {
-            $rmCondition .= " where (1) and ";
+            $query->where('Status', 0);
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TDID' . sprintf("%05d", $row->id),
-                'enc_id' => $row->raw_erc,
-                'account_no' => $row->trade_id,
-                'amount' => '$' . $row->deposit_amount,
-                'deposit_type' => $row->deposit_type,
-                'deposit_from' => $row->deposit_from,
-                'deposit_date' => $row->deposted_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . md5($row->id) . '">View</a>'
-            ];
+
+        // Fetch data
+        $query->orderByDesc('id')->get();
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdraw_amount;
+                })
+                ->addColumn('fee', function($row){
+                    return $row->withdraw_transaction_fee;
+                })
+                ->addColumn('payment_mode', function($row){
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->user->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->withdraw_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->withdraw_date));
+                })
+                ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
-    public function getPendingTradingWithdrawal()
+
+    public function getPendingTradingDeposit2(Request $request)
     {
-
-        $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+        $query = TradeDeposit::with(['user', 'account'])
+                    ->where('status', 0);
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
         } else {
-            $rmCondition .= " where (1) and ";
+            $query->where('code', $_GET['id']);
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => 'TWID' . sprintf("%05d", $row->id),
-                'account_no' => $row->trade_id,
-                'amount' => '$' . $row->withdrawal_amount,
-                'withdraw_type' => $row->withdraw_type,
-                'withdraw_to' => $row->withdraw_to,
-                'withdraw_date' => $row->withdraw_date,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
-            ];
+
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->editColumn('id', function ($row) {
+                    return $row->id;
+                })
+                ->addColumn('account_no', function($row){
+                    return $row->code;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->deposit_amount;
+                })
+                ->addColumn('deposit_type', function($row){
+                    if ($row->deposit_from) {
+                        $acc = Account::where('id', $row->deposit_from)->first();
+                    }
+                    if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+                        $deposit_type = 'IB Deposit';
+                    } else {
+                        $deposit_type = $row->deposit_type;
+                    }
+                    return $deposit_type;
+                })
+                ->addColumn('deposit_from', function($row){
+                    if ($row->deposit_from) {
+                        $acc = Account::where('id', $row->deposit_from)->first();
+                    }
+                    if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
+                        $deposit_from = 'IB Wallet';
+                    } else {
+                        $deposit_from = $row->deposit_type;
+                    }
+                    return ($row->deposit_from && $acc) ? $acc->code : $deposit_from;
+                })
+                ->addColumn('deposit_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->deposted_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->deposted_date));
+                })
+                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from','deposit_date','status','action'])
+                ->make(true);
         }
-        echo json_encode(['data' => $data]);
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
+
+    public function getPendingTradingWithdrawal2(Request $request)
+    {
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status',0);
+
+        if (!isset($_GET['id'])) {
+            if (session('userData')['userRole'] == "Relationship Manager") {
+                $rmId = session('alogin');
+                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+                    $q->where('rm_id', $rmId);
+                });
+            }
+        } else {
+            $query->where('account_id', $_GET['id']);
+        }
+
+        // Fetch data
+        $query->orderByDesc('id')->get();
+
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('account_no', function($row){
+                    return $row->account->code;
+                })
+                ->addColumn('amount', function($row){
+                    return $row->withdrawal_amount;
+                })
+                ->addColumn('withdraw_type', function($row){
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_to', function($row){
+                    // if ($row->withdraw_to) {
+                    //     $acc = Account::where('id', $row->withdraw_to)->first();
+                    // }
+                    return ($row->withdraw_to) ? $row->withdraw_to : $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    }elseif($row->status == 2){
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }else{
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->withdraw_date));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->withdraw_date));
+                })
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to','withdraw_date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    // public function getPendingWalletDeposit()
+    // {
+
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     } else {
+    //         $rmCondition .= " where (1) and ";
+    //     }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_deposit trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     info("getPendingWalletDeposit " . $sql);
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'WDID' . sprintf("%05d", $row->id),
+
+    //             'email' => $row->email,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->fullname,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'payment_mode' => $row->deposit_type,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_deposit_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+
+    //     return ['data' => $data];
+    // }
+    // public function getPendingWalletWithdrawal()
+    // {
+
+    //     // $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     // if (session('userData')['userRole'] == "Relationship Manager") {
+    //     //     $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     // } else {
+    //     //     $rmCondition .= " where (1) and ";
+    //     // }
+    //     // header('Content-Type: application/json');
+    //     // $sql = "SELECT (user.id) as enc_id,user.fullname as fullname,trs.* from wallet_withdraw trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     // $query = DB::select($sql);
+    //     // $results = $query;
+
+    //     $query = WalletWithdraw::with(['user']);
+
+    //     // Add conditions based on session and GET parameters
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmId = session('alogin');
+    //         $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+    //             $q->where('rm_id', $rmId);
+    //         });
+    //     } else {
+    //         $query->where('Status', 0);
+    //     }
+
+    //     // Fetch data
+    //     $results = $query->orderByDesc('id')->get();
+    //     $data = [];
+
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'WWID' . sprintf("%05d", $row->id),
+    //             'email' => $row->email,
+    //             'enc_id' => $row->enc_id,
+    //             'fullname' => $row->user->fullname,
+    //             'amount' => '$' . $row->withdraw_amount,
+    //             'fee' => '$' . $row->withdraw_transaction_fee,
+    //             'payment_mode' => $row->withdraw_type,
+    //             'withdraw_date' => $row->withdraw_date,
+    //             'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/wallet_withdrawal_details?id=' . $row->id . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getPendingTradingDeposit()
+    // {
+
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     } else {
+    //         $rmCondition .= " where (1) and ";
+    //     }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT trs.id as raw_erc,trs.* from trade_deposits trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'TDID' . sprintf("%05d", $row->id),
+    //             'enc_id' => $row->raw_erc,
+    //             'account_no' => $row->code,
+    //             'amount' => '$' . $row->deposit_amount,
+    //             'deposit_type' => $row->deposit_type,
+    //             'deposit_from' => $row->deposit_from,
+    //             'deposit_date' => $row->deposted_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
+    // public function getPendingTradingWithdrawal()
+    // {
+
+    //     $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
+    //     if (session('userData')['userRole'] == "Relationship Manager") {
+    //         $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
+    //     } else {
+    //         $rmCondition .= " where (1) and ";
+    //     }
+    //     header('Content-Type: application/json');
+    //     $sql = "SELECT trs.* from trade_withdrawal trs " . $rmCondition . " trs.Status = 0 order by trs.id desc";
+    //     $query = DB::select($sql);
+    //     $results = $query;
+    //     $data = [];
+    //     foreach ($results as $row) {
+    //         $data[] = [
+    //             'id' => 'TWID' . sprintf("%05d", $row->id),
+    //             'account_no' => $row->code,
+    //             'amount' => '$' . $row->withdrawal_amount,
+    //             'withdraw_type' => $row->withdraw_type,
+    //             'withdraw_to' => $row->withdraw_to,
+    //             'withdraw_date' => $row->withdraw_date,
+    //             'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+    //                 '<span class="badge bg-outline-primary">Pending</span>'),
+    //             'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . $row->id . '">View</a>'
+    //         ];
+    //     }
+    //     return ['data' => $data];
+    // }
     public function getPendingInternalTransfer()
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=trs.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (trs.email=rm.user_id) where rm.rm_id='" . session('alogin') . "' and ";
         } else {
             $rmCondition .= " where (1) and ";
@@ -547,36 +1857,36 @@ class AjaxController extends Controller
                 'amount' => '$' . $row->amount,
                 'transfer_from' => $row->TransferFromAccountId,
                 'transfer_to' => $row->TransferToAccountId,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/internal_transfer_details?id=' . $row->itIndex . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
 
     public function getKYCHistory()
     {
 
         $rmCondition = " left join aspnetusers user on(user.email=kyc.email) ";
-        if (session('userData')['role_id'] == 2) {
+        if (session('userData')['userRole'] == "Relationship Manager") {
             $rmCondition .= " left join relationship_manager rm on (rm.user_id=kyc.email) where rm.rm_id='" . session('alogin') . "' and";
         }
         header('Content-Type: application/json');
         $sql = "SELECT kyc.id as id,kyc.id as id,max(registered_date_js) as date,group_concat(kyc.kyc_type) as kyc_type,
   group_concat(concat(kyc.kyc_type,'=',kyc.Status) SEPARATOR '#') as summary,
-  kyc.email as email,sum(kyc.Status) as status,aspnetusers.fullname,md5(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
+  kyc.email as email,sum(kyc.Status) as status,aspnetusers.fullname,(kyc.email) as enc_id from kyc_update kyc left join aspnetusers on aspnetusers.email = kyc.email " . $rmCondition . " group by kyc.email order by kyc.id desc";
         $query = DB::select($sql);
         $results = $query;
 
-        echo json_encode(['data' => $results]);
+        return ['data' => $results];
     }
     public function getBankDetails()
     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=clientbankdetails.userId) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.userId) where rm.rm_id='" . session('alogin') . "'";
+        $rmCondition = " left join aspnetusers user on(user.id=clientbankdetails.user_id) ";
+        if (session('userData')['userRole'] == "Relationship Manager") {
+            $rmCondition .= " left join relationship_manager rm on (rm.user_id=clientbankdetails.user_id) where rm.rm_id='" . session('alogin') . "'";
         } else {
             $rmCondition .= " where (1)";
         }
@@ -599,28 +1909,29 @@ class AjaxController extends Controller
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/view_bank_details?id=' . $row->id . '">View</a>'
             ];
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getAdminUsers()
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, md5(e.client_index) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.role_name,r.role_id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN permissions p ON e.role_id = p.role_id
-                LEFT JOIN roles r ON e.role_id = r.role_id
+                LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN pages ON p.page_id = pages.page_id
-                GROUP BY e.client_index";
+                GROUP BY e.id";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
+
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = (session('userData')['role_id'] == 1 ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
+            $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
 
     public function getMT5Category($type = "category")
@@ -630,7 +1941,7 @@ class AjaxController extends Controller
         $sql = "SELECT * from mt5_group_categories where mt5_grp_cat_type = '" . $type . "' order by mt5_grp_cat_id";
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return ['data' => $results];
     }
 
 
@@ -641,19 +1952,19 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT * from account_types order by display_priority desc";
         } else {
-            $sql = "SELECT * from account_types where md5(ac_category) = '$type' order by display_priority asc";
+            $sql = "SELECT * from account_types where (ac_category) = '$type' order by display_priority asc";
         }
         $query = DB::select($sql);
         $results = $query;
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->enc_id = md5($row->ac_index);
+            $dat->enc_id = ($row->ac_index);
             $dat->ib_status = $row->ib_enabled == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
 
     public function getIbGroups($type = NULL)
@@ -663,11 +1974,11 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat ";
         } else {
-            $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat where md5(acc_ib_cat) = '$type'";
+            $sql = "SELECT account_types.*,ib_categories.ib_cat_name as ib_plan from account_types left join ib_categories on ib_categories.ib_cat_id = account_types.acc_ib_cat where (acc_ib_cat) = '$type'";
         }
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return ['data' => $results];
     }
 
     public function getIbPlans($type = NULL)
@@ -677,11 +1988,11 @@ class AjaxController extends Controller
         if ($type == NULL) {
             $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where deleted_at is NULL";
         } else {
-            $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where md5(ib_plan_cat_id) = '$type' and deleted_at is NULL";
+            $sql = "SELECT ib_plans.*,ib_categories.ib_cat_name as ib_plan,account_types.ac_name as ac_group from ib_plans left join account_types on account_types.ac_index = ib_plans.ib_acc_type_id left join ib_categories on ib_categories.ib_cat_id = ib_plans.ib_plan_cat_id where (ib_plan_cat_id) = '$type' and deleted_at is NULL";
         }
         $query = DB::select($sql);
         $results = $query;
-        echo json_encode(['data' => $results]);
+        return ['data' => $results];
     }
 
     public function getRoles()
@@ -699,14 +2010,14 @@ class AjaxController extends Controller
 
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getRolePermisions()
     {
 
 
         header('Content-Type: application/json');
-        $sql = "SELECT p.id,r.role_name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
+        $sql = "SELECT p.id,r.name,pg.pagename, p.created_at,p.updated_at from permissions p left join roles r on(p.role_id = r.role_id) left join pages pg on (p.page_id=pg.page_id)";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -715,7 +2026,7 @@ class AjaxController extends Controller
             $dat->action = ' <a class="btn btn-sm btn-danger disabled" href="#">DELETE</a>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getAllTickets()
     {
@@ -728,10 +2039,10 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getOpenTickets()
     {
@@ -742,10 +2053,10 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getClosedTickets()
     {
@@ -756,10 +2067,10 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
-            $dat->status = $row->Status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
+            $dat->status = $row->status == 'Open' ? '<span class="badge bg-outline-success">Open</span>' : '<span class="badge bg-outline-danger">Closed</span>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getRoleDetails($id)
     {
@@ -769,9 +2080,9 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         if (count($query)) {
             $result = $query[0];
-            echo json_encode($result);
+            return $result;
         } else {
-            echo json_encode([]);
+            return [];
         }
     }
     public function getPaymentGateways()
@@ -786,7 +2097,7 @@ class AjaxController extends Controller
             $dat->action = '<a data-id="' . $row->id . '"  class="btn btn-sm btn-secondary me-1 update-payment" href="#">Edit</a> <a href="#" onclick="deletePayment(`' . $row->id . '`)" data-id="' . $row->id . '"  class="btn btn-sm btn-danger me-1 delete-payment" href="#">Delete</a>';
             $data[] = $dat;
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function ibEnroll()
     {
@@ -805,16 +2116,15 @@ class AjaxController extends Controller
                 'emailToken' => $code,
                 'status' => 0
             ]);
-            echo "true";
+            return ["true"];
         } catch (Exception $e) {
-            echo "false";
+            return ["false"];
         }
-        exit();
     }
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where email='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
+        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
@@ -822,146 +2132,356 @@ class AjaxController extends Controller
 
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from_to' => $row->trade_id ?? 'Wallet',
+                'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
 
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getLatestWithdrawal($id)
     {
+        // header('Content-Type: application/json');
+        // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
+        // $query = DB::select($sql);
+        $query = WalletWithdraw::with('user')
+            ->where('user_id', $id)
+            ->where('Status', 1)
+            ->where('withdraw_type', ['Wallet Withdrawal'])
+            ->get();
 
-        header('Content-Type: application/json');
-        $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
-        $query = DB::select($sql);
         $results = $query;
         $data = [];
         foreach ($results as $row) {
-
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => $row->trade_id,
+                'from_to' => 'Wallet',
                 'payment_method' => $row->withdraw_type,
-                'amount' => '$' . $row->withdrawal_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'amount' => '$' . $row->withdraw_amount,
+                'fee' => '$' . $row->withdraw_transaction_fee,
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
     public function getLatestTransfer($id)
     {
-        header('Content-Type: application/json');
-        $sql = "SELECT * from trade_deposit where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and email='" . $id . "'  order by id desc";
-        $query = DB::select($sql);
+        // header('Content-Type: application/json');
+        // $sql = "SELECT * from trade_deposits where deposit_type IN ('Internal Transfer', 'CRM', 'Wallet Transfer')  and user_id='" . $id . "'  order by id desc";
+        // $query = DB::select($sql);
+        $query = TradeDeposit::whereIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer', 'IB Withdraw'])
+            ->with('accountDepositFrom')
+            ->where('user_id', $id)
+            ->get();
         $results = $query;
         $data = [];
-        // var_dump($results);
-        // die;
         foreach ($results as $row) {
+            if ($row->deposit_type == 'IB Withdraw' || $row->deposit_from == 'IB Commission') {
+                $deposit_from = 'IB Wallet';
+            } else {
+                $deposit_from = $row->deposit_type;
+            }
             $data[] = [
                 'created_on' => $row->deposted_date,
-                'from' => $row->deposit_from ? $row->deposit_from : $row->deposit_type,
-                'to' => $row->trade_id,
+                'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
+                'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->Status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->Status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>'),
             ];
         }
-        echo json_encode(['data' => $data]);
+        return ['data' => $data];
     }
-    public function getIbUsers()
+    public function getIbUsers2(Request $request){
+
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
+
+        // Base query
+
+        $rmCondition = Ib1::where('status', 1)
+            ->select('ib1.*')
+            ->with(['user', 'ibWallet','planDetails.accountType']);
+
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        // dd($query);
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->editColumn('name', function ($row) {
+                    if($row->planDetails){
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
+                    }else{
+                        $small = '';
+                    }
+
+                    return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg
+' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
+                })
+
+                ->addColumn('total_deposit', function ($row) {
+                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
+                    return $total_deposit;
+                })
+                ->addColumn('total_withdrawal', function ($row) {
+                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
+                    return $total_withdrawal;
+
+                })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->status ;
+                })
+
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>
+                                    <span class='status-value' data-status='1'>Active IB</span>
+                                </button>";
+                    } elseif ($row->status == 2) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>
+                                    <span class='status-value' data-status='2'>Rejected</span>
+                                </button>";
+                    } elseif ($row->status == 0) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>
+                                    <span class='status-value' data-status='0'>IB Requested</span>
+                                </button>";
+                    } else {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>
+                                    <span class='status-value' data-status='null'>Not Requested</span>
+                                </button>";
+                    }
+                })
+                ->addColumn('date', function($row){
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status','date'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
+    }
+//     public function getIbUsers()
+//     {
+
+//         $rmCondition = "";
+//         if (session('userData')['userRole'] == "Relationship Manager") {
+//             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+//         }
+//         header('Content-Type: application/json');
+//         $sql = "SELECT
+//     ib1.*,
+//     account_types.ac_name as grp,
+//     sum(ib_wallet.ib_wallet) as deposit,
+//     sum(ib_wallet.ib_withdraw) as withdraw
+// FROM
+//     ib1
+// LEFT JOIN
+//     ib_wallet
+// ON
+//     ib1.email = ib_wallet.email
+// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+//     group by ib1.email";
+//         $query = DB::select($sql);
+//         $results = $query;
+//         $data = [];
+//         foreach ($results as $row) {
+//             $data[] = [
+//                 'id' => $row->id,
+//                 'enc' => ($row->user_id),
+//                 // 'ib_category_id' => $row->ib_category_id,
+//                 'ib_plan_details_id' => $row->ib_plan_details_id,
+//                 'grp' => $row->grp,
+//                 'name' => $row->name,
+//                 'email' => $row->email,
+//                 'country' => $row->country,
+//                 'number' => $row->number,
+//                 'date' => $row->reg_date,
+//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+//                 'status' => $row->status
+//             ];
+//         }
+//         return ['data' => $data];
+//     }
+
+    public function getPendingIbUsers2(Request $request)
     {
+        $role = session('userData')['userRole'];
+        $alogin = session('alogin');
 
-        $rmCondition = "";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+        // Base query
+
+        $rmCondition = Ib1::where('status', 0)
+            ->select('ib1.*')
+            ->with(['user', 'ibWallet','planDetails.accountType'])
+            ->where('status',0);
+
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
         }
-        header('Content-Type: application/json');
-        $sql = "SELECT
-    ib1.*,
-    account_types.ac_name as grp,
-    sum(ib_wallet.ib_wallet) as deposit,
-    sum(ib_wallet.ib_withdraw) as withdraw
-FROM
-    ib1
-LEFT JOIN
-    ib_wallet
-ON
-    ib1.email = ib_wallet.email
-LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-    group by ib1.email";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => $row->indexId,
-                'enc' => md5($row->email),
-                'acc_type' => $row->acc_type,
-                'grp' => $row->grp,
-                'name' => $row->name,
-                'email' => $row->email,
-                'country' => $row->country,
-                'number' => $row->number,
-                'date' => $row->reg_date,
-                'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-                'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-                'status' => $row->status
-            ];
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+                $query->where('rm_id', $alogin);
+            });
         }
-        echo json_encode(['data' => $data]);
+
+        $rmCondition->orderBy('id', 'desc');
+
+
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->addColumn('name', function($row){
+                    if($row->planDetails){
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
+                    }else{
+                        $small = '';
+                    }
+
+                    return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
+                })
+                ->addColumn('total_deposit', function($row){
+                    $total_deposit = $row->ibWallet ? $row->ibWallet->sum('ib_wallet') : '$'+0;
+                    return $total_deposit;
+                })
+                ->addColumn('total_withdrawal', function($row){
+                    $total_withdrawal = $row->ibWallet ? $row->ibWallet->sum('ib_withdraw') : '$'+0;
+                    return $total_withdrawal;
+                })
+                ->editColumn('ib_status', function ($row) {
+                    return $row->status ;
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('status', function($row){
+                    if($row->status == 1){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
+                    }elseif($row->status == 2){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
+                    }elseif($row->status == 0){
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
+                    }else{
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
+                    }
+                })
+                ->addColumn('action', function($row){
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function getPendingIbUsers()
-    {
+//     public function getPendingIbUsers()
+//     {
 
-        $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
-        if (session('userData')['role_id'] == 2) {
-            $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
-        } else {
-            $rmCondition .= " where (1) ";
-        }
-        header('Content-Type: application/json');
-        $sql = "SELECT
-    ib1.*,
-    account_types.ac_name as grp,
-    sum(ib_wallet.ib_wallet) as deposit,
-    sum(ib_wallet.ib_withdraw) as withdraw
-FROM
-    ib1
-LEFT JOIN
-    ib_wallet
-ON
-    ib1.email = ib_wallet.email
-LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-and ib1.status = 0
-    group by ib1.email";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id' => $row->indexId,
-                'enc' => md5($row->email),
-                'acc_type' => $row->acc_type,
-                'grp' => $row->grp,
-                'name' => $row->name,
-                'email' => $row->email,
-                'country' => $row->country,
-                'number' => $row->number,
-                'date' => $row->reg_date,
-                'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-                'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-                'status' => $row->status
-            ];
-        }
-        echo json_encode(['data' => $data]);
-    }
+//         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
+//         if (session('userData')['userRole'] == "Relationship Manager") {
+//             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+//         } else {
+//             $rmCondition .= " where (1) ";
+//         }
+//         header('Content-Type: application/json');
+//         $sql = "SELECT
+//     ib1.*,
+//     account_types.ac_name as grp,
+//     sum(ib_wallet.ib_wallet) as deposit,
+//     sum(ib_wallet.ib_withdraw) as withdraw
+// FROM
+//     ib1
+// LEFT JOIN
+//     ib_wallet
+// ON
+//     ib1.email = ib_wallet.email
+// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+// and ib1.status = 0
+//     group by ib1.email";
+//         $query = DB::select($sql);
+//         $results = $query;
+//         $data = [];
+//         foreach ($results as $row) {
+//             $data[] = [
+//                 'id' => $row->indexId,
+//                 'enc' => ($row->user_id),
+//                 'acc_type' => $row->acc_type,
+//                 'grp' => $row->grp,
+//                 'name' => $row->name,
+//                 'email' => $row->email,
+//                 'country' => $row->country,
+//                 'number' => $row->number,
+//                 'date' => $row->reg_date,
+//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+//                 'status' => $row->status
+//             ];
+//         }
+//         return ['data' => $data];
+//     }
 
 
 
@@ -972,7 +2492,8 @@ and ib1.status = 0
         $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
-        echo json_encode($result);
+        unset($result->password);
+        return $result;
     }
     public function getPaymentDetails($id)
     {
@@ -981,61 +2502,68 @@ and ib1.status = 0
         $sql = "SELECT * FROM  available_payment WHERE id=" . $id;
         $query = DB::select($sql);
         $result = $query[0];
-        echo json_encode($result);
+        return $result;
     }
     public function updateClientStatus($data)
     {
+
         header('Content-Type: application/json');
 
-        $email = $data['client_id'];
+        $user_id = $data['client_id'];
         $email_confirmed = isset($data['email_confirmed']) && $data['email_confirmed'] === "on" ? 1 : 0;
         $user_status = isset($data['status']) && $data['status'] === "on" ? 1 : 0;
         $kyc_verify = isset($data['kyc_verify']) && $data['kyc_verify'] === "on" ? 1 : 0;
 
         $result = DB::table('aspnetusers')
             ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('md5(email)'), '=', $email)
+            ->where(DB::raw('id'), '=', $user_id)
             ->first();
-
         try {
+
             $updated = DB::table('aspnetusers')
-                ->where(DB::raw('md5(email)'), '=', $email)
+                ->where(DB::raw('id'), '=', $user_id)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
                     'kyc_verify' => $kyc_verify,
                 ]);
 
-            if ($updated) {
-                $data['email'] = $result->email;
-                if ($result->status != $user_status) {
-                    $data['field'] = 'status';
-                    $data['value'] = $user_status;
-                    $this->add_to_user_log($data);
-                }
-                if ($result->email_confirmed != $email_confirmed) {
-                    $data['field'] = 'email_confirmed';
-                    $data['value'] = $email_confirmed;
-                    $this->add_to_user_log($data);
-                }
-                if ($result->kyc_verify != $kyc_verify) {
-                    $data['field'] = 'kyc_verify';
-                    $data['value'] = $kyc_verify;
-                    $this->add_to_user_log($data);
-                }
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'No rows updated']);
-            }
+            return ['success' => true];
+
+            // if ($updated) {
+            //     $data['client_id'] = $result->email;
+            //     if ($result->status != $user_status) {
+            //         $data['field'] = 'status';
+            //         $data['value'] = $user_status;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     if ($result->email_confirmed != $email_confirmed) {
+            //         $data['field'] = 'email_confirmed';
+            //         $data['value'] = $email_confirmed;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     if ($result->kyc_verify != $kyc_verify) {
+            //         $data['field'] = 'kyc_verify';
+            //         $data['value'] = $kyc_verify;
+            //         $data['user_id']=$result->id;
+            //         $this->add_to_user_log($data);
+            //     }
+            //     echo json_encode(['success' => true]);
+            // } else {
+            //     echo json_encode(['success' => false, 'message' => 'No rows updated']);
+            // }
+
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
     public function add_to_user_log($data)
     {
-
-        DB::table('aspnetusers_log')->insert([
+        UserLog::create([
+            'user_id' => $data['user_id'],
             'email' => $data['email'],
             'admin_email' => session('alogin'),
             'type' => $data['field'],
@@ -1050,48 +2578,44 @@ and ib1.status = 0
 
         $result = DB::table('aspnetusers')
             ->select($ib_columns)
-            ->where(DB::raw('md5(email)'), '=', $id)
+            ->where(DB::raw('id'), '=', $id)
             ->first();
 
-        echo json_encode((array) $result);
+        return (array) $result;
     }
 
     public function getRMbyGroup($id)
     {
 
-        $results = [];
-        // $group_id = DB::table('aspnetusers')
-        //   ->where(DB::raw('md5(email)'), '=', $id)
-        //   ->value('group_id');
-        // if ($group_id !== null) {
-        $results = DB::table('emplist as emp')
-            ->select('emp.client_index', 'emp.email', 'emp.username')
-            ->where('emp.role_id', 2)
-            ->get()
-            ->toArray();
-        // }
-        echo json_encode($results);
-    }
+        $results = EmployeeList::with('role')
+        ->whereHas('role', function ($query) {
+            $query->where('name', 'Relationship Manager');
+        })
+        ->select('id','client_index', 'email', 'username')
+        ->get();
+            return $results;
+        }
 
     public function getClientDetails($data)
     {
-        $result = DB::table('aspnetusers')
-            ->select(
-                DB::raw('md5(email) as id'),
-                'email',
-                'password',
-                'fullname',
-                'country',
-                'number AS telephone',
-                'country_code',
-                'password as confirm_password',
-                // DB::raw("SUBSTRING(number, 1, LOCATE(')', number)) AS country_code"),
-                // DB::raw("REPLACE(SUBSTRING_INDEX(number, ')', -1), ' ', '') AS telephone")
-            )
-            ->where(DB::raw('md5(email)'), '=', $data['id'])
-            ->first();
 
-        echo json_encode((array) $result);
+        $result = DB::table('aspnetusers')
+        ->join('countries', 'aspnetusers.country', '=', 'countries.country_name')
+        ->select(
+            'aspnetusers.id',
+            'aspnetusers.email',
+            'aspnetusers.fullname',
+            'aspnetusers.country',
+            // 'aspnetusers.country_code',
+            // 'aspnetusers.number AS telephone',
+            DB::raw('concat(countries.country_code) as country_code'),
+            DB::raw('REGEXP_REPLACE(aspnetusers.number, concat(countries.country_code), "") AS telephone')
+        )
+        ->where('aspnetusers.id', '=', $data['id'])
+        ->first();
+
+            // dd($result);
+        return (array) $result;
     }
 
     public function requestIB($request)
@@ -1100,9 +2624,14 @@ and ib1.status = 0
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::whereRaw('md5(email) = ?', [$clientId])->first();
+            $result = Ib1::with('user')->whereRaw('user_id = ?', [$clientId])->first();
+
+            if ($result) {
+                $clientId = $result->user->id;
+            }
+
             if (!$result) {
-                $user = User::whereRaw('md5(email) = ?', [$clientId])->first();
+                $user = User::whereRaw('email = ?', [$clientId])->first();
                 if ($user) {
                     $ib1 = new Ib1();
                     $ib1->uid = $user->uid;
@@ -1117,21 +2646,23 @@ and ib1.status = 0
                     $ib1->save();
                 }
             }
-            $updated = Ib1::whereRaw('md5(email) = ?', [$clientId])
+            $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'acc_type' => $ibGroup
+                    'ib_plan_details_id' => $ibGroup
                 ]);
+
+            $cacheKey = 'ib1_' . $clientId;
+            Cache::forget($cacheKey);
+
             if ($updated) {
-                echo json_encode(['status' => true, 'message' => 'IB details updated successfully']);
+                // return response()->json(['status' => true, 'message' => 'IB details updated successfully.']);
+                return ['status' => true];
             } else {
-                echo json_encode(['status' => false, 'message' => 'Failed to update IB details']);
+                return response()->json(['status' => false, 'message' => 'Failed to update IB details.']);
             }
         } catch (Exception $e) {
-            dd($e->getMessage());
-            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
-
-
 }

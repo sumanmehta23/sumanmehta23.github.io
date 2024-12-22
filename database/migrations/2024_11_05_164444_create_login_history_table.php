@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -12,7 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('login_history', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
+            $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 100)->nullable();
             $table->string('ip', 100)->nullable();
             $table->string('country', 100)->nullable();

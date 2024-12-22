@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_logs', function (Blueprint $table) {
-            $table->bigInteger('payment_id', true);
+            $table->uuid('id')->primary();
+            $table->bigInteger('payment_id');
             $table->decimal('payment_amount', 10);
             $table->string('payment_type');
             $table->text('payment_req')->nullable();
@@ -21,9 +22,9 @@ return new class extends Migration
             $table->string('payment_status')->nullable();
             $table->text('payment_res')->nullable();
             $table->string('initiated_by', 100)->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            
             $table->text('remarks')->nullable();
+            $table->timestamps();
         });
     }
 

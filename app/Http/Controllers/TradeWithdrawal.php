@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\LiveAccount;
+use App\Models\Account;
 use App\Models\User;
-use App\Models\ClientBankDetails;
+use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
 use App\Models\TradeWithdrawals;
@@ -30,19 +30,24 @@ class TradeWithdrawal extends Controller
     public function index()
     {
         $email = auth()->user()->email;
-        AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
+        $user=auth()->user();
+        AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
+        $liveaccount_details = Account::with('accountType')
+            ->where('user_id', $user->id)
+            ->where('demo', false)
             ->get();
-        $walletenabled = User::where('email', $email)->value('wallet_enabled') ?? false;
-        $bank_details = ClientBankDetails::where('email', $email)->first() ?? [];
-        $totals = LiveAccount::where('email', $email)
+        $walletenabled = $user->wallet_enabled ?? false;
+        $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
+        $walletBalance=auth()->user()->wallet_balance;
+        $totals = Account::where('user_id', $user->id)
+            ->where('demo', false)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals'));
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','walletBalance'));
     }
     public function withdraw(Request $request)
     {
+        // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
@@ -52,24 +57,26 @@ class TradeWithdrawal extends Controller
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $email = session('clogin');
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
-            ->get()->toArray();
-        $trade_id = $request->input('trade_id');
+        $user_id = auth()->user()->id;
+        $user_email = auth()->user()->email;
+        $account_id = $request->account_id;
+        $account = Account::with('accountType')
+            ->where('id', $account_id)
+            ->where('user_id', $user_id)
+            ->firstOrFail();
+
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
-        $withdraw_to = $request->input('withdraw_to', '');
+        $to_account_id = $request->input('withdraw_to', '');
 
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1'
         ]);
+
         // Get the account balance
-        $account = array_filter($liveaccount_details, function ($obj) use ($trade_id) {
-            return $obj['trade_id'] == $trade_id;
-        });
+
         // Check for sufficient balance
-        if (isset($account[0]) && $amount > $account[0]['Balance']) {
+        if ($amount > $account->balance) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',
@@ -79,7 +86,8 @@ class TradeWithdrawal extends Controller
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
-            $login = $trade_id;
+            $login = $account->code;
+            $email = $account->email;
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
@@ -92,23 +100,27 @@ class TradeWithdrawal extends Controller
                 DB::beginTransaction();
                 try {
                     TradeWithdrawals::create([
-                        'email' => $email,
-                        'trade_id' => $trade_id,
+                        'email' => $user_email,
+                        'user_id' => $user_id,
+                        'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
                         'withdraw_type' => $withdraw_type,
-                        'withdraw_to' => $withdraw_to,
+                        // 'withdraw_to' => $to_account_id,
                         'wallet_qr' => '',
                         'Status' => 1
                     ]);
                     TotalBalance::create([
+                        'account_id' => $account->id,
                         'email' => $email,
+                        'user_id' => $user_id,
                         'deposit_amount' => $amount,
                     ]);
                     WalletDeposit::create([
                         'email' => $email,
+                        'user_id' => $user_id,
                         'deposit_amount' => $amount,
                         'deposit_type' => 'Internal Transfer',
-                        'Status' => 1,
+                        'status' => 1,
                     ]);
                     DB::commit();
                     return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);

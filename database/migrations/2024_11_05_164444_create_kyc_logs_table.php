@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -12,12 +13,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kyc_logs', function (Blueprint $table) {
-            $table->integer('kyc_log_id', true);
+            $table->uuid('id')->primary();
+            $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->integer('kyc_log_id');
             $table->string('client_id');
             $table->text('callback_code');
             $table->longText('callback_payload');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamps();
         });
     }
 

@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -12,24 +13,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wallet_deposit', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
+            $table->foreignIdFor(\App\Models\ClientWallet::class)->nullable()->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('email', 50)->nullable();
+
             $table->string('deposit_amount', 100)->nullable();
             $table->string('deposit_type', 100)->nullable();
             $table->string('company_bank', 100)->nullable();
             $table->string('client_bank', 100)->nullable();
             $table->string('transaction_id', 100)->nullable()->unique('transaction_id');
             $table->timestamp('deposted_date')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('Status')->default(0);
-            $table->string('AdminRemark', 100)->nullable();
+            $table->integer('status')->default(0);
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('btc_amount', 100)->nullable();
             $table->string('currency_type', 50)->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrent();
             $table->longText('callback_data')->nullable();
             $table->longText('callback_code')->nullable();
-        });
+            $table->foreignIdFor(User::class)->constrained((new User())->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
+    });
     }
 
     /**

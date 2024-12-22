@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('help_desk', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->string('email', 50)->nullable();
             $table->string('subject', 100)->nullable();
             $table->string('type', 50)->nullable();
             $table->string('priority', 100)->nullable();
             $table->string('message', 300)->nullable();
             $table->timestamp('created_date_js')->useCurrentOnUpdate()->nullable()->useCurrent();
-            $table->integer('Status')->default(0);
-            $table->string('AdminRemark', 100)->nullable();
+            $table->integer('status')->default(0);
+            $table->string('admin_remark', 100)->nullable();
             $table->timestamp('Js_Admin_Remark_Date')->nullable()->useCurrent();
         });
     }

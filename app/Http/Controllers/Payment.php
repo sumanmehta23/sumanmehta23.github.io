@@ -26,7 +26,7 @@ class Payment extends Controller
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
         $payment_res = json_encode($request->all());
-        $paymentLog = PaymentLog::where(DB::raw('MD5(payment_id)'), $payment_id)->with('user')->first();
+        $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
         if ($status == "success") {
             // Get the payment log
             if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
@@ -43,7 +43,7 @@ class Payment extends Controller
                     'deposit_amount' => $amount,
                     'deposit_type' => "Now Payment",
                     'currency_type' => "USD",
-                    'Status' => 1,
+                    'status' => 1,
                 ]);
 
                 if ($walletDeposit) {

@@ -39,14 +39,14 @@
                                 <ul class="list-group" id="tableMT5Group">
                                     <?php $i = 1;
                 foreach ($mt5_groups as $res) { ?>
-                                    <li class="list-group-item <?= $activeGroup == md5($res->mt5_group_id) ? 'active' : '' ?>"
+                                    <li class="list-group-item <?= $activeGroup == ($res->mt5_group_id) ? 'active' : '' ?>"
                                         aria-current="true">
                                         <a class="d-flex justify-content-between"
-                                            href="/admin/mt5_groups?activeGroup=<?= md5($res->mt5_group_id) ?>">
+                                            href="/admin/mt5_groups?activeGroup=<?= ($res->mt5_group_id) ?>">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <span class="fs-15">
-                                                        <?php if (md5($res->mt5_group_id) == $activeGroup) { ?>
+                                                        <?php if (($res->mt5_group_id) == $activeGroup) { ?>
                                                         <i class="bi category-icon bi-toggle2-on"></i>
                                                         <?php } else { ?>
                                                         <i class="bi category-icon bi-toggle2-off"></i>
@@ -77,7 +77,7 @@
                                                 </span>
                                                 <!-- <div class="badge m-auto bg-success">Active</div> -->
                                                 <?php } ?>
-                                                <button class="btn mains-edit" data-id="<?= md5($res->mt5_group_id) ?>"><i
+                                                <button class="btn mains-edit" data-id="<?= ($res->mt5_group_id) ?>"><i
                                                         class="fa fa-edit category-icon"></i></button>
                                             </div>
                                         </a>
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-end">
-                            <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-primary btn-sm">Show All</a>
+                            <a href="{{ url()->current() }}" class="btn btn-outline-primary btn-sm">Show All</a>
                         </div>
                     </div>
 
@@ -105,14 +105,14 @@
                                 <ul class="list-group" id="tableMT5Category">
                                     <?php $i = 1;
                 foreach ($results as $res) { ?>
-                                    <li class="list-group-item <?= $activeType == md5($res->mt5_grp_cat_id) ? 'active' : '' ?>"
+                                    <li class="list-group-item <?= $activeType == ($res->mt5_grp_cat_id) ? 'active' : '' ?>"
                                         aria-current="true">
                                         <a class="d-flex justify-content-between"
-                                            href="/admin/mt5_groups?activeType=<?= md5($res->mt5_grp_cat_id) ?>">
+                                            href="/admin/mt5_groups?activeType=<?= ($res->mt5_grp_cat_id) ?>">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <span class="fs-15">
-                                                        <?php if (md5($res->mt5_grp_cat_id) == $activeType) { ?>
+                                                        <?php if (($res->mt5_grp_cat_id) == $activeType) { ?>
                                                         <i class="bi category-icon bi-toggle2-on"></i>
                                                         <?php } else { ?>
                                                         <i class="bi category-icon bi-toggle2-off"></i>
@@ -141,7 +141,7 @@
                                                 <!-- <div class="badge m-auto bg-success">Active</div> -->
                                                 <?php } ?>
                                                 <button class="btn category-edit"
-                                                    data-id="<?= md5($res->mt5_grp_cat_id) ?>"><i
+                                                    data-id="<?= ($res->mt5_grp_cat_id) ?>"><i
                                                         class="fa fa-edit category-icon"></i></button>
                                             </div>
                                         </a>
@@ -152,7 +152,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-end">
-                            <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-primary btn-sm">Show All</a>
+                            <a href="{{ url()->current() }}" class="btn btn-outline-primary btn-sm">Show All</a>
                         </div>
                     </div>
 
@@ -169,13 +169,13 @@
                                 <ul class="list-group" id="tableMT5Category">
                                     <?php $i = 1;
                 foreach ($grp_books as $res) { ?>
-                                    <li class="list-group-item d-flex justify-content-between <?= $activeType == md5($res->mt5_grp_cat_id) ? 'active' : '' ?>"
+                                    <li class="list-group-item d-flex justify-content-between <?= $activeType == ($res->mt5_grp_cat_id) ? 'active' : '' ?>"
                                         aria-current="true">
-                                        <!-- <a href="/admin/mt5_groups?activeType=<?= md5($res->mt5_grp_cat_id) ?>"> -->
+                                        <!-- <a href="/admin/mt5_groups?activeType=<?= ($res->mt5_grp_cat_id) ?>"> -->
                                         <div class="d-flex align-items-center">
                                             <div>
                                                 <span class="fs-15">
-                                                    <?php if (md5($res->mt5_grp_cat_id) == $activeType) { ?>
+                                                    <?php if (($res->mt5_grp_cat_id) == $activeType) { ?>
                                                     <i class="bi category-icon bi-toggle2-on"></i>
                                                     <?php } else { ?>
                                                     <i class="bi category-icon bi-toggle2-off"></i>
@@ -202,7 +202,7 @@
                                             <!-- <div class="badge m-auto bg-success">Active</div> -->
                                             <?php } ?>
                                             <button class="btn category-edit"
-                                                data-id="<?= md5($res->mt5_grp_cat_id) ?>"><i
+                                                data-id="<?= ($res->mt5_grp_cat_id) ?>"><i
                                                     class="fa fa-edit"></i></button>
                                         </div>
                                         <!-- </a> -->
@@ -857,7 +857,7 @@
                     });
                 },
                 success: function(data) {
-                    
+
                     if (data == "true" || data.trim() == "true") {
                         swal.fire({
                             icon: "success",

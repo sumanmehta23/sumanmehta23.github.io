@@ -1,4 +1,13 @@
 @extends('layouts.app')
+<style>
+    @media (max-width: 550px) {
+        .mob_logo_center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+</style>
 @section('content')
 
         <div id="app" data-v-app="">
@@ -6,7 +15,7 @@
                 <div  class="auth-wrapper v3">
                     <div  class="auth-form">
                         <div  class="auth-header row">
-                            <div  class="my-1 col">
+                            <div  class="my-1 col mob_logo_center">
                                 <a href="{{ route('login') }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>

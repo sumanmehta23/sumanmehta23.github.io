@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trading_bonus', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->integer('trade_id')->nullable();
+            $table->uuid('id')->primary();
+            $table->integer('code')->nullable();
             $table->string('bonus_amount', 100)->nullable();
             $table->string('comments', 100)->nullable();
-            $table->timestamp('Registered_Date')->useCurrentOnUpdate()->useCurrent();
+            $table->timestamp('registered_date')->useCurrentOnUpdate()->useCurrent();
         });
     }
 

@@ -275,5 +275,3 @@ class MTHistoryAnswer
     return MTOrderJson::GetFromJson($obj);
     }
   }
-
-?>

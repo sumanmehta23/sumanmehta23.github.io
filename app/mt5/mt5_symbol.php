@@ -1737,5 +1737,3 @@ class MTEnHedgeFlags
   const HEDGE_FLAGS_FIRST = MTEnHedgeFlags::HEDGE_FLAGS_ALLOW_CLOSEBY;
   const HEDGE_FLAGS_ALL   = 1; // HEDGE_FLAGS_ALLOW_CLOSEBY
   }
-
-?>

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_assignee', function (Blueprint $table) {
-            $table->integer('id', true);
+            $table->uuid('id')->primary();
             $table->integer('ticket_id')->unique('ticket_id');
             $table->integer('assignee')->index('assignee');
             $table->dateTime('assigned_at')->useCurrentOnUpdate()->useCurrent();

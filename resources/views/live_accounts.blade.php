@@ -2,6 +2,9 @@
 @section('content')
 <div class="pc-container">
     <div class="pc-content">
+      @if(session('error'))
+          <div class="alert alert-danger">{{ session('error') }}</div>
+      @endif
       <div class="page-header mb-0 pb-0">
         <div class="page-block">
           <div class="row align-items-center">
@@ -17,7 +20,7 @@
         @include('mt5_accounts_tab')
         <div class="col-md-12 col-lg-9">
           <div class="card">
-            <div class="card-body border-bottom pb-0">
+            <div class="pb-0 card-body border-bottom">
               <div class="d-flex align-items-center justify-content-between">
                 <h5 class="mb-0">My Live Trading Accounts</h5>
                 <div class="dropdown">
@@ -51,25 +54,25 @@
                           <td>
                             <div class="row align-items-center">
                               <div class="col-auto pe-0">
-                                <img src="/assets/images/mt5.png" alt="user-image" class="wid-50 hei-50 rounded">
+                                <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                               </div>
                               <div class="col">
                                 <h4 class="mb-2 ms-2">
-                                  <span class="text-truncate w-100">{{ $acc->trade_id }}</span>
+                                  <span class="text-truncate w-100">{{ $acc->code }}</span>
                                 </h4>
-                                <p class="text-muted ms-2 f-12 mb-0">
-                                  <span class="text-truncate w-100">{{ $acc->ac_name }}</span>
+                                <p class="mb-0 text-muted ms-2 f-12">
+                                  <span class="text-truncate w-100">{{ $acc->email }}</span>
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                          <td class="text-end f-w-400 f-16">$ {{ $acc->Balance }}</td>
+                          <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
                           <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
                           <td class="text-end f-w-200">
                             <div class="d-flex align-items-center">
                               <button class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                <a href="{{ url('/view_account_details') }}?type=live&id={{ $acc->trade_id }}">
+                                <a href="{{ route('view-account-details', $acc->id) }}">
                                   <span class="">View <svg class="pc-icon">
                                       <use xlink:href="#custom-login"></use>
                                     </svg></span>
@@ -92,7 +95,7 @@
         <div class="col-md-6 col-lg-3">
           <a href="{{ url('/createLiveAccount') }}">
             <div class="card bg-primary available-balance-card">
-              <div class="card-body p-3">
+              <div class="p-3 card-body">
                 <div class="d-flex align-items-center justify-content-between">
                   <div>
                     <h4 class="mb-0 text-white">Create Account</h4>
@@ -107,7 +110,7 @@
           </a>
           <a href="/liveAccounts#">
             <div class="card">
-              <div class="card-body p-3">
+              <div class="p-3 card-body">
                 <a href="{{ url('/trade-deposit') }}" class="d-flex align-items-center justify-content-between">
                   <div>
                     <p class="mb-0 text-white text-opacity-75"></p>
@@ -122,7 +125,7 @@
           </a>
           <a href="/liveAccounts#">
             <div class="card">
-              <div class="card-body p-3">
+              <div class="p-3 card-body">
                 <a href="{{ url('/trade-withdrawal') }}" class="d-flex align-items-center justify-content-between">
                   <div>
                     <p class="mb-0 text-white text-opacity-75"></p>
@@ -137,7 +140,7 @@
           </a>
           <a href="/liveAccounts#">
             <div class="card">
-              <div class="card-body p-3">
+              <div class="p-3 card-body">
                 <a href="{{ url('/user-profile') }}" class="d-flex align-items-center justify-content-between">
                   <div>
                     <p class="mb-0 text-white text-opacity-75"></p>

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bonuses', function (Blueprint $table) {
-            $table->integer('bonus_id', true);
+            $table->uuid('id')->primary();
+            $table->integer('bonus_id');
             $table->string('bonus_name');
             $table->string('bonus_code');
             $table->text('bonus_desc');
@@ -26,9 +27,8 @@ return new class extends Migration
             $table->integer('bonus_limit')->default(1);
             $table->boolean('status')->default(true);
             $table->string('bonus_updated_by', 300);
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-            $table->dateTime('deleted_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -86,7 +86,7 @@
                                 <div class="avtar avtar-s border"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->trade_id }}</h6>
+                                <h6 class="mb-0">{{ $history->code }}</h6>
                                 <p class="text-muted mb-0"><small>{{ $history->ac_name }}</small></p>
                               </div>
                             </div>
@@ -103,8 +103,8 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->deposit_amount, 2) }}</h6>
                           </td>
-                          <td class="{{ $history->Status == 0 ? 'text-warning' : ($history->Status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->Status == 0 ? 'Pending' : ($history->Status == 1 ? 'Success' : 'Cancelled') }}</p>
+                          <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                            <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
                         </tr>
                       @endforeach
@@ -147,6 +147,7 @@
                         <th scope="col">TRANSACTION DATE</th>
                         <th scope="col">TYPE</th>
                         <th scope="col">AMOUNT</th>
+                        <th scope="col">FEE</th>
                         <th scope="col">STATUS</th>
                       </tr>
                     </thead>
@@ -176,8 +177,11 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount, 2) }}</h6>
                           </td>
-                          <td class="{{ $history->Status == 0 ? 'text-warning' : ($history->Status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->Status == 0 ? 'Pending' : ($history->Status == 1 ? 'Success' : 'Cancelled') }}</p>
+                          <td>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee, 2) }}</h6>
+                          </td>
+                          <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                            <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
                         </tr>
                       @endforeach
@@ -226,38 +230,59 @@
                     </thead>
                     <tbody>
                       @foreach ($internal_transfer as $history)
+                      {{-- {{ dump($internal_transfer); }} --}}
+                        @php
+                            if ($history->type == 'CRM') {
+                                $from = 'CRM';
+                            } elseif($history->type == 'IB Withdraw'){
+                                $from = 'IB Wallet';
+                            }elseif (!empty($history->accountFrom->code)) {
+                                $from = $history->accountFrom->code;
+                            }elseif($history->type == 'Wallet Transfer' && $history->source == 'TDID'){
+                                $from = 'Wallet';
+                            } else {
+                                $from = $history->it_from;
+                            }
+
+                            if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
+                                $to = $history->it_to ?? 'Wallet';
+                            } else {
+                                $to = !empty($history->accountTo->code) ? $history->accountTo->code : '';
+                            }
+                        @endphp
                         <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->source }}{{ sprintf("%04d", $history->raw_id) }}</h6>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500">{{ Carbon::parse($history->date)->format('Y-m-d') }}</h6>
-                            <p class="text-muted mb-0">
-                              <small>{{ Carbon::parse($history->date)->format('H:i A') }}</small>
-                            </p>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history->type == "Wallet Transfer" ? 'Wallet' : $history->it_from }}</h6>
-                            </div>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <h6 class="mb-0">{{ $history->type == "Wallet Withdrawal" ? 'Wallet' : $history->it_to }}</h6>
-                            </div>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500">{{ $history->type }}</h6>
-                          </td>
-                          <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->amount, 2) }}</h6>
-                          </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="ms-2">
+                                        <h6 class="mb-0">{{ $history['source'] }}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
+                                <p class="text-muted mb-0">
+                                    <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
+                                </p>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0">{{ $from }}</h6>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0">{{ $to }}</h6>
+                                </div>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500">{{ $history['type'] }}</h6>
+                            </td>
+                            <td>
+                                <h6 class="f-w-500 f-16">${{ number_format($history['amount'], 2) }}</h6>
+                            </td>
                         </tr>
-                      @endforeach
+                    @endforeach
+
                     </tbody>
                   </table>
                   <hr>

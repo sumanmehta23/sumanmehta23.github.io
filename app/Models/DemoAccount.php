@@ -14,16 +14,22 @@ class DemoAccount extends Model
         'balance',
         'email',
         'name',
-        'trade_id',
+        'code',
         'account_type',
         'leverage',
         'currency',
-        'trader_pwd',
-        'invester_pwd',
-        'phone_pwd',
+        'trader_password',
+        'invester_password',
+        'phone_password',
     ];
     public function accountType()
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'ac_group');
+    }
+
+
+    public function BonusTransaction()
+    {
+        return $this->hasMany(BonusTransaction::class, 'code',  'code');
     }
 }

@@ -26303,7 +26303,7 @@ pre[class*=language-]>code {
         box-shadow: none
     }
 
-    [data-pc-layout=horizontal] .pc-header .pc-h-item.pc-sidebar-collapse {
+    [data-pc-layout=horizontal] .pc-header .pc-h-item .pc-sidebar-collapse {
         display: none
     }
 

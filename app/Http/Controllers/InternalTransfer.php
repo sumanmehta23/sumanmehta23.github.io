@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\LiveAccount;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
-use App\Helpers\AccountHelper;
-use Illuminate\Support\Facades\DB;
-use App\Models\TradeWithdrawals;
-use App\Models\TradeDeposits;
 use App\Models\TotalBalance;
+use Illuminate\Http\Request;
+use App\Models\TradeDeposit;
+use App\Helpers\AccountHelper;
+use App\Models\TradeWithdrawals;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class InternalTransfer extends Controller
 {
@@ -25,10 +26,8 @@ class InternalTransfer extends Controller
     public function index()
     {
         $email = auth()->user()->email;
-        AccountHelper::updateLiveAndDemoAccounts($email, $this->api);
-        $liveaccount_details = LiveAccount::with('accountType')
-            ->where('email', $email)
-            ->get();
+        AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
+        $liveaccount_details = auth()->user()->liveAccounts;
         return view('internal-transfer', compact('liveaccount_details'));
     }
     public function processTransfer(Request $request)
@@ -48,46 +47,57 @@ class InternalTransfer extends Controller
             'transferable_amount' => 'required|numeric|min:1',
         ]);
 
-        $fromAccount = $request->input('fromAccount');
-        $toAccount = $request->input('toAccount');
+        $fromAccountId = $request->input('fromAccount');
+        $toAccountId = $request->input('toAccount');
+        $userId=auth()->user()->id;
+        $fromAccount = Account::where(['id'=> $fromAccountId,'user_id'=>$userId])->firstOrFail();
+        $toAccount = Account::where(['id'=> $toAccountId,'user_id'=>$userId])->firstOrFail();
+        // dump($fromAccount);
+        // dd($toAccount);
         $transferable_amount = $request->input('transferable_amount');
         $email = auth()->user()->email;
         $ticket = NULL;
 
         // Withdraw from the first account
-        $errorCode = $this->api->TradeBalance($fromAccount, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
+        $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
             return redirect()->back()->with('error', 'Failed to withdraw from the account.');
         } else {
+
             DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
                 TradeWithdrawals::create([
                     'email' => $email,
-                    'trade_id' => $fromAccount,
+                    'user_id' => auth()->user()->id,
+                    'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
-                    'withdraw_to' => $toAccount,
+                    'withdraw_to' => $toAccount->id,
                     'withdraw_date' => now(),
-                    'Status' => 1
+                    'status' => 1
                 ]);
                 // Deposit to the second account
-                $errorCode = $this->api->TradeBalance($toAccount, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
+                $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     return redirect()->back()->with('error', 'Deposit Failed.');
                 } else {
                     // Log deposit
-                    TradeDeposits::create([
+                    TradeDeposit::create([
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $toAccount->id,
                         'email' => $email,
-                        'trade_id' => $toAccount,
+                        'code' => $toAccount->code,
                         'deposit_amount' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
-                        'deposit_from' => $fromAccount,
+                        'deposit_from' => $fromAccount->id,
                         'status' => 1,
                     ]);
                     TotalBalance::create([
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $toAccount->id,
                         'email' => $email,
-                        'trade_id' => $toAccount,
+                        'code' => $toAccount->code,
                         'trading_deposited' => $transferable_amount,
                         'deposit_type' => 'Internal Transfer',
                     ]);

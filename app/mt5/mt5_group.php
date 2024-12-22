@@ -1488,5 +1488,3 @@ class MTEnCommissionVolumeType
   const COMM_TYPE_FIRST = MTEnCommissionVolumeType::COMM_TYPE_DEAL;
   const COMM_TYPE_LAST  = MTEnCommissionVolumeType::COMM_TYPE_VOLUME;
   }
-
-?>
