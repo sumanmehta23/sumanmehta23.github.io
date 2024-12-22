@@ -174,6 +174,7 @@ class Ib extends Controller
             if(!$referral_code){
                 $referral_code = auth()->user()->ib->email;
             }
+            info('Getting accounts for ref code '.$referral_code." for user ".$userId);
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
