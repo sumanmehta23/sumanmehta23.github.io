@@ -133,6 +133,13 @@ return [
             'days' => 1000,
             'replace_placeholders' => true,
         ],
+        'payouts' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payouts/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 1000,
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];
