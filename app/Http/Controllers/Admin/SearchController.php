@@ -33,12 +33,14 @@ class SearchController extends Controller
         }
         // Apply conditions based on user groups.
         if ($roleId != '9db6f441-3c60-4045-a236-8b7b71fa6e15') {
-            $userGroups = session('user_groups');
-            // dd($userGroups);
-            if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
-                $query->whereIn('user.group_id', explode(',', $userGroups));
-            } else {
-                $query->whereIn('user.group_id', explode(',', $userGroups));
+                $userGroups = session('user_groups');
+                if($userGroups){
+                // dd($userGroups);
+                if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
+                    $query->whereIn('user.group_id', explode(',', $userGroups));
+                } else {
+                    $query->whereIn('user.group_id', explode(',', $userGroups));
+                }
             }
         }
 
