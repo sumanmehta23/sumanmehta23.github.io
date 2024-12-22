@@ -40,20 +40,20 @@ class DataImportSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', 3000);
-        $this->users();
-        $this->userLogs();
-        $this->liveaccounts();
-        $this->demoaccounts();
-        $this->bonusTransaction();
-        $this->clientWallets();
-        $this->demoDeposit();
-        $this->ib1(); 
-        $this->ib1_commission();
-        $this->ib1_withdraw();
-        $this->ib_categories();
-        $this->ib_plans();
-        $this->ib_plan_details();
-        $this->ib_wallet();
+        // $this->users();
+        // $this->userLogs();
+        // $this->liveaccounts();
+        // $this->demoaccounts();
+        // $this->bonusTransaction();
+        // $this->clientWallets();
+        // $this->demoDeposit();
+        // $this->ib1(); 
+        // $this->ib1_commission();
+        // $this->ib1_withdraw();
+        // $this->ib_categories();
+        // $this->ib_plans();
+        // $this->ib_plan_details();
+        // $this->ib_wallet();
         $this->kyc_logs();
         $this->loginHistory();
         $this->totalBalance();
@@ -354,7 +354,12 @@ class DataImportSeeder extends Seeder
             $ibwallet['code'] = $ibwallet['trade_id'];
             unset($ibwallet['trade_id']);
             unset($ibwallet['id']);
-            IbWallet::create($ibwallet);
+            try {
+                IbWallet::create($ibwallet);
+            } catch (\Throwable $th) {
+                Log::error( $th->getMessage(),$ibwallet);
+            }
+            
         }
     }
 
