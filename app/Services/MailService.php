@@ -21,7 +21,6 @@ class MailService
 
     public function sendEmail($toEmail, $subject, $headers,$templateFile,$data)
     {
-        return '';
         $settings=settings();
         $htmlContent = view('emails.template', $data)->render();
         $payload = [
