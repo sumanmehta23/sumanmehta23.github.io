@@ -169,6 +169,9 @@ class Ib extends Controller
             }
             // dump($ib_acc_plans);
             $referral_code= auth()->user()->ib->referral_code;
+            if(!$referral_code){
+                $referral_code = auth()->user()->ib->email;
+            }
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
@@ -205,6 +208,7 @@ class Ib extends Controller
                         $result2 = $orders;
 
                         if ($result2) {
+                            $ibcommissions=[];
                             foreach ($result2 as $item) {
 
                                 $symbolWithoutP = $item->Symbol;
@@ -236,22 +240,32 @@ class Ib extends Controller
                                 $init_volume = $item->VolumeInitial;
                                 $volume = $init_volume * $b;
                                 $time_closed = Carbon::createFromTimestamp($item->TimeDone);
-
-                                try {
-                                    Ib1Commission::create([
-                                        'user_id' => $client->user_id,
-                                        'account_id' => $client->id,
-                                        'order_id' => $order,
-                                        'code' => $login,
-                                        'init_volume' => $init_volume,
-                                        'symbol' => $symbolWithoutP,
-                                        'volume' => $volume,
-                                        'time_closed' => $time_closed
-                                    ]);
-                                } catch (Exception $e) {
-
-                                    logger()->error('Error inserting commission: ' . $e->getMessage());
+                                $ibcommissions[]=[
+                                    'user_id' => $client->user_id,
+                                    'account_id' => $client->id,
+                                    'order_id' => $order,
+                                    'code' => $login,
+                                    'init_volume' => $init_volume,
+                                    'symbol' => $symbolWithoutP,
+                                    'volume' => $volume,
+                                    'time_closed' => $time_closed,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                                if(count($ibcommissions) == 100){
+                                    try {
+                                        Ib1Commission::insert($ibcommissions);
+                                    } catch (Exception $e) {
+                                        logger()->error('Error inserting commission: ' . $e->getMessage());
+                                    }
+                                    $ibcommissions=[];
                                 }
+                            }
+                            try {
+                                 Ib1Commission::insert($ibcommissions);
+                            } catch (Exception $e) {
+
+                                logger()->error('Error inserting commission: ' . $e->getMessage());
                             }
                         }
                         // dd($result2);
