@@ -239,7 +239,7 @@ class LoginController extends Controller
         }
         $userData['referral'] ='';
         if($request->has('referral')){
-            $result = Ib1::where(['referral_code'=> $request->refercode,'status'=>1])->first();
+            $result = Ib1::where(['referral_code'=> $request->referral,'status'=>1])->first();
             if ($result) {
                 $userData['referral'] = $request->referral;
             }
