@@ -295,7 +295,7 @@ class Ib extends Controller
                     ->orderByDesc('id')->get();
 
                     // dump($client_live_accs);
-
+                    info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
 
                 foreach ($client_live_accs as $ca) {
 
