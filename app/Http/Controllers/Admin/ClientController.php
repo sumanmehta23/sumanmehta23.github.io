@@ -426,12 +426,12 @@ class ClientController extends Controller
         $user = User::with('ib')
             ->where('id', $id)
             ->firstOrFail();
-      
+
         $acc_groups = IBPlan::with('category')
             ->where('status', 1)
             ->groupBy('ib_plan_cat_id')
             ->get();
-       
+
         $acc_types = AccountType::with('mt5Group')
             ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();
@@ -446,18 +446,18 @@ class ClientController extends Controller
                 }
                 $clients[$i] = $foundClients;
             }
-          
+
             $total_wd = WalletDeposit::where('user_id', $eid)
                 ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
                 ->where('status', 1)
                 ->sum('deposit_amount');
-          
+
             $total_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('withdraw_type', 'Internal Transfer')
                 ->where('status', 1)
                 ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
                 ->value('total');
-           
+
             $pending_ww = WalletWithdraw::where('user_id', $eid)
                 ->where('status', 0)
                 ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
@@ -465,9 +465,9 @@ class ClientController extends Controller
 
 
             $pendingwalletwithdraw = (float)$pending_ww;
-          
+
             $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
-          
+
             $total_balance = TotalBalance::where('user_id', $eid)
                 ->selectRaw('
                     SUM(deposit_amount) as deposit_amount,
@@ -515,7 +515,7 @@ class ClientController extends Controller
         $ticket_status = json_decode(json_encode($ticket_status_obj), true);
         $ticket_types_obj = DB::table('ticket_types')->get()->toArray();
         $ticket_types = json_decode(json_encode($ticket_types_obj), true);
-       
+        dd('fff');
         return view('admin.client_details', compact(
             'ticket_status',
             'ticket_types',
