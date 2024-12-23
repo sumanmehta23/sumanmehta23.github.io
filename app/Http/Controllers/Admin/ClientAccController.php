@@ -48,9 +48,9 @@ class ClientAccController extends Controller
         // $accounts = $rmCondition->select('liveaccount.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
         //     ->get();
 
-        $accounts = $rmCondition->orderBy('id', 'desc')->get();
+        $accountCount = $rmCondition->count();
 
-        return view('admin.client_accounts.live_accounts', compact("accounts"));
+        return view('admin.client_accounts.live_accounts', compact("accountCount"));
     }
     public function demo_accounts()
     {

@@ -21,7 +21,7 @@
                     <div class="card custom-card">
                         <div class="card-header d-none">
                             <div class="card-title">
-                                Listed Count : {{ count($accounts) }}
+                                Listed Count : {{ $accountCount }}
                             </div>
                         </div>
                         <div class="card-body">
@@ -43,67 +43,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- <?php
-                                    foreach ($accounts as $result) {
-                                        // print_r($result);
-                                        // exit();
-                                    ?>
-                                        <tr>
-                                            <td>
-                                                <a href='{{route('admin.admin-view-client-details',$result->user_id)}}'>
-                                                    <div class='d-flex align-items-center'>
-                                                        <div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'
-                                                                width='28' height='28' viewBox='0 0 24 24'
-                                                                fill='none' stroke='#000000' stroke-width='1.5'
-                                                                stroke-linecap='round' stroke-linejoin='round'
-                                                                size='28' color='#000000'
-                                                                class='tabler-icon tabler-icon-user-square-rounded'>
-                                                                <path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path>
-                                                                <path
-                                                                    d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'>
-                                                                </path>
-                                                                <path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'>
-                                                                </path>
-                                                            </svg></div>
-                                                        <div>
-                                                            <div class='lh-1'><span><?= ucfirst($result->name) ?></span>
-                                                            </div>
-                                                            <div class='lh-1'><span
-                                                                    class='fs-11 text-muted'><?= $result->email ?></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <a href="{{route('admin.admin-view-account-details',$result->id)}}">
-                                                    <div class="row align-items-center">
-                                                        <div class="col-auto pe-0"><img src="/assets/images/mt5.png"
-                                                                alt="user-image" class="rounded wid-50 hei-50"></div>
-                                                        <div class="col ps-2">
-                                                            <h6 class="mb-0"><span
-                                                                    class="text-truncate w-100"><?= $result->code ?></span>
-                                                            </h6>
-                                                            <p class="mb-0 text-muted f-12"><span
-                                                                    class="text-truncate w-100"><?= $result->accountType->ac_group ?></span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </a>
-                                            </td>
-                                            <td><?php echo htmlentities($result->leverage); ?></td>
-                                            <td><?php echo htmlentities(number_format($result->balance,2)); ?></td>
-                                            <td>
-                                                <div class="lh-1">
-                                                    <?= date('Y-m-d', strtotime($result->registered_date)) ?>
-                                                </div>
-                                                <div class="lh-2 text-muted">
-                                                    <?= date('H:i:s', strtotime($result->registered_date)) ?></div>
-                                            </td>
-                                        </tr>
-                                        <?php }
-                                    ?>
-                                        </tr> --}}
+                                        
                                     </tbody>
                                 </table>
                             </div>
