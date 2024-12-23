@@ -144,7 +144,6 @@ class User extends Authenticatable
             ->sum('deposit_amount');
     }
 
-    // Accessor for Wallet Withdrawals (total withdraw amount)
     public function getTotalWwAttribute()
     {
         return WalletWithdraw::where('user_id', $this->id)
@@ -154,7 +153,6 @@ class User extends Authenticatable
             ->value('total');
     }
 
-    // Accessor for Pending Wallet Withdrawals
     public function getPendingWwAttribute()
     {
         return WalletWithdraw::where('user_id', $this->id)
@@ -163,8 +161,6 @@ class User extends Authenticatable
             ->value('total');
     }
 
-
-    // Accessor for Total Balance (sum of deposits, trading deposits, etc.)
     public function getTotalBalanceAttribute()
     {
         return TotalBalance::where('user_id', $this->id)
@@ -176,19 +172,16 @@ class User extends Authenticatable
             ->first();
     }
 
-    // Accessor for Bank Details
     public function getBankDetailsAttribute()
     {
         return DB::table('clientbankdetails')->where('userId', $this->id)->first();
     }
 
-    // Accessor for KYC Details
     public function getKycDetailsAttribute()
     {
         return DB::table('kyc_update')->where('email', $this->email)->get();
     }
 
-    // Accessor for IB Details
     public function getIbDetailsAttribute()
     {
         return DB::table('ib1')
@@ -202,7 +195,6 @@ class User extends Authenticatable
             ->first();
     }
 
-    // Accessor for Relationship Manager (RM) Details
     public function getRmDetailsAttribute()
     {
         return DB::table('relationship_manager as rm')
@@ -212,26 +204,22 @@ class User extends Authenticatable
             ->first();
     }
 
-    // Accessor for Super Admin Details
     public function getSuperadminDetailsAttribute()
     {
         return DB::table('emplist')->where('role_id', 1)->first();
     }
 
-    // Accessor for Country Code
     public function getCountryCodeAttribute()
     {
         return DB::table('countries')->where('country_name', $this->country)->first();
     }
 
-    // Accessor for Clients grouped by referral code
     public function getClientsAttribute()
     {
         $clients = $this->ib ? IbClientList::whereIn('ib1', [$this->ib->referral_code])->get() : collect();
         return $clients->groupBy('ib1');
     }
 
-    // Accessor for Ticket Status and Ticket Types (cached)
     public function getTicketStatusAttribute()
     {
         return Cache::remember('ticket_status', 60, function () {
