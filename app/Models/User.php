@@ -114,9 +114,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(WalletWithdraw::class);
     }
-    public function countries()
+    public function country()
     {
-        return $this->hasMany(Country::class);
+        return $this->belongsTo(Country::class);
     }
     public function getWalletBalanceAttribute()
     {
