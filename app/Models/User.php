@@ -139,7 +139,7 @@ class User extends Authenticatable
     public function getTotalWdAttribute()
     {
         return WalletDeposit::where('user_id', $this->id)
-            ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
+            ->whereIn('deposit_type', ['Internal Transfer', 'CryptoChill'])
             ->where('status', 1)
             ->sum('deposit_amount');
     }
