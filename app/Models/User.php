@@ -80,11 +80,11 @@ class User extends Authenticatable
         ->withPivot('added_by');
     }
 
-    public function getCountry()
-    {
-        return Country::where('country_name', '=', $this->country) 
-            ->first();
-    }
+    // public function getCountry()
+    // {
+    //     return Country::where('country_name', '=', $this->country) 
+    //         ->first();
+    // }
 
     public function getParentIb()
     {   
@@ -114,9 +114,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(WalletWithdraw::class);
     }
-    public function country()
+    public function countryDetail()
     {
-        return $this->belongsTo(Country::class);
+        return $this->belongsTo(Country::class,'country','country_name');
     }
     public function getWalletBalanceAttribute()
     {
@@ -211,7 +211,7 @@ class User extends Authenticatable
 
     public function getCountryCodeAttribute()
     {
-        return DB::table('countries')->where('country_name', $this->country)->first();
+        return $this->countryDetail;
     }
 
     public function getClientsAttribute()

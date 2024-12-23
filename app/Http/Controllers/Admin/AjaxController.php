@@ -245,6 +245,7 @@ class AjaxController extends Controller
         // ini_set('max_execution_time', 3000);
         $query = User::with([
             'ib',
+            'countryDetail',
             'employee' => function ($query) {
                 $query->select('emplist.id', 'username');
             }
@@ -322,8 +323,8 @@ class AjaxController extends Controller
                         </a>";
                 })
                 ->editColumn('user_country', function ($row) {
-                    $countryAlpha = strtolower($row->getCountry() ? $row->getCountry()->country_alpha :'');
-                    return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->getCountry()->country_alpha}" : '-';
+                    $countryAlpha = strtolower($row->countryDetail ? $row->countryDetail->country_alpha :'');
+                    return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->countryDetail->country_alpha}" : '-';
                 })
                 ->editColumn('phone', function ($row) {
                     return $row->number ?? '-';
@@ -953,7 +954,7 @@ class AjaxController extends Controller
         }
 
         // Fetch data
-        $query->orderByDesc('id')->get();
+        // $query->orderByDesc('id')->get();
 
 
         if ($request->ajax()) {
@@ -1025,7 +1026,7 @@ class AjaxController extends Controller
         }
 
         // Fetch data
-        $query->orderByDesc('id')->get();
+        // $query->orderByDesc('id')->get();
 
         if ($request->ajax()) {
             return DataTables::of($query)
