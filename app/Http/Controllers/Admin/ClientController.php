@@ -29,6 +29,7 @@ use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
@@ -420,102 +421,74 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
-
         $id = request('userId');
-
-        $user = User::with('ib')
-            ->where('id', $id)
-            ->firstOrFail();
-      
+        $user = User::with(['ib' => function ($query) {
+            $query->select('id', 'referral_code');
+        }])->find($id);
+    
+        if (!$user) {
+            abort(404);
+        }
+    
+        // Fetching all the account groups and types in one go
         $acc_groups = IBPlan::with('category')
             ->where('status', 1)
             ->groupBy('ib_plan_cat_id')
             ->get();
-       
+    
         $acc_types = AccountType::with('mt5Group')
             ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();
-        if (!empty($user)) {
-            $eid = $user->id;
-            $clients = [];
-            for ($i = 1; $i <= 15; $i++) {
-                if($user->ib){
-                    $foundClients = IbClientList::where("ib$i", $user->ib->referral_code)->get();
-                }else{
-                    $foundClients='';
-                }
-                $clients[$i] = $foundClients;
-            }
-          
-            $total_wd = WalletDeposit::where('user_id', $eid)
-                ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
-                ->where('status', 1)
-                ->sum('deposit_amount');
-          
-            $total_ww = WalletWithdraw::where('user_id', $eid)
-                ->where('withdraw_type', 'Internal Transfer')
-                ->where('status', 1)
-                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
-                ->value('total');
-           
-            $pending_ww = WalletWithdraw::where('user_id', $eid)
-                ->where('status', 0)
-                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
-                ->value('total');
-
-
-            $pendingwalletwithdraw = (float)$pending_ww;
-          
-            $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
-          
-            $total_balance = TotalBalance::where('user_id', $eid)
-                ->selectRaw('
-                    SUM(deposit_amount) as deposit_amount,
-                    SUM(trading_deposited) as trading_deposited,
-                    SUM(trading_withdrawal) as trading_withdrawal,
-                    SUM(withdraw_amount) as withdraw_amount')
-                ->first();
-
-            $live_accounts = Account::with('accountType')
-                ->where('user_id', $eid)
-                ->where('demo', false)
-                ->orderBy('id', 'desc')
-                ->get();
-
-            $bank_details = DB::table('clientbankdetails')
-                ->where('userId', $eid)
-                ->first();
-            $kyc_details = DB::table('kyc_update')
-                ->where('email', $eid)
-                ->get();
-            $ib_details = DB::table('ib1')
-                ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
-                ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
-                ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
-                ->where('ib1.status', 1)
-                ->where('ib1.email', $user->email)
-                ->groupBy('ib1.email')
-                ->havingRaw('COUNT(ib1.email) > 0')
-                ->first();
-
-            $rm_details = DB::table('relationship_manager as rm')
-                ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
-                ->select('emp.client_index', 'emp.username', 'rm.*')
-                ->where('rm.user_id', $eid)
-                ->first();
-
-            $superadmin_details = DB::table('emplist')
-                ->where('role_id', 1)
-                ->first();
-            $country_code = DB::table('countries')
-                ->where('country_name', $user->country)
-                ->first();
-        }
-        $ticket_status_obj = DB::table('ticket_status')->get()->toArray();
-        $ticket_status = json_decode(json_encode($ticket_status_obj), true);
-        $ticket_types_obj = DB::table('ticket_types')->get()->toArray();
-        $ticket_types = json_decode(json_encode($ticket_types_obj), true);
-       
+    
+        // Fetch clients at once and group by referral code
+        $clients = $user->ib ? IbClientList::whereIn('ib1', [$user->ib->referral_code])->get() : collect();
+        $clientsGrouped = $clients->groupBy('ib1');
+    
+        // Aggregate wallet data in a single query
+        $wallet_balance_data = DB::table('wallet_deposits')
+            ->selectRaw('SUM(CASE WHEN deposit_type IN (?, ?) THEN deposit_amount ELSE 0 END) as total_wd', ['Internal Transfer', 'Crypto Chill'])
+            ->selectRaw('SUM(CASE WHEN withdraw_type = ? THEN withdraw_amount + COALESCE(withdraw_transaction_fee, 0) ELSE 0 END) as total_ww', ['Internal Transfer'])
+            ->selectRaw('SUM(CASE WHEN status = 0 THEN withdraw_amount + COALESCE(withdraw_transaction_fee, 0) ELSE 0 END) as pending_ww')
+            ->where('user_id', $user->id)
+            ->first();
+    
+        $wallet_balance = $wallet_balance_data->total_wd - $wallet_balance_data->total_ww - $wallet_balance_data->pending_ww;
+    
+        // Fetch total balance in a single query
+        $total_balance = TotalBalance::where('user_id', $user->id)
+            ->selectRaw('
+                SUM(deposit_amount) as deposit_amount,
+                SUM(trading_deposited) as trading_deposited,
+                SUM(trading_withdrawal) as trading_withdrawal,
+                SUM(withdraw_amount) as withdraw_amount')
+            ->first();
+    
+        // Fetch other details
+        $bank_details = DB::table('clientbankdetails')->where('userId', $user->id)->first();
+        $kyc_details = DB::table('kyc_update')->where('email', $user->email)->get();
+        $ib_details = DB::table('ib1')
+            ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
+            ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
+            ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
+            ->where('ib1.status', 1)
+            ->where('ib1.email', $user->email)
+            ->groupBy('ib1.email')
+            ->havingRaw('COUNT(ib1.email) > 0')
+            ->first();
+    
+        $rm_details = DB::table('relationship_manager as rm')
+            ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
+            ->select('emp.client_index', 'emp.username', 'rm.*')
+            ->where('rm.user_id', $user->id)
+            ->first();
+    
+        $superadmin_details = DB::table('emplist')->where('role_id', 1)->first();
+        $country_code = DB::table('countries')->where('country_name', $user->country)->first();
+    
+        // Fetch ticket status and types
+        $ticket_status = Cache::remember('ticket_status', 60, fn() => DB::table('ticket_status')->get());
+        $ticket_types = Cache::remember('ticket_types', 60, fn() => DB::table('ticket_types')->get());
+    
         return view('admin.client_details', compact(
             'ticket_status',
             'ticket_types',
@@ -524,18 +497,16 @@ class ClientController extends Controller
             'acc_types',
             'wallet_balance',
             'total_balance',
-            'live_accounts',
+            'clientsGrouped as clients',
             'bank_details',
             'kyc_details',
             'ib_details',
             'rm_details',
             'superadmin_details',
-            'country_code',
-            'total_wd',
-            'total_ww',
-            'clients'
+            'country_code'
         ));
     }
+    
     public function sendPasswordResetLink(Request $request)
     {
         $email = $request->txtemail;
