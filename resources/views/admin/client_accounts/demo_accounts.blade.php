@@ -21,7 +21,6 @@
                     <div class="card custom-card">
                         <div class="card-header d-none">
                             <div class="card-title">
-                                Listed Count : {{ count($accounts) }}
                             </div>
                         </div>
                         <div class="card-body">
