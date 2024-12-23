@@ -515,7 +515,6 @@ class ClientController extends Controller
         $ticket_status = json_decode(json_encode($ticket_status_obj), true);
         $ticket_types_obj = DB::table('ticket_types')->get()->toArray();
         $ticket_types = json_decode(json_encode($ticket_types_obj), true);
-        dd('fff');
         return view('admin.client_details', compact(
             'ticket_status',
             'ticket_types',
