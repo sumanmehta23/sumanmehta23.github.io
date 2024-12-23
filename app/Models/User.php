@@ -196,7 +196,7 @@ class User extends Authenticatable
             ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
             ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
             ->where('ib1.status', 1)
-            ->where('ib1.email', $this->email)
+            ->where('ib1.user_id', $this->id)
             ->groupBy('ib1.email')
             ->havingRaw('COUNT(ib1.email) > 0')
             ->first();
