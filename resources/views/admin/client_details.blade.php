@@ -704,8 +704,10 @@
                                                                                     PROFILE STATUS</th>
                                                                             </tr>
                                                                         </thead>
-                                                                        {{-- <tbody>
-                                                                            <?php foreach ($clients[$i] as $client) { ?>
+                                                                        <tbody>
+                                                                            <?php 
+                                                                                 if ($clients->has($i) && $clients[$i]->count() > 0) {
+                                                                                foreach ($clients[$i] as $client) { ?>
                                                                             <tr data-index="0">
                                                                                 <td>
                                                                                     <div class="row align-items-center">
@@ -741,8 +743,9 @@
                                                                                     <?php } ?>
                                                                                 </td>
                                                                             </tr>
-                                                                            <?php } ?>
-                                                                        </tbody> --}}
+                                                                            <?php } 
+                                                                            }?>
+                                                                        </tbody>
                                                                     </table>
                                                                 </div>
                                                             </div>
