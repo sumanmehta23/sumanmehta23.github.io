@@ -216,8 +216,21 @@ class User extends Authenticatable
 
     public function getClientsAttribute()
     {
-        $clients = $this->ib ? IbClientList::whereIn('ib1', [$this->ib->referral_code])->get() : collect();
-        return $clients->groupBy('ib1');
+        $clients = collect();
+    
+        // Loop through the 15 possible levels (ib1, ib2, ..., ib15)
+        for ($i = 1; $i <= 15; $i++) {
+            if ($this->ib) {
+                // Dynamically create the column name based on the current level
+                $foundClients = IbClientList::where("ib$i", $this->ib->referral_code)->get();
+            } else {
+                $foundClients = collect(); 
+            }
+    
+            $clients->put($i, $foundClients);
+        }
+    
+        return $clients;
     }
 
     public function getTicketStatusAttribute()
