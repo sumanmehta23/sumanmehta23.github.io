@@ -476,7 +476,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="p-0 tab-pane" id="tab-transactions">
+                                    {{-- <div class="p-0 tab-pane" id="tab-transactions">
                                         <div class="row">
                                             <div class="col-xl-6">
                                                 <div class="card custom-card">
@@ -571,7 +571,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <?php if (!empty($ib_details)): ?>
                                     <div class="p-0 tab-pane" id="tab-ib">
                                         <div class="row">
