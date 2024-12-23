@@ -704,7 +704,7 @@
                                                                                     PROFILE STATUS</th>
                                                                             </tr>
                                                                         </thead>
-                                                                        <tbody>
+                                                                        {{-- <tbody>
                                                                             <?php foreach ($clients[$i] as $client) { ?>
                                                                             <tr data-index="0">
                                                                                 <td>
@@ -742,7 +742,7 @@
                                                                                 </td>
                                                                             </tr>
                                                                             <?php } ?>
-                                                                        </tbody>
+                                                                        </tbody> --}}
                                                                     </table>
                                                                 </div>
                                                             </div>
