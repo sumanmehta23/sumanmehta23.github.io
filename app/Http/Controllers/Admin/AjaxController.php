@@ -1642,10 +1642,6 @@ class AjaxController extends Controller
             $query->where('account_id', $_GET['id']);
         }
 
-        // Fetch data
-        $query->orderByDesc('id')->get();
-
-
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->addColumn('account_no', function($row){
