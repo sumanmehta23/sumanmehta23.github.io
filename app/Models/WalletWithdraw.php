@@ -46,7 +46,8 @@ class WalletWithdraw extends Model
 
     public function getFilteredWithdrawalSumAttribute()
     {
-        return $this->where('withdraw_type', 'Wallet Withdrawal')
+        return $this->where('user_id', $this->user_id)
+                ->where('withdraw_type', 'Wallet Withdrawal')
                     ->where('status', 1)
                     ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
                     ->value('total');

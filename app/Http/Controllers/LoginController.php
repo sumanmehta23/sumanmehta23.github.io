@@ -206,8 +206,11 @@ class LoginController extends Controller
 
         $userData = [];
 
-        if ($request->has('refercode')) {
-            $refercode = $request->query('refercode');
+        if ($request->has('refercode') || $request->has('referral')) {
+            $refercode = $request->refercode;
+            if(empty($refercode)){
+                $refercode = $request->referral;
+            }
             $referrals = [];
             $nextReferral = $refercode;
 
@@ -237,7 +240,13 @@ class LoginController extends Controller
                 $userData[$key] = $referralCode;
             }
         }
-
+        $userData['referral'] ='';
+        // if($request->has('referral')){
+        //     $result = Ib1::where(['referral_code'=> $request->referral,'status'=>1])->first();
+        //     if ($result) {
+        //         $userData['ib1'] = $request->referral;
+        //     }
+        // }
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
@@ -247,7 +256,7 @@ class LoginController extends Controller
         $userData['country_code'] =$request->country_code;
         $userData['number'] =$number;
         $userData['username'] =$request->email;
-        $userData['referral'] ='';
+        
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
         $userData['created_at'] =now();

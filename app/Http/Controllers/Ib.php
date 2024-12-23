@@ -105,6 +105,9 @@ class Ib extends Controller
 
 
                 $ib1_referral = $ib1->referral_code;
+                if(!$ib1_referral){
+                    $ib1_referral = $ib1->email;
+                }
                 User::where(function ($query) use ($ib1_referral) {
                     for ($i = 1; $i <= 15; $i++) {
                         $query->orWhere("ib$i", $ib1_referral);
@@ -152,6 +155,8 @@ class Ib extends Controller
         $ib_email = auth()->user()->email;
         //  dd($plan_id);
         if ($plan_id) {
+            ini_set('max_execution_time', 600);
+            ini_set("memory_limit", "1024M");
             $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
                 ->where('status', 1)
                 ->whereNull('deleted_at')
@@ -169,6 +174,10 @@ class Ib extends Controller
             }
             // dump($ib_acc_plans);
             $referral_code= auth()->user()->ib->referral_code;
+            if(!$referral_code){
+                $referral_code = auth()->user()->ib->email;
+            }
+            // info('Getting accounts for ref code '.$referral_code." for user ".$userId);
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
@@ -178,6 +187,7 @@ class Ib extends Controller
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
                     ->get();
+                    // info('Total accounts for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($clientLiveAccs) . json_encode($clientLiveAccs->pluck('code')));
                     // dd($clientLiveAccs);
                 foreach ($clientLiveAccs as $client) {
                     $login = $client->code;
@@ -198,6 +208,7 @@ class Ib extends Controller
                     $total = $closedOrderHistory;
                     // dump($login);
                     // dd($total);
+                    // info('Getting trades for '.$login);
                     while ($offset < $total) {
                         if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                             session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -205,6 +216,7 @@ class Ib extends Controller
                         $result2 = $orders;
 
                         if ($result2) {
+                            $ibcommissions=[];
                             foreach ($result2 as $item) {
 
                                 $symbolWithoutP = $item->Symbol;
@@ -236,22 +248,32 @@ class Ib extends Controller
                                 $init_volume = $item->VolumeInitial;
                                 $volume = $init_volume * $b;
                                 $time_closed = Carbon::createFromTimestamp($item->TimeDone);
-
-                                try {
-                                    Ib1Commission::create([
-                                        'user_id' => $client->user_id,
-                                        'account_id' => $client->id,
-                                        'order_id' => $order,
-                                        'code' => $login,
-                                        'init_volume' => $init_volume,
-                                        'symbol' => $symbolWithoutP,
-                                        'volume' => $volume,
-                                        'time_closed' => $time_closed
-                                    ]);
-                                } catch (Exception $e) {
-
-                                    logger()->error('Error inserting commission: ' . $e->getMessage());
+                                $ibcommissions[]=[
+                                    'user_id' => $client->user_id,
+                                    'account_id' => $client->id,
+                                    'order_id' => $order,
+                                    'code' => $login,
+                                    'init_volume' => $init_volume,
+                                    'symbol' => $symbolWithoutP,
+                                    'volume' => $volume,
+                                    'time_closed' => $time_closed,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                                if(count($ibcommissions) == 50){
+                                    try {
+                                        Ib1Commission::insert($ibcommissions);
+                                    } catch (Exception $e) {
+                                        logger()->error('Error inserting commission: ' . $e->getMessage());
+                                    }
+                                    $ibcommissions=[];
                                 }
+                            }
+                            try {
+                                 Ib1Commission::insert($ibcommissions);
+                            } catch (Exception $e) {
+
+                                logger()->error('Error inserting commission: ' . $e->getMessage());
                             }
                         }
                         // dd($result2);
@@ -276,7 +298,7 @@ class Ib extends Controller
                     ->orderByDesc('id')->get();
 
                     // dump($client_live_accs);
-
+                    // info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
 
                 foreach ($client_live_accs as $ca) {
 
@@ -339,9 +361,10 @@ class Ib extends Controller
             ->get();
 
         for ($i = 1; $i <= 7; $i++) {
-            $ib_clients[$i] = IbClientList::where("ib$i", auth()->user()->ib->referral_code)->get();
+            $ib_clients[$i] = IbClientList::where("ib$i", $referral_code)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
+        // info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
         // dd($ib_wallet);
         return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
     }

@@ -16,7 +16,7 @@ class SuperAdminSeeder extends Seeder
     public function run(): void
     {
        $role=Role::where('name', 'Super Admin')->first();
-        EmployeeList::create([
+    EmployeeList::create([
             'client_index' => 1,
             'role_id' => $role->id,
             'username' => 'lqhmarket',

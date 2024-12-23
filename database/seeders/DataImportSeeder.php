@@ -47,12 +47,12 @@ class DataImportSeeder extends Seeder
         $this->bonusTransaction();
         $this->clientWallets();
         $this->demoDeposit();
-        $this->ib1(); 
-        $this->ib1_commission();
-        $this->ib1_withdraw();
         $this->ib_categories();
         $this->ib_plans();
         $this->ib_plan_details();
+        $this->ib1(); 
+        $this->ib1_commission();
+        $this->ib1_withdraw();
         $this->ib_wallet();
         $this->kyc_logs();
         $this->loginHistory();
@@ -75,7 +75,7 @@ class DataImportSeeder extends Seeder
     private function demoaccounts()
     {
         $replacementgroups = ['LQH MARKETS\NO-COMMISION-B-USD' => 'LM\B-Book\NC\DF-B', "LQH MARKETS\LM-STANDARD-A-USD" => "LM\A-Book\STD\DF-A"];
-        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_liveaccount.json')), true);
+        $usersdata = json_decode(File::get(storage_path('app/olddata/lqhcore_82_table_demoaccount.json')), true);
         $missingaccountcodes = ['125717', 855017, 540606, 123831, 768456];
 
         foreach ($usersdata as $account) {
@@ -142,7 +142,7 @@ class DataImportSeeder extends Seeder
             unset($account['trade_id']);
             $account['account_type_id'] = AccountType::where('ac_index', $account['account_type'])->value('id');
             if (!$account['account_type_id']) {
-                Log::error('Account Type not found', $account);
+                Log::error('Account Type not found ', $account);
                 continue;
             }
             unset($account['account_type']);
@@ -260,7 +260,8 @@ class DataImportSeeder extends Seeder
         foreach ($ibs as $ib) {
             $ib['user_id'] = User::where('email', $ib['email'])->value('id');
             if($ib['acc_type']){
-                $ib['ib_category_id'] = IbCategory::where('ib_cat_id', $ib['acc_type'])->value('id');
+                $catid=IbCategory::where('ib_cat_id', $ib['acc_type'])->value('id');
+                $ib['ib_plan_details_id'] = IbPlanDetails::where('ib_category_id', $catid)->value('id');
             }
             try {
                 Ib1::create($ib);
@@ -354,7 +355,12 @@ class DataImportSeeder extends Seeder
             $ibwallet['code'] = $ibwallet['trade_id'];
             unset($ibwallet['trade_id']);
             unset($ibwallet['id']);
-            IbWallet::create($ibwallet);
+            try {
+                IbWallet::create($ibwallet);
+            } catch (\Throwable $th) {
+                Log::error( $th->getMessage(),$ibwallet);
+            }
+            
         }
     }
 
@@ -458,10 +464,7 @@ class DataImportSeeder extends Seeder
             }
             $deposit['admin_remark'] = $deposit['AdminRemark'];
             unset($deposit['AdminRemark']);
-            WalletDeposit::updateOrCreate([
-                'user_id' => $deposit['user_id'],
-                'deposted_date' => $deposit['deposted_date'],
-            ], $deposit);
+            WalletDeposit::create($deposit);
         }
     }
     private function walletWithdraw()
