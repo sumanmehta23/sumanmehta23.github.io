@@ -637,17 +637,15 @@
                         visible: false,
                         render: function (data, row, row_data) {
                             return row_data.fullname;
-                        },
-                        searchable: false
+                        }
                     },
                     {
                         data: 'fullemail',
-                        name: 'fullemail',
+                        name: 'email',
                         visible: false,
                         render: function (data, row, row_data) {
                             return row_data.email;
-                        },
-                        searchable: false
+                        }
                     },
                     {
                         data: 'ibemail',
