@@ -217,12 +217,15 @@ class User extends Authenticatable
     public function getClientsAttribute()
     {
         $clients = collect();
-    
+        $referralCode = $this->ib->referral_code;
+        if(empty($referralCode)){
+            $referralCode = $this->ib->email;
+        }
         // Loop through the 15 possible levels (ib1, ib2, ..., ib15)
         for ($i = 1; $i <= 15; $i++) {
             if ($this->ib) {
                 // Dynamically create the column name based on the current level
-                $foundClients = IbClientList::where("ib$i", $this->ib->referral_code)->get();
+                $foundClients = IbClientList::where("ib$i", $referralCode)->get();
             } else {
                 $foundClients = collect(); 
             }
