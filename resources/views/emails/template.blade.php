@@ -1396,7 +1396,7 @@ $settings=settings();
                                                                                                                 <div
                                                                                                                     style="color:#000;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;font-weight:normal;line-height:17.2px;letter-spacing:-0.2px;font-variant-ligatures:normal;font-size:12px;text-align:left">
                                                                                                                     <div>
-                                                                                                                        <span>All official communication from LQH Markets (LQH Integrated Ltd.) will be conducted solely through our official email addresses, using the @‌LQHMarkets.com (hyperlink) domain.</span>
+                                                                                                                        <span>All official communication from LQH Markets (LQH Integrated Ltd.) will be conducted solely through our official email addresses, using the <a href="https://www.lqhmarkets.com/">LQHMarkets.com</a> domain.</span>
                                                                                                                         <p>Our mailing address is as follows:</p>
                                                                                                                                 LQH Integrated Ltd<br>
                                                                                                                                 A2-704A, Al Hamra Industrial Zone-FZ<br>
