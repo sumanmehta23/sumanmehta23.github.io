@@ -688,8 +688,8 @@
                                                     <div class="card-body">
                                                         <div class="tab-content connectionTab" id="nav-tabContent">
                                                             <?php for ($i = 1; $i <= 15; $i++) { ?>
-                                                            <div class="tab-pane fade{{ $i == 1 ? ' show active' : '' }}"
-                                                                id="LEVEL{{ $i }}" role="tabpanel">
+                                                                <div class="tab-pane fade<?php echo ($i == 1 ? ' show active' : ''); ?>"
+                                                                    id="LEVEL<?php echo $i; ?>" role="tabpanel">
                                                                 <div class="datatable-container">
                                                                     <table class="table table-hover datatable-table"
                                                                         id="pc-dt-simple">
@@ -705,9 +705,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            <?php 
-                                                                            if($clients){
-                                                                                foreach ($clients[$i] as $client) { ?>
+                                                                            <?php foreach ($clients[$i] as $client) { ?>
                                                                             <tr data-index="0">
                                                                                 <td>
                                                                                     <div class="row align-items-center">
@@ -743,7 +741,7 @@
                                                                                     <?php } ?>
                                                                                 </td>
                                                                             </tr>
-                                                                            <?php } } ?>
+                                                                            <?php } ?>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
