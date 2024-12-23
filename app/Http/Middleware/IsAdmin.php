@@ -17,7 +17,7 @@ class IsAdmin
     public function handle($request, Closure $next)
     {
         if (!session('alogin')) {
-            return redirect('/admin/login')->with('error','You do not have access to this page.');
+            return redirect('/admin/login');
         }
         if (Auth::guard('admin')->check()) {
             Auth::setDefaultDriver('admin');
