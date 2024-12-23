@@ -705,7 +705,9 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            <?php foreach ($clients[$i] as $client) { ?>
+                                                                            <?php 
+                                                                            if($clients){
+                                                                                foreach ($clients[$i] as $client) { ?>
                                                                             <tr data-index="0">
                                                                                 <td>
                                                                                     <div class="row align-items-center">
@@ -741,7 +743,7 @@
                                                                                     <?php } ?>
                                                                                 </td>
                                                                             </tr>
-                                                                            <?php } ?>
+                                                                            <?php } } ?>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
