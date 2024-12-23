@@ -147,7 +147,7 @@ class User extends Authenticatable
     public function getTotalWwAttribute()
     {
         return WalletWithdraw::where('user_id', $this->id)
-            ->where('withdraw_type', 'Internal Transfer')
+            ->where('withdraw_type', 'Wallet Withdrawal')
             ->where('status', 1)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
             ->value('total');
