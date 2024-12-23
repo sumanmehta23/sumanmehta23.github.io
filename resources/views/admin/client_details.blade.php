@@ -186,127 +186,643 @@
             <!-- Start:: row-1 -->
             <div class="mt-5 row" id="user-profile">
                 <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header justify-content-between">
-                            <div class="card-title">CLIENT DETAILS</div>
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Client Details</li>
-                            </ol>
-                        </div>
-                        <div class="card-body">
-                            <div class="wideget-user">
-                                <div class="row">
-                                    <div class="col-lg-12 col-xl-12">
-                                        <div class="wideget-user-desc d-flex">
-                                            <div class="wideget-user-img d-flex align-items-center ">
-                                                <img src="/admin_assets/assets/images/users/client.jpeg" alt="img"
-                                                    style="width:100px">
-                                            </div>
-                                            <div class="user-wrap">
-                                                <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
-                                                <h6 class="mb-3 fw-normal">
-                                                    <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->kyc_verify == 0
-                                                        ? '<span class="badge bg-outline-danger">Pending KYC</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                            : '') !!}</span>
-                                                    |
-                                                    <span
-                                                        class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->status == 0
-                                                        ? '<span class="badge bg-outline-danger">Inactive</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">Active</span>'
-                                                            : '') !!}</span>
-                                                </h6>
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center">
-                                                            <button
-                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
-                                                                <i class="ri-mail-line"></i>
-                                                            </button>
-                                                            <div>
-                                                                <div class="mb-0 text-muted fs-11">Email:</div>
-                                                                <div class="mb-1 fs-12">{{ $user->email }}</div>
-                                                            </div>
-                                                        </div>
+                   
+                    <div class="">
+                        <div class="">
+                            <div class="border-0">
+                                <div class="tab-content clienttabs">
+                                    <div class="p-0 tab-pane active show" id="tab-overview">
+                                        <div class="row">
+                                            <div class="col-12 col-xl-9">
+                                                <div class="card custom-card">
+                                                    <div class="card-header">
+                                                        <div class="card-title">SUMMARY</div>
                                                     </div>
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center">
-                                                            <button
-                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
-                                                                <i class="ri-phone-line"></i>
-                                                            </button>
-                                                            <div>
-                                                                <div class="mb-0 text-muted fs-11">Phone:</div>
-                                                                <div class="mb-1 fs-12">{{ $user->number }}</div>
+                                                    <div class="card-body">
+                                                        <div class="pb-3 row border-bottom">
+                                                            <div class="col-xl-3">
+                                                                <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
+                                                                <h4 class="fw-normal">
+                                                                    ${{ htmlentities(number_format((float) $total_wd, 2)) }}
+                                                                </h4>
+                                                            </div>
+                                                            <div class="col-xl-3">
+                                                                <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
+                                                                <h4 class="fw-normal">
+                                                                    ${{ htmlentities(number_format((float) $total_ww, 2)) }}
+                                                                </h4>
+                                                            </div>
+                                                            <div class="col-xl-3">
+                                                                <h4 class="mb-3 text-muted fw-normal">WALLET</h4>
+                                                                <?php if ($user->wallet_enabled): ?>
+                                                                <h4 class="fw-normal">
+                                                                    ${{ htmlentities(number_format($wallet_balance, 2)) }}
+                                                                </h4>
+                                                                <?php else: ?>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-dark btn-sm disabled">
+                                                                    No Wallet
+                                                                </button>
+                                                                <?php endif; ?>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="mt-3 row">
+                                                            <div class="d-flex justify-content-between">
+                                                                <h4>LIVE MT5 ACCOUNTS</h4>
+                                                                <!-- <button type="button" class="d-none btn btn-outline-dark btn-sm bg-light"
+                                                                              data-bs-toggle="modal" data-bs-target="#accountModal">
+                                                                              <i class="ri-add-box-fill"></i>
+                                                                              CREATE NEW MT5 ACCOUNTS
+                                                                            </button> -->
                                                             </div>
                                                         </div>
-
+                                                        <div class="px-2 row">
+                                                            <?php if (empty($live_accounts)) { ?>
+                                                            <div class="my-4 text-muted">No Live Accounts Found.</div>
+                                                            <?php } ?>
+                                                            <?php foreach ($live_accounts as $acc): ?>
+                                                            <div
+                                                                class="my-2 border border-dashed col-xl-4 col-lg-6 border-3">
+                                                                <div>
+                                                                    <div
+                                                                        class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
+                                                                        <div class="d-flex w-50 flex-column">
+                                                                            <img src="/admin_assets/assets/images/mt5.png"
+                                                                                alt="card img" style="width:50px;">
+                                                                            <div class="mt-1 fs-18 text-black-50 fw-bold">
+                                                                                {{ $acc->code }}</div>
+                                                                        </div>
+                                                                        <div class="d-flex justify-content-end w-50">
+                                                                            <span
+                                                                                class="mt-2 h4 fw-normal">${{ $acc->balance }}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <div>
+                                                                            <div class="fw-bold fs-12">
+                                                                                {{ $acc->accountType->ac_name }}</div>
+                                                                            <div class="mb-2 fw-normal fs-10">
+                                                                                {{ $acc->accountType->ac_group }}</div>
+                                                                        </div>
+                                                                        <div class="mt-auto mb-auto">
+                                                                            <a
+                                                                                href="/admin/view_account_details/{{ $acc->id }}">
+                                                                                <i class="fa fa-edit fw-bold"
+                                                                                    style="font-size: 1rem;color: var(--primary-color);"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="pt-1 mt-1 border-2 row border-top border-default">
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center">
-                                                            <button
-                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
-                                                                <i class="ri-user-2-fill"></i>
-                                                            </button>
-                                                            <div>
-                                                                <div class="mb-0 text-muted fs-11">Relationship Manager:
-                                                                </div>
-                                                                <div class="mb-1 fs-12">{{ $rm_details->username ?? '' }}
+                                            </div>
+                                            <div class="col-12 col-xl-3">
+                                                <div>
+                                                    <button type="button"
+                                                        class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
+                                                        data-bs-toggle="modal" data-bs-target="#addTicketModal">
+                                                        CREATE TICKET
+                                                    </button>
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">INTRODUCING BROKER</div>
+                                                                <div>
+                                                                    <?php if ($user->ib_status == 0): ?>
+                                                                    <span
+                                                                        class="badge bg-outline-warning text-end">Pending</span>
+                                                                    <?php elseif ($user->ib_status == 1): ?>
+                                                                    <span class="badge bg-outline-success text-end">Active
+                                                                        IB</span>
+                                                                    <?php else: ?>
+                                                                    <span class="badge bg-outline-info text-end">Not
+                                                                        Requested</span>
+                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center">
-                                                            <button
-                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
-                                                                <i class="ri-user-line"></i>
+                                                        <div class="card-body">
+                                                            <p class="card-text">A request on behalf of client for creating
+                                                                IB profile for this client.
+                                                            </p>
+                                                            <?php if ($user->ib_status != 1): ?>
+                                                            <?php if ($user->ib_status == '0'): ?>
+                                                            <button type="button"
+                                                                class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                data-bs-toggle="modal" data-bs-target="#ibModal">
+                                                                Approve Request
                                                             </button>
-                                                            <div>
-                                                                <div class="mb-0 text-muted fs-11">Parent IB:</div>
-                                                                <div class="mb-1 fs-12">{{ $user->ib1 }}</div>
+                                                            <?php else: ?>
+                                                            <button type="button"
+                                                                class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                                data-fullname="<?= $user->fullname ?>"
+                                                                data-email="<?= $user->email ?>"
+                                                                data-enc="<?= ($user->email) ?>"
+                                                                data-ib_status="<?= $user->ib_status ?>">
+                                                                Request To become ib
+                                                            </button>
+                                                            <?php endif; ?>
+                                                            <?php else: ?>
+                                                            <hr style="opacity:.1;">
+                                                            <label class="col-form-label col-12 text-lg-start">
+                                                                Copy this IB referral link to share with potential clients!
+                                                            </label>
+                                                            <div class="mb-4 col-12">
+                                                                <div class="mb-2 input-group"><input type="text"
+                                                                        class="form-control" id="pc-clipboard-1"
+                                                                        value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
+                                                                        readonly=""><button
+                                                                        class="btn btn-lg btn-primary cb" id="ibClient"
+                                                                        data-clipboard-target="#pc-clipboard-1"><i
+                                                                            class="fa fa-copy"></i></button>
+                                                                </div>
                                                             </div>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-3 col-xl-12" style="display:none">
-                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
-                                                class="ri-mail-line text-primary me-1"></i>Send Mail</button>
-                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
-                                                class="ri-share-line"></i></button>
-                                        <button type="button" class="shadow-sm btn btn-outline-light"><i
-                                                class="ri-flag-line"></i></button>
+                                    <div class="p-0 tab-pane" id="tab-transactions">
+                                        <div class="row">
+                                            <div class="col-xl-6">
+                                                <div class="card custom-card">
+                                                    <div class="card-header justify-content-between">
+                                                        <div class="card-title">
+                                                            Deposits
+                                                        </div>
+                                                        <div class="prism-toggle">
+                                                            <a href="/admin/transactions/trading_deposit"
+                                                                class="btn btn-sm btn-primary-light">View
+                                                                All</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table text-nowrap" id="tableDeposit">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th scope="col">Created On</th>
+                                                                        <th scope="col">Deposit To</th>
+                                                                        <th scope="col">Payment Method</th>
+                                                                        <th scope="col">Amount</th>
+                                                                        <th scope="col">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xl-6">
+                                                <div class="card custom-card">
+                                                    <div class="card-header justify-content-between">
+                                                        <div class="card-title">
+                                                            Withdrawal
+                                                        </div>
+                                                        <div class="prism-toggle">
+                                                            <a href="/admin/transactions/wallet_withdrawal"
+                                                                class="btn btn-sm btn-primary-light">View All</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table text-nowrap" id="tableWithdrawal">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th scope="col">Created On</th>
+                                                                        <th scope="col">From</th>
+                                                                        <th scope="col">Withdraw Method</th>
+                                                                        <th scope="col">Amount</th>
+                                                                        <th scope="col">Fee</th>
+                                                                        <th scope="col">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xl-6">
+                                                <div class="card custom-card">
+                                                    <div class="card-header justify-content-between">
+                                                        <div class="card-title">
+                                                            Internal Transfers
+                                                        </div>
+                                                        <div class="prism-toggle">
+                                                            <a href="/admin/transactions/internal_transfer"
+                                                                class="btn btn-sm btn-primary-light">View All</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table text-nowrap" id="tableInternalTransfer">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th scope="col">Created On</th>
+                                                                        <th scope="col">From</th>
+                                                                        <th scope="col">To</th>
+                                                                        <th scope="col">Amount</th>
+                                                                        <th scope="col">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($ib_details)): ?>
+                                    <div class="p-0 tab-pane" id="tab-ib">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
+                                                <div class="card custom-card">
+                                                    <div class="card-body">
+                                                        <div class="card-order">
+                                                            <div class="row">
+                                                                <div class="col-4">
+                                                                    <button
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="fa fa-list-alt" aria-hidden="true"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="col-8">
+                                                                    <p class="h5 text-muted">IB </br> PLAN</p>
+                                                                    <h4>{{ getPlanNameByPlanId($acc_groups, $ib_details->acc_type) }}
+                                                                    </h4>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
+                                                <div class="card custom-card">
+                                                    <div class="card-body">
+                                                        <div class="card-order">
+                                                            <div class="row">
+                                                                <div class="col-4">
+                                                                    <button
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="fa fa-credit-card"
+                                                                            aria-hidden="true"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="col-8">
+                                                                    <p class="h5 text-muted">IB </br>WALLET</p>
+                                                                    <h4><?= "$" . number_format($ib_details->deposit -
+                                                                    $ib_details->withdraw, 2) ?></h4>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
+                                                <div class="card custom-card">
+                                                    <div class="card-body">
+                                                        <div class="card-order">
+                                                            <div class="row">
+                                                                <div class="col-4">
+                                                                    <button
+                                                                        class=" w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="fa fa-credit-card-alt"
+                                                                            aria-hidden="true"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="col-8">
+                                                                    <p class="h5 text-muted">TOTAL </br>COMMISSION</p>
+                                                                    <h4>{{ $ib_details->deposit ? "$" . $ib_details->deposit : "$0.00" }}
+                                                                    </h4>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12 col-xl-3 col-lg-3">
+                                                <div class="card custom-card">
+                                                    <div class="card-body">
+                                                        <div class="card-order">
+                                                            <div class="row">
+                                                                <div class="col-4">
+                                                                    <button
+                                                                        class="w-100 h-75 btn btn-icon btn-lg bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="fa fa-usd" aria-hidden="true"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="col-8">
+                                                                    <p class="h5 text-muted">TOTAL </br>DEPOSIT</p>
+                                                                    <h4>{{ $ib_details->withdraw ? "$" . $ib_details->withdraw : "$0.00" }}
+                                                                    </h4>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="card">
+                                                    <div class="p-3 card-body">
+                                                        <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
+                                                            <?php for ($i = 1; $i <= 15; $i++) { ?>
+                                                            <li class="nav-item"
+                                                                data-target-form="#LEVEL{{ $i }}"
+                                                                role="presentation"><a href="#LEVEL{{ $i }}"
+                                                                    data-bs-toggle="tab"
+                                                                    data-bs-target="#LEVEL{{ $i }}"
+                                                                    data-toggle="tab"
+                                                                    class="nav-link {{ $i == 1 ? 'active' : '' }}"
+                                                                    aria-selected="false" role="tab"
+                                                                    tabindex="-1"><i
+                                                                        class="ti ti-chart-bar me-2"></i><span
+                                                                        class="d-none d-sm-inline">LEVEL{{ $i }}</span></a>
+                                                            </li>
+                                                            <?php } ?>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div class="tab-content connectionTab" id="nav-tabContent">
+                                                            <?php for ($i = 1; $i <= 15; $i++) { ?>
+                                                            <div class="tab-pane fade{{ $i == 1 ? ' show active' : '' }}"
+                                                                id="LEVEL{{ $i }}" role="tabpanel">
+                                                                <div class="datatable-container">
+                                                                    <table class="table table-hover datatable-table"
+                                                                        id="pc-dt-simple">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th style="width: 30%;">CLIENT</th>
+                                                                                <th class="text-end" style="width: 10%;">
+                                                                                    TOTAL ACCOUNTS</th>
+                                                                                <th class="text-end" style="width: 10%;">
+                                                                                    TOTAL DEPOSIT</th>
+                                                                                <th class="text-end" style="width: 15%;">
+                                                                                    PROFILE STATUS</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <?php foreach ($clients[$i] as $client) { ?>
+                                                                            <tr data-index="0">
+                                                                                <td>
+                                                                                    <div class="row align-items-center">
+                                                                                        <div class="col-auto pe-0"><img
+                                                                                                src="/assets/images/ib_avatar.png"
+                                                                                                alt="user-image"
+                                                                                                class="rounded wid-55 hei-55"
+                                                                                                style="height:50px">
+                                                                                        </div>
+                                                                                        <div class="col">
+                                                                                            <h6 class="mb-2"><span
+                                                                                                    class="text-truncate w-100">{{ $client->fullname }}</span>
+                                                                                            </h6>
+                                                                                            <p
+                                                                                                class="mb-0 text-muted f-12">
+                                                                                                <span
+                                                                                                    class="text-truncate w-100">{{ $client->email }}</span>
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td class="text-end f-w-400">
+                                                                                    {{ $client->liveaccounts }}</td>
+                                                                                <td class="f-w-400 text-end">
+                                                                                    ${{ $client->total_deposit }}</td>
+                                                                                <td class="text-end">
+                                                                                    <?php if ($client->email_confirmed == 1) { ?>
+                                                                                    <span
+                                                                                        class="badge btn bg-success">Active</span>
+                                                                                    <?php } else { ?>
+                                                                                    <span class="badge btn bg-info">Not
+                                                                                        Verified</span>
+                                                                                    <?php } ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <?php } ?>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="p-0 tab-pane" id="tab-info">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="card custom-card">
+                                                    <div class="card-header">
+                                                        <div class="card-title">Bank Details</div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <ul class="list-group">
+                                                            <li
+                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                ACCOUNT HOLDER NAME
+                                                                <span>{{ $bank_details->ClientName ?? '' }}</span>
+                                                            </li>
+                                                            <li
+                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                BANK NAME
+                                                                <span>{{ $bank_details->bankName ?? '' }}</span>
+                                                            </li>
+                                                            <li
+                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                ACCOUNT NUMBER
+                                                                <span>{{ $bank_details->accountNumber ?? '' }}</span>
+                                                            </li>
+                                                            <li
+                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                IFSC CODE
+                                                                <span>{{ $bank_details->code ?? '' }}</span>
+                                                            </li>
+                                                            <li
+                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                SWIFT CODE
+                                                                <span>{{ $bank_details->swift_code ?? '' }}</span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card custom-card">
+                                                    <div class="card-header">
+                                                        <div class="card-title">Client Documents</div>
+                                                    </div>
+                                                    <?php
+                                                    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                                    $pdfExtensions = ['pdf'];
+                                                    $mimeTypes = [
+                                                        'jpeg' => 'image/jpeg',
+                                                        'jpg' => 'image/jpeg',
+                                                        'png' => 'image/png',
+                                                        'pdf' => 'application/pdf',
+                                                        'gif' => 'image/gif',
+                                                    ];
+                                                    ?>
+
+                                                    <div class="card-body">
+                                                        <?php foreach ($kyc_details as $kyc): ?>
+                                                        <?php
+                                                        $files = [
+                                                            'front_image' => strtolower(pathinfo($kyc->front_image, PATHINFO_EXTENSION)),
+                                                            'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
+                                                            'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
+                                                        ];
+                                                        $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
+                                                        [$badgeClass, $icon] = getBadgeProperties($kyc->status);
+                                                        ?>
+
+                                                        <?php if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
+                                                        <div
+                                                            class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
+                                                            <div class="mb-2 d-flex mb-sm-0">
+                                                                <div class="my-auto media-body valign-middle"
+                                                                    style="max-width: 100px; display: flex; flex-direction: column;">
+                                                                    <?php foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
+                                                                    <?php if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
+                                                                    <button
+                                                                        class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
+                                                                        data-bs-toggle="modal" data-bs-target="#kycModal"
+                                                                        data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
+                                                                        data-bs-type="{{ $mimeTypes[$extension] }}">
+                                                                        <i
+                                                                            class="ri-{{ in_array($extension, $pdfExtensions) ? 'file-pdf-2-line' : 'image-2-fill' }}"></i>
+                                                                    </button>
+                                                                    <?php endif; ?>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+                                                                <div class="my-auto media-body valign-middle">
+                                                                    <a href=""
+                                                                        class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
+                                                                    <p class="m-0 text-muted">
+                                                                        {{ $kyc->registered_date_js }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div
+                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                <span
+                                                                    class="badge {{ $badgeClass }}">{!! $icon !!}
+                                                                    <?= $statusText ?>
+                                                                </span>
+                                                            </div>
+                                                            <div
+                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                <?php if ($kyc->status == 2 || $kyc->status == 0) { ?>
+                                                                <button class="btn btn-lg btn-icon btn-light text-success"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Approve"
+                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',1)">
+                                                                    <i class="ri-check-line"></i>
+                                                                </button>
+                                                                <?php }
+                                    if ($kyc->status == 1 || $kyc->status == 0) { ?>
+                                                                <button class="btn btn-lg btn-icon btn-light text-danger"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Reject"
+                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',2)">
+                                                                    <i class="ri-close-circle-line"></i>
+                                                                </button>
+                                                                <?php } ?>
+                                                            </div>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </div>
+
+                                                </div>
+                                                <?php if (!isset($kyc)) { ?>
+                                                <form method="post" enctype="multipart/form-data">
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="card-title">Upload Documents</div>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="mb-3">
+                                                                <label for="formFile" class="form-label">ID Proof Front
+                                                                    Side</label>
+                                                                <input class="form-control" id="formFile" name="image"
+                                                                    type="file" accept="image/png,image/jpeg">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="formFile" class="form-label">ID Proof Back
+                                                                    Side</label>
+                                                                <input class="form-control" id="formFile" name="image1"
+                                                                    type="file" accept="image/png,image/jpeg">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="formFile" class="form-label">Address Proof
+                                                                    Front Side</label>
+                                                                <input class="form-control" id="formFile" name="image2"
+                                                                    type="file" accept="image/png,image/jpeg">
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-footer">
+                                                            <input type="hidden" name="email"
+                                                                value="{{ $user->email }}">
+                                                            <input type="submit" href="javascript:void(0);"
+                                                                class="btn btn-primary d-grid" value="Upload Document"
+                                                                name="upload_kyc">
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="p-0 tab-pane" id="tab-profile">
+                                        <div class="row">
+                                            <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div class="text-center">
+                                                            <div class="userprofile">
+                                                                <div class="avatar userpic avatar-rounded">
+                                                                    <img src="/admin_assets/assets/images/users/client.jpeg"
+                                                                        alt="img" style="width:100px">
+                                                                </div>
+                                                                <h3 class="mb-2 username">{{ $user->fullname }}</h3>
+                                                                <p class="mb-1 text-muted">{{ $user->email }}</p>
+                                                                <form method="post"
+                                                                    action="{{ route('admin.sendPasswordResetLink') }}">
+                                                                    @csrf
+                                                                    <input type="hidden" name="txtemail"
+                                                                        value="{{ $user->email }}">
+                                                                    <button class="btn btn-primary" type="submit"
+                                                                        name="btn-submit" value="reset">Send Reset
+                                                                        Password Link</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-7 col-xl-8 col-xl-12 col-sm-12">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="border-top">
-                            <div class="wideget-user-tab">
-                                <div class="border-0 tab-menu-heading">
-                                    <div class="tabs-menu1">
-                                       
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="">
-                        <div class="">
-                            <div class="border-0">
-                             
                             </div>
                         </div>
                     </div>
