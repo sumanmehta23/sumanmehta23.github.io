@@ -29,6 +29,7 @@ use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
