@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Country;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -132,6 +133,104 @@ class User extends Authenticatable
                 ->sum('withdraw_transaction_fee');
 
             return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);
+        });
+    }
+
+    public function getTotalWdAttribute()
+    {
+        return WalletDeposit::where('user_id', $this->id)
+            ->whereIn('deposit_type', ['Internal Transfer', 'CryptoChill'])
+            ->where('status', 1)
+            ->sum('deposit_amount');
+    }
+
+    public function getTotalWwAttribute()
+    {
+        return WalletWithdraw::where('user_id', $this->id)
+            ->where('withdraw_type', 'Wallet Withdrawal')
+            ->where('status', 1)
+            ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+            ->value('total');
+    }
+
+    public function getPendingWwAttribute()
+    {
+        return WalletWithdraw::where('user_id', $this->id)
+            ->where('status', 0)
+            ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+            ->value('total');
+    }
+
+    public function getTotalBalanceAttribute()
+    {
+        return TotalBalance::where('user_id', $this->id)
+            ->selectRaw('
+                SUM(deposit_amount) as deposit_amount,
+                SUM(trading_deposited) as trading_deposited,
+                SUM(trading_withdrawal) as trading_withdrawal,
+                SUM(withdraw_amount) as withdraw_amount')
+            ->first();
+    }
+
+    public function getBankDetailsAttribute()
+    {
+        return DB::table('clientbankdetails')->where('userId', $this->id)->first();
+    }
+
+    public function getKycDetailsAttribute()
+    {
+        return DB::table('kyc_update')->where('email', $this->email)->get();
+    }
+
+    public function getIbDetailsAttribute()
+    {
+        return DB::table('ib1')
+            ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
+            ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
+            ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
+            ->where('ib1.status', 1)
+            ->where('ib1.user_id', $this->id)
+            ->groupBy('ib1.email')
+            ->havingRaw('COUNT(ib1.email) > 0')
+            ->first();
+    }
+
+    public function getRmDetailsAttribute()
+    {
+        return DB::table('relationship_manager as rm')
+            ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
+            ->select('emp.client_index', 'emp.username', 'rm.*')
+            ->where('rm.user_id', $this->id)
+            ->first();
+    }
+
+    public function getSuperadminDetailsAttribute()
+    {
+        return DB::table('emplist')->where('role_id', 1)->first();
+    }
+
+    public function getCountryCodeAttribute()
+    {
+        return DB::table('countries')->where('country_name', $this->country)->first();
+    }
+
+    public function getClientsAttribute()
+    {
+        $clients = $this->ib ? IbClientList::whereIn('ib1', [$this->ib->referral_code])->get() : collect();
+        return $clients->groupBy('ib1');
+    }
+
+    public function getTicketStatusAttribute()
+    {
+        return Cache::remember('ticket_status', 60, function () {
+            return DB::table('ticket_status')->get();
+        });
+    }
+
+    public function getTicketTypesAttribute()
+    {
+        return Cache::remember('ticket_types', 60, function () {
+            return DB::table('ticket_types')->get();
         });
     }
 }
