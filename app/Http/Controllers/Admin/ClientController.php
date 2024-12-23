@@ -29,7 +29,6 @@ use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
@@ -420,103 +419,123 @@ class ClientController extends Controller
         ]);
     }
     public function clientDetails(Request $request)
-{
-    // Fetch user and related data with eager loading
-    $id = request('userId');
-    $user = User::with(['ib']) // Eager load ib only
-        ->where('id', $id)
-        ->firstOrFail();
+    {
 
-    // Retrieve all related data in a more efficient manner
-    $acc_groups = IBPlan::with('category')
-        ->where('status', 1)
-        ->get()
-        ->groupBy('ib_plan_cat_id'); // Grouping after fetching
+        $id = request('userId');
 
-    $acc_types = AccountType::with('mt5Group')
-        ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
-        ->get();
+        $user = User::with('ib')
+            ->where('id', $id)
+            ->firstOrFail();
+      
+        $acc_groups = IBPlan::with('category')
+            ->where('status', 1)
+            ->groupBy('ib_plan_cat_id')
+            ->get();
+       
+        $acc_types = AccountType::with('mt5Group')
+            ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
+            ->get();
+        if (!empty($user)) {
+            $eid = $user->id;
+            $clients = [];
+            for ($i = 1; $i <= 15; $i++) {
+                if($user->ib){
+                    $foundClients = IbClientList::where("ib$i", $user->ib->referral_code)->get();
+                }else{
+                    $foundClients='';
+                }
+                $clients[$i] = $foundClients;
+            }
+          
+            $total_wd = WalletDeposit::where('user_id', $eid)
+                ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
+                ->where('status', 1)
+                ->sum('deposit_amount');
+          
+            $total_ww = WalletWithdraw::where('user_id', $eid)
+                ->where('withdraw_type', 'Internal Transfer')
+                ->where('status', 1)
+                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+                ->value('total');
+           
+            $pending_ww = WalletWithdraw::where('user_id', $eid)
+                ->where('status', 0)
+                ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+                ->value('total');
 
-    // Efficiently fetch client data without the loop
-    $clients = $user->ib ? IbClientList::where('ib1', $user->ib->referral_code)->get()->groupBy('ib1') : [];
 
-    // Calculate wallet-related balances
-    $eid = $user->id;
-    $total_wd = WalletDeposit::where('user_id', $eid)
-        ->whereIn('deposit_type', ['Internal Transfer', 'Crypto Chill'])
-        ->where('status', 1)
-        ->sum('deposit_amount');
+            $pendingwalletwithdraw = (float)$pending_ww;
+          
+            $wallet_balance = (float) $total_wd - (float) $total_ww - $pendingwalletwithdraw;
+          
+            $total_balance = TotalBalance::where('user_id', $eid)
+                ->selectRaw('
+                    SUM(deposit_amount) as deposit_amount,
+                    SUM(trading_deposited) as trading_deposited,
+                    SUM(trading_withdrawal) as trading_withdrawal,
+                    SUM(withdraw_amount) as withdraw_amount')
+                ->first();
 
-    $total_ww = WalletWithdraw::where('user_id', $eid)
-        ->where('withdraw_type', 'Internal Transfer')
-        ->where('status', 1)
-        ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
-        ->value('total') ?? 0;
+            $live_accounts = Account::with('accountType')
+                ->where('user_id', $eid)
+                ->where('demo', false)
+                ->orderBy('id', 'desc')
+                ->get();
 
-    $pending_ww = WalletWithdraw::where('user_id', $eid)
-        ->where('status', 0)
-        ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
-        ->value('total') ?? 0;
+            $bank_details = DB::table('clientbankdetails')
+                ->where('userId', $eid)
+                ->first();
+            $kyc_details = DB::table('kyc_update')
+                ->where('email', $eid)
+                ->get();
+            $ib_details = DB::table('ib1')
+                ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
+                ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
+                ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
+                ->where('ib1.status', 1)
+                ->where('ib1.email', $user->email)
+                ->groupBy('ib1.email')
+                ->havingRaw('COUNT(ib1.email) > 0')
+                ->first();
 
-    $wallet_balance = (float)$total_wd - (float)$total_ww - (float)$pending_ww;
+            $rm_details = DB::table('relationship_manager as rm')
+                ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
+                ->select('emp.client_index', 'emp.username', 'rm.*')
+                ->where('rm.user_id', $eid)
+                ->first();
 
-    // Calculate total balance
-    $total_balance = TotalBalance::where('user_id', $eid)
-        ->selectRaw('SUM(deposit_amount) as deposit_amount, SUM(trading_deposited) as trading_deposited, SUM(trading_withdrawal) as trading_withdrawal, SUM(withdraw_amount) as withdraw_amount')
-        ->first();
-
-    // Fetch live accounts, bank details, KYC details, IB details, RM details, and country info
-    $live_accounts = Account::where('user_id', $eid)
-        ->where('demo', false)
-        ->orderBy('id', 'desc')
-        ->get();
-
-    $bank_details = DB::table('clientbankdetails')->where('userId', $eid)->first();
-    $kyc_details = DB::table('kyc_update')->where('email', $eid)->get();
-    $ib_details = DB::table('ib1')
-        ->leftJoin('ib_wallet', 'ib1.user_id', '=', 'ib_wallet.user_id')
-        ->leftJoin('account_types as ac', 'ac.ac_index', '=', 'ib1.acc_type')
-        ->select('ib1.*', DB::raw('SUM(ib_wallet.ib_wallet) as deposit'), DB::raw('SUM(ib_wallet.ib_withdraw) as withdraw'), 'ac.ac_name')
-        ->where('ib1.status', 1)
-        ->where('ib1.email', $user->email)
-        ->groupBy('ib1.email')
-        ->havingRaw('COUNT(ib1.email) > 0')
-        ->first();
-
-    $rm_details = DB::table('relationship_manager as rm')
-        ->leftJoin('emplist as emp', 'rm.rm_id', '=', 'emp.email')
-        ->select('emp.client_index', 'emp.username', 'rm.*')
-        ->where('rm.user_id', $eid)
-        ->first();
-
-    $superadmin_details = DB::table('emplist')->where('role_id', 1)->first();
-    $country_code = DB::table('countries')->where('country_name', $user->country)->first();
-
-    // Fetch ticket status and types with caching
-    $ticket_status = Cache::remember('ticket_status', now()->addMinutes(10), fn() => DB::table('ticket_status')->get()->toArray());
-    $ticket_types = Cache::remember('ticket_types', now()->addMinutes(10), fn() => DB::table('ticket_types')->get()->toArray());
-
-    return view('admin.client_details', compact(
-        'ticket_status',
-        'ticket_types',
-        'user',
-        'acc_groups',
-        'acc_types',
-        'wallet_balance',
-        'total_balance',
-        'live_accounts',
-        'bank_details',
-        'kyc_details',
-        'ib_details',
-        'rm_details',
-        'superadmin_details',
-        'country_code',
-        'total_wd',
-        'total_ww',
-        'clients'
-    ));
-}
-
+            $superadmin_details = DB::table('emplist')
+                ->where('role_id', 1)
+                ->first();
+            $country_code = DB::table('countries')
+                ->where('country_name', $user->country)
+                ->first();
+        }
+        $ticket_status_obj = DB::table('ticket_status')->get()->toArray();
+        $ticket_status = json_decode(json_encode($ticket_status_obj), true);
+        $ticket_types_obj = DB::table('ticket_types')->get()->toArray();
+        $ticket_types = json_decode(json_encode($ticket_types_obj), true);
+       
+        return view('admin.client_details', compact(
+            'ticket_status',
+            'ticket_types',
+            'user',
+            'acc_groups',
+            'acc_types',
+            'wallet_balance',
+            'total_balance',
+            'live_accounts',
+            'bank_details',
+            'kyc_details',
+            'ib_details',
+            'rm_details',
+            'superadmin_details',
+            'country_code',
+            'total_wd',
+            'total_ww',
+            'clients'
+        ));
+    }
     public function sendPasswordResetLink(Request $request)
     {
         $email = $request->txtemail;
