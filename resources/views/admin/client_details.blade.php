@@ -1,5 +1,4 @@
 @extends('layouts.admin.admin')
-{{ dd($user) }}
 @section('content')
     <div class="modal fade" id="addTicketModal" tabindex="-1" aria-labelledby="addTicketModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
