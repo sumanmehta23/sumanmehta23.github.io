@@ -173,6 +173,13 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group"><label
+                                                        class="form-label">Gender</label><input
+                                                        type="text" class="form-control" placeholder="Gender"
+                                                        required name="gender"><!----></div>
+                                            </div>
+
                                             @if(request()->has('refercode') && $referral_code)
                                                 <div data-v-97e32e5a="" class="col-sm-12">
                                                     <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""

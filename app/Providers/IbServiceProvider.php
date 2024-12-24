@@ -14,13 +14,13 @@ class IbServiceProvider extends ServiceProvider
     {
         View::composer('*', function ($view) {
             $user = auth()->user();
-            if ($user) {
+            if ($user && !isset($user->userRole)) {
                 $cacheKey = 'ib1_' . $user->id;
                 if (Cache::has($cacheKey)) {
                     $ibResult=Cache::get($cacheKey);
                 } else {
                     $ibResult =Ib1::where('user_id', $user->id)->first();
-                    Cache::put($cacheKey, $ibResult, 600);
+                    Cache::put($cacheKey, $ibResult, 60);
                 }
                 $view->with('ibResult', $ibResult);
             } else {

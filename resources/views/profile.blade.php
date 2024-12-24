@@ -159,6 +159,13 @@
                                                                     value="{{ session('user')->number }}" disabled>
                                                             </div>
                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Gender</label>
+                                                                <input type="text" class="form-control"
+                                                                    value="{{ session('user')->gender }}" disabled>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
