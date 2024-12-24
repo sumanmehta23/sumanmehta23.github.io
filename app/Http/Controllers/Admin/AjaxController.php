@@ -720,7 +720,7 @@ class AjaxController extends Controller
                             </a>";
                 })
                 ->addColumn('amount', function($row){
-                    return $row->withdraw_amount;
+                    return $row->deposit_amount;
                 })
                 ->addColumn('payment_mode', function($row){
                     return $row->deposit_type;
