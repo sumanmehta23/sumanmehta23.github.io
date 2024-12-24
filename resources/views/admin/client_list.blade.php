@@ -7,6 +7,8 @@
 
     ?>
     <style>
+        .pointer,
+        .emailActionToggle,
         .statusToggle,
         .viewClient {
             cursor: pointer;
@@ -234,7 +236,76 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="emailModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="#" id="emailActionForm" method="post">
+                    @csrf
+                    <input type="hidden" name="action" value="updateClientStatus">
+                    <input type="hidden" name="client_id" id="user_id" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="statusModalLabel">Resend Email</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="mb-0 modal-body custom-card card">
+                        <div class="d-flex align-items-center card-header w-100">
+                            
+                            <div class="">
+                                <div class="fs-15 fw-medium text-capitalize" id="userName"></div>
+                                <p class="mb-0 text-muted fs-11" id="userEmail"></p>
+                            </div>
 
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 row">
+                                <div class="m-auto col-lg-4">
+                                    <label class="form-label">Resend Account Verification Email</label>
+                                </div>
+                                <div class="col-lg-8">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="status"
+                                            id="user_status" checked>
+                                        <label class="form-check-label" for="user_status"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <div class="m-auto col-lg-4">
+                                    <label class="form-label">Email Confirmed</label>
+                                </div>
+                                <div class="col-lg-8">
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="email_confirmed" id="email_status">
+                                        <label class="form-check-label" for="email_status"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="m-auto col-lg-4">
+                                    <label class="form-label">KYC Verification</label>
+                                </div>
+                                <div class="col-lg-8">
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="kyc_verify"
+                                            id="kyc_verify">
+                                        <label class="form-check-label" for="kyc_verify"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="ibRequest" value="update" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -519,6 +590,7 @@
             window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
             window.editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
             window.statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+            window.emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
             window.rmModal = new bootstrap.Modal(document.getElementById('rmModal'));
             window.updateIbModal = new bootstrap.Modal(document.getElementById('updateIbModal'));
             $(".countrycode").select2({
@@ -852,6 +924,62 @@
                     $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
                     statusModal.show();
                 });
+                $('.ajaxDataTable tbody').off('click', '.resendVerificationEmail');
+                $('.ajaxDataTable tbody').on('click', '.resendVerificationEmail', function() {
+                    var data = dTtable.row($(this).closest("tr")).data();
+                    $("#userName,#userEmail").html("");
+                    $("#userName").html(data.fullname);
+                    $("#userEmail").html(data.email);
+                    $("#user_id").val(data.id);
+                    $("#user_status").prop("checked", data.status == 1);
+                    $("#email_status").prop("checked", data.email_confirmed == 1);
+                    $("#kyc_verify").prop("checked", (data.kyc_verify == 1));
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "An account email confirmation email will be resent to the user.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, resend it!"
+                        }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "/admin/ajax",
+                                type: "POST",
+                                cache: false,
+                                data: {
+                                    action: 'resendVerificationEmail',
+                                    id: data.id
+                                },
+                                success: function(response) {
+                                    if (response.success == true) {
+                                        swal.fire({
+                                            icon: "success",
+                                            title: "Verification email Successfully Sent",
+                                        }).then((val) => {
+                                            // location.reload();
+                                        });
+                                    } else {
+                                        swal.fire({
+                                            icon: "error",
+                                            title: "Something went wrong.",
+                                            text: "Please try again or contact support."
+                                        }).then((val) => {
+                                            // location.reload();
+                                        });
+                                    }
+                                }
+                            });
+                            // Swal.fire({
+                            // title: "Deleted!",
+                            // text: "Your file has been deleted.",
+                            // icon: "success"
+                            // });
+                        }
+                        });
+                });
+                
                 $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
                 $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
                     var data = dTtable.row($(this).closest("tr")).data();
@@ -904,7 +1032,34 @@
                 });
             });
 
+            $("#statusUpdateForm22").submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "/admin/ajax",
+                    type: "POST",
+                    cache: false,
+                    data: $("#statusUpdateForm").serialize(),
+                    success: function(response) {
 
+                        if (response.success == true) {
+                            swal.fire({
+                                icon: "success",
+                                title: "Status Successfully Updated",
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        } else {
+                            swal.fire({
+                                icon: "error",
+                                title: "Something went wrong.",
+                                text: "Please try again or contact support."
+                            }).then((val) => {
+                                location.reload();
+                            });
+                        }
+                    }
+                });
+            });
             $("#statusUpdateForm").submit(function(e) {
                 e.preventDefault();
                 $.ajax({
