@@ -82,16 +82,16 @@ class User extends Authenticatable
 
     // public function getCountry()
     // {
-    //     return Country::where('country_name', '=', $this->country) 
+    //     return Country::where('country_name', '=', $this->country)
     //         ->first();
     // }
 
     public function getParentIb()
-    {   
+    {
         if (is_null($this->ib1)) {
             return null;
         }
-        
+
         return Ib1::where('referral_code', $this->ib1)
             ->orWhere('referral_code', $this->email)
             ->first();
@@ -217,19 +217,25 @@ class User extends Authenticatable
     public function getClientsAttribute()
     {
         $clients = collect();
-    
-        // Loop through the 15 possible levels (ib1, ib2, ..., ib15)
-        for ($i = 1; $i <= 15; $i++) {
-            if ($this->ib) {
-                // Dynamically create the column name based on the current level
-                $foundClients = IbClientList::where("ib$i", $this->ib->referral_code)->get();
-            } else {
-                $foundClients = collect(); 
+        // dd($this->ib);
+        if($this->ib){
+            $referralCode = $this->ib->referral_code;
+            if(empty($referralCode)){
+                $referralCode = $this->ib->email;
             }
-    
-            $clients->put($i, $foundClients);
+            // Loop through the 15 possible levels (ib1, ib2, ..., ib15)
+            for ($i = 1; $i <= 15; $i++) {
+                if ($this->ib) {
+                    // Dynamically create the column name based on the current level
+                    $foundClients = IbClientList::where("ib$i", $referralCode)->get();
+                } else {
+                    $foundClients = collect();
+                }
+
+                $clients->put($i, $foundClients);
+            }
         }
-    
+
         return $clients;
     }
 

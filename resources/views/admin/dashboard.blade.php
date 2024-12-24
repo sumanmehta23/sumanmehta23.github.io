@@ -347,7 +347,7 @@
                                                 <div><?php echo htmlentities($result->id); ?></div>
                                             </td>
                                             <td>
-                                                <a href="/admin/client_details?id={{ ($result->email) }}">
+                                                <a href="/admin/client_details/{{ ($result->user_id) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"
