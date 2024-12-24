@@ -45,4 +45,7 @@ return [
         'url'=>env('BREVO_URL','https://api.brevo.com/v3/'),
         'api_key'=>env('BREVO_API_KEY')
     ],
+    'pamm' =>[
+        'url' =>env('PAMM_URL'),
+    ]
 ];

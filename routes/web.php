@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\PammController;
 Route::get("/se",function(){
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
@@ -126,6 +127,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
+    Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
@@ -149,7 +152,7 @@ Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->n
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
-        
+
         return ini_get('memory_limit');
     });
     Route::get('/', [Login::class, 'showLoginForm']);
