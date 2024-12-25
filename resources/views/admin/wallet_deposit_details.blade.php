@@ -12,7 +12,7 @@
         </div>
         @if (isset($details) && !empty($details))
             <div class="row">
-                <div class="col-10 mx-auto">
+                <div class="mx-auto col-10">
                     <div class="card custom-card">
                         <div class="card-body">
                             <h6 class="card-title fw-medium">DEPOSIT TICKET #{{ $details->id }}</h6>
@@ -25,11 +25,11 @@
                                         </div>
                                         <div class="user-wrap">
                                             <h4 class="fw-normal">{{ $details->fullname }}</h4>
-                                            <h6 class="text-muted mb-3 fw-normal">{{ $details->email }}</h6>
+                                            <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
+                                <div class="cursor-pointer col-lg-3 col-md-12 rmToggle" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
@@ -46,11 +46,11 @@
                                             </svg></div>
                                         <div class="user-wrap">
                                             <h4 class="fw-medium fs-11">{{ $details->rm_name ?? 'NoRM' }}</h4>
-                                            <h6 class="text-muted mb-3 fw-normal fs-11">Relationship Manager</h6>
+                                            <h6 class="mb-3 text-muted fw-normal fs-11">Relationship Manager</h6>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-12 updateIb cursor-pointer"
+                                <div class="cursor-pointer col-lg-3 col-md-12 updateIb"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
@@ -67,7 +67,7 @@
                                             </svg></div>
                                         <div class="user-wrap">
                                             <h4 class="fw-medium fs-11">{{ $details->parent_ib ?? 'NoIB' }}</h4>
-                                            <h6 class="text-muted mb-3 fw-normal fs-11">Parent IB</h6>
+                                            <h6 class="mb-3 text-muted fw-normal fs-11">Parent IB</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -83,9 +83,9 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Contact</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span><i
-                                                                    class="fa fa-phone text-primary px-2"></i>{{ $details->number }}</span>
+                                                                    class="px-2 fa fa-phone text-primary"></i>{{ $details->number }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -96,7 +96,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Created On</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->deposted_date }}</span>
                                                         </div>
                                                     </div>
@@ -108,7 +108,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Total Deposit</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span class="badge bg-success-transparent">+</span>
                                                             <span>${{ $details->total_trading_dp + $details->total_wallet_dp }}</span>
                                                         </div>
@@ -121,7 +121,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Total Withdraw</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span class="badge bg-danger-transparent">-</span>
                                                             <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span>
                                                         </div>
@@ -136,7 +136,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">PAYMENT METHOD</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             {{ $details->deposit_type }}</span>
                                                         </div>
                                                     </div>
@@ -148,7 +148,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">TRANSACTION ID</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->transaction_id }}</span>
                                                         </div>
                                                     </div>
@@ -160,7 +160,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">DEPOSIT AMOUNT</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>${{ $details->deposit_amount }}</span>
                                                         </div>
                                                     </div>
@@ -172,7 +172,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">PAYMENT STATUS</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <?php if ($details->status == 1) { ?>
                                                             <span class="badge bg-success">APPROVED</span>
                                                             <?php } elseif ($details->status == 2) { ?>
@@ -192,7 +192,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">COMPANY BANK</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->company_bank }}</span>
                                                         </div>
                                                     </div>
@@ -204,7 +204,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">CURRENCY TYPE</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->currency_type }}</span>
                                                         </div>
                                                     </div>
@@ -214,15 +214,15 @@
                                             <td>
                                             </td>
                                             <td>
-                                                <div class="btn-list ms-auto my-auto">
+                                                <div class="my-auto btn-list ms-auto">
                                                     <button
                                                         onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',1)"
                                                         type="button"
-                                                        class="btn btn-success btn-space m-1">Approve</button>
+                                                        class="m-1 btn btn-success btn-space">Approve</button>
                                                     <button
                                                         onclick="takeAction('{{ $details->email }}','{{ $details->deposit_amount }}',2)"
                                                         type="submit"
-                                                        class="btn btn-danger btn-space m-1">Reject</button>
+                                                        class="m-1 btn btn-danger btn-space">Reject</button>
                                                 </div>
                                             </td>
                                             <?php } else { ?>
@@ -232,7 +232,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
@@ -244,7 +244,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">ADMIN ACTION TAKEN</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->Js_Admin_Remark_Date }}</span>
                                                         </div>
                                                     </div>
@@ -261,7 +261,7 @@
             </div>
         @else
             <div class="row">
-                <div class="col-12 mx-3">
+                <div class="mx-3 col-12">
                     <h4>No details found or you are not authorized to access this page</h4>
                 </div>
             </div>

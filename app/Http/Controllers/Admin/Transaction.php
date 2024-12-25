@@ -53,7 +53,7 @@ class Transaction extends Controller
                 ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
                 ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
                 ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.referral_code')
                 ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
                 ->when(session('userData.role_id') == 2, function ($query) {
                     $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
@@ -114,6 +114,7 @@ class Transaction extends Controller
             $details = WalletWithdraw::with([
                 'clientWallet',
                 'user',
+                'user.parentib',
                 'totalBalance',
                 // 'relationshipManager.emplist',
                 'user',
@@ -132,6 +133,8 @@ class Transaction extends Controller
             }else{
                 $client_wallet='';
             }
+
+            // dd($details);
             return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
         }
     }

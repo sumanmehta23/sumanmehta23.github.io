@@ -75,7 +75,7 @@
                                             <path d="M6 20.703v-.703a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.707"></path>
                                         </svg></div>
                                     <div class="user-wrap">
-                                        <h4 class="fw-medium fs-11">{{ $details->parent_ib ?? 'NoIB' }}</h4>
+                                        <h4 class="fw-medium fs-11">{{ $details->user->parentib->name ?? 'NoIB' }}</h4>
                                         <!-- <h4 class="fw-medium fs-11 text-muted">{{ $details->parent_ib_email ?? '' }}</h4> -->
                                         <h6 class="mb-3 text-muted fw-normal fs-11">Parent IB</h6>
                                     </div>
