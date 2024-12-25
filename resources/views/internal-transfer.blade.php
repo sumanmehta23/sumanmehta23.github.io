@@ -132,7 +132,7 @@
                                                 </form>
                                             @else
                                                 <div class="d-flex justify-content-center">
-                                                    <a href="{{ route('liveAccounts.create') }}" class="d-grid">
+                                                    <a href="{{ route('show-live-account-form') }}" class="d-grid">
                                                         <button class="btn btn-primary">
                                                             <span class="text-truncate w-100">Create New Live Account</span>
                                                         </button>
