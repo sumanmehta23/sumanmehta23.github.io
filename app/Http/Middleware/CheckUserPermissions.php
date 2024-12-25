@@ -36,10 +36,6 @@ class CheckUserPermissions
             ->where('p.role_id', $userRole)
             ->pluck('pg.filename')
             ->toArray();
-
-        
-       
-        
         if (!in_array($requestUri, $rolePermissions) && $userRole != 2) {
             return response()->view('errors.401', [], 401);
         }

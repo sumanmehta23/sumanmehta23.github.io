@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Country;
+use Illuminate\Support\Str;
+use App\Services\MailService;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -67,6 +69,10 @@ class User extends Authenticatable
     public function ib()
     {
         return $this->hasOne(Ib1::class);
+    }
+    public function parentib()
+    {
+        return $this->hasOne(Ib1::class, 'referral_code', 'ib1');
     }
 
     public function employee()
@@ -215,29 +221,31 @@ class User extends Authenticatable
     }
 
     public function getClientsAttribute()
-    {
-        $clients = collect();
-        // dd($this->ib);
-        if($this->ib){
-            $referralCode = $this->ib->referral_code;
-            if(empty($referralCode)){
-                $referralCode = $this->ib->email;
-            }
-            // Loop through the 15 possible levels (ib1, ib2, ..., ib15)
-            for ($i = 1; $i <= 15; $i++) {
-                if ($this->ib) {
-                    // Dynamically create the column name based on the current level
-                    $foundClients = IbClientList::where("ib$i", $referralCode)->get();
-                } else {
-                    $foundClients = collect();
-                }
+{
+    if (!$this->ib) {
+        return collect(); // Return an empty collection if the user has no IB.
+    }
 
-                $clients->put($i, $foundClients);
+    $referralCode = $this->ib->referral_code ?: $this->ib->email;
+
+    // Dynamically build the query for all 15 levels using a single query.
+    $clients = IbClientList::where(function ($query) use ($referralCode) {
+        for ($i = 1; $i <= 15; $i++) {
+            $query->orWhere("ib$i", $referralCode);
+        }
+    })->get();
+
+    // Group clients by level (ib1, ib2, ..., ib15)
+    $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
+        foreach (range(1, 15) as $level) {
+            if ($client["ib$level"] === $referralCode) {
+                return [$level => $client];
             }
         }
+    });
 
-        return $clients;
-    }
+    return $groupedClients;
+}
 
     public function getTicketStatusAttribute()
     {
@@ -251,5 +259,35 @@ class User extends Authenticatable
         return Cache::remember('ticket_types', 60, function () {
             return DB::table('ticket_types')->get();
         });
+    }
+    public function sendEmailVerificationNotification()
+    {
+        $mailservice=new MailService();
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $toEmail = $this->email;
+        $uid = uniqid();
+        $emailSubject = $settings['admin_title'] . ' - Email Address Verfication';
+        $htmlContent = "";
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content =
+            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+            '<div>You are receiving this email because you have registered for a Trading Account.</div>' .
+            '<div>Click the link below to activate your Trading Account</div>';
+        $code = Str::random(60);
+        $this->emailToken=$code;
+        $templateVars = [
+            'name' => $this->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$this->id}&code=$code",
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Account"
+        ];
+
+        $mailservice->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
 }

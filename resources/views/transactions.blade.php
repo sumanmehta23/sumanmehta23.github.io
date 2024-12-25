@@ -23,7 +23,7 @@
 </style>
 <div class="pc-container">
   <div class="pc-content">
-    <div class="page-header mb-0 pb-0">
+    <div class="pb-0 mb-0 page-header">
       <div class="page-block">
         <div class="row align-items-center">
           <div class="col-md-12">
@@ -37,7 +37,7 @@
     <div class="row">
       <div class="col-lg-12">
         <div class="card">
-          <div class="card-body border-bottom pb-0">
+          <div class="pb-0 card-body border-bottom">
             <div class="d-flex align-items-center justify-content-between">
               <h5 class="mb-0">All Transactions</h5>
               <div class="dropdown">
@@ -83,17 +83,17 @@
                           <td>
                             <div class="d-flex align-items-center">
                               <div>
-                                <div class="avtar avtar-s border"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
+                                <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
                                 <h6 class="mb-0">{{ $history->code }}</h6>
-                                <p class="text-muted mb-0"><small>{{ $history->ac_name }}</small></p>
+                                <p class="mb-0 text-muted"><small>{{ $history->ac_name }}</small></p>
                               </div>
                             </div>
                           </td>
                           <td>
                             <h6 class="f-w-500">{{Carbon::parse($history->deposted_date)->format('Y-m-d') }}</h6>
-                            <p class="text-muted mb-0">
+                            <p class="mb-0 text-muted">
                               <small>{{ Carbon::parse($history->deposted_date)->format('H:i A') }}</small>
                             </p>
                           </td>
@@ -111,7 +111,7 @@
                     </tbody>
                   </table>
                   <hr>
-                  <div class="row mt-2 justify-content-between">
+                  <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
                       <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $deposit_history->count() }} of {{ $deposit_history->count() }} entries</div>
                     </div>
@@ -124,7 +124,7 @@
                       <div class="text-center me-4">
                         <a href="/transactions/deposit#"><img src="/assets/images/deposit2.png" class="w-25" alt="img"></a>
                       </div>
-                      <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Deposit History found!</h6>
+                      <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Deposit History found!</h6>
                     </div>
                   </div>
                 </div>
@@ -157,17 +157,17 @@
                           <td>
                             <div class="d-flex align-items-center">
                               <div>
-                                <div class="avtar avtar-s border"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
+                                <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
                                 <h6 class="mb-0">{{ $history->transaction_id }}</h6>
-                                <p class="text-muted mb-0"><small>Live Account</small></p>
+                                <p class="mb-0 text-muted"><small>Live Account</small></p>
                               </div>
                             </div>
                           </td>
                           <td>
                             <h6 class="f-w-500">{{ Carbon::parse($history->withdraw_date)->format('Y-m-d') }}</h6>
-                            <p class="text-muted mb-0">
+                            <p class="mb-0 text-muted">
                               <small>{{ Carbon::parse($history->withdraw_date)->format('H:i A') }}</small>
                             </p>
                           </td>
@@ -188,7 +188,7 @@
                     </tbody>
                   </table>
                   <hr>
-                  <div class="row mt-2 justify-content-between">
+                  <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
                       <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $withdrawal_history->count() }} of {{ $withdrawal_history->count() }} entries</div>
                     </div>
@@ -201,7 +201,7 @@
                       <div class="text-center me-4">
                         <a href="#"><img src="/assets/images/withdrawals2.png" class="w-25" alt="img"></a>
                       </div>
-                      <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Withdrawal History found!</h6>
+                      <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Withdrawal History found!</h6>
                     </div>
                   </div>
                 </div>
@@ -260,7 +260,7 @@
                             </td>
                             <td>
                                 <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
-                                <p class="text-muted mb-0">
+                                <p class="mb-0 text-muted">
                                     <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
                                 </p>
                             </td>
@@ -286,7 +286,7 @@
                     </tbody>
                   </table>
                   <hr>
-                  <div class="row mt-2 justify-content-between">
+                  <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
                       <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $internal_transfer->count() }} of {{ $internal_transfer->count() }} entries</div>
                     </div>
@@ -299,7 +299,7 @@
                       <div class="text-center me-4">
                         <a href="#"><img src="/assets/images/internaltransfer2.png" class="w-25" alt="img"></a>
                       </div>
-                      <h6 class="text-center text-secondary f-w-400 mb-0 f-16">No Internal Transfers Found!</h6>
+                      <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Internal Transfers Found!</h6>
                     </div>
                   </div>
                 </div>

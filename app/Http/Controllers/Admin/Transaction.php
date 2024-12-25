@@ -53,7 +53,7 @@ class Transaction extends Controller
                 ->leftJoin('aspnetusers as u', 'wd.email', '=', 'u.email')
                 ->leftJoin('relationship_manager as r', 'wd.email', '=', 'r.user_id')
                 ->leftJoin('emplist as emp', 'r.rm_id', '=', 'emp.email')
-                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.email')
+                ->leftJoin('ib1', 'u.ib1', '=', 'ib1.referral_code')
                 ->leftJoin('total_balance as tb', 'u.email', '=', 'tb.email')
                 ->when(session('userData.role_id') == 2, function ($query) {
                     $query->join('relationship_manager as rm', 'wd.email', '=', 'rm.user_id')
@@ -114,6 +114,7 @@ class Transaction extends Controller
             $details = WalletWithdraw::with([
                 'clientWallet',
                 'user',
+                'user.parentib',
                 'totalBalance',
                 // 'relationshipManager.emplist',
                 'user',
@@ -132,6 +133,8 @@ class Transaction extends Controller
             }else{
                 $client_wallet='';
             }
+
+            // dd($details);
             return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
         }
     }
@@ -238,11 +241,7 @@ class Transaction extends Controller
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
-                TotalBalance::create([
-                    'user_id' => $transaction->user_id,
-                    'email' => $email,
-                    'withdraw_amount' => $depositAmount,
-                ]);
+                
 
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
 
@@ -283,7 +282,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new Exception("Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
 
                     $responseData=json_decode($response);
@@ -292,7 +291,7 @@ class Transaction extends Controller
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction,$email,$depositAmount) {
                             // Update wallet_withdraw table with transaction_id and status
                             WalletWithdraw::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -301,6 +300,11 @@ class Transaction extends Controller
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($payoutResult->passthrough),
                                     'status' => 1  // Set status to 1 (success)
+                                ]);
+                                TotalBalance::create([
+                                    'user_id' => $transaction->user_id,
+                                    'email' => $email,
+                                    'withdraw_amount' => $depositAmount,
                                 ]);
                         });
                     } else {
@@ -316,11 +320,11 @@ class Transaction extends Controller
                                 ]);
 
                             // Delete total_balance entry
-                            TotalBalance::where('id', $transaction->id)->delete();
+                            // TotalBalance::where('id', $transaction->id)->delete();
                         });
                         Log::error("Error Processing Request: " .json_encode([ $responseData]));
                         // Throw an exception with the error message from the response
-                        throw new Exception("Error Processing Request: " . $responseData->message);
+                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
                     }
                 }
 

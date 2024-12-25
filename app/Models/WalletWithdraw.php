@@ -29,7 +29,7 @@ class WalletWithdraw extends Model
     }
     public function totalBalance()
     {
-        return $this->belongsTo(TotalBalance::class,'email','email');
+        return $this->belongsTo(TotalBalance::class,'user_id','user_id');
     }
     public function relationshipManager()
     {
