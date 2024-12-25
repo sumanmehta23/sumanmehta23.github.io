@@ -283,7 +283,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new Exception("Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
 
                     $responseData=json_decode($response);
@@ -320,7 +320,7 @@ class Transaction extends Controller
                         });
                         Log::error("Error Processing Request: " .json_encode([ $responseData]));
                         // Throw an exception with the error message from the response
-                        throw new Exception("Error Processing Request: " . $responseData->message);
+                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
                     }
                 }
 
