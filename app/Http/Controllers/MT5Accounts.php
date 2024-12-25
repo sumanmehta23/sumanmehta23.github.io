@@ -420,6 +420,7 @@ class MT5Accounts extends Controller
             Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
+            Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
             return ["status" => true, "message" => $type . " Account Created Successfully"];
         }
     }
