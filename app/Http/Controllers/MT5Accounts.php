@@ -297,7 +297,7 @@ class MT5Accounts extends Controller
         $new_user->Phone = $user->number;
         $new_user->Currency = 'USD';
         $new_user->Company = $settings['mt5_company_name'];
-        $new_user->Name = $user->fullname;
+        $new_user->Name =  $user->fullname??$user->email;
         $new_user->Email = $user->email;
         $new_user->LeadSource = $user->ib1 ?? "" ;
         $new_user->PhonePassword = $this->generatePassword();
