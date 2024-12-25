@@ -323,6 +323,7 @@ class MT5Accounts extends Controller
             $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
+                Log::error('MT5 live account : ' . $error.' for user '.$user->id);
                 return redirect()->back()->with('success', $error);
             } else {
                 $data = [
@@ -410,11 +411,13 @@ class MT5Accounts extends Controller
             );
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
+                Log::error('MT5 live account connection error : ' . $error.' for user '.json_encode($user));
                 return ["status" => false, "message" => $error];
             }
         }
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
+            Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
             return ["status" => true, "message" => $type . " Account Created Successfully"];
