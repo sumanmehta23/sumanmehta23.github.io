@@ -238,11 +238,7 @@ class Transaction extends Controller
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
-                TotalBalance::create([
-                    'user_id' => $transaction->user_id,
-                    'email' => $email,
-                    'withdraw_amount' => $depositAmount,
-                ]);
+                
 
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
 
@@ -292,7 +288,7 @@ class Transaction extends Controller
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction,$email,$depositAmount) {
                             // Update wallet_withdraw table with transaction_id and status
                             WalletWithdraw::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -301,6 +297,11 @@ class Transaction extends Controller
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($payoutResult->passthrough),
                                     'status' => 1  // Set status to 1 (success)
+                                ]);
+                                TotalBalance::create([
+                                    'user_id' => $transaction->user_id,
+                                    'email' => $email,
+                                    'withdraw_amount' => $depositAmount,
                                 ]);
                         });
                     } else {
@@ -316,7 +317,7 @@ class Transaction extends Controller
                                 ]);
 
                             // Delete total_balance entry
-                            TotalBalance::where('id', $transaction->id)->delete();
+                            // TotalBalance::where('id', $transaction->id)->delete();
                         });
                         Log::error("Error Processing Request: " .json_encode([ $responseData]));
                         // Throw an exception with the error message from the response
