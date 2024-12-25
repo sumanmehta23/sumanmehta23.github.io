@@ -30,10 +30,12 @@
                             <div class="col-lg-6 col-md-12">
                                 <div class="wideget-user-desc d-flex align-items-center">
                                     <div class="wideget-user-img">
+                                        <a href="{{route("admin.admin-view-client-details",$details->user->id)}}">
                                         <img src="/admin_assets/assets/images/users/client.png" alt="img" style="width:50px">
+                                        </a>
                                     </div>
                                     <div class="user-wrap">
-                                        <h4 class="fw-normal">{{ $details->fullname }}</h4>
+                                        <h4 class="fw-normal">{{ $details->user->fullname }}</h4>
                                         <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
                                     </div>
                                 </div>
