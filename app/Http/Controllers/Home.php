@@ -56,7 +56,7 @@ class Home extends Controller
             ->where('status','<>', 2)
             ->sum('withdraw_transaction_fee');
         $walletBalance = $totalDeposit - ($totalWithdraw + $totalWithdrawFee);
-        return $walletBalance;
+        return round($walletBalance,2);
     }
     public function getTotalDeposit($userId)
     {
