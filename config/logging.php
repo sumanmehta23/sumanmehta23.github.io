@@ -130,9 +130,17 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/cryptochill/callbacks.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 1000,
+            'days' => 10000,
             'replace_placeholders' => true,
         ],
+        'creditcardpayissa' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/creditcardpayissa/callbacks.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 10000,
+            'replace_placeholders' => true,
+        ],
+        
         'payouts' => [
             'driver' => 'daily',
             'path' => storage_path('logs/payouts/laravel.log'),
