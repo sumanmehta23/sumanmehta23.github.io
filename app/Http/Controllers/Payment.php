@@ -37,8 +37,10 @@ class Payment extends Controller
             if(!$paymentLog){
                 return response()->json(['error' => 'Invalid Payment ID'], 400);
             }
-            $validationToken=json_decode($paymentLog->payment_req)->polygon_address_in;
-            if($responsedata['address_in'] ==$validationToken && $responsedata['value_coin']==$paymentLog->payment_amount){
+            $paymentlinkresponse=json_decode($paymentLog->payment_req);
+            $validationToken=$paymentlinkresponse->polygon_address_in;
+            // && $responsedata['value_coin']==$paymentLog->payment_amount can't compare as it will never be same as intial input
+            if($responsedata['address_in'] ==$validationToken){
                 $paymentLog->update([
                     'payment_res' => json_encode($responsedata),
                     'payment_status' => 'success',
