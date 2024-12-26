@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
+use App\Models\TotalBalance;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use App\Services\MailService as MailService;
 
@@ -28,8 +31,54 @@ class Payment extends Controller
         $payment_id = $request->input('payment_id');
         $address_in = $request->input('address_in');
         if(!empty($address_in)){
-            Log::info('Payment Response: '.json_encode($request->all()));
-            return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
+            $responsedata= $request->all();
+            Log::channel("creditcardpayissa")->info('Payment Response: '.json_encode($responsedata));
+            $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
+            if($responsedata['value_coin']==$paymentLog->payment_amount){
+                $paymentLog->update([
+                    'payment_res' => json_encode($responsedata),
+                    'payment_status' => 'success',
+                ]);
+                $email = $paymentLog->initiated_by;
+                $amount = $responsedata['value_coin'];
+                $transactionId = $responsedata['txid_in'];
+                try {
+                    DB::beginTransaction();
+
+                    $walletDeposit=  WalletDeposit::create([
+                        'user_id' => $paymentLog->user_id,
+                        'email' => $email,
+                        'deposit_type' => "CreditCardPayissa",
+                        'deposit_amount' => $amount,
+                        'company_bank' => "CreditCardPayissa",
+                        'transaction_id' => $transactionId,
+                        'status' => 1,
+                        'currency_type' => 'USD',
+                        'callback_data' => json_encode($responsedata),
+                        'callback_code' => "success",
+                    ]);
+
+                    // Update total balance
+                    TotalBalance::create(
+                        ['email' => $email,'user_id'=>$paymentLog->user_id,'deposit_amount' => $amount]
+                    );
+
+                    DB::commit();
+                    Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
+                    Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
+                    $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
+                    return response()->json(['status' => 'true']);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                }
+                
+                
+            }
+            
+            return ["ok"];
+            // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
         }else{
             
                 $payment_res = json_encode($request->all());
@@ -76,9 +125,10 @@ class Payment extends Controller
 
     public function sendSuccessEmail($toEmail, $amount, $paymentLog,$lastInsertId)
     {
+        $paymentLog->payment_type = $paymentLog->payment_type=="CreditCardPayissa"?"Credit Card":$paymentLog->payment_type;
         $settings = settings();
         $from = $settings['email_from_address'];
-        $transid = "WDID" . str_pad($lastInsertId, 4, '0', STR_PAD_LEFT);
+        $transid = "WDID" . $lastInsertId;
         $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
          $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";

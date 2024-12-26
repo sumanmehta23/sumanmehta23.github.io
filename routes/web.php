@@ -75,6 +75,8 @@ Route::get("/se",function(){
     // $settings = \App\Models\Account::get()->toArray();
     // file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
+Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
+
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -92,7 +94,6 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
