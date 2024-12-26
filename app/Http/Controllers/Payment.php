@@ -29,7 +29,8 @@ class Payment extends Controller
         $address_in = $request->input('address_in');
         if(!empty($address_in)){
             Log::info('Payment Response: '.json_encode($request->all()));
-            return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
+            return ["ok"];
+            // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
         }else{
             
                 $payment_res = json_encode($request->all());
