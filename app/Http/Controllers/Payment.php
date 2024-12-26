@@ -32,8 +32,8 @@ class Payment extends Controller
         $address_in = $request->input('address_in');
         if(!empty($address_in)){
             $responsedata= $request->all();
-            Log::channel("creditcardpayissa")->info('Payment Response: '.json_encode($responsedata));
-            $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
+            Log::channel("creditcardpayissa")->info('Payment callback Response: '.json_encode($responsedata));
+            $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
             if(!$paymentLog){
                 return response()->json(['error' => 'Invalid Payment ID'], 400);
             }
