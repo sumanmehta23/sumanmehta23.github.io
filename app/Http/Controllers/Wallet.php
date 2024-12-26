@@ -214,7 +214,7 @@ class Wallet extends Controller
                 'payment_url' => $responsdata['ipn_token'],
                 'remarks' => $success_url,
             ]);
-            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$response['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
+            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$responsdata['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
 
             return ['invoice_url'=>$url];
         }
