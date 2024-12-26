@@ -98,7 +98,7 @@
                                                                                 <span class="p-2 card-body d-block">
                                                                                     <span
                                                                                         class="d-flex align-items-center justify-content-between">
-                                                                                        <span>Crypto Payment</span>
+                                                                                        <span>Crypto</span>
                                                                                         <span>
                                                                                             <span
                                                                                                 class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
@@ -112,26 +112,26 @@
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                {{-- <div class="col-6 col-lg-6 col-xl-6">
+                                                                 <div class="col-6 col-lg-6 col-xl-6">
                                                                     <div
                                                                         class="border rounded address-check trade-deposit-type">
                                                                         <div class="form-check">
                                                                             <input type="radio" name="deposit_type"
                                                                                 checked
                                                                                 class="form-check-input input-primary tradefund-deposit"
-                                                                                id="option_nowpayment" value="Now Payment"
-                                                                                data-type="Now-Payment">
+                                                                                id="option_cc" value="CreditCard"
+                                                                                data-type="CreditCard">
                                                                             <label class="form-check-label d-block"
-                                                                                for="option_nowpayment">
+                                                                                for="option_cc">
                                                                                 <span class="p-2 card-body d-block">
                                                                                     <span
                                                                                         class="d-flex align-items-center justify-content-between">
-                                                                                        <span>Crypto Payment</span>
+                                                                                        <span>Credit Card</span>
                                                                                         <span>
                                                                                             <span
                                                                                                 class="mb-1 h6 f-w-500 d-block">
                                                                                                 <img src="/assets/images/nowpayments-white.png"
-                                                                                                    alt="Now Payment"
+                                                                                                    alt="Credit Card"
                                                                                                     style="height: 40px;">
                                                                                             </span>
                                                                                         </span>
@@ -140,7 +140,7 @@
                                                                             </label>
                                                                         </div>
                                                                     </div>
-                                                                </div> --}}
+                                                                </div> 
                                                             </div>
                                                             <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                             <form method="post" style="padding:10px;"
@@ -461,7 +461,7 @@
 
                                                         </div>
                                                     </div>
-                                                @endif;
+                                                @endif
                                             </div>
 
 
