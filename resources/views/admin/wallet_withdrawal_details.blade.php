@@ -191,7 +191,9 @@
                                                         <span class="badge bg-danger">REJECTED</span>
                                                         <?php } elseif ($details->status == 0) { ?>
                                                         <span class="badge bg-primary">WAITING FOR APPROVAL</span>
-                                                        <?php } ?>
+                                                        <?php } elseif ($details->status == 3) {?>
+                                                            <span class="badge bg-primary">DECLINED</span>
+                                                            <?php } ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -270,6 +272,15 @@
                                                 <button
                                                     onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
                                                     type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
+                                                    @if (($details->status == 0) || ($details->payout_res != null))
+                                                        @php
+                                                            $payout_res = !empty($details->payout_res) ? json_decode($details->payout_res, true) : [];
+                                                            $message = isset($payout_res['message']) ? $payout_res['message'] : '';
+                                                        @endphp
+                                                        <button
+                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',3)"
+                                                        type="submit" class="m-1 btn btn-danger btn-space">Decline</button>
+                                                    @endif
                                             </div>
                                         </td>
                                         <?php } else { ?>
@@ -328,8 +339,16 @@
     </div>
     <script>
         function takeAction(email, amount, status) {
+            var statuscode;
+            if(status==3){
+                statuscode='decline';
+            }else if(status==2){
+                statuscode='reject';
+            }else{
+                statuscode='approve';
+            }
           Swal.fire({
-            title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
+            title: `Are you sure you want to ${statuscode} this transaction?`,
             html: `
             <form id="updateTransactionForm" method="post">
               @csrf

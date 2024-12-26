@@ -237,21 +237,16 @@ class Transaction extends Controller
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
             $transaction->admin_remark = $description;
-            $transaction->Status = $status;
+            $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
-                
-
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
-
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;
                     $walletAddress = $walletDetails->wallet_address;
                     $amount = $transaction->withdraw_amount;
-
-
                     $payload = [
                         "profile_id" => config("services.cryptochill.profileid"),
                         "passthrough" => json_encode(["trans_id" => $did]),
@@ -284,7 +279,6 @@ class Transaction extends Controller
                     if (json_last_error() !== JSON_ERROR_NONE) {
                         return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
-
                     $responseData=json_decode($response);
 
                     // Process the result from the API
@@ -355,6 +349,64 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
+            }elseif($status==3){
+                if ( ($transaction->payout_res) != NULL) {
+                    // Decode the JSON string if it's not null or empty
+                    $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                    $message = isset($payout_res['message']) ? $payout_res['message'] : '';
+                    if($message){
+                        //Send email
+                        $from = $settings['email_from_address'];
+                        $transid = "WDID" . $payout_res;
+                        $headers = "MIME-Version: 1.0" . "\r\n";
+                        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                        $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
+                                    <div>The approved amount has been withdrawn from your wallet.</div>
+                                    <div><b>Transaction Details</b></div>
+                                    <div><b>Approved Amount: </b>$' . $transaction->withdraw_amount . '</div>
+                                    <div><b>Transaction ID: </b>' . $transid . '</div>
+                                    <div><b>Withdrawal Date: </b>' . $transaction->withdraw_date . '</div>
+                                    <div><b>Withdrawal Type: </b>' . $transaction->withdraw_type . '</div>';
+                        $templateVars = [
+                            'name' => $transaction->user->fullname,
+                            'site_link' => $settings['copyright_site_name_text'],
+                            'email' => $settings['email_from_address'],
+                            'content' => $content,
+                            'title_right' => 'Transaction',
+                            'subtitle_right' => 'Declined',
+                            'btn_text' => 'Go To Dashboard',
+                        ];
+                        // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    }
+                } 
+                // $deposit_details = WalletWithdraw::with('user')
+                //     ->whereRaw('id = ?', [$did])
+                //     ->first();
+                // $from = $settings['email_from_address'];
+                // $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+                // $headers = "MIME-Version: 1.0" . "\r\n";
+                // $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                // $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                // $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
+                // $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
+                //             <div>The approved amount has been withdrawn from your wallet.</div>
+                //             <div><b>Transaction Details</b></div>
+                //             <div><b>Approved Amount: </b>$' . $deposit_details->withdraw_amount . '</div>
+                //             <div><b>Transaction ID: </b>' . $transid . '</div>
+                //             <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
+                //             <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
+                // $templateVars = [
+                //     'name' => $deposit_details->user->fullname,
+                //     'site_link' => $settings['copyright_site_name_text'],
+                //     'email' => $settings['email_from_address'],
+                //     'content' => $content,
+                //     'title_right' => 'Transaction',
+                //     'subtitle_right' => 'Approved',
+                //     'btn_text' => 'Go To Dashboard',
+                // ];
+                // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
             }
             return redirect()->back()->with('status', 'Transaction Rejected Successfully');
         } else {
