@@ -92,6 +92,7 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
@@ -138,7 +139,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
     Route::post('/wallet_withdrawal', [Wallet::class, 'withdrawal'])->name('wallet_withdrawal_store');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
-    Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
