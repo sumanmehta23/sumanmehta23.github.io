@@ -208,12 +208,13 @@ class Wallet extends Controller
             'Content-Type' => 'application/json',
         ])->get($url);
         if ($response->successful()) {
+            $responsdata=$response->json();
             PaymentLog::where('id', $paymentId)->update([
-                'payment_req' => json_encode($response),
-                'payment_url' => $response['ipn_token'],
+                'payment_req' => json_encode($responsdata),
+                'payment_url' => $responsdata['ipn_token'],
                 'remarks' => $success_url,
             ]);
-            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$response['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
+            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$responsdata['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
 
             return ['invoice_url'=>$url];
         }
