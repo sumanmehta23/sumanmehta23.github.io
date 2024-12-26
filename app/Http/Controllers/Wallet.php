@@ -129,8 +129,9 @@ class Wallet extends Controller
     }
     public function showWithdrawalForm()
     {
-        $email = auth()->user()->email;
-        $userId=auth()->user()->id;
+        $user=auth()->user();
+        $email = $user->email;
+        $userId=$user->id;
         $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->get();
@@ -143,16 +144,8 @@ class Wallet extends Controller
             ->where('demo', false)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        $total_wd = WalletDeposit::where('user_id', $userId)
-            ->where('status', 1)
-            ->sum('deposit_amount');
-        $total_ww = WalletWithdraw::where('user_id', $userId)
-            ->where('status','<>', 2)
-            ->sum('withdraw_amount');
-        $total_wwf = WalletWithdraw::where('user_id', $userId)
-            ->where('status','<>', 2)
-            ->sum('withdraw_transaction_fee');
-        $wallet_balance = (float) $total_wd - ((float) $total_ww + (float) $total_wwf);
+        
+        $wallet_balance =$user->wallet_balance;
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
     public function deposit(Request $request)

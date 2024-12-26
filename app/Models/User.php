@@ -124,6 +124,20 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Country::class,'country','country_name');
     }
+    // public function getWalletBalance($userId)
+    // {
+    //     $totalDeposit = WalletDeposit::where('user_id', $userId)
+    //         ->where('status', 1)
+    //         ->sum('deposit_amount');
+    //     $totalWithdraw = WalletWithdraw::where('user_id', $userId)
+    //         ->whereNotIn('status',[2,3])
+    //         ->sum('withdraw_amount');
+    //     $totalWithdrawFee = WalletWithdraw::where('user_id', $userId)
+    //         ->whereNotIn('status',[2,3])
+    //         ->sum('withdraw_transaction_fee');
+    //     $walletBalance = $totalDeposit - ($totalWithdraw + $totalWithdrawFee);
+    //     return round($walletBalance,2);
+    // }
     public function getWalletBalanceAttribute()
     {
         return Cache::remember("user:{$this->id}:wallet_balance", now()->addMinutes(10), function () {
@@ -132,10 +146,10 @@ class User extends Authenticatable
                 ->sum('deposit_amount');
 
             $totalWithdraw = WalletWithdraw::where('user_id', $this->id)
-                ->where('status', '<>', 2)
+            ->whereNotIn('status',[2,3])
                 ->sum('withdraw_amount');
             $totalWithdrawFee = WalletWithdraw::where('user_id', $this->id)
-                ->where('status', '<>', 2)
+                ->whereNotIn('status',[2,3])
                 ->sum('withdraw_transaction_fee');
 
             return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);

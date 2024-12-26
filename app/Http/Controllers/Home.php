@@ -50,10 +50,10 @@ class Home extends Controller
             ->where('status', 1)
             ->sum('deposit_amount');
         $totalWithdraw = WalletWithdraw::where('user_id', $userId)
-            ->where('status','<>', 2)
+            ->whereNotIn('status',[2,3])
             ->sum('withdraw_amount');
         $totalWithdrawFee = WalletWithdraw::where('user_id', $userId)
-            ->where('status','<>', 2)
+            ->whereNotIn('status',[2,3])
             ->sum('withdraw_transaction_fee');
         $walletBalance = $totalDeposit - ($totalWithdraw + $totalWithdrawFee);
         return round($walletBalance,2);

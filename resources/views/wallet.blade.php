@@ -25,7 +25,7 @@
 </style>
 <div class="pc-container">
     <div class="pc-content">
-        <div class="page-header mb-0 pb-0">
+        <div class="pb-0 mb-0 page-header">
             <div class="page-block">
                 <div class="row align-items-center">
                     <div class="col-md-12">
@@ -40,9 +40,9 @@
             <div class="col-md-6 col-lg-6">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-4 mt-2">
+                        <div class="mt-2 mb-4 d-flex align-items-center justify-content-between">
                             <div>
-                                <div class="avtar avtar-s bg-gray-300">
+                                <div class="bg-gray-300 avtar avtar-s">
                                     <svg class="pc-icon">
                                         <use xlink:href="#custom-security-safe"></use>
                                     </svg>
@@ -52,7 +52,7 @@
                                 <h5 class="text-black">My Wallet</h5>
                             </div>
                         </div>
-                        <div class="d-flex align-items-end justify-content-center mb-5" style="height: 100px;">
+                        <div class="mb-5 d-flex align-items-end justify-content-center" style="height: 100px;">
                             <img src="{{ asset('assets/images/wallet.png') }}" class="pt-4" alt="logo" style="width: 20%; margin-right: 10px;">
                             {{-- @if (auth()->user()->wallet_enabled == 0 || is_null(auth()->user()->wallet_enabled))
                                 <button class="btn btn-outline-secondary activate-wallet" type="button">
@@ -64,8 +64,8 @@
                         </div>
 
                         <a href="{{ url('/wallet_deposit') }}">
-                            <div class="card bg-primary available-balance-card mt-3">
-                                <div class="card-body p-3">
+                            <div class="mt-3 card bg-primary available-balance-card">
+                                <div class="p-3 card-body">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div>
                                             <h4 class="mb-0 text-white">Add Funds</h4>
@@ -79,13 +79,13 @@
                             </div>
                         </a>
                         <a href="{{ url('/wallet_withdrawal') }}">
-                            <div class="border rounded p-3 my-3">
+                            <div class="p-3 my-3 border rounded">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
                                         <h4 class="mb-0">Withdraw</h4>
                                         <p class="mb-0 text-opacity-75">from My Wallet</p>
                                     </div>
-                                    <div class="avtar avtar-s bg-gray-300">
+                                    <div class="bg-gray-300 avtar avtar-s">
                                         <svg class="pc-icon">
                                             <use xlink:href="#custom-direct-inbox"></use>
                                         </svg>
@@ -94,13 +94,13 @@
                             </div>
                         </a>
                         <a href="{{ url('/trade-deposit') }}">
-                            <div class="border rounded p-3 my-3">
+                            <div class="p-3 my-3 border rounded">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
                                         <h4 class="mb-0">Transfer</h4>
                                         <p class="mb-0 text-opacity-75">from My Wallet</p>
                                     </div>
-                                    <div class="avtar avtar-s bg-gray-300">
+                                    <div class="bg-gray-300 avtar avtar-s">
                                         <svg class="pc-icon">
                                             <use xlink:href="#custom-refresh-2"></use>
                                         </svg>
@@ -113,7 +113,7 @@
             </div>
             <div class="col-md-6 col-lg-6">
                 <div class="card">
-                    <div class="card-body border-bottom pb-0">
+                    <div class="pb-0 card-body border-bottom">
                         <div class="d-flex align-items-center justify-content-between">
                             <h5 class="mb-0">Recent Wallet Transactions</h5>
                             <div class="dropdown">
@@ -147,7 +147,7 @@
                                             } else if($transaction->status == 1) {
                                                 $status = 'Approved';
                                                 $rowClass = 'wallet-plus';
-                                            } else if($transaction->status == 2){
+                                            } else if($transaction->status == 2 || $transaction->status == 3){
                                                 $status = 'Rejected';
                                                 $rowClass = 'wallet-minus';
                                             }
@@ -164,7 +164,7 @@
 
                                             </td>
                                             <td class="text-wrap"><?= $transaction->transaction_id; ?></td>
-                                            <td class="td-wrap text-left">
+                                            <td class="text-left td-wrap">
                                                 {{ $transaction->type == 'deposit' ? '+' : '-' }} ${{ $transaction->amount }}
                                             </td>
                                             <td class="text-end"><?= isset($transaction->withdraw_transaction_fee) ? ($transaction->type == 'deposit' ? '+' : '-') : '' ?>$<?= $transaction->withdraw_transaction_fee ?? 0; ?></td>
