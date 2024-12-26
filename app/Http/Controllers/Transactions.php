@@ -19,7 +19,7 @@ class Transactions extends Controller
         $email = $email = auth()->user()->email;
 
         $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
-            ->where('deposit_type', 'CryptoChill')
+            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
             // dd($wallet_deposit_history);
