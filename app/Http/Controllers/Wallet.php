@@ -150,18 +150,37 @@ class Wallet extends Controller
     }
     public function deposit(Request $request)
     {
-        $email = auth()->user()->email;
+        $user = auth()->user();
         try {
+            // dd($request->all());
             $trading_deposited1 = $request->input('deposit');
-            $email = $request->input('email');
             $deposit_type = $request->input('deposit_type');
-            if ($deposit_type == "Now Payment") {
+            if ($deposit_type == "CreditCardPayissa") {
+                $data = [
+                    "payment_amount" => $trading_deposited1,
+                    "payment_type" => "CreditCardPayissa",
+                    "payment_reference_id" => "Wallet",
+                    "user_id" => $user->id,
+                    "payment_status" => "Initiated",
+                    "initiated_by" => $user->email
+                ];
+                $paymentLog = PaymentLog::create($data);
+                $orderId = 'ccPayissa' . $paymentLog->id;
+                $currency = 'USD';
+                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id);
+                if ($payment) {
+                    return redirect($payment['invoice_url']);
+                } else {
+                    return redirect()->back()->with('error', 'Something went wrong in NowPayment. Please try again other Payment methods or try again later.');
+                }
+            }elseif ($deposit_type == "Now Payment") {
                 $data = [
                     "payment_amount" => $trading_deposited1,
                     "payment_type" => "NowPayment",
+                    "user_id" => $user->id,
                     "payment_reference_id" => "Wallet",
                     "payment_status" => "Initiated",
-                    "initiated_by" => $email
+                    "initiated_by" => $user->email
                 ];
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
@@ -178,7 +197,28 @@ class Wallet extends Controller
             return redirect()->back()->with('error', $error);
         }
     }
+    private function createCCPayment($amount, $currency, $orderId, $paymentId)
+    {
+        $user=auth()->user();
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
+         $url = config("services.payissa.url").'/control/wallet.php?address='.config("services.payissa.address").'&callback='.urlencode($success_url);
+       
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->get($url);
+        if ($response->successful()) {
+            PaymentLog::where('id', $paymentId)->update([
+                'payment_req' => json_encode($response),
+                'payment_url' => $response['ipn_token'],
+                'remarks' => $success_url,
+            ]);
+            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$response['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
 
+            return ['invoice_url'=>$url];
+        }
+        return null;
+    }
     private function createPayment($amount, $currency, $orderId, $paymentId)
     {
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";

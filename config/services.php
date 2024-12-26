@@ -41,6 +41,11 @@ return [
         'profileid'=>env('CRYPTOCHILL_PROFILE_ID'),
         'accountid'=>env('CRYPTOCHILL_ACCOUNT_ID')
     ],
+    'payissa'=>[
+        'url'=>env('PAYISSA_URL','https://api.payissa.com'),
+        'checkouturl'=>env('PAYISSA_CHECKOUT_URL','https://checkout.payissa.com'),
+        'address'=>env('PAYISSA_WALLET_ADDRESS'),
+    ],
     'brevo'=>[
         'url'=>env('BREVO_URL','https://api.brevo.com/v3/'),
         'api_key'=>env('BREVO_API_KEY')

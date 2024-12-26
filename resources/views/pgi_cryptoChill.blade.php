@@ -8,6 +8,17 @@
 var customerID = "{{auth()->user()->id}}";
   var customerEmail = "{{auth()->user()->email}}";
   var depositTo=  'wallet';
+  // CC Payment gateway options
+  $("#ccpay").attr("disabled", "true");
+  $("#deposit_amount_cc").on('change keypress keydown keyup', function() {
+    if ($(this).val() >= 10) {
+      $("#ccpay").attr("disabled", false);
+    } else {
+      $("#ccpay").attr("disabled", "true");
+    }
+    $("#ccpay").attr("data-amount", $(this).val());
+  });
+  // CC Payment gateway options Ends
   $("#paynow").attr("disabled", "true");
   $("#crypto_deposit_amount").on('change keypress keydown keyup', function() {
     if ($(this).val() >= 10) {

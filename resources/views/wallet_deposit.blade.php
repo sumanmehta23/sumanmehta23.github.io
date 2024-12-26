@@ -119,8 +119,8 @@
                                                                             <input type="radio" name="deposit_type"
                                                                                 checked
                                                                                 class="form-check-input input-primary tradefund-deposit"
-                                                                                id="option_cc" value="CreditCard"
-                                                                                data-type="CreditCard">
+                                                                                id="option_cc" value="CreditCardPayissa"
+                                                                                data-type="CreditCardPayissa">
                                                                             <label class="form-check-label d-block"
                                                                                 for="option_cc">
                                                                                 <span class="p-2 card-body d-block">
@@ -386,7 +386,7 @@
                                                                 </form>
                                                             </div>
 
-                                                            <div class="Now-Payment trade-deposit-details"
+                                                            <div class="CreditCardPayissa trade-deposit-details"
                                                                 style="display:none">
                                                                 <form method="post">
                                                                     @csrf
@@ -400,32 +400,15 @@
                                                                         <div class="mt-2 col-12">
                                                                             <input type="hidden" name="deposit_type"
                                                                                 class="tradedeposittype"
-                                                                                value="Now Payment">
-                                                                            <div class="form-group row">
-                                                                                <label
-                                                                                    class="col-lg-4 col-form-label">DEPOSIT
-                                                                                    CURRENCY:
-                                                                                    <small
-                                                                                        class="text-muted d-block">Please
-                                                                                        select the currency you wish to use
-                                                                                        for the payment</small>
-                                                                                </label>
-                                                                                <div class="col-lg-8">
-                                                                                    <select class="form-select"
-                                                                                        id="exampleFormControlSelect1"
-                                                                                        required>
-                                                                                        <option value="USD">USD</option>
-                                                                                    </select>
-                                                                                </div>
-                                                                            </div>
+                                                                                value="CreditCardPayissa">
+                                                                            
                                                                             <div class="form-group row">
                                                                                 <label
                                                                                     class="col-lg-4 col-form-label">ENTER
                                                                                     AMOUNT:
                                                                                     <small
                                                                                         class="text-muted d-block">Please
-                                                                                        enter the amount to be deposited in
-                                                                                        selected currency</small>
+                                                                                        enter the amount to be deposited </small>
                                                                                 </label>
                                                                                 <div class="col-lg-8">
                                                                                     <div class="mb-3 input-group">
@@ -433,10 +416,10 @@
                                                                                             class="input-group-text">USD</span>
                                                                                         <input placeholder="Minimum $10"
                                                                                             name="deposit"
-                                                                                            id="deposit_amount_now"
+                                                                                            id="deposit_amount_cc"
                                                                                             type="number" min="10"
                                                                                             title="Minimum $10"
-                                                                                            class="form-control fill nowdeposit_amount"
+                                                                                            class="form-control fill ccdeposit_amount"
                                                                                             aria-label="Amount" required>
                                                                                     </div>
                                                                                 </div>
@@ -447,7 +430,8 @@
                                                                                     <div class="col-lg-8">
                                                                                         <div class="row g-1">
                                                                                             <input type="submit"
-                                                                                                name="register"
+                                                                                                name="ccpay"
+                                                                                                id="ccpay"
                                                                                                 class="btn btn-primary col-12"
                                                                                                 value="Deposit To Trading Account">
                                                                                         </div>
