@@ -16,8 +16,10 @@ class PaymentLog extends Model
         'payment_reference_id',
         'payment_status',
         'initiated_by',
-        'user_id'
+        'user_id',
+        'payment_res'
     ];
+    protected $guarded = [];
     public function user(){
         return $this->belongsTo(User::class);
     }
