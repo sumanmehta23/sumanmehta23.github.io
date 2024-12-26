@@ -130,7 +130,7 @@
                                                                                         <span>
                                                                                             <span
                                                                                                 class="mb-1 h6 f-w-500 d-block">
-                                                                                                <img src="/assets/images/nowpayments-white.png"
+                                                                                                <img src="/assets/images/credit-card.png"
                                                                                                     alt="Credit Card"
                                                                                                     style="height: 40px;">
                                                                                             </span>
