@@ -34,7 +34,11 @@ class Payment extends Controller
             $responsedata= $request->all();
             Log::channel("creditcardpayissa")->info('Payment Response: '.json_encode($responsedata));
             $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
-            if($responsedata['value_coin']==$paymentLog->payment_amount){
+            if(!$paymentLog){
+                return response()->json(['error' => 'Invalid Payment ID'], 400);
+            }
+            $validationToken=json_decode($paymentLog->payment_req)->polygon_address_in;
+            if($responsedata['address_in'] ==$validationToken && $responsedata['value_coin']==$paymentLog->payment_amount){
                 $paymentLog->update([
                     'payment_res' => json_encode($responsedata),
                     'payment_status' => 'success',
