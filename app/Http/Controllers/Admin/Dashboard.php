@@ -87,7 +87,7 @@ class Dashboard extends Controller
     }
     public function sendMarketingEmail(MailService $mailService){
         $users = User::where('status',1)
-        ->whereIn('email',['tech2@lqhmarkets.com'])->get();
+        ->whereIn('email',['tech2@lqhmarkets.com','jalelwabou@gmail.com'])->get();
         foreach($users as $user){
             $this->sendmail($user->email,$mailService);
         }
