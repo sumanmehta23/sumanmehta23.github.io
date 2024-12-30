@@ -353,9 +353,10 @@ class Transaction extends Controller
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
-                    $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
-                    $message = isset($payout_res['message']) ? $payout_res['message'] : '';
-                    if($message){
+                    // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                    // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
+
+                    // if($message){
                         //Send email
                         $from = $settings['email_from_address'];
                         $transid = "WDID" . $payout_res;
@@ -379,7 +380,7 @@ class Transaction extends Controller
                             'btn_text' => 'Go To Dashboard',
                         ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                    }
+                    // }
                 }
                 // $deposit_details = WalletWithdraw::with('user')
                 //     ->whereRaw('id = ?', [$did])
