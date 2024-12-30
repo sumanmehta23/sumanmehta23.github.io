@@ -195,6 +195,16 @@
         .no-wrap {
             white-space: nowrap;
         }
+        .w-xs-50 {
+                width: 50% ;
+        }
+
+        @media (min-width: 768px) { 
+            .w-md-25 {
+                width: 25% !important;
+            }
+            
+        }
     </style>
 </head>
 
