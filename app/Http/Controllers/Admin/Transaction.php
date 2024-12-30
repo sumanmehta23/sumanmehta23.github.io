@@ -353,13 +353,13 @@ class Transaction extends Controller
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
-                    $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                    // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
                     // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
 
                     // if($message){
                         //Send email
                         $from = $settings['email_from_address'];
-                        $transid = "WDID" . $payout_res;
+                        // $transid = "WDID" . $payout_res;
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
