@@ -362,13 +362,12 @@ class Transaction extends Controller
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                         $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-                        $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
-                                    <div>The approved amount has been withdrawn from your wallet.</div>
-                                    <div><b>Transaction Details</b></div>
-                                    <div><b>Approved Amount: </b>$' . $transaction->withdraw_amount . '</div>
-                                    <div><b>Transaction ID: </b>' . $transid . '</div>
-                                    <div><b>Withdrawal Date: </b>' . $transaction->withdraw_date . '</div>
-                                    <div><b>Withdrawal Type: </b>' . $transaction->withdraw_type . '</div>';
+                        $content= '<div>We are reaching out to notify you that your recent withdrawal request on LQHMarkets could not be processed because the cryptocurrency address you provided is invalid.</div>
+                                    <div>To ensure a smooth withdrawal, please resubmit your request using a valid cryptocurrency address. Make sure the address corresponds to the specific cryptocurrency you selected for the withdrawal. For accuracy, we suggest copying and pasting the address directly from your wallet.</div>
+                                    <div>If you need any guidance or encounter issues, feel free to contact our support team at support@lqhmarkets.com .</div>
+                                    <div>Thank you for your understanding and cooperation.</div>
+                                    <div>Best regards,</div>
+                                    <div>The LQHMarkets Team</div>';
                         $templateVars = [
                             'name' => $transaction->user->fullname,
                             'site_link' => $settings['copyright_site_name_text'],
@@ -380,7 +379,7 @@ class Transaction extends Controller
                         ];
                         // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     }
-                } 
+                }
                 // $deposit_details = WalletWithdraw::with('user')
                 //     ->whereRaw('id = ?', [$did])
                 //     ->first();
