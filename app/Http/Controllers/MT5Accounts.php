@@ -193,6 +193,15 @@ class MT5Accounts extends Controller
         $leverage = Leverage::where('account_type_id', $accountTypeId)->get();
         return response()->json($leverage);
     }
+    public function updateLeverage(Request $request)
+    {
+
+        dd($request->all());
+        $accountTypeId = $request->query('id');
+
+        $leverage = Leverage::where('account_type_id', $accountTypeId)->get();
+        return response()->json($leverage);
+    }
     public function createLiveAccount(Request $request)
     {
         $settings = settings();
@@ -208,7 +217,7 @@ class MT5Accounts extends Controller
         if($referral=="wealthytrades" || $ib=="wealthytrades") {
             $groupCode = str_replace("DF","SNSI",$group->ac_group);
             $group = AccountType::where('ac_group', $groupCode)->first();
-           
+
             if($group){
                 $_POST["options"] =$group->id;
             }
@@ -222,7 +231,7 @@ class MT5Accounts extends Controller
         }else{
             $groupCode = $group->ac_group;
         }
-        
+
         $new_user = $this->api->UserCreate();
         $new_user->MainPassword = $this->generatePassword();
         $new_user->Group = $group->ac_group;

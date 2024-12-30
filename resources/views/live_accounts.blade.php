@@ -70,7 +70,7 @@
                           <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
                           <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
                           <td class="text-end f-w-200">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center gap-2">
                               <button class="btn btn-sm btn-outline-secondary d-grid me-2">
                                 <a href="{{ route('view-account-details', $acc->id) }}">
                                   <span class="">View <svg class="pc-icon">
@@ -80,6 +80,14 @@
                               </button>
                               <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                 <span class="">Deposit <i class="ti ti-database-import"></i></span>
+                              </a>
+                              <a href="#"
+                                class="btn btn-sm btn-outline-secondary d-grid"
+                                data-bs-toggle="modal"
+                                data-bs-target="#changeLeverage"
+                                data-id="{{ $acc->account_type_id }}"
+                                data-leverage="{{ $acc->leverage }}">
+                                Edit Leverage
                               </a>
                             </div>
                           </td>
