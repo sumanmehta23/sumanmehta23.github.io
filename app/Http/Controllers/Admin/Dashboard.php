@@ -89,7 +89,7 @@ class Dashboard extends Controller
         $users = User::where('status',1)
         ->whereIn('email',['tech2@lqhmarkets.com'])->get();
         foreach($users as $user){
-            $this->sendmail($user,$mailService);
+            $this->sendmail($user->email,$mailService);
         }
     }
     private function sendmail($userEmail,MailService $mailService){
@@ -110,16 +110,17 @@ class Dashboard extends Controller
           </ul>
           <div>Ready to fund your account? Visit our secure deposit page: <a href="'.$settings['copyright_site_name_text'].'/wallet_deposit">'.$settings['copyright_site_name_text'].'/wallet_deposit</a></div>
           <div>Start trading today with these <b>flexible payment options!</b></div>
+          <p>Best Regards.</p>
+          <p>LQH Markets Team</p>
           ';
         $templateVars = [
-            'name' => '',
-            'site_link' => $settings['copyright_site_name_text'],
+            'name' => 'Valued Client',
             'email' => $settings['email_from_address'],
             "content" => $content,
             "title_right" => "",
             "subtitle_right" => "",
-            "btn_text" => "",
         ];
+       
         $mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
     }
 }
