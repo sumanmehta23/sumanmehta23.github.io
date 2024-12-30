@@ -377,7 +377,7 @@ class Transaction extends Controller
                             'subtitle_right' => 'Declined',
                             'btn_text' => 'Go To Dashboard',
                         ];
-                        // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     }
                 }
                 // $deposit_details = WalletWithdraw::with('user')
