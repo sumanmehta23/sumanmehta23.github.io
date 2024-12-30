@@ -99,13 +99,11 @@
                                                                                     <span
                                                                                         class="d-flex align-items-center justify-content-between">
                                                                                         <span>Crypto</span>
-                                                                                        <span>
                                                                                             <span
                                                                                                 class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
                                                                                                 <img src="/assets/images/crypto_payments2.png"
                                                                                                     alt="CryptoChill" style="width:25%">
                                                                                             </span>
-                                                                                        </span>
                                                                                     </span>
                                                                                 </span>
                                                                             </label>
@@ -126,15 +124,13 @@
                                                                                 <span class="p-2 card-body d-block">
                                                                                     <span
                                                                                         class="d-flex align-items-center justify-content-between">
-                                                                                        <span>Credit Card</span>
-                                                                                        <span>
+                                                                                        <span class="no-wrap">Credit Card</span>
                                                                                             <span
-                                                                                                class="mb-1 h6 f-w-500 d-block">
+                                                                                                class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
                                                                                                 <img src="/assets/images/credit-card.png"
                                                                                                     alt="Credit Card"
-                                                                                                    style="height: 40px;">
+                                                                                                    style="width:25%">
                                                                                             </span>
-                                                                                        </span>
                                                                                     </span>
                                                                                 </span>
                                                                             </label>

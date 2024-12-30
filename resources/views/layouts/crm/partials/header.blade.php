@@ -192,6 +192,9 @@
             max-height: 500px;
             padding: 10px;
         }
+        .no-wrap {
+            white-space: nowrap;
+        }
     </style>
 </head>
 
