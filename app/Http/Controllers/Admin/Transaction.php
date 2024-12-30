@@ -350,7 +350,8 @@ class Transaction extends Controller
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
             }elseif($status==3){
-                if ( ($transaction->payout_res) != NULL) {
+
+                if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
                     $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
                     $message = isset($payout_res['message']) ? $payout_res['message'] : '';
