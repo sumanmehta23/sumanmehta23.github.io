@@ -353,7 +353,7 @@ class Transaction extends Controller
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
-                    // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                    $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
                     // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
 
                     // if($message){
