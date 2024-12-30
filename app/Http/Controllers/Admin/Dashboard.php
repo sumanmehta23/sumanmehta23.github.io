@@ -85,12 +85,19 @@ class Dashboard extends Controller
 
         return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws'));
     }
-    public function sendMarketingEmail(MailService $mailService){
-        $users = User::where('status',1)
-        ->whereIn('email',['tech2@lqhmarkets.com','jalelwabou@gmail.com'])->get();
-        foreach($users as $user){
-            $this->sendmail($user->email,$mailService);
-        }
+    public function sendMarketingEmail(MailService $mailService)
+    {
+        ini_set("memory_limit", "-1");
+        ini_set('max_execution_time', 0);
+        // Process users in chunks to save memory
+        User::select('email')
+            ->where('status', 1)
+            ->orderBy('id', 'desc')
+            ->chunk(100, function ($users) use ($mailService) {
+                foreach ($users as $user) {
+                    $this->sendmail($user->email, $mailService);
+                }
+            });
     }
     private function sendmail($userEmail,MailService $mailService){
         
