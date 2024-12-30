@@ -102,7 +102,7 @@
                                                                                             <span
                                                                                                 class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
                                                                                                 <img src="/assets/images/crypto_payments2.png"
-                                                                                                    alt="CryptoChill" class="w-xs-50 w-md-25">
+                                                                                                    alt="CryptoChill" class="w-xs-75 w-md-25">
                                                                                             </span>
                                                                                     </span>
                                                                                 </span>
@@ -129,7 +129,7 @@
                                                                                                 class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
                                                                                                 <img src="/assets/images/credit-card.png"
                                                                                                     alt="Credit Card"
-                                                                                                    class="w-xs-50 w-md-25">
+                                                                                                    class="w-xs-100 w-md-25">
                                                                                             </span>
                                                                                     </span>
                                                                                 </span>

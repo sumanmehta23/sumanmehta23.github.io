@@ -196,13 +196,20 @@
             white-space: nowrap;
         }
         .w-xs-50 {
-                width: 50% ;
+            width: 50% ;
+        }
+        .w-xs-75 {
+            width: 75% ;
+        }
+        .w-xs-100 {
+            width: 100% ;
         }
 
         @media (min-width: 768px) { 
             .w-md-25 {
                 width: 25% !important;
             }
+            
             
         }
     </style>
