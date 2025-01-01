@@ -52,7 +52,8 @@
                         <input class="btn btn-primary" type="submit" name="update_leverage" value="Update Leverage">
                     </div>
                 </div>
-                <input type="hidden" name="id" id="modalAccountId">
+                <input type="hidden" name="modalAccountId" id="modalAccountId">
+                <input type="hidden" name="accountId" id="accountId">
             </form>
         </div>
     </div>
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const changeLeverageModal = document.getElementById('changeLeverage');
     const leverageSelect = document.getElementById('leverage');
     const modalAccountIdInput = document.getElementById('modalAccountId');
+    const accountIdInput = document.getElementById('accountId');
 
     changeLeverageModal.addEventListener('show.bs.modal', (event) => {
         // Get the button that triggered the modal
@@ -187,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Extract data from the button
         const accountTypeId = button.getAttribute('data-id');
         const leverageValue = button.getAttribute('data-leverage');
+        const accountId = button.getAttribute('data-account');
 
         // Populate the leverage select field dynamically
         $.ajax({
@@ -210,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set the account type ID in the hidden input field
         modalAccountIdInput.value = accountTypeId;
+        accountIdInput.value = accountId;
     });
 });
 

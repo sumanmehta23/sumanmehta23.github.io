@@ -86,6 +86,7 @@
                                 data-bs-toggle="modal"
                                 data-bs-target="#changeLeverage"
                                 data-id="{{ $acc->account_type_id }}"
+                                data-account="{{ $acc->id }}"
                                 data-leverage="{{ $acc->leverage }}">
                                 Edit Leverage
                               </a>

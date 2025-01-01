@@ -195,12 +195,28 @@ class MT5Accounts extends Controller
     }
     public function updateLeverage(Request $request)
     {
+        // dump($user);
+        $login = $request->accountId;
+        $account_code = Account::where('id', $login)->value('code');
+        $accountTypeId = $request->modalAccountId;
+        $newLeverage = $request->leverage;
+        $comment = $request->update_leverage;
+        $ticket = null;
 
-        dd($request->all());
-        $accountTypeId = $request->query('id');
 
-        $leverage = Leverage::where('account_type_id', $accountTypeId)->get();
-        return response()->json($leverage);
+        $errorCode = $this->api->UserUpdate($account_code, $type = MTEnDealAction::DEAL_COMMISSION, $newLeverage, $comment, $ticket, true);
+        dd($errorCode);
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode);
+                Log::error('MT5 live account : ' . $error.' for user '.$user->id);
+                return redirect()->back()->with('success', $error);
+            } else {
+                Account::where('id', $login)->update([
+                    'leverage' => $newLeverage
+                ]);
+            }
+
+        return redirect()->back()->with('success', 'Leverage updated');
     }
     public function createLiveAccount(Request $request)
     {
