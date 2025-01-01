@@ -58,6 +58,18 @@
         </div>
     </div>
 </div>
+@if(session('success'))
+    <script>
+        Swal.fire({
+            title: '{{ session('success') }}',
+            icon: 'success'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif
+
 
 
 <div id="addBankModal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
@@ -216,8 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         accountIdInput.value = accountId;
     });
 });
-
-
 
 </script>
 
