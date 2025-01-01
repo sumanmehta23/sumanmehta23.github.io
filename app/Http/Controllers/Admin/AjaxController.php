@@ -847,7 +847,10 @@ class AjaxController extends Controller
                             return "<div class='badge bg-outline-success'>Approved</div>";
                         }elseif($row->status == 2){
                             return "<div class='badge bg-outline-danger'>Rejected</div>";
-                        }else{
+                        }elseif($row->status == 3){
+                            return "<div class='badge bg-outline-danger'>Declined</div>";
+                        }
+                        else{
                             return "<div class='badge bg-outline-primary'>Pending</div>";
                         }
                     })
