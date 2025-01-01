@@ -230,11 +230,14 @@ class AjaxController extends Controller
 
         $clientId = $validated['id'];
 
+        $admin = EmployeeList::where('id',$request->user['id'])->first();
+
         try {
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
             // Log in as the new user
             Auth::login($client);
+            Session::put('admin', $admin);
             Session::put('user', $client);
             // dd('ssss');
             return response()->json([

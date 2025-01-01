@@ -205,12 +205,12 @@
             width: 100% ;
         }
 
-        @media (min-width: 768px) { 
+        @media (min-width: 768px) {
             .w-md-25 {
                 width: 25% !important;
             }
-            
-            
+
+
         }
     </style>
 </head>
@@ -437,6 +437,15 @@
                         </ul>
                     </div>
                     <div class="ms-auto">
+                        @if (session('admin'))
+                            <ul>
+                                <a href="/admin/client_list" class="">
+                                    <span>
+                                        Switch Back To {{ session('admin')->username }}
+                                    </span>
+                                </a>
+                            </ul>
+                        @endif
                         <ul class="list-unstyled">
                             <li class="dropdown pc-h-item">
                                 <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">

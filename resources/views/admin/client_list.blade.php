@@ -250,7 +250,7 @@
                     </div>
                     <div class="mb-0 modal-body custom-card card">
                         <div class="d-flex align-items-center card-header w-100">
-                            
+
                             <div class="">
                                 <div class="fs-15 fw-medium text-capitalize" id="userName"></div>
                                 <p class="mb-0 text-muted fs-11" id="userEmail"></p>
@@ -879,6 +879,10 @@
                 $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
                     e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
+                    var user = {
+                            id: "{{ auth()->user()->id }}",  // Assuming you want the user's ID or other necessary details from the PHP session
+                            name: "{{ auth()->user()->username }}"
+                        };
 
                     $.ajax({
                         url: "/admin/getClientSwitch", // Ensure this matches your backend route
@@ -886,7 +890,8 @@
                         contentType: "application/json",
                         data: JSON.stringify({
                             action: "getClientSwitch",
-                            id: clientData.id  // Pass the correct client ID
+                            id: clientData.id,  // Pass the correct client ID
+                            user: user
                         }),
                         success: function(resp) {
                             if (resp.success) {
@@ -979,7 +984,7 @@
                         }
                         });
                 });
-                
+
                 $('.ajaxDataTable tbody tr').off('click', '.rmToggle');
                 $('.ajaxDataTable tbody tr').on('click', '.rmToggle', function() {
                     var data = dTtable.row($(this).closest("tr")).data();
