@@ -201,22 +201,23 @@ class MT5Accounts extends Controller
         $accountTypeId = $request->modalAccountId;
         $newLeverage = $request->leverage;
         $comment = $request->update_leverage;
-        $ticket = null;
+        $updated_user = "";
 
+        if (($error_code = $this->api->UserGet($account_code, $trade_user)) != MTRetCode::MT_RET_OK) {
+            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+        }
+        $trade_user->Leverage = $newLeverage;
 
-        $errorCode = $this->api->UserUpdate($account_code, $type = MTEnDealAction::DEAL_COMMISSION, $newLeverage, $comment, $ticket, true);
-        dd($errorCode);
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account : ' . $error.' for user '.$user->id);
-                return redirect()->back()->with('success', $error);
+        $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
             } else {
                 Account::where('id', $login)->update([
                     'leverage' => $newLeverage
                 ]);
             }
 
-        return redirect()->back()->with('success', 'Leverage updated');
+        return redirect()->back()->with('success', 'Leverage updated successfully!');
     }
     public function createLiveAccount(Request $request)
     {
