@@ -142,10 +142,12 @@ class Users extends Controller
     }
     public function sumsub_verify(Request $request)
     {
+        dd($request);
         if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
             $email = Session::get('clogin');
             $type = $request->input('type');
             $payload = $request->input('payload');
+
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
@@ -180,9 +182,19 @@ class Users extends Controller
                 } else {
                     return response()->json(['status' => 'false', 'message' => 'Status in progress..']);
                 }
-            } else {
+            }else {
                 return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
             }
+        }
+
+        if($type == 'idCheck.onApplicantLoaded'){
+
+            KycLog::create([
+                'client_id' => $email,
+                'user_id' => auth()->user()->id,
+                'callback_code' => json_encode($type),
+                'callback_payload' => json_encode($payload),
+            ]);
         }
 
         // Return a default response if session or parameters are missing

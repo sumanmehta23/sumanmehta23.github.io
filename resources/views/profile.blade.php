@@ -179,7 +179,7 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         {{-- {{ dd($user) }} --}}

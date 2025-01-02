@@ -39,6 +39,7 @@
                     // Handle the error event
                 })
                 .onMessage((type, payload) => {
+                    console.log("Received message:", type, payload);
                     $.ajax({
                         url: "{{ url('/sumsub_verify') }}",
                         type: "POST",
