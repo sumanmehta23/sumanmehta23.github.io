@@ -69,6 +69,17 @@
         });
     </script>
 @endif
+@if(session('warning'))
+    <script>
+        Swal.fire({
+            title: '{{ session('warning') }}',
+            icon: 'warning'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif
 
 
 

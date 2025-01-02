@@ -224,7 +224,7 @@ class MT5Accounts extends Controller
 
             return redirect()->back()->with('success', 'Leverage updated successfully!');
         }else{
-            return redirect()->back()->with('success', 'Trades need to be closed!');
+            return redirect()->back()->with('warning', 'Trades need to be closed!');
         }
 
 
