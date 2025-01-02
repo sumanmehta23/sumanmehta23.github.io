@@ -1405,6 +1405,10 @@ class AjaxController extends Controller
             });
         }
 
+        if ($request->status) {
+            $rmCondition->where('Status', $request->status);
+        }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -1575,6 +1579,10 @@ class AjaxController extends Controller
             $query->where('code', $_GET['id']);
         }
 
+        if ($request->status) {
+            $query->where('Status', $request->status);
+        }
+
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -1657,6 +1665,10 @@ class AjaxController extends Controller
             }
         } else {
             $query->where('account_id', $_GET['id']);
+        }
+
+        if ($request->status) {
+            $query->where('Status', $request->status);
         }
 
         if ($request->ajax()) {
