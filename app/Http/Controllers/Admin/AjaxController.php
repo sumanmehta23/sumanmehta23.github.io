@@ -1483,7 +1483,9 @@ class AjaxController extends Controller
                 $q->where('rm_id', $rmId);
             });
         } else {
-            $query->where('Status', 0);
+            if ($request->status) {
+                $query->where('Status', $request->status);
+            }
         }
 
         // Fetch data

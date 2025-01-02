@@ -58,7 +58,7 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      $('#tableWalletWithdrawal').DataTable({
+      var tableWalletWithdrawal =  $('#tableWalletWithdrawal').DataTable({
         // order: [[0, "desc"]],
         // "ajax": {
         //   "url": "/admin/ajax",
@@ -85,7 +85,10 @@
         ajax: {
             url: '/admin/getPendingWalletWithdrawal2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+            d.status = $('select[name=status]').val();
+            return d;
+            },
             dataSrc: function(json) {
                 return json.data;
             }
@@ -221,6 +224,8 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-
+      $('#statusFilter').on('change', function () {
+        tableWalletWithdrawal.ajax.reload(); 
+    });
     });
   </script>
