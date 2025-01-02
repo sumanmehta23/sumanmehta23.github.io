@@ -1,6 +1,6 @@
 <script>
     $(document).ready(function () {
-      $('#tableWalletDeposit').DataTable({
+      var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
         // order: [[0, "desc"]],
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
         //   buttons: [
@@ -37,7 +37,10 @@
         ajax: {
             url: '/admin/getWalletDeposit2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+                    d.status = $('select[name=status]').val();
+                    return d;
+                }, // Ensure this is populated dynamically if needed.
             dataSrc: function(json) {
                 return json.data;
             }
@@ -70,7 +73,7 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      var dTtable = $('#tableWalletWithdrawal').DataTable({
+      var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
           buttons: [
                 {
@@ -89,7 +92,10 @@
         ajax: {
             url: '/admin/getWalletWithdrawal2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+                    d.status = $('select[name=status]').val();
+                    return d;
+                },  // Ensure this is populated dynamically if needed.
             dataSrc: function(json) {
                 return json.data;
             }
@@ -124,7 +130,7 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      $('#tableTradingDeposit').DataTable({
+      var tableTradingDeposit = $('#tableTradingDeposit').DataTable({
         // order: [[0, "desc"]],
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
         // dom: '<"row"<"col d-flex align-items-center"<l>><"col"<"div d-flex justify-content-end gap-1"<f><B>>>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -164,7 +170,10 @@
         ajax: {
             url: '/admin/getTradingDeposit2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+                    d.status = $('select[name=status]').val();
+                    return d;
+                },  // Ensure this is populated dynamically if needed.
             dataSrc: function(json) {
                 return json.data;
             }
@@ -191,7 +200,7 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      $('#tableTradingWithdrawal').DataTable({
+      var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
         // order: [[0, "desc"]],
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
         //   buttons: [
@@ -229,7 +238,10 @@
         ajax: {
             url: '/admin/getTradingWithdrawal2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+                    d.status = $('select[name=status]').val();
+                    return d;
+                },  // Ensure this is populated dynamically if needed.
             dataSrc: function(json) {
                 return json.data;
             }
@@ -255,7 +267,7 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      $('#tableInternalTransfer').DataTable({
+      var tableInternalTransfer = $('#tableInternalTransfer').DataTable({
         // order: [[0, "desc"]],
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
         //   buttons: [
@@ -292,7 +304,10 @@
         ajax: {
             url: '/admin/getInternalTransfer2',
             type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
+            data: function(d) {
+                    d.status = $('select[name=status]').val();
+                    return d;
+                },  // Ensure this is populated dynamically if needed.
             dataSrc: function(json) {
                 return json.data;
             }
@@ -305,6 +320,13 @@
           { data: 'status', name: 'status' },
           // { data: 'action', name: 'action', orderable: false, searchable: false },
         ]
+      });
+      $('#statusFilter').on('change', function () {
+        tableWalletDeposit.ajax.reload();
+        tableWalletWithdrawal.ajax.reload();
+        tableTradingDeposit.ajax.reload();
+        tableTradingWithdrawal.ajax.reload();
+        tableInternalTransfer.ajax.reload();
       });
     });
   </script>

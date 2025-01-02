@@ -268,5 +268,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount');
 
         Route::get("/search", [SearchController::class, 'index']);
+
+
+        Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });

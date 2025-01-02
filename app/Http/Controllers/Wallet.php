@@ -144,7 +144,7 @@ class Wallet extends Controller
             ->where('demo', false)
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
-        
+
         $wallet_balance =$user->wallet_balance;
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
@@ -203,12 +203,12 @@ class Wallet extends Controller
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
          $url = config("services.payissa.url").'/control/wallet.php?address='.config("services.payissa.address").'&callback='.urlencode($success_url);
-       
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->get($url);
         if ($response->successful()) {
-            
+
             $responsdata=$response->json();
             Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
             PaymentLog::where('id', $paymentId)->update([
@@ -445,11 +445,11 @@ class Wallet extends Controller
             ->sum('deposit_amount');
 
         $totalWithdrawals = WalletWithdraw::where('email', $userEmail)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2, 3])
             ->sum('withdraw_amount');
 
         $totalWithdrawalsFee = WalletWithdraw::where('email', $userEmail)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2, 3])
             ->sum('withdraw_transaction_fee');
 
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals +(float) $totalWithdrawalsFee);
