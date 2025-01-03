@@ -1503,7 +1503,7 @@ class AjaxController extends Controller
 
     public function getPendingWalletWithdrawal2(Request $request)
     {
-        $query = WalletWithdraw::with(['user']);
+        $query = WalletWithdraw::with(['user'])->where('status',0);
 
         if (session('userData')['userRole'] == "Relationship Manager") {
             $rmId = session('alogin');
@@ -1562,6 +1562,8 @@ class AjaxController extends Controller
                         return "<div class='badge bg-outline-success'>Approved</div>";
                     }elseif($row->status == 2){
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }elseif($row->status == 3){
+                        return "<div class='badge bg-outline-danger'>Decline</div>";
                     }else{
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
