@@ -365,7 +365,7 @@ class Transaction extends Controller
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                         $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
                         $content = '<div>
-                                        We are reaching out regarding your <b>withdrawal request</b>b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                        We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
                                     </div><br>
                                     <div>
                                         To complete your withdrawal:
