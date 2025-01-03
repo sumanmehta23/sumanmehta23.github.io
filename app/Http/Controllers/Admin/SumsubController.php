@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Storage;
 class SumsubController extends Controller
 {
 
-    public function sumsub_data()
+    public function sumsub_data(Request $request)
     {
-
+        $email = $request->email;
         $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key
         $timestamp = time(); // Current timestamp in seconds
 
@@ -64,10 +64,11 @@ class SumsubController extends Controller
 
         // Parse the response
         $auth = json_decode($response);
-        dd($auth);
+
         // Close cURL session
         curl_close($curl);
         $token = $auth->token ?? null;
+
         // return view('client_details', compact('token'));
         if (isset($auth->token)) {
             return response()->json(['token' => $auth->token, 'email' => $email]);
@@ -75,39 +76,6 @@ class SumsubController extends Controller
 
         return response()->json(['error' => 'Failed to fetch token'], 500);
 
-    }
-
-    public function generateAccessToken()
-    {
-        $sumsubApiKey = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
-        $sumsubSecretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8';
-        $headers = [
-            'X-App-Token: ' . $sumsubApiKey,
-        ];
-
-        $response = Http::withHeaders($headers)->post('https://api.sumsub.com/resources/accessTokens', [
-            'levelName' => 'your_level',
-        ]);
-        dd($response);
-        return $response->json();
-    }
-
-    public function getApplicantData(Request $request)
-    {
-
-        $email = $request->input('email');
-        $applicant = User::where('email', $email)->first();
-
-        if ($applicant) {
-            $accessToken = $this->generateAccessToken(); // Assume this method generates a token
-
-            return response()->json([
-                'accessToken' => $accessToken,
-                'phone' => $applicant->phone,
-            ]);
-        } else {
-            return response()->json(['error' => 'Applicant not found'], 404);
-        }
     }
 
 }
