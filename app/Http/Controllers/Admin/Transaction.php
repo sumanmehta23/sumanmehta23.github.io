@@ -378,10 +378,10 @@ class Transaction extends Controller
                                     </div>
                                     <div>
                                         Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
-                                    </div>
+                                    </div><br>
                                     <div>
                                         Thank you for your understanding.
-                                    </div>
+                                    </div><br>
                                     <div>
                                         Best regards,<br>
                                         The LQHMarkets Team
