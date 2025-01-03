@@ -364,10 +364,10 @@ class Transaction extends Controller
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                         $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-                        $content = '<div>
+                        $content = '<p>
                                         We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
-                                    </div><br>
-                                    <div>
+                                    </p>
+                                    <p>
                                         To complete your withdrawal:
                                         <ol>
                                             <li>Please <b>submit a new request</b></li>
@@ -375,17 +375,17 @@ class Transaction extends Controller
                                             <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
                                             <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
                                         </ol>
-                                    </div>
-                                    <div>
+                                    </p>
+                                    <p>
                                         Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
-                                    </div><br>
-                                    <div>
+                                    </p>
+                                    <p>
                                         Thank you for your understanding.
-                                    </div><br>
-                                    <div>
+                                    </p>
+                                    <p>
                                         Best regards,<br>
                                         The LQHMarkets Team
-                                    </div>';
+                                    </p>';
 
                         $templateVars = [
                             'name' => $transaction->user->fullname,
