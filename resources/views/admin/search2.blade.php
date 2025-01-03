@@ -1,5 +1,6 @@
 @extends('layouts.admin.admin')
 @section('content')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -80,7 +81,17 @@
                                                 <?php echo htmlentities($result->number); ?>
                                             </td>
                                             <td>
-                                                <?php echo htmlentities($result->country); ?>
+                                                <?php
+                                                    $countryAlpha = isset($result->countryDetail) && isset($result->countryDetail->country_alpha)
+                                                        ? strtolower($result->countryDetail->country_alpha)
+                                                        : '';
+
+                                                    $countryAlphaDisplay = isset($result->countryDetail) && isset($result->countryDetail->country_alpha)
+                                                        ? $result->countryDetail->country_alpha
+                                                        : '';
+                                                    echo "<span class='fi fis fi-{$countryAlpha}'></span> {$countryAlphaDisplay}";
+                                                    ?>
+
                                             </td>
                                             <td><?php $ib_name = $result->getParentIb() ? $result->getParentIb()->fullname : 'noIB';
                                                 $ib_email  =$result->getParentIb() ? $result->getParentIb()->email : '';
