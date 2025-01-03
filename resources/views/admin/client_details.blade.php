@@ -205,23 +205,25 @@
                                             <div class="user-wrap">
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
-                                                    <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->kyc_verify == 0
-                                                        ? '<span class="badge bg-outline-danger">Pending KYC</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                            : '') !!}</span>
-                                                    |
-                                                    <span
-                                                        class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->status == 0
-                                                        ? '<span class="badge bg-outline-danger">Inactive</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">Active</span>'
-                                                            : '') !!}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="px-2"><span
+                                                                class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                        |
+                                                        <span class="d-flex flex-column px-2">{!! $user->kyc_verify == 0
+                                                            ? '<span class="badge bg-outline-danger">Pending KYC</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">KYC Verified</span>'
+                                                                : '') !!}<a class="mb-1 fs-12" href="">check-sumsub</a></span>
+                                                        |
+                                                        <span
+                                                            class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
+                                                        |
+                                                        <span class="px-2">{!! $user->status == 0
+                                                            ? '<span class="badge bg-outline-danger">Inactive</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">Active</span>'
+                                                                : '') !!}</span>
+                                                    </div>
                                                 </h6>
                                                 <div class="row">
                                                     <div class="col-6">
@@ -1235,7 +1237,8 @@
             data: { email: email  },
             success: function(response) {
                 if (response.token) {
-                    launchWebSdk(response.token, email, response.phone);
+                    console.log(response);
+                    // launchWebSdk(response.token, email, response.phone);
                 } else {
                     console.error("Failed to fetch applicant data");
                 }
