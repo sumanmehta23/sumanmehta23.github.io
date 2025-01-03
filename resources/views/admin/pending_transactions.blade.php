@@ -10,7 +10,7 @@
                 </ol>
             </div>
             <!-- Add a Status Filter Dropdown above the table -->
-<div class="row mb-3">
+{{-- <div class="row mb-3">
     <div class="col-md-4">
       <label for="statusFilter">Filter by Status:</label>
       <select id="statusFilter" class="form-select" name="status">
@@ -21,7 +21,7 @@
         <!-- Add other status options as needed -->
       </select>
     </div>
-  </div>
+  </div> --}}
 
             <div class="row">
                 <div class="col-xl-12">

@@ -1429,9 +1429,9 @@ class AjaxController extends Controller
             });
         }
 
-        if (isset($request->status)) {
-            $rmCondition->where('Status', $request->status);
-        }
+        // if (isset($request->status)) {
+        //     $rmCondition->where('Status', $request->status);
+        // }
 
         $rmCondition->orderBy('id', 'desc');
 
@@ -1510,11 +1510,11 @@ class AjaxController extends Controller
             $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
                 $q->where('rm_id', $rmId);
             });
-        } else {
-            if (isset($request->status)) {
-                $query->where('Status', $request->status);
-            }
         }
+
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
         // Fetch data
         $query->orderByDesc('id')->get();
@@ -1603,9 +1603,9 @@ class AjaxController extends Controller
             $query->where('code', $_GET['id']);
         }
 
-        if (isset($request->status)) {
-            $query->where('Status', $request->status);
-        }
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
 
         if ($request->ajax()) {
@@ -1691,9 +1691,9 @@ class AjaxController extends Controller
             $query->where('account_id', $_GET['id']);
         }
 
-        if (isset($request->status)) {
-            $query->where('Status', $request->status);
-        }
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
         if ($request->ajax()) {
             return DataTables::of($query)
