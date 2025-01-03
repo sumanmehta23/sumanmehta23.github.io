@@ -33,6 +33,7 @@ use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
+use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\PammController;
 Route::get("/se",function(){
@@ -247,6 +248,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'update_password']);
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password');
         });
+
+        Route::get('/sumsub_data', [SumsubController::class, 'sumsub_data']);
+        Route::get('/get-applicant-data', [SumsubController::class, 'getApplicantData']);
 
         Route::get("/ibdashboard", [IBController::class, 'index']);
         Route::get("/iblist", [IBController::class, 'list']);

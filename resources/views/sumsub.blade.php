@@ -20,6 +20,7 @@
         localStorage.setItem("isVerified", "false");
 
         function launchWebSdk(accessToken, applicantEmail, applicantPhone) {
+
             let snsWebSdkInstance = snsWebSdk
                 .init(accessToken, () => getNewAccessToken())
                 .withConf({
@@ -85,7 +86,6 @@
         function getNewAccessToken() {
             return Promise.resolve("{{ $token }}");
         }
-
         launchWebSdk("{{ $token }}");
     </script>
 </body>

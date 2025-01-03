@@ -142,7 +142,6 @@ class Users extends Controller
     }
     public function sumsub_verify(Request $request)
     {
-        dd($request);
         if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
             $email = Session::get('clogin');
             $type = $request->input('type');
