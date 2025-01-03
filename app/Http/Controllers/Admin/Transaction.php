@@ -364,12 +364,29 @@ class Transaction extends Controller
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                         $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-                        $content= '<div>We are reaching out to notify you that your recent withdrawal request on LQHMarkets could not be processed because the cryptocurrency address you provided is invalid.</div>
-                                    <div>To ensure a smooth withdrawal, please resubmit your request using a valid cryptocurrency address. Make sure the address corresponds to the specific cryptocurrency you selected for the withdrawal. For accuracy, we suggest copying and pasting the address directly from your wallet.</div>
-                                    <div>If you need any guidance or encounter issues, feel free to contact our support team at support@lqhmarkets.com .</div>
-                                    <div>Thank you for your understanding and cooperation.</div>
-                                    <div>Best regards,</div>
-                                    <div>The LQHMarkets Team</div>';
+                        $content = '<div>
+                                        We are reaching out regarding your <b>withdrawal request</b>b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                    </div><br>
+                                    <div>
+                                        To complete your withdrawal:
+                                        <ol>
+                                            <li>Please <b>submit a new request</b></li>
+                                            <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                                            <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                                            <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                                        </ol>
+                                    </div>
+                                    <div>
+                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
+                                    </div>
+                                    <div>
+                                        Thank you for your understanding.
+                                    </div>
+                                    <div>
+                                        Best regards,<br>
+                                        The LQHMarkets Team
+                                    </div>';
+
                         $templateVars = [
                             'name' => $transaction->user->fullname,
                             'site_link' => $settings['copyright_site_name_text'],
