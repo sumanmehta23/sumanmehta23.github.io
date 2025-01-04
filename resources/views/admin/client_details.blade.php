@@ -1237,10 +1237,9 @@
             data: { email: email  },
             success: function(response) {
                 if (response.token) {
-                    console.log(response);
-                    // launchWebSdk(response.token, email, response.phone);
+                    launchSumsubWebSdk(response.token, userEmail);
                 } else {
-                    console.error("Failed to fetch applicant data");
+                    console.error("Failed to fetch token");
                 }
             },
             error: function(error) {
@@ -1252,71 +1251,24 @@
     const userEmail = "{{ $user->email }}";
     getApplicantData(userEmail);
 
-
-    function launchWebSdk(accessToken, applicantEmail, applicantPhone) {
-        console.log(accessToken);
-        let snsWebSdkInstance = snsWebSdk
-            .init(accessToken, () => {
-                return accessToken;
-            })
+    function launchSumsubWebSdk(accessToken, email) {
+        snsWebSdk.init(accessToken)
             .withConf({
                 lang: "en",
-                email: applicantEmail,
-                phone: applicantPhone,
+                email: email,
             })
             .withOptions({
                 addViewportTag: false,
-                adaptIframeHeight: true
+                adaptIframeHeight: true,
             })
             .on("idCheck.onStepCompleted", (payload) => {
                 console.log("Step completed: ", payload);
-                // Handle the step completion event
             })
             .on("idCheck.onError", (error) => {
-                console.log("Error message:", error);
+                console.error("Error: ", error);
             })
-            .onMessage((type, payload) => {
-                console.log("Received message:", type, payload);
-                $.ajax({
-                    url: "{{ url('/sumsub_verify') }}",
-                    type: "POST",
-                    data: {
-                        type: type,
-                        payload: payload,
-                        sumsub: "action"
-                    },
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Set the CSRF token
-                    },
-                    success: function(data) {
-                        if (localStorage.getItem("isVerified") == "false") {
-                            try {
-                                var json_data = JSON.parse(data);
-                            } catch (err) {
-                                var json_data = data;
-                            }
-                            if (json_data.status == "true") {
-                                swal.fire({
-                                    icon: "success",
-                                    title: "Your KYC has been successfully verified",
-                                    text: "You're now cleared for complete access to Liquidity House",
-                                    allowEscapeKey: false,
-                                    allowOutsideClick: false
-                                }).then(() => {
-                                    parent.location.reload();
-                                    location.href = "{{ url('/dashboard') }}";
-                                });
-                            }
-                        } else {
-                            localStorage.setItem("isVerified", "true");
-                        }
-                    }
-                });
-            })
-            .build();
+            .build()
+            .launch("#sumsub-websdk-container");
     }
-
-
-
     </script>
 @endsection

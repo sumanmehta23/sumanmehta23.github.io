@@ -250,7 +250,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         });
 
         Route::get('/sumsub_data', [SumsubController::class, 'sumsub_data']);
-        Route::get('/get-applicant-data', [SumsubController::class, 'getApplicantData']);
 
         Route::get("/ibdashboard", [IBController::class, 'index']);
         Route::get("/iblist", [IBController::class, 'list']);

@@ -15,7 +15,6 @@
 
 <body>
     <div id="sumsub-websdk-container"></div>
-
     <script>
         localStorage.setItem("isVerified", "false");
 
