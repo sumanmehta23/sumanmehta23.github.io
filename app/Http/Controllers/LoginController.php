@@ -198,7 +198,11 @@ class LoginController extends Controller
             'country' => 'required|string',
             'country_code' => 'required',
             'telephone' => 'required',
+        ], [
+            'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+            'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
         ]);
+
 
         if ($validator->fails()) {
             return redirect()->route('register')->with('errors', $validator->errors());
