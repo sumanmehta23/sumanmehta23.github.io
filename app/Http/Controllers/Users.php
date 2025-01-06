@@ -186,16 +186,6 @@ class Users extends Controller
             }
         }
 
-        if($type == 'idCheck.onApplicantLoaded'){
-
-            KycLog::create([
-                'client_id' => $email,
-                'user_id' => auth()->user()->id,
-                'callback_code' => json_encode($type),
-                'callback_payload' => json_encode($payload),
-            ]);
-        }
-
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }

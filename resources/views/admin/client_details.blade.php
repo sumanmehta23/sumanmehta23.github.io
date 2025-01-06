@@ -213,7 +213,7 @@
                                                             ? '<span class="badge bg-outline-danger">Pending KYC</span>'
                                                             : ($user->status == 1
                                                                 ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                                : '') !!}<a class="mb-1 fs-12" href="">check-sumsub</a></span>
+                                                                : '') !!}<a class="mb-1 fs-12" id="sumsub-info" href=""></a></span>
                                                         |
                                                         <span
                                                             class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
@@ -225,6 +225,7 @@
                                                                 : '') !!}</span>
                                                     </div>
                                                 </h6>
+                                                <div id="sumsub-websdk-container" hidden></div>
                                                 <div class="row">
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
@@ -1251,24 +1252,36 @@
     const userEmail = "{{ $user->email }}";
     getApplicantData(userEmail);
 
-    function launchSumsubWebSdk(accessToken, email) {
-        snsWebSdk.init(accessToken)
+    let token;
+
+    function launchSumsubWebSdk(accessToken, email, applicantPhone) {
+        token = accessToken;
+        let applicantId = '';
+        let snsWebSdkInstance = snsWebSdk
+            .init(token, () => getNewAccessToken())
             .withConf({
                 lang: "en",
                 email: email,
+                phone: applicantPhone,
             })
             .withOptions({
                 addViewportTag: false,
                 adaptIframeHeight: true,
             })
-            .on("idCheck.onStepCompleted", (payload) => {
-                console.log("Step completed: ", payload);
+            .onMessage((type, payload) => {
+                if(type == 'idCheck.onApplicantLoaded'){
+                    console.log("Received message:", type, payload);
+                    applicantId = payload.applicantId;  // Capture applicantId
+                    // Display applicantId in HTML after it's received
+                    document.getElementById("sumsub-info").innerText = `Applicant ID: ${applicantId}`;
+                }
             })
-            .on("idCheck.onError", (error) => {
-                console.error("Error: ", error);
-            })
-            .build()
-            .launch("#sumsub-websdk-container");
+            .build();
+            snsWebSdkInstance.launch("#sumsub-websdk-container");
+    }
+    function getNewAccessToken() {
+        console.log(token);
+        return Promise.resolve(token);
     }
     </script>
 @endsection
