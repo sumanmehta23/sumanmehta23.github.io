@@ -302,9 +302,9 @@ class AjaxController extends Controller
         //     ])
         //     ->groupBy('ap.email');
 
-        $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
+        // $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
             // $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
-        });
+        // });
 
         if (session('userData')['userRole'] == "Relationship Manager") {
             $query->where('rm.rm_id', session('alogin'));
