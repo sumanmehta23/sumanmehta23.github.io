@@ -171,8 +171,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->bonusTrans)) {
-                                                                        echo "$" . number_format($account->bonusTrans->sum('bonus_amount') , 2) ;
+                                                                    if (isset($account->BonusTransaction)) {
+                                                                        echo "$" . number_format($account->BonusTransaction->sum('bonus_amount') , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>
