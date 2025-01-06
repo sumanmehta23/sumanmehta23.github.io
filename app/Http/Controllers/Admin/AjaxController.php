@@ -306,13 +306,13 @@ class AjaxController extends Controller
             // $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
         // });
 
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $query->where('rm.rm_id', session('alogin'));
-        }
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $query->where('rm.rm_id', session('alogin'));
+        // }
 
-        if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
-            $query->where('rm.rm_id', $request->get('rm_id'));
-        }
+        // if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
+        //     $query->where('rm.rm_id', $request->get('rm_id'));
+        // }
 
         if ($request->ajax()) {
             return DataTables::of($query)
