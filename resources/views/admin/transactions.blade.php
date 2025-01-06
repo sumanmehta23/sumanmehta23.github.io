@@ -105,7 +105,7 @@
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
-                                                    <th>#</th>
+                                                    {{-- <th>#</th> --}}
                                                     <th>Account No</th>
                                                     <th>Deposit Amount</th>
                                                     <th>Deposit Type</th>

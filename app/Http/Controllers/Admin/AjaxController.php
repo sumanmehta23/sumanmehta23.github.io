@@ -886,7 +886,10 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        $query = TradeDeposit::with(['user', 'account']);
+        // dd($request->search);
+        $query = TradeDeposit::select(
+            'trade_deposits.*'
+        )->with(['user', 'account']);
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmId = session('alogin');
@@ -902,17 +905,9 @@ class AjaxController extends Controller
             $query->where('Status', $request->status);
         }
 
+
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->editColumn('id', function ($row) {
-                    return $row->id;
-                })
-                ->addColumn('account_no', function($row){
-                    return $row->code;
-                })
-                ->addColumn('amount', function($row){
-                    return $row->deposit_amount;
-                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -972,7 +967,8 @@ class AjaxController extends Controller
 
     public function getTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account']);
+        $query = TradeWithdrawals::select('trade_withdrawal.*')
+                ->with(['user', 'withdrawTo', 'account']);
 
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
@@ -995,12 +991,6 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->addColumn('account_no', function($row){
-                    return $row->account->code;
-                })
-                ->addColumn('amount', function($row){
-                    return $row->withdrawal_amount;
-                })
                 ->addColumn('withdraw_type', function($row){
                     return $row->withdraw_type;
                 })
