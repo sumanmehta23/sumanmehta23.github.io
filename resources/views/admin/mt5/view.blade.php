@@ -663,12 +663,12 @@ if ($getUser) {
                     }
                 },
                 columns: [{
-                        data: 'account_no',
-                        name: 'account_no'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'amount',
-                        name: 'amount',
+                        data: 'deposit_amount',
+                        name: 'deposit_amount',
                         render: function(data, type, row) {
                             return number_format(data);
                         }
@@ -726,12 +726,12 @@ if ($getUser) {
                     }
                 },
                 columns: [{
-                        data: 'account_no',
-                        name: 'account_no'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'amount',
-                        name: 'amount',
+                        data: 'withdrawal_amount',
+                        name: 'withdrawal_amount',
                         // render: function(data, type, row) {
                         //     return number_format(data);
                         // }
