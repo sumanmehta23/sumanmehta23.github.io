@@ -876,6 +876,12 @@
                     editUserModal.show();
                 });
 
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+
                 $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
                     e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
