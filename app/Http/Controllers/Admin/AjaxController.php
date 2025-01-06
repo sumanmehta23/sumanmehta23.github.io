@@ -713,6 +713,10 @@ class AjaxController extends Controller
             });
         }
 
+        if (isset($request->status)) {
+            $rmCondition->where('Status', $request->status);
+        }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -797,6 +801,10 @@ class AjaxController extends Controller
             $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
                 $query->where('rm_id', $alogin);
             });
+        }
+
+        if (isset($request->status)) {
+            $rmCondition->where('Status', $request->status);
         }
 
         $rmCondition->orderBy('id', 'desc');
@@ -884,6 +892,9 @@ class AjaxController extends Controller
             $query->where('code', $_GET['id']);
         }
 
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
+        }
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -968,6 +979,10 @@ class AjaxController extends Controller
             $query->where('account_id', $_GET['id']);
         }
 
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
+        }
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
@@ -1040,9 +1055,12 @@ class AjaxController extends Controller
             $query->where('deposit_type', 'Internal Transfer');;
         }
 
+        if (isset($request->status)) {
+            $query->where('status', $request->status);
+        }
+
         // Fetch data
         // $query->orderByDesc('id')->get();
-
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->addColumn('email', function($row){
@@ -1405,6 +1423,10 @@ class AjaxController extends Controller
             });
         }
 
+        if (isset($request->status)) {
+            $rmCondition->where('Status', $request->status);
+        }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -1483,7 +1505,9 @@ class AjaxController extends Controller
                 $q->where('rm_id', $rmId);
             });
         } else {
-            $query->where('Status', 0);
+            if (isset($request->status)) {
+                $query->where('Status', $request->status);
+            }
         }
 
         // Fetch data
@@ -1573,6 +1597,10 @@ class AjaxController extends Controller
             $query->where('code', $_GET['id']);
         }
 
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
+        }
+
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -1655,6 +1683,10 @@ class AjaxController extends Controller
             }
         } else {
             $query->where('account_id', $_GET['id']);
+        }
+
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
         }
 
         if ($request->ajax()) {
