@@ -11,7 +11,7 @@ use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\IbWallet;
-use Str;use Carbon\Carbon;
+use Carbon\Carbon;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\IbClientList;
@@ -24,6 +24,7 @@ use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Ib extends Controller
 {
@@ -194,6 +195,11 @@ class Ib extends Controller
                     $from = 'September 01,2024';
                     $to = 'March 31,2080';
                     $total = 0;
+                    $isProcessed=Cache::get('ib1History_'.$login);
+                    if($isProcessed){
+                        continue;
+                    }
+                    Cache::put('ib1History_'.$login,true,now()->addMinutes(20));
                     if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
                         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                     }
@@ -249,6 +255,7 @@ class Ib extends Controller
                                 $volume = $init_volume * $b;
                                 $time_closed = Carbon::createFromTimestamp($item->TimeDone);
                                 $ibcommissions[]=[
+                                    'id' => Str::uuid()->toString(),
                                     'user_id' => $client->user_id,
                                     'account_id' => $client->id,
                                     'order_id' => $order,
@@ -264,6 +271,7 @@ class Ib extends Controller
                                     try {
                                         Ib1Commission::insert($ibcommissions);
                                     } catch (Exception $e) {
+                                        Cache::put('ib1History_'.$login,true,now()->addMinutes(50));
                                         logger()->error('Error inserting commission: ' . $e->getMessage());
                                     }
                                     $ibcommissions=[];
@@ -272,7 +280,7 @@ class Ib extends Controller
                             try {
                                  Ib1Commission::insert($ibcommissions);
                             } catch (Exception $e) {
-
+                                Cache::put('ib1History_'.$login,true,now()->addMinutes(50));
                                 logger()->error('Error inserting commission: ' . $e->getMessage());
                             }
                         }
