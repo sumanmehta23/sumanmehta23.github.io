@@ -322,12 +322,11 @@ class Ib extends Controller
                             if ($commission) {
                                 $ib_level_name = "IB Level $ib_level - D$i";
                                 $ib_wallet = ((float)$commission / 2) * $ca->volume;
-                                
-                                $ib_wallet = bcdiv($ib_wallet, 1, 10);
-                                $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');  
 
+                                $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
+                    
                                 if ($formatted_ib_wallet < 0.0000001) {
-                                    $formatted_ib_wallet = '0.0000000000'; 
+                                    $formatted_ib_wallet = '0.0000000000'; // Handle small values
                                 }
 
                                 $existingWallet = IbWallet::where('user_id', $userId)
