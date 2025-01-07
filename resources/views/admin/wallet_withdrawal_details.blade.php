@@ -266,20 +266,23 @@
                                         </td>
                                         <td style="vertical-align:top">
                                             <div class="my-auto btn-list ms-auto">
+                                                @php
+                                                    $userData = json_encode(session('userData'));
+                                                @endphp
                                                 <button
-                                                    onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
+                                                    onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
                                                     type="button" class="m-1 btn btn-success btn-space">Approve</button>
-                                                <button
+                                                    {{-- <button
                                                     onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
-                                                    type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
+                                                    type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
                                                     @if (($details->status == 0) || ($details->payout_res != null))
                                                         @php
                                                             $payout_res = !empty($details->payout_res) ? json_decode($details->payout_res, true) : [];
                                                             $message = isset($payout_res['message']) ? $payout_res['message'] : '';
                                                         @endphp
                                                         <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',3)"
-                                                        type="submit" class="m-1 btn btn-danger btn-space">Decline</button>
+                                                        onclick="takeAction('{{ $details }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
+                                                        type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
                                                     @endif
                                             </div>
                                         </td>
@@ -338,13 +341,19 @@
         @endif
     </div>
     <script>
-        function takeAction(email, amount, status) {
-            var statuscode;
+        function takeAction(data, email, amount, status) {
+            const parsedData = JSON.parse(data);
+            // console.log(parsedData);
+            const now = new Date();
+            const approved_date_time = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
             if(status==3){
-                statuscode='decline';
-            }else if(status==2){
                 statuscode='reject';
-            }else{
+            }
+            // else if(status==2){
+            //     statuscode='reject';
+            // }
+            else{
                 statuscode='approve';
             }
           Swal.fire({
@@ -356,26 +365,54 @@
               <input type="hidden" name="amount" value="${amount}">
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_transaction">
-              <div class="mt-3 col-12 text-start">
-                  <label for="transaction_id" class="form-label">Withdraw Reference ID</label>
-                  <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="Add Reference ID">
-              </div>
-              <div class="mt-2 col-12 text-start">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
-              </div>
+                ${
+                  status == 3
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="transaction_id" class="form-label">Transaction ID</label>
+                      <label id="transaction_id" name="transaction_id" class="mt-2 form-control" value='${parsedData.id}'>${parsedData.id}</label>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="rejection_reason" class="form-label">Rejection Reason</label>
+                      <select id="rejection_reason" name="rejection_reason" class="form-control">
+                          <option value="" disabled selected>Select Reference ID</option>
+                          <option value="Wrong Address">Wrong Wallet Address</option>
+                          <option value="incorrect_payment_details">Incorrect Payment Details</option>
+                          <option value="duplicate_transaction">Duplicate Transaction</option>
+                      </select>
+                  </div>
+              `
+                      : ''
+                }
+                ${
+                  status == 1
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="aproved_by" class="form-label">Approved By</label>
+                      <label id="aproved_by" name="aproved_by" class="mt-2 form-control" value='${parsedData.username}'>${parsedData.username}</label>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="aproved_by" class="form-label">Approved On</label>
+                      <label id="aproved_by" name="aproved_by" class="mt-2 form-control" value='${approved_date_time}'>${approved_date_time}</label>
+                  </div>
+              `
+                      : ''
+                }
+
               </form>
           `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Submit',
             preConfirm: () => {
-              const description = document.querySelector('#updateTransactionForm textarea').value;
-              const transaction_id = document.querySelector('#transaction_id').value;
-              if (!description || !transaction_id) {
-                Swal.showValidationMessage('Please fill out all fields');
-                return false;
+              if(status==3){
+                const rejection_reason = document.querySelector('#rejection_reason').value;
+                if (!rejection_reason) {
+                    Swal.showValidationMessage('Please fill out all fields');
+                    return false;
+                }
               }
+
               return true;
             }
           }).then((result) => {
