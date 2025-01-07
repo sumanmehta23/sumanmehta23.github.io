@@ -305,4 +305,11 @@ class User extends Authenticatable
 
         $mailservice->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
+
+    public function getTotalBonusAttribute()
+    {
+        return $this->accounts->sum(function($account) {
+            return $account->BonusTransaction->sum('bonus_amount'); 
+        });
+    }
 }
