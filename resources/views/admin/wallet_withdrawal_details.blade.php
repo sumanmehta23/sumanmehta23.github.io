@@ -30,12 +30,19 @@
                             <div class="col-lg-6 col-md-12">
                                 <div class="wideget-user-desc d-flex align-items-center">
                                     <div class="wideget-user-img">
-                                        <a href="{{route("admin.admin-view-client-details",$details->user->id)}}">
-                                        <img src="/admin_assets/assets/images/users/client.png" alt="img" style="width:50px">
+                                        <a href="{{ route('admin.admin-view-client-details', $details->user->id) }}">
+                                            <img src="/admin_assets/assets/images/users/client.png" alt="User Image" class="img-fluid rounded-circle" style="width:50px;">
                                         </a>
                                     </div>
                                     <div class="user-wrap">
-                                        <h4 class="fw-normal">{{ $details->user->fullname }}</h4>
+                                        <h4 class="fw-normal d-flex align-items-center">
+                                            {{ $details->user->fullname }}
+                                            @if($details->user->total_bonus)
+                                                <span class="badge bg-success text-white ms-2">
+                                                    <i class="fas fa-trophy"></i> Bonus: ${{ number_format($details->user->total_bonus, 2) }}
+                                                </span>
+                                            @endif
+                                        </h4>
                                         <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
                                     </div>
                                 </div>
