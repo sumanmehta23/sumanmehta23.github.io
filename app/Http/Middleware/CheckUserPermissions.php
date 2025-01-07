@@ -31,13 +31,22 @@ class CheckUserPermissions
         //     return DB::table('roles')->where('name', $userRole)->first()->role_id;
         // });
         $requestUri = $request->getPathInfo();
+
+        $path = request()->path(); 
+
+        $segments = explode('/', $path);
+        $filteredPath = implode('/', array_slice($segments, 0, 2));
         $rolePermissions = DB::table('permissions as p')
             ->leftJoin('pages as pg', 'p.page_id', '=', 'pg.id')
             ->where('p.role_id', $userRole)
             ->pluck('pg.filename')
             ->toArray();
-        if (!in_array($requestUri, $rolePermissions) && $userRole != 2) {
-            return response()->view('errors.401', [], 401);
+        if ((!in_array($requestUri, $rolePermissions)  ) && $userRole != 2) {
+            if((count($segments)==3 && in_array("/".$filteredPath, $rolePermissions) ) && $userRole != 2){
+                return $next($request);
+            }else{
+                return response()->view('errors.401', [], 401);
+            }
         }
         return $next($request);
     }
