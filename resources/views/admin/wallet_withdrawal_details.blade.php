@@ -303,18 +303,22 @@
                                                     <div class="mt-2 lh-1">
                                                         <span>{{ $details->admin_remark }}</span>
                                                     </div>
-                                                    <div class="mt-4 lh-1">
-                                                        <span class="fs-11 text-muted">APPROVED BY</span>
-                                                    </div>
-                                                    <div class="mt-2 lh-1">
-                                                        <span>{{ $details->approved_by }}</span>
-                                                    </div>
-                                                    <div class="mt-4 lh-1">
-                                                        <span class="fs-11 text-muted">APPROVED DATE</span>
-                                                    </div>
-                                                    <div class="mt-2 lh-1">
-                                                        <span>{{ $details->approved_date }}</span>
-                                                    </div>
+                                                    {{ dd($details) }}
+                                                    @if ($details->admin_remark == 'Approved')
+                                                        <div class="mt-4 lh-1">
+                                                            <span class="fs-11 text-muted">APPROVED BY</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                            <span>{{ $details->approved_by }}</span>
+                                                        </div>
+                                                        <div class="mt-4 lh-1">
+                                                            <span class="fs-11 text-muted">APPROVED DATE</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                            <span>{{ $details->approved_date }}</span>
+                                                        </div>
+                                                    @endif
+
                                                 </div>
                                             </div>
                                         </td>
