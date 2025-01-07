@@ -303,7 +303,6 @@
                                                     <div class="mt-2 lh-1">
                                                         <span>{{ $details->admin_remark }}</span>
                                                     </div>
-                                                    {{ dd($details) }}
                                                     @if ($details->admin_remark == 'Approved')
                                                         <div class="mt-4 lh-1">
                                                             <span class="fs-11 text-muted">APPROVED BY</span>
