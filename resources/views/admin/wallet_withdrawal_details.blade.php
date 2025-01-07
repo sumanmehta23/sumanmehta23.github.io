@@ -351,7 +351,7 @@
         function takeAction(data, email, amount, status) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
             const parsedData = JSON.parse(sanitizedData);
-            console.log(parsedData);
+            // console.log(parsedData);
             const now = new Date();
             const approved_date_time = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
