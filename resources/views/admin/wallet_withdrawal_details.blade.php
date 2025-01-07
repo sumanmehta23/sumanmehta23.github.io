@@ -39,7 +39,7 @@
                                             {{ $details->user->fullname }}
                                             @if($details->user->total_bonus)
                                                 <span class="badge bg-success text-white ms-2">
-                                                    <i class="fas fa-trophy"></i> Bonus: ${{ number_format($details->user->total_bonus, 2) }}
+                                                    Bonus: ${{ number_format($details->user->total_bonus, 2) }}
                                                 </span>
                                             @endif
                                         </h4>
