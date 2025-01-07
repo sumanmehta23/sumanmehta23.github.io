@@ -221,22 +221,36 @@ class Transaction extends Controller
     }
     public function update_wallet_withdrawal(Request $request)
     {
+
         $settings = settings();
-        $validatedData = $request->validate([
-            'description' => 'required|string|max:255',
-            'status' => 'required|integer',
-            'email' => 'required|email',
-            'amount' => 'required|numeric',
-        ]);
-        $description = $validatedData['description'];
+        $status = $request->status;
+        // dd($request->all());
+        if ($status == '3') {
+            $validatedData = $request->validate([
+                'rejection_reason' => 'required',
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+            $rejection_reason = $validatedData['rejection_reason'];
+        }elseif($status == '1'){
+            $validatedData = $request->validate([
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+            $rejection_reason = 'Approved';
+        }
         $status = $validatedData['status'];
         $email = $validatedData['email'];
         $depositAmount = $validatedData['amount'];
         $did = $request->input('id');
-        $transaction_id = $request->input('transaction_id');
+        // dd($did);
+        $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        // dd($transaction);
         if ($transaction) {
-            $transaction->admin_remark = $description;
+            $transaction->admin_remark = $rejection_reason;
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
@@ -280,7 +294,6 @@ class Transaction extends Controller
                         return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
                     $responseData=json_decode($response);
-
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
@@ -349,7 +362,7 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==3){
+            }elseif($status==3 && $rejection_reason == 'Wrong Address'){
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
