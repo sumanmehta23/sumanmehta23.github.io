@@ -186,6 +186,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
+    Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
+
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);

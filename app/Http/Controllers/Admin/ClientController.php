@@ -454,6 +454,7 @@ class ClientController extends Controller
 
         $ticket_status = $user->ticket_status;  // Cached ticket status
         $ticket_types = $user->ticket_types;  // Cached ticket types
+        $userid = $id;
         
         return view('admin.client_details', compact(
             'acc_groups',
@@ -473,7 +474,8 @@ class ClientController extends Controller
             'rm_details',
             'superadmin_details',
             'country_code',
-            'clients'
+            'clients',
+            'userid'
         ));
     }
     
