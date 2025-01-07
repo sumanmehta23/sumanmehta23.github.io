@@ -303,6 +303,18 @@
                                                     <div class="mt-2 lh-1">
                                                         <span>{{ $details->admin_remark }}</span>
                                                     </div>
+                                                    <div class="mt-4 lh-1">
+                                                        <span class="fs-11 text-muted">APPROVED BY</span>
+                                                    </div>
+                                                    <div class="mt-2 lh-1">
+                                                        <span>{{ $details->approved_by }}</span>
+                                                    </div>
+                                                    <div class="mt-4 lh-1">
+                                                        <span class="fs-11 text-muted">APPROVED DATE</span>
+                                                    </div>
+                                                    <div class="mt-2 lh-1">
+                                                        <span>{{ $details->approved_date }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -350,10 +362,11 @@
     <script>
         function takeAction(data, email, amount, status) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
+            console.log(sanitizedData);
             const parsedData = JSON.parse(sanitizedData);
             // console.log(parsedData);
             const now = new Date();
-            const approved_date_time = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
             if(status==3){
                 statuscode='reject';
@@ -378,7 +391,8 @@
                       ? `
                   <div class="mt-2 col-12 text-start">
                       <label for="transaction_id" class="form-label">Transaction ID</label>
-                      <label id="transaction_id" name="transaction_id" class="mt-2 form-control" value='${parsedData.id}'>${parsedData.id}</label>
+                      <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData.id}">
+                      <div class="form-control">${parsedData.id}</div>
                   </div>
                   <div class="mt-3 col-12 text-start">
                       <label for="rejection_reason" class="form-label">Rejection Reason</label>
@@ -396,12 +410,14 @@
                   status == 1
                       ? `
                   <div class="mt-2 col-12 text-start">
-                      <label for="aproved_by" class="form-label">Approved By</label>
-                      <label id="aproved_by" name="aproved_by" class="mt-2 form-control" value='${parsedData.username}'>${parsedData.username}</label>
+                      <label for="approved_by" class="form-label">Approved By</label>
+                      <input type="hidden" id="approved_by" name="approved_by" value="${parsedData.username}">
+                      <div class="form-control">${parsedData.username}</div>
                   </div>
                   <div class="mt-3 col-12 text-start">
-                      <label for="aproved_by" class="form-label">Approved On</label>
-                      <label id="aproved_by" name="aproved_by" class="mt-2 form-control" value='${approved_date_time}'>${approved_date_time}</label>
+                      <label for="approved_date" class="form-label">Approved On</label>
+                      <input type="hidden" id="approved_date" name="approved_date" value="${approved_date_time}">
+                      <div class="form-control">${approved_date_time}</div>
                   </div>
               `
                       : ''

@@ -240,6 +240,8 @@ class Transaction extends Controller
                 'amount' => 'required|numeric',
             ]);
             $rejection_reason = 'Approved';
+            $approved_by = $request->approved_by;
+            $approved_date = $request->approved_date;
         }
         $status = $validatedData['status'];
         $email = $validatedData['email'];
@@ -256,6 +258,12 @@ class Transaction extends Controller
             $transaction->save();
             if ($status == 1) {
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
+                    $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+                    $transaction->approved_by = $approved_by;
+                    $transaction->approved_date =$approved_date;
+                    $transaction->save();
+
+
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;
