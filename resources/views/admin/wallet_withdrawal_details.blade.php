@@ -288,7 +288,7 @@
                                                             $message = isset($payout_res['message']) ? $payout_res['message'] : '';
                                                         @endphp
                                                         <button
-                                                        onclick="takeAction('{{ $details }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
+                                                        onclick="takeAction('{{ json_encode($details) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
                                                         type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
                                                     @endif
                                             </div>
@@ -349,8 +349,9 @@
     </div>
     <script>
         function takeAction(data, email, amount, status) {
-            const parsedData = JSON.parse(data);
-            // console.log(parsedData);
+            const sanitizedData = data.replace(/\\/g, '\\\\');
+            const parsedData = JSON.parse(sanitizedData);
+            console.log(parsedData);
             const now = new Date();
             const approved_date_time = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
