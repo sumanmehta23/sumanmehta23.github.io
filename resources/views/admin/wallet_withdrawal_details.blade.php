@@ -375,7 +375,7 @@
                   <div class="mt-3 col-12 text-start">
                       <label for="rejection_reason" class="form-label">Rejection Reason</label>
                       <select id="rejection_reason" name="rejection_reason" class="form-control">
-                          <option value="" disabled selected>Select Reference ID</option>
+                          <option value="" disabled selected>Select Rejection Reason</option>
                           <option value="Wrong Address">Wrong Wallet Address</option>
                           <option value="incorrect_payment_details">Incorrect Payment Details</option>
                           <option value="duplicate_transaction">Duplicate Transaction</option>
