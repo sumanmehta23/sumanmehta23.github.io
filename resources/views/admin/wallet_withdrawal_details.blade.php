@@ -376,9 +376,9 @@
                       <label for="rejection_reason" class="form-label">Rejection Reason</label>
                       <select id="rejection_reason" name="rejection_reason" class="form-control">
                           <option value="" disabled selected>Select Rejection Reason</option>
-                          <option value="Wrong Address">Wrong Wallet Address</option>
-                          <option value="incorrect_payment_details">Incorrect Payment Details</option>
-                          <option value="duplicate_transaction">Duplicate Transaction</option>
+                          <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
+                          <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
+                          <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
                       </select>
                   </div>
               `

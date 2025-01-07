@@ -362,7 +362,7 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==3 && $rejection_reason == 'Wrong Address'){
+            }elseif($status==3 && $rejection_reason == 'Invalid cryptocurrency address'){
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
