@@ -486,7 +486,7 @@
                                                                     }
                                                                 @endphp
                                                                 <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
-                                                                        <div class="card-body">
+                                                                        <div class="card-body d-flex">
 
                                                                             <div class="statusToggle" data-status="{{ $user->status }}">
                                                                                 @if ($user->status == 0)
@@ -523,42 +523,42 @@
                                                                                             <path d="M17 22l5 -5"></path>
                                                                                         </svg>
                                                                                     </div>
-                                                                                    <div class="badge text-info pointer resendVerificationEmail" data-bs-toggle="tooltip" title="Resend Verification Email">
-                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="mdi-email-sync-outline">
-                                                                                            <path d="M..."></path> <!-- Add full path data here -->
-                                                                                        </svg>
+                                                                                    <div class='badge text-info pointer resendVerificationEmail' data-bs-toggle='tooltip' title='Resend Verification Email'>
+                                                                                        <svg class='w-64 h-64' fill='currentColor' width='25' height='25' xmlns='http://www.w3.org/2000/svg' id='mdi-email-sync-outline' viewBox='0 0 24 24'><path d='M3 4C1.9 4 1 4.9 1 6V18C1 19.1 1.9 20 3 20H13.5A6.5 6.5 0 0 1 13 18H3V8L11 13L19 8V11A6.5 6.5 0 0 1 19.5 11A6.5 6.5 0 0 1 21 11.18V6C21 4.9 20.1 4 19 4H3M3 6H19L11 11L3 6M19 12L16.75 14.25L19 16.5V15C20.38 15 21.5 16.12 21.5 17.5C21.5 17.9 21.41 18.28 21.24 18.62L22.33 19.71C22.75 19.08 23 18.32 23 17.5C23 15.29 21.21 13.5 19 13.5V12M15.67 15.29C15.25 15.92 15 16.68 15 17.5C15 19.71 16.79 21.5 19 21.5V23L21.25 20.75L19 18.5V20C17.62 20 16.5 18.88 16.5 17.5C16.5 17.1 16.59 16.72 16.76 16.38L15.67 15.29Z'></path></svg>
                                                                                     </div>
                                                                                 </div>
                                                                             @else
                                                                                 <div class="statusToggle" data-status="{{ $user->email_confirmed }}">
                                                                                     <div class="badge text-success" data-bs-toggle="tooltip" title="Email Verified">
                                                                                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" color="#81C784" class="tabler-icon tabler-icon-mail-check">
-                                                                                            <path d="M..."></path> <!-- Add full path data here -->
+                                                                                            <path d='M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6'></path>
+                                                                                            <path d='M3 7l9 6l9 -6'></path>
+                                                                                            <path d='M15 19l2 2l4 -4'></path>
                                                                                         </svg>
                                                                                     </div>
                                                                                 </div>
                                                                             @endif
 
-                                                                            <div class="viewClient" data-enc="{{ $user->id }}">
-                                                                                <div class="badge text-danger" data-bs-toggle="tooltip" title="View Client">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler icon-tabler-eye">
-                                                                                        <path d="M..."></path> <!-- Add full path data here -->
-                                                                                    </svg>
+                                                                            <div class='viewClient' data-enc='{{$user->id}}'>
+                                                                                <div class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
+                                                                                    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                                                                 </div>
-                                                                            </div>
+                                                                              </div>
 
-                                                                            <div class="editClient" data-enc="{{ $user->id }}">
-                                                                                <div class="badge text-secondary" data-bs-toggle="tooltip" title="Edit Client">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler icon-tabler-edit">
-                                                                                        <path d="M..."></path> <!-- Add full path data here -->
-                                                                                    </svg>
+                                                                              <div class='editClient' data-enc='{{$user->id}}'>
+                                                                                <div class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
+                                                                                    <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
                                                                                 </div>
-                                                                            </div>
+                                                                              </div>
 
                                                                             <div class="switchClient" data-enc="{{ $user->id }}">
                                                                                 <div class="badge text-secondary" data-bs-toggle="tooltip" title="Switch Client">
                                                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-shuffle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                                        <path d="M..."></path> <!-- Add full path data here -->
+                                                                                        <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                                                                        <path d='M18 4l3 3l-3 3' />
+                                                                                        <path d='M18 20l3 -3l-3 -3' />
+                                                                                        <path d='M3 7h3a4 4 0 0 1 4 4a4 4 0 0 0 4 4h7' />
+                                                                                        <path d='M21 7h-7a4 4 0 0 0 -4 4a4 4 0 0 1 -4 4h-3' />
                                                                                     </svg>
                                                                                 </div>
                                                                             </div>
@@ -632,6 +632,85 @@
                                                                                         <div class="modal-footer">
                                                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                                                             <button type="submit" name="ibRequest" value="update" class="btn btn-primary">Update</button>
+                                                                                        </div>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                                                            aria-labelledby="editUserLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                                                <div class="modal-content">
+                                                                                    <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
+                                                                                        @csrf
+                                                                                        <div class="modal-header">
+                                                                                            <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
+                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                        </div>
+                                                                                        <div class="mb-0 modal-body custom-card card">
+                                                                                            <input type="hidden" name="id">
+                                                                                            <div class="row">
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Email:</label>
+                                                                                                    <input type="text" class="form-control" name="email" required readonly>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Full Name:</label>
+                                                                                                    <input type="text" class="form-control" name="fullname" required>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Phone:</label>
+                                                                                                    <div class="input-group">
+                                                                                                        <div class="input-group-prepend w-25">
+                                                                                                            <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
+                                                                                                                required>
+                                                                                                                <option value="">Country Code</option>
+                                                                                                                <?php foreach ($countries as $country) { ?>
+                                                                                                                <option value="+<?= $country['country_code'] ?>"
+                                                                                                                    data-flag="<?= strtolower($country['country_alpha']) ?>">
+                                                                                                                    +<?= $country['country_code'] ?>
+                                                                                                                    (<?= $country['country_name'] ?>)</option>
+                                                                                                                <?php } ?>
+                                                                                                            </select>
+
+
+                                                                                                        </div>
+                                                                                                        <input type="text" class="form-control" id="phone_number" name="telephone"
+                                                                                                            placeholder="Enter phone number">
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Country:</label>
+                                                                                                    <select class="form-select" id="country" name="country" required>
+                                                                                                        <option value="">Select Country</option>
+                                                                                                        <?php foreach ($countries as $country) { ?>
+                                                                                                        <option value="<?= $country['country_name'] ?>">
+                                                                                                            <?= $country['country_name'] ?>
+                                                                                                        </option>
+                                                                                                        <?php } ?>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Password:</label>
+                                                                                                    <input type="password" class="form-control" name="password" required>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Confirm Password:</label>
+                                                                                                    <input type="password" class="form-control" id="input" name="confirm_password"
+                                                                                                        required>
+                                                                                                </div>
+
+                                                                                                <div class="col-lg-6 d-flex align-items-end">
+                                                                                                    <div class="form-check form-switch">
+                                                                                                        <input class="form-check-input" type="checkbox" role="switch"
+                                                                                                            name="email_notification">
+                                                                                                        <label class="form-check-label">Send Notification Email</label>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="modal-footer">
+                                                                                            <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
                                                                                         </div>
                                                                                     </form>
                                                                                 </div>
@@ -1398,6 +1477,7 @@
 
     $(document).ready(function() {
         window.statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        window.editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
         // Encode PHP data as JSON for JavaScript compatibility
         var userData = @json($user);
 
@@ -1419,6 +1499,92 @@
             } else {
                 console.error('statusModal is not defined');
             }
+        });
+
+        $('.resendToggle').off('click', '.resendVerificationEmail');
+        $('.resendToggle').on('click', '.resendVerificationEmail', function() {
+            $("#userName,#userEmail").html("");
+            $("#userName").html(userData.fullname);
+            $("#userEmail").html(userData.email);
+            $("#user_id").val(userData.id);
+            $("#user_status").prop("checked", userData.status == 1);
+            $("#email_status").prop("checked", userData.email_confirmed == 1);
+            $("#kyc_verify").prop("checked", (userData.kyc_verify == 1));
+            Swal.fire({
+                title: "Are you sure?",
+                text: "An account email confirmation email will be resent to the user.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, resend it!"
+                }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/admin/ajax",
+                        type: "POST",
+                        cache: false,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Include CSRF token in the header
+                        },
+                        data: {
+                            action: 'resendVerificationEmail',
+                            id: userData.id
+                        },
+                        success: function(response) {
+                            if (response.success == true) {
+                                swal.fire({
+                                    icon: "success",
+                                    title: "Verification email Successfully Sent",
+                                }).then((val) => {
+                                    // location.reload();
+                                });
+                            } else {
+                                swal.fire({
+                                    icon: "error",
+                                    title: "Something went wrong.",
+                                    text: "Please try again or contact support."
+                                }).then((val) => {
+                                    // location.reload();
+                                });
+                            }
+                        }
+                    });
+                }
+                });
+        });
+
+        $(document).on('click', '.viewClient', function() {
+            location.href = "/admin/client_details/" + userData.id;
+        });
+
+        $(document).off('click', '.editClient')
+        $(document).on('click', '.editClient', function() {
+            $.ajax({
+                url: "/admin/ajax",
+                type: "GET",
+                cache: false,
+                data: {
+                    "action": "getClientDetails",
+                    "id": userData.id
+                },
+                success: function(resp) {
+
+                    $.each(resp, function(key, value) {
+
+                        if (key === 'country_code') {
+                            value = value.replace('', '+');
+                        }
+                        if (key === 'telephone') {
+                            value = value.replace('+', '');
+                        }
+                        $('#editUserForm [name="' + key + '"]').val(
+                            value);
+                    });
+                    $('#editUserForm [name="country_code"]').trigger('change');
+                }
+            });
+            editUserModal.show();
         });
 
         $("#statusUpdateForm").submit(function(e) {
