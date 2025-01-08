@@ -472,6 +472,175 @@
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">ACTIONS</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body">
+                                                                @php
+                                                                    $success = '';
+                                                                    if (intval($user->kyc_verify) >= 1) {
+                                                                        $success = ($user->status == 0) ? 'bg-success' : 'bg-success text-white';
+                                                                    }
+                                                                @endphp
+                                                                <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
+                                                                        <div class="card-body">
+
+                                                                            <div class="statusToggle" data-status="{{ $user->status }}">
+                                                                                @if ($user->status == 0)
+                                                                                    <div class="badge text-danger {{ $success }}" data-bs-toggle="tooltip" title="Inactive User">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan">
+                                                                                            <path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                                                                            <path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path>
+                                                                                            <path d="M4 16v2a2 2 0 0 0 2 2h2"></path>
+                                                                                            <path d="M16 4h2a2 2 0 0 1 2 2v2"></path>
+                                                                                            <path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path>
+                                                                                            <path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path>
+                                                                                        </svg>
+                                                                                    </div>
+                                                                                @elseif ($user->status == 1)
+                                                                                    <div class="badge text-success {{ $success }}" data-bs-toggle="tooltip" title="Active User">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-user-scan">
+                                                                                            <path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                                                                            <path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path>
+                                                                                            <path d="M4 16v2a2 2 0 0 0 2 2h2"></path>
+                                                                                            <path d="M16 4h2a2 2 0 0 1 2 2v2"></path>
+                                                                                            <path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path>
+                                                                                            <path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path>
+                                                                                        </svg>
+                                                                                    </div>
+                                                                                @endif
+                                                                            </div>
+                                                                            @if ($user->email_confirmed == 0)
+                                                                                <div class="resendToggle" data-status="{{ $user->email_confirmed }}">
+                                                                                    <div class="badge text-danger" data-bs-toggle="tooltip" title="Email Not Verified">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="tabler-icon tabler-icon-mail-x">
+                                                                                            <path d="M13.5 19h-8.5a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"></path>
+                                                                                            <path d="M3 7l9 6l9 -6"></path>
+                                                                                            <path d="M22 22l-5 -5"></path>
+                                                                                            <path d="M17 22l5 -5"></path>
+                                                                                        </svg>
+                                                                                    </div>
+                                                                                    <div class="badge text-info pointer resendVerificationEmail" data-bs-toggle="tooltip" title="Resend Verification Email">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" class="mdi-email-sync-outline">
+                                                                                            <path d="M..."></path> <!-- Add full path data here -->
+                                                                                        </svg>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @else
+                                                                                <div class="statusToggle" data-status="{{ $user->email_confirmed }}">
+                                                                                    <div class="badge text-success" data-bs-toggle="tooltip" title="Email Verified">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" size="25" color="#81C784" class="tabler-icon tabler-icon-mail-check">
+                                                                                            <path d="M..."></path> <!-- Add full path data here -->
+                                                                                        </svg>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endif
+
+                                                                            <div class="viewClient" data-enc="{{ $user->id }}">
+                                                                                <div class="badge text-danger" data-bs-toggle="tooltip" title="View Client">
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler icon-tabler-eye">
+                                                                                        <path d="M..."></path> <!-- Add full path data here -->
+                                                                                    </svg>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="editClient" data-enc="{{ $user->id }}">
+                                                                                <div class="badge text-secondary" data-bs-toggle="tooltip" title="Edit Client">
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler icon-tabler-edit">
+                                                                                        <path d="M..."></path> <!-- Add full path data here -->
+                                                                                    </svg>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="switchClient" data-enc="{{ $user->id }}">
+                                                                                <div class="badge text-secondary" data-bs-toggle="tooltip" title="Switch Client">
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-shuffle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                        <path d="M..."></path> <!-- Add full path data here -->
+                                                                                    </svg>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal fade" id="statusModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                                                            aria-labelledby="statusModalLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                                <div class="modal-content">
+                                                                                    <form action="#" id="statusUpdateForm" method="post">
+                                                                                        @csrf
+                                                                                        <input type="hidden" name="action" value="updateClientStatus">
+                                                                                        <input type="hidden" name="client_id" id="user_id" value="">
+                                                                                        <div class="modal-header">
+                                                                                            <h5 class="modal-title" id="statusModalLabel">Update Status</h5>
+                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                        </div>
+                                                                                        <div class="mb-0 modal-body custom-card card">
+                                                                                            <div class="d-flex align-items-center card-header w-100">
+                                                                                                <div class="me-2">
+                                                                                                    <span class="avatar avatar-rounded">
+                                                                                                        <img src="/admin_assets/assets/images/users/user.png" alt="img">
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <div class="">
+                                                                                                    <div class="fs-15 fw-medium text-capitalize" id="userName"></div>
+                                                                                                    <p class="mb-0 text-muted fs-11" id="userEmail"></p>
+                                                                                                </div>
+
+                                                                                            </div>
+                                                                                            <div class="card-body">
+                                                                                                <div class="mb-3 row">
+                                                                                                    <div class="m-auto col-lg-4">
+                                                                                                        <label class="form-label">User Status</label>
+                                                                                                    </div>
+                                                                                                    <div class="col-lg-8">
+                                                                                                        <div class="form-check form-switch">
+                                                                                                            <input class="form-check-input" type="checkbox" role="switch" name="status"
+                                                                                                                id="user_status" checked>
+                                                                                                            <label class="form-check-label" for="user_status"></label>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="mb-3 row">
+                                                                                                    <div class="m-auto col-lg-4">
+                                                                                                        <label class="form-label">Email Confirmed</label>
+                                                                                                    </div>
+                                                                                                    <div class="col-lg-8">
+
+                                                                                                        <div class="form-check form-switch">
+                                                                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                                                                name="email_confirmed" id="email_status">
+                                                                                                            <label class="form-check-label" for="email_status"></label>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="row">
+                                                                                                    <div class="m-auto col-lg-4">
+                                                                                                        <label class="form-label">KYC Verification</label>
+                                                                                                    </div>
+                                                                                                    <div class="col-lg-8">
+
+                                                                                                        <div class="form-check form-switch">
+                                                                                                            <input class="form-check-input" type="checkbox" role="switch" name="kyc_verify"
+                                                                                                                id="kyc_verify">
+                                                                                                            <label class="form-check-label" for="kyc_verify"></label>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="modal-footer">
+                                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                                            <button type="submit" name="ibRequest" value="update" class="btn btn-primary">Update</button>
+                                                                                        </div>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -705,7 +874,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            <?php 
+                                                                            <?php
                                                                                  if ($clients->has($i) && $clients[$i]->count() > 0) {
                                                                                 foreach ($clients[$i] as $client) { ?>
                                                                             <tr data-index="0">
@@ -743,7 +912,7 @@
                                                                                     <?php } ?>
                                                                                 </td>
                                                                             </tr>
-                                                                            <?php } 
+                                                                            <?php }
                                                                             }?>
                                                                         </tbody>
                                                                     </table>
@@ -1225,4 +1394,63 @@
             }
         })
     </script>
+   <script>
+
+    $(document).ready(function() {
+        window.statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        // Encode PHP data as JSON for JavaScript compatibility
+        var userData = @json($user);
+
+        $('.statusToggle').on('click', function() {
+            // Clear any existing content in modal
+            $("#userName,#userEmail").html("");
+
+            // Populate modal with user data
+            $("#userName").html(userData.fullname || 'N/A');
+            $("#userEmail").html(userData.email || 'N/A');
+            $("#user_id").val(userData.id);
+            $("#user_status").prop("checked", userData.status == 1);
+            $("#email_status").prop("checked", userData.email_confirmed == 1);
+            $("#kyc_verify").prop("checked", userData.kyc_verify == 1);
+
+            // Show the modal
+            if (typeof statusModal !== 'undefined') {
+                statusModal.show();
+            } else {
+                console.error('statusModal is not defined');
+            }
+        });
+
+        $("#statusUpdateForm").submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: "/admin/ajax",
+                type: "POST",
+                cache: false,
+                data: $("#statusUpdateForm").serialize(),
+                success: function(response) {
+
+                    if (response.success == true) {
+                        swal.fire({
+                            icon: "success",
+                            title: "Status Successfully Updated",
+                        }).then((val) => {
+                            location.reload();
+                        });
+                    } else {
+                        swal.fire({
+                            icon: "error",
+                            title: "Something went wrong.",
+                            text: "Please try again or contact support."
+                        }).then((val) => {
+                            location.reload();
+                        });
+                    }
+                }
+            });
+        });
+
+    });
+</script>
+
 @endsection
