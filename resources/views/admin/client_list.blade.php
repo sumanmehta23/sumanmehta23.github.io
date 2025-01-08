@@ -899,7 +899,7 @@
                         },
                         data: JSON.stringify({
                             action: "getClientSwitch",
-                            id: clientData.id, // Pass the correct client ID
+                            client_id: clientData.id, // Pass the correct client ID
                             admin_user: admin_user
                         }),
                         success: function(resp) {
