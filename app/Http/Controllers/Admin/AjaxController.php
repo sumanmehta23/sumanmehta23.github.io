@@ -230,7 +230,7 @@ class AjaxController extends Controller
 
         $clientId = $validated['id'];
 
-        $admin = EmployeeList::where('id',$request->user['id'])->first();
+        $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
 
         try {
             // Find the user to impersonate

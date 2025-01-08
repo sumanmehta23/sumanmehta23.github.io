@@ -885,7 +885,7 @@
                 $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
                     e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
-                    var user = {
+                    var admin_user = {
                         id: "{{ auth()->user()->id }}", // Assuming you want the user's ID or other necessary details from the PHP session
                         name: "{{ auth()->user()->username }}"
                     };
@@ -900,7 +900,7 @@
                         data: JSON.stringify({
                             action: "getClientSwitch",
                             id: clientData.id, // Pass the correct client ID
-                            user: user
+                            admin_user: admin_user
                         }),
                         success: function(resp) {
                             if (resp.success) {
