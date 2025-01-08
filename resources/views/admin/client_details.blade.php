@@ -1,5 +1,19 @@
 @extends('layouts.admin.admin')
 @section('content')
+<style>
+    .pointer,
+    .emailActionToggle,
+    .statusToggle,
+    .viewClient {
+        cursor: pointer;
+    }
+    .switchClient{
+        cursor: pointer;
+    }
+    .editClient{
+        cursor: pointer;
+    }
+</style>
     <div class="modal fade" id="addTicketModal" tabindex="-1" aria-labelledby="addTicketModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
