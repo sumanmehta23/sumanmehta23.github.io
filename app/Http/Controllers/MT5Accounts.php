@@ -240,6 +240,7 @@ class MT5Accounts extends Controller
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
         $referral=$user->referral;
         $ib=$user->ib1;
+        $account_type_id = $validatedData['options'];
         //wealthytrades
         if($referral=="wealthytrades" || $ib=="wealthytrades") {
             $groupCode = str_replace("DF","SNSI",$group->ac_group);
@@ -247,6 +248,7 @@ class MT5Accounts extends Controller
 
             if($group){
                 $_POST["options"] =$group->id;
+                $account_type_id = $group->id;
             }
             // $sql = "select ac_index from account_types where ac_group = '" . $groupCode . "'";
             // $query = $dbh->prepare($sql);
@@ -287,7 +289,7 @@ class MT5Accounts extends Controller
                 'email' => $new_user->Email,
                 'name' => $new_user->Name,
                 'code' => $new_user->Login,
-                'account_type_id' => $validatedData['options'],
+                'account_type_id' => $account_type_id,
                 'leverage' => $new_user->Leverage,
                 'currency' => $new_user->Currency,
                 'trader_password' => $new_user->MainPassword,

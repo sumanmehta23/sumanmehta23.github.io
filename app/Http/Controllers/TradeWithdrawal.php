@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Account;
+use App\Models\BonusTransaction;
 use App\Models\User;
 use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
@@ -47,7 +48,7 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
-
+        // dd($request->account_id);
         // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -72,6 +73,13 @@ class TradeWithdrawal extends Controller
             ->where('user_id', $user_id)
             ->firstOrFail();
 
+        $total_bonus = BonusTransaction::where('account_id', $request->account_id)
+            ->where(function($query) {
+                $query->where('admin_remark', 'Bonus Deposit In')
+                      ->orWhere('admin_remark', 'Bonus Deposit Out');
+            })
+            ->sum('bonus_amount');
+
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');
@@ -83,7 +91,7 @@ class TradeWithdrawal extends Controller
         // Get the account balance
 
         // Check for sufficient balance
-        if ($amount > $account->balance) {
+        if ($amount > ($account->balance - $total_bonus)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',

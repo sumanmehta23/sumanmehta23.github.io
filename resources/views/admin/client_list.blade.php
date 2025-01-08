@@ -881,29 +881,26 @@
                     });
                     editUserModal.show();
                 });
-
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-
+                $('.ajaxDataTable tbody').off('click', '.switchClient');
                 $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
                     e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
-                    var user = {
-                            id: "{{ auth()->user()->id }}",  // Assuming you want the user's ID or other necessary details from the PHP session
-                            name: "{{ auth()->user()->username }}"
-                        };
+                    var admin_user = {
+                        id: "{{ auth()->user()->id }}", // Assuming you want the user's ID or other necessary details from the PHP session
+                        name: "{{ auth()->user()->username }}"
+                    };
 
                     $.ajax({
                         url: "/admin/getClientSwitch", // Ensure this matches your backend route
                         type: "POST",
                         contentType: "application/json",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Include CSRF token in the header
+                        },
                         data: JSON.stringify({
                             action: "getClientSwitch",
-                            id: clientData.id,  // Pass the correct client ID
-                            user: user
+                            client_id: clientData.id, // Pass the correct client ID
+                            admin_user: admin_user
                         }),
                         success: function(resp) {
                             if (resp.success) {
@@ -926,6 +923,7 @@
                         }
                     });
                 });
+
 
 
 

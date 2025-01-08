@@ -288,7 +288,7 @@
                                                             $message = isset($payout_res['message']) ? $payout_res['message'] : '';
                                                         @endphp
                                                         <button
-                                                        onclick="takeAction('{{ json_encode($details) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
+                                                        onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
                                                         type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
                                                     @endif
                                             </div>
@@ -365,7 +365,7 @@
     <script>
         function takeAction(data, email, amount, status) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
-            console.log(sanitizedData);
+            // console.log(sanitizedData);
             const parsedData = JSON.parse(sanitizedData);
             // console.log(parsedData);
             const now = new Date();
@@ -394,8 +394,8 @@
                       ? `
                   <div class="mt-2 col-12 text-start">
                       <label for="transaction_id" class="form-label">Transaction ID</label>
-                      <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData.id}">
-                      <div class="form-control">${parsedData.id}</div>
+                      <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
+                      <div class="form-control">${parsedData}</div>
                   </div>
                   <div class="mt-3 col-12 text-start">
                       <label for="rejection_reason" class="form-label">Rejection Reason</label>
