@@ -1586,6 +1586,41 @@
             });
             editUserModal.show();
         });
+        $(document).off('click', '.switchClient')
+        $(document).on('click', '.switchClient', function(e) {
+            e.preventDefault(); // Prevent default behavior
+            $.ajax({
+                url: "/admin/getClientSwitch", // Ensure this matches your backend route
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Include CSRF token in the header
+                        },
+                data: JSON.stringify({
+                    action: "getClientSwitch",
+                    id: userData.id  // Pass the correct client ID
+                }),
+                success: function(resp) {
+                    if (resp.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: resp.message,
+                        }).then(() => {
+                            // Redirect using the URL from the server
+                            window.location.href = resp.redirectUrl;
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || "Can't switch user. Please try again.",
+                    });
+                }
+            });
+        });
 
         $("#statusUpdateForm").submit(function(e) {
             e.preventDefault();
