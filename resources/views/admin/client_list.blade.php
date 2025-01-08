@@ -881,7 +881,7 @@
                     });
                     editUserModal.show();
                 });
-
+                $('.ajaxDataTable tbody').off('click', '.switchClient');
                 $('.ajaxDataTable tbody').on('click', '.switchClient', function(e) {
                     e.preventDefault(); // Prevent default behavior
                     var clientData = dTtable.row($(this).closest("tr")).data();
