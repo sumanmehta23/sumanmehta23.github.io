@@ -182,8 +182,8 @@ class Ib extends Controller
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
-                $clientLiveAccs = Account::select('id', 'code', 'user_id', 'account_type_id')
-                    ->where('demo',false)
+                Account::select('id', 'code', 'user_id', 'account_type_id')
+                    ->where('demo', false)
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
@@ -236,9 +236,6 @@ class Ib extends Controller
                                         } else {
                                             $symbolmap[$symbolWithoutP] = 'default/path';
                                         }
-                                    } catch (\Exception $e) {
-                                        logger()->error('Error fetching symbol: ' . $e->getMessage());
-                                        $symbolmap[$symbolWithoutP] = 'error/path';
                                     }
                                 }
 
@@ -274,7 +271,13 @@ class Ib extends Controller
                                         Cache::put('ib1History_'.$login,true,now()->addMinutes(50));
                                         logger()->error('Error inserting commission: ' . $e->getMessage());
                                     }
-                                    $ibcommissions=[];
+                                }
+                            
+                                $offset += count($orders);
+                            
+                                $attempts++;
+                                if ($attempts >= $maxTries) {
+                                    logger()->warning("Reached max tries for account: $login after $attempts attempts.");
                                 }
                             }
                             try {
@@ -284,16 +287,14 @@ class Ib extends Controller
                                 logger()->error('Error inserting commission: ' . $e->getMessage());
                             }
                         }
-                        // dd($result2);
-                        $offset = Ib1Commission::where('code', $login)->count();
-                    }
-                }
+                    });
             }
-
+            
             //Calculate IB Wallet
             for ($i = 1; $i <= 15; $i++) {
                 DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
-                $client_live_accs=Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type_id','ibWallet'])
+            
+                Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id', 'ibWallet'])
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
@@ -301,53 +302,55 @@ class Ib extends Controller
                         $query->where('user_id', $userId);
                     })
                     ->where('status', 0)
+                    ->chunk(100, function ($client_live_accs) use ($referral_code, $userId, $ib_acc_plans, $i) {
+                        $walletsToCreate = [];
+            
+                        foreach ($client_live_accs as $ca) {
+                            $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
+                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
+            
+                            if ($commission) {
+                                $ib_level_name = "IB Level $ib_level - D$i";
+                                $ib_wallet = ((float)$commission / 2) * $ca->volume;
 
-                    ->groupBy('order_id')
-                    ->orderByDesc('id')->get();
+                                $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
+                    
+                                if ($formatted_ib_wallet < 0.0000001) {
+                                    $formatted_ib_wallet = '0.0000000000'; // Handle small values
+                                }
 
-                    // dump($client_live_accs);
-                    // info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
-
-                foreach ($client_live_accs as $ca) {
-
-                    $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
-                    // dump( $ib_level);
-                    // dump($ib_level);
-                    // dump($ca->account->account_type_id);
-                    // dump($ib_acc_plans);
-                    // dd($i);
-                    $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-                    // dd($commission);
-                    if ($commission) {
-                        $ib_level_name = "IB Level $ib_level - D$i";
-                        $ib_wallet = ((float) $commission / 2) * $ca->volume;
-
-                        IbWallet::create([
-                            'ib_wallet' => $ib_wallet,
-                            'email' => $referral_code,
-                            'code' => $ca->code,
-                            'user_id' => $userId,
-                            'account_id' => $ca->account->id,
-                            'order_id' => $ca->order_id,
-                            'ib1_commission_id' => $ca->id,
-                            // 'remark' => $ca->client_email,
-                            'ib_level' => $ib_level_name,
-                        ]);
-
-                        // $ca->status= 1;
-                        // $ca->save();
-                    }
-                }
-                // $client_live_accs=Ib1Commission::whereHas('user', function ($query) use ($referral_code, $i) {
-                //     $query->where("ib$i", $referral_code)->where('status', 1);
-                // })
-                // ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
-                //     $query->where('user_id', $userId)->whereNull('order_id');
-                // })
-                // ->where('status', 0)
-                // ->update(['status'=>1]);
+                                $existingWallet = IbWallet::where('user_id', $userId)
+                                    ->where('order_id', $ca->order_id)
+                                    ->exists();
+            
+                                if (!$existingWallet) {
+                                    $walletsToCreate[] = [
+                                        'id' => Str::uuid(),
+                                        'ib_wallet' => $formatted_ib_wallet,
+                                        'email' => $referral_code,
+                                        'code' => $ca->code,
+                                        'user_id' => $userId,
+                                        'account_id' => $ca->account->id,
+                                        'order_id' => $ca->order_id,
+                                        'ib1_commission_id' => $ca->id,
+                                        'ib_level' => $ib_level_name,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ];
+                                }
+                            }
+                        }
+            
+                        if (count($walletsToCreate) > 0) {
+                            try {
+                                IbWallet::insert($walletsToCreate);
+                            } catch (Exception $e) {
+                                logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
+                            }
+                        }
+                    });
             }
-
+            
 
         }
         $refercode =auth()->user()->ib->referral_code;

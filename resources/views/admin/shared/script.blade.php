@@ -179,13 +179,13 @@
             }
         },
         columns: [
-          { data: 'id', name: '#' },
-          { data: 'account_no', name: 'account_no' },
-          { data: 'amount', name: 'amount' },
-          { data: 'deposit_type', name: 'deposit_type' },
-          { data: 'deposit_from', name: 'deposit_from' },
+        //   { data: 'id', name: '#' },
+          { data: 'code', name: 'code' },
+          { data: 'deposit_amount', name: 'deposit_amount'},
+          { data: 'deposit_type', name: 'deposit_type' ,searchable: false},
+          { data: 'deposit_from', name: 'deposit_from' ,searchable: false},
           {
-            data: 'deposit_date', name: 'deposit_date',
+            data: 'deposit_date', name: 'deposit_date',searchable: false
             // render: function (data, type, row) {
             //   var dateTime = row.deposit_date.split(' ');
             //   var date = dateTime[0];
@@ -194,7 +194,7 @@
             //   return return_data;
             // }
           },
-          { data: 'status', name: 'status' },
+          { data: 'status', name: 'status',searchable: false },
           { data: 'action', name: 'action', orderable: false, searchable: false },
           { data: 'created_date', name: 'created_date', visible: false},
           { data: 'created_time', name: 'created_time', visible: false},
@@ -247,8 +247,8 @@
             }
         },
         columns: [
-          { data: 'account_no', name: 'account_no' },
-          { data: 'amount', name: 'amount' },
+          { data: 'code', name: 'code' },
+          { data: 'withdrawal_amount', name: 'withdrawal_amount' },
           { data: 'withdraw_type', name: 'withdraw_type' },
           { data: 'withdraw_to', name: 'withdraw_to' },
           {

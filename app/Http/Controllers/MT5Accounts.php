@@ -193,6 +193,42 @@ class MT5Accounts extends Controller
         $leverage = Leverage::where('account_type_id', $accountTypeId)->get();
         return response()->json($leverage);
     }
+    public function updateLeverage(Request $request)
+    {
+        // dump($user);
+        $login = $request->accountId;
+        $account_code = Account::where('id', $login)->value('code');
+        $accountTypeId = $request->modalAccountId;
+        $newLeverage = $request->leverage;
+        $comment = $request->update_leverage;
+        $updated_user = "";
+
+        if (($error_code = $this->api->UserGet($account_code, $trade_user)) != MTRetCode::MT_RET_OK) {
+            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+        }
+        if (($error_code = $this->api->PositionGetTotal($account_code, $total_positions)) != MTRetCode::MT_RET_OK) {
+            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+        }
+
+        if($total_positions == 0){
+            $trade_user->Leverage = $newLeverage;
+
+            $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                } else {
+                    Account::where('id', $login)->update([
+                        'leverage' => $newLeverage
+                    ]);
+                }
+
+            return redirect()->back()->with('success', 'Leverage updated successfully!');
+        }else{
+            return redirect()->back()->with('warning', 'Trades need to be closed!');
+        }
+
+
+    }
     public function createLiveAccount(Request $request)
     {
         $settings = settings();

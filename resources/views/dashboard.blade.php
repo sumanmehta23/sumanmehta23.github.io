@@ -22,6 +22,7 @@
                                     <h2 class="text-center text-white">${{ $walletBalance }}</h2>
                                 </div>
                             </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
+                            
                         </div>
                     </div>
                 </div>

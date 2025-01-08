@@ -8,6 +8,10 @@
 </div>
 
 <script>
+
+    console.log('abhay');
+    console.log(auth()->user()->id);
+    console.log();
     window.intercomSettings = {
       api_base: "https://api-iam.intercom.io",
       app_id: "hcaolnkq",
@@ -24,6 +28,64 @@
     // We pre-filled your app ID in the widget URL: 'https://widget.intercom.io/widget/hcaolnkq'
     (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',w.intercomSettings);}else{var d=document;var i=function(){i.c(arguments);};i.q=[];i.c=function(args){i.q.push(args);};w.Intercom=i;var l=function(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/hcaolnkq';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);};if(document.readyState==='complete'){l();}else if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})();
 </script>
+
+<div id="changeLeverage" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLiveLabel">Edit Leverage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" id="updateLeverageForm"  action="{{ route('update-leverage') }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="form-label">Leverage</label>
+                                <select class="form-control" name="leverage" id="leverage">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <hr class="my-3 border border-secondary-subtle">
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 text-end">
+                        <button type="button" class="btn btn-link-danger btn-pc-default" data-bs-dismiss="modal">Cancel</button>
+                        <input class="btn btn-primary" type="submit" name="update_leverage" value="Update Leverage">
+                    </div>
+                </div>
+                <input type="hidden" name="modalAccountId" id="modalAccountId">
+                <input type="hidden" name="accountId" id="accountId">
+            </form>
+        </div>
+    </div>
+</div>
+@if(session('success'))
+    <script>
+        Swal.fire({
+            title: '{{ session('success') }}',
+            icon: 'success'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif
+@if(session('warning'))
+    <script>
+        Swal.fire({
+            title: '{{ session('warning') }}',
+            icon: 'warning'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif
+
+
 
 <div id="addBankModal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
     aria-hidden="true">
@@ -140,6 +202,49 @@
     // })
 </script>
 <script type="module" src="/assets/js/custom.js?v=<?= time() ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const changeLeverageModal = document.getElementById('changeLeverage');
+    const leverageSelect = document.getElementById('leverage');
+    const modalAccountIdInput = document.getElementById('modalAccountId');
+    const accountIdInput = document.getElementById('accountId');
+
+    changeLeverageModal.addEventListener('show.bs.modal', (event) => {
+        // Get the button that triggered the modal
+        const button = event.relatedTarget;
+
+        // Extract data from the button
+        const accountTypeId = button.getAttribute('data-id');
+        const leverageValue = button.getAttribute('data-leverage');
+        const accountId = button.getAttribute('data-account');
+
+        // Populate the leverage select field dynamically
+        $.ajax({
+            url: "{{ route('get-leverage') }}?id=" + accountTypeId,
+            success: function(data) {
+                // Clear existing options
+                $("#leverage").html("");
+
+                // Populate the select with new options
+                $.each(data, function(key, value) {
+                    const isSelected = value.account_leverage == leverageValue ? "selected" : "";
+                    $("#leverage").append(
+                        `<option value="${value.account_leverage}" ${isSelected}>${value.account_leverage}</option>`
+                    );
+                });
+
+                // Set the selected leverage in the dropdown
+                leverageSelect.value = leverageValue;
+            }
+        });
+
+        // Set the account type ID in the hidden input field
+        modalAccountIdInput.value = accountTypeId;
+        accountIdInput.value = accountId;
+    });
+});
+
+</script>
 
 </body>
 

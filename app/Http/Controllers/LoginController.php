@@ -192,13 +192,17 @@ class LoginController extends Controller
         // dd($request->all());
         // Validate the request data
         $validator = Validator::make($request->all(), [
-            'fullname' => 'required|string|max:255',
+            'fullname' => 'required|string|max:255|unique:aspnetusers',
             'email' => 'required|string|email|max:255|unique:aspnetusers',
             'password' => 'required|string|confirmed',
             'country' => 'required|string',
             'country_code' => 'required',
             'telephone' => 'required',
+        ], [
+            'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+            'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
         ]);
+
 
         if ($validator->fails()) {
             return redirect()->route('register')->with('errors', $validator->errors());
@@ -256,7 +260,7 @@ class LoginController extends Controller
         $userData['country_code'] =$request->country_code;
         $userData['number'] =$number;
         $userData['username'] =$request->email;
-        
+
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
         $userData['created_at'] =now();
