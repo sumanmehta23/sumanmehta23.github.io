@@ -195,13 +195,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
-    Route::middleware(['is_admin', 'check.permissions'])->group(function () {
+    Route::middleware(['is_admin'])->group(function () {
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/{id}', [Transaction::class, 'index']);
         Route::get('/transactions/pending/{id}', [Transaction::class, 'pending']);
 
-        Route::get('/client_list', [ClientController::class, 'index'])->name('client_list');
-        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details');
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:user:viewAny');
+        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:user:view');
         Route::post('/updateIB', [ClientController::class, 'updateIB'])->name('updateIB');
         Route::post('/updateRM', [ClientController::class, 'updateRM'])->name('updateRM');
         Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser');
@@ -240,13 +240,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
 
         Route::prefix('/clientAccounts')->group(function () {
-            Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts']);
-            Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts']);
+            Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
+            Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
         });
 
         Route::prefix('/ui_settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index']);
-            Route::post('/', [SettingsController::class, 'store']);
+            Route::get('/', [SettingsController::class, 'index'])->middleware('check.permissions:setting:viewAny');
+            Route::post('/', [SettingsController::class, 'store'])->middleware('check.permissions:setting:update');
         });
         Route::prefix('/update_password')->group(function () {
             Route::get('/', [SettingsController::class, 'update_password']);

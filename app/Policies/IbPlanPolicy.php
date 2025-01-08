@@ -40,27 +40,4 @@ class IbPlanPolicy
         return false;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, IbPlan $ibPlan): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, IbPlan $ibPlan): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, IbPlan $ibPlan): bool
-    {
-        return false;
-    }
 }

@@ -42,7 +42,7 @@ $filePermissions = filePermissions($userRole);
     <link rel="stylesheet" href="/admin_assets/assets/libs/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="/admin_assets/assets/libs/flatpickr/flatpickr.min.css">
     <link rel="stylesheet" href="/admin_assets/assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css">
-    @if (!View::hasSection("noDatatable"))
+    @if (!View::hasSection('noDatatable'))
         <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
@@ -89,7 +89,7 @@ $filePermissions = filePermissions($userRole);
             color: var(--custom-black);
         }
 
-        .cursor-pointer{
+        .cursor-pointer {
             cursor: pointer !important;
         }
 
@@ -100,7 +100,7 @@ $filePermissions = filePermissions($userRole);
     } */
     </style>
 
-    @yield("styles")
+    @yield('styles')
 </head>
 
 <body>
@@ -196,10 +196,7 @@ $filePermissions = filePermissions($userRole);
                                         class="mb-0 text-dark fs-14 fw-semibold">{{ ucfirst(session('userData')['username']) }}</span>
                                 </p>
                             </li>
-                            <!-- <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i
-                    class="fe fe-user me-2 fs-18 text-primary"></i>Profile</a></li> -->
-                            <!-- <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i
-                    class="fe fe-calendar me-2 fs-18 text-primary"></i>Task Borad</a></li> -->
+                            
                             <li><a class="dropdown-item d-flex align-items-center" href="/admin/logout"><i
                                         class="fe fe-alert-circle me-2 fs-18 text-primary"></i>Logout</a></li>
                         </ul>
@@ -238,7 +235,309 @@ $filePermissions = filePermissions($userRole);
                             <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                         </svg>
                     </div>
-                    <ul class="main-menu">
+                    <ul class="main-menu" style="margin-left: 0px; margin-right: 0px;">
+
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">MAIN</span>
+                        </li>
+
+                        <li class="slide menu-item-main ">
+                            <a href="/admin/dashboard" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-airplay"></i>
+                                <span class="side-menu__label">Dashboard</span>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">CLIENT</span>
+                        </li>
+
+                        <li class="slide menu-item-main ">
+                            <a href="{{route("admin.clients.index")}}" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-users"></i>
+                                <span class="side-menu__label">Client List</span>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
+                        @if(auth()->user()->can('account:viewLiveAccounts') || auth()->user()->can('account:viewDemoAccounts'))
+
+                            <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-user-plus"></i>
+                                <span class="side-menu__label">Client Accounts</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
+                                data-popper-placement="bottom">
+                                @can('account:viewLiveAccounts')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.liveAccounts')}}" class="side-menu__item ">Live Accounts</a>
+                                    </li>
+                                @endcan
+                                
+                                @can('account:viewDemoAccounts')
+                                <li class="slide menu-item-sub">
+                                    <a href="{{route('admin.demoAccounts')}}" class="side-menu__item ">Demo Accounts</a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endif
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">FINANCE</span>
+                        </li>
+
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-credit-card"></i>
+                                <span class="side-menu__label">Transactions</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 417px);"
+                                data-popper-placement="bottom">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/wallet_deposit" class="side-menu__item ">
+                                        Wallet Deposit
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/wallet_withdrawal" class="side-menu__item ">
+                                        Wallet Withdrawal
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/trading_deposit" class="side-menu__item ">
+                                        Trading Deposit
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/trading_withdrawal" class="side-menu__item ">
+                                        Trading Withdrawal
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/internal_transfer" class="side-menu__item ">
+                                        Internal Transfer
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-list"></i>
+                                <span class="side-menu__label">Pend.,Transactions</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 461px);"
+                                data-popper-placement="bottom">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/pending/wallet_deposit" class="side-menu__item ">
+                                        Wallet Deposit
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/pending/wallet_withdrawal" class="side-menu__item ">
+                                        Wallet Withdrawal
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/pending/trading_deposit" class="side-menu__item ">
+                                        Trading Deposit
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/transactions/pending/trading_withdrawal" class="side-menu__item ">
+                                        Trading Withdrawal
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">INTRODUCING BROKER</span>
+                        </li>
+
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-user"></i>
+                                <span class="side-menu__label">IB</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 501px);"
+                                data-popper-placement="top">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/ibdashboard" class="side-menu__item ">
+                                        IB Dashboard
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/iblist" class="side-menu__item ">
+                                        IB Requests
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/iblist_active" class="side-menu__item ">
+                                        IB Users
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/ib_settings" class="side-menu__item ">
+                                        IB Com. Settings
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">MT5 CONFIGURATION</span>
+                        </li>
+
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-help-circle"></i>
+                                <span class="side-menu__label">META Config</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 585px);"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/mt5_groups" class="side-menu__item ">
+                                        MT5 Groups
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">ADMIN USERS</span>
+                        </li>
+
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-user"></i>
+                                <span class="side-menu__label">Staff Management</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 669px);"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/roles" class="side-menu__item ">
+                                        Roles
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/role_permissions" class="side-menu__item ">
+                                        Role Permissions
+                                    </a>
+                                </li>
+
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/admin_users" class="side-menu__item ">
+                                        Staffs Management
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-help-circle"></i>
+                                <span class="side-menu__label">Help Desk</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 713px);"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/all_tickets" class="side-menu__item ">
+                                        All Tickets
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/open_tickets" class="side-menu__item ">
+                                        Open Tickets
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/closed_tickets" class="side-menu__item ">
+                                        Closed Tickets
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class="slide has-sub menu-item-main ">
+                            <a href="#" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-settings"></i>
+                                <span class="side-menu__label">Settings</span>
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1"
+                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/update_password" class="side-menu__item ">
+                                        Update Password
+                                    </a>
+                                </li>
+
+
+                                <li class="slide menu-item-sub">
+                                    <a href="/admin/ui_settings" class="side-menu__item ">
+                                        UI Settings
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+
+                    </ul>
+                    {{-- <ul class="main-menu">
+                        
                         @foreach ($categories as $category)
                         <li class="slide__category menu-item-category">
                             <span class="category-name">{{ $category->category_name }}</span>
@@ -253,10 +552,7 @@ $filePermissions = filePermissions($userRole);
                                     return $item->filename == $requestUri;
                                 }) ? 'open' : '';
                             @endphp
-                            @if (
-                                (in_array($main->id, $rolePermissionsList) || $userRole == "Super Admin") &&
-                                $main->show_in_menu == 1 
-                            )
+                            @if ((in_array($main->id, $rolePermissionsList) || $userRole == 'Super Admin') && $main->show_in_menu == 1)
                                 <li class="slide {{ ($sub_menus->count() > 0) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
                                     <a href="{{ $main->filename }}" class="side-menu__item">
                                         <i class="side-menu__icon {{ $main->icon }}"></i>
@@ -270,8 +566,8 @@ $filePermissions = filePermissions($userRole);
                                             @php
                                                 $active = ($requestUri == $sub->filename) ? 'active' : '';
                                             @endphp
-                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == "Super Admin")
-                                                @if($sub->pagename != 'Permissions List')    
+                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == 'Super Admin')
+                                                @if ($sub->pagename != 'Permissions List')    
                                                     <li class="slide menu-item-sub">
                                                         <a href="{{ $sub->filename }}" class="side-menu__item {{ $active }}">
                                                             {{ $sub->pagename }}
@@ -286,7 +582,7 @@ $filePermissions = filePermissions($userRole);
                         @endforeach
                     @endforeach
 
-                    </ul>
+                    </ul> --}}
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
                             width="24" height="24" viewBox="0 0 24 24">
                             <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
