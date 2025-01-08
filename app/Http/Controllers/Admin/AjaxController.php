@@ -10,17 +10,18 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\Permission;
 use App\Models\EmployeeList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Models\WalletDeposit;
-use Illuminate\Support\Facades\Cache;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class AjaxController extends Controller
@@ -171,6 +172,9 @@ class AjaxController extends Controller
                     case 'resendVerificationEmail':
                         $result = $this->resendVerificationEmail($requestData);
                         break;
+                    case 'getPermissions':
+                        $result = $this->getPermissions($request);
+                        break;
                     default:
                         $result = ['error' => 'Invalid function call'];
                         break;
@@ -193,6 +197,29 @@ class AjaxController extends Controller
         } else {
             return ['success' => false,'error' => 'User not found'];
         }
+    }
+
+    public function getPermissions(Request $request){
+
+        
+
+        // Base query
+
+        $rmCondition = Permission::orderBy('name', 'asc');
+
+
+
+        // dd($query);
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+            ->addColumn('action', function($row){
+                return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+            })
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
     public function getListOfGroups($string)
     {

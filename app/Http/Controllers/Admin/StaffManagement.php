@@ -6,10 +6,11 @@ use App\Models\Page;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\EmployeeList;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
+use App\Models\PermissionGroup;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class StaffManagement extends Controller
 {
@@ -32,26 +33,27 @@ class StaffManagement extends Controller
     {  
         $id = $request->id;
         $roles = Role::where('id', $id)->first();
-        $pages = Page::all();
-        $permissions = Permission::where('role_id', $id)->get()->toArray();
-        $rolePermissions = array_values(array_column($permissions, 'page_id'));
+        $permissionGroups = PermissionGroup::with("permissions")->get();
+        $rolePermissions = Role::where('id', $id)->with('permissions')->first();
+        // dd($rolePermissions);
+        // $rolePermissions = array_values(array_column($permissions, 'page_id'));
         $menu = [];
-        foreach ($pages as $page) {
-            if ($page['is_submenu'] == 0) {
-                $menu[$page['page_id']] = [
-                    'page_name' => $page['pagename'],
-                    'page_id' => $page['id'],
-                    'submenu' => []
-                ];
-            } else {
-                $menu[$page['is_submenu']]['submenu'][] = [
-                    'page_id' => $page['id'],
-                    'page_name' => $page['pagename']
-                ];
-            }
-        }
+        // foreach ($permissions as $page) {
+        //     if ($page['is_submenu'] == 0) {
+        //         $menu[$page['page_id']] = [
+        //             'page_name' => $page['pagename'],
+        //             'page_id' => $page['id'],
+        //             'submenu' => []
+        //         ];
+        //     } else {
+        //         $menu[$page['is_submenu']]['submenu'][] = [
+        //             'page_id' => $page['id'],
+        //             'page_name' => $page['pagename']
+        //         ];
+        //     }
+        // }
 
-        return view('admin.permissions_list', compact('menu', 'rolePermissions', 'pages', 'roles'));
+        return view('admin.permissions_list', compact('menu', 'rolePermissions', 'permissionGroups', 'roles'));
     }
     public function addRole(Request $request)
     {
@@ -101,44 +103,44 @@ class StaffManagement extends Controller
     public function updateRolePermissions(Request $request)
     {
         $request->validate([
-            'pages' => 'required|array',
+            'permissions' => 'required|array',
         ]);
         $roleId = $request->input('role_id');
-        Permission::where('role_id', $roleId)->delete();
+        // Permission::where('role_id', $roleId)->delete();
         
-        $pages = $request->input('pages');
+        $permissions = $request->input('permissions');
         $createdBy = session('userData')['client_index'];
 
-        $currentPermissions = Permission::where('role_id', $roleId)->pluck('page_id')->toArray();
-        $pagesToAdd = array_diff($pages, $currentPermissions);
-        $pagesToRemove = array_diff($currentPermissions, $pages);
-
-        foreach ($pagesToAdd as $pageId) {
-            Permission::updateOrCreate(
-                [
-                    'role_id' => $roleId,
-                    'page_id' => $pageId,
-                ],
-                [
-                    'role_id' => $roleId,
-                    'page_id' => $pageId,
-                    'created_by' => $createdBy,
-                ]
-            );
-        }
+        // $currentPermissions = Permission::where('role_id', $roleId)->pluck('page_id')->toArray();
+        // $pagesToAdd = array_diff($pages, $currentPermissions);
+        // $pagesToRemove = array_diff($currentPermissions, $pages);
+        Role::find($roleId)->permissions()->sync($permissions);
+        // foreach ($pagesToAdd as $pageId) {
+        //     Permission::updateOrCreate(
+        //         [
+        //             'role_id' => $roleId,
+        //             'page_id' => $pageId,
+        //         ],
+        //         [
+        //             'role_id' => $roleId,
+        //             'page_id' => $pageId,
+        //             'created_by' => $createdBy,
+        //         ]
+        //     );
+        // }
         
-        $category_id = Page::find($pageId)->value('page_category_id');
+        // $category_id = Page::find($pageId)->value('page_category_id');
         // Invalidate cached categories and menus for the specific roleId
-        Cache::forget('page_categories_all_role_' . $roleId); // Invalidate cached categories for this role
-        Cache::forget('main_menus_category_' . $category_id . '_role_' . $roleId); // Invalidate main menus for the category and role
-        Cache::forget('sub_menus_main_' . $pageId . '_role_' . $roleId); // Invalidate submenus for the page and role
+        // Cache::forget('page_categories_all_role_' . $roleId); // Invalidate cached categories for this role
+        // Cache::forget('main_menus_category_' . $category_id . '_role_' . $roleId); // Invalidate main menus for the category and role
+        // Cache::forget('sub_menus_main_' . $pageId . '_role_' . $roleId); // Invalidate submenus for the page and role
 
 
-        if (!empty($pagesToRemove)) {
-            Permission::where('role_id', $roleId)
-                    ->whereIn('page_id', $pagesToRemove)
-                    ->delete();
-        }
+        // if (!empty($pagesToRemove)) {
+        //     Permission::where('role_id', $roleId)
+        //             ->whereIn('page_id', $pagesToRemove)
+        //             ->delete();
+        // }
         // foreach ($pages as $pageId) {
         //     $permissions[] = [
         //         'page_id' => $pageId,

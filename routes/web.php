@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\PermissionController;
 use App\Models\Account;
+use App\Models\Permission;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
+use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
@@ -34,7 +37,6 @@ use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
-use App\Http\Controllers\PammController;
 Route::get("/se",function(){
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
@@ -175,6 +177,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
 
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
+    Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
+
+    // 
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
@@ -268,8 +273,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount');
 
         Route::get("/search", [SearchController::class, 'index']);
-
-
+        Route::resource('permissions', PermissionController::class);
+        // Route::get("/roles-permissions", [SearchController::class, 'index']);
         Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });
