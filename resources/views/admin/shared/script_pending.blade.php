@@ -27,10 +27,11 @@
         ajax: {
             url: '/admin/getPendingWalletDeposit2',
             type: 'GET',
-            data: function(d) {
-            d.status = $('select[name=status]').val();
-            return d;
-            }, // Ensure this is populated dynamically if needed.
+            // data: function(d) {
+            // d.status = $('select[name=status]').val();
+            // return d;
+            // }, // Ensure this is populated dynamically if needed.
+            data: {},
             dataSrc: function(json) {
                 return json.data;
             }
@@ -88,10 +89,11 @@
         ajax: {
             url: '/admin/getPendingWalletWithdrawal2',
             type: 'GET',
-            data: function(d) {
-            d.status = $('select[name=status]').val();
-            return d;
-            },
+            // data: function(d) {
+            // d.status = $('select[name=status]').val();
+            // return d;
+            // },
+            data: {},
             dataSrc: function(json) {
                 return json.data;
             }
@@ -153,10 +155,11 @@
         ajax: {
             url: '/admin/getPendingTradingDeposit2',
             type: 'GET',
-            data: function(d) {
-            d.status = $('select[name=status]').val();
-            return d;
-            }, // Ensure this is populated dynamically if needed.
+            // data: function(d) {
+            // d.status = $('select[name=status]').val();
+            // return d;
+            // }, // Ensure this is populated dynamically if needed.
+            data: {},
             dataSrc: function(json) {
                 return json.data;
             }
@@ -204,10 +207,11 @@
         ajax: {
             url: '/admin/getPendingTradingWithdrawal2',
             type: 'GET',
-            data: function(d) {
-            d.status = $('select[name=status]').val();
-            return d;
-            }, // Ensure this is populated dynamically if needed.
+            // data: function(d) {
+            // d.status = $('select[name=status]').val();
+            // return d;
+            // }, // Ensure this is populated dynamically if needed.
+            data: {},
             dataSrc: function(json) {
                 return json.data;
             }
@@ -233,11 +237,11 @@
           { data: 'created_time', name: 'created_time', visible: false},
         ]
       });
-      $('#statusFilter').on('change', function () {
-        tableWalletDeposit.ajax.reload();
-        tableWalletWithdrawal.ajax.reload();
-        tableTradingDeposit.ajax.reload();
-        tableTradingWithdrawal.ajax.reload();
-      });
+    //   $('#statusFilter').on('change', function () {
+    //     tableWalletDeposit.ajax.reload();
+    //     tableWalletWithdrawal.ajax.reload();
+    //     tableTradingDeposit.ajax.reload();
+    //     tableTradingWithdrawal.ajax.reload();
+    //   });
     });
   </script>

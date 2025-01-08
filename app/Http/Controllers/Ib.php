@@ -182,118 +182,129 @@ class Ib extends Controller
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
             for ($i = 1; $i <= 15; $i++) {
-                $clientLiveAccs = Account::select('id', 'code', 'user_id', 'account_type_id')
-                    ->where('demo',false)
+                Account::select('id', 'code', 'user_id', 'account_type_id')
+                    ->where('demo', false)
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
-                    ->get();
-                    // info('Total accounts for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($clientLiveAccs) . json_encode($clientLiveAccs->pluck('code')));
-                    // dd($clientLiveAccs);
-                foreach ($clientLiveAccs as $client) {
-                    $login = $client->code;
-                    $from = 'September 01,2024';
-                    $to = 'March 31,2080';
-                    $total = 0;
-                    $isProcessed=Cache::get('ib1History_'.$login);
-                    if($isProcessed){
-                        continue;
-                    }
-                    Cache::put('ib1History_'.$login,true,now()->addMinutes(20));
-                    if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
-                        session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-                    }
+                    ->chunk(100, function ($clientLiveAccs) use ($referral_code, $i) {
+                        foreach ($clientLiveAccs as $client) {
+                            $login = $client->code;
+                            $from = 'September 01,2024';
+                            $to = 'March 31,2080';
+                            $total = 0;
 
-                    $closedOrderHistory = $total;
+                            $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
+                            if ($error_code != MTRetCode::MT_RET_OK) {
+                                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                                continue;
+                            }
 
-                    if ($closedOrderHistory == 0) {
-                        continue;
-                    }
-                    $offset = Ib1Commission::where('code', $login)->count();
+                            $closedOrderHistory = $total;
+                            if ($closedOrderHistory == 0) {
+                                continue;
+                            }
 
-                    $total = $closedOrderHistory;
-                    // dump($login);
-                    // dd($total);
-                    // info('Getting trades for '.$login);
-                    while ($offset < $total) {
-                        if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
-                            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-                        }
-                        $result2 = $orders;
+                            $offset = Ib1Commission::where('code', $login)->count();
+                            $total = $closedOrderHistory;
 
-                        if ($result2) {
-                            $ibcommissions=[];
-                            foreach ($result2 as $item) {
+                            $maxTries = 10;
+                            $attempts = 0;
+                            $processedOrders = [];
 
-                                $symbolWithoutP = $item->Symbol;
+                            while ($offset < $total && $attempts < $maxTries) {
+                                $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
+                                if ($error_code != MTRetCode::MT_RET_OK) {
+                                    session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                                    break;
+                                }
 
-                                if (!isset($symbolmap[$symbolWithoutP])) {
-                                    try {
-                                        $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
+                                if ($orders) {
+                                    $ibcommissions = [];
+                                    $orderIdsAndCodes = [];
 
-                                        if ($symbol) {
-                                            $symbolmap[$symbolWithoutP] = $symbol->path;
-                                        } else {
-                                            $symbolmap[$symbolWithoutP] = 'default/path';
+                                    foreach ($orders as $item) {
+                                        $symbolWithoutP = $item->Symbol;
+                                        if (!isset($symbolmap[$symbolWithoutP])) {
+                                            try {
+                                                $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
+                                                $symbolmap[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
+                                            } catch (Exception $e) {
+                                                logger()->error('Error fetching symbol: ' . $e->getMessage());
+                                                $symbolmap[$symbolWithoutP] = 'error/path';
+                                            }
                                         }
-                                    } catch (\Exception $e) {
-                                        logger()->error('Error fetching symbol: ' . $e->getMessage());
-                                        $symbolmap[$symbolWithoutP] = 'error/path';
+
+                                        $symbolpath = $symbolmap[$symbolWithoutP];
+                                        $b = (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) ? 0.00001 : 0.0001;
+
+                                        if (in_array($item->Order . '-' . $item->Login, $processedOrders)) {
+                                            continue;
+                                        }
+
+                                        $existingCommission = Ib1Commission::where('order_id', $item->Order)
+                                            ->where('code', $item->Login)
+                                            ->exists();
+
+                                        if ($existingCommission) {
+                                            continue;
+                                        }
+
+                                        $processedOrders[] = $item->Order . '-' . $item->Login;
+
+                                        $ibcommissions[] = [
+                                            'id' => Str::uuid(),
+                                            'user_id' => $client->user_id,
+                                            'account_id' => $client->id,
+                                            'order_id' => $item->Order,
+                                            'code' => $item->Login,
+                                            'init_volume' => $item->VolumeInitial,
+                                            'symbol' => $symbolWithoutP,
+                                            'volume' => $item->VolumeInitial * $b,
+                                            'time_closed' => Carbon::createFromTimestamp($item->TimeDone),
+                                            'created_at' => now(),
+                                            'updated_at' => now(),
+                                        ];
+
+                                        if (count($ibcommissions) >= 50) {
+                                            try {
+                                                Ib1Commission::insert($ibcommissions);
+                                            } catch (Exception $e) {
+                                                logger()->error('Error inserting commission: ' . $e->getMessage());
+                                            }
+                                            $ibcommissions = [];
+                                        }
+                                    }
+
+                                    if (count($ibcommissions) > 0) {
+                                        try {
+                                            Ib1Commission::insert($ibcommissions);
+                                        } catch (Exception $e) {
+                                            logger()->error('Error inserting commission: ' . $e->getMessage());
+                                        }
                                     }
                                 }
 
-                                $symbolpath = $symbolmap[$symbolWithoutP];
+                                $offset += count($orders);
 
-                                if (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) {
-                                    $b = 0.00001;
-                                } else {
-                                    $b = 0.0001;
-                                }
-                                $order = $item->Order;
-                                $login = $item->Login;
-                                $init_volume = $item->VolumeInitial;
-                                $volume = $init_volume * $b;
-                                $time_closed = Carbon::createFromTimestamp($item->TimeDone);
-                                $ibcommissions[]=[
-                                    'id' => Str::uuid()->toString(),
-                                    'user_id' => $client->user_id,
-                                    'account_id' => $client->id,
-                                    'order_id' => $order,
-                                    'code' => $login,
-                                    'init_volume' => $init_volume,
-                                    'symbol' => $symbolWithoutP,
-                                    'volume' => $volume,
-                                    'time_closed' => $time_closed,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
-                                if(count($ibcommissions) == 50){
-                                    try {
-                                        Ib1Commission::insert($ibcommissions);
-                                    } catch (Exception $e) {
-                                        Cache::put('ib1History_'.$login,true,now()->addMinutes(50));
-                                        logger()->error('Error inserting commission: ' . $e->getMessage());
-                                    }
-                                    $ibcommissions=[];
+                                $attempts++;
+                                if ($attempts >= $maxTries) {
+                                    logger()->warning("Reached max tries for account: $login after $attempts attempts.");
                                 }
                             }
-                            try {
-                                 Ib1Commission::insert($ibcommissions);
-                            } catch (Exception $e) {
-                                Cache::put('ib1History_'.$login,true,now()->addMinutes(50));
-                                logger()->error('Error inserting commission: ' . $e->getMessage());
+
+                            if ($attempts >= $maxTries) {
+                                session()->flash('error', "Reached maximum attempts for account: $login. Skipping.");
                             }
                         }
-                        // dd($result2);
-                        $offset = Ib1Commission::where('code', $login)->count();
-                    }
-                }
+                    });
             }
 
             //Calculate IB Wallet
             for ($i = 1; $i <= 15; $i++) {
                 DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
-                $client_live_accs=Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15','account:id,account_type_id','ibWallet'])
+
+                Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id', 'ibWallet'])
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
@@ -301,51 +312,53 @@ class Ib extends Controller
                         $query->where('user_id', $userId);
                     })
                     ->where('status', 0)
+                    ->chunk(100, function ($client_live_accs) use ($referral_code, $userId, $ib_acc_plans, $i) {
+                        $walletsToCreate = [];
 
-                    ->groupBy('order_id')
-                    ->orderByDesc('id')->get();
+                        foreach ($client_live_accs as $ca) {
+                            $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
+                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
 
-                    // dump($client_live_accs);
-                    // info('Calculate IB Wallet for ref code '.$referral_code." for user ".$userId." for level ".$i." is ".count($client_live_accs) . json_encode($client_live_accs->pluck('code')));
+                            if ($commission) {
+                                $ib_level_name = "IB Level $ib_level - D$i";
+                                $ib_wallet = ((float)$commission / 2) * $ca->volume;
 
-                foreach ($client_live_accs as $ca) {
+                                $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
 
-                    $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
-                    // dump( $ib_level);
-                    // dump($ib_level);
-                    // dump($ca->account->account_type_id);
-                    // dump($ib_acc_plans);
-                    // dd($i);
-                    $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-                    // dd($commission);
-                    if ($commission) {
-                        $ib_level_name = "IB Level $ib_level - D$i";
-                        $ib_wallet = ((float) $commission / 2) * $ca->volume;
+                                if ($formatted_ib_wallet < 0.0000001) {
+                                    $formatted_ib_wallet = '0.0000000000'; // Handle small values
+                                }
 
-                        IbWallet::create([
-                            'ib_wallet' => $ib_wallet,
-                            'email' => $referral_code,
-                            'code' => $ca->code,
-                            'user_id' => $userId,
-                            'account_id' => $ca->account->id,
-                            'order_id' => $ca->order_id,
-                            'ib1_commission_id' => $ca->id,
-                            // 'remark' => $ca->client_email,
-                            'ib_level' => $ib_level_name,
-                        ]);
+                                $existingWallet = IbWallet::where('user_id', $userId)
+                                    ->where('order_id', $ca->order_id)
+                                    ->exists();
 
-                        // $ca->status= 1;
-                        // $ca->save();
-                    }
-                }
-                // $client_live_accs=Ib1Commission::whereHas('user', function ($query) use ($referral_code, $i) {
-                //     $query->where("ib$i", $referral_code)->where('status', 1);
-                // })
-                // ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
-                //     $query->where('user_id', $userId)->whereNull('order_id');
-                // })
-                // ->where('status', 0)
-                // ->update(['status'=>1]);
+                                if (!$existingWallet) {
+                                    $walletsToCreate[] = [
+                                        'id' => Str::uuid(),
+                                        'ib_wallet' => $formatted_ib_wallet,
+                                        'email' => $referral_code,
+                                        'code' => $ca->code,
+                                        'user_id' => $userId,
+                                        'account_id' => $ca->account->id,
+                                        'order_id' => $ca->order_id,
+                                        'ib1_commission_id' => $ca->id,
+                                        'ib_level' => $ib_level_name,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ];
+                                }
+                            }
+                        }
+
+                        if (count($walletsToCreate) > 0) {
+                            try {
+                                IbWallet::insert($walletsToCreate);
+                            } catch (Exception $e) {
+                                logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
+                            }
+                        }
+                    });
             }
 
 

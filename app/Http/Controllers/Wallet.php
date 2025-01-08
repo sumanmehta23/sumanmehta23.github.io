@@ -418,7 +418,6 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request)
     {
-
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1',
             'withdraw_type' => 'required|string',

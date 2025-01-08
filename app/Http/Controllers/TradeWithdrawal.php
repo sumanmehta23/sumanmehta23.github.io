@@ -47,6 +47,7 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
+
         // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -60,6 +61,12 @@ class TradeWithdrawal extends Controller
         $user_id = auth()->user()->id;
         $user_email = auth()->user()->email;
         $account_id = $request->account_id;
+        $request->validate([
+            'account_id' => 'required',
+        ], [
+            'account_id.required' => 'Account is not selected.',
+        ]);
+
         $account = Account::with('accountType')
             ->where('id', $account_id)
             ->where('user_id', $user_id)
