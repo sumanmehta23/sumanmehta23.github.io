@@ -75,8 +75,8 @@ class TradeWithdrawal extends Controller
 
         $total_bonus = BonusTransaction::where('account_id', $request->account_id)
             ->where(function($query) {
-                $query->where('admin_remark', 'Bonus Deposit In')
-                      ->orWhere('admin_remark', 'Bonus Deposit Out');
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
             })
             ->sum('bonus_amount');
 
@@ -91,7 +91,7 @@ class TradeWithdrawal extends Controller
         // Get the account balance
 
         // Check for sufficient balance
-        if ($amount > ($account->balance - $total_bonus)) {
+        if ((float) ($amount) > ((float) $account->balance - (float) $total_bonus)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',
