@@ -13,6 +13,12 @@
         .viewClient {
             cursor: pointer;
         }
+        .switchClient{
+            cursor: pointer;
+        }
+        .editClient{
+            cursor: pointer;
+        }
     </style>
     <div class="modal fade" id="addUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="addUserLabel" aria-hidden="true">
