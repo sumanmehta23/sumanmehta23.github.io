@@ -27,4 +27,8 @@ class EmployeeList extends Authenticatable
         )
         ->withPivot('added_by');
     }
+    public function hasPermission($permission)
+    {
+        return $this->role->permissions->contains('name', $permission);
+    }
 }

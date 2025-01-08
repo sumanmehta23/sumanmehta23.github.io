@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 
 class CheckUserPermissions
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, ...$permissions)
     {
         
        if(!Auth::check()){
@@ -47,6 +47,9 @@ class CheckUserPermissions
             }else{
                 return response()->view('errors.401', [], 401);
             }
+        }
+        if (!$request->user()->hasPermissions($permissions)) {
+            return redirect()->route('no-permission');  
         }
         return $next($request);
     }

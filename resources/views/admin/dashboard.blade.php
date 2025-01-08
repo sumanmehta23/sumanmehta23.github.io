@@ -15,6 +15,9 @@
             <!-- ROW-1 -->
 
             <div class="row">
+                @can('dashboard:viewTotalDeposit')
+                    
+                
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
@@ -32,6 +35,7 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
