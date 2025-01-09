@@ -84,15 +84,21 @@ class SumsubController extends Controller
 
         $email = $request->email;
 
-        $httpMethod = "POST";
+        $requestMethod = 'GET';
         $requestUrl = "/resources/applicants?-;externalUserId=" . urlencode($email)."/one"; // Add externalUserId as a query parameter
         $payload = ""; // Empty payload for this request
         $timestamp = time();
+        $apiUrl = '/resources/applicants/-;externalUserId=' . urlencode($email) . '/one';
+        $requestBody = '';
+        $valueToSign = $timestamp . $requestMethod . $apiUrl;
+        if (!empty($requestBody)) {
+            $valueToSign .= $requestBody;
+        }
 
         // Generate signature
-        $stringToSign = $httpMethod . ' ' . $requestUrl . "\n" . $timestamp . "\n" . $payload;
+        $stringToSign = $requestMethod . ' ' . $requestUrl . "\n" . $timestamp . "\n" . $payload;
         $signature = base64_encode(hash_hmac('sha256', $stringToSign, $secretKey, true));
-
+        $signatureHex = bin2hex($signature);
         // Headers
         $headers = [
             "X-App-Token: $appToken",
@@ -104,14 +110,21 @@ class SumsubController extends Controller
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.sumsub.com' . $requestUrl, // Full URL including query parameters
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => $httpMethod,
-            CURLOPT_HTTPHEADER => $headers,
+        // CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId={{$email}}/one",
+        CURLOPT_URL => 'https://api.sumsub.com' . $apiUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => $requestMethod,
+        // CURLOPT_POSTFIELDS => $requestBody,
+        CURLOPT_HTTPHEADER => [
+            'X-App-Token: ' . $appToken,
+            'X-App-Access-Ts: ' . $timestamp,
+            'X-App-Access-Sig: ' . $signatureHex,
+        ],
         ]);
 
         $response = curl_exec($curl);
@@ -120,15 +133,12 @@ class SumsubController extends Controller
         curl_close($curl);
 
         if ($err) {
-            return response()->json(['error' => "cURL Error: $err"], 500);
+        echo "cURL Error #:" . $err;
+        } else {
+        echo $response;
         }
 
         $decodedResponse = json_decode($response, true);
-
-        // Debugging Logs
-        \Log::info('Sumsub Request URL: ' . $requestUrl);
-        \Log::info('Sumsub Request StringToSign: ' . $stringToSign);
-        \Log::info('Sumsub Response: ' . $response);
 
         if (isset($decodedResponse['errorCode'])) {
             return response()->json($decodedResponse, 401); // Handle API error response
@@ -136,7 +146,4 @@ class SumsubController extends Controller
 
         return response()->json($decodedResponse, 200);
     }
-
-
-
 }
