@@ -360,7 +360,7 @@ $filePermissions = filePermissions($userRole);
                                 data-popper-placement="bottom">
 
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/pending/wallet_deposit" class="side-menu__item ">
+                                    <a href="{{route('admin.')}}/admin/transactions/pending/wallet_deposit" class="side-menu__item ">
                                         Wallet Deposit
                                     </a>
                                 </li>
