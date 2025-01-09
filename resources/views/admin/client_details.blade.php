@@ -1603,6 +1603,10 @@
         $(document).off('click', '.switchClient')
         $(document).on('click', '.switchClient', function(e) {
             e.preventDefault(); // Prevent default behavior
+            var admin_user = {
+                id: "{{ auth()->user()->id }}", // Assuming you want the user's ID or other necessary details from the PHP session
+                name: "{{ auth()->user()->username }}"
+            };
             $.ajax({
                 url: "/admin/getClientSwitch", // Ensure this matches your backend route
                 type: "POST",
@@ -1612,7 +1616,8 @@
                         },
                 data: JSON.stringify({
                     action: "getClientSwitch",
-                    id: userData.id  // Pass the correct client ID
+                    client_id: userData.id, // Pass the correct client ID
+                    admin_user: admin_user
                 }),
                 success: function(resp) {
                     if (resp.success) {
