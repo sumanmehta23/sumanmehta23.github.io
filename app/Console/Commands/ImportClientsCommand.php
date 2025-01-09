@@ -3,8 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
 use League\Csv\Reader;
 use App\Models\Country;
+use App\Models\AccountType;
+use App\Services\MT5Service;
+use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,12 +28,28 @@ class ImportClientsCommand extends Command
      * @var string
      */
     protected $description = 'Parse a CSV file and output its content';
+    protected $api;
+    protected $mailService;
+    protected $mt5Service;
+    // public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    // {
+    //     $this->mt5Service = $mt5Service;
+    //     $this->mt5Service->connect();
+    //     $this->api = $this->mt5Service->getApi();
+    //     $this->mailService = $mailService;
+    //     // $this->api = $api;
 
+    // }
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
     {
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
+        $this->mailService = $mailService;
+        // $this->api = $api;
         $filePath = $this->argument('file');
         $missingcountries=0;
         // Validate the file
@@ -65,7 +86,42 @@ class ImportClientsCommand extends Command
                 if($existing){
                     if(empty( $existing->ib1) || $existing->ib1=='noIB'){
                         $existing->ib1='Swingtradinglab';
-                        
+                        $accountcount=$existing->accounts()->count();
+                        foreach($existing->accounts as $account){
+                            dump($account->accountType);
+                           
+                           $groupCode = str_replace("DF","ALEX",$account->accountType->ac_group);
+                            $group = AccountType::where('ac_group', $groupCode)->first();
+                            if($group){
+                                $_POST["options"] =$group->id;
+                                $account_type_id = $group->id;
+                                $code=$account->code;
+                                dump($account_type_id);
+                                if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                    //dd(MTRetCode::GetError($error_code));
+                                    // return response()->json([
+                                    //     'status' => 'warning',
+                                    //     'message' => 'Something went wrong on Updating details',
+                                    //     'error' => MTRetCode::GetError($error_code)
+                                    // ], 400);
+                                    $this->error( 'Something went wrong on Updating details '.$code." " . MTRetCode::GetError($error_code));
+                                }
+                                dd($trade_user);
+                                // Fetch account type details
+                                $trade_user->Group = $group->ac_group;
+                    
+                                // Update user data via API
+                                $updated_user = "";
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    $this->error( "Something went wrong on Updating details $code " . MTRetCode::GetError($error_code));
+                                } else {
+                                    $account->account_type_id = $account_type_id;
+                                    // $account->save();
+                                    
+                                }
+                            }
+                        }
+                        $this->info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
                         // $existing->save();
                     }else{
                         $this->error("Row {$record['Your email address']}: User already exists and has an IB1");
