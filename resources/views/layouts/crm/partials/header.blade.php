@@ -48,6 +48,11 @@
         });
     </script>
     @yield('styles')
+    <?php
+        if (app()->environment('local')) {
+            $marginTopStyle = 'style="margin-top: 40px;"' ?? '';
+        }
+    ?>
     <style>
         .pc-sidebar .navbar-content {
             overflow-y: scroll;
@@ -220,7 +225,7 @@
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar">
+            <nav class="pc-sidebar" <?php echo $marginTopStyle; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
@@ -405,7 +410,12 @@
                     </div>
                 </div>
             </div>
-            <header class="pc-header">
+            @if (app()->environment('local'))
+                <div style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
+                    <b>DEV ENVIRONMENT</b>
+                </div>
+            @endif
+            <header class="pc-header" <?php echo $marginTopStyle; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">
