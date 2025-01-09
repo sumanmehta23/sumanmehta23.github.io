@@ -39,8 +39,8 @@ class TradeDepositController extends Controller
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_amount');
-        $totalWwf = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_transaction_fee');
+        $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_amount');
+        $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_transaction_fee');
         $wallet_balance = $totalWd - ($totalWw + $totalWwf);
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
