@@ -101,7 +101,7 @@ class TradeDepositController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong',
-                'error' => "Insufficient wallet balance!!!!",
+                'error' => "Insufficient wallet balance!",
             ], 402);
         }
         // Handle file upload for deposit proof

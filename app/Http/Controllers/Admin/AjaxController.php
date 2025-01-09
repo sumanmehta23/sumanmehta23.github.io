@@ -225,12 +225,12 @@ class AjaxController extends Controller
     {
         // Validate the incoming request
         $validated = $request->validate([
-            'id' => 'required', // Ensure the ID is valid and exists in the users table
+            'client_id' => 'required', // Ensure the ID is valid and exists in the users table
         ]);
 
-        $clientId = $validated['id'];
+        $clientId = $validated['client_id'];
 
-        $admin = EmployeeList::where('id',$request->user['id'])->first();
+        $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
 
         try {
             // Find the user to impersonate
@@ -302,17 +302,17 @@ class AjaxController extends Controller
         //     ])
         //     ->groupBy('ap.email');
 
-        $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
+        // $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
             // $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
-        });
+        // });
 
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $query->where('rm.rm_id', session('alogin'));
-        }
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $query->where('rm.rm_id', session('alogin'));
+        // }
 
-        if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
-            $query->where('rm.rm_id', $request->get('rm_id'));
-        }
+        // if ($request->has('rm_id') && !empty($request->get('rm_id'))) {
+        //     $query->where('rm.rm_id', $request->get('rm_id'));
+        // }
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -716,6 +716,10 @@ class AjaxController extends Controller
             });
         }
 
+        if (isset($request->status)) {
+            $rmCondition->where('Status', $request->status);
+        }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -802,6 +806,10 @@ class AjaxController extends Controller
             });
         }
 
+        if (isset($request->status)) {
+            $rmCondition->where('Status', $request->status);
+        }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -878,7 +886,10 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        $query = TradeDeposit::with(['user', 'account']);
+        // dd($request->search);
+        $query = TradeDeposit::select(
+            'trade_deposits.*'
+        )->with(['user', 'account']);
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
                 $rmId = session('alogin');
@@ -890,18 +901,13 @@ class AjaxController extends Controller
             $query->where('code', $_GET['id']);
         }
 
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
+        }
+
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->editColumn('id', function ($row) {
-                    return $row->id;
-                })
-                ->addColumn('account_no', function($row){
-                    return $row->code;
-                })
-                ->addColumn('amount', function($row){
-                    return $row->deposit_amount;
-                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -961,7 +967,8 @@ class AjaxController extends Controller
 
     public function getTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account']);
+        $query = TradeWithdrawals::select('trade_withdrawal.*')
+                ->with(['user', 'withdrawTo', 'account']);
 
         if (!isset($_GET['id'])) {
             if (session('userData')['userRole'] == "Relationship Manager") {
@@ -974,18 +981,16 @@ class AjaxController extends Controller
             $query->where('account_id', $_GET['id']);
         }
 
+        if (isset($request->status)) {
+            $query->where('Status', $request->status);
+        }
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->addColumn('account_no', function($row){
-                    return $row->account->code;
-                })
-                ->addColumn('amount', function($row){
-                    return $row->withdrawal_amount;
-                })
                 ->addColumn('withdraw_type', function($row){
                     return $row->withdraw_type;
                 })
@@ -1046,9 +1051,12 @@ class AjaxController extends Controller
             $query->where('deposit_type', 'Internal Transfer');;
         }
 
+        if (isset($request->status)) {
+            $query->where('status', $request->status);
+        }
+
         // Fetch data
         // $query->orderByDesc('id')->get();
-
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->addColumn('email', function($row){
@@ -1411,6 +1419,10 @@ class AjaxController extends Controller
             });
         }
 
+        // if (isset($request->status)) {
+        //     $rmCondition->where('Status', $request->status);
+        // }
+
         $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
@@ -1481,16 +1493,18 @@ class AjaxController extends Controller
 
     public function getPendingWalletWithdrawal2(Request $request)
     {
-        $query = WalletWithdraw::with(['user']);
+        $query = WalletWithdraw::with(['user'])->where('status',0);
 
         if (session('userData')['userRole'] == "Relationship Manager") {
             $rmId = session('alogin');
             $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
                 $q->where('rm_id', $rmId);
             });
-        } else {
-            $query->where('Status', 0);
         }
+
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
         // Fetch data
         $query->orderByDesc('id')->get();
@@ -1538,6 +1552,8 @@ class AjaxController extends Controller
                         return "<div class='badge bg-outline-success'>Approved</div>";
                     }elseif($row->status == 2){
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    }elseif($row->status == 3){
+                        return "<div class='badge bg-outline-danger'>Decline</div>";
                     }else{
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
@@ -1578,6 +1594,10 @@ class AjaxController extends Controller
         } else {
             $query->where('code', $_GET['id']);
         }
+
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
 
         if ($request->ajax()) {
@@ -1662,6 +1682,10 @@ class AjaxController extends Controller
         } else {
             $query->where('account_id', $_GET['id']);
         }
+
+        // if (isset($request->status)) {
+        //     $query->where('Status', $request->status);
+        // }
 
         if ($request->ajax()) {
             return DataTables::of($query)

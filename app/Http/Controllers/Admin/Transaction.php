@@ -221,27 +221,49 @@ class Transaction extends Controller
     }
     public function update_wallet_withdrawal(Request $request)
     {
+
         $settings = settings();
-        $validatedData = $request->validate([
-            'description' => 'required|string|max:255',
-            'status' => 'required|integer',
-            'email' => 'required|email',
-            'amount' => 'required|numeric',
-        ]);
-        $description = $validatedData['description'];
+        $status = $request->status;
+        // dd($request->all());
+        if ($status == '3') {
+            $validatedData = $request->validate([
+                'rejection_reason' => 'required',
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+            $rejection_reason = $validatedData['rejection_reason'];
+        }elseif($status == '1'){
+            $validatedData = $request->validate([
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+            $rejection_reason = 'Approved';
+            $approved_by = $request->approved_by;
+            $approved_date = $request->approved_date;
+        }
         $status = $validatedData['status'];
         $email = $validatedData['email'];
         $depositAmount = $validatedData['amount'];
         $did = $request->input('id');
-        $transaction_id = $request->input('transaction_id');
+        // dd($did);
+        $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        // dd($transaction);
         if ($transaction) {
-            $transaction->admin_remark = $description;
+            $transaction->admin_remark = $rejection_reason;
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
+                    $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+                    $transaction->approved_by = $approved_by;
+                    $transaction->approved_date =$approved_date;
+                    $transaction->save();
+
+
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;
@@ -280,7 +302,6 @@ class Transaction extends Controller
                         return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
                     $responseData=json_decode($response);
-
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
@@ -349,7 +370,7 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==3){
+            }elseif($status==3 && $rejection_reason == 'Invalid cryptocurrency address'){
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
@@ -364,12 +385,29 @@ class Transaction extends Controller
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                         $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-                        $content= '<div>We are reaching out to notify you that your recent withdrawal request on LQHMarkets could not be processed because the cryptocurrency address you provided is invalid.</div>
-                                    <div>To ensure a smooth withdrawal, please resubmit your request using a valid cryptocurrency address. Make sure the address corresponds to the specific cryptocurrency you selected for the withdrawal. For accuracy, we suggest copying and pasting the address directly from your wallet.</div>
-                                    <div>If you need any guidance or encounter issues, feel free to contact our support team at support@lqhmarkets.com .</div>
-                                    <div>Thank you for your understanding and cooperation.</div>
-                                    <div>Best regards,</div>
-                                    <div>The LQHMarkets Team</div>';
+                        $content = '<p>
+                                        We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                    </p>
+                                    <p>
+                                        To complete your withdrawal:
+                                        <ol>
+                                            <li>Please <b>submit a new request</b></li>
+                                            <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                                            <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                                            <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                                        </ol>
+                                    </p>
+                                    <p>
+                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
+                                    </p>
+                                    <p>
+                                        Thank you for your understanding.
+                                    </p>
+                                    <p>
+                                        Best regards,<br>
+                                        The LQHMarkets Team
+                                    </p>';
+
                         $templateVars = [
                             'name' => $transaction->user->fullname,
                             'site_link' => $settings['copyright_site_name_text'],

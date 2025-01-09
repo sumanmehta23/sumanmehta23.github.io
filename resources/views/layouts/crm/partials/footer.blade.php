@@ -8,6 +8,10 @@
 </div>
 
 <script>
+
+    console.log('abhay');
+    console.log(auth()->user()->id);
+    console.log();
     window.intercomSettings = {
       api_base: "https://api-iam.intercom.io",
       app_id: "hcaolnkq",

@@ -315,7 +315,7 @@
                                     Latest Pending Withdrawals
                                 </div>
                                 <div>
-                                    <a href="/admin/transactions/wallet_deposit" class="btn btn-primary-light">View
+                                    <a href="/admin/transactions/wallet_withdrawal" class="btn btn-primary-light">View
                                         All</a>
                                 </div>
                             </div>
@@ -377,7 +377,7 @@
                                             </td>
                                             <td>
                                                 <?php if ($result->code == 'email') { ?>
-                                                <a href="/admin/client_details?id={{ ($result->email) }}">
+                                                <a href="/admin/client_details/{{ ($result->user_id) }}">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="28"

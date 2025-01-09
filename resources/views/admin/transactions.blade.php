@@ -9,6 +9,18 @@
                     <li class="breadcrumb-item active" aria-current="page">Transaction List</li>
                 </ol>
             </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="statusFilter">Filter by Status:</label>
+                  <select id="statusFilter" class="form-select" name="status">
+                    <option value="">All</option>
+                    <option value="1">Approved</option>
+                    <option value="2">Rejected</option>
+                    <option value="0">Pending</option>
+                    <!-- Add other status options as needed -->
+                  </select>
+                </div>
+              </div>
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
@@ -93,7 +105,7 @@
                                             class="ajaxDataTable table table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
-                                                    <th>#</th>
+                                                    {{-- <th>#</th> --}}
                                                     <th>Account No</th>
                                                     <th>Deposit Amount</th>
                                                     <th>Deposit Type</th>

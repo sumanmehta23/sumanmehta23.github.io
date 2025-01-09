@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\TradeDeposit;
-use App\Models\TradeWithdrawals;
-use App\Models\WalletDeposit;
-use App\Models\WalletWithdraw;
-use App\Models\User;
 use App\Models\Ib1;
+use App\Models\User;
+use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
+use App\Services\MailService;
+use App\Models\WalletWithdraw;
+use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 
 class Dashboard extends Controller
@@ -83,5 +84,50 @@ class Dashboard extends Controller
         $wallet_withdraws = DB::select($sql);
 
         return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws'));
+    }
+    public function sendMarketingEmail(MailService $mailService)
+    {
+        ini_set("memory_limit", "-1");
+        ini_set('max_execution_time', 0);
+        // Process users in chunks to save memory
+        User::select('email')
+            ->where('status', 1)
+            ->orderBy('id', 'desc')
+            ->chunk(100, function ($users) use ($mailService) {
+                foreach ($users as $user) {
+                    $this->sendmail($user->email, $mailService);
+                }
+            });
+    }
+    private function sendmail($userEmail,MailService $mailService){
+        
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - New Payment Options Now Available at LQH Markets! 🎉';
+         $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content = '<div>Just in time for <b>New Year\'s,</b> we\'re excited to announce that <b>LQH Markets</b> has expanded our payment options to make trading more convenient for you!
+</div>
+          <div>We now accept:</div>
+          <ul>
+          <li><b>Credit Card</b> payments</li>
+          <li><b>Apple Pay</b></li>
+          <li><b>Crypto</b> deposits</li>
+          </ul>
+          <div>Ready to fund your account? Visit our secure deposit page: <a href="'.$settings['copyright_site_name_text'].'/wallet_deposit">'.$settings['copyright_site_name_text'].'/wallet_deposit</a></div>
+          <div>Start trading today with these <b>flexible payment options!</b></div>
+          <p>Best Regards.</p>
+          <p>LQH Markets Team</p>
+          ';
+        $templateVars = [
+            'name' => 'Valued Client',
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "",
+            "subtitle_right" => "",
+        ];
+       
+        $mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
     }
 }

@@ -171,8 +171,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($account->bonusTrans)) {
-                                                                        echo "$" . number_format($account->bonusTrans->sum('bonus_amount') , 2) ;
+                                                                    if (isset($account->BonusTransaction)) {
+                                                                        echo "$" . number_format($account->BonusTransaction->sum('bonus_amount') , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>
@@ -663,12 +663,12 @@ if ($getUser) {
                     }
                 },
                 columns: [{
-                        data: 'account_no',
-                        name: 'account_no'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'amount',
-                        name: 'amount',
+                        data: 'deposit_amount',
+                        name: 'deposit_amount',
                         render: function(data, type, row) {
                             return number_format(data);
                         }
@@ -726,12 +726,12 @@ if ($getUser) {
                     }
                 },
                 columns: [{
-                        data: 'account_no',
-                        name: 'account_no'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'amount',
-                        name: 'amount',
+                        data: 'withdrawal_amount',
+                        name: 'withdrawal_amount',
                         // render: function(data, type, row) {
                         //     return number_format(data);
                         // }

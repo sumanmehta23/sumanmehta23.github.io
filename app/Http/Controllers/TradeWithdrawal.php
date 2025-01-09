@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Account;
+use App\Models\BonusTransaction;
 use App\Models\User;
 use App\Models\ClientBankDetail;
 use App\Models\TotalBalance;
@@ -32,10 +33,21 @@ class TradeWithdrawal extends Controller
         $email = auth()->user()->email;
         $user=auth()->user();
         AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
-        $liveaccount_details = Account::with('accountType')
-            ->where('user_id', $user->id)
-            ->where('demo', false)
-            ->get();
+        // $liveaccount_details = Account::with('accountType','BonusTransaction')
+        //     ->where('user_id', $user->id)
+        //     ->where('demo', false)
+        //     ->get();
+        $liveaccount_details = Account::with([
+            'accountType',
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])
+        ->where('user_id', $user->id)
+        ->where('demo', false)
+        ->get();
+
         $walletenabled = $user->wallet_enabled ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $walletBalance=auth()->user()->wallet_balance;
@@ -47,6 +59,7 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
+        // dd($request->account_id);
         // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -60,10 +73,23 @@ class TradeWithdrawal extends Controller
         $user_id = auth()->user()->id;
         $user_email = auth()->user()->email;
         $account_id = $request->account_id;
+        $request->validate([
+            'account_id' => 'required',
+        ], [
+            'account_id.required' => 'Account is not selected.',
+        ]);
+
         $account = Account::with('accountType')
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
+
+        $total_bonus = BonusTransaction::where('account_id', $request->account_id)
+            ->where(function($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->sum('bonus_amount');
 
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
@@ -76,7 +102,7 @@ class TradeWithdrawal extends Controller
         // Get the account balance
 
         // Check for sufficient balance
-        if ($amount > $account->balance) {
+        if ((float) ($amount) > ((float) $account->balance - (float) $total_bonus)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',

@@ -30,12 +30,19 @@
                             <div class="col-lg-6 col-md-12">
                                 <div class="wideget-user-desc d-flex align-items-center">
                                     <div class="wideget-user-img">
-                                        <a href="{{route("admin.admin-view-client-details",$details->user->id)}}">
-                                        <img src="/admin_assets/assets/images/users/client.png" alt="img" style="width:50px">
+                                        <a href="{{ route('admin.admin-view-client-details', $details->user->id) }}">
+                                            <img src="/admin_assets/assets/images/users/client.png" alt="User Image" class="img-fluid rounded-circle" style="width:50px;">
                                         </a>
                                     </div>
                                     <div class="user-wrap">
-                                        <h4 class="fw-normal">{{ $details->user->fullname }}</h4>
+                                        <h4 class="fw-normal d-flex align-items-center">
+                                            {{ $details->user->fullname }}
+                                            @if($details->user->total_bonus)
+                                                <span class="badge bg-success text-white ms-2">
+                                                    Bonus: ${{ number_format($details->user->total_bonus, 2) }}
+                                                </span>
+                                            @endif
+                                        </h4>
                                         <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
                                     </div>
                                 </div>
@@ -266,20 +273,23 @@
                                         </td>
                                         <td style="vertical-align:top">
                                             <div class="my-auto btn-list ms-auto">
+                                                @php
+                                                    $userData = json_encode(session('userData'));
+                                                @endphp
                                                 <button
-                                                    onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
+                                                    onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
                                                     type="button" class="m-1 btn btn-success btn-space">Approve</button>
-                                                <button
+                                                    {{-- <button
                                                     onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
-                                                    type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
+                                                    type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
                                                     @if (($details->status == 0) || ($details->payout_res != null))
                                                         @php
                                                             $payout_res = !empty($details->payout_res) ? json_decode($details->payout_res, true) : [];
                                                             $message = isset($payout_res['message']) ? $payout_res['message'] : '';
                                                         @endphp
                                                         <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',3)"
-                                                        type="submit" class="m-1 btn btn-danger btn-space">Decline</button>
+                                                        onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
+                                                        type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
                                                     @endif
                                             </div>
                                         </td>
@@ -293,6 +303,21 @@
                                                     <div class="mt-2 lh-1">
                                                         <span>{{ $details->admin_remark }}</span>
                                                     </div>
+                                                    @if ($details->admin_remark == 'Approved')
+                                                        <div class="mt-4 lh-1">
+                                                            <span class="fs-11 text-muted">APPROVED BY</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                            <span>{{ $details->approved_by }}</span>
+                                                        </div>
+                                                        <div class="mt-4 lh-1">
+                                                            <span class="fs-11 text-muted">APPROVED DATE</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                            <span>{{ $details->approved_date }}</span>
+                                                        </div>
+                                                    @endif
+
                                                 </div>
                                             </div>
                                         </td>
@@ -338,13 +363,21 @@
         @endif
     </div>
     <script>
-        function takeAction(email, amount, status) {
-            var statuscode;
+        function takeAction(data, email, amount, status) {
+            const sanitizedData = data.replace(/\\/g, '\\\\');
+            // console.log(sanitizedData);
+            const parsedData = JSON.parse(sanitizedData);
+            // console.log(parsedData);
+            const now = new Date();
+            const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
             if(status==3){
-                statuscode='decline';
-            }else if(status==2){
                 statuscode='reject';
-            }else{
+            }
+            // else if(status==2){
+            //     statuscode='reject';
+            // }
+            else{
                 statuscode='approve';
             }
           Swal.fire({
@@ -356,26 +389,57 @@
               <input type="hidden" name="amount" value="${amount}">
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_transaction">
-              <div class="mt-3 col-12 text-start">
-                  <label for="transaction_id" class="form-label">Withdraw Reference ID</label>
-                  <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="Add Reference ID">
-              </div>
-              <div class="mt-2 col-12 text-start">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
-              </div>
+                ${
+                  status == 3
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="transaction_id" class="form-label">Transaction ID</label>
+                      <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
+                      <div class="form-control">${parsedData}</div>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="rejection_reason" class="form-label">Rejection Reason</label>
+                      <select id="rejection_reason" name="rejection_reason" class="form-control">
+                          <option value="" disabled selected>Select Rejection Reason</option>
+                          <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
+                          <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
+                          <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
+                      </select>
+                  </div>
+              `
+                      : ''
+                }
+                ${
+                  status == 1
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="approved_by" class="form-label">Approved By</label>
+                      <input type="hidden" id="approved_by" name="approved_by" value="${parsedData.username}">
+                      <div class="form-control">${parsedData.username}</div>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="approved_date" class="form-label">Approved On</label>
+                      <input type="hidden" id="approved_date" name="approved_date" value="${approved_date_time}">
+                      <div class="form-control">${approved_date_time}</div>
+                  </div>
+              `
+                      : ''
+                }
+
               </form>
           `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Submit',
             preConfirm: () => {
-              const description = document.querySelector('#updateTransactionForm textarea').value;
-              const transaction_id = document.querySelector('#transaction_id').value;
-              if (!description || !transaction_id) {
-                Swal.showValidationMessage('Please fill out all fields');
-                return false;
+              if(status==3){
+                const rejection_reason = document.querySelector('#rejection_reason').value;
+                if (!rejection_reason) {
+                    Swal.showValidationMessage('Please fill out all fields');
+                    return false;
+                }
               }
+
               return true;
             }
           }).then((result) => {
