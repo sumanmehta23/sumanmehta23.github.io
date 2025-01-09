@@ -225,12 +225,12 @@ class AjaxController extends Controller
     {
         // Validate the incoming request
         $validated = $request->validate([
-            'id' => 'required', // Ensure the ID is valid and exists in the users table
+            'client_id' => 'required', // Ensure the ID is valid and exists in the users table
         ]);
 
-        $clientId = $validated['id'];
+        $clientId = $validated['client_id'];
 
-        $admin = EmployeeList::where('id',$request->user['id'])->first();
+        $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
 
         try {
             // Find the user to impersonate
