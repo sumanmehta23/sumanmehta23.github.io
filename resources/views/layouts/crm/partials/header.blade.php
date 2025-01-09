@@ -49,10 +49,12 @@
     </script>
     @yield('styles')
     <?php
+        $marginTopStyle = ''; // Default value
         if (app()->environment('local')) {
-            $marginTopStyle = 'style="margin-top: 40px;"' ?? '';
+            $marginTopStyle = 'style="margin-top: 40px;"';
         }
     ?>
+
     <style>
         .pc-sidebar .navbar-content {
             overflow-y: scroll;
