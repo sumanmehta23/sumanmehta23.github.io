@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\EmployeeList;
+use Illuminate\Support\Facades\Hash;
 
 class SettingsController extends Controller
 {
@@ -45,10 +46,11 @@ class SettingsController extends Controller
             'newpassword' => 'required|confirmed',
         ]);
         $user = EmployeeList::where('email', session('alogin'))->first();
-        if ($request->oldpassword!=$user->password){
+
+        if (!Hash::check($request->oldpassword, $user->password)){
             return redirect()->back()->with('error','Old password you entered is invalid');
         }
-        $user->password = $request->newpassword;
+        $user->password = Hash::make($request->newpassword);
         $user->save();
         return redirect()->back()->with('success','Password Updated Successfully');
     }
