@@ -68,7 +68,7 @@ class Wallet extends Controller
             'status' => 'required',
         ]);
 
-        $user = DB::table('aspnetusers')->where('email', session('clogin'))->first();
+        $user = DB::table('aspnetusers')->where('email', auth()->user()->email)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
