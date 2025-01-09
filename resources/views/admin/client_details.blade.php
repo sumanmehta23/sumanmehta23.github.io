@@ -423,69 +423,6 @@
                                             </div>
                                             <div class="col-12 col-xl-3">
                                                 <div>
-                                                    <button type="button"
-                                                        class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
-                                                        data-bs-toggle="modal" data-bs-target="#addTicketModal">
-                                                        CREATE TICKET
-                                                    </button>
-                                                    <div class="card custom-card">
-                                                        <div class="card-header">
-                                                            <div class="d-flex justify-content-between">
-                                                                <div class="card-title">INTRODUCING BROKER</div>
-                                                                <div>
-                                                                    <?php if ($user->ib_status == 0): ?>
-                                                                    <span
-                                                                        class="badge bg-outline-warning text-end">Pending</span>
-                                                                    <?php elseif ($user->ib_status == 1): ?>
-                                                                    <span class="badge bg-outline-success text-end">Active
-                                                                        IB</span>
-                                                                    <?php else: ?>
-                                                                    <span class="badge bg-outline-info text-end">Not
-                                                                        Requested</span>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <p class="card-text">A request on behalf of client for creating
-                                                                IB profile for this client.
-                                                            </p>
-                                                            <?php if ($user->ib_status != 1): ?>
-                                                            <?php if ($user->ib_status == '0'): ?>
-                                                            <button type="button"
-                                                                class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                data-bs-toggle="modal" data-bs-target="#ibModal">
-                                                                Approve Request
-                                                            </button>
-                                                            <?php else: ?>
-                                                            <button type="button"
-                                                                class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                data-bs-toggle="modal" data-bs-target="#ibModal"
-                                                                data-fullname="<?= $user->fullname ?>"
-                                                                data-email="<?= $user->email ?>"
-                                                                data-enc="<?= ($user->email) ?>"
-                                                                data-ib_status="<?= $user->ib_status ?>">
-                                                                Request To become ib
-                                                            </button>
-                                                            <?php endif; ?>
-                                                            <?php else: ?>
-                                                            <hr style="opacity:.1;">
-                                                            <label class="col-form-label col-12 text-lg-start">
-                                                                Copy this IB referral link to share with potential clients!
-                                                            </label>
-                                                            <div class="mb-4 col-12">
-                                                                <div class="mb-2 input-group"><input type="text"
-                                                                        class="form-control" id="pc-clipboard-1"
-                                                                        value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
-                                                                        readonly=""><button
-                                                                        class="btn btn-lg btn-primary cb" id="ibClient"
-                                                                        data-clipboard-target="#pc-clipboard-1"><i
-                                                                            class="fa fa-copy"></i></button>
-                                                                </div>
-                                                            </div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
                                                     <div class="card custom-card">
                                                         <div class="card-header">
                                                             <div class="d-flex justify-content-between">
@@ -733,7 +670,69 @@
                                                             </div>
                                                         </div>
                                                     </div>
-
+                                                    {{-- <button type="button"
+                                                        class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
+                                                        data-bs-toggle="modal" data-bs-target="#addTicketModal">
+                                                        CREATE TICKET
+                                                    </button> --}}
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">INTRODUCING BROKER</div>
+                                                                <div>
+                                                                    <?php if ($user->ib_status == 0): ?>
+                                                                    <span
+                                                                        class="badge bg-outline-warning text-end">Pending</span>
+                                                                    <?php elseif ($user->ib_status == 1): ?>
+                                                                    <span class="badge bg-outline-success text-end">Active
+                                                                        IB</span>
+                                                                    <?php else: ?>
+                                                                    <span class="badge bg-outline-info text-end">Not
+                                                                        Requested</span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <p class="card-text">A request on behalf of client for creating
+                                                                IB profile for this client.
+                                                            </p>
+                                                            <?php if ($user->ib_status != 1): ?>
+                                                            <?php if ($user->ib_status == '0'): ?>
+                                                            <button type="button"
+                                                                class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                data-bs-toggle="modal" data-bs-target="#ibModal">
+                                                                Approve Request
+                                                            </button>
+                                                            <?php else: ?>
+                                                            <button type="button"
+                                                                class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                                data-fullname="<?= $user->fullname ?>"
+                                                                data-email="<?= $user->email ?>"
+                                                                data-enc="<?= ($user->email) ?>"
+                                                                data-ib_status="<?= $user->ib_status ?>">
+                                                                Request To become ib
+                                                            </button>
+                                                            <?php endif; ?>
+                                                            <?php else: ?>
+                                                            <hr style="opacity:.1;">
+                                                            <label class="col-form-label col-12 text-lg-start">
+                                                                Copy this IB referral link to share with potential clients!
+                                                            </label>
+                                                            <div class="mb-4 col-12">
+                                                                <div class="mb-2 input-group"><input type="text"
+                                                                        class="form-control" id="pc-clipboard-1"
+                                                                        value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
+                                                                        readonly=""><button
+                                                                        class="btn btn-lg btn-primary cb" id="ibClient"
+                                                                        data-clipboard-target="#pc-clipboard-1"><i
+                                                                            class="fa fa-copy"></i></button>
+                                                                </div>
+                                                            </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

@@ -60,6 +60,13 @@ $filePermissions = filePermissions($userRole);
     <script src="/admin_assets/assets/js/sweetalert2.all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <?php
+        $marginTopStyle = ''; // Default value
+        if (app()->environment('local')) {
+            $marginTopStyle = 'style="margin-top: 40px;"';
+        }
+    ?>
+
     <style>
         input[readonly] {
             background: var(--input-border);
@@ -104,15 +111,21 @@ $filePermissions = filePermissions($userRole);
 </head>
 
 <body>
+    @if (app()->environment('local'))
+        <div style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
+            <b>DEV ENVIRONMENT</b>
+        </div>
+    @endif
     <!-- Loader -->
     <div id="loader">
         <img src="/admin_assets/assets/images/media/loader.svg" alt="">
     </div>
     <!-- Loader -->
-    <div class="page">
+    <div class="page" <?php echo $marginTopStyle; ?>>
 
         <!-- app-header -->
-        <header class="sticky app-header sticky-pin" id="header">
+
+        <header class="sticky app-header sticky-pin" id="header" <?php echo $marginTopStyle; ?>>
 
             <!-- Start::main-header-container -->
             <div class="main-header-container container-fluid">
@@ -211,7 +224,7 @@ $filePermissions = filePermissions($userRole);
         </header>
         <!-- /app-header -->
         <!-- Start::app-sidebar -->
-        <aside class="sticky app-sidebar sticky-pin" id="sidebar">
+        <aside class="sticky app-sidebar sticky-pin" id="sidebar" <?php echo $marginTopStyle; ?>>
 
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
@@ -542,7 +555,7 @@ $filePermissions = filePermissions($userRole);
                         <li class="slide__category menu-item-category">
                             <span class="category-name">{{ $category->category_name }}</span>
                         </li>
-        
+
                         @foreach ($category->main_menus as $main)
                             @php
                                 // Check if the current menu has submenus
@@ -552,7 +565,10 @@ $filePermissions = filePermissions($userRole);
                                     return $item->filename == $requestUri;
                                 }) ? 'open' : '';
                             @endphp
-                            @if ((in_array($main->id, $rolePermissionsList) || $userRole == 'Super Admin') && $main->show_in_menu == 1)
+                            @if (
+                                (in_array($main->id, $rolePermissionsList) || $userRole == "Super Admin") &&
+                                $main->show_in_menu == 1
+                            )
                                 <li class="slide {{ ($sub_menus->count() > 0) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
                                     <a href="{{ $main->filename }}" class="side-menu__item">
                                         <i class="side-menu__icon {{ $main->icon }}"></i>
@@ -566,15 +582,15 @@ $filePermissions = filePermissions($userRole);
                                             @php
                                                 $active = ($requestUri == $sub->filename) ? 'active' : '';
                                             @endphp
-                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == 'Super Admin')
-                                                @if ($sub->pagename != 'Permissions List')    
+                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == "Super Admin")
+                                                @if($sub->pagename != 'Permissions List')
                                                     <li class="slide menu-item-sub">
                                                         <a href="{{ $sub->filename }}" class="side-menu__item {{ $active }}">
                                                             {{ $sub->pagename }}
                                                         </a>
                                                     </li>
                                                 @endif
-                                            @endif    
+                                            @endif
                                         @endforeach
                                     </ul>
                                 </li>
