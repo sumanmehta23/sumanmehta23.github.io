@@ -89,10 +89,10 @@ class TradeDepositController extends Controller
         ->sum('deposit_amount');
 
         $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_amount');
         $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_transaction_fee');
 
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
