@@ -253,7 +253,7 @@ class Ib extends Controller
                                         $processedOrders[] = $item->Order . '-' . $item->Login;
 
                                         $ibcommissions[] = [
-                                            'id' => Str::uuid(),
+                                            'id' => (string)Str::orderedUuid(),
                                             'user_id' => $client->user_id,
                                             'account_id' => $client->id,
                                             'order_id' => $item->Order,
@@ -335,7 +335,7 @@ class Ib extends Controller
 
                                 if (!$existingWallet) {
                                     $walletsToCreate[] = [
-                                        'id' => Str::uuid(),
+                                        'id' => (string)Str::orderedUuid(),
                                         'ib_wallet' => $formatted_ib_wallet,
                                         'email' => $referral_code,
                                         'code' => $ca->code,

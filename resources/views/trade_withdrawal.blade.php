@@ -52,7 +52,8 @@
                                                                     </span>
                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                         <span class="mb-0 h5 d-block f-w-500">
-                                                                            ${{ $liveaccount->balance ?? '0.0000' }}
+                                                                            {{-- {{ dd($liveaccount) }} --}}
+                                                                            ${{ $liveaccount->balance - ($liveaccount->BonusTransaction ? $liveaccount->BonusTransaction->sum('bonus_amount') : 0)?? '0.0000' }}
                                                                         </span>
                                                                         <span class="mb-0 text-muted f-10">Current
                                                                             Balance</span>
@@ -164,7 +165,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="card">
                                     <div class="py-2 card-body">
                                         <ul class="list-group list-group-flush">

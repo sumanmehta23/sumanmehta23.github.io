@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\PermissionController;
 use App\Models\Account;
+use Illuminate\Support\Str;
 use App\Models\Permission;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 Route::get("/se",function(){
+    
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'

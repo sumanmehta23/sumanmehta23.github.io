@@ -33,10 +33,21 @@ class TradeWithdrawal extends Controller
         $email = auth()->user()->email;
         $user=auth()->user();
         AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
-        $liveaccount_details = Account::with('accountType')
-            ->where('user_id', $user->id)
-            ->where('demo', false)
-            ->get();
+        // $liveaccount_details = Account::with('accountType','BonusTransaction')
+        //     ->where('user_id', $user->id)
+        //     ->where('demo', false)
+        //     ->get();
+        $liveaccount_details = Account::with([
+            'accountType',
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])
+        ->where('user_id', $user->id)
+        ->where('demo', false)
+        ->get();
+
         $walletenabled = $user->wallet_enabled ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $walletBalance=auth()->user()->wallet_balance;
@@ -75,8 +86,8 @@ class TradeWithdrawal extends Controller
 
         $total_bonus = BonusTransaction::where('account_id', $request->account_id)
             ->where(function($query) {
-                $query->where('admin_remark', 'Bonus Deposit In')
-                      ->orWhere('admin_remark', 'Bonus Deposit Out');
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
             })
             ->sum('bonus_amount');
 
@@ -91,7 +102,7 @@ class TradeWithdrawal extends Controller
         // Get the account balance
 
         // Check for sufficient balance
-        if ($amount > ($account->balance - $total_bonus)) {
+        if ((float) ($amount) > ((float) $account->balance - (float) $total_bonus)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance',
