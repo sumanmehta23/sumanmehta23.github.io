@@ -56,7 +56,7 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0)  }}</span>
                                                                                     <span
                                                                                         class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
@@ -97,7 +97,7 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0) }}</span>
                                                                                     <span
                                                                                         class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
@@ -149,6 +149,15 @@
             </div>
         </div>
     </div>
+    @if(session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{{ session('error') }}',
+            });
+        </script>
+    @endif
     @if (session('success'))
         <script>
             Swal.fire({

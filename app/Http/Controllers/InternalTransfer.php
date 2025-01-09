@@ -14,6 +14,7 @@ use App\Helpers\AccountHelper;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\BonusTransaction;
 
 class InternalTransfer extends Controller
 {
@@ -27,11 +28,18 @@ class InternalTransfer extends Controller
     {
         $email = auth()->user()->email;
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
-        $liveaccount_details = auth()->user()->liveAccounts;
+        $liveaccount_details = auth()->user()->liveAccounts()->with([
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])->get();
+        // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
     }
     public function processTransfer(Request $request)
     {
+        // dd($request->all());
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
@@ -54,7 +62,19 @@ class InternalTransfer extends Controller
         $toAccount = Account::where(['id'=> $toAccountId,'user_id'=>$userId])->firstOrFail();
         // dump($fromAccount);
         // dd($toAccount);
+        $total_bonus = BonusTransaction::where('account_id', $fromAccount->id)
+            ->where(function($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->sum('bonus_amount');
+
+
         $transferable_amount = $request->input('transferable_amount');
+
+        if((float)$transferable_amount > (float)$fromAccount->balance - (float)$total_bonus) {
+            return redirect()->back()->with('error', 'Insufficient balance');
+        }
         $email = auth()->user()->email;
         $ticket = NULL;
 
