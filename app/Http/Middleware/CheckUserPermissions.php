@@ -49,6 +49,7 @@ class CheckUserPermissions
         //     }
         // }
         // dd($permissions);
+        
         if (!$request->user()->hasPermissions($permissions)) {
             return response()->view('errors.401', [], 401); 
         }

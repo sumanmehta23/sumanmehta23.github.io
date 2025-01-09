@@ -33,7 +33,7 @@ class StaffManagement extends Controller
     {  
         $id = $request->id;
         $roles = Role::where('id', $id)->first();
-        $permissionGroups = PermissionGroup::with("permissions")->get();
+        $permissionGroups = PermissionGroup::with("permissions")->orderBy('name','asc')->get();
         $rolePermissions = Role::where('id', $id)->with('permissions')->first();
         // dd($rolePermissions);
         // $rolePermissions = array_values(array_column($permissions, 'page_id'));

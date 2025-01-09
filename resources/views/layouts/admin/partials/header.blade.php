@@ -255,100 +255,100 @@ $filePermissions = filePermissions($userRole);
                         </li>
 
                         <li class="slide menu-item-main ">
-                            <a href="/admin/dashboard" class="side-menu__item">
+                            <a href="{{route("admin.dashboard")}}" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-airplay"></i>
                                 <span class="side-menu__label">Dashboard</span>
                             </a>
                             <ul class="slide-menu child1">
                             </ul>
                         </li>
-                        <li class="slide__category menu-item-category">
-                            <span class="category-name">CLIENT</span>
-                        </li>
-
-                        <li class="slide menu-item-main ">
-                            <a href="{{route("admin.clients.index")}}" class="side-menu__item">
-                                <i class="side-menu__icon fe fe-users"></i>
-                                <span class="side-menu__label">Client List</span>
-                            </a>
-                            <ul class="slide-menu child1">
-                            </ul>
-                        </li>
                         @if(auth()->user()->can('account:viewLiveAccounts') || auth()->user()->can('account:viewDemoAccounts'))
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">CLIENT</span>
+                            </li>
+                            
+                            <li class="slide menu-item-main ">
+                                <a href="{{route("admin.clients.index")}}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-users"></i>
+                                    <span class="side-menu__label">Client List</span>
+                                </a>
+                                <ul class="slide-menu child1">
+                                </ul>
+                            </li>
+                        
+
+                                <li class="slide has-sub menu-item-main ">
+                                <a href="#" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-user-plus"></i>
+                                    <span class="side-menu__label">Client Accounts</span>
+                                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                </a>
+                                <ul class="slide-menu child1"
+                                    style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
+                                    data-popper-placement="bottom">
+                                    @can('account:viewLiveAccounts')
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{route('admin.liveAccounts')}}" class="side-menu__item ">Live Accounts</a>
+                                        </li>
+                                    @endcan
+                                    
+                                    @can('account:viewDemoAccounts')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.demoAccounts')}}" class="side-menu__item ">Demo Accounts</a>
+                                    </li>
+                                    @endcan
+                                </ul>
+                            </li>
+                        @endif
+                        @if(auth()->user()->can('wallet_deposit:viewAny') || auth()->user()->can('wallet_withdrawal:viewAny')|| auth()->user()->can('trade_deposit:viewAny')|| auth()->user()->can('trade_withdrawals:viewAny')|| auth()->user()->can('internal_transfer:viewAny'))
+                        
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">FINANCE</span>
+                            </li>
 
                             <li class="slide has-sub menu-item-main ">
-                            <a href="#" class="side-menu__item">
-                                <i class="side-menu__icon fe fe-user-plus"></i>
-                                <span class="side-menu__label">Client Accounts</span>
-                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            </a>
-                            <ul class="slide-menu child1"
-                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
-                                data-popper-placement="bottom">
-                                @can('account:viewLiveAccounts')
-                                    <li class="slide menu-item-sub">
-                                        <a href="{{route('admin.liveAccounts')}}" class="side-menu__item ">Live Accounts</a>
+                                <a href="#" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-credit-card"></i>
+                                    <span class="side-menu__label">Transactions</span>
+                                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                </a>
+                                <ul class="slide-menu child1"
+                                    style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 417px);"
+                                    data-popper-placement="bottom">
+                                    @can('wallet_deposit:viewAny')
+                                     <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.transactions.wallet-deposit')}}" class="side-menu__item ">Wallet Deposit</a>
                                     </li>
-                                @endcan
-                                
-                                @can('account:viewDemoAccounts')
-                                <li class="slide menu-item-sub">
-                                    <a href="{{route('admin.demoAccounts')}}" class="side-menu__item ">Demo Accounts</a>
-                                </li>
-                                @endcan
-                            </ul>
-                        </li>
+                                    @endcan
+                                    @can('wallet_withdraw:viewAny')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.transactions.wallet-withdrawal')}}" class="side-menu__item ">Wallet Withdrawal</a>
+                                    </li>
+                                    @endcan
+                                    @can('trade_deposit:viewAny')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.transactions.trading-deposit')}}" class="side-menu__item ">
+                                            Trading Deposit
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    @can('trade_withdrawals:viewAny')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.transactions.trading-withdrawal')}}" class="side-menu__item ">
+                                            Trading Withdrawal
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    @can('internal_transfer:viewAny')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.transactions.internal-transfer')}}" class="side-menu__item ">
+                                            Internal Transfer
+                                        </a>
+                                    </li>
+                                    @endcan
+                                </ul>
+                            </li>
                         @endif
-                        <li class="slide__category menu-item-category">
-                            <span class="category-name">FINANCE</span>
-                        </li>
-
-                        <li class="slide has-sub menu-item-main ">
-                            <a href="#" class="side-menu__item">
-                                <i class="side-menu__icon fe fe-credit-card"></i>
-                                <span class="side-menu__label">Transactions</span>
-                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            </a>
-                            <ul class="slide-menu child1"
-                                style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 417px);"
-                                data-popper-placement="bottom">
-
-                                <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/wallet_deposit" class="side-menu__item ">
-                                        Wallet Deposit
-                                    </a>
-                                </li>
-
-
-                                <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/wallet_withdrawal" class="side-menu__item ">
-                                        Wallet Withdrawal
-                                    </a>
-                                </li>
-
-
-                                <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/trading_deposit" class="side-menu__item ">
-                                        Trading Deposit
-                                    </a>
-                                </li>
-
-
-                                <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/trading_withdrawal" class="side-menu__item ">
-                                        Trading Withdrawal
-                                    </a>
-                                </li>
-
-
-                                <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/internal_transfer" class="side-menu__item ">
-                                        Internal Transfer
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </li>
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-list"></i>

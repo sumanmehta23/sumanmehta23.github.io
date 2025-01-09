@@ -38,6 +38,34 @@ class Transaction extends Controller
         $id = $request->id;
         return view('admin.transactions', compact('id'));
     }
+    public function wallet_deposit(Request $request)
+    {
+        $id = "wallet_deposit";
+        return view('admin.transactions.wallet_deposit', compact('id'));
+    }
+    public function wallet_withdrawal(Request $request)
+    {
+        
+        $id = "wallet_withdrawal";
+        return view('admin.transactions.wallet_withdrawal', compact('id'));
+    }
+    public function trading_deposit(Request $request)
+    {
+        
+        $id = "trading_deposit";
+        return view('admin.transactions.trading_deposit', compact('id'));
+    }
+    public function trading_withdrawal(Request $request)
+    {
+      
+        $id = "trading_withdrawal";
+        return view('admin.transactions.trading_withdrawal', compact('id'));
+    }
+    public function internal_transfer(Request $request)
+    {
+        $id = "internal_transfer";
+        return view('admin.transactions.internal_transfer', compact('id'));
+    }
     public function pending(Request $request)
     {
         if (!isset($request->id)) {

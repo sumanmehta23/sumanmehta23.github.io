@@ -199,7 +199,12 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::middleware(['is_admin'])->group(function () {
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
-        Route::get('/transactions/{id}', [Transaction::class, 'index']);
+        Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')->middleware('check.permissions:wallet_deposit:viewAny');
+        Route::get('/transactions/wallet-withdrawal', [Transaction::class, 'wallet_withdrawal'])->name('transactions.wallet-withdrawal')->middleware('check.permissions:wallet_withdraw:viewAny');
+        Route::get('/transactions/trading-deposit', [Transaction::class, 'trading_deposit'])->name('transactions.trading-deposit')->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/transactions/trading-withdrawal', [Transaction::class, 'trading_withdrawal'])->name('transactions.trading-withdrawal')->middleware('check.permissions:trade_withdrawals:viewAny');
+        Route::get('/transactions/internal-transfer', [Transaction::class, 'internal_transfer'])->name('transactions.internal-transfer')->middleware('check.permissions:internal_transfer:viewAny');
+        // Route::get('/transactions/{id}', [Transaction::class, 'index'])->name('transactions')->middleware('check.permissions:wallet_deposit:viewAny');
         Route::get('/transactions/pending/{id}', [Transaction::class, 'pending']);
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:user:viewAny');
