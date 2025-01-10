@@ -93,12 +93,12 @@ class Dashboard extends Controller
         // Process users in chunks to save memory
         User::select('email')
             // ->whereIn('email',['tech2@lqhmarkets.com'])
-            ->where('id','<','9dc8c7dd-3ba3-4086-af38-d68b469bf0f5')
+            ->where('id','<','9dc8c7dd-3adf-46be-a384-5b115f964131')
             ->where('status', 1)
             ->orderBy('id', 'desc')
             ->chunk(100, function ($users) use ($mailService) {
                 foreach ($users as $user) {
-                    if(in_array($user->email,['toussaintorlando249@yahoo.com'])){
+                    if(in_array($user->email,['Sayedrihaad@gmail.com'])){
                         $this->sendmail($user->email, $mailService);
                     }
                 }
