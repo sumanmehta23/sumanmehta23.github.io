@@ -46,13 +46,15 @@ class ImportClientsCommand extends Command
      */
     public function handle(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
     {
+        ini_set("memory_limit", "-1");
+        ini_set('max_execution_time', 0);
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
         $this->mailService = $mailService;
         // $this->api = $api;
         $filePath = $this->argument('file');
-        $existingcounter=$missingcountries=0;
+        $newcustomers=$existingcounter=$missingcountries=0;
 
         // Validate the file
         if (!file_exists($filePath) || !is_readable($filePath)) {
@@ -146,6 +148,7 @@ class ImportClientsCommand extends Command
                     if($user){
                         Log::info("Row {$record['Your email address']}: User created successfully");
                         $this->sendWelcomeEmail($user);
+                        $newcustomers++;
                     }
                 }
                 // die();
@@ -155,27 +158,19 @@ class ImportClientsCommand extends Command
             return Command::FAILURE;
         }
 
-        Log::info('CSV parsing completed successfully. Ignored '.$missingcountries.' rows with missing countries. '.$existingcounter.' existing users found');
+        Log::info('CSV parsing completed successfully. Ignored '.$missingcountries.' rows with missing countries. '.$existingcounter.' existing users found. '.$newcustomers.' new users created.');
         return Command::SUCCESS;
     }
     private function sendWelcomeEmail($user)
     {
-//         Dear Valued Client,
-// Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:
-// Reset your password using the secure link provided: https://my.lqhmarkets.com/forgot-password
-// Complete the Know Your Customer (KYC) verification process
-// Set up your MetaTrader 5 (MT5) trading account
-// Fill out your bonus request form here: https://forms.gle/Jk9SH1sxM4fEDNre6
-// Please note:  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.
-// If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com
-// Best regards,LQH Markets Team
+
 
         $email=$user->email;
         // $code =Str::random(60);
         // User::where('email', $email)->update(['emailToken' => $code]);
         $settings = settings();
         $from = $settings['email_from_address'];
-        $emailSubject = 'Redeem Your $300 Bonus on LQHMarkets';
+        $emailSubject = 'Redeem Your $300 SwingTradingLabs Bonus on LQHMarkets';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
@@ -203,18 +198,13 @@ class ImportClientsCommand extends Command
     }
     private function sendWelcomeToExistingUser($user)
     {
-//         Dear Valued Client,
-// Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:
-// Fill out your bonus request form here: https://forms.gle/Jk9SH1sxM4fEDNre6
-// Please note:  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.
-// If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com
-// Best regards,LQH Markets Team
+
         $email=$user->email;
         // $code =Str::random(60);
         // User::where('email', $email)->update(['emailToken' => $code]);
         $settings = settings();
         $from = $settings['email_from_address'];
-        $emailSubject = 'Redeem Your $300 Bonus on LQHMarkets';
+        $emailSubject = 'Redeem Your $300 SwingTradingLabs Bonus on LQHMarkets';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
