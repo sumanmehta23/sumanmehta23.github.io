@@ -249,7 +249,15 @@ class MT5Controller extends Controller
             $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';;
             $ticket = null;
 
-            if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+            $loginss = [];
+
+            if (in_array($login, $loginss)) {
+                $operation = MTEnDealAction::DEAL_BONUS;
+            } else {
+                $operation = MTEnDealAction::DEAL_BALANCE;
+            }
+
+            if (($error_code = $this->api->TradeBalance($login, $operation, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
             } else {
                 $deposit_details = BonusTransaction::create([
