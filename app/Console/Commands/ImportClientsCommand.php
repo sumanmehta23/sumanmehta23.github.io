@@ -11,6 +11,7 @@ use App\Models\AccountType;
 use App\Services\MT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 
 class ImportClientsCommand extends Command
@@ -51,7 +52,8 @@ class ImportClientsCommand extends Command
         $this->mailService = $mailService;
         // $this->api = $api;
         $filePath = $this->argument('file');
-        $missingcountries=0;
+        $existingcounter=$missingcountries=0;
+
         // Validate the file
         if (!file_exists($filePath) || !is_readable($filePath)) {
             $this->error("The file {$filePath} does not exist or is not readable.");
@@ -70,8 +72,8 @@ class ImportClientsCommand extends Command
                 $country=Country::where('country_name',$record['Where are you from?'])->first();
                 if(!$country){
                     $missingcountries++;
-                    $this->error("Row {$record['Where are you from?']}: Country not found");
-                    continue;
+                    Log::error("Row {$record['Where are you from?']}: Country not found");
+                    // continue;
                 }
                 // dd($country);
                 $phone=str_replace("'","",$record['Your phone number']);
@@ -84,11 +86,12 @@ class ImportClientsCommand extends Command
                 // $this->line('---');
                 $existing=User::where('email',$record['Your email address'])->first();
                 if($existing){
+                    $existingcounter++;
                     if(empty( $existing->ib1) || $existing->ib1=='noIB'){
                         $existing->ib1='Swingtradinglab';
                         $accountcount=$existing->accounts()->count();
                         foreach($existing->accounts as $account){
-                            dump($account->accountType);
+                            // dump($account->accountType);
                            
                            $groupCode = str_replace("DF","ALEX",$account->accountType->ac_group);
                             $group = AccountType::where('ac_group', $groupCode)->first();
@@ -96,50 +99,54 @@ class ImportClientsCommand extends Command
                                 $_POST["options"] =$group->id;
                                 $account_type_id = $group->id;
                                 $code=$account->code;
-                                dump($account_type_id);
+                                // dump($account_type_id);
                                 if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                    //dd(MTRetCode::GetError($error_code));
                                     // return response()->json([
                                     //     'status' => 'warning',
                                     //     'message' => 'Something went wrong on Updating details',
                                     //     'error' => MTRetCode::GetError($error_code)
                                     // ], 400);
-                                    $this->error( 'Something went wrong on Updating details '.$code." " . MTRetCode::GetError($error_code));
+                                    Log::error( 'Something went wrong on Updating details '.$code." " . MTRetCode::GetError($error_code));
                                 }
-                                dd($trade_user);
-                                // Fetch account type details
+                                // dd($trade_user);
+                                // // Fetch account type details
                                 $trade_user->Group = $group->ac_group;
                     
                                 // Update user data via API
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                    $this->error( "Something went wrong on Updating details $code " . MTRetCode::GetError($error_code));
+                                    Log::error( "Something went wrong on Updating details $code " . MTRetCode::GetError($error_code));
                                 } else {
                                     $account->account_type_id = $account_type_id;
-                                    // $account->save();
+                                    $account->save();
                                     
                                 }
                             }
                         }
-                        $this->info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
-                        // $existing->save();
+                        Log::info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
+                        $existing->save();
+                        $this->sendWelcomeToExistingUser($existing);
                     }else{
-                        $this->error("Row {$record['Your email address']}: User already exists and has an IB1");
+                        Log::error("Row {$record['Your email address']}: User already exists and has an IB1");
                     }
                     continue;
                 }else{
-                    // User::create([
-                    //     'fullname'=>$record['Full Name'],
-                    //     'email'=>$record['Your email address'],
-                    //     'username'=>$record['Your email address'],
-                    //     'password'=>Hash::make('password'.rand(999,999999)),
-                    //     'country_code'=>$country->country_code,
-                    //     'number'=>$phone,
-                    //     'country'=>$record['Where are you from?'],
-                    //     // 'request'=>$record['What do you want?'],
-                    //     'wallet_enabled'=>1,
-                    //     'ib1'=>'Swingtradinglab'
-                    // ]);
+                    $user=User::create([
+                        'fullname'=>$record['Full Name'],
+                        'email'=>$record['Your email address'],
+                        'username'=>$record['Your email address'],
+                        'password'=>Hash::make('password'.rand(999,999999)),
+                        'country_code'=>$country?$country->country_code:'',
+                        'number'=>$phone,
+                        'country'=>$record['Where are you from?'],
+                        // 'request'=>$record['What do you want?'],
+                        'wallet_enabled'=>1,
+                        'ib1'=>'Swingtradinglab'
+                    ]);
+                    if($user){
+                        Log::info("Row {$record['Your email address']}: User created successfully");
+                        $this->sendWelcomeEmail($user);
+                    }
                 }
                 // die();
             }
@@ -148,7 +155,85 @@ class ImportClientsCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->info('CSV parsing completed successfully. Ignored '.$missingcountries.' rows with missing countries.');
+        Log::info('CSV parsing completed successfully. Ignored '.$missingcountries.' rows with missing countries. '.$existingcounter.' existing users found');
         return Command::SUCCESS;
+    }
+    private function sendWelcomeEmail($user)
+    {
+//         Dear Valued Client,
+// Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:
+// Reset your password using the secure link provided: https://my.lqhmarkets.com/forgot-password
+// Complete the Know Your Customer (KYC) verification process
+// Set up your MetaTrader 5 (MT5) trading account
+// Fill out your bonus request form here: https://forms.gle/Jk9SH1sxM4fEDNre6
+// Please note:  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.
+// If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com
+// Best regards,LQH Markets Team
+
+        $email=$user->email;
+        // $code =Str::random(60);
+        // User::where('email', $email)->update(['emailToken' => $code]);
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $emailSubject = 'Redeem Your $300 Bonus on LQHMarkets';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content =
+            
+            '<div>Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:</div>
+            <ol>
+                <li><b>Reset your password</b> using the secure link provided:<a href="'.$settings['copyright_site_name_text'] . "/forgot-password".'">'.$settings['copyright_site_name_text'] . "/forgot-password".'</a></li>
+                <li>Complete the <b>Know Your Customer (KYC)</b> verification process</li>
+                <li>Set up your <b>MetaTrader 5 (MT5)</b> trading account</li>
+                <li>Fill out your <b>bonus request form</b> here: <ahref="https://forms.gle/Jk9SH1sxM4fEDNre6">https://forms.gle/Jk9SH1sxM4fEDNre6</a></li>
+            </ol>
+            <p><b>Please note:</b>  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.</p>
+            <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+            <p>Best Regards.</p>
+          <p>LQH Markets Team</p>';
+          $templateVars = [
+            'name' => 'Valued Client',
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "",
+            "subtitle_right" => "",
+        ];
+        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+    }
+    private function sendWelcomeToExistingUser($user)
+    {
+//         Dear Valued Client,
+// Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:
+// Fill out your bonus request form here: https://forms.gle/Jk9SH1sxM4fEDNre6
+// Please note:  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.
+// If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com
+// Best regards,LQH Markets Team
+        $email=$user->email;
+        // $code =Str::random(60);
+        // User::where('email', $email)->update(['emailToken' => $code]);
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $emailSubject = 'Redeem Your $300 Bonus on LQHMarkets';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content ='<div>Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:</div>
+            
+                
+                <p>Fill out your <b>bonus request form</b> here: <ahref="https://forms.gle/Jk9SH1sxM4fEDNre6">https://forms.gle/Jk9SH1sxM4fEDNre6</a></p>
+            
+            <p><b>Please note:</b>  You must complete KYC & create a MT5 account on LQHMarkets to qualify for this bonus.</p>
+            <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+            <p>Best Regards.</p>
+          <p>LQH Markets Team</p>';
+        $templateVars = [
+            'name' => 'Valued Client',
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "",
+            "subtitle_right" => "",
+        ];
+        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
     }
 }
