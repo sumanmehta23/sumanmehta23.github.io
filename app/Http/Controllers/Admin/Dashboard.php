@@ -89,6 +89,7 @@ class Dashboard extends Controller
     {
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);
+        return;
         // Process users in chunks to save memory
         User::select('email')
             // ->whereIn('email',['tech2@lqhmarkets.com','lqhmarkets@gmail.com'])
