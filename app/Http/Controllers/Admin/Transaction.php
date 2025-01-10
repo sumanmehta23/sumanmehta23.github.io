@@ -72,8 +72,40 @@ class Transaction extends Controller
             return redirect('admin/dashboard');
         }
         $id = $request->id;
-        return view('admin.pending_transactions', compact('id'));
+        return view('admin.transactions.pending.', compact('id'));
     }
+    // public function pending(Request $request)
+    // {
+    //     if (!isset($request->id)) {
+    //         return redirect('admin/dashboard');
+    //     }
+    //     $id = $request->id;
+    //     return view('admin.pending_transactions', compact('id'));
+    // }
+    // public function pending(Request $request)
+    // {
+    //     if (!isset($request->id)) {
+    //         return redirect('admin/dashboard');
+    //     }
+    //     $id = $request->id;
+    //     return view('admin.pending_transactions', compact('id'));
+    // }
+    // public function pending(Request $request)
+    // {
+    //     if (!isset($request->id)) {
+    //         return redirect('admin/dashboard');
+    //     }
+    //     $id = $request->id;
+    //     return view('admin.pending_transactions', compact('id'));
+    // }
+    // public function pending(Request $request)
+    // {
+    //     if (!isset($request->id)) {
+    //         return redirect('admin/dashboard');
+    //     }
+    //     $id = $request->id;
+    //     return view('admin.pending_transactions', compact('id'));
+    // }
     public function wallet_deposit_details(Request $request)
     {
         if (request()->has('id') && !empty(request()->id)) {
