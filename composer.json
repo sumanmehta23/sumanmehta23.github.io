@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/telescope": "^5.2",
         "laravel/tinker": "^2.8",
+        "league/csv": "^9.21",
         "predis/predis": "^2.3",
         "realrashid/sweet-alert": "^7.2",
         "yajra/laravel-datatables-oracle": "^11.1"
