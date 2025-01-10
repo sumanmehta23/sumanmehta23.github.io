@@ -249,7 +249,7 @@ class MT5Controller extends Controller
             $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';;
             $ticket = null;
 
-            $loginss = [];
+            $loginss = [118695];
 
             if (in_array($login, $loginss)) {
                 $operation = MTEnDealAction::DEAL_BONUS;
