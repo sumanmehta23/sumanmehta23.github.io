@@ -94,7 +94,6 @@ class ImportClientsCommand extends Command
                         $accountcount=$existing->accounts()->count();
                         foreach($existing->accounts as $account){
                             // dump($account->accountType);
-                           
                            $groupCode = str_replace("DF","ALEX",$account->accountType->ac_group);
                             $group = AccountType::where('ac_group', $groupCode)->first();
                             if($group){
@@ -127,7 +126,7 @@ class ImportClientsCommand extends Command
                         }
                         Log::info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
                         $existing->save();
-                        $this->sendWelcomeToExistingUser($existing);
+                        // $this->sendWelcomeToExistingUser($existing);
                     }else{
                         Log::error("Row {$record['Your email address']}: User already exists and has an IB1");
                     }
@@ -149,6 +148,8 @@ class ImportClientsCommand extends Command
                         Log::info("Row {$record['Your email address']}: User created successfully");
                         $this->sendWelcomeEmail($user);
                         $newcustomers++;
+                    }else{
+                        Log::error("Row {$record['Your email address']}: User not created");
                     }
                 }
                 // die();
