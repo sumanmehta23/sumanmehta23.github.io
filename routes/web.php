@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\PermissionController;
+use App\Models\Ib1;
 use App\Models\Account;
-use Illuminate\Support\Str;
 use App\Models\Permission;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
@@ -15,6 +15,8 @@ use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
@@ -38,8 +40,16 @@ use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\Admin\PermissionController;
 Route::get("/se",function(){
+//     $clientId='9dc8c7da-d335-4100-99cb-0ea0935b0920';
+//     $admin = Auth::guard('admin')->user();
+
+//     $ib = Ib1::with('user')->where('user_id', $clientId)->first();
+//     Gate::forUser($admin)->authorize('ib:update', $ib);
+//  die("AUthorized");
     
+    // Gate::authorize('ib:update',$result);
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'
@@ -156,6 +166,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
+Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -191,13 +202,17 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
-    Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
+    
 
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
+    Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
     Route::middleware(['is_admin'])->group(function () {
+        
+        
+        
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
         ->middleware('check.permissions:wallet_deposit:viewAny');
@@ -220,11 +235,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         ->middleware('check.permissions:trade_withdrawals:viewAny');
         
 
-        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:user:viewAny');
-        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:user:view');
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
+        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
         Route::post('/updateIB', [ClientController::class, 'updateIB'])->name('updateIB');
         Route::post('/updateRM', [ClientController::class, 'updateRM'])->name('updateRM');
-        Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser');
+        Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser')->middleware("check.permissions:client:create");
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
 
@@ -273,10 +288,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password');
         });
 
-        Route::get("/ibdashboard", [IBController::class, 'index']);
-        Route::get("/iblist", [IBController::class, 'list']);
-        Route::get("/iblist_active", [IBController::class, 'list_active']);
-        Route::get("/ib_settings", [IBController::class, 'ib_settings']);
+        Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
+        Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
+        Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;
+        Route::get("/ib_settings", [IBController::class, 'ib_settings'])->name('ib.settings')->middleware('check.permissions:ib:manageSettings');
         Route::get("/ibCommission", [IBController::class, 'ibCommission']);
         Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);

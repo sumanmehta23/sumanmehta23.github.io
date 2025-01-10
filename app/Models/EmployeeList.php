@@ -39,6 +39,7 @@ class EmployeeList extends Authenticatable
         // if ($this->role->name == "Super Admin") {
         //     return true;
         // }
+        info("Permissions to check ".json_encode([$permissions]));
         return $this->role->permissions->pluck('name')->intersect($permissions)->isNotEmpty();
     }
 }

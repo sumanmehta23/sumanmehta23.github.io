@@ -49,7 +49,7 @@ class CheckUserPermissions
         //     }
         // }
         // dd($permissions);
-        
+        // $admin=Auth::guard('admin')->user();
         if (!$request->user()->hasPermissions($permissions)) {
             return response()->view('errors.401', [], 401); 
         }

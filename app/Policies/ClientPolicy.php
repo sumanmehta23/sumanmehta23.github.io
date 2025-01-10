@@ -46,6 +46,13 @@ class ClientPolicy
     {
         return false;
     }
+     /**
+     * Determine whether the user can delete the model.
+     */
+    public function impersonate(User $user, User $model): bool
+    {
+        return false;
+    }
 
     
 }

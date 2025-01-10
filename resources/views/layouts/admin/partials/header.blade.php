@@ -262,11 +262,11 @@ $filePermissions = filePermissions($userRole);
                             <ul class="slide-menu child1">
                             </ul>
                         </li>
-                        @if(auth()->user()->can('account:viewLiveAccounts') || auth()->user()->can('account:viewDemoAccounts'))
+                        @if(auth()->user()->can('account:viewLiveAccounts') || auth()->user()->can('account:viewDemoAccounts')  || auth()->user()->can('client:viewAny'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">CLIENT</span>
                             </li>
-                            
+                            @can("client:viewAny")
                             <li class="slide menu-item-main ">
                                 <a href="{{route("admin.clients.index")}}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-users"></i>
@@ -275,7 +275,7 @@ $filePermissions = filePermissions($userRole);
                                 <ul class="slide-menu child1">
                                 </ul>
                             </li>
-                        
+                        @endcan
 
                                 <li class="slide has-sub menu-item-main ">
                                 <a href="#" class="side-menu__item">
@@ -348,7 +348,7 @@ $filePermissions = filePermissions($userRole);
                                     @endcan
                                 </ul>
                             </li>
-                        @endif
+                       
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-list"></i>
@@ -380,6 +380,8 @@ $filePermissions = filePermissions($userRole);
                                 @endcan
                             </ul>
                         </li>
+                        @endif
+                        @if(auth()->user()->can('ib:viewAny') || auth()->user()->can('ib:manageSettings'))
                         <li class="slide__category menu-item-category">
                             <span class="category-name">INTRODUCING BROKER</span>
                         </li>
@@ -393,36 +395,30 @@ $filePermissions = filePermissions($userRole);
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 501px);"
                                 data-popper-placement="top">
-
+                                @can('ib:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/ibdashboard" class="side-menu__item ">
-                                        IB Dashboard
-                                    </a>
+                                    <a href="{{route('admin.ib.dashboard')}}" class="side-menu__item ">IB Dashboard</a>
                                 </li>
-
-
+                                @endcan
+                                @can('ib:manageRequests')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/iblist" class="side-menu__item ">
-                                        IB Requests
-                                    </a>
+                                    <a href="{{route('admin.ib.list')}}" class="side-menu__item ">IB Requests</a>
                                 </li>
-
-
+                                @endcan
+                                @can('ib:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/iblist_active" class="side-menu__item ">
-                                        IB Users
-                                    </a>
+                                    <a href="{{route("admin.ib.active.list")}}" class="side-menu__item ">IB Users</a>
                                 </li>
-
-
+                                @endcan
+                                @can('ib:manageSettings')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/ib_settings" class="side-menu__item ">
-                                        IB Com. Settings
-                                    </a>
+                                    <a href="/admin/ib_settings" class="side-menu__item ">IB Com. Settings</a>
                                 </li>
+                                @endcan
 
                             </ul>
                         </li>
+                        @endif
                         <li class="slide__category menu-item-category">
                             <span class="category-name">MT5 CONFIGURATION</span>
                         </li>
