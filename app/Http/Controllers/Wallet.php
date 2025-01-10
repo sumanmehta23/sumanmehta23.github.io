@@ -35,7 +35,8 @@ class Wallet extends Controller
     {
         $email = auth()->user()->email;
         $wallet_history = $this->getWalletHistory($email);
-        $wallet_balance =auth()->user()->wallet_balance;
+        $wallet_balance = round(auth()->user()->wallet_balance, 2);
+
         // dd($wallet_balance);
         return view('wallet', compact('wallet_balance', 'wallet_history'));
     }

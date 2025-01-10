@@ -272,6 +272,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/search", [SearchController::class, 'index']);
 
 
-        // Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+        Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });
