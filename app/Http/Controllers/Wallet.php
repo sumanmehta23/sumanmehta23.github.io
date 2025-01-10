@@ -35,7 +35,8 @@ class Wallet extends Controller
     {
         $email = auth()->user()->email;
         $wallet_history = $this->getWalletHistory($email);
-        $wallet_balance =auth()->user()->wallet_balance;
+        $wallet_balance = round(auth()->user()->wallet_balance, 2);
+
         // dd($wallet_balance);
         return view('wallet', compact('wallet_balance', 'wallet_history'));
     }
@@ -68,7 +69,7 @@ class Wallet extends Controller
             'status' => 'required',
         ]);
 
-        $user = DB::table('aspnetusers')->where('email', session('clogin'))->first();
+        $user = DB::table('aspnetusers')->where('email', auth()->user()->email)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
