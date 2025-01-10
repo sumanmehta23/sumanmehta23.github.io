@@ -2,6 +2,7 @@
 
 namespace App\Services;
 use GuzzleHttp\Client;
+use App\Jobs\ScheduleMailJob;
 use Illuminate\Support\Facades\Log;
 
 class MailService
@@ -21,30 +22,17 @@ class MailService
 
     public function sendEmail($toEmail, $subject, $headers,$templateFile,$data)
     {
-        $settings=settings();
-        $htmlContent = view('emails.template', $data)->render();
-        $payload = [
-            'sender' => [
-                'name' => $settings['sender_name'],
-                'email' => $settings['sender_email_address'],
-            ],
-            'to' => [
-                [
-                    'email' => $toEmail,
-                ],
-            ],
-            'subject' => $subject,
-            'htmlContent' => $htmlContent,
-        ];
+        
         try {
-            $response = $this->client->post('smtp/email', [
-                'headers' => [
-                    'api-key' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $payload,
-            ]);
-            return json_decode($response->getBody(), true);
+            ScheduleMailJob::dispatch($data,$toEmail,$subject)->onQueue('emails');
+            // $response = $this->client->post('smtp/email', [
+            //     'headers' => [
+            //         'api-key' => $this->apiKey,
+            //         'Content-Type' => 'application/json',
+            //     ],
+            //     'json' => $payload,
+            // ]);
+            return true;
         } catch (\Exception $e) {
             Log::error('Brevo API Error: ' . $e->getMessage());
             return [

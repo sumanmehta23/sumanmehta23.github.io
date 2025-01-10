@@ -89,17 +89,18 @@ class Dashboard extends Controller
     {
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);
-        return;
+        // return;
         // Process users in chunks to save memory
         User::select('email')
-            // ->whereIn('email',['tech2@lqhmarkets.com','lqhmarkets@gmail.com'])
+            // ->whereIn('email',['tech2@lqhmarkets.com'])
+            ->where('id','<','9dc8c7dd-3ba3-4086-af38-d68b469bf0f5')
             ->where('status', 1)
             ->orderBy('id', 'desc')
             ->chunk(100, function ($users) use ($mailService) {
                 foreach ($users as $user) {
-                    // if(in_array($user->email,['tech2@lqhmarkets.com','lqhmarkets@gmail.com'])){
+                    if(in_array($user->email,['toussaintorlando249@yahoo.com'])){
                         $this->sendmail($user->email, $mailService);
-                    // }
+                    }
                 }
             });
     }
