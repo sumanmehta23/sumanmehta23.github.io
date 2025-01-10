@@ -17,6 +17,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\BonusTransaction;
 
 class TradeDepositController extends Controller
 {
@@ -31,7 +32,17 @@ class TradeDepositController extends Controller
         $email = auth()->user()->email;
         $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
-        $liveaccount_details =auth()->user()->liveAccounts;
+        // $liveaccount_details =auth()->user()->liveAccounts;
+        $liveaccount_details = Account::with([
+            'accountType',
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])
+        ->where('user_id', $user->id)
+        ->where('demo', false)
+        ->get();
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $totals = Account::where('user_id', $user->id)
