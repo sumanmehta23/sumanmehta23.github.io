@@ -358,34 +358,26 @@ $filePermissions = filePermissions($userRole);
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 461px);"
                                 data-popper-placement="bottom">
-
+                                @can('wallet_deposit:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="{{route('admin.')}}/admin/transactions/pending/wallet_deposit" class="side-menu__item ">
-                                        Wallet Deposit
-                                    </a>
+                                    <a href="{{route('admin.transactions.pending.wallet-deposit')}}" class="side-menu__item ">Wallet Deposit</a>
                                 </li>
-
-
+                                @endcan
+                                @can('wallet_withdraw:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/pending/wallet_withdrawal" class="side-menu__item ">
-                                        Wallet Withdrawal
-                                    </a>
+                                    <a href="{{route('admin.transactions.pending.wallet-withdrawal')}}" class="side-menu__item ">Wallet Withdrawal</a>
                                 </li>
-
-
+                                @endcan
+                                @can('trade_deposit:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/pending/trading_deposit" class="side-menu__item ">
-                                        Trading Deposit
-                                    </a>
+                                    <a href="{{route('admin.transactions.pending.trading-deposit')}}" class="side-menu__item ">Trading Deposit</a>
                                 </li>
-
-
+                                @endcan
+                                @can('trade_withdrawals:viewAny')
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/transactions/pending/trading_withdrawal" class="side-menu__item ">
-                                        Trading Withdrawal
-                                    </a>
+                                    <a href="{{route('admin.transactions.pending.trading-withdrawal')}}" class="side-menu__item ">Trading Withdrawal</a>
                                 </li>
-
+                                @endcan
                             </ul>
                         </li>
                         <li class="slide__category menu-item-category">

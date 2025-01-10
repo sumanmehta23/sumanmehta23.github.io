@@ -29,7 +29,7 @@
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
-                                        href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
+                                        href="{{route('admin.transactions.pending.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
@@ -41,19 +41,13 @@
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
-                                        href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
+                                        href="{{route('admin.transactions.pending.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
-                                        href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading Withdrawal</a>
-                                </li>
-                                @endcan
-                                @can('internal_transfer:viewAny')
-                                <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer" 
-                                        href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal Transfer</a>
+                                        href="{{route('admin.transactions.pending.trading-withdrawal')}}" aria-selected="false">Trading Withdrawal</a>
                                 </li>
                                 @endcan
                             </ul>
@@ -178,7 +172,7 @@
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getWalletWithdrawal2',
+                url: '/admin/getPendingWalletWithdrawal2',
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();

@@ -29,33 +29,29 @@
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
-                                        href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
+                                        href="{{route('admin.transactions.pending.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}" data-bs-toggle="tab" data-type="wallet_withdrawal" role="tab"
-                                        href="#walletwithdrawal" aria-selected="false">Wallet Withdrawal</a>
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                        href="{{route('admin.transactions.pending.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
-                                        href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
+                                        href="{{route('admin.transactions.pending.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
-                                        href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading Withdrawal</a>
+                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}" data-bs-toggle="tab" data-type="trading_withdrawal" role="tab"
+                                        href="#tradingwithdrawal" aria-selected="false">Trading
+                                        Withdrawal</a>
                                 </li>
                                 @endcan
-                                @can('internal_transfer:viewAny')
-                                <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer" 
-                                        href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal Transfer</a>
-                                </li>
-                                @endcan
+                               
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
@@ -65,49 +61,12 @@
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'wallet_withdrawal'? 'active show':''}}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
-                                        <table id="tableWalletWithdrawal"
-                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
-                                            <thead>
-                                                <tr>
-                                                    <th>Account No</th>
-                                                    <th>Withdrawal Amount</th>
-                                                    <th>Withdrawal Fee</th>
-                                                    <th>Withdraw To</th>
-                                                    <th>Withdraw Date</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
-                                                    <th>Date</th>
-                                                    <th>Time</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
+                                        
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_deposit'? 'active show':''}}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        <table id="tableTradingDeposit"
-                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
-                                            <thead>
-                                                <tr>
-                                                    {{-- <th>#</th> --}}
-                                                    <th>Account No</th>
-                                                    <th>Deposit Amount</th>
-                                                    <th>Deposit Type</th>
-                                                    <th>Deposit From</th>
-                                                    <th>Deposited Date</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                    <th>Date</th>
-                                                    <th>Time</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
+                                       
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_withdrawal'? 'active show':''}}" id="tradingwithdrawal" role="tabpanel">
@@ -133,21 +92,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'internal_transfer'? 'active':''}}" id="transaction5" role="tabpanel">
-                                    <table id="tableInternalTransfer"
-                                        class="table ajaxDataTable table-bordered text-nowrap w-100">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Amount</th>
-                                                <th>Transfer From</th>
-                                                <th>Transfer To</th>
-                                                <th>Status</th>
-                                                <!-- <th>Actions</th> -->
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        </tbody>
-                                    </table>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -161,24 +106,43 @@
     <script>
         $(document).ready(function () {
           
-          var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
+          var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
+            // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-              buttons: [
+            //   buttons: [
+            //         {
+            //             extend: 'excel',
+            //             text: 'Export to Excel',
+            //         }
+            //     ],
+    
+            // order: [
+            //   [0, "desc"]
+            // ],
+    
+            // "ajax": {
+            //   "url": "/admin/ajax",
+            //   "type": "GET",
+            //   data: {
+            //     action: 'getTradingWithdrawal',
+            //   },
+            // },
+            buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
                         exportOptions: {
-                            columns: [7,8,1,2,3,9,10,5] // Updated column indices to match your use case
+                            columns: [0,1,2,3,5,7,8] // Updated column indices to match your use case
                         }
                     }
                 ],
     
-             order: [[3, "desc"]],
-             processing: true,
+            order: [[3, "desc"]],
+            processing: true,
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getWalletWithdrawal2',
+                url: '/admin/getPendingTradingWithdrawal2',
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
@@ -189,17 +153,10 @@
                 }
             },
             columns: [
-              {
-                data: 'email',
-                name: 'email',
-                // render: function (data, row, row_data) {
-                //   var return_data = "<a href='/admin/client_details/" + row_data.enc_id + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.fullname + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div></div></div></a>";
-                //   return return_data;
-                // }
-              },
-              { data: 'amount', name: 'amount' },
-              { data: 'fee', name: 'fee' },
-              { data: 'payment_mode', name: 'payment_mode' },
+              { data: 'code', name: 'code' },
+              { data: 'withdrawal_amount', name: 'withdrawal_amount' },
+              { data: 'withdraw_type', name: 'withdraw_type' },
+              { data: 'withdraw_to', name: 'withdraw_to' },
               {
                 data: 'withdraw_date', name: 'withdraw_date',
                 // render: function (data, type, row) {
@@ -212,16 +169,15 @@
               },
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
-              { data: 'fullname', name: 'fullname', visible: false },
-              { data: 'fullemail', name: 'fullemail', visible: false},
               { data: 'created_date', name: 'created_date', visible: false},
               { data: 'created_time', name: 'created_time', visible: false},
             ]
           });
-          
+         
           $('#statusFilter').on('change', function () {
-            tableWalletWithdrawal.ajax.reload();
-           
+            
+            tableTradingWithdrawal.ajax.reload();
+            
           });
         });
       </script>

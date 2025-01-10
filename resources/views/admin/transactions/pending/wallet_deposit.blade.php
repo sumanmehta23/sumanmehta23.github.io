@@ -28,39 +28,54 @@
                             <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
-                                        href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
+                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" data-bs-toggle="tab" role="tab"
+                                        href="#walletdeposit" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}" data-bs-toggle="tab" data-type="wallet_withdrawal" role="tab"
-                                        href="#walletwithdrawal" aria-selected="false">Wallet Withdrawal</a>
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                        href="{{route('admin.transactions.pending.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
-                                        href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
+                                        href="{{route('admin.transactions.pending.trading-deposit')}}" aria-selected="false">Trading
+                                        Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
-                                        href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading Withdrawal</a>
+                                        href="{{route('admin.transactions.pending.trading-withdrawal')}}" aria-selected="false">Trading
+                                        Withdrawal</a>
                                 </li>
                                 @endcan
-                                @can('internal_transfer:viewAny')
-                                <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer" 
-                                        href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal Transfer</a>
-                                </li>
-                                @endcan
+                                
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+                                        <table id="tableWalletDeposit"
+                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
+                                            <thead>
+                                                <tr>
+                                                    <th>Email</th>
+                                                    <th>Amount</th>
+                                                    <th>Payment Mode</th>
+                                                    <th>Deposit Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'wallet_withdrawal'? 'active show':''}}" id="walletwithdrawal" role="tabpanel">
@@ -160,50 +175,48 @@
     @push('scripts')
     <script>
         $(document).ready(function () {
-          
-          var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
+          var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-              buttons: [
+            
+            buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
                         exportOptions: {
-                            columns: [7,8,1,2,3,9,10,5] // Updated column indices to match your use case
+                            columns: [6,7,1,2,4,8,9] // Updated column indices to match your use case
                         }
                     }
                 ],
     
-             order: [[3, "desc"]],
-             processing: true,
+            order: [[3, "desc"]],
+            processing: true,
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getWalletWithdrawal2',
+                url: '/admin/getPendingWalletDeposit2',
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
                         return d;
-                    },  // Ensure this is populated dynamically if needed.
+                    }, // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
                     return json.data;
                 }
             },
             columns: [
               {
-                data: 'email',
-                name: 'email',
+                data: 'email', name: 'email',
                 // render: function (data, row, row_data) {
                 //   var return_data = "<a href='/admin/client_details/" + row_data.enc_id + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.fullname + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div></div></div></a>";
                 //   return return_data;
                 // }
               },
               { data: 'amount', name: 'amount' },
-              { data: 'fee', name: 'fee' },
               { data: 'payment_mode', name: 'payment_mode' },
               {
-                data: 'withdraw_date', name: 'withdraw_date',
+                data: 'deposit_date', name: 'deposit_date',
                 // render: function (data, type, row) {
-                //   var dateTime = row.withdraw_date.split(' ');
+                //   var dateTime = row.deposit_date.split(' ');
                 //   var date = dateTime[0];
                 //   var time = dateTime[1];
                 //   var return_data = "<div class='d-grid'><div class='date'>" + date + "</div><div class='time text-muted'>" + time + "</div></div>";
@@ -220,7 +233,7 @@
           });
           
           $('#statusFilter').on('change', function () {
-            tableWalletWithdrawal.ajax.reload();
+            tableWalletDeposit.ajax.reload();
            
           });
         });

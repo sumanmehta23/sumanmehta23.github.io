@@ -199,7 +199,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::middleware(['is_admin'])->group(function () {
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
-        Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-withdrawal')
+        Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
         ->middleware('check.permissions:wallet_deposit:viewAny');
         Route::get('/transactions/wallet-withdrawal', [Transaction::class, 'wallet_withdrawal'])->name('transactions.wallet-withdrawal')
         ->middleware('check.permissions:wallet_withdraw:viewAny');
@@ -210,16 +210,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/internal-transfer', [Transaction::class, 'internal_transfer'])->name('transactions.internal-transfer')
         ->middleware('check.permissions:internal_transfer:viewAny');
         // Route::get('/transactions/{id}', [Transaction::class, 'index'])->name('transactions')->middleware('check.permissions:wallet_deposit:viewAny');
-        Route::get('/transactions/pending/wallet-deposit', [Transaction::class, 'pending'])->name('transactions.pending.wallet-withdrawal')
+        Route::get('/transactions/pending/wallet-deposit', [Transaction::class, 'pendingWalletDeposit'])->name('transactions.pending.wallet-deposit')
         ->middleware('check.permissions:wallet_deposit:viewAny');
-        Route::get('/transactions/pending/wallet-withdrawal', [Transaction::class, 'pending'])->name('transactions.pending.wallet-withdrawal')
+        Route::get('/transactions/pending/wallet-withdrawal', [Transaction::class, 'pendingWalletWithdrawal'])->name('transactions.pending.wallet-withdrawal')
         ->middleware('check.permissions:wallet_withdraw:viewAny');
-        Route::get('/transactions/pending/trading-deposit', [Transaction::class, 'pending'])->name('transactions.pending.trading-deposit')
+        Route::get('/transactions/pending/trading-deposit', [Transaction::class, 'pendingTradingDeposit'])->name('transactions.pending.trading-deposit')
         ->middleware('check.permissions:trade_deposit:viewAny');
-        Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pending'])->name('transactions.pending.trading-withdrawal')
+        Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
         ->middleware('check.permissions:trade_withdrawals:viewAny');
-        Route::get('/transactions/pending/internal-transfer', [Transaction::class, 'pending'])->name('transactions.pending.internal-transfer')
-        ->middleware('check.permissions:internal_transfer:viewAny');
+        
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:user:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:user:view');
