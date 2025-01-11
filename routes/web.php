@@ -299,10 +299,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/view_account_details/{accountId}", [MT5Controller::class, 'view'])->where('account', '.*')->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
-        Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');
-        Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount');
-        Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount');
-        Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount');
+        Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
+        Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
+        Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount')->middleware('check.permissions:bonus_transaction:create');
+        Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount')->middleware('check.permissions:bonus_transaction:create');
 
         Route::get("/search", [SearchController::class, 'index']);
         Route::resource('permissions', PermissionController::class);
