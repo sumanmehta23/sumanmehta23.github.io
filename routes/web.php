@@ -37,7 +37,11 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 Route::get("/se",function(){
-    
+    // $uuids=[];
+    // for($i=0;$i<100;$i++){
+    //     $uuids[]=Str::orderedUuid()->__tostring();
+    // }
+    // dump($uuids);
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'
