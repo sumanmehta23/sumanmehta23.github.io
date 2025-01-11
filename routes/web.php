@@ -42,14 +42,11 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 Route::get("/se",function(){
-//     $clientId='9dc8c7da-d335-4100-99cb-0ea0935b0920';
-//     $admin = Auth::guard('admin')->user();
-
-//     $ib = Ib1::with('user')->where('user_id', $clientId)->first();
-//     Gate::forUser($admin)->authorize('ib:update', $ib);
-//  die("AUthorized");
-    
-    // Gate::authorize('ib:update',$result);
+    // $uuids=[];
+    // for($i=0;$i<100;$i++){
+    //     $uuids[]=Str::orderedUuid()->__tostring();
+    // }
+    // dump($uuids);
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'
