@@ -172,7 +172,7 @@
                                 <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->transaction_id }}</h6>
+                                <h6 class="mb-0">{{ $history->id }}</h6>
                                 <p class="mb-0 text-muted"><small>Live Account</small></p>
                               </div>
                             </div>
@@ -344,6 +344,25 @@
     </div>
   </div>
 </div>
+@if (session('status'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: "{{ session('status') }}",
+        });
+    </script>
+@endif
+
+@if (session('error'))
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "{{ session('error') }}",
+        });
+    </script>
+@endif
 
 <script>
     function takeAction(data, email, amount, status) {
@@ -362,60 +381,20 @@
           <input type="hidden" name="email" value="${email}">
           <input type="hidden" name="amount" value="${amount}">
           <input type="hidden" name="status" value="${status}">
+          <input type="hidden" name="transaction_id" value="${parsedData}">
           <input type="hidden" name="action" value="update_transaction">
             ${
               status == 3
                   ? `
-              <div class="mt-2 col-12 text-start">
-                  <label for="transaction_id" class="form-label">Transaction ID</label>
-                  <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
-                  <div class="form-control">${parsedData}</div>
-              </div>
-              <div class="mt-3 col-12 text-start">
-                  <label for="rejection_reason" class="form-label">Rejection Reason</label>
-                  <select id="rejection_reason" name="rejection_reason" class="form-control">
-                      <option value="" disabled selected>Select Rejection Reason</option>
-                      <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
-                      <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
-                      <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
-                  </select>
-              </div>
-          `
-                  : ''
-            }
-            ${
-              status == 1
-                  ? `
-              <div class="mt-2 col-12 text-start">
-                  <label for="approved_by" class="form-label">Approved By</label>
-                  <input type="hidden" id="approved_by" name="approved_by" value="${parsedData.username}">
-                  <div class="form-control">${parsedData.username}</div>
-              </div>
-              <div class="mt-3 col-12 text-start">
-                  <label for="approved_date" class="form-label">Approved On</label>
-                  <input type="hidden" id="approved_date" name="approved_date" value="${approved_date_time}">
-                  <div class="form-control">${approved_date_time}</div>
-              </div>
-          `
-                  : ''
-            }
 
+          `
+                  : ''
+            }
           </form>
       `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'Submit',
-        preConfirm: () => {
-          if(status==3){
-            const rejection_reason = document.querySelector('#rejection_reason').value;
-            if (!rejection_reason) {
-                Swal.showValidationMessage('Please fill out all fields');
-                return false;
-            }
-          }
-
-          return true;
-        }
       }).then((result) => {
         console.log(result);
         if (result.isConfirmed) {

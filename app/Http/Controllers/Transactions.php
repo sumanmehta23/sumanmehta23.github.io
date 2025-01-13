@@ -122,21 +122,16 @@ class Transactions extends Controller
         // dd($request->all());
         if ($status == '3') {
             $validatedData = $request->validate([
-                'rejection_reason' => 'required',
                 'status' => 'required|integer',
                 'email' => 'required|email',
                 'amount' => 'required|numeric',
             ]);
-            $rejection_reason = $validatedData['rejection_reason'];
         }elseif($status == '1'){
             $validatedData = $request->validate([
                 'status' => 'required|integer',
                 'email' => 'required|email',
                 'amount' => 'required|numeric',
             ]);
-            $rejection_reason = 'Approved';
-            $approved_by = $request->approved_by;
-            $approved_date = $request->approved_date;
         }
         $status = $validatedData['status'];
         $email = $validatedData['email'];
@@ -147,125 +142,10 @@ class Transactions extends Controller
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         // dd($transaction);
         if ($transaction) {
-            $transaction->admin_remark = $rejection_reason;
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
-            if ($status == 1) {
-                if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
-                    $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
-                    $transaction->approved_by = $approved_by;
-                    $transaction->approved_date =$approved_date;
-                    $transaction->save();
-
-
-                    $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
-                    $walletNetwork = $walletDetails->wallet_network;
-                    $walletCurrency = $walletDetails->wallet_currency;
-                    $walletAddress = $walletDetails->wallet_address;
-                    $amount = $transaction->withdraw_amount;
-                    $payload = [
-                        "profile_id" => config("services.cryptochill.profileid"),
-                        "passthrough" => json_encode(["trans_id" => $did]),
-                        "reference_id" => "LQHPRW" . str_pad($transaction->id, 9, '0', STR_PAD_LEFT) . "-" . rand(100, 999),
-                        "kind" => $walletNetwork,
-                        "recipients" => [
-                            [
-                                "amount" => $amount,
-                                "currency" => $walletCurrency,
-                                "address" => $walletAddress,
-                                "notes" => $email . " WD# " . $transaction->id
-                            ]
-                        ],
-                        "request" => "/v1/payouts/",
-                        "nonce" => time() * 1000
-                    ];
-                    // env('CRYPTOCHILL_API_KEY')
-                    // env('CRYPTOCHILL_API_SECRET')
-                    $response = Http::withHeaders([
-                        'X-CC-KEY' => config('services.cryptochill.key'),
-                        'X-CC-PAYLOAD' => base64_encode(json_encode($payload)),
-                        'X-CC-SIGNATURE' => hash_hmac('sha256', base64_encode(json_encode($payload)), config('services.cryptochill.secret')),
-                    ])->post('https://api.cryptochill.com/v1/payouts/', $payload);
-
-                    // Log the response
-                    Log::channel('payouts')->info("Request Payload: " . json_encode($payload));
-                    Log::channel('payouts')->info("API Response: " . $response->body());
-
-                    // Check if there was an error decoding the JSON
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
-                    }
-                    $responseData=json_decode($response);
-                    // Process the result from the API
-                    if (isset($responseData->result) && isset($responseData->result->id)) {
-                        $payoutResult = $responseData->result;
-
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction,$email,$depositAmount) {
-                            // Update wallet_withdraw table with transaction_id and status
-                            WalletWithdraw::where('id', $transaction->id)
-                                ->orWhere(DB::raw('id'), '=', $request->did)
-                                ->update([
-                                    'transaction_id' => $payoutResult->id,
-                                    'payout_res' => $response->body(),
-                                    'payout_req' => json_encode($payoutResult->passthrough),
-                                    'status' => 1  // Set status to 1 (success)
-                                ]);
-                                TotalBalance::create([
-                                    'user_id' => $transaction->user_id,
-                                    'email' => $email,
-                                    'withdraw_amount' => $depositAmount,
-                                ]);
-                        });
-                    } else {
-                        // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
-                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
-                            // Update wallet_withdraw table with response and set status to 0 (error state)
-                            WalletWithdraw::where('id', $transaction->id)
-                                ->orWhere(DB::raw('id'), '=', $request->did)
-                                ->update([
-                                    'payout_res' => $response->body(),
-                                    'payout_req' => json_encode($responseData),
-                                    'status' => 0
-                                ]);
-
-                            // Delete total_balance entry
-                            // TotalBalance::where('id', $transaction->id)->delete();
-                        });
-                        Log::error("Error Processing Request: " .json_encode([ $responseData]));
-                        // Throw an exception with the error message from the response
-                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
-                    }
-                }
-
-                $deposit_details = WalletWithdraw::with('user')
-                    ->whereRaw('id = ?', [$did])
-                    ->first();
-                $from = $settings['email_from_address'];
-                $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
-                $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
-                            <div>The approved amount has been withdrawn from your wallet.</div>
-                            <div><b>Transaction Details</b></div>
-                            <div><b>Approved Amount: </b>$' . $deposit_details->withdraw_amount . '</div>
-                            <div><b>Transaction ID: </b>' . $transid . '</div>
-                            <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
-                            <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
-                $templateVars = [
-                    'name' => $deposit_details->user->fullname,
-                    'site_link' => $settings['copyright_site_name_text'],
-                    'email' => $settings['email_from_address'],
-                    'content' => $content,
-                    'title_right' => 'Transaction',
-                    'subtitle_right' => 'Approved',
-                    'btn_text' => 'Go To Dashboard',
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==3 && $rejection_reason == 'Invalid cryptocurrency address'){
+            if($status==3){
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
