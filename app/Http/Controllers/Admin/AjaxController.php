@@ -2707,4 +2707,57 @@ class AjaxController extends Controller
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+    public function getClientIbProfile(Request $request)
+    {
+        $id = request('userId');
+        $level = request('level');
+        
+        $user = User::with('ib')->findOrFail($id); 
+
+        if(isset($user->clients[$level])){
+            $query = $user->clients[$level];
+        }else{
+            $query = [];
+        }
+        
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                             
+            ->editColumn('email', function ($row) {  
+                    return " <div class='row align-items-center'>
+                                <div class='col-auto pe-0'>
+                                    <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
+                                </div>
+                                <div class='col'>
+                                    <h6 class='mb-2'>
+                                        <span class='text-truncate w-100'>{$row->fullname}</span>
+                                    </h6>
+                                    <p class='mb-0 text-muted f-12'>
+                                        <span class='text-truncate w-100'>{$row->email}</span>
+                                    </p>
+                                </div>
+                            </div>";
+            })
+
+            ->editColumn('total_accounts', function ($row) {
+                    return $row->liveaccounts;
+            })
+
+            ->editColumn('total_deposit', function ($row) {
+                    return $row->total_deposit ? $row->total_deposit : "$";
+            })
+
+            ->editColumn('profile_status', function ($row) {
+                    if($row->email_confirmed == 1){
+                        return " <span  class='badge btn bg-success'>Active</span>";
+                    }else{
+                        return "<span class='badge btn bg-info'>Not Verified</span>";
+                    }
+            })
+        
+                ->rawColumns(['email', 'profile_status'])
+                ->make(true);
+        }
+
+    }
 }

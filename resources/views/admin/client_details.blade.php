@@ -927,22 +927,20 @@
                                             <div class="col-12">
                                                 <div class="card">
                                                     <div class="p-3 card-body">
-                                                        <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
-                                                            <?php for ($i = 1; $i <= 15; $i++) { ?>
-                                                            <li class="nav-item"
-                                                                data-target-form="#LEVEL{{ $i }}"
-                                                                role="presentation"><a href="#LEVEL{{ $i }}"
-                                                                    data-bs-toggle="tab"
-                                                                    data-bs-target="#LEVEL{{ $i }}"
-                                                                    data-toggle="tab"
-                                                                    class="nav-link {{ $i == 1 ? 'active' : '' }}"
-                                                                    aria-selected="false" role="tab"
-                                                                    tabindex="-1"><i
-                                                                        class="ti ti-chart-bar me-2"></i><span
-                                                                        class="d-none d-sm-inline">LEVEL{{ $i }}</span></a>
-                                                            </li>
-                                                            <?php } ?>
-                                                        </ul>
+                                                            <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
+                                                                <?php for ($i = 1; $i <= 15; $i++) { ?>
+                                                                    <li class="nav-item"
+                                                                    data-target-form="#LEVEL{{ $i }}"
+                                                                    role="presentation"><a                                                                           
+                                                                        class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
+                                                                        data-level="{{ $i }}"
+                                                                        aria-selected="false" role="tab"
+                                                                        tabindex="-1"><i
+                                                                            class="ti ti-chart-bar me-2"></i><span
+                                                                            class="d-none d-sm-inline">LEVEL{{ $i }}</span></a>
+                                                                </li>
+                                                                <?php } ?>
+                                                            </ul>
                                                     </div>
                                                 </div>
                                                 <div class="card">
@@ -952,8 +950,8 @@
                                                                 <div class="tab-pane fade<?php echo ($i == 1 ? ' show active' : ''); ?>"
                                                                     id="LEVEL<?php echo $i; ?>" role="tabpanel">
                                                                 <div class="datatable-container">
-                                                                    <table class="table table-hover datatable-table"
-                                                                        id="pc-dt-simple">
+                                                                    <table class="table table-hover datatable-table ajaxDataTable table-bordered text-nowrap w-100"
+                                                                        id="ajaxDatatable">
                                                                         <thead>
                                                                             <tr>
                                                                                 <th style="width: 30%;">CLIENT</th>
@@ -966,46 +964,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            <?php
-                                                                                 if ($clients->has($i) && $clients[$i]->count() > 0) {
-                                                                                foreach ($clients[$i] as $client) { ?>
-                                                                            <tr data-index="0">
-                                                                                <td>
-                                                                                    <div class="row align-items-center">
-                                                                                        <div class="col-auto pe-0"><img
-                                                                                                src="/assets/images/ib_avatar.png"
-                                                                                                alt="user-image"
-                                                                                                class="rounded wid-55 hei-55"
-                                                                                                style="height:50px">
-                                                                                        </div>
-                                                                                        <div class="col">
-                                                                                            <h6 class="mb-2"><span
-                                                                                                    class="text-truncate w-100">{{ $client->fullname }}</span>
-                                                                                            </h6>
-                                                                                            <p
-                                                                                                class="mb-0 text-muted f-12">
-                                                                                                <span
-                                                                                                    class="text-truncate w-100">{{ $client->email }}</span>
-                                                                                            </p>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td class="text-end f-w-400">
-                                                                                    {{ $client->liveaccounts }}</td>
-                                                                                <td class="f-w-400 text-end">
-                                                                                    ${{ $client->total_deposit }}</td>
-                                                                                <td class="text-end">
-                                                                                    <?php if ($client->email_confirmed == 1) { ?>
-                                                                                    <span
-                                                                                        class="badge btn bg-success">Active</span>
-                                                                                    <?php } else { ?>
-                                                                                    <span class="badge btn bg-info">Not
-                                                                                        Verified</span>
-                                                                                    <?php } ?>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <?php }
-                                                                            }?>
+                                                                            
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1486,7 +1445,56 @@
             }
         })
     </script>
-   <script>
+     <script>
+        $(document).ready(function() {
+       
+            let level = 1;
+
+            var dTtable = $('#ajaxDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                searching: true,
+                ajax: {
+                    url: '/admin/getClientIbProfile',
+                    type: 'GET',
+                    data: function(d) {
+                        d.userId = {!! json_encode($userid) !!}; // Pass the user ID
+                        d.level = level; // Pass the current level
+                        console.log('Sending data:', d);
+                    },
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
+                },
+                columns: [
+                    { data: 'email', name: 'email' },
+                    { data: 'total_accounts', name: 'total_accounts' },
+                    { data: 'total_deposit', name: 'total_deposit' },
+                    { data: 'profile_status', name: 'profile_status' },
+                ],
+                order: [
+                    [0, "desc"]
+                ]
+            });
+
+            // Handle button click events
+            $('.client-level').on('click', function(e) {
+                e.preventDefault();
+
+                $('.client-level').removeClass('active');
+                $(this).addClass('active');
+
+                level = $(this).data('level');
+                console.log(level);
+
+                dTtable.ajax.reload();
+            });
+
+       
+        });
+
+    </script>
+    <script>
 
     $(document).ready(function() {
         window.statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
@@ -1671,5 +1679,4 @@
 
     });
 </script>
-
 @endsection
