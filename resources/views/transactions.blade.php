@@ -347,6 +347,7 @@
 
 <script>
     function takeAction(data, email, amount, status) {
+        parsedData = JSON.parse(data)
         const now = new Date();
         const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
@@ -367,8 +368,8 @@
                   ? `
               <div class="mt-2 col-12 text-start">
                   <label for="transaction_id" class="form-label">Transaction ID</label>
-                  <input type="hidden" id="transaction_id" name="transaction_id" value="${data}">
-                  <div class="form-control">${data}</div>
+                  <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
+                  <div class="form-control">${parsedData}</div>
               </div>
               <div class="mt-3 col-12 text-start">
                   <label for="rejection_reason" class="form-label">Rejection Reason</label>
