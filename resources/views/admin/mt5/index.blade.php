@@ -28,7 +28,7 @@
                 <div class="col-xl-4">
                     <div class="card custom-card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="mb-auto mt-auto page-title">Group Mains</h4>
+                            <h4 class="mt-auto mb-auto page-title">Group Mains</h4>
                             <button class="btn btn-primary addGrpMain">
                                 <i class="fa fa-plus"></i>
                                 Add Main Group
@@ -58,24 +58,24 @@
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-end">
-                                                <span class="badge badge-primary bg-outline-primary m-auto me-2">
+                                                <span class="m-auto badge badge-primary bg-outline-primary me-2">
                                                     <?= $res->mt5_group_type ?>
                                                 </span>
                                                 <?php if ($res->is_active == 0) { ?>
-                                                <span class="badge bg-light border custom-badge d-flex m-auto text-default"
+                                                <span class="m-auto border badge bg-light custom-badge d-flex text-default"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Disabled Group Category"><i
                                                         class="d-inline-block fe fe-eye-off me-2"></i>
                                                     <!-- <div class="m-auto"><$res->count ?></div> -->
                                                 </span>
-                                                <!-- <div class="badge m-auto bg-gray-600">Inactive</div> -->
+                                                <!-- <div class="m-auto bg-gray-600 badge">Inactive</div> -->
                                                 <?php } else { ?>
                                                 <span
-                                                    class="badge bg-light border custom-badge d-flex m-auto text-default"><i
+                                                    class="m-auto border badge bg-light custom-badge d-flex text-default"><i
                                                         class="d-inline-block fe fe-eye me-2"></i>
                                                     <!-- <div class="m-auto"><$res->count ?></div> -->
                                                 </span>
-                                                <!-- <div class="badge m-auto bg-success">Active</div> -->
+                                                <!-- <div class="m-auto badge bg-success">Active</div> -->
                                                 <?php } ?>
                                                 <button class="btn mains-edit" data-id="<?= ($res->mt5_group_id) ?>"><i
                                                         class="fa fa-edit category-icon"></i></button>
@@ -94,7 +94,7 @@
 
                     <div class="card custom-card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="mb-auto mt-auto page-title">Group Categories</h4>
+                            <h4 class="mt-auto mb-auto page-title">Group Categories</h4>
                             <button class="btn btn-primary addGrpCat">
                                 <i class="fa fa-plus"></i>
                                 Add Group Category
@@ -125,20 +125,20 @@
                                             </div>
                                             <div class="d-flex align-items-end">
                                                 <?php if ($res->is_active == 0) { ?>
-                                                <span class="badge bg-light border custom-badge d-flex m-auto text-default"
+                                                <span class="m-auto border badge bg-light custom-badge d-flex text-default"
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Disabled Group Category"><i
                                                         class="d-inline-block fe fe-eye-off me-2"></i>
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
-                                                <!-- <div class="badge m-auto bg-gray-600">Inactive</div> -->
+                                                <!-- <div class="m-auto bg-gray-600 badge">Inactive</div> -->
                                                 <?php } else { ?>
                                                 <span
-                                                    class="badge bg-light border custom-badge d-flex m-auto text-default"><i
+                                                    class="m-auto border badge bg-light custom-badge d-flex text-default"><i
                                                         class="d-inline-block fe fe-eye me-2"></i>
                                                     <div class="m-auto"><?= $res->count ?></div>
                                                 </span>
-                                                <!-- <div class="badge m-auto bg-success">Active</div> -->
+                                                <!-- <div class="m-auto badge bg-success">Active</div> -->
                                                 <?php } ?>
                                                 <button class="btn category-edit"
                                                     data-id="<?= ($res->mt5_grp_cat_id) ?>"><i
@@ -158,7 +158,7 @@
 
                     <div class="card custom-card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="mb-auto mt-auto page-title">Group Type</h4>
+                            <h4 class="mt-auto mb-auto page-title">Group Type</h4>
                             <button class="btn btn-primary addGrpType">
                                 <i class="fa fa-plus"></i>
                                 Add Group Type
@@ -189,17 +189,17 @@
                                         </div>
                                         <div class="d-flex align-items-end">
                                             <?php if ($res->is_active == 0) { ?>
-                                            <span class="badge bg-light border custom-badge d-flex m-auto text-default"
+                                            <span class="m-auto border badge bg-light custom-badge d-flex text-default"
                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Disabled Group Category"><i
                                                     class="d-inline-block fe fe-eye-off"></i>
                                             </span>
-                                            <!-- <div class="badge m-auto bg-gray-600">Inactive</div> -->
+                                            <!-- <div class="m-auto bg-gray-600 badge">Inactive</div> -->
                                             <?php } else { ?>
-                                            <span class="badge bg-light border custom-badge d-flex m-auto text-default"><i
+                                            <span class="m-auto border badge bg-light custom-badge d-flex text-default"><i
                                                     class="d-inline-block fe fe-eye"></i>
                                             </span>
-                                            <!-- <div class="badge m-auto bg-success">Active</div> -->
+                                            <!-- <div class="m-auto badge bg-success">Active</div> -->
                                             <?php } ?>
                                             <button class="btn category-edit"
                                                 data-id="<?= ($res->mt5_grp_cat_id) ?>"><i
@@ -220,13 +220,13 @@
                     <div class="card custom-card position-sticky" style="top: 80px;">
                         <div class="card-header">
                             <div class="d-flex justify-content-between w-100">
-                                <h4 class="mb-auto mt-auto page-title">Groups</h4>
+                                <h4 class="mt-auto mb-auto page-title">Groups</h4>
                                 <button type="button" class="btn btn-primary addGrp">Add New Group</button>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="tableMT5Groups" class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                <table id="tableMT5Groups" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <tbody>
                                     </tbody>
                                 </table>
@@ -242,7 +242,7 @@
     <!-- Modal -->
     <div class="modal fade" id="groupCat" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="groupCatForm" method="post">
                     @csrf
@@ -252,10 +252,10 @@
                         <h5 class="modal-title" id="ibModalLabel">Group Category / Type</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Name Of Category / Type</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -263,7 +263,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Description</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -271,7 +271,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Category Type</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -283,7 +283,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -309,7 +309,7 @@
     <!-- Grp Modal -->
     <div class="modal fade" id="grpMainModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
-        <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="groupMainForm" method="post">
                     @csrf
@@ -319,10 +319,10 @@
                         <h5 class="modal-title" id="ibModalLabel">Group Mains</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="card-body">
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Name Of Group Main</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -330,7 +330,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Description</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -338,7 +338,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Type</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -350,7 +350,7 @@
                                 </div>
                             </div>
                             <div class="mb-3 row">
-                                <div class="col-lg-4 m-auto">
+                                <div class="m-auto col-lg-4">
                                     <label class="form-label">Status</label>
                                 </div>
                                 <div class="col-lg-8">
@@ -387,9 +387,9 @@
                         <h5 class="modal-title" id="groupMgmtLabel">Group Creation Form</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_type" class="form-label">Group Type</label>
                                 <select class="form-control" id="ac_type" name="ac_type" required="">
                                     <option value="" selected disabled></option>
@@ -403,12 +403,12 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="group_name" class="form-label">Display Name</label>
                                 <input type="text" class="form-control" name="ac_name" required=""
                                     id="group_name">
                             </div>
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_type" class="form-label">Group Category</label>
                                 <select class="form-control" id="ac_type" name="ac_category" required="">
                                     <option selected="" default="" disabled=""></option>
@@ -421,7 +421,7 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_book_type" class="form-label">Group Book Type</label>
                                 <select class="form-control" id="ac_book_type" name="ac_book_type" required="">
                                     <option selected="" default="" disabled=""></option>
@@ -435,67 +435,67 @@
                                 </select>
                             </div>
 
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="group_name" class="form-label">Group Name</label>
                                 <input type="text" class="form-control" name="ac_group" required=""
                                     readonly="" id="group_name">
                             </div>
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_min_deposit" class="form-label">Minimum Deposit</label>
                                 <input type="number" class="form-control" id="ac_min_deposit" name="ac_min_deposit"
                                     required="">
                             </div>
-                            <!-- <div class="form-group col-lg-4 mb-3">
+                            <!-- <div class="mb-3 form-group col-lg-4">
                       <label for="group_max_deposit" class="form-label">Maximum Deposit</label>
                       <input type="number" class="form-control" id="group_max_deposit" name="ac_max_deposit" required="">
                     </div> -->
-                            <div class="form-group col-lg-3 mb-3">
+                            <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
                                 <input type="text" class="form-control" id="ac_max_leverage" name="ac_max_leverage"
                                     required="">
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="group_spread" class="form-label">Spread</label>
                                 <input type="number" class="form-control" id="group_spread" name="ac_spread"
                                     step="0.1" required="">
                             </div>
 
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_swap" class="form-label">Swap</label>
                                 <select class="form-control" id="ac_swap" name="ac_swap" required="">
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="is_client_group" class="form-label">Client Group</label>
                                 <select class="form-control" id="is_client_group" name="is_client_group" required="">
                                     <option value="1">Shown</option>
                                     <option value="0">Hidden</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="inquiry_status" class="form-label">Inquiry Status</label>
                                 <select class="form-control" id="inquiry_status" name="inquiry_status" required="">
                                     <option value="0">Account Creation</option>
                                     <option value="1">Enquiry</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-control" id="status" name="status" required="">
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="ib_enabled" class="form-label">IB Enabled</label>
                                 <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="display_priority" class="form-label">Display Priority</label>
                                 <input type="number" class="form-control" id="display_priority" name="display_priority"
                                     step="1" required="">
@@ -526,85 +526,85 @@
                         <h5 class="modal-title" id="groupUpdateLabel">Group Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body custom-card card mb-0">
+                    <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="group_name" class="form-label">Display Name</label>
                                 <input type="text" class="form-control" name="ac_name" required=""
                                     id="group_name">
                             </div>
-                            <div class="form-group col-lg-6 mb-3">
+                            <div class="mb-3 form-group col-lg-6">
                                 <label for="group_name" class="form-label">Group Name</label>
                                 <input type="text" class="form-control" name="ac_group" readonly required=""
                                     id="group_name">
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_min_deposit" class="form-label">Minimum Deposit</label>
                                 <input type="number" class="form-control" id="ac_min_deposit" name="ac_min_deposit"
                                     required="">
                             </div>
-                            <!-- <div class="form-group col-lg-4 mb-3">
+                            <!-- <div class="mb-3 form-group col-lg-4">
                       <label for="group_max_deposit" class="form-label">Maximum Deposit</label>
                       <input type="number" class="form-control" id="group_max_deposit" name="ac_max_deposit" required="">
                     </div> -->
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
                                 <input type="input" class="form-control" id="ac_max_leverage" name="ac_max_leverage"
                                     required="">
                             </div>
 
                             <!--
-                    <div class="form-group col-lg-4 mb-3">
+                    <div class="mb-3 form-group col-lg-4">
                       <label for="group_spread" class="form-label">Spread</label>
                       <input type="number" class="form-control" id="group_spread" name="ac_spread" required="">
                     </div>
-                    <div class="form-group col-lg-4 mb-3">
+                    <div class="mb-3 form-group col-lg-4">
                       <label for="group_commission" class="form-label">Commission</label>
                       <input type="number" class="form-control" id="group_commission" name="ib_commission1" required="">
                     </div> -->
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_swap" class="form-label">Swap</label>
                                 <select class="form-control" id="ac_swap" name="ac_swap" required="">
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="is_client_group" class="form-label">Client Group</label>
                                 <select class="form-control" id="is_client_group" name="is_client_group" required="">
                                     <option value="1">Shown</option>
                                     <option value="0">Hidden</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="inquiry_status" class="form-label">Inquiry Status</label>
                                 <select class="form-control" id="inquiry_status" name="inquiry_status" required="">
                                     <option value="0">Account Creation</option>
                                     <option value="1">Enquiry</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-control" id="status" name="status" required="">
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ib_enabled" class="form-label">IB Enabled</label>
                                 <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="ib_enabled" class="form-label">IB Enabled</label>
                                 <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
                             </div>
-                            <div class="form-group col-lg-4 mb-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="display_priority" class="form-label">Display Priority</label>
                                 <input type="number" class="form-control" id="display_priority" name="display_priority"
                                     step="1" required="">

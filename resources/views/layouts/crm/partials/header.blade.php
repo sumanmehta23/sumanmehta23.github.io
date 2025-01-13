@@ -451,7 +451,7 @@
                     <div class="ms-auto">
                         @if (session('admin'))
                             <ul>
-                                <a href="/admin/client_list" class="">
+                                <a href="{{route('switchToAdmin')}}" class="">
                                     <span>
                                         Switch Back To {{ session('admin')->username }}
                                     </span>

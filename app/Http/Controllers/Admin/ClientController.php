@@ -28,6 +28,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -37,6 +38,7 @@ class ClientController extends Controller
     public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
+        // Gate::validate('view-client');
     }
     public function index()
     {
