@@ -142,7 +142,8 @@ class Ib extends Controller
         $userId = auth()->user()->id;
         $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
-        $ib = Ib1::where('user_id', $userId)
+        $ib = Ib1::with('planDetails')
+            ->where('user_id', $userId)
             ->whereNotNull('ib_plan_details_id')
             ->first();
 
