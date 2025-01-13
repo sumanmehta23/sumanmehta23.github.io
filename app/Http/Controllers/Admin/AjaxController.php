@@ -2023,7 +2023,7 @@ class AjaxController extends Controller
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             if($admin->can('employee:update')){
-                $dat->action = '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
+                $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
             }else{
                 $dat->action='';
             }
@@ -2588,11 +2588,12 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
-        $query = DB::select($sql);
-        $result = $query[0];
-        unset($result->password);
-        return $result;
+        // $sql = "SELECT * FROM  emplist WHERE id='" . $id;
+        return EmployeeList::select("id","role_id",'username','email','gender','dob','number','address','company_name','status')->where("id",$id)->first();
+        // $query = DB::select($sql);
+        // $result = $query[0];
+        // unset($result->password);
+        // return $result;
     }
     public function getPaymentDetails($id)
     {
