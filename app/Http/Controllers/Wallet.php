@@ -93,14 +93,14 @@ class Wallet extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content =
-                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
-                '<div>Click the link below to activate your Wallet Address</div>';
-
         $ClientWallet = ClientWallet::where('user_id', $user->id)
                 ->latest('created_at') // Specify the column to order by
                 ->first();
+        $content =
+                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
+                '<div>Wallet Address: '.$request->wallet_address.' </div>' .
+                '<div>Click the link below to activate your Wallet Address</div>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -123,6 +123,8 @@ class Wallet extends Controller
         $new_wallet_address = ClientWallet::with('user')->where('id', $id)
             ->where('client_wallet_id', $clientWallet_id)
             ->first();
+        dump($new_wallet_address->user->fullname);
+        dd($new_wallet_address);
         if ($new_wallet_address) {
             if ($new_wallet_address->verified  == 0) {
                 $new_wallet_address->verified = 1;
