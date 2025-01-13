@@ -20,6 +20,17 @@
         --bs-text-opacity: 1;
         color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     }
+    .reject-btn {
+        border-color: red; /* Outer line red */
+        color: red;        /* Text red */
+        transition: background-color 0.3s, color 0.3s; /* Smooth hover effect */
+    }
+
+    .reject-btn:hover {
+        background-color: red; /* Background red on hover */
+        color: white;          /* Text white on hover */
+        border-color: red;
+    }
 </style>
 <div class="pc-container">
   <div class="pc-content">
@@ -149,6 +160,7 @@
                         <th scope="col">AMOUNT</th>
                         <th scope="col">FEE</th>
                         <th scope="col">STATUS</th>
+                        <th scope="col">ACTION</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -183,6 +195,20 @@
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
+                          @if($history->status == 0)
+                            <td >
+                                {{-- <button onclick="takeAction('{{ $history->id }}', '{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee }}',3)" type="button" class="m-1 btn btn-danger btn-space">Reject</button> --}}
+                                <a  href="#"
+                                    class="btn btn-sm btn-outline-secondary d-grid reject-btn"
+                                    onclick="takeAction('{{ json_encode($history->id) }}','{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee}}',3)"
+                                    type="submit">
+                                Reject
+                                </a>
+                            </td>
+                          @else
+                            <td></td>
+                          @endif
+
                         </tr>
                       @endforeach
                     </tbody>
@@ -318,5 +344,84 @@
     </div>
   </div>
 </div>
+
+<script>
+    function takeAction(data, email, amount, status) {
+        const now = new Date();
+        const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+        if(status==3){
+            statuscode='reject';
+        }
+      Swal.fire({
+        title: `Are you sure you want to ${statuscode} this transaction?`,
+        html: `
+        <form id="updateTransactionForm" method="post" action="/update-transaction">
+          @csrf
+          <input type="hidden" name="email" value="${email}">
+          <input type="hidden" name="amount" value="${amount}">
+          <input type="hidden" name="status" value="${status}">
+          <input type="hidden" name="action" value="update_transaction">
+            ${
+              status == 3
+                  ? `
+              <div class="mt-2 col-12 text-start">
+                  <label for="transaction_id" class="form-label">Transaction ID</label>
+                  <input type="hidden" id="transaction_id" name="transaction_id" value="${data}">
+                  <div class="form-control">${data}</div>
+              </div>
+              <div class="mt-3 col-12 text-start">
+                  <label for="rejection_reason" class="form-label">Rejection Reason</label>
+                  <select id="rejection_reason" name="rejection_reason" class="form-control">
+                      <option value="" disabled selected>Select Rejection Reason</option>
+                      <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
+                      <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
+                      <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
+                  </select>
+              </div>
+          `
+                  : ''
+            }
+            ${
+              status == 1
+                  ? `
+              <div class="mt-2 col-12 text-start">
+                  <label for="approved_by" class="form-label">Approved By</label>
+                  <input type="hidden" id="approved_by" name="approved_by" value="${parsedData.username}">
+                  <div class="form-control">${parsedData.username}</div>
+              </div>
+              <div class="mt-3 col-12 text-start">
+                  <label for="approved_date" class="form-label">Approved On</label>
+                  <input type="hidden" id="approved_date" name="approved_date" value="${approved_date_time}">
+                  <div class="form-control">${approved_date_time}</div>
+              </div>
+          `
+                  : ''
+            }
+
+          </form>
+      `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        preConfirm: () => {
+          if(status==3){
+            const rejection_reason = document.querySelector('#rejection_reason').value;
+            if (!rejection_reason) {
+                Swal.showValidationMessage('Please fill out all fields');
+                return false;
+            }
+          }
+
+          return true;
+        }
+      }).then((result) => {
+        console.log(result);
+        if (result.isConfirmed) {
+          document.querySelector('#updateTransactionForm').submit();
+        }
+      });
+    }
+  </script>
 
 @endsection
