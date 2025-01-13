@@ -438,7 +438,7 @@
                                                                 @endphp
                                                                 <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
                                                                         <div class="card-body d-flex">
-
+                                                                            @can("client:update")
                                                                             <div class="statusToggle" data-status="{{ $user->status }}">
                                                                                 @if ($user->status == 0)
                                                                                     <div class="badge text-danger {{ $success }}" data-bs-toggle="tooltip" title="Inactive User">
@@ -464,6 +464,7 @@
                                                                                     </div>
                                                                                 @endif
                                                                             </div>
+                                                                            @endcan
                                                                             @if ($user->email_confirmed == 0)
                                                                                 <div class="resendToggle" data-status="{{ $user->email_confirmed }}">
                                                                                     <div class="badge text-danger" data-bs-toggle="tooltip" title="Email Not Verified">
@@ -490,29 +491,27 @@
                                                                                 </div>
                                                                             @endif
 
-                                                                            <div class='viewClient' data-enc='{{$user->id}}'>
-                                                                                <div class='badge text-danger' data-bs-toggle='tooltip' title='View Client'>
-                                                                                    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
+                                                                            
+                                                                              @can('client:update')
+                                                                                <div class='editClient' data-enc='{{$user->id}}'>
+                                                                                    <div class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
+                                                                                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                                                                    </div>
                                                                                 </div>
-                                                                              </div>
-
-                                                                              <div class='editClient' data-enc='{{$user->id}}'>
-                                                                                <div class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
-                                                                                    <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                                                              @endcan
+                                                                              @can('client:impersonate')
+                                                                                <div class="switchClient" data-enc="{{ $user->id }}">
+                                                                                    <div class="badge text-secondary" data-bs-toggle="tooltip" title="Switch Client">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-shuffle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                            <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                                                                            <path d='M18 4l3 3l-3 3' />
+                                                                                            <path d='M18 20l3 -3l-3 -3' />
+                                                                                            <path d='M3 7h3a4 4 0 0 1 4 4a4 4 0 0 0 4 4h7' />
+                                                                                            <path d='M21 7h-7a4 4 0 0 0 -4 4a4 4 0 0 1 -4 4h-3' />
+                                                                                        </svg>
+                                                                                    </div>
                                                                                 </div>
-                                                                              </div>
-
-                                                                            <div class="switchClient" data-enc="{{ $user->id }}">
-                                                                                <div class="badge text-secondary" data-bs-toggle="tooltip" title="Switch Client">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-shuffle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                                        <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
-                                                                                        <path d='M18 4l3 3l-3 3' />
-                                                                                        <path d='M18 20l3 -3l-3 -3' />
-                                                                                        <path d='M3 7h3a4 4 0 0 1 4 4a4 4 0 0 0 4 4h7' />
-                                                                                        <path d='M21 7h-7a4 4 0 0 0 -4 4a4 4 0 0 1 -4 4h-3' />
-                                                                                    </svg>
-                                                                                </div>
-                                                                            </div>
+                                                                                @endcan
                                                                         </div>
                                                                         <div class="modal fade" id="statusModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
                                                                             aria-labelledby="statusModalLabel" aria-hidden="true">

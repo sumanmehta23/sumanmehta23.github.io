@@ -85,30 +85,30 @@ foreach ($categories as $category) {
 function filePermissions($userRole)
 {
     $filePermissions = [];
-    if ($userRole != "Super Admin") {
-        $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
-            return Role::where('name', $userRole)->value('id');
-        });
-        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
-        $role_permissions = DB::select($sql);
-        $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
-        $filePermissions = array_values(array_column($role_permissions, 'filename'));
-    }
+    // if ($userRole != "Super Admin") {
+    //     $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
+    //         return Role::where('name', $userRole)->value('id');
+    //     });
+    //     $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
+    //     $role_permissions = DB::select($sql);
+    //     $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
+    //     $filePermissions = array_values(array_column($role_permissions, 'filename'));
+    // }
     return $filePermissions;
 }
 
 function rolePermissions($userRole)
 {
     $rolePermissionsList = [];
-    if ($userRole != 'Super Admin') {
-        $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
-            return Role::where('name', $userRole)->value('id');
-        });
+    // if ($userRole != 'Super Admin') {
+    //     $userRoleID = Cache::remember('role_id', 60 * 60, function () use ($userRole) {
+    //         return Role::where('name', $userRole)->value('id');
+    //     });
      
-        $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
-        $role_permissions = DB::select($sql);
-        $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
-    }
+    //     $sql = "SELECT p.page_id,pg.filename from permissions p left join pages pg on(p.page_id=pg.id) WHERE p.role_id='" . $userRoleID."'";
+    //     $role_permissions = DB::select($sql);
+    //     $rolePermissionsList = array_values(array_column($role_permissions, 'page_id'));
+    // }
 
     return $rolePermissionsList;
 }

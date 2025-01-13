@@ -10,17 +10,19 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\Permission;
 use App\Models\EmployeeList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Models\WalletDeposit;
-use Illuminate\Support\Facades\Cache;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class AjaxController extends Controller
@@ -171,6 +173,9 @@ class AjaxController extends Controller
                     case 'resendVerificationEmail':
                         $result = $this->resendVerificationEmail($requestData);
                         break;
+                    case 'getPermissions':
+                        $result = $this->getPermissions($request);
+                        break;
                     default:
                         $result = ['error' => 'Invalid function call'];
                         break;
@@ -193,6 +198,29 @@ class AjaxController extends Controller
         } else {
             return ['success' => false,'error' => 'User not found'];
         }
+    }
+
+    public function getPermissions(Request $request){
+
+        
+
+        // Base query
+
+        $rmCondition = Permission::orderBy('name', 'asc');
+
+
+
+        // dd($query);
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+            ->addColumn('action', function($row){
+                return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+            })
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
     public function getListOfGroups($string)
     {
@@ -233,8 +261,11 @@ class AjaxController extends Controller
         $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
 
         try {
+            $admin = Auth::guard('admin')->user();
+            
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
+            Gate::forUser($admin)->authorize('client:impersonate',$client);
             // Log in as the new user
             Auth::login($client);
             Session::put('admin', $admin);
@@ -248,9 +279,29 @@ class AjaxController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to impersonate the user. Please try again.',
+                'message' => 'Failed to impersonate the user. Please try again.'.$e->getMessage(),
             ], 500);
         }
+    }
+    public function switchToAdmin(Request $request)
+    {
+        if(Auth::user() instanceof User && Session::has('admin')){
+            $admin=Session::get('admin');
+            Session::forget('user');
+            Auth::logout();
+            // $request->session()->invalidate();
+            // $request->session()->regenerateToken();
+            Auth::guard('admin')->loginUsingId($admin->id);
+            
+             return redirect()->route('admin.dashboard');
+            // Auth::logout();
+            // $request->session()->invalidate();
+            // $request->session()->regenerateToken();
+            // Session::forget('admin');
+        }else{
+            return redirect()->route('admin.login');
+        }
+        
     }
 
     public function getClientList(Request $request)
@@ -410,33 +461,33 @@ class AjaxController extends Controller
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
-
-                    $html .= "<span class='statusToggle' data-status='{$row->status}'>";
-                    if ($row->status == 0) {
-                        $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
-                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
-                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
-                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
-                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
-                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
-                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
-                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
-                                    </svg>
-                                  </span>";
-                    } elseif ($row->status == 1) {
-                        $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
-                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
-                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
-                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
-                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
-                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
-                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
-                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
-                                    </svg>
-                                  </span>";
+                    if (Auth::guard('admin')->user()->can('update', $row)) {
+                        $html .= "<span class='statusToggle' data-status='{$row->status}'>";
+                        if ($row->status == 0) {
+                            $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                            <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                            <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                            <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                            <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                            <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                            <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                        </svg>
+                                    </span>";
+                        } elseif ($row->status == 1) {
+                            $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                            <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                            <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                            <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                            <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                            <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                            <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                        </svg>
+                                    </span>";
+                        }
+                        $html .= "</span>";
                     }
-                    $html .= "</span>";
-
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='resendToggle' data-status='{$row->email_confirmed}'>";
                         $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
@@ -467,13 +518,14 @@ class AjaxController extends Controller
                                 </span>
                               </span>";
 
-
+                              if (Auth::guard('admin')->user()->can('client:update', $row)) {
                     $html .= "<span class='editClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
                                     <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
                                 </span>
                               </span>";
-
+                              }
+                              if (Auth::guard('admin')->user()->can('client:impersonate', $row)) {
                     $html .= "<span class='switchClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Switch Client'>
                                     <svg xmlns='http://www.w3.org/2000/svg' class='icon icon-tabler icon-tabler-arrows-shuffle' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
@@ -485,6 +537,7 @@ class AjaxController extends Controller
                                     </svg>
                                 </span>
                               </span>";
+                              }
 
                     return $html;
                 })
@@ -1957,20 +2010,24 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
-                LEFT JOIN permissions p ON e.role_id = p.role_id
                 LEFT JOIN roles r ON e.role_id = r.id
-                LEFT JOIN pages ON p.page_id = pages.page_id
+                -- LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.id";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
-
+        $admin=Auth::guard('admin')->user();
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
+            if($admin->can('employee:update')){
+                $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
+            }else{
+                $dat->action='';
+            }
+            // $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
         return ['data' => $data];
@@ -2531,11 +2588,12 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
-        $query = DB::select($sql);
-        $result = $query[0];
-        unset($result->password);
-        return $result;
+        // $sql = "SELECT * FROM  emplist WHERE id='" . $id;
+        return EmployeeList::select("id","role_id",'username','email','gender','dob','number','address','company_name','status')->where("id",$id)->first();
+        // $query = DB::select($sql);
+        // $result = $query[0];
+        // unset($result->password);
+        // return $result;
     }
     public function getPaymentDetails($id)
     {
@@ -2556,14 +2614,14 @@ class AjaxController extends Controller
         $user_status = isset($data['status']) && $data['status'] === "on" ? 1 : 0;
         $kyc_verify = isset($data['kyc_verify']) && $data['kyc_verify'] === "on" ? 1 : 0;
 
-        $result = DB::table('aspnetusers')
-            ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('id'), '=', $user_id)
+        $user = User::select('status', 'email', 'email_confirmed', 'kyc_verify')
+            ->where("id", $user_id)
             ->first();
+        $admin = Auth::guard('admin')->user();
+        Gate::forUser($admin)->authorize('client:update',$user);
         try {
 
-            $updated = DB::table('aspnetusers')
-                ->where(DB::raw('id'), '=', $user_id)
+            $updated = User::where("id", $user_id)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
@@ -2662,12 +2720,14 @@ class AjaxController extends Controller
 
     public function requestIB($request)
     {
+        
         try {
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::with('user')->whereRaw('user_id = ?', [$clientId])->first();
-
+            $result = Ib1::with('user')->where('user_id', $clientId)->first();
+            $admin = Auth::guard('admin')->user();
+            Gate::forUser($admin)->authorize('ib:update',$result);
             if ($result) {
                 $clientId = $result->user->id;
             }

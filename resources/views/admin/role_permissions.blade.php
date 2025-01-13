@@ -1,4 +1,6 @@
 @extends('layouts.admin.admin')
+
+@section('content')
 <style>
   .alert {
       padding: 15px;
@@ -26,7 +28,6 @@
       color: #fff;
   }
 </style>
-@section('content')
     <div class="main-content app-content">
         <div class="container-fluid">
             <div class="page-header">
@@ -108,23 +109,23 @@
         $(document).on('change', '.permission-menu-main', function () {
           let isChecked = $(this).is(':checked');
           console.log(isChecked);
-          let page = $(this).data('page');
-          $('.permission-menu-sub[data-page="' + page + '"]').prop('checked', isChecked);
+          let group = $(this).data('group');
+          $('.permission-menu-sub[data-group="' + group + '"]').prop('checked', isChecked);
         });
         $(document).on('change', '.permission-menu-sub', function () {
-          let page = $(this).data('page');
+          let group = $(this).data('group');
           let allChecked = true;
           let anyUnchecked = false;
-          $('.permission-menu-sub[data-page="' + page + '"]').each(function () {
+          $('.permission-menu-sub[data-group="' + group + '"]').each(function () {
             if (!$(this).is(':checked')) {
               allChecked = false;
               anyUnchecked = true;
             }
           });
           if (allChecked) {
-            $('.permission-menu-main[data-page="' + page + '"]').prop('checked', true);
+            $('.permission-menu-main[data-group="' + group + '"]').prop('checked', true);
           } else if (anyUnchecked) {
-            $('.permission-menu-main[data-page="' + page + '"]').prop('checked', false);
+            $('.permission-menu-main[data-group="' + group + '"]').prop('checked', false);
           }
         });
 

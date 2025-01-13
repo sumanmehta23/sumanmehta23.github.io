@@ -20,6 +20,7 @@
             cursor: pointer;
         }
     </style>
+    @can("client:create")
     <div class="modal fade" id="addUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="addUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -88,6 +89,8 @@
             </div>
         </div>
     </div>
+    @endcan
+    @can("client:update")
     <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="editUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -167,6 +170,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <div class="modal fade" id="statusModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="statusModalLabel" aria-hidden="true">
@@ -394,12 +398,12 @@
                             <div class="card-title">
                                 Listed Count : {{ $total_clients }}
                             </div>
-                            <?php if (session('userData')['userRole'] == "Super Admin") { ?>
+                            @can("client:create")
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                 data-bs-target="#addUserModal">
                                 Add New Client
                             </button>
-                            <?php } ?>
+                            @endcan
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
