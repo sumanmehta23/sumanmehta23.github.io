@@ -89,47 +89,51 @@ class ImportClientsCommand extends Command
                 $existing=User::where('email',$record['Your email address'])->first();
                 if($existing){
                     $existingcounter++;
+                    $existing->email_confirmed=1;
+                    $existing->status=1;
                     if(empty( $existing->ib1) || $existing->ib1=='noIB'){
                         $existing->ib1='Swingtradinglab';
-                        $accountcount=$existing->accounts()->count();
-                        foreach($existing->accounts as $account){
-                            // dump($account->accountType);
-                           $groupCode = str_replace("DF","ALEX",$account->accountType->ac_group);
-                            $group = AccountType::where('ac_group', $groupCode)->first();
-                            if($group){
-                                $_POST["options"] =$group->id;
-                                $account_type_id = $group->id;
-                                $code=$account->code;
-                                // dump($account_type_id);
-                                if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                    // return response()->json([
-                                    //     'status' => 'warning',
-                                    //     'message' => 'Something went wrong on Updating details',
-                                    //     'error' => MTRetCode::GetError($error_code)
-                                    // ], 400);
-                                    Log::error( 'Something went wrong on Updating details '.$code." " . MTRetCode::GetError($error_code));
-                                }
-                                // dd($trade_user);
-                                // // Fetch account type details
-                                $trade_user->Group = $group->ac_group;
+                        
+                        // $accountcount=$existing->accounts()->count();
+                        // foreach($existing->accounts as $account){
+                        //     // dump($account->accountType);
+                        //    $groupCode = str_replace("DF","ALEX",$account->accountType->ac_group);
+                        //     $group = AccountType::where('ac_group', $groupCode)->first();
+                        //     if($group){
+                        //         $_POST["options"] =$group->id;
+                        //         $account_type_id = $group->id;
+                        //         $code=$account->code;
+                        //         // dump($account_type_id);
+                        //         if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                        //             // return response()->json([
+                        //             //     'status' => 'warning',
+                        //             //     'message' => 'Something went wrong on Updating details',
+                        //             //     'error' => MTRetCode::GetError($error_code)
+                        //             // ], 400);
+                        //             Log::error( 'Something went wrong on Updating details '.$code." " . MTRetCode::GetError($error_code));
+                        //         }
+                        //         // dd($trade_user);
+                        //         // // Fetch account type details
+                        //         $trade_user->Group = $group->ac_group;
                     
-                                // Update user data via API
-                                $updated_user = "";
-                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                    Log::error( "Something went wrong on Updating details $code " . MTRetCode::GetError($error_code));
-                                } else {
-                                    $account->account_type_id = $account_type_id;
-                                    $account->save();
+                        //         // Update user data via API
+                        //         $updated_user = "";
+                        //         if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                        //             Log::error( "Something went wrong on Updating details $code " . MTRetCode::GetError($error_code));
+                        //         } else {
+                        //             $account->account_type_id = $account_type_id;
+                        //             $account->save();
                                     
-                                }
-                            }
-                        }
-                        Log::info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
-                        $existing->save();
+                        //         }
+                        //     }
+                        // }
+                        // Log::info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
+                        
                         // $this->sendWelcomeToExistingUser($existing);
                     }else{
                         Log::error("Row {$record['Your email address']}: User already exists and has an IB1");
                     }
+                    $existing->save();
                     continue;
                 }else{
                     $user=User::create([
@@ -142,11 +146,13 @@ class ImportClientsCommand extends Command
                         'country'=>$record['Where are you from?'],
                         // 'request'=>$record['What do you want?'],
                         'wallet_enabled'=>1,
-                        'ib1'=>'Swingtradinglab'
+                        'ib1'=>'Swingtradinglab',
+                        'email_confirmed'=>1,
+                        'status'=>1,
                     ]);
                     if($user){
                         Log::info("Row {$record['Your email address']}: User created successfully");
-                        $this->sendWelcomeEmail($user);
+                        // $this->sendWelcomeEmail($user);
                         $newcustomers++;
                     }else{
                         Log::error("Row {$record['Your email address']}: User not created");

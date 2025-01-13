@@ -37,7 +37,11 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 Route::get("/se",function(){
-    
+    // $uuids=[];
+    // for($i=0;$i<100;$i++){
+    //     $uuids[]=Str::orderedUuid()->__tostring();
+    // }
+    // dump($uuids);
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'
@@ -188,6 +192,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
+    Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
+
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
@@ -272,6 +278,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/search", [SearchController::class, 'index']);
 
 
-        // Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+        Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });
