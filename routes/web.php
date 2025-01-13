@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Account;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
+use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
@@ -34,8 +36,12 @@ use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
-use App\Http\Controllers\PammController;
 Route::get("/se",function(){
+    // $uuids=[];
+    // for($i=0;$i<100;$i++){
+    //     $uuids[]=Str::orderedUuid()->__tostring();
+    // }
+    // dump($uuids);
 //     // Cache::put('test-key', 'test-value', 1000);
 // $value = Cache::get('test-key');
 // dd($value); // Should output 'test-value'
@@ -272,6 +278,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/search", [SearchController::class, 'index']);
 
 
-        // Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+        Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });

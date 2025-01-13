@@ -423,7 +423,7 @@ class ClientController extends Controller
 
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
-        
+        $countries = Country::all();
         $acc_groups = IBPlan::with('category')
         ->where('status', 1)
         ->groupBy('ib_plan_cat_id')
@@ -435,7 +435,7 @@ class ClientController extends Controller
 
         // Get all the required data directly from $user
         $total_wd = $user->total_wd;  // Accessor for total wallet deposit
-        
+
         $total_ww = $user->total_ww;  // Accessor for total wallet withdrawal
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
@@ -445,15 +445,16 @@ class ClientController extends Controller
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
         $rm_details = $user->rm_details;  // Accessor for RM details
-        
+
         $superadmin_details = $user->superadmin_details;  // Accessor for super admin details
-        
+
         $country_code = $user->country_code;  // Accessor for country code
-        
+
         $clients = $user->clients;  // Accessor for clients grouped by referral code
 
         $ticket_status = $user->ticket_status;  // Cached ticket status
         $ticket_types = $user->ticket_types;  // Cached ticket types
+
         $userid = $id;
         
         return view('admin.client_details', compact(
@@ -475,10 +476,11 @@ class ClientController extends Controller
             'superadmin_details',
             'country_code',
             'clients',
-            'userid'
+            'userid',
+            'countries'
         ));
     }
-    
+
     public function sendPasswordResetLink(Request $request)
     {
         $email = $request->txtemail;

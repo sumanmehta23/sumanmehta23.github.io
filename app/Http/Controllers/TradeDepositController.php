@@ -17,6 +17,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\BonusTransaction;
 
 class TradeDepositController extends Controller
 {
@@ -31,7 +32,17 @@ class TradeDepositController extends Controller
         $email = auth()->user()->email;
         $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
-        $liveaccount_details =auth()->user()->liveAccounts;
+        // $liveaccount_details =auth()->user()->liveAccounts;
+        $liveaccount_details = Account::with([
+            'accountType',
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])
+        ->where('user_id', $user->id)
+        ->where('demo', false)
+        ->get();
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $totals = Account::where('user_id', $user->id)
@@ -39,9 +50,10 @@ class TradeDepositController extends Controller
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_amount');
-        $totalWwf = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_transaction_fee');
-        $wallet_balance = $totalWd - ($totalWw + $totalWwf);
+        $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_amount');
+        $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_transaction_fee');
+        $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
+
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }
@@ -89,10 +101,10 @@ class TradeDepositController extends Controller
         ->sum('deposit_amount');
 
         $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_amount');
         $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_transaction_fee');
 
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
