@@ -146,10 +146,11 @@ class Ib extends Controller
             ->where('user_id', $userId)
             ->whereNotNull('ib_plan_details_id')
             ->first();
-
+            dd($ib);
         if (!$ib) {
             return redirect()->route('ib');
         }
+
         $plan_id = $ib->planDetails->ib_category_id;
 
 
