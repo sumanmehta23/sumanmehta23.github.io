@@ -120,10 +120,10 @@ class Wallet extends Controller
         $id = $request->query('id');
         $clientWallet_id = $request->query('clientWallet_id');
 
-        $new_wallet_address = ClientWallet::with('user')->where('id', $id)
-            ->where('client_wallet_id', $clientWallet_id)
+        $new_wallet_address = ClientWallet::with('user')->where('user_id', $id)
+            ->where('id', $clientWallet_id)
             ->first();
-        dd($clientWallet_id);
+        dd($new_wallet_address);
         if ($new_wallet_address) {
             if ($new_wallet_address->verified  == 0) {
                 $new_wallet_address->verified = 1;
