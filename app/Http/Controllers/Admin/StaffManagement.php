@@ -9,6 +9,7 @@ use App\Models\EmployeeList;
 use Illuminate\Http\Request;
 use App\Models\PermissionGroup;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 
@@ -163,8 +164,10 @@ class StaffManagement extends Controller
             'company_name' => 'required|string|max:255',
         ]);
         if ($userId) {
+            Gate::authorize('employee:update', EmployeeList::class);
             $user = EmployeeList::findOrFail($userId);
         } else {
+            Gate::authorize('employee:create', EmployeeList::class);
             $user = new EmployeeList();
             $user->uid = '';
             $user->profile_pic = '';

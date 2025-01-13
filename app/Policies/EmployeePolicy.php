@@ -2,8 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\Employee;
 use App\Models\User;
+use App\Models\Employee;
+use App\Models\EmployeeList;
 use Illuminate\Auth\Access\Response;
 
 class EmployeePolicy
@@ -19,7 +20,7 @@ class EmployeePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Employee $employee): bool
+    public function view(User $user, EmployeeList $employee): bool
     {
         return false;
     }
@@ -27,23 +28,24 @@ class EmployeePolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(EmployeeList $user): bool
     {
-        return false;
+
+        return $user->can("employee.create");
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Employee $employee): bool
+    public function update(EmployeeList $user, EmployeeList $employee): bool
     {
-        return false;
+        return $user->can("employee.update");
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Employee $employee): bool
+    public function delete(User $user, EmployeeList $employee): bool
     {
         return false;
     }

@@ -246,7 +246,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
         Route::post('/update_role_status', [StaffManagement::class, 'updateRoleStatus'])->name('update_role_status');
         Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
-        Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser');
+        Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser')->middleware('check.permissions:employee:update,employee:create');
 
         Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions'])->name('role_permissions')->middleware('check.permissions:permission:update');
         Route::get('/admin_users', [StaffManagement::class, 'adminUsers'])->name('admin_users')->middleware('check.permissions:employee:viewAny');
