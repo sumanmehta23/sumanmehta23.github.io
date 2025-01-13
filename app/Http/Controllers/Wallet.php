@@ -18,18 +18,19 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Services\MailService as MailService;
 
 class Wallet extends Controller
 {
     protected $settings;
     protected $paymentController;
+    protected $mailService;
 
-
-    public function __construct(Payment $paymentController)
+    public function __construct(Payment $paymentController,MailService $mailService)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
-
+        $this->mailService = $mailService;
     }
     public function index()
     {
@@ -74,7 +75,7 @@ class Wallet extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
-
+        $settings = settings();
         ClientWallet::create([
             'wallet_name' => $request->wallet_name,
             'wallet_currency' => 'USDT',
@@ -82,10 +83,83 @@ class Wallet extends Controller
             'wallet_address' => $request->wallet_address,
             'user_id' =>  $user->id,
             'status' => $request->status,
+            'verified' => 0,
         ]);
+
+        $toEmail = $user->email;
+        $type = 'Wallet Details Verification';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content =
+                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
+                '<div>Click the link below to activate your Wallet Address</div>';
+
+        $ClientWallet = ClientWallet::where('user_id', $user->id)
+                ->latest('created_at') // Specify the column to order by
+                ->first();
+
+        $templateVars = [
+            'name' => $user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id=$ClientWallet->id",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Wallet Address"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
         return response()->json(['success' => true]);
     }
+    public function wallet_address_verify(Request $request){
+        $settings = settings();
+        dd($settings);
+        $id = $request->query('id');
+        $clientWallet_id = $request->query('clientWallet_id');
+
+        $new_wallet_address = ClientWallet::where('id', $id)
+            ->where('client_wallet_id', $clientWallet_id)
+            ->first();
+        if ($new_wallet_address) {
+            if ($new_wallet_address->verified  == 0) {
+                $new_wallet_address->verified = 1;
+                $new_wallet_address->save();
+                $from = $settings['email_from_address'];
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Email Address';
+                $htmlContent = "";
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</div>' .
+                    '<div><b>Here are your login credentials:</b></div>
+          <div><b>Username: </b>' . $user->email . '</div>
+          <div><b>Password: </b>' . $user->password . '</div>';
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'site_link' => $settings['copyright_site_name_text'] . "/login",
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Email Verification",
+                    "subtitle_right" => "Successful",
+                    "btn_text" => "Login"
+                ];
+                $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('login')->with('status', 'WoW! Your Account is Now Activated');
+            } else {
+                return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
+            }
+        } else {
+            return redirect()->route('register')->with('error', 'Sorry! No Account Found. Signup here');
+        }
+    }
+
     public function updateStatus(Request $request)
     {
         $request->validate([
