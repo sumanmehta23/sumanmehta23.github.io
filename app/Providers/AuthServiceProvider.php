@@ -6,6 +6,7 @@ namespace App\Providers;
 use App\Models\Permission;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Schema;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,13 +27,13 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // Dynamically register permissions from the database
-        $permissions = Permission::get();
-
-        foreach ($permissions as $permission) {
-            Gate::define($permission->name, function ($user) use ($permission) {
-                // Check if the user has the permission (adjust logic as needed)
-                return $user->hasPermission($permission->name);
-            });
+        if (Schema::hasTable('permissions')) {
+            $permissions = Permission::get();
+            foreach ($permissions as $permission) {
+                Gate::define($permission->name, function ($user) use ($permission) {
+                    return $user->hasPermission($permission->name);
+                });
+            }
         }
     }
 }
