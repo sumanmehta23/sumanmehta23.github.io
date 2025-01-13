@@ -146,7 +146,7 @@ class Ib extends Controller
             ->whereNotNull('ib_plan_details_id')
             ->first();
 
-
+        dd($ib);
         if (!$ib) {
             return redirect()->route('ib');
         }
