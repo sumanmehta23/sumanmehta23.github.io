@@ -117,11 +117,10 @@ class Wallet extends Controller
     }
     public function wallet_address_verify(Request $request){
         $settings = settings();
-        dd($settings);
         $id = $request->query('id');
         $clientWallet_id = $request->query('clientWallet_id');
 
-        $new_wallet_address = ClientWallet::where('id', $id)
+        $new_wallet_address = ClientWallet::with('user')->where('id', $id)
             ->where('client_wallet_id', $clientWallet_id)
             ->first();
         if ($new_wallet_address) {
@@ -129,34 +128,31 @@ class Wallet extends Controller
                 $new_wallet_address->verified = 1;
                 $new_wallet_address->save();
                 $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Email Address';
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
                 $htmlContent = "";
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</div>' .
-                    '<div><b>Here are your login credentials:</b></div>
-          <div><b>Username: </b>' . $user->email . '</div>
-          <div><b>Password: </b>' . $user->password . '</div>';
+                    '<div>Your wallet address has been successfully confirmed, and you’re all set to withdraw your earnings.</div>';
                 $templateVars = [
-                    'name' => $user->fullname,
+                    'name' => $new_wallet_address->user->fullname,
                     'server_name' => $settings['mt5_company_name'],
                     'site_link' => $settings['copyright_site_name_text'] . "/login",
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "Email Verification",
+                    "title_right" => "Wallet Address Verification",
                     "subtitle_right" => "Successful",
                     "btn_text" => "Login"
                 ];
-                $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('login')->with('status', 'WoW! Your Account is Now Activated');
+                $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Address is now Verified');
             } else {
-                return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
+                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
             }
         } else {
-            return redirect()->route('register')->with('error', 'Sorry! No Account Found. Signup here');
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
         }
     }
 
