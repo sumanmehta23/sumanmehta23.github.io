@@ -123,7 +123,7 @@ class Wallet extends Controller
         $new_wallet_address = ClientWallet::with('user')->where('id', $id)
             ->where('client_wallet_id', $clientWallet_id)
             ->first();
-        dd($request->all());
+        dd($clientWallet_id);
         if ($new_wallet_address) {
             if ($new_wallet_address->verified  == 0) {
                 $new_wallet_address->verified = 1;
