@@ -419,6 +419,7 @@ $filePermissions = filePermissions($userRole);
                             </ul>
                         </li>
                         @endif
+                        @can("m_t5_group:viewAny")
                         <li class="slide__category menu-item-category">
                             <span class="category-name">MT5 CONFIGURATION</span>
                         </li>
@@ -441,6 +442,8 @@ $filePermissions = filePermissions($userRole);
 
                             </ul>
                         </li>
+                        @endcan
+                        @can("employee:viewAny")
                         <li class="slide__category menu-item-category">
                             <span class="category-name">ADMIN USERS</span>
                         </li>
@@ -454,31 +457,28 @@ $filePermissions = filePermissions($userRole);
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 669px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-
+                                @can("role:viewAny")
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/roles" class="side-menu__item ">
+                                    <a href="{{route("admin.roles")}}" class="side-menu__item ">
                                         Roles
                                     </a>
                                 </li>
-
-
+                                @endcan
+                                @can("permission:update")
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/role_permissions" class="side-menu__item ">
-                                        Role Permissions
-                                    </a>
+                                    <a href="{{route("admin.role_permissions")}}" class="side-menu__item "> Role Permissions</a>
                                 </li>
+                                @endcan
 
-
-
+                                @can("employee:viewAny")
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/admin_users" class="side-menu__item ">
-                                        Staffs Management
-                                    </a>
+                                    <a href="{{route("admin.admin_users")}}" class="side-menu__item ">Staffs Management</a>
                                 </li>
-
+                                @endcan
                             </ul>
                         </li>
-                        <li class="slide has-sub menu-item-main ">
+                        @endcan
+                        {{-- <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-help-circle"></i>
                                 <span class="side-menu__label">Help Desk</span>
@@ -509,7 +509,8 @@ $filePermissions = filePermissions($userRole);
                                 </li>
 
                             </ul>
-                        </li>
+                        </li> --}}
+                        
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-settings"></i>
@@ -519,19 +520,20 @@ $filePermissions = filePermissions($userRole);
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-
+                                @can("setting:update")
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/update_password" class="side-menu__item ">
+                                    <a href="{{route("admin.update_password")}}" class="side-menu__item ">
                                         Update Password
                                     </a>
                                 </li>
-
-
+                                @endcan
+                                @can("setting:viewAny")
                                 <li class="slide menu-item-sub">
-                                    <a href="/admin/ui_settings" class="side-menu__item ">
+                                    <a href="{{route('admin.ui-settings.view')}}" class="side-menu__item ">
                                         UI Settings
                                     </a>
                                 </li>
+                                @endcan
 
                             </ul>
                         </li>

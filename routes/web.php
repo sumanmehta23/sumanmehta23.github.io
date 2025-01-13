@@ -240,7 +240,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
 
-        Route::get('/roles', [StaffManagement::class, 'roles']);
+        Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
         Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles');
         Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
@@ -248,8 +248,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
         Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser');
 
-        Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions']);
-        Route::get('/admin_users', [StaffManagement::class, 'adminUsers']);
+        Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions'])->name('role_permissions')->middleware('check.permissions:permission:update');
+        Route::get('/admin_users', [StaffManagement::class, 'adminUsers'])->name('admin_users')->middleware('check.permissions:employee:viewAny');
         Route::get('/permissionsList', [StaffManagement::class, 'permissionsList'])->name('permissionsList');
 
         Route::post('/addTicket', [Ticket::class, 'addTicket'])->name('addTicket');
@@ -277,12 +277,12 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         });
 
         Route::prefix('/ui_settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index'])->middleware('check.permissions:setting:viewAny');
-            Route::post('/', [SettingsController::class, 'store'])->middleware('check.permissions:setting:update');
+            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
+            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
         Route::prefix('/update_password')->group(function () {
-            Route::get('/', [SettingsController::class, 'update_password']);
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password');
+            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
 
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
