@@ -42,7 +42,8 @@ class ClientController extends Controller
     }
     public function index()
     {
-
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         // Fetch IB details
         $ib_details = DB::table('ib1')
             ->select('name', 'email', 'referral_code')
@@ -81,7 +82,15 @@ class ClientController extends Controller
             ->sum('withdraw_transaction_fee');
         $wallet_withdrawal = $wallet_withdrawal + $wallet_withdrawal_fee;
         // Total Clients & IBs count
-        $total_clients = DB::table("aspnetusers")->count();
+        if ($role === "Relationship Manager") {
+            $total_clients = DB::table("aspnetusers")
+                ->leftJoin('relationship_manager as rm', 'aspnetusers.id', '=', 'rm.user_id')
+                ->where('rm.rm_id', $alogin)
+                ->count();
+
+        }else{
+            $total_clients = DB::table("aspnetusers")->count();
+        }
 
         $total_ib = DB::table('ib1')
             ->leftJoin('relationship_manager as rm', 'rm.user_id', '=', 'ib1.email')
@@ -458,7 +467,7 @@ class ClientController extends Controller
         $ticket_types = $user->ticket_types;  // Cached ticket types
 
         $userid = $id;
-        
+
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
