@@ -189,7 +189,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
-    // 
+    //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
@@ -199,7 +199,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
-    
+
 
     Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
 
@@ -209,9 +209,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
     Route::middleware(['is_admin'])->group(function () {
-        
-        
-        
+
+
+
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
         ->middleware('check.permissions:wallet_deposit:viewAny');
@@ -232,7 +232,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         ->middleware('check.permissions:trade_deposit:viewAny');
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
         ->middleware('check.permissions:trade_withdrawals:viewAny');
-        
+
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
