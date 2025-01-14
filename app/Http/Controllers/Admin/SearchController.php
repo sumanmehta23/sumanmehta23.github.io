@@ -27,10 +27,10 @@ class SearchController extends Controller
         $query->leftJoin('aspnetusers as user', 'user.email', '=', 'accounts.email');
     }
 
-    if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
-        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
-            ->where('rmgr.rm_id',  $userData['id']);
-    }
+    // if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
+    //     $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
+    //         ->where('rmgr.rm_id',  $userData['id']);
+    // }
 
     if($userData['userRole'] == 'Relationship Manager'){
         $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
