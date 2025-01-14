@@ -29,7 +29,7 @@ class SearchController extends Controller
 
     if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
         $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
-            ->where('rmgr.rm_id', session('alogin'));
+            ->where('rmgr.rm_id',  $userData['id']);
     }
 
     if($userData['userRole'] == 'Relationship Manager'){
