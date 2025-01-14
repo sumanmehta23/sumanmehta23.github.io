@@ -34,27 +34,27 @@
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal"
                                         href="{{route('admin.transactions.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
+                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit"
                                         href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading
                                         Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
+                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal"
                                         href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading
                                         Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('internal_transfer:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer" 
+                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer"
                                         href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal
                                         Transfer</a>
                                 </li>
@@ -177,13 +177,13 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <script>
         $(document).ready(function () {
           var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            
+
             buttons: [
                     {
                         extend: 'excel',
@@ -193,7 +193,7 @@
                         }
                     }
                 ],
-    
+
             order: [[3, "desc"]],
             processing: true,
             serverSide: true,
@@ -237,13 +237,13 @@
               { data: 'created_time', name: 'created_time', visible: false},
             ]
           });
-          
+
           $('#statusFilter').on('change', function () {
             tableWalletDeposit.ajax.reload();
-           
+
           });
         });
       </script>
-    
+
     @endpush
     @endsection

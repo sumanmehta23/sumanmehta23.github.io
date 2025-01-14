@@ -32,6 +32,11 @@ class SearchController extends Controller
             ->where('rmgr.rm_id', session('alogin'));
     }
 
+    if($userData['userRole'] == 'Relationship Manager'){
+        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
+            ->where('rmgr.rm_id', $userData['id']);
+    }
+
     // Apply conditions based on user groups.
     if ($roleId != '9db6f441-3c60-4045-a236-8b7b71fa6e15') {
         $userGroups = session('user_groups');
@@ -53,14 +58,23 @@ class SearchController extends Controller
     // Fetch the account data.
     $accounts = $query->orderByDesc('accounts.id')->get();
     // If no accounts are found, search in aspnetusers table.
+    // dd($userData);   
     if ($accounts->isEmpty()) {
         $userQuery = User::with([
             'ib',
             'countryDetail',
-            'employee' => function ($query) {
+            'employee' => function ($query) use ($userData) {
+                if ($userData['userRole'] === 'Relationship Manager') {
+                    $query->wherePivot('rm_id', $userData['id']); // Ensure it filters by rm_id
+                }
                 $query->select('emplist.id', 'username');
             }
-        ]);
+        ]) ->when($userData['userRole'] === 'Relationship Manager', function ($q) use ($userData) {
+            // Ensure that only users linked to the admin's rm_id are retrieved
+            $q->whereHas('employee', function ($query) use ($userData) {
+                $query->where('relationship_manager.rm_id', $userData['id']);
+            });
+        });
 
         if ($request->has('search')) {
             $search = $request->input('search');

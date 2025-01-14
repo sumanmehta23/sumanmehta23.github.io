@@ -16,15 +16,16 @@ class IBController extends Controller
 
     public function index(Request $request)
     {
-        $userRole = $request->session()->get('userData.role_id');
-        $alogin = $request->session()->get('alogin');
-
+        $userRole = $request->session()->get('userData.userRole');
+        $alogin = $request->session()->get('userData.id');
+        // dump($userRole);
+        // dd($alogin);
 
         $rmCondition = DB::table('ib1 as ib')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
         if ($userRole == "Relationship Manager") {
-            $rmCondition->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $rmCondition->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -42,7 +43,7 @@ class IBController extends Controller
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
         if ($userRole == "Relationship Manager") {
-            $totalClients->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $totalClients->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -54,7 +55,7 @@ class IBController extends Controller
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
             if ($userRole == "Relationship Manager") {
-            $pendingKyc->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $pendingKyc->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -90,7 +91,7 @@ class IBController extends Controller
 
         // Applying dynamic conditions
         if ($userRole == "Relationship Manager") {
-            $rmCondition->leftJoin('relationship_manager as rm', 'ib1.email', '=', 'rm.user_id')
+            $rmCondition->leftJoin('relationship_manager as rm', 'ib1.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
