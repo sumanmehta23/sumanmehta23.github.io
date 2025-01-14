@@ -129,7 +129,7 @@
                                                     </div>
                                                     <div class="mt-2 lh-1">
                                                         <span class="badge bg-success-transparent">+</span>
-                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->walletDeposits->sum('deposit_amount') : 0 }}</span>
+                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0 }}</span>
                                                     </div>
                                                 </div>
                                             </div>
