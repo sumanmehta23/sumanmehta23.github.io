@@ -28,7 +28,7 @@ class SearchController extends Controller
     }
 
     if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
-        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.email')
+        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
             ->where('rmgr.rm_id', session('alogin'));
     }
 
@@ -58,7 +58,7 @@ class SearchController extends Controller
     // Fetch the account data.
     $accounts = $query->orderByDesc('accounts.id')->get();
     // If no accounts are found, search in aspnetusers table.
-    // dd($userData);   
+    // dd($userData);
     if ($accounts->isEmpty()) {
         $userQuery = User::with([
             'ib',
