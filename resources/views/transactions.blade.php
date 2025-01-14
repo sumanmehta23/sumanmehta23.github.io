@@ -197,12 +197,11 @@
                           </td>
                           @if($history->status == 0)
                             <td >
-                                {{-- <button onclick="takeAction('{{ $history->id }}', '{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee }}',3)" type="button" class="m-1 btn btn-danger btn-space">Reject</button> --}}
                                 <a  href="#"
                                     class="btn btn-sm btn-outline-secondary d-grid reject-btn"
                                     onclick="takeAction('{{ json_encode($history->id) }}','{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee}}',3)"
                                     type="submit">
-                                Reject
+                                Cancel
                                 </a>
                             </td>
                           @else
@@ -371,7 +370,7 @@
         const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
         if(status==3){
-            statuscode='reject';
+            statuscode='cancel';
         }
       Swal.fire({
         title: `Are you sure you want to ${statuscode} this transaction?`,
@@ -394,7 +393,8 @@
       `,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Submit',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
       }).then((result) => {
         console.log(result);
         if (result.isConfirmed) {

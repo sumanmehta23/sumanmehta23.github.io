@@ -196,7 +196,7 @@ class Transactions extends Controller
                     // }
                 }
             }
-            return redirect()->back()->with('status', 'Transaction Rejected Successfully');
+            return redirect()->back()->with('status', 'Transaction Cancelled Successfully');
         } else {
             return redirect()->back()->with('error', 'Transaction Not Found');
         }
