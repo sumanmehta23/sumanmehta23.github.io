@@ -558,9 +558,9 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('leverage', function($row){
-                    return $row->leverage;
-                })
+                // ->addColumn('leverage', function($row){
+                //     return $row->leverage;
+                // })
                 ->addColumn('balance', function($row){
                     return $row->balance;
                 })
@@ -586,13 +586,27 @@ class AjaxController extends Controller
                 ->addColumn('account_group', function($row){
                     return $row->accountType->ac_group;
                 })
+                ->addColumn('account_request_status', function($row){
+
+                    if($row->account_request_status == 1 || $row->account_request_status == Null ){
+                        return "<button class='ibToggle badge bg-outline-success'>Approved</button>";
+                    // }elseif($row->account_request_status == 2){
+                    //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
+                    }elseif($row->account_request_status == 0){
+                        return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
+                    }
+                    
+                })
+                ->editColumn('request_status', function ($row) {
+                    return $row->account_request_status ;
+                })
                 ->addColumn('created_date', function($row){
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('created_time', function($row){
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail', 'account_request_status', 'request_status'])
                 ->make(true);
         }
 

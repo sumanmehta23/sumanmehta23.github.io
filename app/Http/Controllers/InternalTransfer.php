@@ -33,7 +33,9 @@ class InternalTransfer extends Controller
                 $query->where('bonus_type', 'Bonus In')
                       ->orWhere('bonus_type', 'Bonus Out');
             }
-        ])->get();
+        ])
+        ->where('account_request_status', "!=", "0")    
+        ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
     }
