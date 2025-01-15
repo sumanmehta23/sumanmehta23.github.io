@@ -122,7 +122,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/view-account-details/{account}', [MT5Accounts::class, 'viewAccountDetails'])->where('account', '.*')->name('view-account-details');
     Route::get('/createLiveAccount', [MT5Accounts::class, 'showLiveAccountForm'])->name('show-live-account-form');
     Route::post('/createLiveAccount', [MT5Accounts::class, 'createLiveAccount'])->name('create-live-account');
-    // Route::post('/activate_account', [MT5Accounts::class, 'updateLiveAccount'])->name('activate_account');
     Route::get('/createDemoAccount', [MT5Accounts::class, 'showDemoAccountForm'])->name('show-demo-account-form');
     Route::post('/createDemoAccount', [MT5Accounts::class, 'createDemoAccount'])->name('create-demo-account');
     Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
@@ -282,6 +281,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
             Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
+            Route::post('/activate_account', [MT5Accounts::class, 'updateLiveAccount'])->name('activate_account');
         });
 
         Route::prefix('/ui_settings')->group(function () {

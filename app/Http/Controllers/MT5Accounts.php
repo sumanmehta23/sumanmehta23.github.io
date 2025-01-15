@@ -397,7 +397,6 @@ class MT5Accounts extends Controller
     }
     public function updateLiveAccount(Request $request)
     {
-        // dd($request->all());
 
         $settings = settings();
         $validatedData = $request->validate([
