@@ -440,7 +440,7 @@ class ClientController extends Controller
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
-        $live_accounts = $user->liveAccounts;  // Relationship for live accounts
+        $live_accounts = $user->liveAccounts->where('account_request_status',1);  // Relationship for live accounts
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
@@ -456,7 +456,7 @@ class ClientController extends Controller
         $ticket_types = $user->ticket_types;  // Cached ticket types
 
         $userid = $id;
-        
+
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',

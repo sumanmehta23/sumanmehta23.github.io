@@ -58,7 +58,7 @@
                               </div>
                               <div class="col">
                                 <h4 class="mb-2 ms-2">
-                                  <span class="text-truncate w-100">{{ $acc->code }}</span>
+                                  <span class="text-truncate w-100">{{ $acc->code ?? 'Pending' }}</span>
                                 </h4>
                                 <p class="mb-0 text-muted ms-2 f-12">
                                   <span class="text-truncate w-100">{{ $acc->email }}</span>
@@ -71,13 +71,15 @@
                           <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
                           <td class="text-end f-w-200">
                             <div class="d-flex align-items-center gap-2">
-                              <button class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                <a href="{{ route('view-account-details', $acc->id) }}">
-                                  <span class="">View <svg class="pc-icon">
-                                      <use xlink:href="#custom-login"></use>
-                                    </svg></span>
-                                </a>
-                              </button>
+                              @if ($acc->code)
+                                <button class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                    <a href="{{ route('view-account-details', $acc->id) }}">
+                                    <span class="">View <svg class="pc-icon">
+                                        <use xlink:href="#custom-login"></use>
+                                        </svg></span>
+                                    </a>
+                                </button>
+                              @endif
                               <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                 <span class="">Deposit <i class="ti ti-database-import"></i></span>
                               </a>

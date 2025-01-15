@@ -507,6 +507,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = Account::where('demo', false)
             ->select('accounts.*')
+            ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
@@ -595,7 +596,7 @@ class AjaxController extends Controller
                     }elseif($row->account_request_status == 0){
                         return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
                     }
-                    
+
                 })
                 ->editColumn('request_status', function ($row) {
                     return $row->account_request_status ;
@@ -2725,19 +2726,19 @@ class AjaxController extends Controller
     {
         $id = request('userId');
         $level = request('level');
-        
-        $user = User::with('ib')->findOrFail($id); 
+
+        $user = User::with('ib')->findOrFail($id);
 
         if(isset($user->clients[$level])){
             $query = $user->clients[$level];
         }else{
             $query = [];
         }
-        
+
         if ($request->ajax()) {
             return DataTables::of($query)
-                             
-            ->editColumn('email', function ($row) {  
+
+            ->editColumn('email', function ($row) {
                     return " <div class='row align-items-center'>
                                 <div class='col-auto pe-0'>
                                     <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
@@ -2768,7 +2769,7 @@ class AjaxController extends Controller
                         return "<span class='badge btn bg-info'>Not Verified</span>";
                     }
             })
-        
+
                 ->rawColumns(['email', 'profile_status'])
                 ->make(true);
         }

@@ -259,16 +259,14 @@ class MT5Accounts extends Controller
                 $_POST["options"] =$group->id;
                 $account_type_id = $group->id;
             }
-            
+
         }else{
             $groupCode = $group->ac_group;
         }
 
-         $userAcc = User::with('liveAccounts')
-         ->where('id', $user->id)
-         ->first();
-        
-        if ($userAcc && $userAcc->liveAccounts->isEmpty()) {
+         $userAcc = Account::where('user_id', $user->id)->get();
+
+        if ($userAcc && count($userAcc) < 2) {
             // dd('No live accounts found.');
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -290,7 +288,7 @@ class MT5Accounts extends Controller
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
             $response = $this->CreateAccount($new_user, $user_server, 'Live');
-            
+
             if ($response['status']) {
                 Account::create([
                     'user_id' => $user->id,
@@ -313,7 +311,7 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('error', $response['message']);
             }
         }else {
-
+            $settings = settings();
             $useraccount = Account::create([
                 'user_id' => $user->id,
                 'name' => $user->fullname??$user->email,
@@ -324,17 +322,34 @@ class MT5Accounts extends Controller
                 'currency' => 'USD',
                 'ib1' => $user->ib1?? "",
                 'account_request_status' => '0',
-                // 'code' => $new_user->Login,
-                // 'trader_password' => $new_user->MainPassword,
-                // 'invester_password' => $new_user->InvestPassword,
-                // 'phone_password' => $new_user->PhonePassword,
+
             ]);
             if($useraccount){
+
+                $from = $settings['email_from_address'];
+                $emailSubject = 'Account send for approval';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+
+                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+                    <p>Best Regards.</p>
+                <p>LQH Markets Team</p>';
+                $templateVars = [
+                    'name' => 'Valued Client',
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "",
+                    "subtitle_right" => "",
+                ];
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('success', 'Account created successfully');
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
-            
+
         }
 
         // $new_user = $this->api->UserCreate();
@@ -357,7 +372,7 @@ class MT5Accounts extends Controller
         // $new_user->InvestPassword = $this->generatePassword();
         // $new_user->Login = $this->generateRandomNumber();
         // $response = $this->CreateAccount($new_user, $user_server, 'Live');
-        
+
         // if ($response['status']) {
         //     Account::create([
         //         'user_id' => $user->id,
@@ -381,7 +396,7 @@ class MT5Accounts extends Controller
         // }
     }
     public function updateLiveAccount(Request $request)
-    {   
+    {
         // dd($request->all());
 
         $settings = settings();
@@ -437,7 +452,7 @@ class MT5Accounts extends Controller
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
             $response = $this->CreateAccount($new_user, $user_server, 'Live');
-            
+
             if ($response['status']) {
                 $account = Account::where('id', $request->account_id)->first();
                 // dd($account);
@@ -468,7 +483,7 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('error', $response['message']);
             }
     }
-    
+
     public function createDemoAccount(Request $request)
     {
         $settings = settings();
