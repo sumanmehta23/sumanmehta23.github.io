@@ -379,7 +379,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="px-2 row">
-                                                            <?php if (empty($live_accounts)) { ?>
+                                                            <?php if (empty(    )) { ?>
                                                             <div class="my-4 text-muted">No Live Accounts Found.</div>
                                                             <?php } ?>
                                                             <?php foreach ($live_accounts as $acc): ?>
@@ -931,7 +931,7 @@
                                                                 <?php for ($i = 1; $i <= 15; $i++) { ?>
                                                                     <li class="nav-item"
                                                                     data-target-form="#LEVEL{{ $i }}"
-                                                                    role="presentation"><a                                                                           
+                                                                    role="presentation"><a
                                                                         class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
                                                                         data-level="{{ $i }}"
                                                                         aria-selected="false" role="tab"
@@ -964,7 +964,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            
+
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1447,7 +1447,7 @@
     </script>
      <script>
         $(document).ready(function() {
-       
+
             let level = 1;
 
             var dTtable = $('#ajaxDatatable').DataTable({
@@ -1490,7 +1490,7 @@
                 dTtable.ajax.reload();
             });
 
-       
+
         });
 
     </script>

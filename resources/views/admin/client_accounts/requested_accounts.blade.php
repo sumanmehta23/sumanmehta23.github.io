@@ -39,10 +39,11 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Status</td>
                                         </tr>
                                     </thead>
                                     <tbody>
-
+                                        
                                     </tbody>
                                 </table>
                             </div>
@@ -78,7 +79,7 @@
                             <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
                             {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
                         </div>
-
+            
                         </div>
                         <div class="card-body">
                         <div class="mb-3 row">
@@ -208,7 +209,11 @@
                     visible: false,
 
                 },
-
+                {
+                    data: 'account_request_status',
+                    name: 'account_request_status',
+                },
+                
             ],
             rowCallback: function(row, data) {
                 // Optional customization for rows
