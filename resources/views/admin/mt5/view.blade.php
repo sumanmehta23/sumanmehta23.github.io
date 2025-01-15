@@ -53,30 +53,37 @@ if ($getUser) {
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
-                                                <div class="col-6 mb-2">
+                                                @can("trade_deposit:create")
+                                                <div class="mb-2 col-6">
                                                     <span class="badge btn btn-primary" data-bs-toggle="modal"
                                                         data-bs-target="#depositModal">Deposit
                                                         <i class="ti ti-database-import"></i>
                                                     </span>
                                                 </div>
-                                                <div class="col-6 mb-2">
+                                                @endcan
+                                                @can("trade_withdrawals:create")
+                                                <div class="mb-2 col-6">
                                                     <span class="badge btn btn-info" data-bs-toggle="modal"
                                                         data-bs-target="#withdrawalModal">Withdraw
                                                         <i class="ti ti-square-rounded-arrow-down"></i>
                                                     </span>
                                                 </div>
-                                                <div class="col-6 mb-2">
-                                                    <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                        data-bs-target="#bonusModalCredit">Bonus Credit
-                                                        <i class="ti ti-plus" style="font-weight: bold"></i>
-                                                    </span>
-                                                </div>
-                                                <div class="col-6 mb-2">
-                                                    <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                        data-bs-target="#bonusModal">Bonus Deposit
-                                                        <i class="ti ti-plus" style="font-weight: bold"></i>
-                                                    </span>
-                                                </div>
+                                                @endcan
+                                                @can("bonus_transaction:create")
+                                                    <div class="mb-2 col-6">
+                                                        <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                            data-bs-target="#bonusModalCredit">Bonus Credit
+                                                            <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div class="mb-2 col-6">
+                                                        <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                            data-bs-target="#bonusModal">Bonus Deposit
+                                                            <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                        </span>
+                                                    </div>
+                                                @endcan
                                             </div>
                                         </div>
                                     </div>

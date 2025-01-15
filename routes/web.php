@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Ib1;
 use App\Models\Account;
+use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
@@ -13,6 +15,8 @@ use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
@@ -36,6 +40,7 @@ use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\Admin\PermissionController;
 Route::get("/se",function(){
     // $uuids=[];
     // for($i=0;$i<100;$i++){
@@ -94,6 +99,7 @@ Route::get('/register', [LoginController::class, 'register'])->name('register');
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
+Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
@@ -109,6 +115,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
+    Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
@@ -159,6 +166,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
+Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -182,6 +190,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
 
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
+    Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
+
+    //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
@@ -191,7 +202,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
-    Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
+
 
     Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
 
@@ -199,29 +210,51 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
-    Route::middleware(['is_admin', 'check.permissions'])->group(function () {
-        Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
-        Route::get('/transactions/{id}', [Transaction::class, 'index']);
-        Route::get('/transactions/pending/{id}', [Transaction::class, 'pending']);
+    Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
+    Route::middleware(['is_admin'])->group(function () {
 
-        Route::get('/client_list', [ClientController::class, 'index'])->name('client_list');
-        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details');
+
+
+        Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+        Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
+        ->middleware('check.permissions:wallet_deposit:viewAny');
+        Route::get('/transactions/wallet-withdrawal', [Transaction::class, 'wallet_withdrawal'])->name('transactions.wallet-withdrawal')
+        ->middleware('check.permissions:wallet_withdraw:viewAny');
+        Route::get('/transactions/trading-deposit', [Transaction::class, 'trading_deposit'])->name('transactions.trading-deposit')
+        ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/transactions/trading-withdrawal', [Transaction::class, 'trading_withdrawal'])->name('transactions.trading-withdrawal')
+        ->middleware('check.permissions:trade_withdrawals:viewAny');
+        Route::get('/transactions/internal-transfer', [Transaction::class, 'internal_transfer'])->name('transactions.internal-transfer')
+        ->middleware('check.permissions:internal_transfer:viewAny');
+        // Route::get('/transactions/{id}', [Transaction::class, 'index'])->name('transactions')->middleware('check.permissions:wallet_deposit:viewAny');
+        Route::get('/transactions/pending/wallet-deposit', [Transaction::class, 'pendingWalletDeposit'])->name('transactions.pending.wallet-deposit')
+        ->middleware('check.permissions:wallet_deposit:viewAny');
+        Route::get('/transactions/pending/wallet-withdrawal', [Transaction::class, 'pendingWalletWithdrawal'])->name('transactions.pending.wallet-withdrawal')
+        ->middleware('check.permissions:wallet_withdraw:viewAny');
+        Route::get('/transactions/pending/trading-deposit', [Transaction::class, 'pendingTradingDeposit'])->name('transactions.pending.trading-deposit')
+        ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
+        ->middleware('check.permissions:trade_withdrawals:viewAny');
+
+
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
+        Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
         Route::post('/updateIB', [ClientController::class, 'updateIB'])->name('updateIB');
         Route::post('/updateRM', [ClientController::class, 'updateRM'])->name('updateRM');
-        Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser');
+        Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser')->middleware("check.permissions:client:create");
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
 
-        Route::get('/roles', [StaffManagement::class, 'roles']);
+        Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
         Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles');
         Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
         Route::post('/update_role_status', [StaffManagement::class, 'updateRoleStatus'])->name('update_role_status');
         Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
-        Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser');
+        Route::post('/save_user', [StaffManagement::class, 'saveUser'])->name('saveUser')->middleware('check.permissions:employee:update,employee:create');
 
-        Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions']);
-        Route::get('/admin_users', [StaffManagement::class, 'adminUsers']);
+        Route::get('/role_permissions', [StaffManagement::class, 'rolePermissions'])->name('role_permissions')->middleware('check.permissions:permission:update');
+        Route::get('/admin_users', [StaffManagement::class, 'adminUsers'])->name('admin_users')->middleware('check.permissions:employee:viewAny');
         Route::get('/permissionsList', [StaffManagement::class, 'permissionsList'])->name('permissionsList');
 
         Route::post('/addTicket', [Ticket::class, 'addTicket'])->name('addTicket');
@@ -239,30 +272,29 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/wallet_deposit_details', [Transaction::class, 'wallet_deposit_details']);
         Route::get('/wallet_withdrawal_details', [Transaction::class, 'wallet_withdrawal_details']);
         Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal'])->name('wallet_withdrawal_details');
+        Route::post('/manually_approve_withdrawal', [Transaction::class, 'manually_approve_withdrawal'])->name('manually_approve_withdrawal');
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
 
         Route::prefix('/clientAccounts')->group(function () {
-            Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts']);
-            Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts']);
-            Route::post("/activate_account", [MT5Accounts::class, 'updateLiveAccount']);
-
+            Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
+            Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
         });
 
         Route::prefix('/ui_settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index']);
-            Route::post('/', [SettingsController::class, 'store']);
+            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
+            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
         Route::prefix('/update_password')->group(function () {
-            Route::get('/', [SettingsController::class, 'update_password']);
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password');
+            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
 
-        Route::get("/ibdashboard", [IBController::class, 'index']);
-        Route::get("/iblist", [IBController::class, 'list']);
-        Route::get("/iblist_active", [IBController::class, 'list_active']);
-        Route::get("/ib_settings", [IBController::class, 'ib_settings']);
+        Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
+        Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
+        Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;
+        Route::get("/ib_settings", [IBController::class, 'ib_settings'])->name('ib.settings')->middleware('check.permissions:ib:manageSettings');
         Route::get("/ibCommission", [IBController::class, 'ibCommission']);
         Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
@@ -273,13 +305,14 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/view_account_details/{accountId}", [MT5Controller::class, 'view'])->where('account', '.*')->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
-        Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount');
-        Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount');
-        Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount');
-        Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount');
+        Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
+        Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
+        Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount')->middleware('check.permissions:bonus_transaction:create');
+        Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount')->middleware('check.permissions:bonus_transaction:create');
 
         Route::get("/search", [SearchController::class, 'index']);
-
-        Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+        Route::resource('permissions', PermissionController::class);
+        // Route::get("/roles-permissions", [SearchController::class, 'index']);
+        // Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
     });
 });

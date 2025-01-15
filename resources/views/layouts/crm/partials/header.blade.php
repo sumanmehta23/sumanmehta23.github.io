@@ -330,7 +330,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            {{-- <li class="pc-item">
+                            <li class="pc-item">
                                 <a href="javascript:void(0);" class="pc-link" id="pamm-menu">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -347,7 +347,7 @@
                                     <li><a href="{{ route('pamm.manager') }}">Manager</a></li>
                                     <li><a href="{{ route('pamm.investor') }}">Investor</a></li>
                                 </ul>
-                            </li> --}}
+                            </li>
 
 
 
@@ -451,7 +451,7 @@
                     <div class="ms-auto">
                         @if (session('admin'))
                             <ul>
-                                <a href="/admin/client_list" class="">
+                                <a href="{{route('switchToAdmin')}}" class="">
                                     <span>
                                         Switch Back To {{ session('admin')->username }}
                                     </span>

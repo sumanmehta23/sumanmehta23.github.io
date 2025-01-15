@@ -10,7 +10,7 @@
                 </ol>
             </div>
             <!-- Add a Status Filter Dropdown above the table -->
-{{-- <div class="row mb-3">
+{{-- <div class="mb-3 row">
     <div class="col-md-4">
       <label for="statusFilter">Filter by Status:</label>
       <select id="statusFilter" class="form-select" name="status">
@@ -27,7 +27,7 @@
                 <div class="col-xl-12">
                     <div class="card custom-card">
                         <div class="card-body">
-                            <ul class="nav nav-tabs mb-3 border-0" role="tablist">
+                            <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" data-bs-toggle="tab" role="tab"
                                         href="#walletdeposit" aria-selected="true">Wallet Deposit</a>
@@ -52,7 +52,7 @@
                                 <div class="tab-pane text-muted  {{ $id === 'wallet_deposit' ? 'active show' : '' }}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletDeposit"
-                                            class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
                                                     <th>Email</th>
@@ -75,7 +75,7 @@
                                 <div class="tab-pane text-muted {{ $id === 'wallet_withdrawal' ? 'active show' : '' }}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableWalletWithdrawal"
-                                            class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
                                                     <th>Account No</th>
@@ -99,7 +99,7 @@
                                 <div class="tab-pane text-muted {{ $id === 'trading_deposit' ? 'active show' : '' }}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingDeposit"
-                                            class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
@@ -122,7 +122,7 @@
                                 <div class="tab-pane text-muted {{ $id === 'trading_withdrawal' ? 'active show' : '' }}" id="tradingwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
                                         <table id="tableTradingWithdrawal"
-                                            class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                            class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
                                                     <th>Account No</th>
@@ -143,7 +143,7 @@
                                 </div>
                                 <div class="tab-pane text-muted" id="transaction5" role="tabpanel">
                                     <table id="tableInternalTransfer"
-                                        class="ajaxDataTable table table-bordered text-nowrap w-100">
+                                        class="table ajaxDataTable table-bordered text-nowrap w-100">
                                         <thead>
                                             <tr>
                                                 <th>Name</th>

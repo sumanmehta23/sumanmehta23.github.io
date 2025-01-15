@@ -13,6 +13,7 @@ class SearchController extends Controller
 
     public function index(Request $request)
 {
+    // dd($request->all());
     // Initialize the base query.
     $query = DB::table('accounts')
         ->where('account_request_status', 1)
@@ -28,9 +29,14 @@ class SearchController extends Controller
         $query->leftJoin('aspnetusers as user', 'user.email', '=', 'accounts.email');
     }
 
-    if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
-        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.email')
-            ->where('rmgr.rm_id', session('alogin'));
+    // if ($roleId == '9db6f441-3d0e-4ad5-a0ce-05df46e81956') {
+    //     $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
+    //         ->where('rmgr.rm_id',  $userData['id']);
+    // }
+
+    if($userData['userRole'] == 'Relationship Manager'){
+        $query->leftJoin('relationship_manager as rmgr', 'rmgr.user_id', '=', 'accounts.user_id')
+            ->where('rmgr.rm_id', $userData['id']);
     }
 
     // Apply conditions based on user groups.
@@ -54,14 +60,23 @@ class SearchController extends Controller
     // Fetch the account data.
     $accounts = $query->orderByDesc('accounts.id')->get();
     // If no accounts are found, search in aspnetusers table.
+    // dd($userData);
     if ($accounts->isEmpty()) {
         $userQuery = User::with([
             'ib',
             'countryDetail',
-            'employee' => function ($query) {
+            'employee' => function ($query) use ($userData) {
+                if ($userData['userRole'] === 'Relationship Manager') {
+                    $query->wherePivot('rm_id', $userData['id']); // Ensure it filters by rm_id
+                }
                 $query->select('emplist.id', 'username');
             }
-        ]);
+        ]) ->when($userData['userRole'] === 'Relationship Manager', function ($q) use ($userData) {
+            // Ensure that only users linked to the admin's rm_id are retrieved
+            $q->whereHas('employee', function ($query) use ($userData) {
+                $query->where('relationship_manager.rm_id', $userData['id']);
+            });
+        });
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -74,7 +89,23 @@ class SearchController extends Controller
         $accounts = $userQuery->orderByDesc('id')->get();
         return view("admin.search2", compact("accounts"));
     }else{
-        return view("admin.search", compact("accounts"));
+
+        $search = $request->input('search');
+        
+        if(is_numeric($search))
+        {
+            if($accounts[0]->demo == "1"){
+
+                $type="Client - Demo Accounts";
+            }else{
+
+                $type="Client - Live Accounts";
+            }               
+        }else{
+            $type="Client - Accounts";
+        }
+
+        return view("admin.search", compact("accounts", "type"));
     }
 
     // Return the merged or single dataset to the view.

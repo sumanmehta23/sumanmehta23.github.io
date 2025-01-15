@@ -28,6 +28,7 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -37,10 +38,12 @@ class ClientController extends Controller
     public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
+        // Gate::validate('view-client');
     }
     public function index()
     {
-
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         // Fetch IB details
         $ib_details = DB::table('ib1')
             ->select('name', 'email', 'referral_code')
@@ -79,7 +82,15 @@ class ClientController extends Controller
             ->sum('withdraw_transaction_fee');
         $wallet_withdrawal = $wallet_withdrawal + $wallet_withdrawal_fee;
         // Total Clients & IBs count
-        $total_clients = DB::table("aspnetusers")->count();
+        if ($role === "Relationship Manager") {
+            $total_clients = DB::table("aspnetusers")
+                ->leftJoin('relationship_manager as rm', 'aspnetusers.id', '=', 'rm.user_id')
+                ->where('rm.rm_id', $alogin)
+                ->count();
+
+        }else{
+            $total_clients = DB::table("aspnetusers")->count();
+        }
 
         $total_ib = DB::table('ib1')
             ->leftJoin('relationship_manager as rm', 'rm.user_id', '=', 'ib1.email')

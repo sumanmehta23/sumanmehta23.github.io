@@ -13,11 +13,8 @@ return new class extends Migration
     {
         Schema::create('permissions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('role_id');
-            $table->uuid('page_id');
-            $table->uuid('created_by');
-            $table->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete();
-            $table->foreign('page_id')->references('id')->on('pages')->cascadeOnDelete();
+            $table->string('name');
+            $table->string('description');
             $table->timestamps();
         });
     }

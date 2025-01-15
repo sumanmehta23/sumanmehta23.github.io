@@ -27,4 +27,19 @@ class EmployeeList extends Authenticatable
         )
         ->withPivot('added_by');
     }
+    public function hasPermission($permission)
+    {
+        if ($this->role == "Super Admin") {
+            return true;
+        }
+        return $this->role->permissions->contains('name', $permission);
+    }
+    public function hasPermissions($permissions)
+    {
+        if ($this->role->name == "Super Admin") {
+            return true;
+        }
+        // info("Permissions to check ".json_encode([$permissions]));
+        return $this->role->permissions->pluck('name')->intersect($permissions)->isNotEmpty();
+    }
 }

@@ -9,4 +9,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class Role extends Model
 {
     use HasFactory,HasUuids;
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
 }

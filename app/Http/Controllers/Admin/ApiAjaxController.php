@@ -214,7 +214,7 @@ class ApiAjaxController extends Controller
 
             foreach (explode(",", $request->ac_max_leverage) as $lev) {
                 Leverage::create([
-                    'account_type_id' => $accountType->ac_index,
+                    'account_type_id' => $accountType->id,
                     'account_leverage' => $lev
                 ]);
             }
@@ -247,7 +247,7 @@ class ApiAjaxController extends Controller
 
                 foreach (explode(",", $request->ac_max_leverage) as $lev) {
                     Leverage::create([
-                        'account_type_id' => $accountType->ac_index,
+                        'account_type_id' => $accountType->id,
                         'account_leverage' => $lev
                     ]);
                 }
