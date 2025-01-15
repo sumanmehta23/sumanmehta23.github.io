@@ -45,19 +45,19 @@ class Transaction extends Controller
     }
     public function wallet_withdrawal(Request $request)
     {
-        
+
         $id = "wallet_withdrawal";
         return view('admin.transactions.wallet_withdrawal', compact('id'));
     }
     public function trading_deposit(Request $request)
     {
-        
+
         $id = "trading_deposit";
         return view('admin.transactions.trading_deposit', compact('id'));
     }
     public function trading_withdrawal(Request $request)
     {
-      
+
         $id = "trading_withdrawal";
         return view('admin.transactions.trading_withdrawal', compact('id'));
     }
@@ -86,7 +86,7 @@ class Transaction extends Controller
         $id = "trading_withdrawal";
         return view('admin.transactions.pending.trading_withdrawal', compact('id'));
     }
-    
+
     public function wallet_deposit_details(Request $request)
     {
         if (request()->has('id') && !empty(request()->id)) {
@@ -260,9 +260,43 @@ class Transaction extends Controller
             return view('admin.trading_withdrawal_details', compact('details'));
         }
     }
-    public function update_wallet_withdrawal(Request $request)
+    public function manually_approve_withdrawal(Request $request)
     {
 
+        if($request->transaction = 'Manually'){
+            $validatedData = $request->validate([
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+            $rejection_reason = 'Manually Approved';
+            $approved_by = $request->approved_by;
+            $approved_date = $request->approved_date;
+        }
+        $status = $validatedData['status'];
+        $email = $validatedData['email'];
+        $depositAmount = $validatedData['amount'];
+        $did = $request->transaction_id;
+        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        if ($transaction) {
+            $transaction->admin_remark = $rejection_reason;
+            $transaction->Status =$status;
+            $transaction->transaction_id = $did;
+            $transaction->approved_by = $approved_by;
+            $transaction->approved_date =$approved_date;
+            $transaction->save();
+            TotalBalance::create([
+                'user_id' => $transaction->user_id,
+                'email' => $email,
+                'withdraw_amount' => $depositAmount,
+            ]);
+            return redirect()->back()->with('success', 'Transaction Approved Manually');
+        }else {
+            return redirect()->back()->with('error', 'Transaction Not Found');
+        }
+    }
+    public function update_wallet_withdrawal(Request $request)
+    {
         $settings = settings();
         $status = $request->status;
         // dd($request->all());
@@ -303,7 +337,6 @@ class Transaction extends Controller
                     $transaction->approved_by = $approved_by;
                     $transaction->approved_date =$approved_date;
                     $transaction->save();
-
 
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
                     $walletNetwork = $walletDetails->wallet_network;
