@@ -238,7 +238,7 @@ class MT5Accounts extends Controller
         ]);
 
         $user = auth()->user();
-
+        $email = $user->email;
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
         $referral=$user->referral;
         $ib=$user->ib1;
@@ -264,10 +264,9 @@ class MT5Accounts extends Controller
             $groupCode = $group->ac_group;
         }
 
-         $userAcc = Account::where('user_id', $user->id)->get();
+         $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
         if ($userAcc && count($userAcc) < 2) {
-            // dd('No live accounts found.');
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
@@ -304,6 +303,7 @@ class MT5Accounts extends Controller
                     'invester_password' => $new_user->InvestPassword,
                     'phone_password' => $new_user->PhonePassword,
                     'ib1' => $new_user->LeadSource,
+                    'account_request_status' => '1',
                 ]);
                 $this->sendMail($new_user, 'Live');
                 return redirect()->back()->with('success', $response['message']);
