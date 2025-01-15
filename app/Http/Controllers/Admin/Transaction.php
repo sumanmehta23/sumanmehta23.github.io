@@ -262,7 +262,7 @@ class Transaction extends Controller
     }
     public function manually_approve_withdrawal(Request $request)
     {
-
+        $settings = settings();
         if($request->transaction = 'Manually'){
             $validatedData = $request->validate([
                 'status' => 'required|integer',
@@ -290,6 +290,35 @@ class Transaction extends Controller
                 'email' => $email,
                 'withdraw_amount' => $depositAmount,
             ]);
+
+
+            $deposit_details = WalletWithdraw::with('user')
+                    ->whereRaw('id = ?', [$did])
+                    ->first();
+            $from = $settings['email_from_address'];
+            $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
+            $content = '<div>We are pleased to inform you that your transaction has been successfully approved manually.</div>
+                        <div>The approved amount has been withdrawn from your wallet.</div>
+                        <div><b>Transaction Details</b></div>
+                        <div><b>Approved Amount: </b>$' . $deposit_details->withdraw_amount . '</div>
+                        <div><b>Transaction ID: </b>' . $transid . '</div>
+                        <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
+                        <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
+            $templateVars = [
+                'name' => $deposit_details->user->fullname,
+                'site_link' => $settings['copyright_site_name_text'],
+                'email' => $settings['email_from_address'],
+                'content' => $content,
+                'title_right' => 'Transaction',
+                'subtitle_right' => 'Approved',
+                'btn_text' => 'Go To Dashboard',
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
             return redirect()->back()->with('success', 'Transaction Approved Manually');
         }else {
             return redirect()->back()->with('error', 'Transaction Not Found');
