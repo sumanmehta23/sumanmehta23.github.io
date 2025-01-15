@@ -640,13 +640,14 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function($row) {
                     $accountGroup = $row->accountType->ac_group;
-                    return "<a href='/admin/view_account_details/{$row->id}'>
+                    return "<a href='" . ($row->code ? '/admin/view_account_details/' . $row->id : '#') . "'>
                                 <div class='row align-items-center'>
                                     <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
                                             alt='user-image' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
-                                        <h6 class='mb-0'><span
-                                                class='text-truncate w-100'> $row->code ?? 'Pending' </span>
+                                        <h6 class='mb-0'><span class='text-truncate w-100'>" .
+                                                    ($row->code ? $row->code : 'Pending') .
+                                                "</span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
                                                 class='text-truncate w-100'> $accountGroup </span>
