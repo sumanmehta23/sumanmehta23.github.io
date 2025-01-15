@@ -13,6 +13,7 @@ class SearchController extends Controller
 
     public function index(Request $request)
 {
+    // dd($request->all());
     // Initialize the base query.
     $query = DB::table('accounts')
         ->select('accounts.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
@@ -87,7 +88,23 @@ class SearchController extends Controller
         $accounts = $userQuery->orderByDesc('id')->get();
         return view("admin.search2", compact("accounts"));
     }else{
-        return view("admin.search", compact("accounts"));
+
+        $search = $request->input('search');
+        
+        if(is_numeric($search))
+        {
+            if($accounts[0]->demo == "1"){
+
+                $type="Client - Demo Accounts";
+            }else{
+
+                $type="Client - Live Accounts";
+            }               
+        }else{
+            $type="Client - Accounts";
+        }
+
+        return view("admin.search", compact("accounts", "type"));
     }
 
     // Return the merged or single dataset to the view.
