@@ -6,11 +6,11 @@
 
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                <h1 class="page-title">Client - Live Accounts</h1>
+                <h1 class="page-title">Client - Requested Accounts</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
                     <li class="breadcrumb-item">Client List</li>
-                    <li class="breadcrumb-item active" aria-current="page">Live Accounts</li>
+                    <li class="breadcrumb-item active" aria-current="page">Requested Accounts</li>
                 </ol>
             </div>
             <!-- PAGE-HEADER END -->
@@ -43,7 +43,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
@@ -79,7 +79,7 @@
                             <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
                             {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
                         </div>
-            
+
                         </div>
                         <div class="card-body">
                         <div class="mb-3 row">
@@ -143,7 +143,7 @@
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getLiveAccountsList',
+                url: '/admin/getRequestedAccountsList',
                 type: 'GET',
                 data: {}, // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
@@ -213,7 +213,7 @@
                     data: 'account_request_status',
                     name: 'account_request_status',
                 },
-                
+
             ],
             rowCallback: function(row, data) {
                 // Optional customization for rows

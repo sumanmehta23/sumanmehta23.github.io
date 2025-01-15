@@ -209,7 +209,7 @@ $filePermissions = filePermissions($userRole);
                                         class="mb-0 text-dark fs-14 fw-semibold">{{ ucfirst(session('userData')['username']) }}</span>
                                 </p>
                             </li>
-                            
+
                             <li><a class="dropdown-item d-flex align-items-center" href="/admin/logout"><i
                                         class="fe fe-alert-circle me-2 fs-18 text-primary"></i>Logout</a></li>
                         </ul>
@@ -291,17 +291,22 @@ $filePermissions = filePermissions($userRole);
                                             <a href="{{route('admin.liveAccounts')}}" class="side-menu__item ">Live Accounts</a>
                                         </li>
                                     @endcan
-                                    
+
                                     @can('account:viewDemoAccounts')
                                     <li class="slide menu-item-sub">
                                         <a href="{{route('admin.demoAccounts')}}" class="side-menu__item ">Demo Accounts</a>
+                                    </li>
+                                    @endcan
+                                    @can('account:viewRequestedAccounts')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{route('admin.requestedAccounts')}}" class="side-menu__item ">Requested Accounts</a>
                                     </li>
                                     @endcan
                                 </ul>
                             </li>
                         @endif
                         @if(auth()->user()->can('wallet_deposit:viewAny') || auth()->user()->can('wallet_withdrawal:viewAny')|| auth()->user()->can('trade_deposit:viewAny')|| auth()->user()->can('trade_withdrawals:viewAny')|| auth()->user()->can('internal_transfer:viewAny'))
-                        
+
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
                             </li>
@@ -348,7 +353,7 @@ $filePermissions = filePermissions($userRole);
                                     @endcan
                                 </ul>
                             </li>
-                       
+
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-list"></i>
@@ -510,7 +515,7 @@ $filePermissions = filePermissions($userRole);
 
                             </ul>
                         </li> --}}
-                        
+
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-settings"></i>
@@ -540,7 +545,7 @@ $filePermissions = filePermissions($userRole);
 
                     </ul>
                     {{-- <ul class="main-menu">
-                        
+
                         @foreach ($categories as $category)
                         <li class="slide__category menu-item-category">
                             <span class="category-name">{{ $category->category_name }}</span>

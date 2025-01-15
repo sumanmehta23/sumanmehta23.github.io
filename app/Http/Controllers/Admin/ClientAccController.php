@@ -83,4 +83,8 @@ class ClientAccController extends Controller
         // $totalaccounts = $rmCondition->count();
         return view('admin.client_accounts.demo_accounts');
     }
+    public function requested_accounts()
+    {
+        return view('admin.client_accounts.requested_accounts');
+    }
 }
