@@ -589,7 +589,7 @@ class AjaxController extends Controller
                 ->addColumn('account_request_status', function($row){
 
                     if($row->account_request_status == 1 || $row->account_request_status == Null ){
-                        return "<button class='ibToggle badge bg-outline-success'>Approved</button>";
+                        return "<button class=' badge bg-outline-success'>Approved</button>";
                     // }elseif($row->account_request_status == 2){
                     //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
                     }elseif($row->account_request_status == 0){

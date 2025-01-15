@@ -413,7 +413,6 @@ class MT5Accounts extends Controller
                 $_POST["options"] =$group->id;
                 $account_type_id = $group->id;
             }
-            dd($group->ac_group);
         }else{
             $groupCode = $group->ac_group;
         }
