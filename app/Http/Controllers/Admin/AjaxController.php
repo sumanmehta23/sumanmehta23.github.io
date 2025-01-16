@@ -2191,8 +2191,8 @@ class AjaxController extends Controller
         // $query = DB::select($sql);
         $query = WalletWithdraw::with('user')
             ->where('user_id', $id)
-            ->where('Status', 1)
             ->where('withdraw_type', ['Wallet Withdrawal'])
+            ->orderBy('withdraw_date', 'desc')
             ->get();
 
         $results = $query;
@@ -2711,19 +2711,19 @@ class AjaxController extends Controller
     {
         $id = request('userId');
         $level = request('level');
-        
-        $user = User::with('ib')->findOrFail($id); 
+
+        $user = User::with('ib')->findOrFail($id);
 
         if(isset($user->clients[$level])){
             $query = $user->clients[$level];
         }else{
             $query = [];
         }
-        
+
         if ($request->ajax()) {
             return DataTables::of($query)
-                             
-            ->editColumn('email', function ($row) {  
+
+            ->editColumn('email', function ($row) {
                     return " <div class='row align-items-center'>
                                 <div class='col-auto pe-0'>
                                     <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
@@ -2754,7 +2754,7 @@ class AjaxController extends Controller
                         return "<span class='badge btn bg-info'>Not Verified</span>";
                     }
             })
-        
+
                 ->rawColumns(['email', 'profile_status'])
                 ->make(true);
         }

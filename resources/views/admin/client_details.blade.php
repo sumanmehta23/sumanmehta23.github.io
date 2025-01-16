@@ -931,7 +931,7 @@
                                                                 <?php for ($i = 1; $i <= 15; $i++) { ?>
                                                                     <li class="nav-item"
                                                                     data-target-form="#LEVEL{{ $i }}"
-                                                                    role="presentation"><a                                                                           
+                                                                    role="presentation"><a
                                                                         class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
                                                                         data-level="{{ $i }}"
                                                                         aria-selected="false" role="tab"
@@ -964,7 +964,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            
+
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1202,6 +1202,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'
@@ -1233,6 +1234,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'
@@ -1268,6 +1270,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'
@@ -1447,7 +1450,7 @@
     </script>
      <script>
         $(document).ready(function() {
-       
+
             let level = 1;
 
             var dTtable = $('#ajaxDatatable').DataTable({
@@ -1490,7 +1493,7 @@
                 dTtable.ajax.reload();
             });
 
-       
+
         });
 
     </script>
