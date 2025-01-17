@@ -397,7 +397,6 @@ class MT5Accounts extends Controller
     }
     public function updateLiveAccount(Request $request)
     {
-
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -431,6 +430,7 @@ class MT5Accounts extends Controller
             $groupCode = $group->ac_group;
         }
 
+        if ($request->request_status == 1) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
@@ -481,6 +481,28 @@ class MT5Accounts extends Controller
             } else {
                 return redirect()->back()->with('error', $response['message']);
             }
+        }elseif($request->request_status == 2){
+            $account = Account::where('id', $request->account_id)->first();
+            // dd($account);
+            if($account)
+            {
+                $account->update([
+                    'user_id' => $user->id,
+                    'name' => $user->fullname??$user->email,
+                    'demo'=> false,
+                    'email' => $user->email,
+                    'account_type_id' => $account_type_id,
+                    'leverage' => $validatedData['leverage'],
+                    'currency' => 'USD',
+                    'ib1' => $user->ib1?? "",
+                    'code' => 'Rejected',
+                    'account_request_status' => '1',
+                ]);
+                return redirect()->back()->with('success', 'Account Rejected');
+            }else{
+                return redirect()->back()->with('error', 'No account found to update.');
+            }
+        }
     }
 
     public function createDemoAccount(Request $request)
