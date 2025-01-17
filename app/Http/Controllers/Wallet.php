@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Wallet extends Controller
 {
@@ -419,6 +420,22 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request)
     {
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests',
+                'error' => "Please wait {$retryAfter} seconds before trying again.",
+            ], 429); // HTTP 429 Too Many Requests
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $request->validate([
             'withdraw_amount' => 'required|numeric|min:1',
             'withdraw_type' => 'required|string',
@@ -472,6 +489,7 @@ class Wallet extends Controller
             'withdraw_type' => $withdrawType,
             'status' => 0
         ]);
+        RateLimiter::clear($key);
         return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
     }
 

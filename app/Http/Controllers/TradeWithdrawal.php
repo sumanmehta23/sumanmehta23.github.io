@@ -16,6 +16,7 @@ use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\MT5\MTEnDealAction;
 use App\Helpers\AccountHelper;
+use Illuminate\Support\Facades\RateLimiter;
 
 
 class TradeWithdrawal extends Controller
@@ -60,6 +61,21 @@ class TradeWithdrawal extends Controller
     public function withdraw(Request $request)
     {
         // dd($request->account_id);
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests',
+                'error' => "Please wait {$retryAfter} seconds before trying again.",
+            ], 429); // HTTP 429 Too Many Requests
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
         // TODO: 'Implement Policy to check ownership of the account';
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -149,6 +165,7 @@ class TradeWithdrawal extends Controller
                         'status' => 1,
                     ]);
                     DB::commit();
+                    RateLimiter::clear($key);
                     return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
                 } catch (\Exception $e) {
                     DB::rollBack();
