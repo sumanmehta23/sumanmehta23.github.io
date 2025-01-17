@@ -76,7 +76,7 @@ if ($getUser) {
                                                             <i class="ti ti-plus" style="font-weight: bold"></i>
                                                         </span>
                                                     </div>
-                                                    
+
                                                     <div class="mb-2 col-6">
                                                         <span class="badge btn btn-secondary" data-bs-toggle="modal"
                                                             data-bs-target="#bonusModal">Bonus Deposit
@@ -291,45 +291,48 @@ if ($getUser) {
                         </div>
                     </div>
 
-                    <div class="mt-2 card custom-card">
-                        <div class="card-header justify-content-between">
-                            <div class="card-title">Bonus</div>
-                            <div class="prism-toggle">
+                    @can('bonus_transaction:view')
+                        <div class="mt-2 card custom-card">
+                            <div class="card-header justify-content-between">
+                                <div class="card-title">Bonus</div>
+                                <div class="prism-toggle">
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table text-nowrap" id="tableBonus">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            foreach ($bonus_trans as $bns) {
+                                            ?>
+                                            <tr>
+                                                <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
+                                                </td>
+                                                <td><?= $bns->bonus_amount ?></td>
+                                                <td><?= $bns->bonus_type ?></td>
+                                            </tr>
+                                            <?php
+                                            }
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table text-nowrap" id="tableBonus">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        foreach ($bonus_trans as $bns) {
-                                        ?>
-                                        <tr>
-                                            <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
-                                            </td>
-                                            <td><?= $bns->bonus_amount ?></td>
-                                            <td><?= $bns->bonus_type ?></td>
-                                        </tr>
-                                        <?php
-                                        }
-                                        ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    @endcan
                 </div>
                 <div class="col-xl-8">
                     <div class="card">
                         <div class="p-0 card-body">
                             <div class="row">
+                                @can('trade_deposit:view')
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                     <div class="text-center card-body">
                                         <h6 class="mb-0">Total Deposit</h6>
@@ -347,6 +350,8 @@ if ($getUser) {
                                         </h2>
                                     </div>
                                 </div>
+                                @endcan
+                                @can('trade_withdrawals:view')
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                     <div class="text-center card-body">
                                         <h6 class="mb-0">Total Withdrawl</h6>
@@ -364,171 +369,178 @@ if ($getUser) {
                                         </h2>
                                     </div>
                                 </div>
-
+                                @endcan
                             </div>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title d-flex justify-content-between">
-                                        <div class="mt-auto mb-auto">Security / Passwords</div>
-                                        <div class="updatePassword"><button class="btn btn-primary">Update
-                                                Credentials</button></div>
-                                    </h5>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="form-group">
-                                                    <label for="">Master Password</label>
-                                                    <div class="input-group">
-                                                        <input class="form-control" type="password" name=""
-                                                            placeholder="" readonly aria-label=""
-                                                            value="<?= $account->trader_password ?>"
-                                                            aria-describedby="my-addon">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text showPassword h-100"
-                                                                id="my-addon">
-                                                                <i class="fa fa-eye-slash"></i>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="form-group">
-                                                    <label for="">Investor Password</label>
-                                                    <div class="input-group">
-                                                        <input class="form-control" type="password" name=""
-                                                            value="<?= $getUser->invester_password ?>"
-                                                            aria-describedby="my-addon">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text showPassword h-100"
-                                                                id="my-addon">
-                                                                <i class="fa fa-eye-slash"></i>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <form action="{{route('admin.updateAccountDetails')}}" enctype="multipart/form-data" method="post">
-                                    @csrf
-                                    <input type="hidden" name="code" value="<?= $getUser->code ?>">
+                    @can('account:viewCredentials')
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
-                                            <div class="mt-auto mb-auto">Group / Leverage</div>
+                                            <div class="mt-auto mb-auto">Security / Passwords</div>
+                                            <div class="updatePassword"><button class="btn btn-primary">Update
+                                                    Credentials</button></div>
                                         </h5>
-                                        <div class="pb-0 card-body">
+                                        <div class="card-body">
                                             <div class="row">
                                                 <div class="col-lg-6">
                                                     <div class="form-group">
-                                                        <label for="">Group</label>
-                                                        <select class="form-control acc-types" name="account_type"
-                                                            required id="account_type">
-                                                            <?php foreach ($account_types as $grp) { ?>
-                                                            <option value="<?= $grp->id ?>"
-                                                                <?= $getUser->account_type_id == $grp->id ? 'selected' : '' ?>>
-                                                                <strong><?= $grp->ac_name . '</strong> [ ' . $grp->ac_group . ' ]' ?>
-                                                            </option>
-                                                            <?php } ?>
-                                                        </select>
+                                                        <label for="">Master Password</label>
+                                                        <div class="input-group">
+                                                            <input class="form-control" type="password" name=""
+                                                                placeholder="" readonly aria-label=""
+                                                                value="<?= $account->trader_password ?>"
+                                                                aria-describedby="my-addon">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text showPassword h-100"
+                                                                    id="my-addon">
+                                                                    <i class="fa fa-eye-slash"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6">
                                                     <div class="form-group">
-                                                        <label for="">Leverage</label>
+                                                        <label for="">Investor Password</label>
                                                         <div class="input-group">
-                                                            <select class="form-select" required name="leverage"
-                                                                id="leverage">
-                                                            </select>
+                                                            <input class="form-control" type="password" name=""
+                                                                value="<?= $getUser->invester_password ?>"
+                                                                aria-describedby="my-addon">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text showPassword h-100"
+                                                                    id="my-addon">
+                                                                    <i class="fa fa-eye-slash"></i>
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="card-footer text-end">
-                                        <div class=""><button type="submit" name="update_group" value="submit"
-                                                class="btn btn-primary">Update Settings</button></div>
-                                    </div>
-                                </form>
-
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endcan
+                    @can('account:viewSettings')
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <form action="{{route('admin.updateAccountDetails')}}" enctype="multipart/form-data" method="post">
+                                        @csrf
+                                        <input type="hidden" name="code" value="<?= $getUser->code ?>">
+                                        <div class="card-body">
+                                            <h5 class="card-title d-flex justify-content-between">
+                                                <div class="mt-auto mb-auto">Group / Leverage</div>
+                                            </h5>
+                                            <div class="pb-0 card-body">
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+                                                        <div class="form-group">
+                                                            <label for="">Group</label>
+                                                            <select class="form-control acc-types" name="account_type"
+                                                                required id="account_type">
+                                                                <?php foreach ($account_types as $grp) { ?>
+                                                                <option value="<?= $grp->id ?>"
+                                                                    <?= $getUser->account_type_id == $grp->id ? 'selected' : '' ?>>
+                                                                    <strong><?= $grp->ac_name . '</strong> [ ' . $grp->ac_group . ' ]' ?>
+                                                                </option>
+                                                                <?php } ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <div class="form-group">
+                                                            <label for="">Leverage</label>
+                                                            <div class="input-group">
+                                                                <select class="form-select" required name="leverage"
+                                                                    id="leverage">
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-end">
+                                            <div class=""><button type="submit" name="update_group" value="submit"
+                                                    class="btn btn-primary">Update Settings</button></div>
+                                        </div>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    @endcan
                     <div class="row">
-                        <div class="col-12">
-                            <div class="card custom-card">
-                                <div class="card-header justify-content-between">
-                                    <div class="card-title">
-                                        Deposits
+                        @can('trade_deposit:view')
+                            <div class="col-12">
+                                <div class="card custom-card">
+                                    <div class="card-header justify-content-between">
+                                        <div class="card-title">
+                                            Deposits
+                                        </div>
+                                        <div class="prism-toggle">
+                                        </div>
                                     </div>
-                                    <div class="prism-toggle">
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table text-nowrap" id="tableDeposit">
-                                            <thead>
-                                                <tr>
-                                                    <th>Account No</th>
-                                                    <th>Deposit Amount</th>
-                                                    <th>Deposit Type</th>
-                                                    <th>Deposit From</th>
-                                                    <th>Deposited Date</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table text-nowrap" id="tableDeposit">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Account No</th>
+                                                        <th>Deposit Amount</th>
+                                                        <th>Deposit Type</th>
+                                                        <th>Deposit From</th>
+                                                        <th>Deposited Date</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card custom-card">
-                                <div class="card-header justify-content-between">
-                                    <div class="card-title">
-                                        Withdrawal
+                        @endcan
+                        @can('trade_withdrawals:view')
+                            <div class="col-12">
+                                <div class="card custom-card">
+                                    <div class="card-header justify-content-between">
+                                        <div class="card-title">
+                                            Withdrawal
+                                        </div>
+                                        <div class="prism-toggle">
+                                        </div>
                                     </div>
-                                    <div class="prism-toggle">
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table text-nowrap" id="tableWithdrawal">
-                                            <thead>
-                                                <tr>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table text-nowrap" id="tableWithdrawal">
+                                                <thead>
+                                                    <tr>
 
-                                                    <th>Account No</th>
-                                                    <th>Withdrawal Amount</th>
-                                                    <th>Withdrawal Type</th>
-                                                    <th>Withdraw To</th>
-                                                    <th>Withdrawal Date</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
+                                                        <th>Account No</th>
+                                                        <th>Withdrawal Amount</th>
+                                                        <th>Withdrawal Type</th>
+                                                        <th>Withdraw To</th>
+                                                        <th>Withdrawal Date</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        @endcan
                     </div>
                 </div>
             </div>
