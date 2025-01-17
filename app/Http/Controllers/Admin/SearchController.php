@@ -16,6 +16,7 @@ class SearchController extends Controller
     // dd($request->all());
     // Initialize the base query.
     $query = DB::table('accounts')
+        ->where('account_request_status', 1)
         ->select('accounts.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
         ->leftJoin('aspnetusers', 'aspnetusers.id', '=', 'accounts.user_id')
         ->join('account_types', 'account_types.id', '=', 'accounts.account_type_id');

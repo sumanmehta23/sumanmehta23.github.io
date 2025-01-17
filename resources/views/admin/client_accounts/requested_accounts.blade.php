@@ -6,11 +6,11 @@
 
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                <h1 class="page-title">Client - Live Accounts</h1>
+                <h1 class="page-title">Client - Requested Accounts</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
                     <li class="breadcrumb-item">Client List</li>
-                    <li class="breadcrumb-item active" aria-current="page">Live Accounts</li>
+                    <li class="breadcrumb-item active" aria-current="page">Requested Accounts</li>
                 </ol>
             </div>
             <!-- PAGE-HEADER END -->
@@ -39,6 +39,7 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Status</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -53,7 +54,57 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="accountUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="accountUpdatemodalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="/admin/clientAccounts/activate_account" id="AccountRequestForm"  method="POST">
+                     @csrf
+                     <input type="hidden" name="client_id" id="client_id" value="">
+                     <input type="hidden" name="options" id="account_type_id" value="">
+                     <input type="hidden" name="leverage" id="leverage" value="">
+                     <input type="hidden" name="account_id" id="account_id" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="accountUpdatemodalLabel">Client Account Request Management</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="mb-0 modal-body custom-card card">
+                        <div class="d-flex align-items-center card-header w-100">
+                        <div class="me-2">
+                            <span class="avatar avatar-rounded">
+                            <img src="/admin_assets/assets/images/users/user.png" alt="img">
+                            </span>
+                        </div>
+                        <div class="">
+                            <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
+                            {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
+                        </div>
 
+                        </div>
+                        <div class="card-body">
+                        <div class="mb-3 row">
+                            <div class="m-auto col-lg-4">
+                            <label class="form-label">Client Account Status</label>
+                            </div>
+                            <div class="col-lg-8">
+                            <select class="form-select" required name="request_status" aria-label="Default select example">
+                                <option selected>--Status--</option>
+                                <option value="1">Approve</option>
+                                <option value="0">Pending</option>
+                                <option value="2">Rejected</option>
+                            </select>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="accountRequest" value="update" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 @endsection()
 @section("scripts")
@@ -92,7 +143,7 @@
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getLiveAccountsList',
+                url: '/admin/getRequestedAccountsList',
                 type: 'GET',
                 data: {}, // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
@@ -157,6 +208,10 @@
                     name: 'created_time',
                     visible: false,
 
+                },
+                {
+                    data: 'account_request_status',
+                    name: 'account_request_status',
                 },
 
             ],
