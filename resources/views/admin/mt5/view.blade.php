@@ -291,7 +291,7 @@ if ($getUser) {
                         </div>
                     </div>
 
-                    @can('bonus_transaction:view')
+                    @can('bonus_transaction:viewAny')
                         <div class="mt-2 card custom-card">
                             <div class="card-header justify-content-between">
                                 <div class="card-title">Bonus</div>
@@ -332,7 +332,7 @@ if ($getUser) {
                     <div class="card">
                         <div class="p-0 card-body">
                             <div class="row">
-                                @can('trade_deposit:view')
+                                @can('trade_deposit:viewAny')
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                     <div class="text-center card-body">
                                         <h6 class="mb-0">Total Deposit</h6>
@@ -351,7 +351,7 @@ if ($getUser) {
                                     </div>
                                 </div>
                                 @endcan
-                                @can('trade_withdrawals:view')
+                                @can('trade_withdrawals:viewAny')
                                 <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                     <div class="text-center card-body">
                                         <h6 class="mb-0">Total Withdrawl</h6>
@@ -476,7 +476,7 @@ if ($getUser) {
                         </div>
                     @endcan
                     <div class="row">
-                        @can('trade_deposit:view')
+                        @can('trade_deposit:viewAny')
                             <div class="col-12">
                                 <div class="card custom-card">
                                     <div class="card-header justify-content-between">
@@ -508,7 +508,7 @@ if ($getUser) {
                                 </div>
                             </div>
                         @endcan
-                        @can('trade_withdrawals:view')
+                        @can('trade_withdrawals:viewAny')
                             <div class="col-12">
                                 <div class="card custom-card">
                                     <div class="card-header justify-content-between">

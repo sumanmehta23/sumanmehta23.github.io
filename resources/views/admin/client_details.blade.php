@@ -343,7 +343,7 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="pb-3 row border-bottom">
-                                                            @can('wallet_deposit:view')
+                                                            @can('wallet_deposit:viewAny')
                                                             <div class="col-xl-3">
                                                                 <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
                                                                 <h4 class="fw-normal">
@@ -351,7 +351,7 @@
                                                                 </h4>
                                                             </div>
                                                             @endcan
-                                                            @can('wallet_withdraw:view')
+                                                            @can('wallet_withdraw:viewAny')
                                                             <div class="col-xl-3">
                                                                 <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
                                                                 <h4 class="fw-normal">
@@ -747,7 +747,7 @@
                                     </div>
                                     <div class="p-0 tab-pane" id="tab-transactions">
                                         <div class="row">
-                                            @can('wallet_deposit:view')
+                                            @can('wallet_deposit:viewAny')
                                             <div class="col-xl-6">
                                                 <div class="card custom-card">
                                                     <div class="card-header justify-content-between">
@@ -780,7 +780,7 @@
                                                 </div>
                                             </div>
                                             @endcan
-                                            @can('wallet_withdraw:view')
+                                            @can('wallet_withdraw:viewAny')
                                             <div class="col-xl-6">
                                                 <div class="card custom-card">
                                                     <div class="card-header justify-content-between">
@@ -813,7 +813,7 @@
                                                 </div>
                                             </div>
                                             @endcan
-                                            @can('internal_transfer:view')
+                                            @can('internal_transfer:viewAny')
                                             <div class="col-xl-6">
                                                 <div class="card custom-card">
                                                     <div class="card-header justify-content-between">
