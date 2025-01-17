@@ -99,6 +99,7 @@ Route::get('/register', [LoginController::class, 'register'])->name('register');
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
+Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
@@ -114,6 +115,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
+    Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
@@ -179,6 +181,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
     Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
     Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
+    Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
 
     Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
@@ -269,6 +272,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/wallet_deposit_details', [Transaction::class, 'wallet_deposit_details']);
         Route::get('/wallet_withdrawal_details', [Transaction::class, 'wallet_withdrawal_details']);
         Route::post('/wallet_withdrawal_details', [Transaction::class, 'update_wallet_withdrawal'])->name('wallet_withdrawal_details');
+        Route::post('/manually_approve_withdrawal', [Transaction::class, 'manually_approve_withdrawal'])->name('manually_approve_withdrawal');
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
@@ -276,6 +280,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::prefix('/clientAccounts')->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
+            Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
+            Route::post('/activate_account', [MT5Accounts::class, 'updateLiveAccount'])->name('activate_account');
         });
 
         Route::prefix('/ui_settings')->group(function () {

@@ -41,6 +41,7 @@ class TradeDepositController extends Controller
             }
         ])
         ->where('user_id', $user->id)
+        ->where('account_request_status', 1)
         ->where('demo', false)
         ->get();
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;

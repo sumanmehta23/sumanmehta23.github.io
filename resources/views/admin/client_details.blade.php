@@ -380,11 +380,10 @@
                                                         </div>
                                                         <div class="px-2 row">
                                                             <?php if (empty($live_accounts)) { ?>
-                                                            <div class="my-4 text-muted">No Live Accounts Found.</div>
+                                                                <div class="my-4 text-muted">No Live Accounts Found.</div>
                                                             <?php } ?>
                                                             <?php foreach ($live_accounts as $acc): ?>
-                                                            <div
-                                                                class="my-2 border border-dashed col-xl-4 col-lg-6 border-3">
+                                                            <div class="my-2 border border-dashed col-xl-4 col-lg-6 border-3">
                                                                 <div>
                                                                     <div
                                                                         class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
@@ -491,7 +490,7 @@
                                                                                 </div>
                                                                             @endif
 
-                                                                            
+
                                                                               @can('client:update')
                                                                                 <div class='editClient' data-enc='{{$user->id}}'>
                                                                                     <div class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
@@ -930,7 +929,7 @@
                                                                 <?php for ($i = 1; $i <= 15; $i++) { ?>
                                                                     <li class="nav-item"
                                                                     data-target-form="#LEVEL{{ $i }}"
-                                                                    role="presentation"><a                                                                           
+                                                                    role="presentation"><a
                                                                         class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
                                                                         data-level="{{ $i }}"
                                                                         aria-selected="false" role="tab"
@@ -963,7 +962,7 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            
+
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1446,7 +1445,7 @@
     </script>
      <script>
         $(document).ready(function() {
-       
+
             let level = 1;
 
             var dTtable = $('#ajaxDatatable').DataTable({
@@ -1489,7 +1488,7 @@
                 dTtable.ajax.reload();
             });
 
-       
+
         });
 
     </script>

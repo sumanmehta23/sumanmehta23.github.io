@@ -51,6 +51,15 @@
     font-size: 30px;
 }
 
+.varification-pending{
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+}
+.varification-plus{
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+}
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
@@ -179,7 +188,7 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         {{-- {{ dd($user) }} --}}
@@ -310,17 +319,29 @@
                                                                     <th>Currency</th>
                                                                     <th>Network</th>
                                                                     <th>Address</th>
+                                                                    <th>Verified</th>
                                                                     <th>Status / Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 @foreach ($bank_accounts as $acc)
+                                                                    {{-- {{ dd($acc) }} --}}
                                                                     <tr>
                                                                         {{-- <td>CWA{{ sprintf('%04u', $acc->id) }}</td> --}}
                                                                         <td>{{ $acc->wallet_name }}</td>
                                                                         <td>{{ $acc->wallet_currency }}</td>
                                                                         <td>{{ $acc->wallet_network }}</td>
                                                                         <td>{{ $acc->wallet_address }}</td>
+                                                                        @php
+                                                                            if($acc->verified == 0){
+                                                                                $verification = 'Pending';
+                                                                                $tdClass = 'varification-pending';
+                                                                            }else{
+                                                                                $verification = 'Approved';
+                                                                                $tdClass = 'varification-plus';
+                                                                            }
+                                                                        @endphp
+                                                                        <td  class="{{ $tdClass }}">{{ $verification }}</td>
                                                                         <td
                                                                             class="text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
                                                                             @if ($acc->status == 0)

@@ -42,7 +42,6 @@ class ClientController extends Controller
     }
     public function index()
     {
-
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         // Fetch IB details
@@ -452,7 +451,7 @@ class ClientController extends Controller
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
-        $live_accounts = $user->liveAccounts;  // Relationship for live accounts
+        $live_accounts = $user->liveAccounts->where('account_request_status',1);  // Relationship for live accounts
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
