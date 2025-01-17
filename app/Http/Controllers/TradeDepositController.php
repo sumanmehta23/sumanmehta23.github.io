@@ -185,7 +185,7 @@ class TradeDepositController extends Controller
                 ]);
             });
             AccountHelper::updateLiveAndDemoAccounts();
-            RateLimiter::clear($key);
+            // RateLimiter::clear($key);
             return response()->json(['success' => 'Funds Successfully Deposited']);
         }
     }

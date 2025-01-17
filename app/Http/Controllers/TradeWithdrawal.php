@@ -165,7 +165,7 @@ class TradeWithdrawal extends Controller
                         'status' => 1,
                     ]);
                     DB::commit();
-                    RateLimiter::clear($key);
+                    // RateLimiter::clear($key);
                     return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
                 } catch (\Exception $e) {
                     DB::rollBack();

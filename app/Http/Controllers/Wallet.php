@@ -489,7 +489,7 @@ class Wallet extends Controller
             'withdraw_type' => $withdrawType,
             'status' => 0
         ]);
-        RateLimiter::clear($key);
+        // RateLimiter::clear($key);
         return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
     }
 
