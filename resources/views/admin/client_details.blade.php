@@ -316,7 +316,9 @@
                                             <li><a href="#tab-transactions" data-bs-toggle="tab"
                                                     class="">TRANSACTIONS</a></li>
                                             <?php if (!empty($ib_details)): ?>
+                                            @can('ib:viewAny')
                                             <li><a href="#tab-ib" data-bs-toggle="tab" class="">IB PROFILE</a></li>
+                                            @endcan
                                             <?php endif; ?>
                                             <li><a href="#tab-info" data-bs-toggle="tab" class="">ADDITIONAL
                                                     INFO</a></li>
