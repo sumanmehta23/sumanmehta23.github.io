@@ -64,6 +64,8 @@
                      <input type="hidden" name="options" id="account_type_id" value="">
                      <input type="hidden" name="leverage" id="leverage" value="">
                      <input type="hidden" name="account_id" id="account_id" value="">
+                     <input type="hidden" name="accountType" id="accountType" value="">
+                     <input type="hidden" name="demo_deposit" id="demo_deposit" value="">
                     <div class="modal-header">
                         <h5 class="modal-title" id="accountUpdatemodalLabel">Client Account Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -90,7 +92,7 @@
                             <select class="form-select" required name="request_status" aria-label="Default select example">
                                 <option selected>--Status--</option>
                                 <option value="1">Approve</option>
-                                <option value="0">Pending</option>
+                                {{-- <option value="0">Pending</option> --}}
                                 <option value="2">Rejected</option>
                             </select>
                             </div>
@@ -129,7 +131,9 @@
             $("#clientEmail").html(data.email || "")
             $("#client_id").val(data.user_id)
             $("#leverage").val(data.leverage)
+            $("#accountType").val(data.demo)
             $("#account_type_id").val(data.account_type_id)
+            $("#demo_deposit").val(data.balance)
             $("[name='request_status']").val(data.request_status).trigger("change");
             myModal.show();
 

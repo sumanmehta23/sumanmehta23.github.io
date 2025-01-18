@@ -56,7 +56,7 @@
                                                             <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                                                         </div>
                                                         <div class="col">
-                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code }}</span></h4>
+                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code ?? 'Pending' }}</span></h4>
                                                             <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
                                                         </div>
                                                     </div>
@@ -66,12 +66,14 @@
                                                 <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}</td>
                                                 <td class="text-end f-w-200">
                                                     <div class="d-flex align-items-center">
-                                                        <a href="{{ url('/view-account-details/' . $acc->id) }}"
-                                                           class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                                           <span>View <svg class="pc-icon">
-                                                               <use xlink:href="#custom-login"></use>
-                                                           </svg></span>
-                                                        </a>
+                                                        @if($acc->code != null)
+                                                            <a href="{{ url('/view-account-details/' . $acc->id) }}"
+                                                            class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                            <span>View <svg class="pc-icon">
+                                                                <use xlink:href="#custom-login"></use>
+                                                            </svg></span>
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>

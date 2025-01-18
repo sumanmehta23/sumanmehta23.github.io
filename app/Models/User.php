@@ -158,7 +158,7 @@ class User extends Authenticatable
 
     public function getTotalWdAttribute()
     {
-        
+
         return WalletDeposit::where('user_id', $this->id)
             ->whereIn('deposit_type', ['Internal Transfer', 'CryptoChill','CreditCardPayissa'])
             ->where('status', 1)
@@ -309,7 +309,7 @@ class User extends Authenticatable
     public function getTotalBonusAttribute()
     {
         return $this->accounts->sum(function($account) {
-            return $account->BonusTransaction->sum('bonus_amount'); 
+            return $account->BonusTransaction->sum('bonus_amount');
         });
     }
 }

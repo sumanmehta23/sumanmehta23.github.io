@@ -347,7 +347,9 @@
                                             <th>Mode</th>
                                             <th>Withdraw Date</th>
                                             <th>Status</th>
-                                            <th>Action</th>
+                                            @can("wallet_withdraw:view")
+                                                <th>Action</th>
+                                            @endcan
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -481,24 +483,26 @@
                                                 </div>
 
                                             </td>
-                                            <td>
-                                                <?php if ($result->type == "trade") { ?>
-                                                <div>
-                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
-                                                        class="" style="font-size: 13px;padding: 2px 20px;">
-                                                        <i class="fe fe-eye fs-14 text-info"></i>
-                                                    </a>
-                                                </div>
+                                            @can("wallet_withdraw:view")
+                                                <td>
+                                                    <?php if ($result->type == "trade") { ?>
+                                                    <div>
+                                                        <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
 
-                                                <?php } else { ?>
-                                                <div>
-                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
-                                                        class="" style="font-size: 13px;padding: 2px 20px;">
-                                                        <i class="fe fe-eye fs-14 text-info"></i>
-                                                    </a>
-                                                </div>
-                                                <?php } ?>
-                                            </td>
+                                                    <?php } else { ?>
+                                                    <div>
+                                                        <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
+                                                    <?php } ?>
+                                                </td>
+                                            @endcan
                                         </tr>
                                         <?php }
                     } ?>

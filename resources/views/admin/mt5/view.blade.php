@@ -497,7 +497,9 @@ if ($getUser) {
                                                         <th>Deposit From</th>
                                                         <th>Deposited Date</th>
                                                         <th>Status</th>
-                                                        <th>Actions</th>
+                                                        @can('trade_deposit:view')
+                                                            <th>Actions</th>
+                                                        @endcan
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -530,7 +532,9 @@ if ($getUser) {
                                                         <th>Withdraw To</th>
                                                         <th>Withdrawal Date</th>
                                                         <th>Status</th>
-                                                        <th>Actions</th>
+                                                        @can('trade_withdrawals:view')
+                                                            <th>Actions</th>
+                                                        @endcan
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -640,6 +644,8 @@ if ($getUser) {
     @section('scripts')
 
         <script>
+            const canViewTradeDeposit = @json(auth()->user()->can('trade_deposit:view'));
+            const canViewTradeWithdrawal = @json(auth()->user()->can('trade_withdrawals:view'));
             function number_format(number, decimals = 2, dec_point = '.', thousands_sep = ',') {
                 // Ensure the input is a valid number
                 const match = number.match(/\d+(\.\d{2})?/);
@@ -716,12 +722,12 @@ if ($getUser) {
                         data: 'status',
                         name: 'status'
                     },
-                    {
+                    ...(canViewTradeDeposit ? [{
                         data: 'action',
                         name: 'action',
                         orderable: false,
                         searchable: false
-                    },
+                    }] : []),
                 ]
             });
             $('#tableWithdrawal').DataTable({
@@ -779,12 +785,12 @@ if ($getUser) {
                         data: 'status',
                         name: 'status'
                     },
-                    {
+                    ...(canViewTradeWithdrawal ? [{
                         data: 'action',
                         name: 'action',
                         orderable: false,
                         searchable: false
-                    },
+                    }] : []),
                 ]
             });
 
@@ -879,5 +885,9 @@ if ($getUser) {
             });
             $(".acc-types").trigger("change");
             $(".acc-types").select2();
+
+            // Inject permission data from backend
+
+
         </script>
     @endsection

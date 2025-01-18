@@ -338,7 +338,7 @@ class MT5Accounts extends Controller
                     <p>Best Regards.</p>
                 <p>LQH Markets Team</p>';
                 $templateVars = [
-                    'name' => 'Valued Client',
+                    'name' => $user->fullname,
                     'email' => $settings['email_from_address'],
                     "content" => $content,
                     "title_right" => "",
@@ -395,42 +395,263 @@ class MT5Accounts extends Controller
         //     return redirect()->back()->with('error', $response['message']);
         // }
     }
-    public function updateLiveAccount(Request $request)
+    public function activateAccount(Request $request)
+    {
+        $settings = settings();
+        if($request->accountType == 0)
+        {
+            $validatedData = $request->validate([
+                'options' => 'required|string',
+                'leverage' => 'required|string',
+            ]);
+
+            // $user = auth()->user();
+            $user = User::where('id', $request->client_id)->first();
+
+            $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
+
+            $referral=$user->referral;
+            $ib=$user->ib1;
+            $account_type_id = $validatedData['options'];
+
+            //wealthytrades
+            if($referral=="wealthytrades" || $ib=="wealthytrades") {
+                $groupCode = str_replace("DF","SNSI",$group->ac_group);
+                $group = AccountType::where('ac_group', $groupCode)->first();
+
+                if($group){
+                    $_POST["options"] =$group->id;
+                    $account_type_id = $group->id;
+                }
+            }elseif(strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") {
+                $groupCode = str_replace("DF","ALEX",$group->ac_group);
+                $group = AccountType::where('ac_group', $groupCode)->first();
+                if($group){
+                    $_POST["options"] =$group->id;
+                    $account_type_id = $group->id;
+                }
+            }else{
+                $groupCode = $group->ac_group;
+            }
+
+            if ($request->request_status == 1) {
+                $new_user = $this->api->UserCreate();
+                $new_user->MainPassword = $this->generatePassword();
+                $new_user->Group = $group->ac_group;
+                $new_user->type = $group->ac_name;
+                $new_user->Leverage = $validatedData['leverage'];
+                $new_user->ZipCode = $user->zipcode;
+                $new_user->Country = $user->country;
+                $new_user->State = $user->state;
+                $new_user->City = $user->city;
+                $new_user->Address = $user->address;
+                $new_user->Phone = $user->number;
+                $new_user->Currency = 'USD';
+                $new_user->Company = $settings['mt5_company_name'];
+                $new_user->Name = $user->fullname??$user->email;
+                $new_user->Email = $user->email;
+                $new_user->LeadSource = $user->ib1?? "" ;
+                $new_user->PhonePassword = $this->generatePassword();
+                $new_user->InvestPassword = $this->generatePassword();
+                $new_user->Login = $this->generateRandomNumber();
+                $response = $this->CreateAccount($new_user, $user_server, 'Live');
+
+                if ($response['status']) {
+                    $account = Account::where('id', $request->account_id)->first();
+                    // dd($account);
+                    if($account)
+                    {
+                        $account->update([
+                            'user_id' => $user->id,
+                            'name' => $new_user->Name,
+                            'demo'=> false,
+                            'email' => $new_user->Email,
+                            // 'name' => $new_user->Name,
+                            'code' => $new_user->Login,
+                            'account_type_id' => $account_type_id,
+                            'leverage' => $new_user->Leverage,
+                            'currency' => $new_user->Currency,
+                            'trader_password' => $new_user->MainPassword,
+                            'invester_password' => $new_user->InvestPassword,
+                            'phone_password' => $new_user->PhonePassword,
+                            'ib1' => $new_user->LeadSource,
+                            'account_request_status' => 1,
+                        ]);
+                        $this->sendMail($new_user, 'Live');
+                        return redirect()->back()->with('success', $response['message']);
+                    }else{
+                        return redirect()->back()->with('error', 'No account found to update.');
+                    }
+                } else {
+                    return redirect()->back()->with('error', $response['message']);
+                }
+            }elseif($request->request_status == 2){
+                $account = Account::where('id', $request->account_id)->first();
+                // dd($account);
+                if($account)
+                {
+                    $account->update([
+                        'user_id' => $user->id,
+                        'name' => $user->fullname??$user->email,
+                        'demo'=> false,
+                        'email' => $user->email,
+                        'account_type_id' => $account_type_id,
+                        'leverage' => $validatedData['leverage'],
+                        'currency' => 'USD',
+                        'ib1' => $user->ib1?? "",
+                        'code' => 'Rejected',
+                        'account_request_status' => 0,
+                    ]);
+                    return redirect()->back()->with('success', 'Account Rejected');
+                }else{
+                    return redirect()->back()->with('error', 'No account found to update.');
+                }
+            }
+        }else{
+
+            $validatedData = $request->validate([
+                'options' => 'required|string',
+                'leverage' => 'required|string',
+                'demo_deposit' => 'required|numeric|min:1',
+            ]);
+            // $user = auth()->user();
+            $user = User::where('id', $request->client_id)->first();
+
+            $email = $user->email;
+
+            $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
+
+            if($group->ac_min_deposit){
+                $validatedData = $request->validate([
+                    'options' => 'required|string',
+                    'leverage' => 'required|string',
+                    'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
+                ]);
+            }
+
+            if ($request->request_status == 1) {
+
+                $new_user = $this->api->UserCreate();
+                $new_user->MainPassword = $this->generatePassword();
+                $new_user->Group = $group->ac_group;
+                $new_user->type = $group->ac_name;
+                $new_user->Leverage = $validatedData['leverage'];
+                $new_user->ZipCode = $user->zipcode;
+                $new_user->Country = $user->country;
+                $new_user->State = $user->state;
+                $new_user->City = $user->city;
+                $new_user->Address = $user->address;
+                $new_user->Phone = $user->number;
+                $new_user->Currency = 'USD';
+                $new_user->Company = $settings['mt5_company_name'];
+                $new_user->Name =  $user->fullname??$user->email;
+                $new_user->Email = $user->email;
+                $new_user->LeadSource = $user->ib1 ?? "" ;
+                $new_user->PhonePassword = $this->generatePassword();
+                $new_user->InvestPassword = $this->generatePassword();
+                $new_user->Login = $this->generateRandomNumber();
+                $response = $this->CreateAccount($new_user, $user_server, 'Demo');
+
+                if ($response['status']) {
+
+                    $account = Account::where('id', $request->account_id)->first();
+                    // dd($account);
+                    if($account)
+                    {
+                        $account->update([
+                            'user_id' => $user->id,
+                            'name' => $new_user->Name,
+                            'demo' => true,
+                            'email' => $new_user->Email,
+                            'code' => $new_user->Login,
+                            'account_type_id' => $validatedData['options'],
+                            'leverage' => $new_user->Leverage,
+                            'currency' => $new_user->Currency,
+                            'trader_password' => $new_user->MainPassword,
+                            'invester_password' => $new_user->InvestPassword,
+                            'phone_password' => $new_user->PhonePassword,
+                            'balance' => $validatedData['demo_deposit'],
+                            'account_request_status' => 1,
+                        ]);
+                    }
+                    $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
+                    if ($errorCode != MTRetCode::MT_RET_OK) {
+                        $error = MTRetCode::GetError($errorCode);
+                        Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+                        return redirect()->back()->with('success', $error);
+                    } else {
+
+                        $data = [
+                            'user_id' => $user->id,
+                            'account_id'=>$account->id,
+                            'email' => $new_user->Email,
+                            'code' => $new_user->Login,
+                            'deposit_amount' => $validatedData['demo_deposit'],
+                            'Status' => 1
+                        ];
+
+                        DemoDeposit::create($data);
+                    }
+                    $this->sendMail($new_user, 'Demo');
+                    return redirect()->back()->with('success', $response['message']);
+                } else {
+                    return redirect()->back()->with('error', $response['message']);
+                }
+            }elseif($request->request_status == 2){
+
+                $account = Account::where('id', $request->account_id)->first();
+                // dd($account);
+                if($account)
+                {
+                    $account->update([
+                        'user_id' => $user->id,
+                        'name' => $user->fullname??$user->email,
+                        'demo' => true,
+                        'email' => $user->email,
+                        'code' => 'Rejected',
+                        'account_type_id' => $validatedData['options'],
+                        'leverage' => $validatedData['leverage'],
+                        'currency' => 'USD',
+                        'balance' => $validatedData['demo_deposit'],
+                        'account_request_status' => 0,
+                    ]);
+                    return redirect()->back()->with('success', 'Account Rejected');
+                }else{
+                    return redirect()->back()->with('error', 'No account found to update.');
+                }
+            }
+        }
+    }
+
+    public function createDemoAccount(Request $request)
     {
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
             'leverage' => 'required|string',
+            'demo_deposit' => 'required|numeric|min:1',
         ]);
-        // $user = auth()->user();
 
-        $user = User::where('id', $request->client_id)->first();
+        $user = auth()->user();
+        $email = $user->email;
+
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-        $referral=$user->referral;
-        $ib=$user->ib1;
-        $account_type_id = $validatedData['options'];
 
-        //wealthytrades
-        if($referral=="wealthytrades" || $ib=="wealthytrades") {
-            $groupCode = str_replace("DF","SNSI",$group->ac_group);
-            $group = AccountType::where('ac_group', $groupCode)->first();
+        if($group->ac_min_deposit){
+            $validatedData = $request->validate([
+                'options' => 'required|string',
+                'leverage' => 'required|string',
+                'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
+            ]);
 
-            if($group){
-                $_POST["options"] =$group->id;
-                $account_type_id = $group->id;
-            }
-        }elseif(strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") {
-            $groupCode = str_replace("DF","ALEX",$group->ac_group);
-            $group = AccountType::where('ac_group', $groupCode)->first();
-            if($group){
-                $_POST["options"] =$group->id;
-                $account_type_id = $group->id;
-            }
-        }else{
-            $groupCode = $group->ac_group;
         }
 
-        if ($request->request_status == 1) {
+        $userAcc = Account::where('user_id', $user->id)->where('demo',1)->get();
+        // dd(count($userAcc));
+
+        if($userAcc && count($userAcc)<2)
+        {
+
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
@@ -444,145 +665,103 @@ class MT5Accounts extends Controller
             $new_user->Phone = $user->number;
             $new_user->Currency = 'USD';
             $new_user->Company = $settings['mt5_company_name'];
-            $new_user->Name = $user->fullname??$user->email;
+            $new_user->Name =  $user->fullname??$user->email;
             $new_user->Email = $user->email;
-            $new_user->LeadSource = $user->ib1?? "" ;
+            $new_user->LeadSource = $user->ib1 ?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
-            $response = $this->CreateAccount($new_user, $user_server, 'Live');
+            $response = $this->CreateAccount($new_user, $user_server, 'Demo');
 
             if ($response['status']) {
-                $account = Account::where('id', $request->account_id)->first();
-                // dd($account);
-                if($account)
-                {
-                    $account->update([
+                $account=Account::create([
+                    'user_id' => $user->id,
+                    'name' => $new_user->Name,
+                    'demo' => true,
+                    'email' => $new_user->Email,
+                    'code' => $new_user->Login,
+                    'account_type_id' => $validatedData['options'],
+                    'leverage' => $new_user->Leverage,
+                    'currency' => $new_user->Currency,
+                    'trader_password' => $new_user->MainPassword,
+                    'invester_password' => $new_user->InvestPassword,
+                    'phone_password' => $new_user->PhonePassword,
+                    'balance' => $validatedData['demo_deposit'],
+                    'account_request_status' => 1,
+                ]);
+                $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+                    return redirect()->back()->with('success', $error);
+                } else {
+                    $data = [
                         'user_id' => $user->id,
-                        'name' => $new_user->Name,
-                        'demo'=> false,
+                        'account_id'=>$account->id,
                         'email' => $new_user->Email,
-                        // 'name' => $new_user->Name,
                         'code' => $new_user->Login,
-                        'account_type_id' => $account_type_id,
-                        'leverage' => $new_user->Leverage,
-                        'currency' => $new_user->Currency,
-                        'trader_password' => $new_user->MainPassword,
-                        'invester_password' => $new_user->InvestPassword,
-                        'phone_password' => $new_user->PhonePassword,
-                        'ib1' => $new_user->LeadSource,
-                        'account_request_status' => $request->request_status,
-                    ]);
-                    $this->sendMail($new_user, 'Live');
-                    return redirect()->back()->with('success', $response['message']);
-                }else{
-                    return redirect()->back()->with('error', 'No account found to update.');
+                        'deposit_amount' => $validatedData['demo_deposit'],
+                        'Status' => 1
+                    ];
+
+                    DemoDeposit::create($data);
                 }
+                $this->sendMail($new_user, 'Demo');
+                return redirect()->back()->with('success', $response['message']);
             } else {
                 return redirect()->back()->with('error', $response['message']);
             }
-        }elseif($request->request_status == 2){
-            $account = Account::where('id', $request->account_id)->first();
-            // dd($account);
-            if($account)
-            {
-                $account->update([
-                    'user_id' => $user->id,
-                    'name' => $user->fullname??$user->email,
-                    'demo'=> false,
-                    'email' => $user->email,
-                    'account_type_id' => $account_type_id,
-                    'leverage' => $validatedData['leverage'],
-                    'currency' => 'USD',
-                    'ib1' => $user->ib1?? "",
-                    'code' => 'Rejected',
-                    'account_request_status' => '1',
-                ]);
-                return redirect()->back()->with('success', 'Account Rejected');
-            }else{
-                return redirect()->back()->with('error', 'No account found to update.');
-            }
-        }
-    }
+        }else{
 
-    public function createDemoAccount(Request $request)
-    {
-        $settings = settings();
-        $validatedData = $request->validate([
-            'options' => 'required|string',
-            'leverage' => 'required|string',
-            'demo_deposit' => 'required|numeric|min:1',
-        ]);
-        $user = auth()->user();
-        $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-        if($group->ac_min_deposit){
-            $validatedData = $request->validate([
-                'options' => 'required|string',
-                'leverage' => 'required|string',
-                'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
-            ]);
-        }
-
-
-        $new_user = $this->api->UserCreate();
-        $new_user->MainPassword = $this->generatePassword();
-        $new_user->Group = $group->ac_group;
-        $new_user->type = $group->ac_name;
-        $new_user->Leverage = $validatedData['leverage'];
-        $new_user->ZipCode = $user->zipcode;
-        $new_user->Country = $user->country;
-        $new_user->State = $user->state;
-        $new_user->City = $user->city;
-        $new_user->Address = $user->address;
-        $new_user->Phone = $user->number;
-        $new_user->Currency = 'USD';
-        $new_user->Company = $settings['mt5_company_name'];
-        $new_user->Name =  $user->fullname??$user->email;
-        $new_user->Email = $user->email;
-        $new_user->LeadSource = $user->ib1 ?? "" ;
-        $new_user->PhonePassword = $this->generatePassword();
-        $new_user->InvestPassword = $this->generatePassword();
-        $new_user->Login = $this->generateRandomNumber();
-        $response = $this->CreateAccount($new_user, $user_server, 'Demo');
-
-        if ($response['status']) {
-            $account=Account::create([
+            $account = Account::create([
                 'user_id' => $user->id,
-                'name' => $new_user->Name,
+                'name' => $user->fullname??$user->email,
                 'demo' => true,
-                'email' => $new_user->Email,
-                'code' => $new_user->Login,
+                'email' => $user->email,
                 'account_type_id' => $validatedData['options'],
-                'leverage' => $new_user->Leverage,
-                'currency' => $new_user->Currency,
-                'trader_password' => $new_user->MainPassword,
-                'invester_password' => $new_user->InvestPassword,
-                'phone_password' => $new_user->PhonePassword,
-                'balance' => $validatedData['demo_deposit']
+                'leverage' => $validatedData['leverage'],
+                'currency' => 'USD',
+                'balance' => $validatedData['demo_deposit'],
+                'account_request_status' => 0,
+                // 'code' => $new_user->Login,
+                // 'trader_password' => $new_user->MainPassword,
+                // 'invester_password' => $new_user->InvestPassword,
+                // 'phone_password' => $new_user->PhonePassword,
             ]);
-            $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account : ' . $error.' for user '.$user->id);
-                return redirect()->back()->with('success', $error);
-            } else {
-                $data = [
-                    'user_id' => $user->id,
-                    'account_id'=>$account->id,
-                    'email' => $new_user->Email,
-                    'code' => $new_user->Login,
-                    'deposit_amount' => $validatedData['demo_deposit'],
-                    'Status' => 1
+
+            if($account){
+
+                $settings = settings();
+
+                $from = $settings['email_from_address'];
+                $emailSubject = 'Account send for approval';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+
+                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+                    <p>Best Regards.</p>
+                <p>LQH Markets Team</p>';
+                $templateVars = [
+                    'name' =>  $user->fullname,
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "",
+                    "subtitle_right" => "",
                 ];
 
-                DemoDeposit::create($data);
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+                return redirect()->back()->with('success', 'Account created successfully');
+
+            } else {
+                return redirect()->back()->with('error', 'Account not created');
             }
-            $this->sendMail($new_user, 'Demo');
-            return redirect()->back()->with('success', $response['message']);
-        } else {
-            return redirect()->back()->with('error', $response['message']);
         }
     }
+
     public function sendMail($new_user, $type)
     {
         $settings = settings();
