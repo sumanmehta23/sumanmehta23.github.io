@@ -595,8 +595,8 @@ class AjaxController extends Controller
         $userGroups = explode(',', session('user_groups'));
         // dd($alogin);
         // Base query
-        $rmCondition = Account::where('demo', false)
-            ->select('accounts.*')
+        $rmCondition = Account::select('accounts.*')
+            // ->select('accounts.*')
             ->where('account_request_status', 0)
             ->with(['user', 'accountType']);
 

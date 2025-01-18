@@ -66,12 +66,14 @@
                                                 <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}</td>
                                                 <td class="text-end f-w-200">
                                                     <div class="d-flex align-items-center">
-                                                        <a href="{{ url('/view-account-details/' . $acc->id) }}"
-                                                           class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                                           <span>View <svg class="pc-icon">
-                                                               <use xlink:href="#custom-login"></use>
-                                                           </svg></span>
-                                                        </a>
+                                                        @if($acc->code != null)
+                                                            <a href="{{ url('/view-account-details/' . $acc->id) }}"
+                                                            class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                            <span>View <svg class="pc-icon">
+                                                                <use xlink:href="#custom-login"></use>
+                                                            </svg></span>
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>
