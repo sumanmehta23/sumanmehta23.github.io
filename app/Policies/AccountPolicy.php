@@ -34,7 +34,20 @@ class AccountPolicy
     {
         return false;
     }
-
+    /**
+     * Determine whether the user can view the credentials.
+     */
+    public function viewCredentials(EmployeeList $user, Account $account): bool
+    {
+        return false;
+    }
+    /**
+     * Determine whether the user can view the settings.
+     */
+    public function viewSettings(EmployeeList $user, Account $account): bool
+    {
+        return false;
+    }
     /**
      * Determine whether the user can create models.
      */
