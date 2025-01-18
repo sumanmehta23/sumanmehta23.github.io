@@ -56,7 +56,7 @@
                                                             <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                                                         </div>
                                                         <div class="col">
-                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code }}</span></h4>
+                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code ?? 'Pending' }}</span></h4>
                                                             <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
                                                         </div>
                                                     </div>

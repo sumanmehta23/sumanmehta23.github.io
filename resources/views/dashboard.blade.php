@@ -22,7 +22,7 @@
                                     <h2 class="text-center text-white">${{ $walletBalance }}</h2>
                                 </div>
                             </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
                                                                 <div class="col">
                                                                     <h4 class="mb-2 ms-2">
                                                                         <span
-                                                                            class="text-truncate w-100">{{ $liveAccount->code }}</span>
+                                                                            class="text-truncate w-100">{{ $liveAccount->code ?? 'Pending' }}</span>
                                                                     </h4>
                                                                     <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
@@ -153,20 +153,23 @@
                                                         <td class="text-end f-w-400 f-16">$
                                                             {{ $liveAccount->balance ?? '0.00' }}</td>
                                                         <td class="text-end f-w-400 f-16">$ {{ $liveAccount->equity }}</td>
+
                                                         <td class="text-end f-w-200">
-                                                            <div class="d-flex align-items-center">
-                                                                <a href="{{ route('view-account-details', $liveAccount->id) }}"
-                                                                    class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                                                    <span>View <svg class="pc-icon">
-                                                                            <use xlink:href="#custom-login"></use>
-                                                                        </svg></span>
-                                                                </a>
-                                                                <a href="{{ route('trade-deposit') }}"
-                                                                    class="btn btn-sm btn-outline-secondary d-grid">
-                                                                    <span>Deposit <i
-                                                                            class="ti ti-database-import"></i></span>
-                                                                </a>
-                                                            </div>
+                                                            @if ($liveAccount->code && $liveAccount->code != 'Rejected' )
+                                                                <div class="d-flex align-items-center">
+                                                                    <a href="{{ route('view-account-details', $liveAccount->id) }}"
+                                                                        class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                                        <span>View <svg class="pc-icon">
+                                                                                <use xlink:href="#custom-login"></use>
+                                                                            </svg></span>
+                                                                    </a>
+                                                                    <a href="{{ route('trade-deposit') }}"
+                                                                        class="btn btn-sm btn-outline-secondary d-grid">
+                                                                        <span>Deposit <i
+                                                                                class="ti ti-database-import"></i></span>
+                                                                    </a>
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -223,7 +226,7 @@
                                                                 <div class="col">
                                                                     <h4 class="mb-2 ms-2">
                                                                         <span
-                                                                            class="text-truncate w-100">{{ $demoAccount->code }}</span>
+                                                                            class="text-truncate w-100">{{ $demoAccount->code ?? 'Pending' }}</span>
                                                                     </h4>
                                                                     <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
@@ -237,16 +240,18 @@
                                                             {{ $demoAccount->balance ?? '0.00' }}</td>
                                                         <td class="text-end f-w-400 f-16">$ {{ $demoAccount->equity }}
                                                         </td>
-                                                        <td class="text-end f-w-200">
-                                                            <div class="d-flex align-items-center">
-                                                                <a href="{{ route('view-account-details', $demoAccount->id) }}"
-                                                                    class="btn btn-sm btn-outline-secondary d-grid me-2">
-                                                                    <span>View <svg class="pc-icon">
-                                                                            <use xlink:href="#custom-login"></use>
-                                                                        </svg></span>
-                                                                </a>
-                                                            </div>
-                                                        </td>
+                                                        @if ($demoAccount->code && $demoAccount->code != 'Rejected')
+                                                            <td class="text-end f-w-200">
+                                                                <div class="d-flex align-items-center">
+                                                                    <a href="{{ route('view-account-details', $demoAccount->id) }}"
+                                                                        class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                                        <span>View <svg class="pc-icon">
+                                                                                <use xlink:href="#custom-login"></use>
+                                                                            </svg></span>
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                        @endif
                                                     </tr>
                                                 @endforeach
                                             </tbody>

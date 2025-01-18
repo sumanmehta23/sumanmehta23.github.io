@@ -395,10 +395,9 @@ class MT5Accounts extends Controller
         //     return redirect()->back()->with('error', $response['message']);
         // }
     }
-    public function updateLiveAccount(Request $request)
+    public function activateAccount(Request $request)
     {
         $settings = settings();
-
         if($request->accountType == 0)
         {
             $validatedData = $request->validate([
@@ -476,7 +475,7 @@ class MT5Accounts extends Controller
                             'invester_password' => $new_user->InvestPassword,
                             'phone_password' => $new_user->PhonePassword,
                             'ib1' => $new_user->LeadSource,
-                            'account_request_status' => $request->request_status,
+                            'account_request_status' => 1,
                         ]);
                         $this->sendMail($new_user, 'Live');
                         return redirect()->back()->with('success', $response['message']);
@@ -501,7 +500,7 @@ class MT5Accounts extends Controller
                         'currency' => 'USD',
                         'ib1' => $user->ib1?? "",
                         'code' => 'Rejected',
-                        'account_request_status' => '1',
+                        'account_request_status' => 0,
                     ]);
                     return redirect()->back()->with('success', 'Account Rejected');
                 }else{
@@ -519,9 +518,9 @@ class MT5Accounts extends Controller
             $user = User::where('id', $request->client_id)->first();
 
             $email = $user->email;
-    
+
             $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-            
+
             if($group->ac_min_deposit){
                 $validatedData = $request->validate([
                     'options' => 'required|string',
@@ -531,7 +530,7 @@ class MT5Accounts extends Controller
             }
 
             if ($request->request_status == 1) {
-    
+
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
                 $new_user->Group = $group->ac_group;
@@ -552,7 +551,7 @@ class MT5Accounts extends Controller
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
                 $response = $this->CreateAccount($new_user, $user_server, 'Demo');
-             
+
                 if ($response['status']) {
 
                     $account = Account::where('id', $request->account_id)->first();
@@ -572,7 +571,7 @@ class MT5Accounts extends Controller
                             'invester_password' => $new_user->InvestPassword,
                             'phone_password' => $new_user->PhonePassword,
                             'balance' => $validatedData['demo_deposit'],
-                            'account_request_status' => '1',
+                            'account_request_status' => 1,
                         ]);
                     }
                     $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
@@ -581,7 +580,7 @@ class MT5Accounts extends Controller
                         Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
                         return redirect()->back()->with('success', $error);
                     } else {
-                        
+
                         $data = [
                             'user_id' => $user->id,
                             'account_id'=>$account->id,
@@ -590,7 +589,7 @@ class MT5Accounts extends Controller
                             'deposit_amount' => $validatedData['demo_deposit'],
                             'Status' => 1
                         ];
-    
+
                         DemoDeposit::create($data);
                     }
                     $this->sendMail($new_user, 'Demo');
@@ -614,7 +613,7 @@ class MT5Accounts extends Controller
                         'leverage' => $validatedData['leverage'],
                         'currency' => 'USD',
                         'balance' => $validatedData['demo_deposit'],
-                        'account_request_status' => '1',
+                        'account_request_status' => 0,
                     ]);
                     return redirect()->back()->with('success', 'Account Rejected');
                 }else{
@@ -688,7 +687,7 @@ class MT5Accounts extends Controller
                     'invester_password' => $new_user->InvestPassword,
                     'phone_password' => $new_user->PhonePassword,
                     'balance' => $validatedData['demo_deposit'],
-                    'account_request_status' => '1',
+                    'account_request_status' => 1,
                 ]);
                 $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
@@ -723,7 +722,7 @@ class MT5Accounts extends Controller
                 'leverage' => $validatedData['leverage'],
                 'currency' => 'USD',
                 'balance' => $validatedData['demo_deposit'],
-                'account_request_status' => '0',
+                'account_request_status' => 0,
                 // 'code' => $new_user->Login,
                 // 'trader_password' => $new_user->MainPassword,
                 // 'invester_password' => $new_user->InvestPassword,
@@ -754,9 +753,9 @@ class MT5Accounts extends Controller
                 ];
 
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                
+
                 return redirect()->back()->with('success', 'Account created successfully');
-                
+
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }

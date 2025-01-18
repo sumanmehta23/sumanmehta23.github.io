@@ -640,7 +640,7 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function($row) {
                     $accountGroup = $row->accountType->ac_group;
-                    return "<a href='" . ($row->code ? '/admin/view_account_details/' . $row->id : '#') . "'>
+                    return "<a href='" . (($row->code && $row->code != 'Rejected') ? '/admin/view_account_details/' . $row->id : '#') . "'>
                                 <div class='row align-items-center'>
                                     <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
                                             alt='user-image' class='rounded wid-50 hei-50'></div>
@@ -829,6 +829,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = Account::where('demo', true)
             ->select('accounts.*')
+            ->where('account_request_status',1)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
