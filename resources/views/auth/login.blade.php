@@ -7,41 +7,6 @@
             align-items: center;
         }
     }
-    .lqh-sale-banner {
-  width: 100%;
-  background-size: 100%;
-  background-color: #003e40;
-  text-align: center;
-  padding: 10px 20px;
-}
-
-.lqh-sale-banner h1 {
-   font-size: 20px;
-   margin-top: 0px;
-   color: #FFFFFF;
-   text-shadow: 0 0 7px #000000;
-}
-
-
-.banner-link:hover {
-  text-decoration: none;
-}
-.loggedin .sales-banner-container{
-  position:fixed;
-  top:0;
-  z-index: 1030;
-}
-.loggedin .lqh-sale-banner h1 {
-  font-size: 18px;
-}
-.loggedin .lqh-sale-banner{
-  padding:6px 12px;
-}
-@media (max-width: 550px) {
-  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
-        font-size: 14px;
-    }
-}
 </style>
 @section('content')
 
@@ -55,14 +20,7 @@
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
-                        @if(config("services.sales.promotion"))
-                            <div class=" w-100 sales-banner-container">
-                                <div class="banner-link" ><div class="lqh-sale-banner">
-                                    <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
-                                    </div></div>
-                            </div>
                         
-                        @endif
                         <div  class="my-3 card">
                             <div  class="card-body">
                                 <form method="POST" action="{{ route('login') }}">
