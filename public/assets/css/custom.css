@@ -2705,7 +2705,7 @@ body.swal2-toast-shown .swal2-container.swal2-bottom-right {
   z-index: 1030;
 }
 @media (max-width: 550px) {
-    .lqh-sale-banner h1 {
+  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
         font-size: 14px;
     }
 }
