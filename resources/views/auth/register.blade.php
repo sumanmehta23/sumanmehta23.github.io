@@ -35,6 +35,35 @@
         }
     }
    
+.lqh-sale-banner {
+  width: 100%;
+  background-size: 100%;
+  background-color: #003e40;
+  text-align: center;
+  padding: 10px 20px;
+}
+
+.lqh-sale-banner h1 {
+   font-size: 20px;
+   margin-top: 0px;
+   color: #FFFFFF;
+   text-shadow: 0 0 7px #000000;
+}
+
+
+.banner-link:hover {
+  text-decoration: none;
+}
+.loggedin .sales-banner-container{
+  position:fixed;
+  top:0;
+  z-index: 1030;
+}
+@media (max-width: 550px) {
+  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
+        font-size: 14px;
+    }
+}
 
  </style>
 @section('content')
