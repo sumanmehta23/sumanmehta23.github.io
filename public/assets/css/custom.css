@@ -2710,7 +2710,7 @@ body.swal2-toast-shown .swal2-container.swal2-bottom-right {
   padding:6px 12px;
 }
 @media (max-width: 550px) {
-    .lqh-sale-banner h1 {
+  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
         font-size: 14px;
     }
 }
