@@ -2703,6 +2703,12 @@ body.swal2-toast-shown .swal2-container.swal2-bottom-right {
   top:0;
   z-index: 1030;
 }
+.loggedin .lqh-sale-banner h1 {
+  font-size: 18px;
+}
+.loggedin .lqh-sale-banner{
+  padding:6px 12px;
+}
 @media (max-width: 550px) {
     .lqh-sale-banner h1 {
         font-size: 14px;
