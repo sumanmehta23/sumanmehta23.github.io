@@ -33,35 +33,30 @@
             align-items: center;
             margin-bottom:10%
         }
-    }.gigaparts-sale-banner {
+    }
+    .lqh-sale-banner {
   width: 100%;
-  height: 64px;
-  /* background-image: url(https://i.gyazo.com/10bbc418bb220dada639670e8b7d4776.png); */
   background-size: 100%;
   background-color: #0c2740;
   text-align: center;
+  padding: 10px 20px;
 }
 
-.gigaparts-sale-banner h1 {
+.lqh-sale-banner h1 {
    font-size: 20px;
    margin-top: 0px;
-   line-height: 64px;
    color: #FFFFFF;
    text-shadow: 0 0 7px #000000;
 }
-@keyframes pulse {
-  0% {transform: scale(1);}
-  50% {transform: scale(1.1);}
-  100% {transform: scale(1);}
-}
-.pulse {
-  animation-name: pulse;
-  animation-duration: 1s;
-  animation-iteration-count: infinite;
-}
+
 
 .banner-link:hover {
   text-decoration: none;
+}
+@media (max-width: 550px) {
+    .lqh-sale-banner h1 {
+        font-size: 14px;
+    }
 }
 
  </style>
@@ -80,9 +75,9 @@
                         </div>
                     </div>
                     <div class="mt-4 w-100">
-                        <a class="banner-link" href="javascript:void(0)" target="_blank"><div class="gigaparts-sale-banner">
+                        <div class="banner-link" ><div class="lqh-sale-banner">
                             <h1 class="animated pulse">Deposit <span style="font-weight: bold;">$100-$1000</span>  and Recieve a <span style="font-weight: bold;">15% Deposit Bonus</span> * First Time Deposits Only *</h1>
-                            </div></a>
+                            </div></div>
                     </div>
                     <div data-v-97e32e5a="" class="my-auto card">
                         <div data-v-97e32e5a="" class="card-body">
