@@ -12,7 +12,7 @@
         content="forex broker, forex trading, commodities trading, indices trading, cryptocurrencies trading, low spreads, fast execution">
     <title>{{ $settings['admin_title'] }} - Client Portal</title>
     <link rel="stylesheet" href="{{ asset('assets/css/main.css?v=244.1') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/custom.css?v=4.3') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/custom.css?v=4.5') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css?v=2&" rel="stylesheet" />
     <script src="{{ asset('assets/js/sweetalert2.all.min.js') }}"></script>
