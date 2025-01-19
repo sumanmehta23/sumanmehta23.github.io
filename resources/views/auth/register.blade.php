@@ -37,7 +37,7 @@
     .lqh-sale-banner {
   width: 100%;
   background-size: 100%;
-  background-color: #0c2740;
+  background-color: #003e40;
   text-align: center;
   padding: 10px 20px;
 }
