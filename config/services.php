@@ -52,5 +52,9 @@ return [
     ],
     'pamm' =>[
         'url' =>env('PAMM_URL'),
+    ],
+    'sales'=>[
+        'promotion'=>env('SALES_PROMOTION',false),
+        'promotiontext'=>env('SALES_PROMOTION_TEXT'),
     ]
 ];
