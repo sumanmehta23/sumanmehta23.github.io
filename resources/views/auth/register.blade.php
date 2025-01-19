@@ -51,11 +51,15 @@
                                     id="auth-active-slide"><?= isset($success) ? '3' : '1' ?></b> to 3 </h5>
                         </div>
                     </div>
-                    <div class="mt-4 w-100">
+                    
+                    @if(config("services.sales.promotion"))
+                    <div class="mt-4 w-100 sales-banner-container">
                         <div class="banner-link" ><div class="lqh-sale-banner">
-                            <h1 class="animated pulse">Deposit <span style="font-weight: bold;">$100-$1000</span>  and Recieve a <span style="font-weight: bold;">15% Deposit Bonus</span> * First Time Deposits Only *</h1>
+                            <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
                             </div></div>
                     </div>
+                    
+                    @endif
                     <div data-v-97e32e5a="" class="my-auto card">
                         <div data-v-97e32e5a="" class="card-body">
                             <ul data-v-97e32e5a="" class="nav nav-tabs d-none" id="myTab" role="tablist">
