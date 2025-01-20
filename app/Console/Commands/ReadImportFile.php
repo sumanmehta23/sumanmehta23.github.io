@@ -32,7 +32,6 @@ class ReadImportFile extends Command
         $header = fgetcsv($file);
         $data = [];
         while ($row = fgetcsv($file)) {
-            
             $data[] = array_combine($header, $row);
             Artisan::call('app:update-leverage',[
                 'account_code'=>$row[3],

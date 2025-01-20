@@ -49,8 +49,11 @@ class UpdateLeverage extends Command
             Log::error('error'. ' Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
         }
-
+        if(!$trade_user){
+            $this->info("Unable to get account ".$account_code);
+        }
         if($total_positions < 2){
+            
             $trade_user->Leverage = $leverage;
             $error_code = $this->api->UserUpdate($trade_user, $updated_user);
                 if ($error_code != MTRetCode::MT_RET_OK) {
