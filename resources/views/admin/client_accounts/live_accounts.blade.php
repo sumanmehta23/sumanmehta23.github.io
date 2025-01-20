@@ -1,5 +1,10 @@
 @extends('layouts.admin.admin')
 @section('content')
+<style>
+    .deleteAcc{
+        cursor: pointer;
+    }
+</style>
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -84,14 +89,14 @@
             myModal.show();
 
         });
-        $('.ajaxDataTable tbody tr').on('click', '.deleteAcc', function() { 
+        $('.ajaxDataTable tbody tr').on('click', '.deleteAcc', function() {
             var data = dTtable.row($(this).closest("tr")).data()
-            console.log(data.id);
-            console.log(data.fullemail);
+            // console.log(data.id);
+            // console.log(data.fullemail);
 
             Swal.fire({
                     title: `Are you sure you want to delete this "${data.account_code}" account?`,
-                    
+
                     html: `
                     <form id="delete_account_form" method="post" action="deleteAccounts">
                     @csrf
@@ -111,7 +116,7 @@
                         // location.href = "/admin/clientAccounts/deleteAccounts/" + data.id;
                          document.querySelector('#delete_account_form').submit();
                     }else {
-                        location.href = ""; 
+                        location.href = "";
                     }
                 });
         });
