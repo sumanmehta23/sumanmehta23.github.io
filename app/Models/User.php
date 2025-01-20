@@ -160,7 +160,7 @@ class User extends Authenticatable
     {
 
         return WalletDeposit::where('user_id', $this->id)
-            ->whereIn('deposit_type', ['Internal Transfer', 'CryptoChill','CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
     }

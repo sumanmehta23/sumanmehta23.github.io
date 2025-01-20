@@ -2480,8 +2480,8 @@ class AjaxController extends Controller
         // $query = DB::select($sql);
         $query = WalletWithdraw::with('user')
             ->where('user_id', $id)
-            ->where('Status', 1)
             ->where('withdraw_type', ['Wallet Withdrawal'])
+            ->orderBy('withdraw_date', 'desc')
             ->get();
 
         $results = $query;

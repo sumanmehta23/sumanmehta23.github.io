@@ -50,7 +50,7 @@
     @yield('styles')
     <?php
         $marginTopStyle = ''; // Default value
-        if (app()->environment('local')) {
+        if (app()->environment('local') || config("services.sales.promotion")) {
             $marginTopStyle = 'style="margin-top: 40px;"';
         }
     ?>

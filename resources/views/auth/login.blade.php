@@ -7,6 +7,7 @@
             align-items: center;
         }
     }
+
 </style>
 @section('content')
 
