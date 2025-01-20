@@ -35,7 +35,7 @@ class ReadImportFile extends Command
             $data[] = array_combine($header, $row);
             Artisan::call('app:update-leverage',[
                 'account_code'=>$row[3],
-                'leverage'=>10
+                'leverage'=>50
             ]);
             //print last command output
             echo Artisan::output();
