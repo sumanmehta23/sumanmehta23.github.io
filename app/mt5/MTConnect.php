@@ -1,6 +1,8 @@
 <?php
 namespace App\MT5;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * Create connect to MetaTrader 5 server
  */
@@ -384,7 +386,14 @@ class MTConnect
     {
     $header = null;
     //---
-    $count_read = socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
+    try {
+      $count_read = socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
+    } catch (\Throwable $th) {
+     
+      Log::error("Unable to connect to MT5 ".$th->getMessage()." on ".$this->m_ip_mt5.":".$this->m_port_mt5);
+      return null;
+    }
+    
     //$header_data = socket_read($this->m_connect, MTHeaderProtocol::HEADER_LENGTH, PHP_BINARY_READ);
     //---
     if($count_read != MTHeaderProtocol::HEADER_LENGTH)

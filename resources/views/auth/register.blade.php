@@ -34,6 +34,66 @@
             margin-bottom:10%
         }
     }
+   
+.lqh-sale-banner {
+  width: 100%;
+  background-size: 100%;
+  background-color: #003e40;
+  text-align: center;
+  padding: 10px 20px;
+}
+
+.lqh-sale-banner h1 {
+   font-size: 20px;
+   margin-top: 0px;
+   color: #FFFFFF;
+   text-shadow: 0 0 7px #000000;
+}
+
+
+.banner-link:hover {
+  text-decoration: none;
+}
+.loggedin .sales-banner-container{
+  position:fixed;
+  top:0;
+  z-index: 1030;
+}
+@media (max-width: 550px) {
+  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
+        font-size: 14px;
+    }
+}
+
+.lqh-sale-banner {
+  width: 100%;
+  background-size: 100%;
+  background-color: #003e40;
+  text-align: center;
+  padding: 10px 20px;
+}
+
+.lqh-sale-banner h1 {
+   font-size: 20px;
+   margin-top: 0px;
+   color: #FFFFFF;
+   text-shadow: 0 0 7px #000000;
+}
+
+
+.banner-link:hover {
+  text-decoration: none;
+}
+.loggedin .sales-banner-container{
+  position:fixed;
+  top:0;
+  z-index: 1030;
+}
+@media (max-width: 550px) {
+  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
+        font-size: 14px;
+    }
+}
 
  </style>
 @section('content')
@@ -42,7 +102,7 @@
             <div  class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
                     <div  class="auth-header row ">
-                        <div  class="col my-1 mob_logo_center"><a  href="/login"><img class="mob_logo_center"
+                        <div  class="my-1 col mob_logo_center"><a  href="/login"><img class="mob_logo_center"
                                      src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
@@ -50,7 +110,16 @@
                                     id="auth-active-slide"><?= isset($success) ? '3' : '1' ?></b> to 3 </h5>
                         </div>
                     </div>
-                    <div data-v-97e32e5a="" class="card my-auto">
+                    
+                    @if(config("services.sales.promotion"))
+                    <div class="mt-4 w-100 sales-banner-container">
+                        <div class="banner-link" ><div class="lqh-sale-banner">
+                            <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
+                            </div></div>
+                    </div>
+                    
+                    @endif
+                    <div data-v-97e32e5a="" class="my-auto card">
                         <div data-v-97e32e5a="" class="card-body">
                             <ul data-v-97e32e5a="" class="nav nav-tabs d-none" id="myTab" role="tablist">
                                 <li data-v-97e32e5a="" class="nav-item" role="presentation"><a data-v-97e32e5a=""
@@ -58,13 +127,14 @@
                                         role="tab" data-slide-index="1" aria-controls="auth-1" aria-selected="true"></a>
                                 </li>
                             </ul>
+                            
                             <form method="post" data-v-97e32e5a="" class="needs-validation" id="formRegister">
                                 @csrf
                                 <div data-v-97e32e5a="" class="tab-content">
                                     <div data-v-97e32e5a="" class="tab-pane <?= !isset($success) ? 'active show' : '' ?>"
                                         id="auth-1" role="tabpanel" aria-labelledby="auth-tab-1">
                                         <div data-v-97e32e5a="" class="text-center">
-                                            <h3 data-v-97e32e5a="" class="text-center mb-2 f-w-600">Join Us Now
+                                            <h3 data-v-97e32e5a="" class="mb-2 text-center f-w-600">Join Us Now
                                             </h3>
                                             <p data-v-97e32e5a="" class="mb-4 fs-5">Get Started with Trading Today: Quick and Easy Account Setup!</p>
                                         </div>
@@ -79,7 +149,7 @@
                                             </div>
                                         @endif
 
-                                        <div data-v-97e32e5a="" class="row my-2">
+                                        <div data-v-97e32e5a="" class="my-2 row">
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Email</label><input data-v-97e32e5a=""
@@ -111,8 +181,8 @@
                                         </div>
 
                                         <div data-v-97e32e5a="" class="row">
-                                            <div data-v-97e32e5a="" class="d-flex align-items-end mt-2">
-                                                <p class="f-w-500 mb-0"
+                                            <div data-v-97e32e5a="" class="mt-2 d-flex align-items-end">
+                                                <p class="mb-0 f-w-500"
                                                     style="font-size: 14px !important;">Already have an Account? </p><a
                                                     href="/login" class="link-primary"
                                                     style="font-size: 14px !important; padding-left: 10px; margin-top: 10px;">
@@ -130,7 +200,7 @@
                                             <h4 data-v-97e32e5a="" class="mb-3 f-w-600">Tell us a bit about yourself
                                             </h4>
                                         </div>
-                                        <div data-v-97e32e5a="" class="row my-4">
+                                        <div data-v-97e32e5a="" class="my-4 row">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Full Name</label><input data-v-97e32e5a=""
@@ -211,7 +281,7 @@
                                         id="auth-3" role="tabpanel" aria-labelledby="auth-tab-3">
                                         <div data-v-97e32e5a="" class="text-center">
                                             <div data-v-97e32e5a="" class="text-center">
-                                                <h3 data-v-97e32e5a="" class="text-center mb-3">Please verify your email
+                                                <h3 data-v-97e32e5a="" class="mb-3 text-center">Please verify your email
                                                     id
                                                 </h3>
                                                 @isset($success)
@@ -229,7 +299,7 @@
                     </div>
                     <?php if (!isset($success)) { ?>
                     <div data-v-97e32e5a="" class="auth-footer">
-                        <p data-v-97e32e5a="" class="m-0 w-100 text-center" style="font-size: 11px;"> By signing up, I
+                        <p data-v-97e32e5a="" class="m-0 text-center w-100" style="font-size: 11px;"> By signing up, I
                             acknowledge
                             that I have read, understood and agree to the Client Agreement <br data-v-97e32e5a="">and
                             give my consent
@@ -245,14 +315,14 @@
                 </div>
                 <div  class="auth-sidecontent"
                     style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
-                    <div class="p-3 px-lg-5 text-center">
+                    <div class="p-3 text-center px-lg-5">
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
                                 <div class="carousel-item active"><img src="/assets/images/acc-1.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Regulatory Excellence</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Regulatory Excellence</h5>
                                     <p class="text-white text-opacity-50">Compliance Assurance</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -265,10 +335,10 @@
                                     </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-02.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Transparent Pricing Policy</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Transparent Pricing Policy</h5>
                                     <p class="text-white text-opacity-50">Clear Cost Commitment</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -281,10 +351,10 @@
                                         a seamless trading experience. </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-03.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Swift and Precise Execution</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Swift and Precise Execution</h5>
                                     <p class="text-white text-opacity-50">Precision Trading</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -297,10 +367,10 @@
                                         market opportunities instantly. </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-04.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Competitive Spreads</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Competitive Spreads</h5>
                                     <p class="text-white text-opacity-50">Cost Efficiency</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -313,7 +383,7 @@
                                         profitability and minimize trading costs. </p>
                                 </div>
                             </div>
-                            <div class="carousel-indicators position-relative mt-3"><button type="button"
+                            <div class="mt-3 carousel-indicators position-relative"><button type="button"
                                     data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"
                                     aria-current="true" aria-label="Slide 1"></button><button type="button"
                                     data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"

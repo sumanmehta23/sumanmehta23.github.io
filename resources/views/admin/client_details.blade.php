@@ -1216,6 +1216,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'
@@ -1247,6 +1248,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'
@@ -1282,6 +1284,7 @@
                         id: '{{ $user->id }}'
                     },
                 },
+                "order": [[0, 'desc']],
                 columns: [{
                         data: 'created_on',
                         name: 'date'

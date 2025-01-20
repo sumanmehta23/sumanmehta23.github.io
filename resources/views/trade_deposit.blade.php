@@ -298,7 +298,7 @@
                         icon: 'success',
                         title: response.success
                     }).then(() => {
-                        window.location.href = '{{ route('transactions') }}';
+                        window.location.href = '{{ route('trade-deposit') }}';
                     });
                 },
                 error: function(xhr) {

@@ -116,6 +116,8 @@ $filePermissions = filePermissions($userRole);
             <b>DEV ENVIRONMENT</b>
         </div>
     @endif
+   
+    
     <!-- Loader -->
     <div id="loader">
         <img src="/admin_assets/assets/images/media/loader.svg" alt="">

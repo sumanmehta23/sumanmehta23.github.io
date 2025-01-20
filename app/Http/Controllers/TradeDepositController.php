@@ -18,6 +18,7 @@ use App\Models\ClientBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\RateLimiter;
 
 class TradeDepositController extends Controller
 {
@@ -60,7 +61,22 @@ class TradeDepositController extends Controller
     }
     public function deposit(Request $request)
     {
-        // dd($request->all());
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests',
+                'error' => "Please wait {$retryAfter} seconds before trying again.",
+            ], 429); // HTTP 429 Too Many Requests
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $request->validate(
             [
                 'user.account_id' => 'required',
@@ -170,6 +186,7 @@ class TradeDepositController extends Controller
                 ]);
             });
             AccountHelper::updateLiveAndDemoAccounts();
+            // RateLimiter::clear($key);
             return response()->json(['success' => 'Funds Successfully Deposited']);
         }
     }

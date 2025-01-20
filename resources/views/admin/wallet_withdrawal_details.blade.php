@@ -129,7 +129,7 @@
                                                     </div>
                                                     <div class="mt-2 lh-1">
                                                         <span class="badge bg-success-transparent">+</span>
-                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->walletDeposits->sum('deposit_amount') : 0 }}</span>
+                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0 }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -406,6 +406,7 @@
                           <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
                           <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
                           <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
+                          <option value="bonus_min_deposit">Bonus and Minimum Deposit Not Eligible for Withdrawal (no email sent)</option>
                       </select>
                   </div>
               `
