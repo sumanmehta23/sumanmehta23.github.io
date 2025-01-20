@@ -51,6 +51,7 @@ class UpdateLeverage extends Command
         }
         if(!$trade_user){
             $this->info("Unable to get account ".$account_code);
+            return ;
         }
         if($total_positions < 2){
             
