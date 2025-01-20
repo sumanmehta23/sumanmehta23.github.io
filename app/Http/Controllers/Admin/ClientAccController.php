@@ -10,13 +10,24 @@ use App\Models\RelationshipManager;
 use App\Models\User;
 use App\Services\MailService;
 use DB;
+use Illuminate\Support\Facades\Log;
+use App\MT5\MTRetCode;
+use App\Models\TradeWithdrawals;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
+use App\MT5\MTEnDealAction;
+use App\MT5\MTWebAPI;
+use App\Http\Controllers\ControllerB;
+
 
 class ClientAccController extends Controller
 {
     protected $mailService;
-    public function __construct(MailService  $mailService)
+    protected $api;
+    public function __construct(MailService  $mailService,MTWebAPI $api)
     {
         $this->mailService = $mailService;
+        $this->api = $api;
     }
     public function live_accounts()
     {
@@ -95,61 +106,6 @@ class ClientAccController extends Controller
         return view('admin.client_accounts.requested_accounts');
     }
 
-    public function deleteAccounts(Request $request)
-    {
-        $settings = settings();
-
-        $validatedData = $request->validate([
-            'id' => 'required',
-            'email' => 'required|email',
-        ]);
-
-        $account = Account::where('id', $request->id)->first();
-        dd($account->code);
-        try {
-            $login = $code;
-            if (($error_code = $this->api->UserDelete($account->code)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code));
-            }
-
-            if ($account) {
-                $account->delete(); // Soft delete the account
-
-                // Refresh the model to include the `deleted_at` timestamp
-                $account->refresh();
-
-                $email = $validatedData['email'];
-                $type = $account->demo == "1" ? "Demo account" : "Live account";
-
-                $from = $settings['email_from_address'];
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $emailSubject = $settings['admin_title'] . ' - Account Deleted';
-                $content = '<div>We are pleased to inform you that your account has been deleted.</div>
-                            <div><b>Account code: </b>' . $account->code . '</div>
-                            <div><b>Account type: </b>' . $type . '</div>
-                            <div><b>Created Date: </b>' . $account->created_at . '</div>
-                            <div><b>Deleted Date: </b>' . $account->deleted_at . '</div>';
-                $templateVars = [
-                    'name' => $account->name,
-                    'site_link' => $settings['copyright_site_name_text'],
-                    'email' => $settings['email_from_address'],
-                    'content' => $content,
-                    'title_right' => 'Account',
-                    'subtitle_right' => 'Deleted',
-                    'btn_text' => 'Go To Dashboard',
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-
-                return redirect()->back()->with('success', 'Account deleted successfully.');
-            } else {
-                return redirect()->back()->with('error', 'Account not found.');
-            }
-        } catch (\Exception $e) {
-            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
-            session()->flash('error', 'Exception: ' . $e->getMessage());
-        }
-    }
+    
 
 }
