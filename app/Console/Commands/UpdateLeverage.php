@@ -61,6 +61,8 @@ class UpdateLeverage extends Command
                         'leverage' => $leverage
                     ]);
                 }
+                Log::info($account_code." Done" );
+                $this->info("Processed ".$account_code);
         }else{
             $this->info($account_code.":".$total_positions);
         }

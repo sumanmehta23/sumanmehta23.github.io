@@ -39,7 +39,7 @@ class ReadImportFile extends Command
             ]);
             //print last command output
             echo Artisan::output();
-            die();
+            
         }
         fclose($file);
     }
