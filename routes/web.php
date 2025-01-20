@@ -91,6 +91,13 @@ Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
 
+Route::get('register/ref', function () {
+    // Get the 'refercode' from the query string
+    $refercode = request()->query('refercode');
+
+    // Perform the redirection to the new URL format
+    return redirect()->route('ib-ref', ['refercode' => $refercode]);
+});
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
