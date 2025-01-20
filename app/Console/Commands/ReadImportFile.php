@@ -33,13 +33,13 @@ class ReadImportFile extends Command
         $data = [];
         while ($row = fgetcsv($file)) {
             $data[] = array_combine($header, $row);
-          
-            Artisan::queue('app:update-leverage',[
+            Artisan::call('app:update-leverage',[
                 'account_code'=>$row[3],
                 'leverage'=>10
             ]);
             //print last command output
             echo Artisan::output();
+            die();
         }
         fclose($file);
     }
