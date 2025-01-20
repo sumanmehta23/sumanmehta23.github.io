@@ -120,7 +120,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
 
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
-    Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
+    // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
