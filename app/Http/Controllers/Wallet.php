@@ -491,6 +491,8 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request)
     {
+        $settings = settings();
+        
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -558,10 +560,102 @@ class Wallet extends Controller
             'withdraw_amount' => $withdrawAmount,
             'withdraw_transaction_fee' => $withdraw_transaction_fee,
             'withdraw_type' => $withdrawType,
-            'status' => 0
+            'status' => 0,
+            'verified' => 0
         ]);
+
+        // $from = $settings['email_from_address'];
+        //         $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
+        //         $htmlContent = "";
+        //         $headers = "MIME-Version: 1.0" . "\r\n";
+        //         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        //         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        //         $content =
+        //             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+        //             '<div>Your wallet address has been successfully confirmed, and you’re withdraw request has been approved.</div>';
+        //         $templateVars = [
+        //             'name' => "$user->name",
+        //             'server_name' => $settings['mt5_company_name'],
+        //             'site_link' => $settings['copyright_site_name_text'] . "/login",
+        //             'email' => $settings['email_from_address'],
+        //             "content" => $content,
+        //             "title_right" => "Withdrawl request",
+        //             "subtitle_right" => "Approved",
+        //             "btn_text" => "Verify"
+        //         ];
+        //         $this->mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
+
+        $toEmail = $user->email;
+        $type = 'Withdrawl Details Verification';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $WalletWithdrawl = WalletWithdraw::where('user_id', $user->id)
+                ->latest('created_at') // Specify the column to order by
+                ->first();
+                dd($WalletWithdrawl->id);
+        $content =
+                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
+                '<div>Wallet Address: '.$request->wallet_address.' </div>' .
+                '<div>Click the link below to activate your Wallet Address</div>';
+
+        $templateVars = [
+            'name' => $user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawl_verify?id={$user->id}&clientWallet_id=$WalletWithdrawl->id",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Wallet Address"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
         // RateLimiter::clear($key);
         return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
+    }
+
+    public function wallet_withdrawl_verify(Request $request){
+        $settings = settings();
+        $id = $request->query('id');
+        $clientWallet_id = $request->query('clientWallet_id');
+
+        $new_wallet_address = ClientWallet::with('user')->where('user_id', $id)
+            ->where('id', $clientWallet_id)
+            ->first();
+        if ($new_wallet_address) {
+            if ($new_wallet_address->verified  == 0) {
+                $new_wallet_address->verified = 1;
+                $new_wallet_address->save();
+                $from = $settings['email_from_address'];
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
+                $htmlContent = "";
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Your wallet address has been successfully confirmed, and you’re all set to withdraw your earnings.</div>';
+                $templateVars = [
+                    'name' => $new_wallet_address->user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'site_link' => $settings['copyright_site_name_text'] . "/login",
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Wallet Address Verification",
+                    "subtitle_right" => "Successful",
+                    "btn_text" => "Login"
+                ];
+                $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Address is now Verified');
+            } else {
+                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
+            }
+        } else {
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
+        }
     }
 
 }
