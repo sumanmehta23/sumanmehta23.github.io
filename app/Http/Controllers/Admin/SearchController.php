@@ -87,7 +87,7 @@ class SearchController extends Controller
                 $type = "Client - Accounts";
             }
 
-            return view("admin.search", compact("accounts"));
+            return view("admin.search", compact("accounts", "type"));
         }
     }
 }
