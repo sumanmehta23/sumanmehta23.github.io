@@ -268,7 +268,7 @@ class MT5Controller extends Controller
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
-                    'admin_remark' => $description,
+                    'admin_remark' => $comment,
                     'bonus_currency' => $deposit_currency,
                     // 'created_by' => session('alogin')
                 ]);
@@ -339,7 +339,7 @@ class MT5Controller extends Controller
                     'bonus_amount' => $amount,
                     'bonus_type' => $deposit_type,
                     'status' => 1,
-                    'admin_remark' => $description,
+                    'admin_remark' => $comment,
                     'bonus_currency' => $deposit_currency,
                     // 'created_by' => session('alogin')
                 ]);
