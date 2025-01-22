@@ -291,8 +291,7 @@ class User extends Authenticatable
             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
             '<div>You are receiving this email because you have registered for a Trading Account.</div>' .
             '<div>Click the link below to activate your Trading Account</div>';
-        $code = Str::random(60);
-        $this->emailToken=$code;
+        $code=$this->emailToken;
         $templateVars = [
             'name' => $this->fullname,
             'server_name' => $settings['mt5_company_name'],
