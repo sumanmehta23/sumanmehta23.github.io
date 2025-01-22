@@ -19,6 +19,7 @@
               <table id="tableIbUsers" class="table ajaxDataTable table-bordered text-nowrap w-100">
                 <thead>
                   <tr>
+                    <th><input type="checkbox" id="select-all"></th>
                     <th>ID</th>
                     <th>Name</th>
                     <!-- <th>Country</th>
@@ -155,6 +156,39 @@
                     exportOptions: {
                         columns: [6,7,0,2,3,4,8,9] // Updated column indices to match your use case
                     }
+                },
+                {
+                    text: 'Perform Bulk Action',
+                    className: 'btn-bulk-action', // Optional: Add a custom class for styling
+                    action: function(e, dt, node, config) {
+                        // Collect selected row IDs
+                        const selectedIds = [];
+                        $('.row-checkbox:checked').each(function() {
+                            selectedIds.push($(this).data('id'));
+                        });
+
+                        if (selectedIds.length === 0) {
+                            alert('No rows selected!');
+                            return;
+                        }
+
+                        // Perform the bulk action (e.g., send to server)
+                        $.ajax({
+                            url: '/admin/bulkUpdate',
+                            method: 'POST',
+                            data: {
+                                ids: selectedIds,
+                                _token: $('meta[name="csrf-token"]').attr('content') // CSRF token if required
+                            },
+                            success: function(response) {
+                                alert(response.message);
+                                dt.ajax.reload(); // Reload DataTable
+                            },
+                            error: function(err) {
+                                alert('Error performing bulk action.');
+                            }
+                        });
+                    }
                 }
             ],
 
@@ -170,7 +204,16 @@
                 return json.data;
             }
         },
-      columns: [{
+      columns: [
+        {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row) {
+                return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
+            }
+        },
+        {
           data: 'id',
           name: 'id'
         },
@@ -232,5 +275,23 @@
       ]
     });
   });
+
+  // Handle "Select All" checkbox toggle
+    $('#select-all').on('click', function() {
+        const isChecked = $(this).is(':checked');
+        $('.row-checkbox').prop('checked', isChecked); // Toggle all row checkboxes
+    });
+
+    // Ensure master checkbox updates correctly when individual checkboxes are clicked
+    $('#tableIbUsers').on('change', '.row-checkbox', function() {
+        const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+        $('#select-all').prop('checked', allChecked); // Update master checkbox
+    });
+
+    // Maintain "Select All" state after DataTable redraw
+    $('#tableIbUsers').on('draw.dt', function() {
+        const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+        $('#select-all').prop('checked', allChecked);
+    });
 </script>
 @endsection
