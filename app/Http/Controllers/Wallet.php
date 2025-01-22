@@ -564,52 +564,31 @@ class Wallet extends Controller
             'verified' => 0
         ]);
 
-        // $from = $settings['email_from_address'];
-        //         $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
-        //         $htmlContent = "";
-        //         $headers = "MIME-Version: 1.0" . "\r\n";
-        //         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        //         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        //         $content =
-        //             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-        //             '<div>Your wallet address has been successfully confirmed, and you’re withdraw request has been approved.</div>';
-        //         $templateVars = [
-        //             'name' => "$user->name",
-        //             'server_name' => $settings['mt5_company_name'],
-        //             'site_link' => $settings['copyright_site_name_text'] . "/login",
-        //             'email' => $settings['email_from_address'],
-        //             "content" => $content,
-        //             "title_right" => "Withdrawl request",
-        //             "subtitle_right" => "Approved",
-        //             "btn_text" => "Verify"
-        //         ];
-        //         $this->mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
-
+        
         $toEmail = $user->email;
-        $type = 'Withdrawl Details Verification';
+        $type = 'Withdrawal Details Verification';
         $from = $settings['email_from_address'];
         $emailSubject = $settings['admin_title'] . ' - ' . $type;
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $WalletWithdrawl = WalletWithdraw::where('user_id', $user->id)
+        $WalletWithdrawal = WalletWithdraw::where('user_id', $user->id)
                 ->latest('created_at') // Specify the column to order by
                 ->first();
-                dd($WalletWithdrawl->id);
+                
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
-                '<div>Wallet Address: '.$request->wallet_address.' </div>' .
-                '<div>Click the link below to activate your Wallet Address</div>';
+                '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.
+                '<div>Click the link below to activate your Wallet Withdrawal</div>';
 
         $templateVars = [
             'name' => $user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawl_verify?id={$user->id}&clientWallet_id=$WalletWithdrawl->id",
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$WalletWithdrawal->id",
             'email' => $from,
             "content" => $content,
             "title_right" => "Activate",
-            "subtitle_right" => "Your Wallet Address"
+            "subtitle_right" => "Your Wallet Withdrawal Request"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
@@ -617,44 +596,47 @@ class Wallet extends Controller
         return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
     }
 
-    public function wallet_withdrawl_verify(Request $request){
+    public function wallet_withdrawal_verify(Request $request){
+        
+         if(!auth()->check()){
+            return redirect('/login');
+         }
+         
         $settings = settings();
-        $id = $request->query('id');
-        $clientWallet_id = $request->query('clientWallet_id');
+        $id = auth()->user()->id;
+        $walletWithdrawal_id = $request->query('walletWithdrawal_id');
 
-        $new_wallet_address = ClientWallet::with('user')->where('user_id', $id)
-            ->where('id', $clientWallet_id)
+        $new_wallet_Withdrawal = WalletWithdraw::with('user')->where('user_id', $id)
+            ->where('id', $walletWithdrawal_id)
             ->first();
-        if ($new_wallet_address) {
-            if ($new_wallet_address->verified  == 0) {
-                $new_wallet_address->verified = 1;
-                $new_wallet_address->save();
+        if ($new_wallet_Withdrawal) {
+            if ($new_wallet_Withdrawal->verified  == 0) {
+                $new_wallet_Withdrawal->verified = 1;
+                $new_wallet_Withdrawal->save();
                 $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
                 $htmlContent = "";
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your wallet address has been successfully confirmed, and you’re all set to withdraw your earnings.</div>';
+                    '<div>Your wallet withdrawal has been successfully confirmed.</div>';
                 $templateVars = [
-                    'name' => $new_wallet_address->user->fullname,
+                    'name' => $new_wallet_Withdrawal->user->fullname,
                     'server_name' => $settings['mt5_company_name'],
-                    'site_link' => $settings['copyright_site_name_text'] . "/login",
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "Wallet Address Verification",
+                    "title_right" => "Wallet Withdrawal Verification",
                     "subtitle_right" => "Successful",
-                    "btn_text" => "Login"
                 ];
-                $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Address is now Verified');
+                $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
             } else {
-                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
+                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
             }
         } else {
-            return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Wallet Withdrawal Found. Signup here');
         }
     }
 

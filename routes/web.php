@@ -106,6 +106,8 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
+
 
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');

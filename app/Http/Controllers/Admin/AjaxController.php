@@ -1032,6 +1032,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = WalletWithdraw::where('withdraw_type','!=', 'Internal Transfer')
             ->select('wallet_withdraw.*')
+            ->where('verified', true)
             ->with(['user']);
 
 
@@ -1759,7 +1760,9 @@ class AjaxController extends Controller
 
     public function getPendingWalletWithdrawal2(Request $request)
     {
-        $query = WalletWithdraw::with(['user'])->where('status',0);
+        $query = WalletWithdraw::with(['user'])
+        ->where('verified',true)
+        ->where('status',0);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         // if (session('userData')['userRole'] == "Relationship Manager") {
