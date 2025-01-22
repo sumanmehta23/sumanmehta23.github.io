@@ -298,32 +298,34 @@ if ($getUser) {
                                 <div class="prism-toggle">
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table text-nowrap" id="tableBonus">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            foreach ($bonus_trans as $bns) {
-                                            ?>
-                                            <tr>
-                                                <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
-                                                </td>
-                                                <td><?= $bns->bonus_amount ?></td>
-                                                <td><?= $bns->bonus_type ?></td>
-                                            </tr>
-                                            <?php
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table text-nowrap" id="tableBonus">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        foreach ($bonus_trans as $bns) {
+                                        ?>
+                                        <tr>
+                                            <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
+                                            </td>
+                                            <td><?= strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
+                                            <td><?= $bns->bonus_amount ?></td>
+                                            <td><?= $bns->bonus_type ?></td>
+                                        </tr>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     @endcan
