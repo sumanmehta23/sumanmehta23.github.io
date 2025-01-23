@@ -600,7 +600,30 @@
                 "processing": true,
                 "order": [[0, "desc"]]
             });
+        });
 
+
+
+
+        function updateReferralLink() {
+            let referralCode = document.getElementById('referral-code').value;
+            let newUrl = "{{ url('/ib-ref?refercode=') }}" + referralCode;
+            document.getElementById('pc-clipboard-1').value = newUrl;
+            document.getElementById('hidden-referral-code').value = referralCode;
+        }
+
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            let referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('referral-code').value = referralCode;
+            updateReferralLink();
+        });
+
+        document.getElementById('referral-code').addEventListener('input', function() {
+            updateReferralLink();
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
 
             let level = 1;
 
@@ -642,25 +665,6 @@
                 dTtable.ajax.reload();
             });
         });
-
-
-        function updateReferralLink() {
-            let referralCode = document.getElementById('referral-code').value;
-            let newUrl = "{{ url('/ib-ref?refercode=') }}" + referralCode;
-            document.getElementById('pc-clipboard-1').value = newUrl;
-            document.getElementById('hidden-referral-code').value = referralCode;
-        }
-
-        document.getElementById('generate-btn').addEventListener('click', function() {
-            let referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            document.getElementById('referral-code').value = referralCode;
-            updateReferralLink();
-        });
-
-        document.getElementById('referral-code').addEventListener('input', function() {
-            updateReferralLink();
-        });
     </script>
-
 
 @endsection
