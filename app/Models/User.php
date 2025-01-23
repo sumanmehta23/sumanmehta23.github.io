@@ -257,6 +257,7 @@ class User extends Authenticatable
                 return [$level => $client];
             }
         }
+        return [];
     });
 
     return $groupedClients;
