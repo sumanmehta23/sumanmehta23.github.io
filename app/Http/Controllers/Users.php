@@ -192,29 +192,30 @@ class Users extends Controller
     {
         // dd($request->all());
         $validatedData =Validator::make($request->all(), [
-            'email' => 'required|unique:aspnetusers',
-        ],
-        [
+            'email' => 'required|unique:aspnetusers'
+        ],[
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
         ]);
-
+        // dd($request['email']);
         if ($validatedData->fails()) {
-            return redirect()->route('register')->with('errors', $validatedData->errors());
+            
+            // return redirect()->route('user-profile')->with('errors', $validatedData->errors());
+            // return response()->json(['error' => $validatedData->errors()], 422);
+            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.');
         }
-        // dd($validatedData);
         $email = auth()->user()->email;
 
         // $user = DB::table('aspnetusers')->where('email', $email)->first();
-        
+
         $updateEmail = User::where('email', $email)
-        ->update(['email' => $validatedData['email']]);
+        ->update(['email' => $request['email']]);
 
        if($updateEmail){
 
-           return response()->json(['success' => 'Email Successfully Changed']);
+           return  redirect()->back()->with('success','Email Successfully Changed');
        }else{
 
-           return response()->json(['error' => 'Current Email is not matched'], 422);
+           return  redirect()->back()->with('error' , 'Current Email is not matched', 422);
        }
     }
 
