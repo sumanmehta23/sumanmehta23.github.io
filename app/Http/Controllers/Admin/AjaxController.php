@@ -2772,7 +2772,10 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function($row){
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action'])
+                ->addColumn('checkbox', function($row){
+                    return "<input type='checkbox' class='row-checkbox' >";
+                })
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action', 'checkbox'])
                 ->make(true);
         }
 

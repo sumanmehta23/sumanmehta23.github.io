@@ -205,13 +205,17 @@
             }
         },
       columns: [
+        // {
+        //     data: null,
+        //     orderable: false,
+        //     searchable: false,
+        //     render: function(data, type, row) {
+        //         return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
+        //     }
+        // },
         {
-            data: null,
-            orderable: false,
-            searchable: false,
-            render: function(data, type, row) {
-                return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
-            }
+          data: 'checkbox',
+          name: 'checkbox'
         },
         {
           data: 'id',
@@ -283,15 +287,15 @@
     });
 
     // Ensure master checkbox updates correctly when individual checkboxes are clicked
-    $('#tableIbUsers').on('change', '.row-checkbox', function() {
-        const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
-        $('#select-all').prop('checked', allChecked); // Update master checkbox
-    });
+    // $('#tableIbUsers').on('change', '.row-checkbox', function() {
+    //     const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+    //     $('#select-all').prop('checked', allChecked); // Update master checkbox
+    // });
 
     // Maintain "Select All" state after DataTable redraw
-    $('#tableIbUsers').on('draw.dt', function() {
-        const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
-        $('#select-all').prop('checked', allChecked);
-    });
+    // $('#tableIbUsers').on('draw.dt', function() {
+    //     const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+    //     $('#select-all').prop('checked', allChecked);
+    // });
 </script>
 @endsection
