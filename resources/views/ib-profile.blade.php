@@ -369,7 +369,7 @@
                                             <?php for ($i = 1; $i <= 7; $i++) { ?>
                                                 <li class="nav-item"
                                                 data-target-form="#LEVEL{{ $i }}"
-                                                role="presentation"><a                                                                           
+                                                role="presentation"><a
                                                     class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
                                                     data-level="{{ $i }}"
                                                     aria-selected="false" role="tab"
@@ -432,7 +432,7 @@
                                             <div class="tab-pane fade<?= $i == 1 ? ' show active' : '' ?>"
                                                 id="LEVEL<?= $i ?>" role="tabpanel">
                                                 <div class="datatable-container">
-                                                    <table class="table table-hover datatable-table ajaxDataTable table-bordered text-nowrap w-100" 
+                                                    <table class="table table-hover datatable-table ajaxDataTable table-bordered text-nowrap w-100"
                                                     id="ajaxDatatable">
                                                         <thead>
                                                             <tr>
@@ -443,7 +443,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            
+
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -600,9 +600,48 @@
                 "processing": true,
                 "order": [[0, "desc"]]
             });
+
+
+            let level = 1;
+
+            var dTtable = $('#ajaxDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                searching: true,
+                ajax: {
+                    url: '/admin/getClientIbProfile',
+                    type: 'GET',
+                    data: function (d) {
+                        d.userId = {!! json_encode($userId) !!};
+                        d.level = level;
+                        console.log('Sending data:', d);
+                    },
+                    dataSrc: function (json) {
+                        return json.data;
+                    }
+                },
+                columns: [
+                    { data: 'email', name: 'email' },
+                    { data: 'total_accounts', name: 'total_accounts' },
+                    { data: 'total_deposit', name: 'total_deposit' },
+                    { data: 'profile_status', name: 'profile_status' }
+                ],
+                order: [[0, "desc"]]
+            });
+
+
+            $('.client-level').on('click', function (e) {
+                e.preventDefault();
+
+                $('.client-level').removeClass('active');
+                $(this).addClass('active');
+
+                level = $(this).data('level');
+                console.log('Selected level:', level);
+
+                dTtable.ajax.reload();
+            });
         });
-
-
 
 
         function updateReferralLink() {
@@ -622,49 +661,6 @@
             updateReferralLink();
         });
     </script>
-    <script>
-        $(document).ready(function () {
 
-            let level = 1; 
-
-            var dTtable = $('#ajaxDatatable').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: true,
-                ajax: {
-                    url: '/admin/getClientIbProfile',
-                    type: 'GET',
-                    data: function (d) {
-                        d.userId = {!! json_encode($userId) !!}; 
-                        d.level = level;
-                        console.log('Sending data:', d); 
-                    },
-                    dataSrc: function (json) {
-                        return json.data;
-                    }
-                },
-                columns: [
-                    { data: 'email', name: 'email' },
-                    { data: 'total_accounts', name: 'total_accounts' },
-                    { data: 'total_deposit', name: 'total_deposit' },
-                    { data: 'profile_status', name: 'profile_status' }
-                ],
-                order: [[0, "desc"]] 
-            });
-
-           
-            $('.client-level').on('click', function (e) {
-                e.preventDefault();
-
-                $('.client-level').removeClass('active'); 
-                $(this).addClass('active'); 
-
-                level = $(this).data('level'); 
-                console.log('Selected level:', level); 
-
-                dTtable.ajax.reload();
-            });
-        });
-    </script>
 
 @endsection
