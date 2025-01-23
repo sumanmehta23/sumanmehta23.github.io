@@ -76,6 +76,7 @@ class MT5Controller extends Controller
     }
     public function updateAccountDetails(Request $request)
     {
+
         if ($request->has(['code', 'account_type'])) {
             $code = $request->input('code');
             $account_type = $request->input('account_type');
@@ -94,14 +95,43 @@ class MT5Controller extends Controller
                 // ], 400);
                 return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             }
+ // dump($code);
+            // dump($account_type);
+            // dump($this);
+
             // Fetch account type details
             $acc = DB::table('account_types')
                 ->where('id', $account_type)
                 ->first();
+            $account =Account::with('user')->where('code',$code)->first();
 
-            $trade_user->Group = $acc->ac_group;
+            if($account){
+                $referral = $account->user->ib1;
+
+                if($referral && ($referral=="wealthytrades")) {
+                    $groupCode = str_replace("DF","SNSI",$acc->ac_group);
+                    $group = AccountType::where('ac_group', $groupCode)->first();
+                    // dd($group);
+                    if($group){
+                        $_POST["options"] =$group->id;
+                        $account_type_id = $group->id;
+                    }
+                }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
+                    $groupCode = str_replace("DF","ALEX",$acc->ac_group);
+                    $group = AccountType::where('ac_group', $groupCode)->first();
+                    if($group){
+                        $_POST["options"] =$group->id;
+                        $account_type_id = $group->id;
+                    }
+                }else{
+                    $groupCode = $acc->ac_group;
+                    $account_type_id = $acc->id;
+                }
+            }
+            $trade_user->Group = $groupCode;
+
             $trade_user->Leverage = $leverage;
-
+            // dd($trade_user);
             // Update user data via API
             $updated_user = "";
             if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
@@ -112,7 +142,7 @@ class MT5Controller extends Controller
                     ->where('code', $code)
                     ->update([
                         'leverage' => $leverage,
-                        'account_type_id' => $acc->id
+                        'account_type_id' => $account_type_id
                     ]);
                 return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
             }
