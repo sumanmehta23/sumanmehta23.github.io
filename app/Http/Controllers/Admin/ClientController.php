@@ -332,7 +332,6 @@ class ClientController extends Controller
             }
             $status = 1;
             $emailConfirmed = 1;
-
             try {
                 // Update user in the database
                 $affectedRows = DB::table('aspnetusers')
@@ -342,7 +341,8 @@ class ClientController extends Controller
                         'password' => $password,
                         'number' => $number,
                         'country_code' => $country_code,
-                        'country' => $country
+                        'country' => $country,
+                        'email' => $email,
                     ]);
 
                 // If update is successful
@@ -456,7 +456,7 @@ class ClientController extends Controller
         $ticket_types = $user->ticket_types;  // Cached ticket types
 
         $userid = $id;
-        
+
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
