@@ -188,5 +188,34 @@ class Users extends Controller
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }
+    public function changeEmail(Request $request)
+    {
+        // dd($request->all());
+        $validatedData =Validator::make($request->all(), [
+            'email' => 'required|unique:aspnetusers',
+        ],
+        [
+            'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+        ]);
+
+        if ($validatedData->fails()) {
+            return redirect()->route('register')->with('errors', $validatedData->errors());
+        }
+        // dd($validatedData);
+        $email = auth()->user()->email;
+
+        // $user = DB::table('aspnetusers')->where('email', $email)->first();
+        
+        $updateEmail = User::where('email', $email)
+        ->update(['email' => $validatedData['email']]);
+
+       if($updateEmail){
+
+           return response()->json(['success' => 'Email Successfully Changed']);
+       }else{
+
+           return response()->json(['error' => 'Current Email is not matched'], 422);
+       }
+    }
 
 }
