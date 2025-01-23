@@ -125,6 +125,7 @@ class MT5Controller extends Controller
                     }
                 }else{
                     $groupCode = $acc->ac_group;
+                    $account_type_id = $acc->id;
                 }
             }
             $trade_user->Group = $groupCode;
