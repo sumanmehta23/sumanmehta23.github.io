@@ -468,6 +468,7 @@ class ClientController extends Controller
 
         $userid = $id;
 
+        $IbTotalDeposits = $user->IbTotalDeposits;
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
@@ -488,7 +489,8 @@ class ClientController extends Controller
             'country_code',
             'clients',
             'userid',
-            'countries'
+            'countries',
+            'IbTotalDeposits'
         ));
     }
 
