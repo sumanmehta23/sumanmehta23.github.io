@@ -195,18 +195,19 @@ class Users extends Controller
     {
         // DB::beginTransaction();
 
+        $validatedData = Validator::make($request->all(), [
+            'email' => 'required|unique:aspnetusers,email'
+        ]);
+
+        if ($validatedData->fails()) {
+            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+        }
+
         try {
             // Validate and update the email
-            $validatedData = Validator::make($request->all(), [
-                'email' => 'required|unique:aspnetusers,email'
-            ]);
-
-            if ($validatedData->fails()) {
-                return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
-            }
-
+            
             $email = auth()->user()->email;
-            $newEmail = $validatedData->validated()['email'];
+            // $newEmail = $validatedData->validated()['email'];
             $user = User::where('email', $email)->first();
 
             if($user){

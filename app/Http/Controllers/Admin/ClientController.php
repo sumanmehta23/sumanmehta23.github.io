@@ -30,6 +30,7 @@ use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
@@ -301,8 +302,17 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
+        $validatedData = Validator::make($request->all(),[
+            'email' => 'required|unique:aspnetusers,email'
+        ]);
+
+        if ($validatedData->fails()) {
+            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+        }
+
         if ($request->has('updateUser')) {
-            $email = $request->input('email');
+            // $email = $request->input('email');
+            $email = $validatedData->validated()['email'];
             $fullname = $request->input('fullname');
             $password = $request->input('password');
             $confirmPassword = $request->input('confirm_password');
@@ -333,26 +343,42 @@ class ClientController extends Controller
             $status = 1;
             $emailConfirmed = 1;
             try {
-                // Update user in the database
-                $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('id'), $user_id)
-                    ->update([
-                        'fullname' => $fullname,
-                        'password' => $password,
-                        'number' => $number,
-                        'country_code' => $country_code,
-                        'country' => $country,
-                        'email' => $email,
-                    ]);
+                
+                $user = User::find($user_id);
+
+                if ($user) {
+                    
+                    $user->fullname = $fullname;
+                    $user->password = $password;
+                    $user->number = $number;
+                    $user->country_code = $country_code;
+                    $user->country = $country;
+                    $user->email = $email;
+                
+                    $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
+                }
+                
+                // $affectedRows = DB::table('aspnetusers')
+                //     ->where(DB::raw('id'), $user_id)
+                //     ->update([
+                //         'fullname' => $fullname,
+                //         'password' => $password,
+                //         'number' => $number,
+                //         'country_code' => $country_code,
+                //         'country' => $country,
+                //         'email' => $email,
+                //     ]);
+                
 
                 // If update is successful
-                if ($affectedRows > 0) {
+                if ($user) {
                     $updateData = [
                         'user_id' => $user_id,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))
                     ];
+                    // dd($updateData);
                     // Log the update (you need to implement this function if not already available)
                     $this->addToUserLog($updateData);
 
