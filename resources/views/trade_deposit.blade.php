@@ -130,7 +130,6 @@
                                                     </div>
                                                     <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                     <div class="Wallet-Transfer trade-deposit-details">
-                                                        {{ dd(session('user')->email) }}
                                                         <form method="post" id="tradeDepositForm">
                                                             @csrf
                                                             <input type="hidden" name="user[email]"

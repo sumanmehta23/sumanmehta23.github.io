@@ -102,6 +102,7 @@ class TradeDepositController extends Controller
         $email = session('clogin');
         $depositamount = $depositdata['deposit'];
         $email = $depositdata['email'];
+        // dd($email);
         $account_id = $depositdata['account_id'];
         $user=auth()->user();
         $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
