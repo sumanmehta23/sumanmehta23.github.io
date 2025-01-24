@@ -118,7 +118,7 @@ class IBController extends Controller
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.id', 'ib_plan_details.ib_category_id')
             ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-            ->where('ib_plan_details.status', 1)
+            ->where(['ib_plan_details.status'=> 1,'ib_plan_details.deleted_at'=> null])
             ->groupBy('ib_plan_details.ib_category_id')
             ->get(); // Use get() to retrieve results
         return view("admin.ib.iblist", ["acc_groups" => $accGroups]);
@@ -128,7 +128,7 @@ class IBController extends Controller
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.id', 'ib_plan_details.ib_category_id')
             ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-            ->where('ib_plan_details.status', 1)
+            ->where(['ib_plan_details.status'=> 1,'ib_plan_details.deleted_at'=> null])
             ->groupBy('ib_plan_details.ib_category_id')
             ->get(); // Use get() to retrieve results
         return view("admin.ib.iblist_active", ["acc_groups" => $accGroups]);
