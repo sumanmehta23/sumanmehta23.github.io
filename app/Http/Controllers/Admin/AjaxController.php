@@ -497,7 +497,7 @@ class AjaxController extends Controller
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
-                    if (Auth::guard('admin')->user()->can('update', $row)) {
+                    // if (Auth::guard('admin')->user()->can('update', $row)) {
                         $html .= "<span class='statusToggle' data-status='{$row->status}'>";
                         if ($row->status == 0) {
                             $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
@@ -523,7 +523,7 @@ class AjaxController extends Controller
                                     </span>";
                         }
                         $html .= "</span>";
-                    }
+                    // }
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='resendToggle' data-status='{$row->email_confirmed}'>";
                         $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>

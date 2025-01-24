@@ -332,7 +332,7 @@ class MT5Accounts extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
-                    '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+                    '<div>Thank you for choosing LQH Markets. Your request for a new trading account will be approved  within 24-48 hours.</div>
 
                     <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
                     <p>Best Regards.</p>
