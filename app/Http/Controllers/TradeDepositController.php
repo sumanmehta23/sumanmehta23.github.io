@@ -102,7 +102,6 @@ class TradeDepositController extends Controller
         $email = session('clogin');
         $depositamount = $depositdata['deposit'];
         $email = $depositdata['email'];
-        // dd($email);
         $account_id = $depositdata['account_id'];
         $user=auth()->user();
         $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
@@ -139,7 +138,6 @@ class TradeDepositController extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
-
         $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
