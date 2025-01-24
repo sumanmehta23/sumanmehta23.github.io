@@ -236,32 +236,53 @@ class User extends Authenticatable
     }
 
     public function getClientsAttribute()
-{
-    if (!$this->ib) {
-        return collect(); // Return an empty collection if the user has no IB.
+    {
+        if (!$this->ib) {
+            return collect(); // Return an empty collection if the user has no IB.
+        }
+
+        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+
+        // Dynamically build the query for all 15 levels using a single query.
+        $clients = IbClientList::where(function ($query) use ($referralCode) {
+            for ($i = 1; $i <= 15; $i++) {
+                $query->orWhere("ib$i", $referralCode);
+            }
+        })->get();
+
+        // Group clients by level (ib1, ib2, ..., ib15)
+        $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
+            foreach (range(1, 15) as $level) {
+                if ($client["ib$level"] === $referralCode) {
+                    return [$level => $client];
+                }
+            }
+            return [];
+        });
+
+        return $groupedClients;
     }
 
-    $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
-
-    // Dynamically build the query for all 15 levels using a single query.
-    $clients = IbClientList::where(function ($query) use ($referralCode) {
-        for ($i = 1; $i <= 15; $i++) {
-            $query->orWhere("ib$i", $referralCode);
+    public function getIbTotalDepositsAttribute()
+    {
+        if (!$this->ib) {
+            return 0; // Return 0 if the user has no IB.
         }
-    })->get();
 
-    // Group clients by level (ib1, ib2, ..., ib15)
-    $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
-        foreach (range(1, 15) as $level) {
-            if ($client["ib$level"] === $referralCode) {
-                return [$level => $client];
+        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+
+        // Dynamically build the query for all 15 levels using a single query.
+        $clients = IbClientList::where(function ($query) use ($referralCode) {
+            for ($i = 1; $i <= 15; $i++) {
+                $query->orWhere("ib$i", $referralCode);
             }
-        }
-        return [];
-    });
+        })->get();
 
-    return $groupedClients;
-}
+        // Calculate the total sum of 'total_deposit'
+        $totalDeposit = $clients->sum('total_deposit');
+
+        return $totalDeposit;
+    }
 
     public function getTicketStatusAttribute()
     {
