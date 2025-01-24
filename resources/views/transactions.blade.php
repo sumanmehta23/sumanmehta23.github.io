@@ -380,6 +380,7 @@
           <input type="hidden" name="email" value="${email}">
           <input type="hidden" name="amount" value="${amount}">
           <input type="hidden" name="status" value="${status}">
+          <input type="hidden" name="statuscode" value="${statuscode}">
           <input type="hidden" name="transaction_id" value="${parsedData}">
           <input type="hidden" name="action" value="update_transaction">
             ${
