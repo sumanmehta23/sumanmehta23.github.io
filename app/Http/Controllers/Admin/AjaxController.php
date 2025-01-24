@@ -1245,6 +1245,9 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->addColumn('code', function($row){
+                    return $row->account->code;
+                })
                 ->addColumn('withdraw_type', function($row){
                     return $row->withdraw_type;
                 })
