@@ -133,7 +133,7 @@
                                                         <form method="post" id="tradeDepositForm">
                                                             @csrf
                                                             <input type="hidden" name="user[email]"
-                                                                value="{{ session('clogin') }}" required
+                                                                value="{{ session('user')->email }}" required
                                                                 class="form-control fill">
                                                             <input class="user_code" type="hidden"
                                                                 name="user[account_id]" value="" readonly required>
