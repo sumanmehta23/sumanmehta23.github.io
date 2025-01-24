@@ -153,6 +153,8 @@
                                                                     <input type="text" class="form-control" name="email"
                                                                         value="{{ session('user')->email }}" required>
                                                                 </div>
+                                                                {{-- <input type="text" class="form-control" name="email_confirmed"
+                                                                    value="{{ session('user')->email_confirmed }}" required readonly> --}}
                                                             </div>
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">

@@ -9,6 +9,7 @@ use App\Models\ClientWallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -188,35 +189,46 @@ class Users extends Controller
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }
+
+
     public function changeEmail(Request $request)
     {
-        // dd($request->all());
-        $validatedData =Validator::make($request->all(), [
-            'email' => 'required|unique:aspnetusers'
-        ],[
-            'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
-        ]);
-        // dd($request['email']);
-        if ($validatedData->fails()) {
+        // DB::beginTransaction();
+
+        try {
+            // Validate and update the email
+            $validatedData = Validator::make($request->all(), [
+                'email' => 'required|unique:aspnetusers,email'
+            ]);
+
+            if ($validatedData->fails()) {
+                return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+            }
+
+            $email = auth()->user()->email;
+            $newEmail = $validatedData->validated()['email'];
+            $user = User::where('email', $email)->first();
+
+            if($user){
+
+                $user->email = $validatedData->validated()['email'];
+                $user->email_confirmed = 0;
+                $user->save(); 
+
+                session()->forget('user');
+                session()->put('user', User::find(auth()->id()));
+
+                // DB::commit();
+
+                return redirect()->back()->with('success', 'Email Successfully Changed');
+            }
+
             
-            // return redirect()->route('user-profile')->with('errors', $validatedData->errors());
-            // return response()->json(['error' => $validatedData->errors()], 422);
-            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.');
+        } catch (\Exception $e) {
+            DB::rollback(); // Rollback on failure
+            return redirect()->back()->with('error', 'Failed to change email.');
         }
-        $email = auth()->user()->email;
-
-        // $user = DB::table('aspnetusers')->where('email', $email)->first();
-
-        $updateEmail = User::where('email', $email)
-        ->update(['email' => $request['email']]);
-
-       if($updateEmail){
-
-           return  redirect()->back()->with('success','Email Successfully Changed');
-       }else{
-
-           return  redirect()->back()->with('error' , 'Current Email is not matched', 422);
-       }
     }
+
 
 }
