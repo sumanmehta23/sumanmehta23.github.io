@@ -253,7 +253,21 @@ class ClientController extends Controller
                 $emailConfirmed = 1;
                 try {
                     // Insert new user into the database
-                    $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    // $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    //     'email' => $email,
+                    //     'fullname' => $fullname,
+                    //     'password' => $password,
+                    //     'country_code' => $country_code,
+                    //     'number' => $number,
+                    //     'username' => $email,
+                    //     'referral' => $referral,
+                    //     'emailToken' => $code,
+                    //     'country' => $country,
+                    //     'status' => $status,
+                    //     'email_confirmed' => $emailConfirmed,
+                    // ]);
+
+                    $user = User::create([
                         'email' => $email,
                         'fullname' => $fullname,
                         'password' => $password,
@@ -267,10 +281,10 @@ class ClientController extends Controller
                         'email_confirmed' => $emailConfirmed,
                     ]);
 
-                    if ($lastInsertId) {
+                    if ($user) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
-                            'user_id' => $lastInsertId,
+                            'user_id' => $user->id,
                             'email' => $email,
                             'type' => 'client_add',
                             'value' => json_encode($request->except(['addUser', 'password', 'confirm_password']))
