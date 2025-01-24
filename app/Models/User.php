@@ -241,7 +241,7 @@ class User extends Authenticatable
         return collect(); // Return an empty collection if the user has no IB.
     }
 
-    $referralCode = $this->ib->referral_code ?: $this->ib->email;
+    $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
 
     // Dynamically build the query for all 15 levels using a single query.
     $clients = IbClientList::where(function ($query) use ($referralCode) {
@@ -257,6 +257,7 @@ class User extends Authenticatable
                 return [$level => $client];
             }
         }
+        return [];
     });
 
     return $groupedClients;
