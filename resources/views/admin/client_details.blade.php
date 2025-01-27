@@ -745,7 +745,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                     <div class="p-0 tab-pane" id="tab-transactions">
                                         <div class="row">
                                             @can('wallet_deposit:viewAny')
