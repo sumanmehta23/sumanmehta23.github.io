@@ -305,7 +305,7 @@ class LoginController extends Controller
         $user = User::where('id', $id)
             ->where('emailToken', $code)
             ->first();
-            
+
         if ($user) {
             if ($user->status == 0) {
                 $user->status = 1;
@@ -321,8 +321,7 @@ class LoginController extends Controller
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                     '<div>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</div>' .
                     '<div><b>Here are your login credentials:</b></div>
-          <div><b>Username: </b>' . $user->email . '</div>
-          <div><b>Password: </b>' . $user->password . '</div>';
+          <div><b>Username: </b>' . $user->email . '</div>';
                 $templateVars = [
                     'name' => $user->fullname,
                     'server_name' => $settings['mt5_company_name'],
