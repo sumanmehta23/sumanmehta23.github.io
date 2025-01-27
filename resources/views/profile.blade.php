@@ -146,7 +146,47 @@
                                                     <h5>Personal Information</h5>
                                                 </div>
                                                 <div class="card-body">
-                                                    <div class="row">
+                                                    <form action={{route("email.change")}} method="post">
+                                                        @csrf
+                                                        <div class="row">
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Full Name</label>
+                                                                    <input type="text" class="form-control" name="name" 
+                                                                        value="{{ session('user')->fullname }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Account Email</label>
+                                                                    <input type="text" class="form-control" name="email"
+                                                                        value="{{ session('user')->email }}" required>
+                                                                </div>
+                                                                {{-- <input type="text" class="form-control" name="email_confirmed"
+                                                                    value="{{ session('user')->email_confirmed }}" required readonly> --}}
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Contact Number</label>
+                                                                    <input type="text" class="form-control" name="telephone"
+                                                                        value="{{ session('user')->number }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Gender</label>
+                                                                    <input type="text" class="form-control"
+                                                                        value="{{ session('user')->gender }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class=" text-end">
+                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update Email</button>
+                                                        </div>
+
+                                                    </form>
+                                                    {{-- <div class="row">
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Full Name</label>
@@ -175,7 +215,7 @@
                                                                     value="{{ session('user')->gender }}" disabled>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div> --}}
                                                 </div>
                                             </div>
                                         </div>
@@ -391,6 +431,26 @@
 
         </div>
     </div>
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}'
+            }).then(() => {
+                window.location.href = '{{ route('user-profile') }}';
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: "Something Went Wrong !!!!",
+                text: '{{ session('error') }}',
+            });
+        </script>
+    @endif
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $("#changePasswordForm").submit(function(e) {

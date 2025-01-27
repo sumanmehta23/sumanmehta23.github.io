@@ -106,7 +106,7 @@
                         <div class="row">
                             <div class="col-6">
                                 <label for="input-label" class="form-label">Email:</label>
-                                <input type="text" class="form-control" name="email" required readonly>
+                                <input type="text" class="form-control" name="email" required >
                             </div>
                             <div class="col-6">
                                 <label for="input-label" class="form-label">Full Name:</label>

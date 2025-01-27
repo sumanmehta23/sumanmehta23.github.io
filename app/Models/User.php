@@ -47,6 +47,37 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected static function booted()
+    {
+        parent::booted();
+        // dd('check');
+
+        static::updated(function ($user) {
+
+            // Check if the email was updated
+            if ($user->isDirty('email')) {
+                // Get the old and new email values
+                $oldEmail = $user->getOriginal('email');
+                $newEmail = $user->email;
+
+                
+                // Update the email in related tables
+                Account::where('email', $oldEmail)->update(['email' => $newEmail]);
+                WalletWithdraw::where('email', $oldEmail)->update(['email' => $newEmail]);
+                WalletDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TradeWithdrawals::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TradeDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TotalBalance::where('email', $oldEmail)->update(['email' => $newEmail]);
+                BonusTransaction::where('email', $oldEmail)->update(['email' => $newEmail]);
+                DemoDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                Ib1::where('email', $oldEmail)->update(['email' => $newEmail]);
+                LoginHistory::where('email', $oldEmail)->update(['email' => $newEmail]);
+                
+                // Add other table updates as necessary
+            }
+        });
+    }
+
     public function BonusTransaction()
     {
         return $this->hasMany(BonusTransaction::class);

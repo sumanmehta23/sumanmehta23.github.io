@@ -595,41 +595,42 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                                                                                aria-labelledby="editUserLabel" aria-hidden="true">
-                                                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                                                    <div class="modal-content">
-                                                                                        <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
-                                                                                            @csrf
-                                                                                            <div class="modal-header">
-                                                                                                <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
-                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                                            </div>
-                                                                                            <div class="mb-0 modal-body custom-card card">
-                                                                                                <input type="hidden" name="id">
-                                                                                                <div class="row">
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Email:</label>
-                                                                                                        <input type="text" class="form-control" name="email" required readonly>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Full Name:</label>
-                                                                                                        <input type="text" class="form-control" name="fullname" required>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Phone:</label>
-                                                                                                        <div class="input-group">
-                                                                                                            <div class="input-group-prepend w-25">
-                                                                                                                <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
-                                                                                                                    required>
-                                                                                                                    <option value="">Country Code</option>
-                                                                                                                    <?php foreach ($countries as $country) { ?>
-                                                                                                                    <option value="+<?= $country['country_code'] ?>"
-                                                                                                                        data-flag="<?= strtolower($country['country_alpha']) ?>">
-                                                                                                                        +<?= $country['country_code'] ?>
-                                                                                                                        (<?= $country['country_name'] ?>)</option>
-                                                                                                                    <?php } ?>
-                                                                                                                </select>
+                                                                        </div>
+                                                                        <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                                                            aria-labelledby="editUserLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                                                <div class="modal-content">
+                                                                                    <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
+                                                                                        @csrf
+                                                                                        <div class="modal-header">
+                                                                                            <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
+                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                        </div>
+                                                                                        <div class="mb-0 modal-body custom-card card">
+                                                                                            <input type="hidden" name="id">
+                                                                                            <div class="row">
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Email:</label>
+                                                                                                    <input type="text" class="form-control" name="email" required>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Full Name:</label>
+                                                                                                    <input type="text" class="form-control" name="fullname" required>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Phone:</label>
+                                                                                                    <div class="input-group">
+                                                                                                        <div class="input-group-prepend w-25">
+                                                                                                            <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
+                                                                                                                required>
+                                                                                                                <option value="">Country Code</option>
+                                                                                                                <?php foreach ($countries as $country) { ?>
+                                                                                                                <option value="+<?= $country['country_code'] ?>"
+                                                                                                                    data-flag="<?= strtolower($country['country_alpha']) ?>">
+                                                                                                                    +<?= $country['country_code'] ?>
+                                                                                                                    (<?= $country['country_name'] ?>)</option>
+                                                                                                                <?php } ?>
+                                                                                                            </select>
 
 
                                                                                                             </div>

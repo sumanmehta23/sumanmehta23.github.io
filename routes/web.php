@@ -164,6 +164,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
+    Route::post('/change_email', [Users::class, 'changeEmail'])->name('email.change');
+
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
