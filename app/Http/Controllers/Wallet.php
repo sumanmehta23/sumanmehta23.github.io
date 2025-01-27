@@ -99,7 +99,7 @@ class Wallet extends Controller
                 ->first();
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
+                '<div>You are receiving this email because you have added a new wallet address to your account.</div>' .
                 '<div>Wallet Address: '.$request->wallet_address.' </div>' .
                 '<div>Click the link below to activate your Wallet Address</div>';
 
