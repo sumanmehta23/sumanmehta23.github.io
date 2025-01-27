@@ -3013,6 +3013,90 @@ class AjaxController extends Controller
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function bulkIbApprove(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'client_id' => 'required', // Ensure it's a comma-separated string
+            'ib_status' => 'required', // Assuming status is an integer
+            'ib_group' => 'required', // Assuming group is an integer
+        ]);
+
+        $clientIds = explode(',', $request['client_id']);
+        $ibStatus = $request['ib_status'];
+        $ibGroup = $request['ib_group'];
+
+        // Track results for each client
+        $results = [];
+
+        foreach ($clientIds as $clientId) {
+            try {
+                $admin = Auth::guard('admin')->user();
+
+                // Attempt to fetch the IB record
+                $ibRecord = Ib1::with('user')->where('id', $clientId)->first();
+
+                // Authorize if the IB record exists
+                if ($ibRecord) {
+                    Gate::forUser($admin)->authorize('ib:update', $ibRecord);
+                }
+
+                // Create a new IB record if none exists
+                if (!$ibRecord) {
+                    $user = User::find($clientId);
+
+                    if ($user) {
+                        $ibRecord = new Ib1();
+                        $ibRecord->user_id = $user->id;
+                        $ibRecord->email = $user->email;
+                        $ibRecord->password = $user->password;
+                        $ibRecord->number = $user->number;
+                        $ibRecord->username = $user->email;
+                        $ibRecord->name = $user->fullname;
+                        $ibRecord->country = $user->country;
+                        $ibRecord->emailToken = $user->emailToken;
+                        $ibRecord->status = 1;
+                        $ibRecord->save();
+                    } else {
+                        $results[$clientId] = ['status' => false, 'message' => 'User not found'];
+                        continue;
+                    }
+                }
+
+                // Update IB details
+                $updated = $ibRecord->update([
+                    'status' => $ibStatus,
+                    'ib_plan_details_id' => $ibGroup,
+                ]);
+
+                // Clear cache for the user
+                Cache::forget('ib1_' . $clientId);
+
+                // Record the result for this client
+                $results[$clientId] = [
+                    'status' => $updated,
+                    'message' => $updated ? 'IB details updated successfully.' : 'Failed to update IB details.',
+                ];
+            } catch (\Exception $e) {
+                // Handle any exceptions and add to results
+                $results[$clientId] = ['status' => false, 'message' => $e->getMessage()];
+            }
+        }
+
+        // Generate a summary of the results
+        $successCount = count(array_filter($results, fn($result) => $result['status']));
+        $failureCount = count($results) - $successCount;
+
+        return redirect()->back()->with('status', [
+            'success' => "Successfully updated {$successCount} clients.",
+            'failure' => "Failed to update {$failureCount} clients.",
+            'details' => $results, // Optional: to debug individual client results
+        ]);
+    }
+
+
+
     public function getClientIbProfile(Request $request)
     {
         $id = request('userId');

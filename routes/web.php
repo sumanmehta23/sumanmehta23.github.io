@@ -205,6 +205,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
 
     Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
+    Route::post('/bulkIbApprove', [AjaxController::class, 'bulkIbApprove']);
     Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);

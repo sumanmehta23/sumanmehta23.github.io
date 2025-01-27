@@ -108,194 +108,212 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="ibRequestApprovalModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form action="/admin/bulkIbApprove" id="ibRequestApproveForm" method="POST">
+            @csrf
+          <input type="hidden" name="client_id" id="client_id" value="">
+          <div class="modal-header">
+            <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="mb-0 modal-body custom-card card">
+            <div class="card-body">
+              <div class="mb-3 row">
+                <div class="m-auto col-lg-4">
+                  <label class="form-label">IB Request Status</label>
+                </div>
+                <div class="col-lg-8">
+                  <select class="form-select" required name="ib_status" aria-label="Default select example">
+                    <option value="" selected>--Status--</option>
+                    <option value="1">Approve</option>
+                    <option value="0">Pending</option>
+                    <option value="2">Rejected</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="m-auto col-lg-4">
+                  <label class="form-label">Account Group</label>
+                </div>
+                <div class="col-lg-8">
+                  <select class="form-select" required name="ib_group" aria-label="Default select example">
+                    <option value="" selected>--Plans--</option>
+                    <?php foreach ($acc_groups as $gp) { ?>
+                      <option value="<?= $gp->id ?>"><?= $gp->ib_cat_name ?></option>
+                    <?php } ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" name="ibRequest" value="update" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  @if (session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('success') }}'
+        }).then(() => {
+            window.location.href = '{{ route('user-profile') }}';
+        });
+    </script>
+  @endif
+  @if (session('error'))
+    <script>
+        Swal.fire({
+            icon: 'warning',
+            title: "Something Went Wrong !!!!",
+            text: '{{ session('error') }}',
+        });
+    </script>
+  @endif
+
 @endsection
 @section("scripts")
 <script>
-  $(document).ready(function() {
-    window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
-  });
+    $(document).ready(function () {
+      window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
 
-  function dTSelection() {
-    // alert("Init");
-    $('.ajaxDataTable tbody tr').off();
-    $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
-      var data = dTtable.row($(this).closest("tr")).data();
-    //   console.log(data.user_id);
-      $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
-      $("#clientName,#clientEmail").html("");
-      $("#clientName").html(data.fullname)
-      $("#clientEmail").html(data.email)
-      $("#client_id").val(data.user_id)
-      $("[name='ib_status']").val(data.ib_status).trigger("change");
-      $("[name='ib_group']").val(data.acc_type).trigger("change");
-      myModal.show();
-      // swal.fire({
-      //   icon: "info",
-      //   title: "IB Status ==> " + data.ib_status
-      // });
+      // Store selected rows' data in an array
+      let selectedRows = [];
 
-    });
-  }
+      // Handle row selection
+      function handleRowSelection() {
+        selectedRows = [];
+        $('.row-checkbox:checked').each(function () {
+          const rowData = dTtable.row($(this).closest('tr')).data();
+          selectedRows.push(rowData);
+        });
+      }
 
-  $(document).ready(function() {
-    window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
-      // order: [[0, "desc"]],
+      // "Select All" functionality
+      $('#select-all').on('click', function () {
+        const isChecked = $(this).is(':checked');
+        $('.row-checkbox').prop('checked', isChecked); // Toggle all checkboxes
+
+        if (isChecked) {
+          // Add all rows to selectedRows
+          selectedRows = dTtable.rows().data().toArray();
+        } else {
+          selectedRows = []; // Clear selection
+        }
+      });
+
+      // Single-row checkbox change event
+      $(document).on('change', '.row-checkbox', function () {
+        const rowId = $(this).data('id');
+        const rowData = dTtable.row($(this).closest('tr')).data();
+
+        if ($(this).is(':checked')) {
+          selectedRows.push(rowData); // Add row data
+        } else {
+          // Remove row data
+          selectedRows = selectedRows.filter(row => row.id !== rowId);
+        }
+
+        // Uncheck "Select All" if a single row is deselected
+        if (!$(this).is(':checked')) {
+          $('#select-all').prop('checked', false);
+        }
+      });
+
+      // DataTable initialization
+      window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
         destroy: true,
-    //   "ajax": {
-    //     "url": "/admin/ajax",
-    //     "type": "GET",
-    //     data: {
-    //       action: 'getPendingIbUsers',
-    //     },
-    //   },
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
         buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    exportOptions: {
-                        columns: [6,7,0,2,3,4,8,9] // Updated column indices to match your use case
-                    }
-                },
-                {
-                    text: 'Perform Bulk Action',
-                    className: 'btn-bulk-action', // Optional: Add a custom class for styling
-                    action: function(e, dt, node, config) {
-                        // Collect selected row IDs
-                        const selectedIds = [];
-                        $('.row-checkbox:checked').each(function() {
-                            selectedIds.push($(this).data('id'));
-                        });
+          {
+            extend: 'excel',
+            text: 'Export to Excel',
+            exportOptions: {
+              columns: [6, 7, 0, 2, 3, 4, 8, 9] // Updated column indices to match your use case
+            }
+          },
+          {
+            text: 'Bulk Approve',
+            className: 'btn-bulk-action', // Optional: Add a custom class for styling
+            action: function (e, dt, node, config) {
+                // Get selected rows
+                const selectedRows = [];
+                $('.row-checkbox:checked').each(function () {
+                    selectedRows.push($(this).data('id')); // Collect all selected row IDs
+                });
 
-                        if (selectedIds.length === 0) {
-                            alert('No rows selected!');
-                            return;
-                        }
-
-                        // Perform the bulk action (e.g., send to server)
-                        $.ajax({
-                            url: '/admin/bulkUpdate',
-                            method: 'POST',
-                            data: {
-                                ids: selectedIds,
-                                _token: $('meta[name="csrf-token"]').attr('content') // CSRF token if required
-                            },
-                            success: function(response) {
-                                alert(response.message);
-                                dt.ajax.reload(); // Reload DataTable
-                            },
-                            error: function(err) {
-                                alert('Error performing bulk action.');
-                            }
-                        });
-                    }
+                if (selectedRows.length === 0) {
+                alert('No rows selected!');
+                return;
                 }
-            ],
+
+                // Populate the hidden input with selected IDs
+                $('#ibRequestApproveForm #client_id').val(selectedRows.join(',')); // Join IDs as a comma-separated string
+
+                // Open the modal
+                const modal = new bootstrap.Modal(document.getElementById('ibRequestApprovalModal'));
+                modal.show();
+            }
+          }
+        ],
 
         order: [[3, "desc"]],
         processing: true,
         serverSide: true,
         searching: true,
         ajax: {
-            url: '/admin/getPendingIbUsers2',
-            type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
-            dataSrc: function(json) {
-                return json.data;
+          url: '/admin/getPendingIbUsers2',
+          type: 'GET',
+          data: {}, // Ensure this is populated dynamically if needed.
+          dataSrc: function (json) {
+            return json.data;
+          }
+        },
+        columns: [
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+              return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
             }
-        },
-      columns: [
-        // {
-        //     data: null,
-        //     orderable: false,
-        //     searchable: false,
-        //     render: function(data, type, row) {
-        //         return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
-        //     }
-        // },
-        {
-          data: 'checkbox',
-          name: 'checkbox'
-        },
-        {
-          data: 'id',
-          name: 'id'
-        },
-        {
-          data: 'name',
-          name: 'name',
-        //   render: function(data,row,row_data){
-        //     var small = "";
-        //     if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
-        //     var return_data = "<a href='/admin/client_details/" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
-        //     return return_data;
-        //   }
-        },
-        // {
-        //   data: 'country',
-        //   name: 'country'
-        // },
-        // {
-        //   data: 'number',
-        //   name: 'number'
-        // },
-        {
-          data: 'total_deposit',
-          name: 'total_deposit'
-        },
-        {
-          data: 'total_withdrawal',
-          name: 'total_withdrawal'
-        },
-        {
-          data: 'status',
-          name: 'status',
-        //   render: function(data) {
-        //     if (data == 1) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-        //     } else if (data == 2) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-        //     } else if (data == 0) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-        //     } else {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-        //     }
-        //   }
-        },
-        {
-          data: 'date',
-          name: 'date',
-        //   render: function(data) {
-        //     var dd = data.split(" ");
-        //     var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
-        //     return rend_date;
-        //   }
-        },
-        { data: 'fullname', name: 'fullname', visible: false },
-        { data: 'fullemail', name: 'fullemail', visible: false},
-        { data: 'created_date', name: 'created_date', visible: false},
-        { data: 'created_time', name: 'created_time', visible: false},
-        // { data: 'action', name: 'action', orderable: false, searchable: false },
-      ]
+          },
+          { data: 'id', name: 'id' },
+          { data: 'name', name: 'name' },
+          { data: 'total_deposit', name: 'total_deposit' },
+          { data: 'total_withdrawal', name: 'total_withdrawal' },
+          { data: 'status', name: 'status' },
+          { data: 'date', name: 'date' },
+          { data: 'fullname', name: 'fullname', visible: false },
+          { data: 'fullemail', name: 'fullemail', visible: false },
+          { data: 'created_date', name: 'created_date', visible: false },
+          { data: 'created_time', name: 'created_time', visible: false },
+        ]
+      });
+
+      // Initialize row selection after table draw
+      function dTSelection() {
+        $('.ajaxDataTable tbody tr').off();
+        $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function () {
+          const data = dTtable.row($(this).closest('tr')).data();
+          $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
+          $("#clientName,#clientEmail").html("");
+          $("#clientName").html(data.fullname);
+          $("#clientEmail").html(data.email);
+          $("#client_id").val(data.user_id);
+          $("[name='ib_status']").val(data.ib_status).trigger("change");
+          $("[name='ib_group']").val(data.acc_type).trigger("change");
+          myModal.show();
+        });
+      }
     });
-  });
+  </script>
 
-  // Handle "Select All" checkbox toggle
-    $('#select-all').on('click', function() {
-        const isChecked = $(this).is(':checked');
-        $('.row-checkbox').prop('checked', isChecked); // Toggle all row checkboxes
-    });
-
-    // Ensure master checkbox updates correctly when individual checkboxes are clicked
-    // $('#tableIbUsers').on('change', '.row-checkbox', function() {
-    //     const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
-    //     $('#select-all').prop('checked', allChecked); // Update master checkbox
-    // });
-
-    // Maintain "Select All" state after DataTable redraw
-    // $('#tableIbUsers').on('draw.dt', function() {
-    //     const allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
-    //     $('#select-all').prop('checked', allChecked);
-    // });
-</script>
 @endsection
