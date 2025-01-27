@@ -177,7 +177,7 @@ class Transactions extends Controller
                                         Withdrawal Date: '.$transaction->withdraw_date.'
                                     </p>
                                     <p>
-                                        Withdrawal Type Wallet Withdrawal
+                                        Withdrawal Type: Wallet Withdrawal
                                     </p>';
 
                         $templateVars = [
