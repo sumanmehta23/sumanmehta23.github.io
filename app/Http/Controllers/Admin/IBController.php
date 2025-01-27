@@ -159,7 +159,7 @@ class IBController extends Controller
 
         // Group and execute the query for plans
         $plans = $plans
-            ->groupBy('created_at')
+            // ->groupBy('created_at')
             ->get();
 
         // Step 3: Query for all account types

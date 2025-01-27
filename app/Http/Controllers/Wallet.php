@@ -283,7 +283,7 @@ class Wallet extends Controller
         if ($response->successful()) {
 
             $responsdata=$response->json();
-            Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
+            // Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
             PaymentLog::where('id', $paymentId)->update([
                 'payment_req' => json_encode($responsdata),
                 'payment_url' => $responsdata['ipn_token'],
