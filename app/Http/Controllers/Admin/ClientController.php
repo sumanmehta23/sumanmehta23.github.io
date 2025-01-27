@@ -32,14 +32,22 @@ use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use App\MT5\MTWebAPI;
+use App\Services\MT5Service;
+use App\MT5\MTRetCode;
 
 class ClientController extends Controller
 {
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         // Gate::validate('view-client');
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
     public function index()
     {
@@ -368,21 +376,21 @@ class ClientController extends Controller
             $status = 1;
             $emailConfirmed = 1;
             try {
-                
+
                 $user = User::find($user_id);
 
                 if ($user) {
-                    
+
                     $user->fullname = $fullname;
                     $user->password = $password;
                     $user->number = $number;
                     $user->country_code = $country_code;
                     $user->country = $country;
                     $user->email = $email;
-                
+
                     $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
                 }
-                
+
                 // $affectedRows = DB::table('aspnetusers')
                 //     ->where(DB::raw('id'), $user_id)
                 //     ->update([
@@ -393,7 +401,7 @@ class ClientController extends Controller
                 //         'country' => $country,
                 //         'email' => $email,
                 //     ]);
-                
+
 
                 // If update is successful
                 if ($user) {
@@ -471,6 +479,16 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
+        if (($error_code = $this->api->UserGet('9dcae627-7a12-4e9b-88cd-c51a77ae1547', $trade_user)) != MTRetCode::MT_RET_OK) {
+            //dd(MTRetCode::GetError($error_code));
+            // return response()->json([
+            //     'status' => 'warning',
+            //     'message' => 'Something went wrong on Updating details',
+            //     'error' => MTRetCode::GetError($error_code)
+            // ], 400);
+            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+        }
+        dd($trade_user);
 
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
