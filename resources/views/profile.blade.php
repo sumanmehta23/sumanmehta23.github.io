@@ -152,7 +152,7 @@
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Full Name</label>
-                                                                    <input type="text" class="form-control" name="name" 
+                                                                    <input type="text" class="form-control" name="name"
                                                                         value="{{ session('user')->fullname }}" required readonly>
                                                                 </div>
                                                             </div>
@@ -182,7 +182,7 @@
                                                         </div>
 
                                                         <div class=" text-end">
-                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update Email</button>
+                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update</button>
                                                         </div>
 
                                                     </form>
