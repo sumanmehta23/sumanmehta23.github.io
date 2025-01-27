@@ -96,7 +96,20 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            <p class="mb-0">{{ session('user')->email }}</p>
+                                            {{-- <p class="mb-0">{{ session('user')->email }}</p>
+                                            @if (session('user')->email_confirmed == 0)
+                                                <div class="card avtar bg-light-primary w-100">
+                                                    <div class="card-header">
+                                                        <label>Email update unverified</label>
+                                                    </div>
+                                                </div>
+                                            @endif --}}
+                                            <div class="d-flex align-items-center">
+                                                <p class="mb-0 me-3">{{ session('user')->email }}</p>
+                                                @if (session('user')->email_confirmed == 0)
+                                                    <label class="text-danger">Email update unverified</label>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div class="col-md-auto"></div>
                                     </div>
@@ -436,7 +449,8 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: '{{ session('success') }}'
+                text: '{{ session('success') }}',
+                message: 'Kindly check your new email address and complete the verification process for this update.'
             }).then(() => {
                 window.location.href = '{{ route('user-profile') }}';
             });
