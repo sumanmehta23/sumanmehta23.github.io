@@ -87,7 +87,13 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            <p class="mb-0">{{ session('user')->email }}</p>
+                                            {{-- <p class="mb-0">{{ session('user')->email }}</p> --}}
+                                            <div class="d-flex align-items-center">
+                                                <p class="mb-0 me-3">{{ session('user')->email }}</p>
+                                                @if (session('user')->email_confirmed == 0)
+                                                    <label class="badge bg-danger text-white ms-2">Email update unverified</label>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div class="col-md-auto"></div>
                                     </div>
@@ -143,7 +149,7 @@
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Full Name</label>
-                                                                    <input type="text" class="form-control" name="name" 
+                                                                    <input type="text" class="form-control" name="name"
                                                                         value="{{ session('user')->fullname }}" required readonly>
                                                                 </div>
                                                             </div>
@@ -219,7 +225,7 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         {{-- {{ dd($user) }} --}}
