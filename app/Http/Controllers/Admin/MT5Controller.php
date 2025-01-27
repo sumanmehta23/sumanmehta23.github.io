@@ -20,6 +20,7 @@ use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Models\AccountType;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\RateLimiter;
 
 class MT5Controller extends Controller
 {
@@ -260,6 +261,20 @@ class MT5Controller extends Controller
 
     public function bonusToAccount(Request $request)
     {
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with(
+                'error',
+                "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            );
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10);
+
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
@@ -337,6 +352,19 @@ class MT5Controller extends Controller
     }
     public function creditBonusToAccount(Request $request)
     {
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with(
+                'error',
+                "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            );
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10);
 
         $eid = $request->input('email');
         $user_id = $request->input('client_id');

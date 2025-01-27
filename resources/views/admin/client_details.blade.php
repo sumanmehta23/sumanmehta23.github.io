@@ -914,7 +914,7 @@
                                                                 </div>
                                                                 <div class="col-8">
                                                                     <p class="h5 text-muted">TOTAL </br>DEPOSIT</p>
-                                                                    <h4>{{ $ib_details->withdraw ? "$" . $ib_details->withdraw : "$0.00" }}
+                                                                    <h4>{{ $IbTotalDeposits ? "$" . $IbTotalDeposits : "$0.00" }}
                                                                     </h4>
                                                                 </div>
                                                             </div>
