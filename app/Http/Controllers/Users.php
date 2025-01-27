@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Services\MailService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,11 @@ use Illuminate\Support\Facades\Validator;
 
 class Users extends Controller
 {
+    protected $mailService;
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
+    }
     public function profile()
     {
         $user_id = auth()->user()->id;
@@ -214,12 +220,38 @@ class Users extends Controller
 
                 $user->email = $validatedData->validated()['email'];
                 $user->email_confirmed = 0;
+                $user->status = 0;
                 $user->save(); 
 
                 session()->forget('user');
                 session()->put('user', User::find(auth()->id()));
 
                 // DB::commit();
+                $settings = settings();
+                $from = $settings['email_from_address'];
+                $toEmail = $user->email;//which email use to send message
+                $uid = uniqid();
+                $emailSubject = $settings['admin_title'] . ' - Activate Your New Email Address';
+                $htmlContent = "";
+                $code = $user->emailToken;
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    // '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Thank you for updating your contact information with LQH Markets. Please </div>' .
+                    '<div>activate your new email address to ensure seamless communication.</div>';
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$user->id}&code=$code",
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Activate",
+                    "subtitle_right" => "Your Account"
+                ];
+                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
                 return redirect()->back()->with('success', 'Email Successfully Changed');
             }

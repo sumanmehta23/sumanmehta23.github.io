@@ -305,6 +305,7 @@ class LoginController extends Controller
         $user = User::where('id', $id)
             ->where('emailToken', $code)
             ->first();
+            
         if ($user) {
             if ($user->status == 0) {
                 $user->status = 1;
