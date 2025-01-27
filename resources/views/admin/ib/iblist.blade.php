@@ -158,25 +158,25 @@
     </div>
   </div>
   @if (session('success'))
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '{{ session('success') }}'
-        }).then(() => {
-            window.location.href = '{{ route('user-profile') }}';
-        });
-    </script>
-  @endif
-  @if (session('error'))
-    <script>
-        Swal.fire({
-            icon: 'warning',
-            title: "Something Went Wrong !!!!",
-            text: '{{ session('error') }}',
-        });
-    </script>
-  @endif
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}'
+            });
+        </script>
+    @endif
+
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Something Went Wrong!',
+                text: '{{ session('error') }}'
+            });
+        </script>
+    @endif
+
 
 @endsection
 @section("scripts")
