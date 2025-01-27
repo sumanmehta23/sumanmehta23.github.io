@@ -25,6 +25,7 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Services\MailService;
 use App\Models\WalletWithdraw;
+use Illuminate\Validation\Rule;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
@@ -302,8 +303,12 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
-        $validatedData = Validator::make($request->all(),[
-            'email' => 'required|unique:aspnetusers,email'
+        $user_id = $request->input('id');
+        $validatedData = Validator::make($request->all(), [
+            'email' => [
+                'required',
+                Rule::unique('aspnetusers', 'email')->ignore($user_id)
+            ],
         ]);
 
         if ($validatedData->fails()) {
@@ -320,7 +325,7 @@ class ClientController extends Controller
             $country_code = $request->input('country_code');
             // $number = $request->input('telephone');
             $number = $request->country_code.$request->telephone;
-            $user_id = $request->input('id');
+            
             $emailNotification = $request->input('email_notification');
 
             $countryCode = Country::where('country_name', $request->country)
@@ -349,7 +354,9 @@ class ClientController extends Controller
                 if ($user) {
                     
                     $user->fullname = $fullname;
-                    $user->password = $password;
+                    if($password){
+                        $user->password = $password;
+                    }
                     $user->number = $number;
                     $user->country_code = $country_code;
                     $user->country = $country;

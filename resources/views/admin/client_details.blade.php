@@ -643,12 +643,12 @@
                                                                                                 </div>
                                                                                                 <div class="col-6">
                                                                                                     <label for="input-label" class="form-label">Password:</label>
-                                                                                                    <input type="password" class="form-control" name="password" required>
+                                                                                                    <input type="password" class="form-control" name="password" >
                                                                                                 </div>
                                                                                                 <div class="col-6">
                                                                                                     <label for="input-label" class="form-label">Confirm Password:</label>
                                                                                                     <input type="password" class="form-control" id="input" name="confirm_password"
-                                                                                                        required>
+                                                                                                        >
                                                                                                 </div>
 
                                                                                                 <div class="col-lg-6 d-flex align-items-end">
