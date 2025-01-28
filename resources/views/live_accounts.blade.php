@@ -95,7 +95,7 @@
                                     <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                         <span class="">Deposit <i class="ti ti-database-import"></i></span>
                                     </a>
-                                    <a href="#"
+                                    {{-- <a href="#"
                                         class="btn btn-sm btn-outline-secondary d-grid"
                                         data-bs-toggle="modal"
                                         data-bs-target="#changeLeverage"
@@ -103,7 +103,7 @@
                                         data-account="{{ $acc->id }}"
                                         data-leverage="{{ $acc->leverage }}">
                                         Edit Leverage
-                                    </a>
+                                    </a> --}}
                                 </div>
                             @elseif ($acc->code && $acc->code == 'Rejected')
                                 <div class="d-flex align-items-center">
