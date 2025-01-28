@@ -34,7 +34,7 @@
             margin-bottom:10%
         }
     }
-   
+
 .lqh-sale-banner {
   width: 100%;
   background-size: 100%;
@@ -110,7 +110,7 @@
                                     id="auth-active-slide"><?= isset($success) ? '3' : '1' ?></b> to 3 </h5>
                         </div>
                     </div>
-                    
+
                     @if(config("services.sales.promotion"))
                         {{-- <div class="mt-4 w-100 sales-banner-container">
                             <div class="banner-link" ><div class="lqh-sale-banner">
@@ -128,7 +128,7 @@
                                         role="tab" data-slide-index="1" aria-controls="auth-1" aria-selected="true"></a>
                                 </li>
                             </ul>
-                            
+
                             <form method="post" data-v-97e32e5a="" class="needs-validation" id="formRegister">
                                 @csrf
                                 <div data-v-97e32e5a="" class="tab-content">
@@ -435,6 +435,21 @@
                     swal.fire({
                         icon: "error",
                         title: "Invalid email address",
+                    });
+                    return;
+                }
+                const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+                if (!passwordPattern.test(password)) {
+                    swal.fire({
+                        icon: "error",
+                        title: "Password must meet the following criteria:",
+                        html: "<ul style='text-align: left;'>"
+                            + "<li>At least 8 characters</li>"
+                            + "<li>At least 1 lowercase letter (a-z)</li>"
+                            + "<li>At least 1 uppercase letter (A-Z)</li>"
+                            + "<li>At least 1 number (0-9)</li>"
+                            + "<li>At least 1 special character</li>"
+                            + "</ul>",
                     });
                     return;
                 }
