@@ -99,7 +99,7 @@
                                             <div class="d-flex align-items-center">
                                                 <p class="mb-0 me-3">{{ session('user')->email }}</p>
                                                 @if ($user->email_confirmed == 0)
-                                                    <label class="badge bg-danger text-white ms-2">Email update unverified</label>
+                                                    <label class="badge bg-danger text-white ms-2" style="font-size: 14px;">Email update unverified</label>
                                                 @endif
                                             </div>
                                         </div>
