@@ -166,15 +166,15 @@ class Transaction extends Controller
             ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
             ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
             ->first();
-                // dd($details);
+
             if($details->client_wallet_id){
-                $client_wallet = ClientWallet::where('id', $details->client_wallet_id)
+                $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
                 ->where('status', 1)
                 ->first();
             }else{
                 $client_wallet='';
             }
-
+            // dd($client_wallet);
             // dd($details);
             return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
         }
