@@ -96,10 +96,9 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            {{-- <p class="mb-0">{{ session('user')->email }}</p> --}}
                                             <div class="d-flex align-items-center">
                                                 <p class="mb-0 me-3">{{ session('user')->email }}</p>
-                                                @if (session('user')->email_confirmed == 0)
+                                                @if ($user->email_confirmed == 0)
                                                     <label class="badge bg-danger text-white ms-2">Email update unverified</label>
                                                 @endif
                                             </div>
