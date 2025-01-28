@@ -341,7 +341,7 @@ class MT5Accounts extends Controller
                     'name' => $user->fullname,
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "",
+                    "title_right" => "Account Creation Request Pending",
                     "subtitle_right" => "",
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
@@ -748,7 +748,7 @@ class MT5Accounts extends Controller
                     'name' =>  $user->fullname,
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "",
+                    "title_right" => "Account Creation Request Pending",
                     "subtitle_right" => "",
                 ];
 
