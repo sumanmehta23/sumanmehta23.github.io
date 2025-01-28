@@ -168,10 +168,10 @@ class Transactions extends Controller
                                         Transaction Details
                                     </p>
                                     <p>
-                                        Withdraw Cancelled Amount: '.$depositAmount.'
+                                        Withdrawal Cancelled Amount: '.$depositAmount.'
                                     </p>
                                     <p>
-                                        Transaction ID: '.$transaction_id.'
+                                        Transaction ID: '.$did.'
                                     </p>
                                     <p>
                                         Withdrawal Date: '.$transaction->withdraw_date.'
@@ -186,7 +186,7 @@ class Transactions extends Controller
                             'email' => $settings['email_from_address'],
                             'content' => $content,
                             'title_right' => 'Transaction',
-                            'subtitle_right' => 'Declined',
+                            'subtitle_right' => 'Cancelled',
                             'btn_text' => 'Go To Dashboard',
                         ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
