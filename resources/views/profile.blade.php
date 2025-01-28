@@ -552,7 +552,7 @@
                 if (result.isConfirmed) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('delete_wallet_address') }}", // Update to match your route
+                        url: "{{ route('verify_delete_wallet_address') }}", // Update to match your route
                         data: {
                             id: wallet_id,
                             _token: "{{ csrf_token() }}" // Ensure CSRF protection
@@ -561,7 +561,7 @@
                             if (data.success) {
                                 Swal.fire({
                                     icon: "success",
-                                    title: data.message || "Wallet Address Deleted"
+                                    title: "Verify Your Email For Wallet Address Deletion"
                                 }).then(() => {
                                     location.reload();
                                 });

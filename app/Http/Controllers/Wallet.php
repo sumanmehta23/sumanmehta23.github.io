@@ -117,6 +117,68 @@ class Wallet extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function verify_delete_wallet_address(Request $request)
+    {
+        $wallet_id = $request->id;
+
+        // Check for pending withdrawals
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        // Delete the wallet
+        // $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
+
+        // if ($deleted) {
+        //     return response()->json([
+        //         'success' => true,
+        //         'message' => 'Wallet address deleted successfully.'
+        //     ]);
+        // } else {
+        //     return response()->json([
+        //         'error' => true,
+        //         'message' => 'Failed to delete wallet address. Please try again.'
+        //     ]);
+        // }
+
+        $settings = settings();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->get();
+
+        $toEmail = $wallet->user->email;
+        $type = 'Verify Wallet Address Deletion Request';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $content =
+                '<div>Dear ' . $wallet->user->fullname . '!</div>' .
+                '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
+                '<div>Wallet Address: '.$wallet->id.' </div>';
+
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?wallet={$wallet}",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Wallet Address"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+        return response()->json([
+                    'success' => true,
+                    'message' => 'Wallet address deletion email send successfully.'
+                ]);
+    }
+
     public function delete_wallet_address(Request $request)
     {
         $wallet_id = $request->id;
@@ -134,6 +196,27 @@ class Wallet extends Controller
         // Delete the wallet
         $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
 
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - Wallet Address Deletion Verified';
+        $htmlContent = "";
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content =
+            '<div>Dear ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+            '<div>Your wallet address has been successfully confirmed, and you’re all set to withdraw your earnings.</div>';
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/login",
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Wallet Address Verification",
+            "subtitle_right" => "Successful",
+            "btn_text" => "Login"
+        ];
+        $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
         if ($deleted) {
             return response()->json([
                 'success' => true,
