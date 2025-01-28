@@ -157,7 +157,7 @@ class Transactions extends Controller
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
                         $content = '<p>
                                         We are pleased to inform you that your withdraw request has been successfully cancelled.
                                     </p>
