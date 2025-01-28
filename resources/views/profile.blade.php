@@ -96,14 +96,7 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            {{-- <p class="mb-0">{{ session('user')->email }}</p>
-                                            @if (session('user')->email_confirmed == 0)
-                                                <div class="card avtar bg-light-primary w-100">
-                                                    <div class="card-header">
-                                                        <label>Email update unverified</label>
-                                                    </div>
-                                                </div>
-                                            @endif --}}
+                                            {{-- <p class="mb-0">{{ session('user')->email }}</p> --}}
                                             <div class="d-flex align-items-center">
                                                 <p class="mb-0 me-3">{{ session('user')->email }}</p>
                                                 @if (session('user')->email_confirmed == 0)

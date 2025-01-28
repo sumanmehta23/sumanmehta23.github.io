@@ -638,26 +638,27 @@
                                                                                                                 placeholder="Enter phone number">
                                                                                                         </div>
                                                                                                     </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Country:</label>
-                                                                                                        <select class="form-select" id="country" name="country" required>
-                                                                                                            <option value="">Select Country</option>
-                                                                                                            <?php foreach ($countries as $country) { ?>
-                                                                                                            <option value="<?= $country['country_name'] ?>">
-                                                                                                                <?= $country['country_name'] ?>
-                                                                                                            </option>
-                                                                                                            <?php } ?>
-                                                                                                        </select>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Password:</label>
-                                                                                                        <input type="password" class="form-control" name="password" required>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Confirm Password:</label>
-                                                                                                        <input type="password" class="form-control" id="input" name="confirm_password"
-                                                                                                            required>
-                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Country:</label>
+                                                                                                    <select class="form-select" id="country" name="country" required>
+                                                                                                        <option value="">Select Country</option>
+                                                                                                        <?php foreach ($countries as $country) { ?>
+                                                                                                        <option value="<?= $country['country_name'] ?>">
+                                                                                                            <?= $country['country_name'] ?>
+                                                                                                        </option>
+                                                                                                        <?php } ?>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Password:</label>
+                                                                                                    <input type="password" class="form-control" name="password" >
+                                                                                                </div>
+                                                                                                <div class="col-6">
+                                                                                                    <label for="input-label" class="form-label">Confirm Password:</label>
+                                                                                                    <input type="password" class="form-control" id="input" name="confirm_password"
+                                                                                                        >
+                                                                                                </div>
 
                                                                                                     <div class="col-lg-6 d-flex align-items-end">
                                                                                                         <div class="form-check form-switch">
