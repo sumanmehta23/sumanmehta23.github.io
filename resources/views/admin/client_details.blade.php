@@ -596,155 +596,156 @@
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                                                                            aria-labelledby="editUserLabel" aria-hidden="true">
-                                                                            <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                                                <div class="modal-content">
-                                                                                    <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
-                                                                                        @csrf
-                                                                                        <div class="modal-header">
-                                                                                            <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
-                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                                                    aria-labelledby="editUserLabel" aria-hidden="true">
+                                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                                        <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
+                                                                            <div class="modal-content">
+                                                                            @csrf
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="mb-0 modal-body custom-card card">
+                                                                                    <input type="hidden" name="id">
+                                                                                    <div class="row">
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Email:</label>
+                                                                                            <input type="text" class="form-control" name="email" required>
                                                                                         </div>
-                                                                                        <div class="mb-0 modal-body custom-card card">
-                                                                                            <input type="hidden" name="id">
-                                                                                            <div class="row">
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Email:</label>
-                                                                                                    <input type="text" class="form-control" name="email" required>
-                                                                                                </div>
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Full Name:</label>
-                                                                                                    <input type="text" class="form-control" name="fullname" required>
-                                                                                                </div>
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Phone:</label>
-                                                                                                    <div class="input-group">
-                                                                                                        <div class="input-group-prepend w-25">
-                                                                                                            <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
-                                                                                                                required>
-                                                                                                                <option value="">Country Code</option>
-                                                                                                                <?php foreach ($countries as $country) { ?>
-                                                                                                                <option value="+<?= $country['country_code'] ?>"
-                                                                                                                    data-flag="<?= strtolower($country['country_alpha']) ?>">
-                                                                                                                    +<?= $country['country_code'] ?>
-                                                                                                                    (<?= $country['country_name'] ?>)</option>
-                                                                                                                <?php } ?>
-                                                                                                            </select>
-
-
-                                                                                                            </div>
-                                                                                                            <input type="text" class="form-control" id="phone_number" name="telephone"
-                                                                                                                placeholder="Enter phone number">
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Country:</label>
-                                                                                                    <select class="form-select" id="country" name="country" required>
-                                                                                                        <option value="">Select Country</option>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Full Name:</label>
+                                                                                            <input type="text" class="form-control" name="fullname" required>
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Phone:</label>
+                                                                                            <div class="input-group">
+                                                                                                <div class="input-group-prepend w-25">
+                                                                                                    <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
+                                                                                                        required>
+                                                                                                        <option value="">Country Code</option>
                                                                                                         <?php foreach ($countries as $country) { ?>
-                                                                                                        <option value="<?= $country['country_name'] ?>">
-                                                                                                            <?= $country['country_name'] ?>
-                                                                                                        </option>
+                                                                                                        <option value="+<?= $country['country_code'] ?>"
+                                                                                                            data-flag="<?= strtolower($country['country_alpha']) ?>">
+                                                                                                            +<?= $country['country_code'] ?>
+                                                                                                            (<?= $country['country_name'] ?>)</option>
                                                                                                         <?php } ?>
                                                                                                     </select>
                                                                                                 </div>
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Password:</label>
-                                                                                                    <input type="password" class="form-control" name="password" >
-                                                                                                </div>
-                                                                                                <div class="col-6">
-                                                                                                    <label for="input-label" class="form-label">Confirm Password:</label>
-                                                                                                    <input type="password" class="form-control" id="input" name="confirm_password"
-                                                                                                        >
-                                                                                                </div>
-
-                                                                                                    <div class="col-lg-6 d-flex align-items-end">
-                                                                                                        <div class="form-check form-switch">
-                                                                                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                                                                                name="email_notification">
-                                                                                                            <label class="form-check-label">Send Notification Email</label>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
+                                                                                                    <input type="text" class="form-control" id="phone_number" name="telephone"
+                                                                                                        placeholder="Enter phone number">
                                                                                             </div>
-                                                                                            <div class="modal-footer">
-                                                                                                <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
-                                                                                            </div>
-                                                                                        </form>
+                                                                                        </div>
                                                                                     </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Country:</label>
+                                                                                            <select class="form-select" id="country" name="country" required>
+                                                                                                <option value="">Select Country</option>
+                                                                                                <?php foreach ($countries as $country) { ?>
+                                                                                                <option value="<?= $country['country_name'] ?>">
+                                                                                                    <?= $country['country_name'] ?>
+                                                                                                </option>
+                                                                                                <?php } ?>
+                                                                                            </select>
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Password:</label>
+                                                                                            <input type="password" class="form-control" name="password" >
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Confirm Password:</label>
+                                                                                            <input type="password" class="form-control" id="input" name="confirm_password"
+                                                                                                >
+                                                                                        </div>
+
+                                                                                            <div class="col-lg-6 d-flex align-items-end">
+                                                                                                <div class="form-check form-switch">
+                                                                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                                                                        name="email_notification">
+                                                                                                    <label class="form-check-label">Send Notification Email</label>
+                                                                                                </div>
+                                                                                            </div>
                                                                                 </div>
                                                                             </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     @endcan
-                                                    {{-- <button type="button"
-                                                        class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
-                                                        data-bs-toggle="modal" data-bs-target="#addTicketModal">
-                                                        CREATE TICKET
-                                                    </button> --}}
-                                                    <div class="card custom-card">
-                                                        <div class="card-header">
-                                                            <div class="d-flex justify-content-between">
-                                                                <div class="card-title">INTRODUCING BROKER</div>
-                                                                <div>
-                                                                    <?php if ($user->ib_status == 0): ?>
-                                                                    <span
-                                                                        class="badge bg-outline-warning text-end">Pending</span>
-                                                                    <?php elseif ($user->ib_status == 1): ?>
-                                                                    <span class="badge bg-outline-success text-end">Active
-                                                                        IB</span>
-                                                                    <?php else: ?>
-                                                                    <span class="badge bg-outline-info text-end">Not
-                                                                        Requested</span>
-                                                                    <?php endif; ?>
-                                                                </div>
+                                                </div>
+
+                                                {{-- <button type="button"
+                                                    class="py-3 my-2 btn btn-outline-dark btn-sm w-100"
+                                                    data-bs-toggle="modal" data-bs-target="#addTicketModal">
+                                                    CREATE TICKET
+                                                </button> --}}
+                                                <div class="card custom-card">
+                                                    <div class="card-header">
+                                                        <div class="d-flex justify-content-between">
+                                                            <div class="card-title">INTRODUCING BROKER</div>
+                                                            <div>
+                                                                <?php if ($user->ib_status == 0): ?>
+                                                                <span
+                                                                    class="badge bg-outline-warning text-end">Pending</span>
+                                                                <?php elseif ($user->ib_status == 1): ?>
+                                                                <span class="badge bg-outline-success text-end">Active
+                                                                    IB</span>
+                                                                <?php else: ?>
+                                                                <span class="badge bg-outline-info text-end">Not
+                                                                    Requested</span>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
-                                                        <div class="card-body">
-                                                            <p class="card-text">A request on behalf of client for creating
-                                                                IB profile for this client.
-                                                            </p>
-                                                            <?php if ($user->ib_status != 1): ?>
-                                                            <?php if ($user->ib_status == '0'): ?>
-                                                            <button type="button"
-                                                                class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                data-bs-toggle="modal" data-bs-target="#ibModal">
-                                                                Approve Request
-                                                            </button>
-                                                            <?php else: ?>
-                                                            <button type="button"
-                                                                class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                data-bs-toggle="modal" data-bs-target="#ibModal"
-                                                                data-fullname="<?= $user->fullname ?>"
-                                                                data-email="<?= $user->email ?>"
-                                                                data-enc="<?= ($user->email) ?>"
-                                                                data-ib_status="<?= $user->ib_status ?>">
-                                                                Request To become ib
-                                                            </button>
-                                                            <?php endif; ?>
-                                                            <?php else: ?>
-                                                            <hr style="opacity:.1;">
-                                                            <label class="col-form-label col-12 text-lg-start">
-                                                                Copy this IB referral link to share with potential clients!
-                                                            </label>
-                                                            <div class="mb-4 col-12">
-                                                                <div class="mb-2 input-group"><input type="text"
-                                                                        class="form-control" id="pc-clipboard-1"
-                                                                        value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
-                                                                        readonly=""><button
-                                                                        class="btn btn-lg btn-primary cb" id="ibClient"
-                                                                        data-clipboard-target="#pc-clipboard-1"><i
-                                                                            class="fa fa-copy"></i></button>
-                                                                </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p class="card-text">A request on behalf of client for creating
+                                                            IB profile for this client.
+                                                        </p>
+                                                        <?php if ($user->ib_status != 1): ?>
+                                                        <?php if ($user->ib_status == '0'): ?>
+                                                        <button type="button"
+                                                            class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                            data-bs-toggle="modal" data-bs-target="#ibModal">
+                                                            Approve Request
+                                                        </button>
+                                                        <?php else: ?>
+                                                        <button type="button"
+                                                            class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                            data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                            data-fullname="<?= $user->fullname ?>"
+                                                            data-email="<?= $user->email ?>"
+                                                            data-enc="<?= ($user->email) ?>"
+                                                            data-ib_status="<?= $user->ib_status ?>">
+                                                            Request To become ib
+                                                        </button>
+                                                        <?php endif; ?>
+                                                        <?php else: ?>
+                                                        <hr style="opacity:.1;">
+                                                        <label class="col-form-label col-12 text-lg-start">
+                                                            Copy this IB referral link to share with potential clients!
+                                                        </label>
+                                                        <div class="mb-4 col-12">
+                                                            <div class="mb-2 input-group"><input type="text"
+                                                                    class="form-control" id="pc-clipboard-1"
+                                                                    value="https://{{ $_SERVER['HTTP_HOST'] }}/register/ref?refercode={{ base64_encode($user->email) }}"
+                                                                    readonly=""><button
+                                                                    class="btn btn-lg btn-primary cb" id="ibClient"
+                                                                    data-clipboard-target="#pc-clipboard-1"><i
+                                                                        class="fa fa-copy"></i></button>
                                                             </div>
-                                                            <?php endif; ?>
                                                         </div>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
+
+
+                                        </div>
+                                    </div>
                                     <div class="p-0 tab-pane" id="tab-transactions">
                                         <div class="row">
                                             @can('wallet_deposit:viewAny')
