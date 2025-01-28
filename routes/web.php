@@ -157,6 +157,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
+    Route::post('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
     Route::get('/wallet_deposit', [Wallet::class, 'showDepositForm'])->name('wallet_deposit');
     Route::get('/wallet_withdrawal', [Wallet::class, 'showWithdrawalForm'])->name('wallet_withdrawal');
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');

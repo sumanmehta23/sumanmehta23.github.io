@@ -387,23 +387,37 @@
                                                                             }
                                                                         @endphp
                                                                         <td  class="{{ $tdClass }}">{{ $verification }}</td>
-                                                                        <td
-                                                                            class="text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
-                                                                            @if ($acc->status == 0)
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Inactive Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-left"></i>
-                                                                                </a>
-                                                                            @else
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Active Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-right"></i>
-                                                                                </a>
-                                                                            @endif
+                                                                        <td class="text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
+                                                                            <div class="d-flex align-items-center">
+                                                                                @if ($acc->status == 0)
+                                                                                    <a class="wallet-action me-2"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Inactive Wallet Address"
+                                                                                        data-toggle="{{ $acc->id }}">
+                                                                                        <i class="f-24 ti ti-toggle-left"></i>
+                                                                                    </a>
+                                                                                @else
+                                                                                    <a class="wallet-action me-2"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Active Wallet Address"
+                                                                                        data-toggle="{{ $acc->id }}">
+                                                                                        <i class="f-24 ti ti-toggle-right"></i>
+                                                                                    </a>
+                                                                                @endif
+                                                                                <span class="badge text-danger delete_wallet_address"
+                                                                                      data-id="{{ $acc->id }}"
+                                                                                      data-bs-toggle="tooltip"
+                                                                                      title="Delete Wallet Address">
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                                        <path d="M4 7l16 0" />
+                                                                                        <path d="M10 11l0 6" />
+                                                                                        <path d="M14 11l0 6" />
+                                                                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                                                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                                                    </svg>
+                                                                                </span>
+                                                                            </div>
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
@@ -522,6 +536,55 @@
                 }
             });
         });
+        $(".delete_wallet_address").click(function (e) {
+            e.preventDefault();
+
+            const wallet_id = this.getAttribute("data-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to undo this action!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('delete_wallet_address') }}", // Update to match your route
+                        data: {
+                            id: wallet_id,
+                            _token: "{{ csrf_token() }}" // Ensure CSRF protection
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: data.message || "Wallet Address Deleted"
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Warning",
+                                    text: data.message || "Something went wrong!"
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "An error occurred while deleting wallet address. Please try again."
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
         $(document).ready(function() {
         // Show "Edit Picture" text when hovering over the image
         $('#profile_image').hover(function() {

@@ -116,6 +116,38 @@ class Wallet extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function delete_wallet_address(Request $request)
+    {
+        $wallet_id = $request->id;
+
+        // Check for pending withdrawals
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        // Delete the wallet
+        $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
+
+        if ($deleted) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Wallet address deleted successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'error' => true,
+                'message' => 'Failed to delete wallet address. Please try again.'
+            ]);
+        }
+    }
+
+
     public function wallet_address_verify(Request $request){
         $settings = settings();
         $id = $request->query('id');
