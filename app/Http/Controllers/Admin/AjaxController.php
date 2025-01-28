@@ -1148,7 +1148,7 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        // dd($request->search);
+        // dd($request->length);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
@@ -1174,7 +1174,13 @@ class AjaxController extends Controller
         }
 
 
+
         if ($request->ajax()) {
+            // if ($request->length == -1) {
+            //     $query = $query->get(); // Fetch all rows
+            // } else {
+            //     $query = $query->paginate($request->length);
+            // }
             return DataTables::of($query)
                 ->filter(function ($query) use ($request) {
                     if (!empty($request->search['value'])) {
