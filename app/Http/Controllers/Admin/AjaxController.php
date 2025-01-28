@@ -959,6 +959,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('deposit_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -1055,6 +1065,17 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
                 return DataTables::of($rmCondition)
+                    ->filter(function ($rmCondition) use ($request) {
+                        if (!empty($request->search['value'])) {
+                            $searchValue = $request->search['value'];
+                            $rmCondition->where(function($q) use ($searchValue) {
+                                $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_transaction_fee', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                            });
+                        }
+                    })
                     ->editColumn('email', function ($row) {
                         $fullname = $row->user
                             ? ($row->user->fullname)
@@ -1155,6 +1176,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $query->where(function($q) use ($searchValue) {
+                            $q->where('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -1696,6 +1727,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
