@@ -70,7 +70,7 @@
                                                                     {{ 'Pending' }}
                                                                 </h4>
                                                             @endif
-                                                            <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
+                                                            <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->email }}</span></p>
                                                         </div>
                                                     </div>
                                                 </td>
