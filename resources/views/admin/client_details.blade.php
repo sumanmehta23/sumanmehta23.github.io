@@ -617,6 +617,8 @@
                                                                                             <label for="input-label" class="form-label">Full Name:</label>
                                                                                             <input type="text" class="form-control" name="fullname" required>
                                                                                         </div>
+                                                                                    </div>
+                                                                                    <div class="row">
                                                                                         <div class="col-6">
                                                                                             <label for="input-label" class="form-label">Phone:</label>
                                                                                             <div class="input-group">
@@ -636,7 +638,6 @@
                                                                                                         placeholder="Enter phone number">
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
                                                                                         <div class="col-6">
                                                                                             <label for="input-label" class="form-label">Country:</label>
                                                                                             <select class="form-select" id="country" name="country" required>
@@ -648,6 +649,8 @@
                                                                                                 <?php } ?>
                                                                                             </select>
                                                                                         </div>
+                                                                                    </div>
+                                                                                    <div class="row">
                                                                                         <div class="col-6">
                                                                                             <label for="input-label" class="form-label">Password:</label>
                                                                                             <input type="password" class="form-control" name="password" >
@@ -665,11 +668,11 @@
                                                                                                     <label class="form-check-label">Send Notification Email</label>
                                                                                                 </div>
                                                                                             </div>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                            <div class="modal-footer">
-                                                                                <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
-                                                                            </div>
+                                                                                <div class="modal-footer">
+                                                                                    <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
+                                                                                </div>
                                                                         </form>
                                                                     </div>
                                                                 </div>
