@@ -310,6 +310,8 @@ class Wallet extends Controller
         $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->where('verified', 1)
+            ->where('wallet_delete_verification', 0)
+            ->where('deleted_at', NULL)
             ->get();
         $settings = $this->settings;
         $liveaccount_details = Account::with('accountType')
