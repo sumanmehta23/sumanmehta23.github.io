@@ -163,7 +163,6 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-                '<div>Dear ' . $wallet->user->fullname . '!</div>' .
                 '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
                 '<div>Wallet Address: '.$wallet->id.' </div>';
 
@@ -173,8 +172,8 @@ class Wallet extends Controller
             'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?wallet={$wallet}",
             'email' => $from,
             "content" => $content,
-            "title_right" => "Activate",
-            "subtitle_right" => "Your Wallet Address"
+            "title_right" => "Verify",
+            "subtitle_right" => "Wallet Address Deletion Request"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
@@ -186,6 +185,7 @@ class Wallet extends Controller
 
     public function delete_wallet_address(Request $request)
     {
+        dd($request->all());
         $wallet_id = $request->id;
 
         // Check for pending withdrawals
