@@ -149,7 +149,8 @@ class Wallet extends Controller
 
         $content =
                 '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
-                '<div>Wallet Address: '.$wallet->wallet_address.' </div>';
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>For security purposes, please verify this request by clicking the link below</div>';
 
         $templateVars = [
             'name' => $wallet->user->fullname,
@@ -184,7 +185,8 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<div>We’re writing to confirm that your request to delete the following wallet address has been successfully verified and processed:</div>'.
-            '<div>Wallet Address: '.$wallet->id.' </div>';
+            '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+            '<div>The wallet address is now removed from your wallet. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
         $templateVars = [
             'name' => $wallet->user->fullname,
             'server_name' => $settings['mt5_company_name'],
