@@ -106,6 +106,7 @@ Route::get('register/ref', function () {
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
+
 Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
@@ -136,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
+    Route::get('/delete_wallet_address/{wallet}', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
@@ -158,7 +160,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
     Route::post('/verify_delete_wallet_address', [Wallet::class, 'verify_delete_wallet_address'])->name('verify_delete_wallet_address');
-    Route::post('/delete_wallet_address/{wallet}', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
+
     Route::get('/wallet_deposit', [Wallet::class, 'showDepositForm'])->name('wallet_deposit');
     Route::get('/wallet_withdrawal', [Wallet::class, 'showWithdrawalForm'])->name('wallet_withdrawal');
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
