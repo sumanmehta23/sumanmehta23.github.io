@@ -159,7 +159,8 @@ class Wallet extends Controller
             'email' => $from,
             "content" => $content,
             "title_right" => "Verify",
-            "subtitle_right" => "Wallet Address Deletion Request"
+            "subtitle_right" => "Wallet Address Deletion Request",
+            "btn_text" => "Verify Wallet Address Deletion"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
