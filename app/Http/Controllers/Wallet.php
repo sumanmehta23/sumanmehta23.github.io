@@ -185,7 +185,6 @@ class Wallet extends Controller
 
     public function delete_wallet_address(Request $request)
     {
-        dd($request->all());
         $wallet_id = $request->clientWallet_id;
         $wallet = ClientWallet::where('id', $wallet_id)->first();
         // Delete the wallet
