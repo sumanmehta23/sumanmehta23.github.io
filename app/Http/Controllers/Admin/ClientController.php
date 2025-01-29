@@ -381,7 +381,7 @@ class ClientController extends Controller
             }
             $errorString = '';
             foreach ($filteredErrors as $error) {
-                $errorString .= '• ' . $error; // Using <br> instead of \n
+                $errorString .= '• ' . $error ;
             }
             $errorString = html_entity_decode($errorString);
             // dd($errorString);

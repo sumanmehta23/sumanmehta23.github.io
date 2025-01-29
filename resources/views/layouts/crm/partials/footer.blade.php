@@ -62,7 +62,7 @@
         </div>
     </div>
 </div> --}}
-@if(session('success'))
+{{-- @if(session('success'))
     <script>
         Swal.fire({
             title: '{{ session('success') }}',
@@ -77,6 +77,23 @@
     <script>
         Swal.fire({
             title: '{{ session('warning') }}',
+            html: '{!! session('error') !!}',
+            icon: 'warning'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif --}}
+
+@if(session('warning'))
+    @php
+        $errorMessage = session('error');
+    @endphp
+    <script>
+        Swal.fire({
+            title: '{{ session('warning') }}',
+            html: `{!! $errorMessage !!}`,
             icon: 'warning'
         }).then(() => {
             // Optionally, you can reload the page after showing the alert
@@ -84,6 +101,8 @@
         });
     </script>
 @endif
+
+
 
 
 
