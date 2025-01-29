@@ -186,7 +186,7 @@ class Wallet extends Controller
     public function delete_wallet_address(Request $request)
     {
         $wallet_id = $request->clientWallet_id;
-        $wallet = ClientWallet::where('id', $wallet_id)->first();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
         // Delete the wallet
         $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
 
@@ -210,17 +210,11 @@ class Wallet extends Controller
             "subtitle_right" => "Verified",
             "btn_text" => "Login"
         ];
-        $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
+        $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
         if ($deleted) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Wallet address deleted successfully.'
-            ]);
+            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Address succesfully deleted');
         } else {
-            return response()->json([
-                'error' => true,
-                'message' => 'Failed to delete wallet address. Please try again.'
-            ]);
+            return redirect()->route('user-profile')->with('error', 'Something went wrong');
         }
     }
 
