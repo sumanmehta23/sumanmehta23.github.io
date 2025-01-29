@@ -160,13 +160,15 @@ class LoginController extends Controller
             return redirect()->back()->with('error', "Sorry! This email was not found.");
         }
     }
+
     public function resetPassword(Request $request)
     {
         $id = $request->query('id');
         $code = $request->query('code');
         // Check user exists
         $user = User::where('id', $id)->where('emailToken', $code)->first();
-        if ($user) {
+
+        if ($user && $user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 5))) {
             if ($request->isMethod('post')) {
                 // Validate
                 $request->validate([
@@ -177,12 +179,15 @@ class LoginController extends Controller
                     ->where('email', $user->email)
                     ->update(['password' => $password]);
                 // Send the email notification
+
+                $user->update(['emailToken' => null]);
+
                 $this->sendPasswordResetSuccessEmail($user);
                 return redirect()->route('login')->with('status', 'Password has been reset successfully. You can now login.');
             }
             return view('auth.reset-password', ['user' => $user]); // Return view
         } else {
-            return redirect()->route('login')->with('error', 'No account found with the given ID and token.');
+            return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
         }
     }
 
