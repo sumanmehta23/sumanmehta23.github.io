@@ -475,6 +475,7 @@
     <script>
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
+
             $.ajax({
                 type: "POST",
                 url: "{{ route('password.change') }}",
@@ -488,11 +489,18 @@
                     });
                 },
                 error: function(xhr) {
-                    console.log(xhr);
-                    const errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                    let errorMessage = "Something went wrong";
+                    if (xhr.responseJSON?.errors) {
+                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join("");
+                        errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                    } else if (xhr.responseJSON?.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
                     Swal.fire({
                         icon: 'error',
-                        title: errorMessage,
+                        title: "Password Requirements Not Met",
+                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
                     });
                 }
             });
