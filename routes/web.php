@@ -108,6 +108,7 @@ Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
 
 Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
+Route::get('/delete_wallet_address/{wallet}', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
@@ -137,7 +138,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
-    Route::get('/delete_wallet_address/{wallet}', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
+
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
