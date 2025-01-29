@@ -169,7 +169,7 @@ class Wallet extends Controller
         $templateVars = [
             'name' => $wallet->user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?wallet={$wallet}",
+            'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?wallet_id={$wallet->id}",
             'email' => $from,
             "content" => $content,
             "title_right" => "Verify",
