@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -88,14 +89,33 @@ class LoginController extends Controller
     }
     public function sendResetLink(Request $request)
     {
+        $key = 'sendResetLink:' . (auth()->id() ?: $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            $hours = floor($retryAfter / 3600);
+            $minutes = floor(($retryAfter % 3600) / 60);
+            $seconds = $retryAfter % 60;
+            $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+            return redirect()->back()->with(
+                'error',
+                "Too many requests. Please wait {$formattedTime} before trying again."
+            );
+        }
+        RateLimiter::hit($key, 600);
+
         $request->validate([
             'txtemail' => 'required|email',
         ]);
+
         $email = $request->input('txtemail');
         $user = User::where('email', $email)->first();
         if ($user) {
             $code =Str::random(60);
-            User::where('email', $email)->update(['emailToken' => $code]);
+            // User::where('email', $email)->update(['emailToken' => $code]);
+            User::where('email', $email)->update([
+                'emailToken' => $code,
+                'email_token_time' => now(), // Set the current timestamp
+            ]);
             $settings = settings();
             $from = $settings['email_from_address'];
             $emailSubject = $settings['admin_title'] . ' Password Reset';

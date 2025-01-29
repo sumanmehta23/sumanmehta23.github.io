@@ -328,7 +328,7 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
-        // dd($request->all());
+
         $user_id = $request->input('id');
         $validatedData = Validator::make($request->all(), [
             'email' => [
@@ -340,13 +340,13 @@ class ClientController extends Controller
                 'sometimes', // Apply validation only if password is provided
                 'nullable',
                 'string',
-                'confirmed',
                 'min:8', // At least 8 characters
                 'regex:/[a-z]/', // At least one lowercase letter
                 'regex:/[A-Z]/', // At least one uppercase letter
                 'regex:/\d/', // At least one number
                 'regex:/[\W_]/', // At least one special character
             ],
+            'confirm_password' => 'required_with:password|same:password',
         ]);
 
         if ($validatedData->fails()) {
@@ -388,12 +388,12 @@ class ClientController extends Controller
             // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
             return redirect()->back()->with('error', $errorString);
         }
-
         if ($request->has('updateUser')) {
             // $email = $request->input('email');
             $email = $validatedData->validated()['email'];
             $fullname = $request->input('fullname');
             $password = $request->input('password');
+
             $confirmPassword = $request->input('confirm_password');
             $country = $request->input('country');
             $country_code = $request->input('country_code');
