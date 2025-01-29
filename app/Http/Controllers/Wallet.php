@@ -147,7 +147,12 @@ class Wallet extends Controller
         // }
 
         $settings = settings();
-        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->get();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        if ($wallet) {
+            $wallet->wallet_delete_verification = true; // or 1, depending on the DB type
+            $wallet->save();
+        }
 
         $toEmail = $wallet->user->email;
         $type = 'Verify Wallet Address Deletion Request';
