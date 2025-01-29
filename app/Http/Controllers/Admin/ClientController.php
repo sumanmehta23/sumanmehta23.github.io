@@ -328,16 +328,65 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
+        // dd($request->all());
         $user_id = $request->input('id');
         $validatedData = Validator::make($request->all(), [
             'email' => [
                 'required',
-                Rule::unique('aspnetusers', 'email')->ignore($user_id)
+                'email',
+                Rule::unique('aspnetusers', 'email')->ignore($user_id),
+            ],
+            'password' => [
+                'sometimes', // Apply validation only if password is provided
+                'nullable',
+                'string',
+                'confirmed',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
             ],
         ]);
 
         if ($validatedData->fails()) {
-            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+            $errors = $validatedData->errors();
+            $filteredErrors = [];
+
+            // Check which specific regex rule failed and return only unmet requirements
+            if ($errors->has('password')) {
+                $password = $request->password;
+
+                if (!preg_match('/[a-z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                }
+                if (!preg_match('/[A-Z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                }
+                if (!preg_match('/\d/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one number.';
+                }
+                if (!preg_match('/[\W_]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one special character.';
+                }
+                if (strlen($password) < 8) {
+                    $filteredErrors[] = 'The password must be at least 8 characters long.';
+                }
+                if ($errors->has('password.confirmed')) {
+                    $filteredErrors[] = 'Passwords do not match.';
+                }
+            }
+            if ($errors->has('email')) {
+                $filteredErrors[] = $errors->get('email')[0];
+            }
+            $errorString = '';
+            foreach ($filteredErrors as $error) {
+                $errorString .= '• ' . $error; // Using <br> instead of \n
+            }
+            $errorString = html_entity_decode($errorString);
+            // dd($errorString);
+            // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+            return redirect()->back()->with('error', $errorString);
         }
 
         if ($request->has('updateUser')) {
@@ -350,7 +399,7 @@ class ClientController extends Controller
             $country_code = $request->input('country_code');
             // $number = $request->input('telephone');
             $number = $request->country_code.$request->telephone;
-            
+
             $emailNotification = $request->input('email_notification');
 
             $countryCode = Country::where('country_name', $request->country)
@@ -373,11 +422,11 @@ class ClientController extends Controller
             $status = 1;
             $emailConfirmed = 1;
             try {
-                
+
                 $user = User::find($user_id);
 
                 if ($user) {
-                    
+
                     $user->fullname = $fullname;
                     if($password){
                         $user->password = $password;
@@ -386,10 +435,10 @@ class ClientController extends Controller
                     $user->country_code = $country_code;
                     $user->country = $country;
                     $user->email = $email;
-                
+
                     $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
                 }
-                
+
                 // $affectedRows = DB::table('aspnetusers')
                 //     ->where(DB::raw('id'), $user_id)
                 //     ->update([
@@ -400,7 +449,7 @@ class ClientController extends Controller
                 //         'country' => $country,
                 //         'email' => $email,
                 //     ]);
-                
+
 
                 // If update is successful
                 if ($user) {
