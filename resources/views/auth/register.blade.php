@@ -203,11 +203,11 @@
                                         </div>
                                         <div data-v-97e32e5a="" class="my-4 row">
                                             <div data-v-97e32e5a="" class="col-sm-12">
-                                                <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Full Name</label><input data-v-97e32e5a=""
-                                                        type="text" class="form-control" placeholder="Full name"
-                                                        required name="fullname"><!----><small data-v-97e32e5a="">*as it
-                                                        appears on your ID Card / Proof of Identity</small></div>
+                                                <div data-v-97e32e5a="" class="form-group">
+                                                    <label data-v-97e32e5a="" class="form-label">Full Name</label>
+                                                        <input data-v-97e32e5a="" type="text" class="form-control" placeholder="Full name" required name="fullname" maxlength="30" onpaste="handlePaste(event)">
+                                                        <small data-v-97e32e5a="">*as it appears on your ID Card / Proof of Identity</small>
+                                                </div>
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group country-code-wrapper"><label
@@ -401,6 +401,16 @@
     </div>
 
     <script>
+        function handlePaste(event) {
+            const pasteData = event.clipboardData.getData('text');
+
+            const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+/;
+
+            if (urlPattern.test(pasteData)) {
+                event.preventDefault();
+                alert('Hyperlinks are not allowed in the Full Name field.');
+            }
+        }
         $(document).ready(function() {
 
             function formatOption(option) {
