@@ -194,13 +194,26 @@ class LoginController extends Controller
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string|max:255|unique:aspnetusers',
             'email' => 'required|string|email|max:255|unique:aspnetusers',
-            'password' => 'required|string|confirmed',
+            // 'password' => 'required|string|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
+            ],
             'country' => 'required|string',
             'country_code' => 'required',
             'telephone' => 'required',
         ], [
             'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+            'password.min' => 'The password must be at least 8 characters long.',
+            'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
+            'password.confirmed' => 'Passwords do not match.',
         ]);
 
 

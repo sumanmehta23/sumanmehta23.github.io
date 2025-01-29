@@ -438,18 +438,37 @@
                     });
                     return;
                 }
-                const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-                if (!passwordPattern.test(password)) {
+                const passwordPattern = {
+                    length: /.{8,}/,
+                    lowercase: /[a-z]/,
+                    uppercase: /[A-Z]/,
+                    number: /\d/,
+                    special: /[\W_]/
+                };
+
+                let errors = [];
+
+                if (!passwordPattern.length.test(password)) {
+                    errors.push("<li>At least 8 characters</li>");
+                }
+                if (!passwordPattern.lowercase.test(password)) {
+                    errors.push("<li>At least 1 lowercase letter (a-z)</li>");
+                }
+                if (!passwordPattern.uppercase.test(password)) {
+                    errors.push("<li>At least 1 uppercase letter (A-Z)</li>");
+                }
+                if (!passwordPattern.number.test(password)) {
+                    errors.push("<li>At least 1 number (0-9)</li>");
+                }
+                if (!passwordPattern.special.test(password)) {
+                    errors.push("<li>At least 1 special character</li>");
+                }
+
+                if (errors.length > 0) {
                     swal.fire({
                         icon: "error",
                         title: "Password must meet the following criteria:",
-                        html: "<ul style='text-align: left;'>"
-                            + "<li>At least 8 characters</li>"
-                            + "<li>At least 1 lowercase letter (a-z)</li>"
-                            + "<li>At least 1 uppercase letter (A-Z)</li>"
-                            + "<li>At least 1 number (0-9)</li>"
-                            + "<li>At least 1 special character</li>"
-                            + "</ul>",
+                        html: "<ul style='text-align: left;'>" + errors.join("") + "</ul>",
                     });
                     return;
                 }
