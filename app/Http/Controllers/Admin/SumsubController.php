@@ -107,17 +107,24 @@ class SumsubController extends Controller
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (only for debugging)
+        curl_setopt($ch, CURLOPT_FAILONERROR, true);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
         curl_close($ch);
-        dd($response);
+
+        if ($error) {
+            return "cURL Error: " . $error;
+        }
 
         if ($httpCode === 200) {
             $data = json_decode($response, true);
             return $data['id'] ?? "Applicant ID not found";
         } else {
-            return "Error: " . $response;
+            return "Error ($httpCode): " . $response;
         }
 
 
