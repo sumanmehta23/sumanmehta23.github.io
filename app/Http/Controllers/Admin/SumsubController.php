@@ -76,6 +76,10 @@ class SumsubController extends Controller
     //     return response()->json(['error' => 'No token received'], 500);
     // }
 
+    function generateSignature($secretKey, $url, $timestamp) {
+        return hash_hmac('sha256', $timestamp . $url, $secretKey);
+    }
+
     public function sumsub_data(Request $request)
     {
         // Store sensitive credentials in the .env file for security
