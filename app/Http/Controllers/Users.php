@@ -100,6 +100,9 @@ class Users extends Controller
 
         if ($user &&(Hash::check($request->current_password, $user->password))) {
             User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             return response()->json(['success' => 'Password Successfully Changed']);
         } else {
             return response()->json(['message' => 'Current Password is not matched'], 422);
