@@ -965,6 +965,7 @@ class AjaxController extends Controller
                         $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('deposit_amount', 'LIKE', "%{$searchValue}%")
                             ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
                             ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
@@ -1072,6 +1073,7 @@ class AjaxController extends Controller
                                 $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('withdraw_transaction_fee', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('withdraw_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
                                 ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                             });
                         }
@@ -1188,6 +1190,7 @@ class AjaxController extends Controller
                         $query->where(function($q) use ($searchValue) {
                             $q->where('deposit_type', 'LIKE', "%{$searchValue}%")
                             ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
                             ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }

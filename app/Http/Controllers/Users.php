@@ -209,6 +209,7 @@ class Users extends Controller
             $email = Session::get('clogin');
             $type = $request->input('type');
             $payload = $request->input('payload');
+
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
@@ -243,13 +244,34 @@ class Users extends Controller
                 } else {
                     return response()->json(['status' => 'false', 'message' => 'Status in progress..']);
                 }
-            } else {
+            }else {
                 return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
             }
         }
 
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
+    }
+
+    public function logVerification(Request $request)
+    {
+        // Validate incoming data
+        $request->validate([
+            'applicantId' => 'required|string',
+            'applicantEmail' => 'required|email',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        // Create a new KYC log entry in the database
+        KycLog::create([
+            'client_id' => $request->applicantEmail,
+            'user_id' => $request->userId,
+            'callback_code' => 'Applicant ID',
+            'callback_payload' => json_encode($request->applicantId),
+        ]);
+
+        // Return a response indicating success
+        return response()->json(['status' => 'success', 'message' => 'KYC log saved']);
     }
 
 

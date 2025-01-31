@@ -39,6 +39,7 @@ use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
+use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 Route::get("/se",function(){
@@ -157,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
@@ -306,7 +308,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
-
+        Route::get('/sumsub_data', [SumsubController::class, 'sumsub_data']);
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

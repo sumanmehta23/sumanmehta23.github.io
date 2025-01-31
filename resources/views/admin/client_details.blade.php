@@ -219,24 +219,27 @@
                                             <div class="user-wrap">
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
-                                                    <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->kyc_verify == 0
-                                                        ? '<span class="badge bg-outline-danger">Pending KYC</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                            : '') !!}</span>
-                                                    |
-                                                    <span
-                                                        class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->status == 0
-                                                        ? '<span class="badge bg-outline-danger">Inactive</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">Active</span>'
-                                                            : '') !!}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="px-2"><span
+                                                                class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                        |
+                                                        <span class="d-flex flex-column px-2">{!! $user->kyc_verify == 0
+                                                            ? '<span class="badge bg-outline-danger">Pending KYC</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">KYC Verified</span>'
+                                                                : '') !!}<a class="mb-1 fs-12" id="sumsub-info" href=""></a></span>
+                                                        |
+                                                        <span
+                                                            class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
+                                                        |
+                                                        <span class="px-2">{!! $user->status == 0
+                                                            ? '<span class="badge bg-outline-danger">Inactive</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">Active</span>'
+                                                                : '') !!}</span>
+                                                    </div>
                                                 </h6>
+                                                <div id="sumsub-websdk-container" hidden></div>
                                                 <div class="row">
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
@@ -1696,4 +1699,30 @@
 
     });
 </script>
+<script src="https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
+<script>
+    function getApplicantData(email) {
+
+        $.ajax({
+            url: "{{ url('/admin/sumsub_data') }}",
+            type: "GET",
+            data: { email: email  },
+            success: function(response) {
+                if (response.token) {
+                    console.log(response);
+                } else {
+                    console.error("Failed to fetch token");
+                }
+            },
+            error: function(error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+    const userEmail = "{{ $user->email }}";
+    getApplicantData(userEmail);
+
+</script>
+
 @endsection
