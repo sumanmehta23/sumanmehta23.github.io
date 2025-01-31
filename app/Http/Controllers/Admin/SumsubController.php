@@ -104,10 +104,10 @@ class SumsubController extends Controller
         // Headers with proper authentication
         $headers = [
             "X-App-Token" => $appToken,
-            "X-App-Access-Ts" => $timestamp,
-            "X-App-Access-Sig" => $signatureHex,
+            // "X-App-Access-Ts" => $timestamp,
+            // "X-App-Access-Sig" => $signatureHex,
             "Accept" => "application/json",
-            "Content-Type" => "application/json"
+            // "Content-Type" => "application/json"
         ];
         $curl = curl_init();
 
