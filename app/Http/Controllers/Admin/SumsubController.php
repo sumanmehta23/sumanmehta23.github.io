@@ -89,85 +89,118 @@ class SumsubController extends Controller
 
         $email = $request->email;
 
-        $requestMethod = 'GET'; // Ensure the correct method is used
-        $requestUrl = "/resources/applicants?externalUserId=" . urlencode($email)."/one"; // Correct endpoint
-        $timestamp = time();
+        $BASE_URL = "https://api.sumsub.com";
 
-        // Generate the correct signature
-        $stringToSign = $timestamp . $requestMethod . $requestUrl;
-        $signature = hash_hmac('sha256', $stringToSign, $secretKey, true);
-        $signatureHex = bin2hex($signature);
+        $endpoint = "/resources/applicants/-;externalUserId?search=" . urlencode($email);
+        $url = $BASE_URL . $endpoint;
+        $timestamp = round(microtime(true) * 1000); // Current timestamp in milliseconds
+        $signature = generateSignature($secretKey, $endpoint, $timestamp);
 
-        // Set API URL
-        // $apiUrl = "https://api.sumsub.com" . $requestUrl;
-
-        // Headers with proper authentication
         $headers = [
-            "X-App-Token" => $appToken,
-            // "X-App-Access-Ts" => $timestamp,
-            // "X-App-Access-Sig" => $signatureHex,
-            "Accept" => "application/json",
-            // "Content-Type" => "application/json"
+            "X-App-Token: $appToken",
+            "X-App-Access-Sig: $signature",
+            "X-App-Access-Ts: $timestamp",
+            "Accept: application/json"
         ];
-        $curl = curl_init();
 
-        curl_setopt_array($curl, [
-        //   CURLOPT_URL => $apiUrl,
-          CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId=".$email."/one",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => "",
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => "GET",
-          CURLOPT_HTTPHEADER => $headers,
-          CURLOPT_POSTFIELDS => '',
-        ]);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        $response = curl_exec($curl);
-        // dump($response);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
         dd($response);
-        $err = curl_error($curl);
 
-        curl_close($curl);
-
-        // Make API request using Laravel's HTTP client
-        // $response = Http::withHeaders($headers)->get($apiUrl);
-
-        // Get the HTTP status code
-        $statusCode = $response->status();
-        $responseBody = $response->json();
-
-        // Debugging Output (Useful for testing)
-        \Log::info("Sumsub API Response:", [
-            "url" => $apiUrl,
-            "status" => $statusCode,
-            "response" => $responseBody
-        ]);
-
-        // Handle errors properly
-        if ($statusCode === 405) {
-            return response()->json(["error" => "Method Not Allowed. Check if GET is the correct method."], 405);
-        } elseif ($statusCode >= 400) {
-            return response()->json([
-                "error" => "API request failed",
-                "status" => $statusCode,
-                "response" => $responseBody
-            ], $statusCode);
-        }
-
-        // Check if an applicant exists
-        if (isset($responseBody['id'])) {
-            return response()->json([
-                "applicantId" => $responseBody['id']
-            ], 200);
+        if ($httpCode === 200) {
+            $data = json_decode($response, true);
+            return $data['id'] ?? "Applicant ID not found";
         } else {
-            return response()->json([
-                "error" => "Applicant not found or invalid response",
-                "response" => $responseBody
-            ], 404);
+            return "Error: " . $response;
         }
+
+
+
+        // $requestMethod = 'GET'; // Ensure the correct method is used
+        // $requestUrl = "/resources/applicants?externalUserId=" . urlencode($email)."/one"; // Correct endpoint
+        // $timestamp = time();
+
+        // // Generate the correct signature
+        // $stringToSign = $timestamp . $requestMethod . $requestUrl;
+        // $signature = hash_hmac('sha256', $stringToSign, $secretKey, true);
+        // $signatureHex = bin2hex($signature);
+
+        // // Set API URL
+        // // $apiUrl = "https://api.sumsub.com" . $requestUrl;
+
+        // // Headers with proper authentication
+        // $headers = [
+        //     "X-App-Token" => $appToken,
+        //     // "X-App-Access-Ts" => $timestamp,
+        //     // "X-App-Access-Sig" => $signatureHex,
+        //     "Accept" => "application/json",
+        //     // "Content-Type" => "application/json"
+        // ];
+        // $curl = curl_init();
+
+        // curl_setopt_array($curl, [
+        // //   CURLOPT_URL => $apiUrl,
+        //   CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId=".$email."/one",
+        //   CURLOPT_RETURNTRANSFER => true,
+        //   CURLOPT_ENCODING => "",
+        //   CURLOPT_MAXREDIRS => 10,
+        //   CURLOPT_TIMEOUT => 0,
+        //   CURLOPT_FOLLOWLOCATION => true,
+        //   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        //   CURLOPT_CUSTOMREQUEST => "GET",
+        //   CURLOPT_HTTPHEADER => $headers,
+        //   CURLOPT_POSTFIELDS => '',
+        // ]);
+
+        // $response = curl_exec($curl);
+        // // dump($response);
+        // dd($response);
+        // $err = curl_error($curl);
+
+        // curl_close($curl);
+
+        // // Make API request using Laravel's HTTP client
+        // // $response = Http::withHeaders($headers)->get($apiUrl);
+
+        // // Get the HTTP status code
+        // $statusCode = $response->status();
+        // $responseBody = $response->json();
+
+        // // Debugging Output (Useful for testing)
+        // \Log::info("Sumsub API Response:", [
+        //     "url" => $apiUrl,
+        //     "status" => $statusCode,
+        //     "response" => $responseBody
+        // ]);
+
+        // // Handle errors properly
+        // if ($statusCode === 405) {
+        //     return response()->json(["error" => "Method Not Allowed. Check if GET is the correct method."], 405);
+        // } elseif ($statusCode >= 400) {
+        //     return response()->json([
+        //         "error" => "API request failed",
+        //         "status" => $statusCode,
+        //         "response" => $responseBody
+        //     ], $statusCode);
+        // }
+
+        // // Check if an applicant exists
+        // if (isset($responseBody['id'])) {
+        //     return response()->json([
+        //         "applicantId" => $responseBody['id']
+        //     ], 200);
+        // } else {
+        //     return response()->json([
+        //         "error" => "Applicant not found or invalid response",
+        //         "response" => $responseBody
+        //     ], 404);
+        // }
     }
 
 }
