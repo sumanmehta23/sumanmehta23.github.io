@@ -90,7 +90,7 @@ class SumsubController extends Controller
         $email = $request->email;
 
         $requestMethod = 'GET'; // Ensure the correct method is used
-        $requestUrl = "/resources/applicants/-;externalUserId=" . urlencode($email)."/one"; // Correct endpoint
+        // $requestUrl = "/resources/applicants?externalUserId=" . urlencode($email)."/one"; // Correct endpoint
         $timestamp = time();
 
         // Generate the correct signature
@@ -99,7 +99,7 @@ class SumsubController extends Controller
         $signatureHex = bin2hex($signature);
 
         // Set API URL
-        $apiUrl = "https://api.sumsub.com" . $requestUrl;
+        // $apiUrl = "https://api.sumsub.com" . $requestUrl;
 
         // Headers with proper authentication
         $headers = [
@@ -112,7 +112,8 @@ class SumsubController extends Controller
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-          CURLOPT_URL => $apiUrl,
+        //   CURLOPT_URL => $apiUrl,
+          CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId={{$email}}/one",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => "",
           CURLOPT_MAXREDIRS => 10,
