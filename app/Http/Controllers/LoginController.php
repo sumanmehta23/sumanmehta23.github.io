@@ -53,10 +53,10 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-            dd($request->input('email'));
+
          // Find the user by email
          $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
-
+         dd($user);
          // Check if user exists
          if (!$user) {
              return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
