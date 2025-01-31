@@ -90,7 +90,7 @@ class SumsubController extends Controller
         $email = $request->email;
 
         $requestMethod = 'GET'; // Ensure the correct method is used
-        // $requestUrl = "/resources/applicants?externalUserId=" . urlencode($email)."/one"; // Correct endpoint
+        $requestUrl = "/resources/applicants?externalUserId=" . urlencode($email)."/one"; // Correct endpoint
         $timestamp = time();
 
         // Generate the correct signature
