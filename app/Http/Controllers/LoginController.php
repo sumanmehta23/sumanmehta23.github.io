@@ -61,7 +61,7 @@ class LoginController extends Controller
          if (!$user) {
              return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
          }
-         dd(Hash::needsRehash($user->password));
+dd($user);
          // Check if the password is in plain text (not hashed)
          if (Hash::needsRehash($user->password)) {
              // If it's plain text, hash it and update the user's password
