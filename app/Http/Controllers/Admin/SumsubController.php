@@ -112,11 +112,12 @@ class SumsubController extends Controller
 
         // Make API request using Laravel's HTTP client
         $response = Http::withHeaders($headers)->get($apiUrl);
-        dd($response);
+
         // Get the HTTP status code
         $statusCode = $response->status();
         $responseBody = $response->json();
-
+        dump($statusCode);
+        dd($responseBody);
         // Debugging Output (Useful for testing)
         \Log::info("Sumsub API Response:", [
             "url" => $apiUrl,
