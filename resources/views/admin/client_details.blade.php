@@ -1709,7 +1709,7 @@
             data: { email: email  },
             success: function(response) {
                 if (response.token) {
-                    launchSumsubWebSdk(response.token, userEmail);
+                    console.log(response);
                 } else {
                     console.error("Failed to fetch token");
                 }
@@ -1723,42 +1723,6 @@
     const userEmail = "{{ $user->email }}";
     getApplicantData(userEmail);
 
-    let token;
-
-    function launchSumsubWebSdk(accessToken, email, applicantPhone) {
-        token = accessToken;
-        let applicantId = '';
-        let snsWebSdkInstance = snsWebSdk
-            .init(token, () => getNewAccessToken())
-            .withConf({
-                lang: "en",
-                email: email,
-                phone: applicantPhone,
-            })
-            .withOptions({
-                addViewportTag: false,
-                adaptIframeHeight: true,
-            })
-            .onMessage((type, payload) => {
-                if(type == 'idCheck.onApplicantLoaded'){
-                    console.log("Received message:", type, payload);
-                    applicantId = payload.applicantId;  // Capture applicantId
-                    // Display applicantId in HTML after it's received
-                    let sumsubInfoElement = document.getElementById("sumsub-info");
-                    if (sumsubInfoElement) {
-                        sumsubInfoElement.innerText = `Applicant ID: ${applicantId}`;
-                        sumsubInfoElement.href = `https://yourlink.com/applicant/${applicantId}`; // Replace with actual link
-                    }
-                    // document.getElementById("sumsub-info").innerText = `Applicant ID: ${applicantId}`;
-                }
-            })
-            .build();
-            snsWebSdkInstance.launch("#sumsub-websdk-container");
-    }
-    function getNewAccessToken() {
-        console.log(token);
-        return Promise.resolve(token);
-    }
 </script>
 
 @endsection
