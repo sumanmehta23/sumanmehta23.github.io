@@ -142,14 +142,14 @@ class Ib extends Controller
         $userId = auth()->user()->id;
         $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
-        $ib = Ib1::where('user_id', $userId)
+        $ib = Ib1::with('planDetails')
+            ->where('user_id', $userId)
             ->whereNotNull('ib_plan_details_id')
             ->first();
-
-
         if (!$ib) {
             return redirect()->route('ib');
         }
+
         $plan_id = $ib->planDetails->ib_category_id;
 
 
@@ -253,7 +253,7 @@ class Ib extends Controller
                                         $processedOrders[] = $item->Order . '-' . $item->Login;
 
                                         $ibcommissions[] = [
-                                            'id' => Str::uuid(),
+                                            'id' => (string)Str::orderedUuid(),
                                             'user_id' => $client->user_id,
                                             'account_id' => $client->id,
                                             'order_id' => $item->Order,
@@ -335,7 +335,7 @@ class Ib extends Controller
 
                                 if (!$existingWallet) {
                                     $walletsToCreate[] = [
-                                        'id' => Str::uuid(),
+                                        'id' => (string)Str::orderedUuid(),
                                         'ib_wallet' => $formatted_ib_wallet,
                                         'email' => $referral_code,
                                         'code' => $ca->code,
@@ -387,7 +387,7 @@ class Ib extends Controller
         $histories = IbWallet::where('user_id', $userId)->get();
         // info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
         // dd($ib_wallet);
-        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories'));
+        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId'));
     }
     public function ibReference(Request $request)
     {

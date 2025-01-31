@@ -15,23 +15,26 @@
             <!-- ROW-1 -->
 
             <div class="row">
-                <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
-                    <div class="card custom-card">
-                        <div class="card-body">
-                            <div class="card-order">
-                                <h6 class="mb-2">Total Deposit</h6>
-                                <h2 class="text-end "><i
-                                        class="mdi mdi-wallet icon-size float-start text-primary text-primary-shadow"></i><span>$
-                                        {{ number_format($trade_deposit->deposit + $wallet_deposit->deposit,2) }}</span>
-                                </h2></span>
-                                <p class="mb-0">Trading Deposit<span class="float-end">${{ number_format($trade_deposit->deposit,2) }}
-                                    </span></p>
-                                <p class="mb-0">Wallet Deposit<span
-                                        class="float-end">${{ number_format($wallet_deposit->deposit,2) }}</span></p>
+                @can('dashboard:viewTotalDeposit')
+                    <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
+                        <div class="card custom-card">
+                            <div class="card-body">
+                                <div class="card-order">
+                                    <h6 class="mb-2">Total Deposit</h6>
+                                    <h2 class="text-end "><i
+                                            class="mdi mdi-wallet icon-size float-start text-primary text-primary-shadow"></i><span>$
+                                            {{ number_format($trade_deposit->deposit + $wallet_deposit->deposit,2) }}</span>
+                                    </h2></span>
+                                    <p class="mb-0">Trading Deposit<span class="float-end">${{ number_format($trade_deposit->deposit,2) }}
+                                        </span></p>
+                                    <p class="mb-0">Wallet Deposit<span
+                                            class="float-end">${{ number_format($wallet_deposit->deposit,2) }}</span></p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div><!-- COL END -->
+                    </div><!-- COL END -->
+                @endcan
+                @can("wallet_withdraw:viewAny")
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
@@ -48,6 +51,8 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
+                @can('client:viewAny')
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
@@ -64,9 +69,11 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
             </div>
             <!-- ROW-1 END -->
             <div class="row">
+                @can("wallet_deposit:viewAny")
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-primary img-card box-primary-shadow">
                         <div class="card-body">
@@ -81,6 +88,8 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
+                @can("wallet_withdraw:viewAny")
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-secondary img-card box-secondary-shadow">
                         <div class="card-body">
@@ -95,6 +104,8 @@
                         </div>
                     </div>
                 </div>
+                @endcan
+                @can("ib:viewAny")
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-success img-card box-success-shadow">
                         <div class="card-body">
@@ -108,6 +119,8 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
+                @can("client:viewAny")
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-info img-card box-info-shadow">
                         <div class="card-body">
@@ -122,8 +135,10 @@
                         </div>
                     </div>
                 </div><!-- COL END -->
+                @endcan
             </div>
             <!-- Row -->
+            @can("wallet_deposit:viewAny")
             <div class="row row-sm">
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
@@ -133,7 +148,7 @@
                                     Latest Pending Deposit
                                 </div>
                                 <div>
-                                    <a href="/admin/transactions/wallet_deposit" class="btn btn-primary-light">View
+                                    <a href="/admin/transactions/pending/wallet-deposit" class="btn btn-primary-light">View
                                         All</a>
                                 </div>
                             </div>
@@ -304,8 +319,8 @@
                     </div>
                 </div>
             </div>
-
-
+            @endcan
+            @can("wallet_withdraw:viewAny")
             <div class="row row-sm">
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
@@ -315,7 +330,7 @@
                                     Latest Pending Withdrawals
                                 </div>
                                 <div>
-                                    <a href="/admin/transactions/wallet_withdrawal" class="btn btn-primary-light">View
+                                    <a href="/admin/transactions/pending/wallet-withdrawal" class="btn btn-primary-light">View
                                         All</a>
                                 </div>
                             </div>
@@ -332,7 +347,9 @@
                                             <th>Mode</th>
                                             <th>Withdraw Date</th>
                                             <th>Status</th>
-                                            <th>Action</th>
+                                            @can("wallet_withdraw:view")
+                                                <th>Action</th>
+                                            @endcan
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -466,24 +483,26 @@
                                                 </div>
 
                                             </td>
-                                            <td>
-                                                <?php if ($result->type == "trade") { ?>
-                                                <div>
-                                                    <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
-                                                        class="" style="font-size: 13px;padding: 2px 20px;">
-                                                        <i class="fe fe-eye fs-14 text-info"></i>
-                                                    </a>
-                                                </div>
+                                            @can("wallet_withdraw:view")
+                                                <td>
+                                                    <?php if ($result->type == "trade") { ?>
+                                                    <div>
+                                                        <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->raw_id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
 
-                                                <?php } else { ?>
-                                                <div>
-                                                    <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
-                                                        class="" style="font-size: 13px;padding: 2px 20px;">
-                                                        <i class="fe fe-eye fs-14 text-info"></i>
-                                                    </a>
-                                                </div>
-                                                <?php } ?>
-                                            </td>
+                                                    <?php } else { ?>
+                                                    <div>
+                                                        <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
+                                                    <?php } ?>
+                                                </td>
+                                            @endcan
                                         </tr>
                                         <?php }
                     } ?>
@@ -496,7 +515,7 @@
                 </div>
             </div>
             <!-- End Row -->
-
+            @endcan
         </div>
     </div>
 @endsection

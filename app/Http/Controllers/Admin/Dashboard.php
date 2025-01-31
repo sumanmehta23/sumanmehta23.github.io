@@ -19,24 +19,29 @@ class Dashboard extends Controller
     public function index()
     {
         $rmCondition = '';
-        if (session('userData')['userRole'] != "Super Admin") {
-            $rmCondition .= " left join aspnetusers user on(user.email=trs.email) WHERE";
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+        // dd($alogin);
+        if ($role != "Super Admin") {
+            $rmCondition .= " left join aspnetusers user on(user.email=trs.email) WHERE ";
         } else {
             $rmCondition .= " where (1) and ";
         }
-        if (session('userData')['userRole'] == "Relationship Managwer") {
-            $rmCondition .= "  left join relationship_manager rm on(rm.user_id=trs.email) where rm.rm_id='" . session('alogin') . "' and ";
+        if ($role == "Relationship Manager") {
+            $rmCondition .= "  left join relationship_manager rm on(rm.user_id=trs.user_id) where rm.rm_id='" . $alogin . "' and ";
         }
 
         $userCondition = " ";
-        if (session('userData')['userRole'] != "Super Admin") {
-            if (session('userData')['userRole'] == "Relationship Managesr") {
-                $userCondition = "  left join relationship_manager rm on(rm.user_id=asp.email) where rm.rm_id='" . session('alogin') . "'";
+        if ($role != "Super Admin") {
+            if ($role == "Relationship Manager") {
+                $userCondition = "  left join relationship_manager rm on(rm.user_id=asp.id) where rm.rm_id='" . $alogin . "'";
             }
         }
-
+        // dd($rmCondition);
 
         $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer')";
+        // dd($sql);
+
         $trade_deposit = DB::select($sql)[0];
 
         $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from wallet_deposit trs " . $rmCondition . " trs. status=1";
@@ -63,8 +68,12 @@ class Dashboard extends Controller
         $sql = "SELECT count(*) as counts from ib1 trs " . $rmCondition . " trs.status = 0";
         $pending_ib = DB::select($sql)[0];
 
+        if ($role == "Relationship Manager") {
+            $sql = "SELECT count(*) as counts from aspnetusers trs left join aspnetusers user on(user.email=trs.email)  left join relationship_manager rm on(rm.user_id=trs.id) where rm.rm_id='" . $alogin . "' and trs.wallet_enabled = 1";
+        }else{
+            $sql = "SELECT count(*) as counts from aspnetusers trs " . $rmCondition . " trs.wallet_enabled = 1";
+        }
 
-        $sql = "SELECT count(*) as counts from aspnetusers trs " . $rmCondition . " trs.wallet_enabled = 1";
         $wallet_users = DB::select($sql)[0];
 
         $sql = "SELECT
@@ -89,34 +98,40 @@ class Dashboard extends Controller
     {
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);
+        return;
         // Process users in chunks to save memory
         User::select('email')
+            // ->whereIn('email',['tech2@lqhmarkets.com'])
+            // ->where('id','<','9dc8c7dd-3a0d-4b4f-a226-b4000fab7fe2')
             ->where('status', 1)
             ->orderBy('id', 'desc')
             ->chunk(100, function ($users) use ($mailService) {
                 foreach ($users as $user) {
-                    $this->sendmail($user->email, $mailService);
+                    // if(in_array($user->email,['Sayedrihaad@gmail.com'])){
+                        $this->sendmail($user->email, $mailService);
+                    // }
                 }
             });
     }
     private function sendmail($userEmail,MailService $mailService){
-        
+
         $settings = settings();
         $from = $settings['email_from_address'];
-        $emailSubject = $settings['admin_title'] . ' - New Payment Options Now Available at LQH Markets! 🎉';
+        $emailSubject =  'Scheduled Server Maintenance – Important Update';
          $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '<div>Just in time for <b>New Year\'s,</b> we\'re excited to announce that <b>LQH Markets</b> has expanded our payment options to make trading more convenient for you!
-</div>
-          <div>We now accept:</div>
+        $content = '<p>As part of our ongoing commitment to improving your trading experience and delivering enhanced services, we will be performing scheduled server maintenance over the weekend.</p>
+<p>To ensure a seamless transition, we kindly request your cooperation with the following:</p>
+
           <ul>
-          <li><b>Credit Card</b> payments</li>
-          <li><b>Apple Pay</b></li>
-          <li><b>Crypto</b> deposits</li>
+          <li><b>Close all open positions and pending orders at least 30 minutes before the market close on Friday.</b></li>
+          <li>Please note that <b>10 minutes prior to market close,</b> the server will automatically close all trading operations.</li>
+
           </ul>
-          <div>Ready to fund your account? Visit our secure deposit page: <a href="'.$settings['copyright_site_name_text'].'/wallet_deposit">'.$settings['copyright_site_name_text'].'/wallet_deposit</a></div>
-          <div>Start trading today with these <b>flexible payment options!</b></div>
+          <divThis maintenance is a crucial step in optimizing our systems to provide you with a better trading environment.</div>
+          <div>Should you have any questions or concerns regarding your account, please do not hesitate to contact our support team. We are here to assist you.</div>
+          <div>Thank you for your understanding and support.</div>
           <p>Best Regards.</p>
           <p>LQH Markets Team</p>
           ';
@@ -127,7 +142,7 @@ class Dashboard extends Controller
             "title_right" => "",
             "subtitle_right" => "",
         ];
-       
+
         $mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
     }
 }

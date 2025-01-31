@@ -16,15 +16,16 @@ class IBController extends Controller
 
     public function index(Request $request)
     {
-        $userRole = $request->session()->get('userData.role_id');
-        $alogin = $request->session()->get('alogin');
-
+        $userRole = $request->session()->get('userData.userRole');
+        $alogin = $request->session()->get('userData.id');
+        // dump($userRole);
+        // dd($alogin);
 
         $rmCondition = DB::table('ib1 as ib')
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
         if ($userRole == "Relationship Manager") {
-            $rmCondition->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $rmCondition->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -42,7 +43,7 @@ class IBController extends Controller
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
         if ($userRole == "Relationship Manager") {
-            $totalClients->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $totalClients->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -54,7 +55,7 @@ class IBController extends Controller
             ->leftJoin('aspnetusers as user', 'user.email', '=', 'ib.email');
 
             if ($userRole == "Relationship Manager") {
-            $pendingKyc->leftJoin('relationship_manager as rm', 'ib.email', '=', 'rm.user_id')
+            $pendingKyc->leftJoin('relationship_manager as rm', 'ib.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -90,7 +91,7 @@ class IBController extends Controller
 
         // Applying dynamic conditions
         if ($userRole == "Relationship Manager") {
-            $rmCondition->leftJoin('relationship_manager as rm', 'ib1.email', '=', 'rm.user_id')
+            $rmCondition->leftJoin('relationship_manager as rm', 'ib1.user_id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin);
         }
 
@@ -117,7 +118,7 @@ class IBController extends Controller
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.id', 'ib_plan_details.ib_category_id')
             ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-            ->where('ib_plan_details.status', 1)
+            ->where(['ib_plan_details.status'=> 1,'ib_plan_details.deleted_at'=> null])
             ->groupBy('ib_plan_details.ib_category_id')
             ->get(); // Use get() to retrieve results
         return view("admin.ib.iblist", ["acc_groups" => $accGroups]);
@@ -127,7 +128,7 @@ class IBController extends Controller
         $accGroups = DB::table('ib_plan_details')
             ->select('ib_categories.ib_cat_name', 'ib_plan_details.id', 'ib_plan_details.ib_category_id')
             ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-            ->where('ib_plan_details.status', 1)
+            ->where(['ib_plan_details.status'=> 1,'ib_plan_details.deleted_at'=> null])
             ->groupBy('ib_plan_details.ib_category_id')
             ->get(); // Use get() to retrieve results
         return view("admin.ib.iblist_active", ["acc_groups" => $accGroups]);
@@ -158,7 +159,7 @@ class IBController extends Controller
 
         // Group and execute the query for plans
         $plans = $plans
-            ->groupBy('created_at')
+            // ->groupBy('created_at')
             ->get();
 
         // Step 3: Query for all account types

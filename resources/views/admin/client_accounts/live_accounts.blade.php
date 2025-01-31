@@ -42,7 +42,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
@@ -52,13 +52,17 @@
             </div>
         </div>
     </div>
+
+
+
 @endsection()
 @section("scripts")
 <!-- End::app-content -->
 <script>
     $(document).ready(function() {
-        window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
+        window.myModal = new bootstrap.Modal(document.getElementById('accountUpdatemodal'));
     });
+    // console.log(bootstrap.Modal);
 
     // $("#ibModal").modal();
     function dTSelection() {
@@ -66,116 +70,119 @@
         $('.ajaxDataTable tbody tr').off();
         $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
             var data = dTtable.row($(this).closest("tr")).data();
-            // console.log(data);
+            console.log(data.id);
+            $("#AccountRequestForm input,#AccountRequestForm select").not("input[name='_token']").val("").trigger("change");
             $("#clientName,#clientEmail").html("");
-            $("#clientName").html(data.fullname)
-            $("#clientEmail").html(data.email)
-            $("#client_id").val(data.enc)
-            $("[name='ib_status']").val(data.ib_status).trigger("change");
-            $("[name='ib_group']").val(data.ib_group).trigger("change");
+            $("#account_id").val(data.id)
+            $("#clientName").html(data.fullname || "")
+            $("#clientEmail").html(data.email || "")
+            $("#client_id").val(data.user_id)
+            $("#leverage").val(data.leverage)
+            $("#account_type_id").val(data.account_type_id)
+            $("[name='request_status']").val(data.request_status).trigger("change");
             myModal.show();
-            // swal.fire({
-            //   icon: "info",
-            //   title: "IB Status ==> " + data.ib_status
-            // });
 
         });
     }
 
-    // window.dTtable = $('.ajaxDataTable').on("draw.dt", dTSelection).DataTable();
-    var dTtable = $('#ajaxDatatable').DataTable({
-        processing: true,
-        serverSide: true,
-        searching: true,
-        ajax: {
-            url: '/admin/getLiveAccountsList',
-            type: 'GET',
-            data: {}, // Ensure this is populated dynamically if needed.
-            dataSrc: function(json) {
-                return json.data;
-            }
-        },
-        columns: [
-            {
-                data: 'email',
-                name: 'email'
-            },
-            {
-                data: 'code',
-                name: 'code'
-            },
-            {
-                data: 'leverage',
-                name: 'leverage'
-            },
-            {
-                data: 'balance',
-                name: 'balance',
-                orderable: false
-            },
-            {
-                data: 'created_at',
-                name: 'created_at',
-                orderable: false
-            },
-            {
-                data: 'fullname',
-                name: 'fullname',
-                visible: false,
-
-            },
-            {
-                data: 'fullemail',
-                name: 'fullemail',
-                visible: false,
-
-            },
-            {
-                data: 'account_code',
-                name: 'account_code',
-                visible: false,
-
-            },
-            {
-                data: 'account_group',
-                name: 'account_group',
-                visible: false,
-
-            },
-            {
-                data: 'created_date',
-                name: 'created_date',
-                visible: false,
-
-            },
-            {
-                data: 'created_time',
-                name: 'created_time',
-                visible: false,
-
-            },
-        ],
-        rowCallback: function(row, data) {
-            // Optional customization for rows
-        },
-        drawCallback: function(settings) {
-            // Optional customization for draw events
-        },
-        order: [[0, "desc"]],
-        lengthChange: true,
-        pageLength: 10,
-        // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
-        dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-        buttons: [
-            {
-                extend: 'excel',
-                text: 'Export to Excel',
-                exportOptions: {
-                    columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+    $(document).ready(function() {
+    window.dTtable = $('#ajaxDatatable').on("draw.dt", dTSelection).DataTable({
+    // var dTtable = $('#ajaxDatatable').DataTable({
+            processing: true,
+            serverSide: true,
+            searching: true,
+            ajax: {
+                url: '/admin/getLiveAccountsList',
+                type: 'GET',
+                data: {}, // Ensure this is populated dynamically if needed.
+                dataSrc: function(json) {
+                    return json.data;
                 }
-            }
-        ]
+            },
+            columns: [
+                {
+                    data: 'email',
+                    name: 'email'
+                },
+                {
+                    data: 'code',
+                    name: 'code'
+                },
+                {
+                    data: 'leverage',
+                    name: 'leverage'
+                },
+                {
+                    data: 'balance',
+                    name: 'balance',
+                    orderable: false
+                },
+                {
+                    data: 'created_at',
+                    name: 'created_at',
+                    orderable: false
+                },
+                {
+                    data: 'fullname',
+                    name: 'fullname',
+                    visible: false,
+
+                },
+                {
+                    data: 'fullemail',
+                    name: 'fullemail',
+                    visible: false,
+
+                },
+                {
+                    data: 'account_code',
+                    name: 'account_code',
+                    visible: false,
+
+                },
+                {
+                    data: 'account_group',
+                    name: 'account_group',
+                    visible: false,
+
+                },
+                {
+                    data: 'created_date',
+                    name: 'created_date',
+                    visible: false,
+
+                },
+                {
+                    data: 'created_time',
+                    name: 'created_time',
+                    visible: false,
+
+                },
+
+            ],
+            rowCallback: function(row, data) {
+                // Optional customization for rows
+            },
+            drawCallback: function(settings) {
+                // Optional customization for draw events
+            },
+            order: [[0, "desc"]],
+            lengthChange: true,
+            pageLength: 10,
+            // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
+            dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    exportOptions: {
+                        columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+                    }
+                }
+            ]
+        });
     });
+
 
 </script>
 @endsection()

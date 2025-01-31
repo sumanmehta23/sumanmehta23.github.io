@@ -73,7 +73,7 @@
                                                                                     </span>
                                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                                         <span class="mb-0 h5 d-block f-w-500">
-                                                                                            ${{ $liveaccount->balance ?? 0.0 }}
+                                                                                            ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
                                                                                         </span>
                                                                                         <span
                                                                                             class="mb-0 text-muted f-10">Current
@@ -133,7 +133,7 @@
                                                         <form method="post" id="tradeDepositForm">
                                                             @csrf
                                                             <input type="hidden" name="user[email]"
-                                                                value="{{ session('clogin') }}" required
+                                                                value="{{ session('user')->email }}" required
                                                                 class="form-control fill">
                                                             <input class="user_code" type="hidden"
                                                                 name="user[account_id]" value="" readonly required>
@@ -298,7 +298,7 @@
                         icon: 'success',
                         title: response.success
                     }).then(() => {
-                        window.location.href = '{{ route('transactions') }}';
+                        window.location.href = '{{ route('trade-deposit') }}';
                     });
                 },
                 error: function(xhr) {

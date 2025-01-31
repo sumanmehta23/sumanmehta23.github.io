@@ -10,10 +10,16 @@ use App\Models\TradeWithdrawals;
 use App\Models\InternalTransfer;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Services\MailService as MailService;
 
 
 class Transactions extends Controller
 {
+    protected $mailService;
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
+    }
     public function index()
     {
         $email = $email = auth()->user()->email;
@@ -108,6 +114,89 @@ class Transactions extends Controller
         // }
         // die;
         return view('transactions', compact('deposit_history', 'withdrawal_history', 'internal_transfer'));
+    }
+    public function updateTransaction(Request $request){
+        // dd($request->all());
+        $settings = settings();
+        $status = $request->status;
+        if ($status == '3') {
+            $validatedData = $request->validate([
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+        }elseif($status == '1'){
+            $validatedData = $request->validate([
+                'status' => 'required|integer',
+                'email' => 'required|email',
+                'amount' => 'required|numeric',
+            ]);
+        }
+        $status = $validatedData['status'];
+        $email = $validatedData['email'];
+        $depositAmount = $validatedData['amount'];
+        $did = $request->input('transaction_id');
+        // dd($did);
+        $transaction_id = $request->input('id');
+        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        if ($transaction) {
+            $transaction->Status =$status;
+            $transaction->transaction_id = $transaction_id;
+            $transaction->save();
+            if($status==3){
+
+                if ( ($transaction->payout_res) == NULL) {
+                    // Decode the JSON string if it's not null or empty
+                    // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                    // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
+
+                    // if($message){
+                        //Send email
+                        $from = $settings['email_from_address'];
+                        // $transid = "WDID" . $payout_res;
+                        $headers = "MIME-Version: 1.0" . "\r\n";
+                        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
+                        $content = '<p>
+                                        We are pleased to inform you that your withdraw request has been successfully cancelled.
+                                    </p>
+                                    <p>
+                                        The cancelled amount has been credited back to your wallet.
+                                    </p>
+                                    <p>
+                                        Transaction Details
+                                    </p>
+                                    <p>
+                                        Withdrawal Cancelled Amount: '.$depositAmount.'
+                                    </p>
+                                    <p>
+                                        Transaction ID: '.$did.'
+                                    </p>
+                                    <p>
+                                        Withdrawal Date: '.$transaction->withdraw_date.'
+                                    </p>
+                                    <p>
+                                        Withdrawal Type: Wallet Withdrawal
+                                    </p>';
+
+                        $templateVars = [
+                            'name' => $transaction->user->fullname,
+                            'site_link' => $settings['copyright_site_name_text'],
+                            'email' => $settings['email_from_address'],
+                            'content' => $content,
+                            'title_right' => 'Transaction',
+                            'subtitle_right' => 'Cancelled',
+                            'btn_text' => 'Go To Dashboard',
+                        ];
+                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    // }
+                }
+            }
+            return redirect()->back()->with('status', 'Transaction Cancelled Successfully');
+        } else {
+            return redirect()->back()->with('error', 'Transaction Not Found');
+        }
     }
     // public function history()
     // {

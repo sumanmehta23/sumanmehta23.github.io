@@ -7,6 +7,7 @@
             align-items: center;
         }
     }
+
 </style>
 @section('content')
 
@@ -20,6 +21,7 @@
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
+                        
                         <div  class="my-3 card">
                             <div  class="card-body">
                                 <form method="POST" action="{{ route('login') }}">

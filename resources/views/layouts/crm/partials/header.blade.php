@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="{{ asset('admin_assets/assets/icon-fonts/feather/feather-v2.css?v=5') }}">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" />
-    <link rel="stylesheet" crossorigin="anonymous" href="{{ asset('assets/css/custom.css?v=4.3') }}">
+    <link rel="stylesheet" crossorigin="anonymous" href="{{ asset('assets/css/custom.css?v=4.5') }}">
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
@@ -48,6 +48,13 @@
         });
     </script>
     @yield('styles')
+    <?php
+        $marginTopStyle = ''; // Default value
+        if (app()->environment('local') || config("services.sales.promotion")) {
+            $marginTopStyle = 'style="margin-top: 40px;"';
+        }
+    ?>
+
     <style>
         .pc-sidebar .navbar-content {
             overflow-y: scroll;
@@ -215,12 +222,12 @@
     </style>
 </head>
 
-<body data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast="" <?php
+<body class="@if (!Auth::guest()) loggedin @endif" data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast="" <?php
   if (!isset($_COOKIE["sitetheme"])) { ?> data-pc-theme="light" <?php } elseif ($_COOKIE["sitetheme"] == 'true') { ?> data-pc-theme="light" <?php } else { ?> data-pc-theme="dark" <?php } ?>>
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar">
+            <nav class="pc-sidebar" <?php echo $marginTopStyle; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
@@ -323,7 +330,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            {{-- <li class="pc-item">
+                            <li class="pc-item">
                                 <a href="javascript:void(0);" class="pc-link" id="pamm-menu">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -340,7 +347,7 @@
                                     <li><a href="{{ route('pamm.manager') }}">Manager</a></li>
                                     <li><a href="{{ route('pamm.investor') }}">Investor</a></li>
                                 </ul>
-                            </li> --}}
+                            </li>
 
 
 
@@ -405,7 +412,20 @@
                     </div>
                 </div>
             </div>
-            <header class="pc-header">
+            @if (app()->environment('local'))
+                <div style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
+                    <b>DEV ENVIRONMENT</b>
+                </div>
+            @endif
+            @if(config("services.sales.promotion"))
+            {{-- <div class=" w-100 sales-banner-container">
+                <div class="banner-link" ><div class="lqh-sale-banner">
+                    <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
+                    </div></div>
+            </div> --}}
+            @endif
+            
+            <header class="pc-header" <?php echo $marginTopStyle; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">
@@ -439,7 +459,7 @@
                     <div class="ms-auto">
                         @if (session('admin'))
                             <ul>
-                                <a href="/admin/client_list" class="">
+                                <a href="{{route('switchToAdmin')}}" class="">
                                     <span>
                                         Switch Back To {{ session('admin')->username }}
                                     </span>

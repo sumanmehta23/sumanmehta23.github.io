@@ -20,6 +20,17 @@
         --bs-text-opacity: 1;
         color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     }
+    .reject-btn {
+        border-color: red; /* Outer line red */
+        color: red;        /* Text red */
+        transition: background-color 0.3s, color 0.3s; /* Smooth hover effect */
+    }
+
+    .reject-btn:hover {
+        background-color: red; /* Background red on hover */
+        color: white;          /* Text white on hover */
+        border-color: red;
+    }
 </style>
 <div class="pc-container">
   <div class="pc-content">
@@ -149,6 +160,7 @@
                         <th scope="col">AMOUNT</th>
                         <th scope="col">FEE</th>
                         <th scope="col">STATUS</th>
+                        <th scope="col">ACTION</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -160,7 +172,7 @@
                                 <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
-                                <h6 class="mb-0">{{ $history->transaction_id }}</h6>
+                                <h6 class="mb-0">{{ $history->id }}</h6>
                                 <p class="mb-0 text-muted"><small>Live Account</small></p>
                               </div>
                             </div>
@@ -183,6 +195,19 @@
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                           </td>
+                          @if($history->status == 0)
+                            <td >
+                                <a  href="#"
+                                    class="btn btn-sm btn-outline-secondary d-grid reject-btn"
+                                    onclick="takeAction('{{ json_encode($history->id) }}','{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee}}',3)"
+                                    type="submit">
+                                Cancel
+                                </a>
+                            </td>
+                          @else
+                            <td></td>
+                          @endif
+
                         </tr>
                       @endforeach
                     </tbody>
@@ -318,5 +343,66 @@
     </div>
   </div>
 </div>
+@if (session('status'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: "{{ session('status') }}",
+        });
+    </script>
+@endif
+
+@if (session('error'))
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "{{ session('error') }}",
+        });
+    </script>
+@endif
+
+<script>
+    function takeAction(data, email, amount, status) {
+        parsedData = JSON.parse(data)
+        const now = new Date();
+        const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+        if(status==3){
+            statuscode='cancel';
+        }
+      Swal.fire({
+        title: `Are you sure you want to ${statuscode} this transaction?`,
+        html: `
+        <form id="updateTransactionForm" method="post" action="/update-transaction">
+          @csrf
+          <input type="hidden" name="email" value="${email}">
+          <input type="hidden" name="amount" value="${amount}">
+          <input type="hidden" name="status" value="${status}">
+          <input type="hidden" name="statuscode" value="${statuscode}">
+          <input type="hidden" name="transaction_id" value="${parsedData}">
+          <input type="hidden" name="action" value="update_transaction">
+            ${
+              status == 3
+                  ? `
+
+          `
+                  : ''
+            }
+          </form>
+      `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+      }).then((result) => {
+        console.log(result);
+        if (result.isConfirmed) {
+          document.querySelector('#updateTransactionForm').submit();
+        }
+      });
+    }
+  </script>
 
 @endsection

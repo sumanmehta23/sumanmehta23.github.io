@@ -15,6 +15,7 @@ use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\RateLimiter;
 
 class InternalTransfer extends Controller
 {
@@ -33,13 +34,31 @@ class InternalTransfer extends Controller
                 $query->where('bonus_type', 'Bonus In')
                       ->orWhere('bonus_type', 'Bonus Out');
             }
-        ])->get();
+        ])
+        ->where('account_request_status', "!=", "0")    
+        ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
     }
     public function processTransfer(Request $request)
     {
         // dd($request->all());
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests',
+                'error' => "Please wait {$retryAfter} seconds before trying again.",
+            ], 429); // HTTP 429 Too Many Requests
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
@@ -124,6 +143,7 @@ class InternalTransfer extends Controller
                 }
             });
         }
+        RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');
     }
 }

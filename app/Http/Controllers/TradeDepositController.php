@@ -17,6 +17,8 @@ use App\Models\WalletWithdraw;
 use App\Models\ClientBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\RateLimiter;
 
 class TradeDepositController extends Controller
 {
@@ -31,7 +33,18 @@ class TradeDepositController extends Controller
         $email = auth()->user()->email;
         $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
-        $liveaccount_details =auth()->user()->liveAccounts;
+        // $liveaccount_details =auth()->user()->liveAccounts;
+        $liveaccount_details = Account::with([
+            'accountType',
+            'BonusTransaction' => function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                      ->orWhere('bonus_type', 'Bonus Out');
+            }
+        ])
+        ->where('user_id', $user->id)
+        ->where('account_request_status', 1)
+        ->where('demo', false)
+        ->get();
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $totals = Account::where('user_id', $user->id)
@@ -39,15 +52,31 @@ class TradeDepositController extends Controller
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_amount');
-        $totalWwf = WalletWithdraw::where('user_id', $user->id)->where('status','<>', 2)->sum('withdraw_transaction_fee');
-        $wallet_balance = $totalWd - ($totalWw + $totalWwf);
+        $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_amount');
+        $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_transaction_fee');
+        $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
+
 
         return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }
     public function deposit(Request $request)
     {
-        // dd($request->all());
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests',
+                'error' => "Please wait {$retryAfter} seconds before trying again.",
+            ], 429); // HTTP 429 Too Many Requests
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $request->validate(
             [
                 'user.account_id' => 'required',
@@ -89,10 +118,10 @@ class TradeDepositController extends Controller
         ->sum('deposit_amount');
 
         $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_amount');
         $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
-            ->where('status',"<>", 2)
+            ->whereNotIn('status', [2,3])
             ->sum('withdraw_transaction_fee');
 
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
@@ -109,7 +138,6 @@ class TradeDepositController extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
-
         $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
@@ -157,6 +185,7 @@ class TradeDepositController extends Controller
                 ]);
             });
             AccountHelper::updateLiveAndDemoAccounts();
+            // RateLimiter::clear($key);
             return response()->json(['success' => 'Funds Successfully Deposited']);
         }
     }

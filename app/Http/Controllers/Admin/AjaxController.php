@@ -10,17 +10,19 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\Permission;
 use App\Models\EmployeeList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Models\WalletDeposit;
-use Illuminate\Support\Facades\Cache;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
 class AjaxController extends Controller
@@ -171,6 +173,9 @@ class AjaxController extends Controller
                     case 'resendVerificationEmail':
                         $result = $this->resendVerificationEmail($requestData);
                         break;
+                    case 'getPermissions':
+                        $result = $this->getPermissions($request);
+                        break;
                     default:
                         $result = ['error' => 'Invalid function call'];
                         break;
@@ -193,6 +198,29 @@ class AjaxController extends Controller
         } else {
             return ['success' => false,'error' => 'User not found'];
         }
+    }
+
+    public function getPermissions(Request $request){
+
+
+
+        // Base query
+
+        $rmCondition = Permission::orderBy('name', 'asc');
+
+
+
+        // dd($query);
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+            ->addColumn('action', function($row){
+                return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+            })
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
     public function getListOfGroups($string)
     {
@@ -233,8 +261,11 @@ class AjaxController extends Controller
         $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
 
         try {
+            $admin = Auth::guard('admin')->user();
+
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
+            Gate::forUser($admin)->authorize('client:impersonate',$client);
             // Log in as the new user
             Auth::login($client);
             Session::put('admin', $admin);
@@ -248,19 +279,43 @@ class AjaxController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to impersonate the user. Please try again.',
+                'message' => 'Failed to impersonate the user. Please try again.'.$e->getMessage(),
             ], 500);
         }
+    }
+    public function switchToAdmin(Request $request)
+    {
+        if(Auth::user() instanceof User && Session::has('admin')){
+            $admin=Session::get('admin');
+            Session::forget('user');
+            Auth::logout();
+            // $request->session()->invalidate();
+            // $request->session()->regenerateToken();
+            Auth::guard('admin')->loginUsingId($admin->id);
+
+             return redirect()->route('admin.dashboard');
+            // Auth::logout();
+            // $request->session()->invalidate();
+            // $request->session()->regenerateToken();
+            // Session::forget('admin');
+        }else{
+            return redirect()->route('admin.login');
+        }
+
     }
 
     public function getClientList(Request $request)
     {
-        // ini_set('memory_limit', '1024M');
-        // ini_set('max_execution_time', 3000);
+        $admin = Auth::guard('admin')->user();
+        // dd($admin);
+
         $query = User::with([
             'ib',
             'countryDetail',
-            'employee' => function ($query) {
+            'employee' => function ($query) use ($admin) {
+                if ($admin->userRole === 'Relationship Manager') {
+                    $query->wherePivot('rm_id', $admin->id); // Ensure it filters by rm_id
+                }
                 $query->select('emplist.id', 'username');
             }
         ])
@@ -275,7 +330,39 @@ class AjaxController extends Controller
             'aspnetusers.country',
             'aspnetusers.kyc_verify',
             'aspnetusers.country_code',
-        ])->groupBy('aspnetusers.email');
+        ])
+        ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
+            // Ensure that only users linked to the admin's rm_id are retrieved
+            $q->whereHas('employee', function ($query) use ($admin) {
+                $query->where('relationship_manager.rm_id', $admin->id);
+            });
+        })
+        ->groupBy('aspnetusers.email');
+
+
+        // $admin=Auth::guard('admin')->user();
+        // dd($admin);
+
+        // $query = User::with([
+        //     'ib',
+        //     'countryDetail',
+        //     'employee' => function ($query) {
+        //         $query->select('emplist.id', 'username');
+        //     }
+        // ])
+        // ->select([
+        //     'aspnetusers.id',
+        //     'aspnetusers.email',
+        //     'aspnetusers.fullname',
+        //     'aspnetusers.number',
+        //     'aspnetusers.ib1',
+        //     'aspnetusers.status',
+        //     'aspnetusers.email_confirmed',
+        //     'aspnetusers.country',
+        //     'aspnetusers.kyc_verify',
+        //     'aspnetusers.country_code',
+        // ])->groupBy('aspnetusers.email');
+
 
         // $query = DB::table('aspnetusers AS ap')
         //     ->leftJoin('ib1', 'ib1.user_id', '=', 'ap.id')
@@ -410,33 +497,33 @@ class AjaxController extends Controller
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
-
-                    $html .= "<span class='statusToggle' data-status='{$row->status}'>";
-                    if ($row->status == 0) {
-                        $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
-                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
-                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
-                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
-                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
-                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
-                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
-                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
-                                    </svg>
-                                  </span>";
-                    } elseif ($row->status == 1) {
-                        $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
-                                    <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
-                                        <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
-                                        <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
-                                        <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
-                                        <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
-                                        <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
-                                        <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
-                                    </svg>
-                                  </span>";
-                    }
-                    $html .= "</span>";
-
+                    // if (Auth::guard('admin')->user()->can('update', $row)) {
+                        $html .= "<span class='statusToggle' data-status='{$row->status}'>";
+                        if ($row->status == 0) {
+                            $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                            <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                            <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                            <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                            <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                            <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                            <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                        </svg>
+                                    </span>";
+                        } elseif ($row->status == 1) {
+                            $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
+                                            <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
+                                            <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
+                                            <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
+                                            <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
+                                            <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
+                                            <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                        </svg>
+                                    </span>";
+                        }
+                        $html .= "</span>";
+                    // }
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='resendToggle' data-status='{$row->email_confirmed}'>";
                         $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
@@ -467,13 +554,14 @@ class AjaxController extends Controller
                                 </span>
                               </span>";
 
-
+                              if (Auth::guard('admin')->user()->can('client:update', $row)) {
                     $html .= "<span class='editClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
                                     <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
                                 </span>
                               </span>";
-
+                              }
+                              if (Auth::guard('admin')->user()->can('client:impersonate', $row)) {
                     $html .= "<span class='switchClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Switch Client'>
                                     <svg xmlns='http://www.w3.org/2000/svg' class='icon icon-tabler icon-tabler-arrows-shuffle' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
@@ -485,6 +573,7 @@ class AjaxController extends Controller
                                     </svg>
                                 </span>
                               </span>";
+                              }
 
                     return $html;
                 })
@@ -498,24 +587,156 @@ class AjaxController extends Controller
         ]);
     }
 
-    public function getLiveAccountsList(Request $request)
+    public function getRequestedAccountsList(Request $request)
     {
+        // dump( session('userData'));
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin =session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
-
+        // dd($alogin);
         // Base query
-        $rmCondition = Account::where('demo', false)
-            ->select('accounts.*')
+        $rmCondition = Account::select('accounts.*')
+            // ->select('accounts.*')
+            ->where('account_request_status', 0)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
         }
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            // dd(DataTables::of($rmCondition));
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('code', function($row) {
+                    $accountGroup = $row->accountType->ac_group;
+                    return "<a href='" . (($row->code && $row->code != 'Rejected') ? '/admin/view_account_details/' . $row->id : '#') . "'>
+                                <div class='row align-items-center'>
+                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
+                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col ps-2'>
+                                        <h6 class='mb-0'><span class='text-truncate w-100'>" .
+                                                    ($row->code ? $row->code : 'Pending') .
+                                                "</span>
+                                        </h6>
+                                        <p class='mb-0 text-muted f-12'><span
+                                                class='text-truncate w-100'> $accountGroup </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                // ->addColumn('leverage', function($row){
+                //     return $row->leverage;
+                // })
+                ->addColumn('balance', function($row){
+                    return $row->balance;
+                })
+                ->addColumn('created_at', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function($row){
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function($row){
+                    return $row->email;
+                })
+                ->addColumn('account_code', function($row){
+                    return $row->code;
+                })
+                ->addColumn('account_group', function($row){
+                    return $row->accountType->ac_group;
+                })
+                ->addColumn('account_request_status', function($row){
+
+                    if($row->account_request_status == 1 ){
+                        return "<button class=' badge bg-outline-success'>Approved</button>";
+                    // }elseif($row->account_request_status == 2){
+                    //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
+                    }elseif($row->account_request_status == 0){
+                        return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
+                    }
+
+                })
+                ->editColumn('request_status', function ($row) {
+                    return $row->account_request_status ;
+                })
+                ->addColumn('created_date', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function($row){
+                    return date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail', 'account_request_status', 'request_status'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getLiveAccountsList(Request $request)
+    {
+        // dump( session('userData'));
+        $role = session('userData')['userRole'];
+        $alogin =session('userData')['id'];
+        $userGroups = explode(',', session('user_groups'));
+        // dd($alogin);
+        // Base query
+        $rmCondition = Account::where('demo', false)
+            ->select('accounts.*')
+            ->where('account_request_status', 1)
+            ->with(['user', 'accountType']);
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -558,9 +779,9 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('leverage', function($row){
-                    return $row->leverage;
-                })
+                // ->addColumn('leverage', function($row){
+                //     return $row->leverage;
+                // })
                 ->addColumn('balance', function($row){
                     return $row->balance;
                 })
@@ -601,21 +822,29 @@ class AjaxController extends Controller
     public function getDemoAccountsList(Request $request)
     {
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        // $alogin = session('alogin');
+        $alogin =session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
 
         // Base query
         $rmCondition = Account::where('demo', true)
             ->select('accounts.*')
+            ->where('account_request_status',1)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
         }
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -702,7 +931,7 @@ class AjaxController extends Controller
     public function getWalletDeposit2(Request $request)
     {
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin = session('userData')['id'];
 
         // Base query
         $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
@@ -710,9 +939,15 @@ class AjaxController extends Controller
             ->with(['user']);
 
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -724,6 +959,17 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('deposit_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -791,7 +1037,7 @@ class AjaxController extends Controller
     public function getWalletWithdrawal2(Request $request)
     {
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin = session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
 
         // Base query
@@ -800,9 +1046,15 @@ class AjaxController extends Controller
             ->with(['user']);
 
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -814,6 +1066,18 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
                 return DataTables::of($rmCondition)
+                    ->filter(function ($rmCondition) use ($request) {
+                        if (!empty($request->search['value'])) {
+                            $searchValue = $request->search['value'];
+                            $rmCondition->where(function($q) use ($searchValue) {
+                                $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_transaction_fee', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                            });
+                        }
+                    })
                     ->editColumn('email', function ($row) {
                         $fullname = $row->user
                             ? ($row->user->fullname)
@@ -886,15 +1150,21 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        // dd($request->search);
+        // dd($request->length);
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
             'trade_deposits.*'
         )->with(['user', 'account']);
         if (!isset($_GET['id'])) {
-            if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmId = session('alogin');
-                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                    $q->where('rm_id', $rmId);
+            // if ($role == "Relationship Manager") {
+            //     $query->whereHas('user.relationshipManager', function ($q) use ($alogin) {
+            //         $q->where('rm_id', $alogin);
+            //     });
+            // }
+            if ($role === "Relationship Manager") {
+                $query->whereHas('user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
                 });
             }
         } else {
@@ -906,8 +1176,25 @@ class AjaxController extends Controller
         }
 
 
+
         if ($request->ajax()) {
+            // if ($request->length == -1) {
+            //     $query = $query->get(); // Fetch all rows
+            // } else {
+            //     $query = $query->paginate($request->length);
+            // }
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $query->where(function($q) use ($searchValue) {
+                            $q->where('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -967,14 +1254,21 @@ class AjaxController extends Controller
 
     public function getTradingWithdrawal2(Request $request)
     {
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
                 ->with(['user', 'withdrawTo', 'account']);
 
         if (!isset($_GET['id'])) {
-            if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmId = session('alogin');
-                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                    $q->where('rm_id', $rmId);
+            // if (session('userData')['userRole'] == "Relationship Manager") {
+            //     $rmId = session('alogin');
+            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+            //         $q->where('rm_id', $rmId);
+            //     });
+            // }
+            if ($role === "Relationship Manager") {
+                $query->whereHas('user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
                 });
             }
         } else {
@@ -991,6 +1285,9 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->addColumn('code', function($row){
+                    return $row->account->code;
+                })
                 ->addColumn('withdraw_type', function($row){
                     return $row->withdraw_type;
                 })
@@ -1038,13 +1335,19 @@ class AjaxController extends Controller
     public function getInternalTransfer2(Request $request)
     {
         $query = TradeDeposit::with(['user', 'account']);
-
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         // Add conditions based on session and GET parameters
         if (!isset($_GET['id'])) {
-            if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmId = session('alogin');
-                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                    $q->where('rm_id', $rmId);
+            // if (session('userData')['userRole'] == "Relationship Manager") {
+            //     $rmId = session('alogin');
+            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+            //         $q->where('rm_id', $rmId);
+            //     });
+            // }
+            if ($role === "Relationship Manager") {
+                $query->whereHas('user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
                 });
             }
         } else {
@@ -1404,7 +1707,7 @@ class AjaxController extends Controller
     public function getPendingWalletDeposit2(Request $request)
     {
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin = session('userData')['id'];
 
         // Base query
         $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
@@ -1413,9 +1716,15 @@ class AjaxController extends Controller
             ->with(['user']);
 
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -1427,6 +1736,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -1494,11 +1813,17 @@ class AjaxController extends Controller
     public function getPendingWalletWithdrawal2(Request $request)
     {
         $query = WalletWithdraw::with(['user'])->where('status',0);
-
-        if (session('userData')['userRole'] == "Relationship Manager") {
-            $rmId = session('alogin');
-            $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                $q->where('rm_id', $rmId);
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+        // if (session('userData')['userRole'] == "Relationship Manager") {
+        //     $rmId = session('alogin');
+        //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+        //         $q->where('rm_id', $rmId);
+        //     });
+        // }
+        if ($role === "Relationship Manager") {
+            $query->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -1582,13 +1907,20 @@ class AjaxController extends Controller
 
     public function getPendingTradingDeposit2(Request $request)
     {
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         $query = TradeDeposit::with(['user', 'account'])
                     ->where('status', 0);
         if (!isset($_GET['id'])) {
-            if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmId = session('alogin');
-                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                    $q->where('rm_id', $rmId);
+            // if (session('userData')['userRole'] == "Relationship Manager") {
+            //     $rmId = session('alogin');
+            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+            //         $q->where('rm_id', $rmId);
+            //     });
+            // }
+            if ($role === "Relationship Manager") {
+                $query->whereHas('user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
                 });
             }
         } else {
@@ -1671,12 +2003,18 @@ class AjaxController extends Controller
     public function getPendingTradingWithdrawal2(Request $request)
     {
         $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status',0);
-
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {
-            if (session('userData')['userRole'] == "Relationship Manager") {
-                $rmId = session('alogin');
-                $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-                    $q->where('rm_id', $rmId);
+            // if (session('userData')['userRole'] == "Relationship Manager") {
+            //     $rmId = session('alogin');
+            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
+            //         $q->where('rm_id', $rmId);
+            //     });
+            // }
+            if ($role === "Relationship Manager") {
+                $query->whereHas('user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
                 });
             }
         } else {
@@ -1957,20 +2295,24 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, COUNT(pages.page_id) as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
-                LEFT JOIN permissions p ON e.role_id = p.role_id
                 LEFT JOIN roles r ON e.role_id = r.id
-                LEFT JOIN pages ON p.page_id = pages.page_id
+                -- LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.id";
         $query = DB::select($sql);
         $results = $query;
         $data = [];
-
+        $admin=Auth::guard('admin')->user();
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
+            if($admin->can('employee:update')){
+                $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
+            }else{
+                $dat->action='';
+            }
+            // $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
         }
         return ['data' => $data];
@@ -2191,8 +2533,8 @@ class AjaxController extends Controller
         // $query = DB::select($sql);
         $query = WalletWithdraw::with('user')
             ->where('user_id', $id)
-            ->where('Status', 1)
             ->where('withdraw_type', ['Wallet Withdrawal'])
+            ->orderBy('withdraw_date', 'desc')
             ->get();
 
         $results = $query;
@@ -2241,7 +2583,7 @@ class AjaxController extends Controller
     public function getIbUsers2(Request $request){
 
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin = session('userData')['id'];
 
         // Base query
 
@@ -2254,9 +2596,15 @@ class AjaxController extends Controller
             $rmCondition->whereHas('user');
         }
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -2388,7 +2736,7 @@ class AjaxController extends Controller
     public function getPendingIbUsers2(Request $request)
     {
         $role = session('userData')['userRole'];
-        $alogin = session('alogin');
+        $alogin = session('userData')['id'];
 
         // Base query
 
@@ -2402,9 +2750,14 @@ class AjaxController extends Controller
             $rmCondition->whereHas('user');
         }
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
         if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-                $query->where('rm_id', $alogin);
+            $rmCondition->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
@@ -2531,11 +2884,12 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT * FROM  emplist WHERE client_index=" . $id;
-        $query = DB::select($sql);
-        $result = $query[0];
-        unset($result->password);
-        return $result;
+        // $sql = "SELECT * FROM  emplist WHERE id='" . $id;
+        return EmployeeList::select("id","role_id",'username','email','gender','dob','number','address','company_name','status')->where("id",$id)->first();
+        // $query = DB::select($sql);
+        // $result = $query[0];
+        // unset($result->password);
+        // return $result;
     }
     public function getPaymentDetails($id)
     {
@@ -2556,14 +2910,14 @@ class AjaxController extends Controller
         $user_status = isset($data['status']) && $data['status'] === "on" ? 1 : 0;
         $kyc_verify = isset($data['kyc_verify']) && $data['kyc_verify'] === "on" ? 1 : 0;
 
-        $result = DB::table('aspnetusers')
-            ->select('status', 'email', 'email_confirmed', 'kyc_verify')
-            ->where(DB::raw('id'), '=', $user_id)
+        $user = User::select('status', 'email', 'email_confirmed', 'kyc_verify')
+            ->where("id", $user_id)
             ->first();
+        $admin = Auth::guard('admin')->user();
+        Gate::forUser($admin)->authorize('client:update',$user);
         try {
 
-            $updated = DB::table('aspnetusers')
-                ->where(DB::raw('id'), '=', $user_id)
+            $updated = User::where("id", $user_id)
                 ->update([
                     'status' => $user_status,
                     'email_confirmed' => $email_confirmed,
@@ -2662,12 +3016,14 @@ class AjaxController extends Controller
 
     public function requestIB($request)
     {
+
         try {
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
             $ibGroup = $request['ib_group'];
-            $result = Ib1::with('user')->whereRaw('user_id = ?', [$clientId])->first();
-
+            $result = Ib1::with('user')->where('user_id', $clientId)->first();
+            $admin = Auth::guard('admin')->user();
+            Gate::forUser($admin)->authorize('ib:update',$result);
             if ($result) {
                 $clientId = $result->user->id;
             }
@@ -2706,5 +3062,58 @@ class AjaxController extends Controller
         } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+    public function getClientIbProfile(Request $request)
+    {
+        $id = request('userId');
+        $level = request('level');
+
+        $user = User::with('ib')->findOrFail($id);
+
+        if(isset($user->clients[$level])){
+            $query = $user->clients[$level];
+        }else{
+            $query = [];
+        }
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+
+            ->editColumn('email', function ($row) {
+                    return " <div class='row align-items-center'>
+                                <div class='col-auto pe-0'>
+                                    <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
+                                </div>
+                                <div class='col'>
+                                    <h6 class='mb-2'>
+                                        <span class='text-truncate w-100'>{$row->fullname}</span>
+                                    </h6>
+                                    <p class='mb-0 text-muted f-12'>
+                                        <span class='text-truncate w-100'>{$row->email}</span>
+                                    </p>
+                                </div>
+                            </div>";
+            })
+
+            ->editColumn('total_accounts', function ($row) {
+                    return $row->liveaccounts;
+            })
+
+            ->editColumn('total_deposit', function ($row) {
+                    return $row->total_deposit ? $row->total_deposit : "$";
+            })
+
+            ->editColumn('profile_status', function ($row) {
+                    if($row->email_confirmed == 1){
+                        return " <span  class='badge btn bg-success'>Active</span>";
+                    }else{
+                        return "<span class='badge btn bg-info'>Not Verified</span>";
+                    }
+            })
+
+                ->rawColumns(['email', 'profile_status'])
+                ->make(true);
+        }
+
     }
 }

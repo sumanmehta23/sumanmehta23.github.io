@@ -23001,6 +23001,9 @@ input.error {
   border: 1px solid transparent;
   border-radius: 0.3rem;
 }
+/* .app-sidebar .slide.menu-item-main:hover {
+  background: #f3f3f95e;
+} */
 
 .app-sidebar .side-menu__item.active {
   color: var(--primary-color);
@@ -23018,6 +23021,7 @@ input.error {
 
 .app-sidebar .side-menu__item.active {
   font-weight: 500;
+  background:#f3f3f95e;
 }
 
 .app-sidebar .side-menu__item svg.side-menu__icon {

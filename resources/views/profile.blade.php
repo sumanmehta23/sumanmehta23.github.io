@@ -51,6 +51,15 @@
     font-size: 30px;
 }
 
+.varification-pending{
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+}
+.varification-plus{
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+}
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
@@ -87,7 +96,12 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            <p class="mb-0">{{ session('user')->email }}</p>
+                                            <div class="d-flex align-items-center">
+                                                <p class="mb-0 me-3">{{ session('user')->email }}</p>
+                                                @if ($user->email_confirmed == 0)
+                                                    <label class="badge bg-danger text-white ms-2" style="font-size: 14px;">Email update unverified</label>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div class="col-md-auto"></div>
                                     </div>
@@ -137,7 +151,47 @@
                                                     <h5>Personal Information</h5>
                                                 </div>
                                                 <div class="card-body">
-                                                    <div class="row">
+                                                    <form action={{route("email.change")}} method="post">
+                                                        @csrf
+                                                        <div class="row">
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Full Name</label>
+                                                                    <input type="text" class="form-control" name="name"
+                                                                        value="{{ session('user')->fullname }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Account Email</label>
+                                                                    <input type="text" class="form-control" name="email"
+                                                                        value="{{ session('user')->email }}" required>
+                                                                </div>
+                                                                {{-- <input type="text" class="form-control" name="email_confirmed"
+                                                                    value="{{ session('user')->email_confirmed }}" required readonly> --}}
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Contact Number</label>
+                                                                    <input type="text" class="form-control" name="telephone"
+                                                                        value="{{ session('user')->number }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Gender</label>
+                                                                    <input type="text" class="form-control"
+                                                                        value="{{ session('user')->gender }}" required readonly>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class=" text-end">
+                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update</button>
+                                                        </div>
+
+                                                    </form>
+                                                    {{-- <div class="row">
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Full Name</label>
@@ -166,7 +220,7 @@
                                                                     value="{{ session('user')->gender }}" disabled>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div> --}}
                                                 </div>
                                             </div>
                                         </div>
@@ -310,33 +364,64 @@
                                                                     <th>Currency</th>
                                                                     <th>Network</th>
                                                                     <th>Address</th>
+                                                                    <th>Verified</th>
                                                                     <th>Status / Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 @foreach ($bank_accounts as $acc)
+                                                                    {{-- {{ dd($acc) }} --}}
                                                                     <tr>
                                                                         {{-- <td>CWA{{ sprintf('%04u', $acc->id) }}</td> --}}
                                                                         <td>{{ $acc->wallet_name }}</td>
                                                                         <td>{{ $acc->wallet_currency }}</td>
                                                                         <td>{{ $acc->wallet_network }}</td>
                                                                         <td>{{ $acc->wallet_address }}</td>
-                                                                        <td
-                                                                            class="text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
-                                                                            @if ($acc->status == 0)
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Inactive Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-left"></i>
-                                                                                </a>
-                                                                            @else
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Active Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-right"></i>
-                                                                                </a>
+                                                                        @php
+                                                                            if($acc->verified == 0){
+                                                                                $verification = 'Pending';
+                                                                                $tdClass = 'varification-pending';
+                                                                            }else{
+                                                                                $verification = 'Approved';
+                                                                                $tdClass = 'varification-plus';
+                                                                            }
+                                                                        @endphp
+                                                                        <td  class="{{ $tdClass }}">{{ $verification }}</td>
+                                                                        {{-- {{ dd($acc) }} --}}
+                                                                        <td>
+                                                                            @if ($acc->wallet_delete_verification == 0)
+                                                                                <div class="d-flex align-items-center text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
+                                                                                    @if ($acc->status == 0)
+                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                            data-bs-toggle="tooltip"
+                                                                                            title="Inactive Wallet Address"
+                                                                                            data-toggle="{{ $acc->id }}">
+                                                                                            <i class="f-24 ti ti-toggle-left"></i>
+                                                                                        </a>
+                                                                                    @else
+                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                            data-bs-toggle="tooltip"
+                                                                                            title="Active Wallet Address"
+                                                                                            data-toggle="{{ $acc->id }}">
+                                                                                            <i class="f-24 ti ti-toggle-right"></i>
+                                                                                        </a>
+                                                                                    @endif
+                                                                                    <span class="badge text-danger delete_wallet_address"
+                                                                                        data-id="{{ $acc->id }}"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Delete Wallet Address">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                                            <path d="M4 7l16 0" />
+                                                                                            <path d="M10 11l0 6" />
+                                                                                            <path d="M14 11l0 6" />
+                                                                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                                                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                                                        </svg>
+                                                                                    </span>
+                                                                                </div>
+                                                                            @elseif ($acc->wallet_delete_verification == 1)
+                                                                                <span class="text-warning">Deletion Not Verified</span>
                                                                             @endif
                                                                         </td>
                                                                     </tr>
@@ -370,6 +455,27 @@
 
         </div>
     </div>
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                message: 'Kindly check your new email address and complete the verification process for this update.'
+            }).then(() => {
+                window.location.href = '{{ route('user-profile') }}';
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: "Something Went Wrong !!!!",
+                text: '{{ session('error') }}',
+            });
+        </script>
+    @endif
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $("#changePasswordForm").submit(function(e) {
@@ -435,6 +541,55 @@
                 }
             });
         });
+        $(".delete_wallet_address").click(function (e) {
+            e.preventDefault();
+
+            const wallet_id = this.getAttribute("data-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to undo this action!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('verify_delete_wallet_address') }}", // Update to match your route
+                        data: {
+                            id: wallet_id,
+                            _token: "{{ csrf_token() }}" // Ensure CSRF protection
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Verify Your Email For Wallet Address Deletion"
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Warning",
+                                    text: data.message || "Something went wrong!"
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "An error occurred while deleting wallet address. Please try again."
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
         $(document).ready(function() {
         // Show "Edit Picture" text when hovering over the image
         $('#profile_image').hover(function() {

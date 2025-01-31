@@ -129,7 +129,7 @@
                                                     </div>
                                                     <div class="mt-2 lh-1">
                                                         <span class="badge bg-success-transparent">+</span>
-                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->walletDeposits->sum('deposit_amount') : 0 }}</span>
+                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0 }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -278,19 +278,21 @@
                                                 @endphp
                                                 <button
                                                     onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
-                                                    type="button" class="m-1 btn btn-success btn-space">Approve</button>
+                                                    type="button" class="m-1 btn btn-success btn-space">
+                                                Approve
+                                                </button>
                                                     {{-- <button
                                                     onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
                                                     type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
-                                                    @if (($details->status == 0) || ($details->payout_res != null))
-                                                        @php
-                                                            $payout_res = !empty($details->payout_res) ? json_decode($details->payout_res, true) : [];
-                                                            $message = isset($payout_res['message']) ? $payout_res['message'] : '';
-                                                        @endphp
-                                                        <button
-                                                        onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)"
-                                                        type="submit" class="m-1 btn btn-danger btn-space">Reject</button>
-                                                    @endif
+                                                @if (($details->status == 0) || ($details->payout_res != null))
+                                                    <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
+                                                    Reject
+                                                    </button>
+                                                    <div class="form-check d-inline-block me-2">
+                                                        <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)">
+                                                        <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </td>
                                         <?php } else { ?>
@@ -404,6 +406,7 @@
                           <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
                           <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
                           <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
+                          <option value="bonus_min_deposit">Bonus and Minimum Deposit Not Eligible for Withdrawal (no email sent)</option>
                       </select>
                   </div>
               `
@@ -448,5 +451,53 @@
             }
           });
         }
+
+        function handleCheckboxClick(checkbox, id, data, email, amount, status) {
+            const sanitizedData = data.replace(/\\/g, '\\\\');
+            const parsedData = JSON.parse(sanitizedData);
+            const withdraw_id = JSON.parse(id);
+            // console.log(withdraw_id);
+            if (checkbox.checked) {
+                const now = new Date();
+                const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+                Swal.fire({
+                    title: `Are you sure you wish to process this payout manually`,
+                    html: `
+                    <form id="manually_approve_withdrawal" method="post" action="manually_approve_withdrawal">
+                    @csrf
+                    <input type="hidden" name="email" value="${email}">
+                    <input type="hidden" name="amount" value="${amount}">
+                    <input type="hidden" name="status" value="${status}">
+                    <input type="hidden" name="transaction" value="Manually">
+                    <input type="hidden" name="approved_by" value="${parsedData.username}">
+                    <input type="hidden" name="approved_date" value="${approved_date_time}">
+                    <input type="hidden" name="transaction_id" value="${withdraw_id}">
+                    <input type="hidden" name="action" value="update_transaction">
+                    </form>
+                `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    preConfirm: () => {
+                    return true;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                    document.querySelector('#manually_approve_withdrawal').submit();
+                    }else {
+                        checkbox.checked = false; // Uncheck the checkbox if canceled
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const manualPayCheckbox = document.getElementById('manualPayCheckbox');
+            if (manualPayCheckbox) {
+                manualPayCheckbox.checked = false; // Ensure the checkbox starts unchecked
+            }
+        });
       </script>
 @endsection

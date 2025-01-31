@@ -25,11 +25,14 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Services\MailService;
 use App\Models\WalletWithdraw;
+use Illuminate\Validation\Rule;
 use App\Models\ClientBankDetail;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
@@ -37,10 +40,12 @@ class ClientController extends Controller
     public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
+        // Gate::validate('view-client');
     }
     public function index()
     {
-
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
         // Fetch IB details
         $ib_details = DB::table('ib1')
             ->select('name', 'email', 'referral_code')
@@ -79,7 +84,15 @@ class ClientController extends Controller
             ->sum('withdraw_transaction_fee');
         $wallet_withdrawal = $wallet_withdrawal + $wallet_withdrawal_fee;
         // Total Clients & IBs count
-        $total_clients = DB::table("aspnetusers")->count();
+        if ($role === "Relationship Manager") {
+            $total_clients = DB::table("aspnetusers")
+                ->leftJoin('relationship_manager as rm', 'aspnetusers.id', '=', 'rm.user_id')
+                ->where('rm.rm_id', $alogin)
+                ->count();
+
+        }else{
+            $total_clients = DB::table("aspnetusers")->count();
+        }
 
         $total_ib = DB::table('ib1')
             ->leftJoin('relationship_manager as rm', 'rm.user_id', '=', 'ib1.email')
@@ -242,7 +255,21 @@ class ClientController extends Controller
                 $emailConfirmed = 1;
                 try {
                     // Insert new user into the database
-                    $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    // $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    //     'email' => $email,
+                    //     'fullname' => $fullname,
+                    //     'password' => $password,
+                    //     'country_code' => $country_code,
+                    //     'number' => $number,
+                    //     'username' => $email,
+                    //     'referral' => $referral,
+                    //     'emailToken' => $code,
+                    //     'country' => $country,
+                    //     'status' => $status,
+                    //     'email_confirmed' => $emailConfirmed,
+                    // ]);
+
+                    $user = User::create([
                         'email' => $email,
                         'fullname' => $fullname,
                         'password' => $password,
@@ -256,10 +283,10 @@ class ClientController extends Controller
                         'email_confirmed' => $emailConfirmed,
                     ]);
 
-                    if ($lastInsertId) {
+                    if ($user) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
-                            'user_id' => $lastInsertId,
+                            'user_id' => $user->id,
                             'email' => $email,
                             'type' => 'client_add',
                             'value' => json_encode($request->except(['addUser', 'password', 'confirm_password']))
@@ -301,8 +328,21 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
+        $user_id = $request->input('id');
+        $validatedData = Validator::make($request->all(), [
+            'email' => [
+                'required',
+                Rule::unique('aspnetusers', 'email')->ignore($user_id)
+            ],
+        ]);
+
+        if ($validatedData->fails()) {
+            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+        }
+
         if ($request->has('updateUser')) {
-            $email = $request->input('email');
+            // $email = $request->input('email');
+            $email = $validatedData->validated()['email'];
             $fullname = $request->input('fullname');
             $password = $request->input('password');
             $confirmPassword = $request->input('confirm_password');
@@ -310,7 +350,7 @@ class ClientController extends Controller
             $country_code = $request->input('country_code');
             // $number = $request->input('telephone');
             $number = $request->country_code.$request->telephone;
-            $user_id = $request->input('id');
+            
             $emailNotification = $request->input('email_notification');
 
             $countryCode = Country::where('country_name', $request->country)
@@ -332,27 +372,45 @@ class ClientController extends Controller
             }
             $status = 1;
             $emailConfirmed = 1;
-
             try {
-                // Update user in the database
-                $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('id'), $user_id)
-                    ->update([
-                        'fullname' => $fullname,
-                        'password' => $password,
-                        'number' => $number,
-                        'country_code' => $country_code,
-                        'country' => $country
-                    ]);
+                
+                $user = User::find($user_id);
+
+                if ($user) {
+                    
+                    $user->fullname = $fullname;
+                    if($password){
+                        $user->password = $password;
+                    }
+                    $user->number = $number;
+                    $user->country_code = $country_code;
+                    $user->country = $country;
+                    $user->email = $email;
+                
+                    $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
+                }
+                
+                // $affectedRows = DB::table('aspnetusers')
+                //     ->where(DB::raw('id'), $user_id)
+                //     ->update([
+                //         'fullname' => $fullname,
+                //         'password' => $password,
+                //         'number' => $number,
+                //         'country_code' => $country_code,
+                //         'country' => $country,
+                //         'email' => $email,
+                //     ]);
+                
 
                 // If update is successful
-                if ($affectedRows > 0) {
+                if ($user) {
                     $updateData = [
                         'user_id' => $user_id,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))
                     ];
+                    // dd($updateData);
                     // Log the update (you need to implement this function if not already available)
                     $this->addToUserLog($updateData);
 
@@ -440,7 +498,7 @@ class ClientController extends Controller
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
-        $live_accounts = $user->liveAccounts;  // Relationship for live accounts
+        $live_accounts = $user->liveAccounts->where('account_request_status',1);  // Relationship for live accounts
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
@@ -455,6 +513,9 @@ class ClientController extends Controller
         $ticket_status = $user->ticket_status;  // Cached ticket status
         $ticket_types = $user->ticket_types;  // Cached ticket types
 
+        $userid = $id;
+
+        $IbTotalDeposits = $user->IbTotalDeposits;
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
@@ -474,7 +535,9 @@ class ClientController extends Controller
             'superadmin_details',
             'country_code',
             'clients',
-            'countries'
+            'userid',
+            'countries',
+            'IbTotalDeposits'
         ));
     }
 
