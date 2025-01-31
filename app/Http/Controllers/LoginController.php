@@ -242,7 +242,7 @@ class LoginController extends Controller
                 //     ->where('email', $user->email)
                 //     ->update(['password' => $password]);
                 // Send the email notification
-                User::where('email', $user->email)->update(['password' =>  Hash::make($request->new_password)]);
+                User::where('email', $user->email)->update(['password' =>  Hash::make($password)]);
                 $user->update(['emailToken' => null]);
 
                 $this->sendPasswordResetSuccessEmail($user);
