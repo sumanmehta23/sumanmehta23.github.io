@@ -56,12 +56,12 @@ class LoginController extends Controller
 
          // Find the user by email
          $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
-         dd('qqq');
+
          // Check if user exists
          if (!$user) {
              return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
          }
-
+         dump($user);
          // Check if the password is in plain text (not hashed)
          if (Hash::needsRehash($user->password)) {
             dd('rrrr');
