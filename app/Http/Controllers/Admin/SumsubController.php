@@ -115,7 +115,7 @@ class SumsubController extends Controller
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
-
+        dd($error);
         if ($error) {
             return "cURL Error: " . $error;
         }
