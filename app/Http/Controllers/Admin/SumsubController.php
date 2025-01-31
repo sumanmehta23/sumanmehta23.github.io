@@ -109,15 +109,33 @@ class SumsubController extends Controller
             "Accept" => "application/json",
             "Content-Type" => "application/json"
         ];
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+          CURLOPT_URL => $apiUrl,
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => "",
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => "GET",
+          CURLOPT_HTTPHEADER => $headers,
+        ]);
+
+        $response = curl_exec($curl);
+        // dump($response);
+        dd($response);
+        $err = curl_error($curl);
+
+        curl_close($curl);
 
         // Make API request using Laravel's HTTP client
-        $response = Http::withHeaders($headers)->get($apiUrl);
+        // $response = Http::withHeaders($headers)->get($apiUrl);
 
         // Get the HTTP status code
         $statusCode = $response->status();
         $responseBody = $response->json();
-        dump($response);
-        dd($responseBody);
+
         // Debugging Output (Useful for testing)
         \Log::info("Sumsub API Response:", [
             "url" => $apiUrl,
