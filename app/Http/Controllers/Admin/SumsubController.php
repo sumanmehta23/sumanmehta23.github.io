@@ -116,7 +116,7 @@ class SumsubController extends Controller
         // Get the HTTP status code
         $statusCode = $response->status();
         $responseBody = $response->json();
-        dump($statusCode);
+        dump($response);
         dd($responseBody);
         // Debugging Output (Useful for testing)
         \Log::info("Sumsub API Response:", [
