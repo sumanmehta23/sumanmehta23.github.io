@@ -76,7 +76,7 @@ class SumsubController extends Controller
     //     return response()->json(['error' => 'No token received'], 500);
     // }
 
-    function generateSignature($secretKey, $url, $timestamp) {
+    public function generateSignature($secretKey, $url, $timestamp) {
         return hash_hmac('sha256', $timestamp . $url, $secretKey);
     }
 
@@ -98,7 +98,7 @@ class SumsubController extends Controller
         $endpoint = "/resources/applicants/-;externalUserId?search=" . urlencode($email);
         $url = $BASE_URL . $endpoint;
         $timestamp = round(microtime(true) * 1000); // Current timestamp in milliseconds
-        $signature = generateSignature($secretKey, $endpoint, $timestamp);
+        $signature = $this->generateSignature($secretKey, $endpoint, $timestamp);
 
         $headers = [
             "X-App-Token: $appToken",
