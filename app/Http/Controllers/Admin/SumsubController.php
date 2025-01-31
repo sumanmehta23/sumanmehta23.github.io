@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class SumsubController extends Controller
 {
@@ -77,73 +78,74 @@ class SumsubController extends Controller
 
     public function sumsub_data(Request $request)
     {
-        // Sumsub API access token (replace with your actual token)
-        $appToken = 'prd:iyi7rUjLQYFWdpw3LFuemd31.R0zHUOl2ZoXyr8y1ZpNKEGUNhx4e18NR';
+        // Store sensitive credentials in the .env file for security
+        $appToken = env('SUMSUB_APP_TOKEN');
+        $secretKey = env('SUMSUB_SECRET_KEY');
 
-        $secretKey = 'Bb7iwwWRFGNvetESRV21JGzv2AQanTZP';// Use environment variables for security
+        // Validate the request
+        $request->validate([
+            'email' => 'required|email'
+        ]);
 
         $email = $request->email;
 
-        $requestMethod = 'GET';
-        $requestUrl = "/resources/applicants?-;externalUserId=" . urlencode($email)."/one"; // Add externalUserId as a query parameter
-        $payload = ""; // Empty payload for this request
+        $requestMethod = 'GET'; // Ensure the correct method is used
+        $requestUrl = "/resources/applicants-;externalUserId=" . urlencode($email)."/one"; // Correct endpoint
         $timestamp = time();
-        $apiUrl = '/resources/applicants/-;externalUserId=' . urlencode($email) . '/one';
-        $requestBody = '';
-        $valueToSign = $timestamp . $requestMethod . $apiUrl;
-        if (!empty($requestBody)) {
-            $valueToSign .= $requestBody;
-        }
 
-        // Generate signature
-        $stringToSign = $requestMethod . ' ' . $requestUrl . "\n" . $timestamp . "\n" . $payload;
-        $signature = base64_encode(hash_hmac('sha256', $stringToSign, $secretKey, true));
+        // Generate the correct signature
+        $stringToSign = $timestamp . $requestMethod . $requestUrl;
+        $signature = hash_hmac('sha256', $stringToSign, $secretKey, true);
         $signatureHex = bin2hex($signature);
-        // Headers
+
+        // Set API URL
+        $apiUrl = "https://api.sumsub.com" . $requestUrl;
+
+        // Headers with proper authentication
         $headers = [
-            "X-App-Token: $appToken",
-            "X-App-Access-Ts: $timestamp",
-            "X-App-Access-Sig: $signature",
-            "Content-Type: application/json" // Default Content-Type, no payload here
+            "X-App-Token" => $appToken,
+            "X-App-Access-Ts" => $timestamp,
+            "X-App-Access-Sig" => $signatureHex,
+            "Accept" => "application/json",
+            "Content-Type" => "application/json"
         ];
 
-        $curl = curl_init();
+        // Make API request using Laravel's HTTP client
+        $response = Http::withHeaders($headers)->get($apiUrl);
+        dd($response);
+        // Get the HTTP status code
+        $statusCode = $response->status();
+        $responseBody = $response->json();
 
-        curl_setopt_array($curl, [
-        // CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId={{$email}}/one",
-        CURLOPT_URL => 'https://api.sumsub.com' . $apiUrl,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => $requestMethod,
-        // CURLOPT_POSTFIELDS => $requestBody,
-        CURLOPT_HTTPHEADER => [
-            'X-App-Token: ' . $appToken,
-            'X-App-Access-Ts: ' . $timestamp,
-            'X-App-Access-Sig: ' . $signatureHex,
-        ],
+        // Debugging Output (Useful for testing)
+        \Log::info("Sumsub API Response:", [
+            "url" => $apiUrl,
+            "status" => $statusCode,
+            "response" => $responseBody
         ]);
 
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        dd($response);
-        curl_close($curl);
+        // Handle errors properly
+        if ($statusCode === 405) {
+            return response()->json(["error" => "Method Not Allowed. Check if GET is the correct method."], 405);
+        } elseif ($statusCode >= 400) {
+            return response()->json([
+                "error" => "API request failed",
+                "status" => $statusCode,
+                "response" => $responseBody
+            ], $statusCode);
+        }
 
-        if ($err) {
-        echo "cURL Error #:" . $err;
+        // Check if an applicant exists
+        if (isset($responseBody['id'])) {
+            return response()->json([
+                "applicantId" => $responseBody['id']
+            ], 200);
         } else {
-        echo $response;
+            return response()->json([
+                "error" => "Applicant not found or invalid response",
+                "response" => $responseBody
+            ], 404);
         }
-
-        $decodedResponse = json_decode($response, true);
-
-        if (isset($decodedResponse['errorCode'])) {
-            return response()->json($decodedResponse, 401); // Handle API error response
-        }
-
-        return response()->json($decodedResponse, 200);
     }
+
 }

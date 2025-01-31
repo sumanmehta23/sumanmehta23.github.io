@@ -1700,8 +1700,8 @@
     });
 </script>
 <script src="https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
-     <script>
-        function getApplicantData(email) {
+<script>
+    function getApplicantData(email) {
 
         $.ajax({
             url: "{{ url('/admin/sumsub_data') }}",
@@ -1744,7 +1744,12 @@
                     console.log("Received message:", type, payload);
                     applicantId = payload.applicantId;  // Capture applicantId
                     // Display applicantId in HTML after it's received
-                    document.getElementById("sumsub-info").innerText = `Applicant ID: ${applicantId}`;
+                    let sumsubInfoElement = document.getElementById("sumsub-info");
+                    if (sumsubInfoElement) {
+                        sumsubInfoElement.innerText = `Applicant ID: ${applicantId}`;
+                        sumsubInfoElement.href = `https://yourlink.com/applicant/${applicantId}`; // Replace with actual link
+                    }
+                    // document.getElementById("sumsub-info").innerText = `Applicant ID: ${applicantId}`;
                 }
             })
             .build();
@@ -1754,6 +1759,6 @@
         console.log(token);
         return Promise.resolve(token);
     }
-    </script>
+</script>
 
 @endsection
