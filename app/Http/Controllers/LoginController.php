@@ -35,19 +35,19 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $key = 'login:' . (auth()->id() ?: $request->ip());
-        if (RateLimiter::tooManyAttempts($key, 3)) {
-            $retryAfter = RateLimiter::availableIn($key);
-            $hours = floor($retryAfter / 3600);
-            $minutes = floor(($retryAfter % 3600) / 60);
-            $seconds = $retryAfter % 60;
-            $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
-            return redirect()->back()->with(
-                'error',
-                "Too many requests. Please wait {$formattedTime} before trying again."
-            );
-        }
-        RateLimiter::hit($key, 300);
+        // $key = 'login:' . (auth()->id() ?: $request->ip());
+        // if (RateLimiter::tooManyAttempts($key, 3)) {
+        //     $retryAfter = RateLimiter::availableIn($key);
+        //     $hours = floor($retryAfter / 3600);
+        //     $minutes = floor(($retryAfter % 3600) / 60);
+        //     $seconds = $retryAfter % 60;
+        //     $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+        //     return redirect()->back()->with(
+        //         'error',
+        //         "Too many requests. Please wait {$formattedTime} before trying again."
+        //     );
+        // }
+        // RateLimiter::hit($key, 300);
         // Validate form inputs
         $request->validate([
             'email' => 'required|email',
