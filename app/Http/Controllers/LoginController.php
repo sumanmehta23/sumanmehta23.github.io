@@ -169,6 +169,7 @@ class LoginController extends Controller
         $code = $request->query('code');
         // Check user exists
         $user = User::where('id', $id)->where('emailToken', $code)->first();
+        dump($request->all());
         dump($request->isMethod('post'));
         dump($user);
         dump($user->email_token_time);
@@ -241,8 +242,9 @@ class LoginController extends Controller
 
                 $this->sendPasswordResetSuccessEmail($user);
                 return redirect()->route('login')->with('status', 'Password has been reset successfully. You can now login.');
+            }else{
+                return view('auth.reset-password', ['user' => $user]); // Return view
             }
-            return view('auth.reset-password', ['user' => $user]); // Return view
         } else {
             return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
         }
