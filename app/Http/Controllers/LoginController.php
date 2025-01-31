@@ -64,6 +64,7 @@ class LoginController extends Controller
 
          // Check if the password is in plain text (not hashed)
          if (Hash::needsRehash($user->password)) {
+            dd('rrrr');
              // If it's plain text, hash it and update the user's password
              if ($user->password === $request->input('password')) {
                  $user->password = Hash::make($request->input('password'));
@@ -72,7 +73,7 @@ class LoginController extends Controller
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
              }
          } else {
-            dd(Hash::check($request->input('password'), $user->password));
+            dd('ssss');
              // If password is hashed, verify it
              if (!Hash::check($request->input('password'), $user->password)) {
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
