@@ -73,7 +73,7 @@ class LoginController extends Controller
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
              }
          } else {
-            dd('ssss');
+            dd(Hash::check($request->input('password'), $user->password));
              // If password is hashed, verify it
              if (!Hash::check($request->input('password'), $user->password)) {
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
