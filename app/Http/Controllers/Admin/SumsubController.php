@@ -113,7 +113,7 @@ class SumsubController extends Controller
 
         curl_setopt_array($curl, [
         //   CURLOPT_URL => $apiUrl,
-          CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId={{$email}}/one",
+          CURLOPT_URL => "https://api.sumsub.com/resources/applicants/-;externalUserId=".$email."/one",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => "",
           CURLOPT_MAXREDIRS => 10,
