@@ -59,6 +59,21 @@
                                     var json_data = data;
                                 }
                                 if (json_data.status == "true") {
+                                    var applicantId = json_data.applicantId;
+                                    $.ajax({
+                                            url: "{{ url('/log_kyc_verification') }}", // Endpoint for logging KYC verification
+                                            type: "POST",
+                                            data: {
+                                                applicantId: applicantId,
+                                                applicantEmail: applicantEmail,  // Ensure this variable is set
+                                                userId: "{{ auth()->user()->id }}", // Pass the authenticated user's ID
+                                                _token: $('meta[name="csrf-token"]').attr('content') // CSRF token for security
+                                            },
+                                            success: function(response) {
+                                                // Handle the success of logging if needed
+                                                console.log('KYC log saved:', response);
+                                            }
+                                        });
                                     swal.fire({
                                         icon: "success",
                                         title: "Your KYC has been successfully verified",

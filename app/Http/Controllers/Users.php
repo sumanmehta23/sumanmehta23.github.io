@@ -197,6 +197,27 @@ class Users extends Controller
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }
 
+    public function logVerification(Request $request)
+    {
+        // Validate incoming data
+        $request->validate([
+            'applicantId' => 'required|string',
+            'applicantEmail' => 'required|email',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        // Create a new KYC log entry in the database
+        KycLog::create([
+            'client_id' => $request->applicantEmail,
+            'user_id' => $request->userId,
+            'callback_code' => 'Applicant ID',
+            'callback_payload' => json_encode($request->applicantId),
+        ]);
+
+        // Return a response indicating success
+        return response()->json(['status' => 'success', 'message' => 'KYC log saved']);
+    }
+
 
     public function changeEmail(Request $request)
     {
@@ -212,7 +233,7 @@ class Users extends Controller
 
         try {
             // Validate and update the email
-            
+
             $email = auth()->user()->email;
             // $newEmail = $validatedData->validated()['email'];
             $user = User::where('email', $email)->first();
@@ -222,7 +243,7 @@ class Users extends Controller
                 $user->email = $validatedData->validated()['email'];
                 $user->email_confirmed = 0;
                 $user->status = 0;
-                $user->save(); 
+                $user->save();
 
                 session()->forget('user');
                 session()->put('user', User::find(auth()->id()));
@@ -257,7 +278,7 @@ class Users extends Controller
                 return redirect()->back()->with('success', 'Email Successfully Changed');
             }
 
-            
+
         } catch (\Exception $e) {
             DB::rollback(); // Rollback on failure
             return redirect()->back()->with('error', 'Failed to change email.');
