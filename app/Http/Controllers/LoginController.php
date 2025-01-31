@@ -155,7 +155,6 @@ class LoginController extends Controller
                 "title_right" => "",
                 "subtitle_right" => ""
             ];
-            dd($templateVars);
             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
             return redirect()->back()->with('success', "We have sent an email to $email. Please click on the password reset link in the email to generate a new password.");
         } else {
@@ -174,9 +173,9 @@ class LoginController extends Controller
         if ($user && $user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME'))) {
             if ($request->isMethod('post')) {
                 // Validate
-                $request->validate([
-                    'password' => 'required|string|confirmed'
-                ]);
+                // $request->validate([
+                //     'password' => 'required|string|confirmed'
+                // ]);
                 // dd($request->all());
                 $validatedData = Validator::make($request->all(), [
                     'password' => [
@@ -229,11 +228,11 @@ class LoginController extends Controller
                     return redirect()->back()->with('error', $errorString);
                 }
                 $password = $request->input('password');
-                DB::table('aspnetusers')
-                    ->where('email', $user->email)
-                    ->update(['password' => $password]);
+                // DB::table('aspnetusers')
+                //     ->where('email', $user->email)
+                //     ->update(['password' => $password]);
                 // Send the email notification
-
+                User::where('email', $user->email)->update(['password' =>  Hash::make($request->new_password)]);
                 $user->update(['emailToken' => null]);
 
                 $this->sendPasswordResetSuccessEmail($user);
