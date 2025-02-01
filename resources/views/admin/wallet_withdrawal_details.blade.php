@@ -129,7 +129,9 @@
                                                     </div>
                                                     <div class="mt-2 lh-1">
                                                         <span class="badge bg-success-transparent">+</span>
-                                                        <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0 }}</span>
+                                                        {{-- <span>${{ ($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0 }}</span> --}}
+                                                        <span>${{ number_format(($details->user && $details->user->walletDeposits) ? $details->user->total_wd : 0, 2) }}</span>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -142,7 +144,7 @@
                                                     </div>
                                                     <div class="mt-2 lh-1">
                                                         <span class="badge bg-danger-transparent">-</span>
-                                                        <span>${{ $details->filtered_withdrawal_sum }}</span>
+                                                        <span>${{ number_format($details->filtered_withdrawal_sum, 2) }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -180,7 +182,7 @@
                                                         <span class="fs-11 text-muted">WITHDRAW AMOUNT</span>
                                                     </div>
                                                     <div class="mt-2 lh-1">
-                                                        <span>${{ $details->withdraw_amount }}</span>
+                                                        <span>${{  number_format($details->withdraw_amount,2 )}}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -237,7 +239,7 @@
                                                         </div>
                                                         <div class="mt-2 lh-1">
                                                         <div class="mb-1"><span class="text-muted me-1">Address: </span><?= $client_wallet->wallet_address ?></div>
-                                                        <div class="mb-1"><span class="text-muted me-1"> <?= $client_wallet->wallet_currency ?> / <?= $client_wallet->wallet_network ?></span></div>
+                                                        <div class="mb-1"><span class="text-muted me-1"> <?= $client_wallet->wallet_network != 'BTC' ? $client_wallet->wallet_currency : 'BTC' ?> / <?= $client_wallet->wallet_network ?></span></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -266,7 +268,7 @@
                                                     <span class="fs-11 text-muted">WITHDRAW FEE</span>
                                                     </div>
                                                     <div class="mt-2 lh-1">
-                                                    <span>$<?= $details->withdraw_transaction_fee ?? 0 ?></span>
+                                                    <span>$<?= number_format($details->withdraw_transaction_fee,2) ?? 0 ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -330,7 +332,7 @@
                                                       <span class="fs-11 text-muted">WITHDRAW FEE</span>
                                                   </div>
                                                   <div class="mt-2 lh-1">
-                                                      <span>$<?= ($details->withdraw_transaction_fee ?? 0) ?></span>
+                                                      <span>$<?= (number_format($details->withdraw_transaction_fee,2) ?? 0) ?></span>
                                                   </div>
                                               </div>
                                             </div>
