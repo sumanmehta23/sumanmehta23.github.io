@@ -406,9 +406,9 @@
                       <select id="rejection_reason" name="rejection_reason" class="form-control">
                           <option value="" disabled selected>Select Rejection Reason</option>
                           <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
-                          <option value="incorrect_payment_details">Incorrect Payment Details (no email sent)</option>
-                          <option value="duplicate_transaction">Duplicate Transaction (no email sent)</option>
-                          <option value="bonus_min_deposit">Bonus and Minimum Deposit Not Eligible for Withdrawal (no email sent)</option>
+                          <option value="Incorrect Payment Details">Incorrect Payment Details (no email sent)</option>
+                          <option value="Duplicate Transaction">Duplicate Transaction (no email sent)</option>
+                          <option value="Bonus Min Deposit">Bonus and Minimum Deposit Not Eligible for Withdrawal (no email sent)</option>
                       </select>
                   </div>
               `
