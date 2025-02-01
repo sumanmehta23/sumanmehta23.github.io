@@ -9,13 +9,21 @@ use App\Models\ClientWallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Account;
+use App\Services\MailService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class Users extends Controller
 {
+    protected $mailService;
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
+    }
     public function profile()
     {
         $user_id = auth()->user()->id;
@@ -28,19 +36,82 @@ class Users extends Controller
     }
     public function changePassword(Request $request)
     {
-        $request->validate([
+        $rules = [
             'current_password' => 'required',
-            'new_password' => 'required|confirmed',
-        ]);
-        $email = auth()->user()->email;
-        $user = DB::table('aspnetusers')->where('email', $email)->first();
+            'new_password' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
+            ],
+        ];
 
-        if ($user &&(Hash::check($request->current_password, $user->password))) {
-            User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
-            return response()->json(['success' => 'Password Successfully Changed']);
-        } else {
-            return response()->json(['message' => 'Current Password is not matched'], 422);
+        $messages = [
+            'new_password.min' => 'The password must be at least 8 characters long.',
+            'new_password.regex' => [
+                'The password must contain at least one lowercase letter.',
+                'The password must contain at least one uppercase letter.',
+                'The password must contain at least one number.',
+                'The password must contain at least one special character.',
+            ],
+            'new_password.confirmed' => 'Passwords do not match.',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $filteredErrors = [];
+
+            // Check which specific regex rule failed and return only unmet requirements
+            if ($errors->has('new_password')) {
+                $password = $request->new_password;
+
+                if (!preg_match('/[a-z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                }
+                if (!preg_match('/[A-Z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                }
+                if (!preg_match('/\d/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one number.';
+                }
+                if (!preg_match('/[\W_]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one special character.';
+                }
+                if (strlen($password) < 8) {
+                    $filteredErrors[] = 'The password must be at least 8 characters long.';
+                }
+                if ($errors->has('new_password.confirmed')) {
+                    $filteredErrors[] = 'Passwords do not match.';
+                }
+            }
+
+            return response()->json([
+                'errors' => $filteredErrors
+            ], 422);
         }
+
+        // $email = auth()->user()->email;
+        // $user = DB::table('aspnetusers')->where('email', $email)->first();
+        $user = Auth::user();
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 422);
+        }
+
+        // Update password
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        auth()->logoutOtherDevices($request->new_password);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['success' => 'Password Successfully Changed']);
     }
     public function changeProfileImage(Request $request)
     {
@@ -146,6 +217,7 @@ class Users extends Controller
             $email = Session::get('clogin');
             $type = $request->input('type');
             $payload = $request->input('payload');
+
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
@@ -180,7 +252,7 @@ class Users extends Controller
                 } else {
                     return response()->json(['status' => 'false', 'message' => 'Status in progress..']);
                 }
-            } else {
+            }else {
                 return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
             }
         }
@@ -188,5 +260,94 @@ class Users extends Controller
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }
+
+    public function logVerification(Request $request)
+    {
+        // Validate incoming data
+        $request->validate([
+            'applicantId' => 'required|string',
+            'applicantEmail' => 'required|email',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        // Create a new KYC log entry in the database
+        KycLog::create([
+            'client_id' => $request->applicantEmail,
+            'user_id' => $request->userId,
+            'callback_code' => 'Applicant ID',
+            'callback_payload' => json_encode($request->applicantId),
+        ]);
+
+        // Return a response indicating success
+        return response()->json(['status' => 'success', 'message' => 'KYC log saved']);
+    }
+
+
+    public function changeEmail(Request $request)
+    {
+        // DB::beginTransaction();
+
+        $validatedData = Validator::make($request->all(), [
+            'email' => 'required|unique:aspnetusers,email'
+        ]);
+
+        if ($validatedData->fails()) {
+            return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+        }
+
+        try {
+            // Validate and update the email
+
+            $email = auth()->user()->email;
+            // $newEmail = $validatedData->validated()['email'];
+            $user = User::where('email', $email)->first();
+
+            if($user){
+
+                $user->email = $validatedData->validated()['email'];
+                $user->email_confirmed = 0;
+                $user->status = 0;
+                $user->save();
+
+                session()->forget('user');
+                session()->put('user', User::find(auth()->id()));
+
+                // DB::commit();
+                $settings = settings();
+                $from = $settings['email_from_address'];
+                $toEmail = $user->email;//which email use to send message
+                $uid = uniqid();
+                $emailSubject = $settings['admin_title'] . ' - Activate Your New Email Address';
+                $htmlContent = "";
+                $code = $user->emailToken;
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    // '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Thank you for updating your contact information with LQH Markets. Please </div>' .
+                    '<div>activate your new email address to ensure seamless communication.</div>';
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$user->id}&code=$code",
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Activate",
+                    "subtitle_right" => "Your Account"
+                ];
+                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+                return redirect()->back()->with('success', 'Email Successfully Changed');
+            }
+
+
+        } catch (\Exception $e) {
+            DB::rollback(); // Rollback on failure
+            return redirect()->back()->with('error', 'Failed to change email.');
+        }
+    }
+
 
 }

@@ -418,12 +418,11 @@
                 </div>
             @endif
             @if(config("services.sales.promotion"))
-            <div class=" w-100 sales-banner-container">
+            {{-- <div class=" w-100 sales-banner-container">
                 <div class="banner-link" ><div class="lqh-sale-banner">
                     <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
                     </div></div>
-            </div>
-            
+            </div> --}}
             @endif
             
             <header class="pc-header" <?php echo $marginTopStyle; ?>>

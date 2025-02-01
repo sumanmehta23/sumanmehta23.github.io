@@ -193,7 +193,11 @@
                         }
                     }
                 ],
-
+            lengthMenu: [
+                [10, 25, 50, 100, -1], // DataTable options
+                [10, 25, 50, 100, "All"] // User-facing labels
+                ],
+            pageLength: 10,
             order: [[3, "desc"]],
             processing: true,
             serverSide: true,

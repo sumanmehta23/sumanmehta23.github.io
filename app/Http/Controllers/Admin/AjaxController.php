@@ -497,7 +497,7 @@ class AjaxController extends Controller
                     if (intval($row->kyc_verify) >= 1) {
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
-                    if (Auth::guard('admin')->user()->can('update', $row)) {
+                    // if (Auth::guard('admin')->user()->can('update', $row)) {
                         $html .= "<span class='statusToggle' data-status='{$row->status}'>";
                         if ($row->status == 0) {
                             $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
@@ -523,7 +523,7 @@ class AjaxController extends Controller
                                     </span>";
                         }
                         $html .= "</span>";
-                    }
+                    // }
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='resendToggle' data-status='{$row->email_confirmed}'>";
                         $html .= "<span class='badge text-danger' data-bs-toggle='tooltip' title='Email Not Verified'>
@@ -959,6 +959,17 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('deposit_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -1055,6 +1066,18 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
                 return DataTables::of($rmCondition)
+                    ->filter(function ($rmCondition) use ($request) {
+                        if (!empty($request->search['value'])) {
+                            $searchValue = $request->search['value'];
+                            $rmCondition->where(function($q) use ($searchValue) {
+                                $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_transaction_fee', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('withdraw_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                            });
+                        }
+                    })
                     ->editColumn('email', function ($row) {
                         $fullname = $row->user
                             ? ($row->user->fullname)
@@ -1127,7 +1150,7 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        // dd($request->search);
+        // dd($request->length);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
@@ -1153,8 +1176,25 @@ class AjaxController extends Controller
         }
 
 
+
         if ($request->ajax()) {
+            // if ($request->length == -1) {
+            //     $query = $query->get(); // Fetch all rows
+            // } else {
+            //     $query = $query->paginate($request->length);
+            // }
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $query->where(function($q) use ($searchValue) {
+                            $q->where('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -1245,6 +1285,9 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->addColumn('code', function($row){
+                    return $row->account->code;
+                })
                 ->addColumn('withdraw_type', function($row){
                     return $row->withdraw_type;
                 })
@@ -1693,6 +1736,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)

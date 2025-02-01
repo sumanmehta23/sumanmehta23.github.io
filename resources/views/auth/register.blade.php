@@ -34,7 +34,7 @@
             margin-bottom:10%
         }
     }
-   
+
 .lqh-sale-banner {
   width: 100%;
   background-size: 100%;
@@ -110,14 +110,15 @@
                                     id="auth-active-slide"><?= isset($success) ? '3' : '1' ?></b> to 3 </h5>
                         </div>
                     </div>
-                    
+
                     @if(config("services.sales.promotion"))
-                    <div class="mt-4 w-100 sales-banner-container">
-                        <div class="banner-link" ><div class="lqh-sale-banner">
-                            <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
-                            </div></div>
-                    </div>
-                    
+                        {{-- <div class="mt-4 w-100 sales-banner-container">
+                            <div class="banner-link" ><div class="lqh-sale-banner">
+                                <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
+                                </div>
+                            </div>
+                        </div> --}}
+
                     @endif
                     <div data-v-97e32e5a="" class="my-auto card">
                         <div data-v-97e32e5a="" class="card-body">
@@ -127,7 +128,7 @@
                                         role="tab" data-slide-index="1" aria-controls="auth-1" aria-selected="true"></a>
                                 </li>
                             </ul>
-                            
+
                             <form method="post" data-v-97e32e5a="" class="needs-validation" id="formRegister">
                                 @csrf
                                 <div data-v-97e32e5a="" class="tab-content">
@@ -202,11 +203,11 @@
                                         </div>
                                         <div data-v-97e32e5a="" class="my-4 row">
                                             <div data-v-97e32e5a="" class="col-sm-12">
-                                                <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Full Name</label><input data-v-97e32e5a=""
-                                                        type="text" class="form-control" placeholder="Full name"
-                                                        required name="fullname"><!----><small data-v-97e32e5a="">*as it
-                                                        appears on your ID Card / Proof of Identity</small></div>
+                                                <div data-v-97e32e5a="" class="form-group">
+                                                    <label data-v-97e32e5a="" class="form-label">Full Name</label>
+                                                        <input data-v-97e32e5a="" type="text" class="form-control" placeholder="Full name" required name="fullname" maxlength="30" onpaste="handlePaste(event)">
+                                                        <small data-v-97e32e5a="">*as it appears on your ID Card / Proof of Identity</small>
+                                                </div>
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group country-code-wrapper"><label
@@ -400,6 +401,16 @@
     </div>
 
     <script>
+        function handlePaste(event) {
+            const pasteData = event.clipboardData.getData('text');
+
+            const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+/;
+
+            if (urlPattern.test(pasteData)) {
+                event.preventDefault();
+                alert('Hyperlinks are not allowed in the Full Name field.');
+            }
+        }
         $(document).ready(function() {
 
             function formatOption(option) {
@@ -434,6 +445,40 @@
                     swal.fire({
                         icon: "error",
                         title: "Invalid email address",
+                    });
+                    return;
+                }
+                const passwordPattern = {
+                    length: /.{8,}/,
+                    lowercase: /[a-z]/,
+                    uppercase: /[A-Z]/,
+                    number: /\d/,
+                    special: /[\W_]/
+                };
+
+                let errors = [];
+
+                if (!passwordPattern.length.test(password)) {
+                    errors.push("<li>At least 8 characters</li>");
+                }
+                if (!passwordPattern.lowercase.test(password)) {
+                    errors.push("<li>At least 1 lowercase letter (a-z)</li>");
+                }
+                if (!passwordPattern.uppercase.test(password)) {
+                    errors.push("<li>At least 1 uppercase letter (A-Z)</li>");
+                }
+                if (!passwordPattern.number.test(password)) {
+                    errors.push("<li>At least 1 number (0-9)</li>");
+                }
+                if (!passwordPattern.special.test(password)) {
+                    errors.push("<li>At least 1 special character</li>");
+                }
+
+                if (errors.length > 0) {
+                    swal.fire({
+                        icon: "error",
+                        title: "Password must meet the following criteria:",
+                        html: "<ul style='text-align: left;'>" + errors.join("") + "</ul>",
                     });
                     return;
                 }
