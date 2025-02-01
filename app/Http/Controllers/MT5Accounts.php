@@ -306,6 +306,7 @@ class MT5Accounts extends Controller
                     'account_request_status' => '1',
                 ]);
                 $this->sendMail($new_user, 'Live');
+                // return redirect()->back()->with('success', $response['message']);
                 return redirect()->back()->with('success', $response['message']);
             } else {
                 return redirect()->back()->with('error', $response['message']);
@@ -345,7 +346,7 @@ class MT5Accounts extends Controller
                     "subtitle_right" => "",
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->back()->with('success', 'Account created successfully');
+                return redirect()->back()->with('success', 'Account Request Received Your request has been submitted.');
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
