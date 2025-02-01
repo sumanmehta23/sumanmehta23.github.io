@@ -99,14 +99,10 @@ class Users extends Controller
         $user = DB::table('aspnetusers')->where('email', $email)->first();
 
         if ($user && (Hash::check($request->current_password, $user->password))) {
-            dd('ssss');
             User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            $user->update(['emailToken' => null]);
             return response()->json(['success' => 'Password Successfully Changed']);
         } else {
-            dd('ggg');
             return response()->json(['message' => 'Current Password is not matched'], 422);
         }
     }
