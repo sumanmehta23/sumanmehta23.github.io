@@ -194,6 +194,7 @@
                           </td>
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+                            <p>{{ $history->admin_remark ? '(' . $history->admin_remark . ')' : '' }}</p>
                           </td>
                           @if($history->status == 0)
                             <td >
