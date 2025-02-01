@@ -60,7 +60,7 @@ class Users extends Controller
             'new_password.confirmed' => 'Passwords do not match.',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             $errors = $validator->errors();
@@ -95,16 +95,17 @@ class Users extends Controller
             ], 422);
         }
 
-        $email = auth()->user()->email;
-        $user = DB::table('aspnetusers')->where('email', $email)->first();
-
-        if ($user && (Hash::check($request->current_password, $user->password))) {
-            User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
-            $user->update(['emailToken' => null]);
-            return response()->json(['success' => 'Password Successfully Changed']);
-        } else {
-            return response()->json(['message' => 'Current Password is not matched'], 422);
+        // $email = auth()->user()->email;
+        // $user = DB::table('aspnetusers')->where('email', $email)->first();
+        $user = Auth::user();
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 422);
         }
+
+        // Update password
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        return response()->json(['success' => 'Password Successfully Changed']);
     }
     public function changeProfileImage(Request $request)
     {
