@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class Users extends Controller
 {
@@ -98,7 +99,7 @@ class Users extends Controller
         // $email = auth()->user()->email;
         // $user = DB::table('aspnetusers')->where('email', $email)->first();
         dump('sssssssssss');
-        $user = auth()->user();
+        $user = Auth::user();
         dump($user);
         if (!Hash::check($request->current_password, $user->password)) {
             dump('matching');
