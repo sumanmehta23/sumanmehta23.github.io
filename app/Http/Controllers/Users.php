@@ -98,13 +98,15 @@ class Users extends Controller
         // $email = auth()->user()->email;
         // $user = DB::table('aspnetusers')->where('email', $email)->first();
         $user = Auth::user();
+        dump($user);
         if (!Hash::check($request->current_password, $user->password)) {
+            dump('matching');
             return response()->json(['message' => 'Current password is incorrect'], 422);
         }
 
         // Update password
         $user->update(['password' => Hash::make($request->new_password)]);
-
+        dd($user);
         return response()->json(['success' => 'Password Successfully Changed']);
     }
     public function changeProfileImage(Request $request)
