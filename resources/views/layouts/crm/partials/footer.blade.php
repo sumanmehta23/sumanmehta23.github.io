@@ -150,7 +150,7 @@
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
                 if (data.success == true) {
                     Swal.fire({
-                        title: "Wallet Details Successfully Added",
+                        title: "Check email to verify new wallet address",
                         icon: "success"
                     }).then((val) => {
                         location.reload();
