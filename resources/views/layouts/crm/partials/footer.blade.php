@@ -130,8 +130,8 @@
                             <div class="form-group"><label class="form-label">Wallet Network</label>
                                 <select id="my-select" class="form-control" name="wallet_network" required>
                                     <option value="BTC">BTC</option>
-                                    <option value="ETH_USDT">ERC20</option>
-                                    <option value="USDT-TRX">TRC20</option>
+                                    <option value="ETH_USDT">USDT/ERC20</option>
+                                    <option value="USDT-TRX">USDT/TRC20</option>
                                 </select>
                             </div>
                             <div class="form-group"><label class="form-label">Wallet Address</label><input
