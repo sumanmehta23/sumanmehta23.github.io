@@ -486,6 +486,7 @@
                 url: "{{ route('password.change') }}",
                 data: $(this).serialize(),
                 success: function(response) {
+                    console.log("Success Response:", response);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
@@ -494,6 +495,7 @@
                     });
                 },
                 error: function(xhr) {
+                    console.log("Error Response:", xhr);
                     let errorMessage = "Something went wrong";
                     if (xhr.responseJSON?.errors) {
                         let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join("");
