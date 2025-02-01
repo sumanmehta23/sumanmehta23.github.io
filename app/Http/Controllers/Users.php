@@ -100,12 +100,17 @@ class Users extends Controller
         // $user = DB::table('aspnetusers')->where('email', $email)->first();
         $user = Auth::user();
         if (!Hash::check($request->current_password, $user->password)) {
-            dump('matching');
             return response()->json(['message' => 'Current password is incorrect'], 422);
         }
 
         // Update password
         $user->update(['password' => Hash::make($request->new_password)]);
+
+        auth()->logoutOtherDevices($request->new_password);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return response()->json(['success' => 'Password Successfully Changed']);
     }
     public function changeProfileImage(Request $request)
