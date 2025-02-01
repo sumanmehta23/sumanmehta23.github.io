@@ -98,7 +98,7 @@ class Users extends Controller
         // $email = auth()->user()->email;
         // $user = DB::table('aspnetusers')->where('email', $email)->first();
         dump('sssssssssss');
-        $user = Auth::user();
+        $user = auth()->user();
         dump($user);
         if (!Hash::check($request->current_password, $user->password)) {
             dump('matching');
