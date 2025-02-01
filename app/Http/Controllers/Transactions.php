@@ -142,6 +142,7 @@ class Transactions extends Controller
         if ($transaction) {
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
+            $transaction->admin_remark = 'Self Cancellation';
             $transaction->save();
             if($status==3){
 
