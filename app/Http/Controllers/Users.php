@@ -35,7 +35,6 @@ class Users extends Controller
     }
     public function changePassword(Request $request)
     {
-        dd($request->all());
         $rules = [
             'current_password' => 'required',
             'new_password' => [
@@ -98,7 +97,9 @@ class Users extends Controller
 
         $email = auth()->user()->email;
         $user = DB::table('aspnetusers')->where('email', $email)->first();
-
+        dump($request->all());
+        dump($email);
+        dd($user);
         if ($user && (Hash::check($request->current_password, $user->password))) {
             User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
             Auth::logout();
