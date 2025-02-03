@@ -57,9 +57,22 @@
                                 <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                               </div>
                               <div class="col">
-                                <h4 class="mb-2 ms-2">
+                                @if ($acc->code && $acc->code != 'Rejected')
+                                    <h4 class="mb-2 ms-2">
+                                        {{ $acc->code }}
+                                    </h4>
+                                @elseif($acc->code == 'Rejected')
+                                    <h4 class="mb-2 ms-2 text-danger">
+                                        {{ 'Rejected' }}
+                                    </h4>
+                                @else
+                                    <h4 class="mb-2 ms-2 text-warning">
+                                        {{ 'Pending' }}
+                                    </h4>
+                                @endif
+                                {{-- <h4 class="mb-2 ms-2">
                                     {{ $acc->code ?? 'Pending' }}
-                                </h4>
+                                </h4> --}}
                                 <p class="mb-0 text-muted ms-2 f-12">
                                   <span class="text-truncate w-100">{{ $acc->email }}</span>
                                 </p>
@@ -82,7 +95,7 @@
                                     <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                         <span class="">Deposit <i class="ti ti-database-import"></i></span>
                                     </a>
-                                    <a href="#"
+                                    {{-- <a href="#"
                                         class="btn btn-sm btn-outline-secondary d-grid"
                                         data-bs-toggle="modal"
                                         data-bs-target="#changeLeverage"
@@ -90,7 +103,15 @@
                                         data-account="{{ $acc->id }}"
                                         data-leverage="{{ $acc->leverage }}">
                                         Edit Leverage
-                                    </a>
+                                    </a> --}}
+                                </div>
+                            @elseif ($acc->code && $acc->code == 'Rejected')
+                                <div class="d-flex align-items-center">
+                                    <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                </div>
+                            @else
+                                <div class="d-flex align-items-center">
+                                    <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
                                 </div>
                             @endif
                           </td>

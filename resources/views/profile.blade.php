@@ -96,7 +96,12 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
-                                            <p class="mb-0">{{ session('user')->email }}</p>
+                                            <div class="d-flex align-items-center">
+                                                <p class="mb-0 me-3">{{ session('user')->email }}</p>
+                                                @if ($user->email_confirmed == 0)
+                                                    <label class="badge bg-danger text-white ms-2" style="font-size: 14px;">Email update unverified</label>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div class="col-md-auto"></div>
                                     </div>
@@ -152,7 +157,7 @@
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Full Name</label>
-                                                                    <input type="text" class="form-control" name="name" 
+                                                                    <input type="text" class="form-control" name="name"
                                                                         value="{{ session('user')->fullname }}" required readonly>
                                                                 </div>
                                                             </div>
@@ -182,7 +187,7 @@
                                                         </div>
 
                                                         <div class=" text-end">
-                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update Email</button>
+                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update</button>
                                                         </div>
 
                                                     </form>
@@ -382,22 +387,41 @@
                                                                             }
                                                                         @endphp
                                                                         <td  class="{{ $tdClass }}">{{ $verification }}</td>
-                                                                        <td
-                                                                            class="text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
-                                                                            @if ($acc->status == 0)
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Inactive Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-left"></i>
-                                                                                </a>
-                                                                            @else
-                                                                                <a class="wallet-action"
-                                                                                    data-bs-toggle="tooltip"
-                                                                                    title="Active Wallet Address"
-                                                                                    data-toggle="{{ ($acc->id) }}">
-                                                                                    <i class="f-24 ti ti-toggle-right"></i>
-                                                                                </a>
+                                                                        {{-- {{ dd($acc) }} --}}
+                                                                        <td>
+                                                                            @if ($acc->wallet_delete_verification == 0)
+                                                                                <div class="d-flex align-items-center text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
+                                                                                    @if ($acc->status == 0)
+                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                            data-bs-toggle="tooltip"
+                                                                                            title="Inactive Wallet Address"
+                                                                                            data-toggle="{{ $acc->id }}">
+                                                                                            <i class="f-24 ti ti-toggle-left"></i>
+                                                                                        </a>
+                                                                                    @else
+                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                            data-bs-toggle="tooltip"
+                                                                                            title="Active Wallet Address"
+                                                                                            data-toggle="{{ $acc->id }}">
+                                                                                            <i class="f-24 ti ti-toggle-right"></i>
+                                                                                        </a>
+                                                                                    @endif
+                                                                                    <span class="badge text-danger delete_wallet_address"
+                                                                                        data-id="{{ $acc->id }}"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Delete Wallet Address">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                                            <path d="M4 7l16 0" />
+                                                                                            <path d="M10 11l0 6" />
+                                                                                            <path d="M14 11l0 6" />
+                                                                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                                                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                                                        </svg>
+                                                                                    </span>
+                                                                                </div>
+                                                                            @elseif ($acc->wallet_delete_verification == 1)
+                                                                                <span class="text-warning">Deletion Not Verified</span>
                                                                             @endif
                                                                         </td>
                                                                     </tr>
@@ -436,7 +460,8 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: '{{ session('success') }}'
+                text: '{{ session('success') }}',
+                message: 'Kindly check your new email address and complete the verification process for this update.'
             }).then(() => {
                 window.location.href = '{{ route('user-profile') }}';
             });
@@ -455,11 +480,13 @@
     <script>
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
+
             $.ajax({
                 type: "POST",
                 url: "{{ route('password.change') }}",
                 data: $(this).serialize(),
                 success: function(response) {
+                    console.log("Success Response:", response);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
@@ -468,11 +495,19 @@
                     });
                 },
                 error: function(xhr) {
-                    console.log(xhr);
-                    const errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                    console.log("Error Response:", xhr);
+                    let errorMessage = "Something went wrong";
+                    if (xhr.responseJSON?.errors) {
+                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join("");
+                        errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                    } else if (xhr.responseJSON?.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
                     Swal.fire({
                         icon: 'error',
-                        title: errorMessage,
+                        title: "Password Requirements Not Met",
+                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
                     });
                 }
             });
@@ -516,6 +551,55 @@
                 }
             });
         });
+        $(".delete_wallet_address").click(function (e) {
+            e.preventDefault();
+
+            const wallet_id = this.getAttribute("data-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to undo this action!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('verify_delete_wallet_address') }}", // Update to match your route
+                        data: {
+                            id: wallet_id,
+                            _token: "{{ csrf_token() }}" // Ensure CSRF protection
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Verify Your Email For Wallet Address Deletion"
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Warning",
+                                    text: data.message || "Something went wrong!"
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "An error occurred while deleting wallet address. Please try again."
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
         $(document).ready(function() {
         // Show "Edit Picture" text when hovering over the image
         $('#profile_image').hover(function() {
