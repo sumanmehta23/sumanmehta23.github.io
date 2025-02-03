@@ -298,7 +298,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
             Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
-            Route::post("/deleteAccounts", [TradeWithdrawal::class, 'deleteAccounts'])->name('deleteAccounts')->middleware('check.permissions:account:viewLiveAccounts');
+            Route::post("/deleteAccounts", [MT5Accounts::class, 'deleteAccounts'])->name('deleteAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::post('/activate_account', [MT5Accounts::class, 'activateAccount'])->name('activate_account');
         });
 
