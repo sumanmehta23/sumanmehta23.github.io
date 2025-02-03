@@ -535,17 +535,6 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
-        if (($error_code = $this->api->UserGet('9dcae627-7a12-4e9b-88cd-c51a77ae1547', $trade_user)) != MTRetCode::MT_RET_OK) {
-            //dd(MTRetCode::GetError($error_code));
-            // return response()->json([
-            //     'status' => 'warning',
-            //     'message' => 'Something went wrong on Updating details',
-            //     'error' => MTRetCode::GetError($error_code)
-            // ], 400);
-            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
-        }
-        dd($trade_user);
-
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
         $countries = Country::all();

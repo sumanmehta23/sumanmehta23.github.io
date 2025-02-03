@@ -287,6 +287,7 @@ class MT5Accounts extends Controller
             $new_user->Name = $user->fullname??$user->email;
             $new_user->Email = $user->email;
             $new_user->LeadSource = $user->ib1?? "" ;
+            $new_user->Agent = $user->ib1?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -456,6 +457,7 @@ class MT5Accounts extends Controller
                 $new_user->Name = $user->fullname??$user->email;
                 $new_user->Email = $user->email;
                 $new_user->LeadSource = $user->ib1?? "" ;
+                $new_user->Agent = $user->ib1?? "" ;
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
