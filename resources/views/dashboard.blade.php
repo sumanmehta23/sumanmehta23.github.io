@@ -138,10 +138,23 @@
                                                                         class="rounded wid-50 hei-50">
                                                                 </div>
                                                                 <div class="col">
-                                                                    <h4 class="mb-2 ms-2">
+                                                                    {{-- <h4 class="mb-2 ms-2">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $liveAccount->code ?? 'Pending' }}</span>
-                                                                    </h4>
+                                                                    </h4> --}}
+                                                                    @if ($liveAccount->code && $liveAccount->code != 'Rejected')
+                                                                        <h4 class="mb-2 ms-2">
+                                                                            {{ $liveAccount->code }}
+                                                                        </h4>
+                                                                    @elseif($liveAccount->code == 'Rejected')
+                                                                        <h4 class="mb-2 ms-2 text-danger">
+                                                                            {{ 'Rejected' }}
+                                                                        </h4>
+                                                                    @else
+                                                                        <h4 class="mb-2 ms-2 text-warning">
+                                                                            {{ 'Pending' }}
+                                                                        </h4>
+                                                                    @endif
                                                                     <p class="mb-0 text-muted ms-2 f-12">
                                                                         <span
                                                                             class="text-truncate w-100">{{ $liveAccount->account_type }}</span>
@@ -154,7 +167,7 @@
                                                             {{ $liveAccount->balance ?? '0.00' }}</td>
                                                         <td class="text-end f-w-400 f-16">$ {{ $liveAccount->equity }}</td>
 
-                                                        <td class="text-end f-w-200">
+                                                        {{-- <td class="text-end f-w-200">
                                                             @if ($liveAccount->code && $liveAccount->code != 'Rejected' )
                                                                 <div class="d-flex align-items-center">
                                                                     <a href="{{ route('view-account-details', $liveAccount->id) }}"
@@ -170,7 +183,40 @@
                                                                     </a>
                                                                 </div>
                                                             @endif
-                                                        </td>
+                                                        </td> --}}
+                                                        <td class="text-end f-w-200">
+                                                            @if ($liveAccount->code && $liveAccount->code != 'Rejected')
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <button class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                                        <a href="{{ route('view-account-details', $liveAccount->id) }}">
+                                                                        <span class="">View <svg class="pc-icon">
+                                                                            <use xlink:href="#custom-login"></use>
+                                                                            </svg></span>
+                                                                        </a>
+                                                                    </button>
+                                                                    <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
+                                                                        <span class="">Deposit <i class="ti ti-database-import"></i></span>
+                                                                    </a>
+                                                                    {{-- <a href="#"
+                                                                        class="btn btn-sm btn-outline-secondary d-grid"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#changeLeverage"
+                                                                        data-id="{{ $liveAccount->account_type_id }}"
+                                                                        data-account="{{ $liveAccount->id }}"
+                                                                        data-leverage="{{ $liveAccount->leverage }}">
+                                                                        Edit Leverage
+                                                                    </a> --}}
+                                                                </div>
+                                                            @elseif ($liveAccount->code && $liveAccount->code == 'Rejected')
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                                </div>
+                                                            @else
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                                </div>
+                                                            @endif
+                                                          </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>

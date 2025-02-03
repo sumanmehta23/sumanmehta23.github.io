@@ -16,6 +16,7 @@ use App\Models\User;
 class Tickets extends Controller
 {
     public function index(){
+        return redirect()->back();
         $ticket_types = TicketType::all();
         $tickets = DB::table('tickets as t')
     ->select(
@@ -55,6 +56,7 @@ class Tickets extends Controller
     }
     public function createTicket(Request $request)
     {
+        return redirect()->back();
         $request->validate([
             'subject_name' => 'required|string|max:255',
             'email' => 'required|email',

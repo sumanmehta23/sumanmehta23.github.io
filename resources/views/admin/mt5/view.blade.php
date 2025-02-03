@@ -292,6 +292,7 @@ if ($getUser) {
                     </div>
 
                     @can('bonus_transaction:viewAny')
+
                         <div class="mt-2 card custom-card">
                             <div class="card-header justify-content-between">
                                 <div class="card-title">Bonus</div>
@@ -304,6 +305,7 @@ if ($getUser) {
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
+                                                <th>Type</th>
                                                 <th>Amount</th>
                                                 <th>Status</th>
                                             </tr>
@@ -315,6 +317,7 @@ if ($getUser) {
                                             <tr>
                                                 <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
                                                 </td>
+                                                <td><?= strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
                                                 <td><?= $bns->bonus_amount ?></td>
                                                 <td><?= $bns->bonus_type ?></td>
                                             </tr>

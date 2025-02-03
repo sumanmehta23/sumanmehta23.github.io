@@ -59,4 +59,14 @@ class Account extends Model
         return $this->hasMany(TradeWithdrawals::class);
     }
 
+    public function getTotalBonusDepositAttribute()
+    {
+        // Sum all bonus amounts where 'admin_remark' contains 'Credit'
+        $bonusDeposit = $this->BonusTransaction->filter(function($transaction) {
+            return (strpos($transaction->admin_remark, 'Credit')) == false;
+        })->sum('bonus_amount');
+
+        return $bonusDeposit;
+    }
+
 }

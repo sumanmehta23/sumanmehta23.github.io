@@ -29,7 +29,7 @@
     (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',w.intercomSettings);}else{var d=document;var i=function(){i.c(arguments);};i.q=[];i.c=function(args){i.q.push(args);};w.Intercom=i;var l=function(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/hcaolnkq';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);};if(document.readyState==='complete'){l();}else if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})();
 </script>
 
-<div id="changeLeverage" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+{{-- <div id="changeLeverage" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
     aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -61,8 +61,8 @@
             </form>
         </div>
     </div>
-</div>
-@if(session('success'))
+</div> --}}
+{{-- @if(session('success'))
     <script>
         Swal.fire({
             title: '{{ session('success') }}',
@@ -77,6 +77,23 @@
     <script>
         Swal.fire({
             title: '{{ session('warning') }}',
+            html: '{!! session('error') !!}',
+            icon: 'warning'
+        }).then(() => {
+            // Optionally, you can reload the page after showing the alert
+            location.reload();
+        });
+    </script>
+@endif --}}
+
+@if(session('warning'))
+    @php
+        $errorMessage = session('error');
+    @endphp
+    <script>
+        Swal.fire({
+            title: '{{ session('warning') }}',
+            html: `{!! $errorMessage !!}`,
             icon: 'warning'
         }).then(() => {
             // Optionally, you can reload the page after showing the alert
@@ -84,6 +101,8 @@
         });
     </script>
 @endif
+
+
 
 
 
@@ -111,8 +130,8 @@
                             <div class="form-group"><label class="form-label">Wallet Network</label>
                                 <select id="my-select" class="form-control" name="wallet_network" required>
                                     <option value="BTC">BTC</option>
-                                    <option value="ETH_USDT">ERC20</option>
-                                    <option value="USDT-TRX">TRC20</option>
+                                    <option value="ETH_USDT">USDT/ERC20</option>
+                                    <option value="USDT-TRX">USDT/TRC20</option>
                                 </select>
                             </div>
                             <div class="form-group"><label class="form-label">Wallet Address</label><input
@@ -150,7 +169,7 @@
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
                 if (data.success == true) {
                     Swal.fire({
-                        title: "Wallet Details Successfully Added",
+                        title: "Check email to verify new wallet address",
                         icon: "success"
                     }).then((val) => {
                         location.reload();

@@ -192,8 +192,12 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee, 2) }}</h6>
                           </td>
+                          {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+                            <p>{{ ($history->payout_req != NULL) ?  htmlspecialchars(isset($history->payout_req) ? json_decode($history->payout_res, true)['reason'] : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+
+
                           </td>
                           @if($history->status == 0)
                             <td >
@@ -380,6 +384,7 @@
           <input type="hidden" name="email" value="${email}">
           <input type="hidden" name="amount" value="${amount}">
           <input type="hidden" name="status" value="${status}">
+          <input type="hidden" name="statuscode" value="${statuscode}">
           <input type="hidden" name="transaction_id" value="${parsedData}">
           <input type="hidden" name="action" value="update_transaction">
             ${

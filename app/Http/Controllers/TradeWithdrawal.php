@@ -107,6 +107,7 @@ class TradeWithdrawal extends Controller
                 $query->where('bonus_type', 'Bonus In')
                       ->orWhere('bonus_type', 'Bonus Out');
             })
+            ->where('admin_remark', 'NOT LIKE', '%Credit%')
             ->sum('bonus_amount');
 
         $withdraw_type = $request->input('withdraw_type');

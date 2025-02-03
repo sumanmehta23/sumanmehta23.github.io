@@ -39,6 +39,7 @@ use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
+use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 Route::get("/se",function(){
@@ -96,10 +97,19 @@ Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
 
+Route::get('register/ref', function () {
+    // Get the 'refercode' from the query string
+    $refercode = request()->query('refercode');
+
+    // Perform the redirection to the new URL format
+    return redirect()->route('ib-ref', ['refercode' => $refercode]);
+});
 
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
+
 Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
+Route::get('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
@@ -127,7 +137,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
 
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
-    Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
+    // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
+
 
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
@@ -147,9 +158,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
+    Route::post('/verify_delete_wallet_address', [Wallet::class, 'verify_delete_wallet_address'])->name('verify_delete_wallet_address');
+
     Route::get('/wallet_deposit', [Wallet::class, 'showDepositForm'])->name('wallet_deposit');
     Route::get('/wallet_withdrawal', [Wallet::class, 'showWithdrawalForm'])->name('wallet_withdrawal');
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
@@ -157,6 +171,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
+    Route::post('/change_email', [Users::class, 'changeEmail'])->name('email.change');
+
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
@@ -198,6 +214,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
 
     Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
+    Route::post('/bulkIbApprove', [AjaxController::class, 'bulkIbApprove']);
     Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
@@ -293,7 +310,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
-
+        Route::get('/sumsub_data', [SumsubController::class, 'sumsub_data']);
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

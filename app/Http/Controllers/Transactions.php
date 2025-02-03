@@ -119,7 +119,6 @@ class Transactions extends Controller
         // dd($request->all());
         $settings = settings();
         $status = $request->status;
-        // dd($request->all());
         if ($status == '3') {
             $validatedData = $request->validate([
                 'status' => 'required|integer',
@@ -140,10 +139,10 @@ class Transactions extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
-        // dd($transaction);
         if ($transaction) {
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
+            $transaction->admin_remark = 'Cancelled by User';
             $transaction->save();
             if($status==3){
 
@@ -159,28 +158,27 @@ class Transactions extends Controller
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
                         $content = '<p>
-                                        We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                        We are pleased to inform you that your withdraw request has been successfully cancelled.
                                     </p>
                                     <p>
-                                        To complete your withdrawal:
-                                        <ol>
-                                            <li>Please <b>submit a new request</b></li>
-                                            <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
-                                            <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
-                                            <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
-                                        </ol>
+                                        The cancelled amount has been credited back to your wallet.
                                     </p>
                                     <p>
-                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
+                                        Transaction Details
                                     </p>
                                     <p>
-                                        Thank you for your understanding.
+                                        Withdrawal Cancelled Amount: '.$depositAmount.'
                                     </p>
                                     <p>
-                                        Best regards,<br>
-                                        The LQHMarkets Team
+                                        Transaction ID: '.$did.'
+                                    </p>
+                                    <p>
+                                        Withdrawal Date: '.$transaction->withdraw_date.'
+                                    </p>
+                                    <p>
+                                        Withdrawal Type: Wallet Withdrawal
                                     </p>';
 
                         $templateVars = [
@@ -189,7 +187,7 @@ class Transactions extends Controller
                             'email' => $settings['email_from_address'],
                             'content' => $content,
                             'title_right' => 'Transaction',
-                            'subtitle_right' => 'Declined',
+                            'subtitle_right' => 'Cancelled',
                             'btn_text' => 'Go To Dashboard',
                         ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);

@@ -6,7 +6,6 @@
 
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                {{-- {{dd($accounts)}} --}}
                 <h1 class="page-title">{{$type}}</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>

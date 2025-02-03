@@ -56,8 +56,21 @@
                                                             <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
                                                         </div>
                                                         <div class="col">
-                                                            <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code ?? 'Pending' }}</span></h4>
-                                                            <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->account_type }}</span></p>
+                                                            {{-- <h4 class="mb-2 ms-2"><span class="text-truncate w-100">{{ $acc->code ?? 'Pending' }}</span></h4> --}}
+                                                            @if ($acc->code && $acc->code != 'Rejected')
+                                                                <h4 class="mb-2 ms-2">
+                                                                    {{ $acc->code }}
+                                                                </h4>
+                                                            @elseif($acc->code == 'Rejected')
+                                                                <h4 class="mb-2 ms-2 text-danger">
+                                                                    {{ 'Rejected' }}
+                                                                </h4>
+                                                            @else
+                                                                <h4 class="mb-2 ms-2 text-warning">
+                                                                    {{ 'Pending' }}
+                                                                </h4>
+                                                            @endif
+                                                            <p class="mb-0 text-muted ms-2 f-12"><span class="text-truncate w-100">{{ $acc->email }}</span></p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -66,13 +79,44 @@
                                                 <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}</td>
                                                 <td class="text-end f-w-200">
                                                     <div class="d-flex align-items-center">
-                                                        @if($acc->code != null)
+                                                        {{-- @if($acc->code != null)
                                                             <a href="{{ url('/view-account-details/' . $acc->id) }}"
                                                             class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                             <span>View <svg class="pc-icon">
                                                                 <use xlink:href="#custom-login"></use>
                                                             </svg></span>
                                                             </a>
+                                                        @endif --}}
+                                                        @if ($acc->code && $acc->code != 'Rejected')
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <button class="btn btn-sm btn-outline-secondary d-grid me-2">
+                                                                    <a href="{{ route('view-account-details', $acc->id) }}">
+                                                                    <span class="">View <svg class="pc-icon">
+                                                                        <use xlink:href="#custom-login"></use>
+                                                                        </svg></span>
+                                                                    </a>
+                                                                </button>
+                                                                <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
+                                                                    <span class="">Deposit <i class="ti ti-database-import"></i></span>
+                                                                </a>
+                                                                {{-- <a href="#"
+                                                                    class="btn btn-sm btn-outline-secondary d-grid"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#changeLeverage"
+                                                                    data-id="{{ $acc->account_type_id }}"
+                                                                    data-account="{{ $acc->id }}"
+                                                                    data-leverage="{{ $acc->leverage }}">
+                                                                    Edit Leverage
+                                                                </a> --}}
+                                                            </div>
+                                                        @elseif ($acc->code && $acc->code == 'Rejected')
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                            </div>
+                                                        @else
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 </td>

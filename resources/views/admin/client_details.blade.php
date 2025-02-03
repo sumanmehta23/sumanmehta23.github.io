@@ -219,24 +219,27 @@
                                             <div class="user-wrap">
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
-                                                    <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->kyc_verify == 0
-                                                        ? '<span class="badge bg-outline-danger">Pending KYC</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                            : '') !!}</span>
-                                                    |
-                                                    <span
-                                                        class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->status == 0
-                                                        ? '<span class="badge bg-outline-danger">Inactive</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">Active</span>'
-                                                            : '') !!}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="px-2"><span
+                                                                class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                        |
+                                                        <span class="d-flex flex-column px-2">{!! $user->kyc_verify == 0
+                                                            ? '<span class="badge bg-outline-danger">Pending KYC</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">KYC Verified</span>'
+                                                                : '') !!}<a class="mb-1 fs-12" id="sumsub-info" href=""></a></span>
+                                                        |
+                                                        <span
+                                                            class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
+                                                        |
+                                                        <span class="px-2">{!! $user->status == 0
+                                                            ? '<span class="badge bg-outline-danger">Inactive</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">Active</span>'
+                                                                : '') !!}</span>
+                                                    </div>
                                                 </h6>
+                                                <div id="sumsub-websdk-container" hidden></div>
                                                 <div class="row">
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">
@@ -372,7 +375,6 @@
                                                                 </button>
                                                                 <?php endif; ?>
                                                             </div>
-
                                                         </div>
                                                         @can('account:viewLiveAccounts')
                                                         <div class="mt-3 row">
@@ -595,85 +597,87 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                                                                                aria-labelledby="editUserLabel" aria-hidden="true">
-                                                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                                                    <div class="modal-content">
-                                                                                        <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
-                                                                                            @csrf
-                                                                                            <div class="modal-header">
-                                                                                                <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
-                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                <div class="modal fade" id="editUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                                                    aria-labelledby="editUserLabel" aria-hidden="true">
+                                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                                        <form action="{{ route('admin.updateUser') }}" id="editUserForm" method="post">
+                                                                            <div class="modal-content">
+                                                                            @csrf
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title" id="editUserLabel">Update Client Details</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="mb-0 modal-body custom-card card">
+                                                                                    <input type="hidden" name="id">
+                                                                                    <div class="row">
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Email:</label>
+                                                                                            <input type="text" class="form-control" name="email" required>
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Full Name:</label>
+                                                                                            <input type="text" class="form-control" name="fullname" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="row">
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Phone:</label>
+                                                                                            <div class="input-group">
+                                                                                                <div class="input-group-prepend w-25">
+                                                                                                    <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
+                                                                                                        required>
+                                                                                                        <option value="">Country Code</option>
+                                                                                                        <?php foreach ($countries as $country) { ?>
+                                                                                                        <option value="+<?= $country['country_code'] ?>"
+                                                                                                            data-flag="<?= strtolower($country['country_alpha']) ?>">
+                                                                                                            +<?= $country['country_code'] ?>
+                                                                                                            (<?= $country['country_name'] ?>)</option>
+                                                                                                        <?php } ?>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                                    <input type="text" class="form-control" id="phone_number" name="telephone"
+                                                                                                        placeholder="Enter phone number">
                                                                                             </div>
-                                                                                            <div class="mb-0 modal-body custom-card card">
-                                                                                                <input type="hidden" name="id">
-                                                                                                <div class="row">
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Email:</label>
-                                                                                                        <input type="text" class="form-control" name="email" required readonly>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Full Name:</label>
-                                                                                                        <input type="text" class="form-control" name="fullname" required>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Phone:</label>
-                                                                                                        <div class="input-group">
-                                                                                                            <div class="input-group-prepend w-25">
-                                                                                                                <select class="form-select me-2 w-25 edit-countrycode" name="country_code"
-                                                                                                                    required>
-                                                                                                                    <option value="">Country Code</option>
-                                                                                                                    <?php foreach ($countries as $country) { ?>
-                                                                                                                    <option value="+<?= $country['country_code'] ?>"
-                                                                                                                        data-flag="<?= strtolower($country['country_alpha']) ?>">
-                                                                                                                        +<?= $country['country_code'] ?>
-                                                                                                                        (<?= $country['country_name'] ?>)</option>
-                                                                                                                    <?php } ?>
-                                                                                                                </select>
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Country:</label>
+                                                                                            <select class="form-select" id="country" name="country" required>
+                                                                                                <option value="">Select Country</option>
+                                                                                                <?php foreach ($countries as $country) { ?>
+                                                                                                <option value="<?= $country['country_name'] ?>">
+                                                                                                    <?= $country['country_name'] ?>
+                                                                                                </option>
+                                                                                                <?php } ?>
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="row">
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Password:</label>
+                                                                                            <input type="password" class="form-control" name="password" >
+                                                                                        </div>
+                                                                                        <div class="col-6">
+                                                                                            <label for="input-label" class="form-label">Confirm Password:</label>
+                                                                                            <input type="password" class="form-control" id="input" name="confirm_password"
+                                                                                                >
+                                                                                        </div>
 
-
-                                                                                                            </div>
-                                                                                                            <input type="text" class="form-control" id="phone_number" name="telephone"
-                                                                                                                placeholder="Enter phone number">
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Country:</label>
-                                                                                                        <select class="form-select" id="country" name="country" required>
-                                                                                                            <option value="">Select Country</option>
-                                                                                                            <?php foreach ($countries as $country) { ?>
-                                                                                                            <option value="<?= $country['country_name'] ?>">
-                                                                                                                <?= $country['country_name'] ?>
-                                                                                                            </option>
-                                                                                                            <?php } ?>
-                                                                                                        </select>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Password:</label>
-                                                                                                        <input type="password" class="form-control" name="password" required>
-                                                                                                    </div>
-                                                                                                    <div class="col-6">
-                                                                                                        <label for="input-label" class="form-label">Confirm Password:</label>
-                                                                                                        <input type="password" class="form-control" id="input" name="confirm_password"
-                                                                                                            required>
-                                                                                                    </div>
-
-                                                                                                    <div class="col-lg-6 d-flex align-items-end">
-                                                                                                        <div class="form-check form-switch">
-                                                                                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                                                                                name="email_notification">
-                                                                                                            <label class="form-check-label">Send Notification Email</label>
-                                                                                                        </div>
-                                                                                                    </div>
+                                                                                            <div class="col-lg-6 d-flex align-items-end">
+                                                                                                <div class="form-check form-switch">
+                                                                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                                                                        name="email_notification">
+                                                                                                    <label class="form-check-label">Send Notification Email</label>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div class="modal-footer">
-                                                                                                <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
-                                                                                            </div>
-                                                                                        </form>
                                                                                     </div>
                                                                                 </div>
+                                                                                <div class="modal-footer">
+                                                                                    <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
+                                                                                </div>
                                                                             </div>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -928,7 +932,7 @@
                                                                 </div>
                                                                 <div class="col-8">
                                                                     <p class="h5 text-muted">TOTAL </br>DEPOSIT</p>
-                                                                    <h4>{{ $ib_details->withdraw ? "$" . $ib_details->withdraw : "$0.00" }}
+                                                                    <h4>{{ $IbTotalDeposits ? "$" . $IbTotalDeposits : "$0.00" }}
                                                                     </h4>
                                                                 </div>
                                                             </div>
@@ -1101,7 +1105,7 @@
                                                                     <i class="ri-check-line"></i>
                                                                 </button>
                                                                 <?php }
-                                    if ($kyc->status == 1 || $kyc->status == 0) { ?>
+                                                        if ($kyc->status == 1 || $kyc->status == 0) { ?>
                                                                 <button class="btn btn-lg btn-icon btn-light text-danger"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                                     title="Reject"
@@ -1189,9 +1193,8 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div><!-- COL-END -->
-            </div>
+                    </div><!-- COL-END -->
+                </div>
             <!-- End:: row-1 -->
         </div>
     </div>
@@ -1696,4 +1699,30 @@
 
     });
 </script>
+<script src="https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
+<script>
+    function getApplicantData(email) {
+
+        $.ajax({
+            url: "{{ url('/admin/sumsub_data') }}",
+            type: "GET",
+            data: { email: email  },
+            success: function(response) {
+                if (response.token) {
+                    console.log(response);
+                } else {
+                    console.error("Failed to fetch token");
+                }
+            },
+            error: function(error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+    const userEmail = "{{ $user->email }}";
+    getApplicantData(userEmail);
+
+</script>
+
 @endsection
