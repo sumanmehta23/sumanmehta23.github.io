@@ -723,11 +723,20 @@ class MT5Accounts extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $emailSubject = $settings['admin_title'] . ' - Account Deleted';
-                $content = '<div>We are pleased to inform you that your account has been deleted.</div>
+                $content = '<div>We would like to inform you that your account has been deleted.</div>
+                            <div> Below are the details for your reference:</div>
+                            <br>
                             <div><b>Account code: </b>' . $account->code . '</div>
                             <div><b>Account type: </b>' . $type . '</div>
-                            <div><b>Created Date: </b>' . $account->created_at . '</div>
-                            <div><b>Deleted Date: </b>' . $account->deleted_at . '</div>';
+                            <div><b>Created On: </b>' . $account->created_at . '</div>
+                            <div><b>Deleted On: </b>' . $account->deleted_at . '</div>
+                            <br>
+                            <div>If this action was performed in error or if you have any questions, please don’t hesitate to contact our support team.</div>
+                            <br>
+                            <div>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com.</div>
+                            <br>
+                            <div>Best regards,</div>
+                            <div>LQH Markets Team</div>';
                 $templateVars = [
                     'name' => $account->name,
                     'site_link' => $settings['copyright_site_name_text'],
