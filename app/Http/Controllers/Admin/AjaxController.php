@@ -3052,7 +3052,6 @@ class AjaxController extends Controller
 
     public function requestIB($request)
     {
-
         try {
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
@@ -3080,6 +3079,8 @@ class AjaxController extends Controller
                     $ib1->save();
                 }
             }
+
+
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
