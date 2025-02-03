@@ -17,6 +17,7 @@ class SearchController extends Controller
     // Initialize the base query.
     $query = DB::table('accounts')
         ->where('account_request_status', 1)
+        ->where('deleted_at', NULL)
         ->select('accounts.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
         ->leftJoin('aspnetusers', 'aspnetusers.id', '=', 'accounts.user_id')
         ->join('account_types', 'account_types.id', '=', 'accounts.account_type_id');
@@ -91,7 +92,7 @@ class SearchController extends Controller
     }else{
 
         $search = $request->input('search');
-        
+
         if(is_numeric($search))
         {
             if($accounts[0]->demo == "1"){
@@ -100,7 +101,7 @@ class SearchController extends Controller
             }else{
 
                 $type="Client - Live Accounts";
-            }               
+            }
         }else{
             $type="Client - Accounts";
         }
