@@ -31,13 +31,13 @@ if ($getUser) {
                                         <div class="card-body">
                                             <div class="text-center">
                                                 <div class="userprofile">
-                                                    <div class="avatar userpic avatar-rounded">
+                                                    <div class="avatar userpic avatar-rounded pointer" onclick="takeAction('{{ route('admin.admin-view-client-details', $getUser->user_id) }}')">
                                                         <img src="/admin_assets/assets/images/users/client.jpeg"
                                                             alt="img" style="width:100px">
                                                     </div>
 
-                                                    <h3 class="mb-2 username"><?= $getUser->name ?></h3>
-                                                    <p class="mb-1 text-muted"><?= $getUser->email ?></p>
+                                                    <h3 class="mb-2 username pointer" onclick="takeAction('{{ route('admin.admin-view-client-details', $getUser->user_id) }}')"><?= $getUser->name ?></h3>
+                                                    <p class="mb-1 text-muted pointer" onclick="takeAction('{{ route('admin.admin-view-client-details', $getUser->user_id) }}')"><?= $getUser->email ?></p>
                                                 </div>
                                             </div>
                                         </div>
@@ -890,7 +890,11 @@ if ($getUser) {
             $(".acc-types").select2();
 
             // Inject permission data from backend
-
+            function takeAction(url) {
+                window.location.href = url;
+                // window.location.href = url;
+                window.open(url, '_blank');
+            }
 
         </script>
     @endsection
