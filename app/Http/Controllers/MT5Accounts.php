@@ -661,7 +661,6 @@ class MT5Accounts extends Controller
                         'error' => $error,
                     ], 400);
                 } else {
-                    DB::beginTransaction();
                     try {
                         TradeWithdrawals::create([
                             'email' => $account->user->email,
