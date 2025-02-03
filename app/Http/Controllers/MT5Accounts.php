@@ -17,6 +17,10 @@ use App\MT5\MTProtocolConsts;
 use App\Http\Controllers\Controller;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Log;
+use App\Models\TradeWithdrawals;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
+use Illuminate\Support\Facades\DB;
 class MT5Accounts extends Controller
 {
     protected $api;
@@ -685,12 +689,8 @@ class MT5Accounts extends Controller
                             'deposit_type' => 'Internal Transfer',
                             'status' => 1,
                         ]);
-                        DB::commit();
                         // RateLimiter::clear($key);
                     } catch (\Exception $e) {
-                        DB::rollBack();
-                        echo "<pre>";
-                        print_r($e->getMessage());
                         return response()->json([
                             'success' => false,
                             'message' => 'Something Went Wrong !!! Please Try Again'
