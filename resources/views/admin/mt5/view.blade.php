@@ -897,7 +897,8 @@ if ($getUser) {
 
             // Inject permission data from backend
             function takeAction(url) {
-                window.open(url, '_blank');
+                // window.open(url, '_blank');
+                window.location.href = url;
             }
 
         </script>
