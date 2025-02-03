@@ -874,6 +874,18 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function($q) use ($searchValue) {
+                            $q->where('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('balance', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
