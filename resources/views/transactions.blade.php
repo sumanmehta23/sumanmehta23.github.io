@@ -276,7 +276,7 @@
                             if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
                                 $to = $history->it_to ?? 'Wallet';
                             } else {
-                                $to = !empty($history->accountTo()->withTrashed()) ? $history->accountTo()->withTrashed()->value('code') : '';
+                                $to = !empty($history->accountTo()->withTrashed()) ? $history->accountTo()->withTrashed()->value('code') : $history->it_to;
                             }
                         @endphp
                         <tr>
