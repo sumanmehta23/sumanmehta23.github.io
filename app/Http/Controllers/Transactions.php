@@ -142,6 +142,7 @@ class Transactions extends Controller
         if ($transaction) {
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
+            $transaction->admin_remark = 'Cancelled by User';
             $transaction->save();
             if($status==3){
 
@@ -157,7 +158,7 @@ class Transactions extends Controller
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
                         $content = '<p>
                                         We are pleased to inform you that your withdraw request has been successfully cancelled.
                                     </p>
@@ -168,10 +169,10 @@ class Transactions extends Controller
                                         Transaction Details
                                     </p>
                                     <p>
-                                        Withdraw Cancelled Amount: '.$depositAmount.'
+                                        Withdrawal Cancelled Amount: '.$depositAmount.'
                                     </p>
                                     <p>
-                                        Transaction ID: '.$transaction_id.'
+                                        Transaction ID: '.$did.'
                                     </p>
                                     <p>
                                         Withdrawal Date: '.$transaction->withdraw_date.'
@@ -186,7 +187,7 @@ class Transactions extends Controller
                             'email' => $settings['email_from_address'],
                             'content' => $content,
                             'title_right' => 'Transaction',
-                            'subtitle_right' => 'Declined',
+                            'subtitle_right' => 'Cancelled',
                             'btn_text' => 'Go To Dashboard',
                         ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);

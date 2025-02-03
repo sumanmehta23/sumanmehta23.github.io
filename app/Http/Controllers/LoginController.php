@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -34,11 +35,25 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        // $key = 'login:' . (auth()->id() ?: $request->ip());
+        // if (RateLimiter::tooManyAttempts($key, 3)) {
+        //     $retryAfter = RateLimiter::availableIn($key);
+        //     $hours = floor($retryAfter / 3600);
+        //     $minutes = floor(($retryAfter % 3600) / 60);
+        //     $seconds = $retryAfter % 60;
+        //     $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+        //     return redirect()->back()->with(
+        //         'error',
+        //         "Too many requests. Please wait {$formattedTime} before trying again."
+        //     );
+        // }
+        // RateLimiter::hit($key, 300);
         // Validate form inputs
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
          // Find the user by email
          $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
 
@@ -49,6 +64,7 @@ class LoginController extends Controller
 
          // Check if the password is in plain text (not hashed)
          if (Hash::needsRehash($user->password)) {
+
              // If it's plain text, hash it and update the user's password
              if ($user->password === $request->input('password')) {
                  $user->password = Hash::make($request->input('password'));
@@ -57,6 +73,9 @@ class LoginController extends Controller
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
              }
          } else {
+            // dump($user->password);
+            // dump(Hash::make($request->input('password')));
+            // dd(Hash::check($request->input('password'), $user->password));
              // If password is hashed, verify it
              if (!Hash::check($request->input('password'), $user->password)) {
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
@@ -88,14 +107,34 @@ class LoginController extends Controller
     }
     public function sendResetLink(Request $request)
     {
+
+        // $key = 'sendResetLink:' . (auth()->id() ?: $request->ip());
+        // if (RateLimiter::tooManyAttempts($key, 5)) {
+        //     $retryAfter = RateLimiter::availableIn($key);
+        //     $hours = floor($retryAfter / 3600);
+        //     $minutes = floor(($retryAfter % 3600) / 60);
+        //     $seconds = $retryAfter % 60;
+        //     $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+        //     return redirect()->back()->with(
+        //         'error',
+        //         "Too many requests. Please wait {$formattedTime} before trying again."
+        //     );
+        // }
+        // RateLimiter::hit($key, 600);
+
         $request->validate([
             'txtemail' => 'required|email',
         ]);
+
         $email = $request->input('txtemail');
         $user = User::where('email', $email)->first();
         if ($user) {
             $code =Str::random(60);
-            User::where('email', $email)->update(['emailToken' => $code]);
+            // User::where('email', $email)->update(['emailToken' => $code]);
+            User::where('email', $email)->update([
+                'emailToken' => $code,
+                'email_token_time' => now(), // Set the current timestamp
+            ]);
             $settings = settings();
             $from = $settings['email_from_address'];
             $emailSubject = $settings['admin_title'] . ' Password Reset';
@@ -127,29 +166,92 @@ class LoginController extends Controller
             return redirect()->back()->with('error', "Sorry! This email was not found.");
         }
     }
+
     public function resetPassword(Request $request)
     {
+
         $id = $request->query('id');
         $code = $request->query('code');
         // Check user exists
         $user = User::where('id', $id)->where('emailToken', $code)->first();
-        if ($user) {
+        // dump($request->all());
+        // dump($request->isMethod('post'));
+        // dump($user);
+        // dump($user->email_token_time);
+        // dump(Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
+        // dd($user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
+        if ($user && $user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME'))) {
             if ($request->isMethod('post')) {
                 // Validate
-                $request->validate([
-                    'password' => 'required|string|confirmed'
+                // $request->validate([
+                //     'password' => 'required|string|confirmed'
+                // ]);
+                // dd($request->all());
+                $validatedData = Validator::make($request->all(), [
+                    'password' => [
+                        'required',
+                        'string',
+                        'confirmed', // At least 8 characters
+                        'regex:/[a-z]/', // At least one lowercase letter
+                        'regex:/[A-Z]/', // At least one uppercase letter
+                        'regex:/\d/', // At least one number
+                        'regex:/[\W_]/', // At least one special character
+                    ],
+                    'password_confirmation' => 'required_with:password|same:password',
                 ]);
+                if ($validatedData->fails()) {
+                    $errors = $validatedData->errors();
+                    $filteredErrors = [];
+                    // dd($errors);
+                    // Check which specific regex rule failed and return only unmet requirements
+                    if ($errors->has('password')) {
+                        $password = $request->password;
+
+                        if (!preg_match('/[a-z]/', $password)) {
+                            $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                        }
+                        if (!preg_match('/[A-Z]/', $password)) {
+                            $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                        }
+                        if (!preg_match('/\d/', $password)) {
+                            $filteredErrors[] = 'The password must contain at least one number.';
+                        }
+                        if (!preg_match('/[\W_]/', $password)) {
+                            $filteredErrors[] = 'The password must contain at least one special character.';
+                        }
+                        if (strlen($password) < 8) {
+                            $filteredErrors[] = 'The password must be at least 8 characters long.';
+                        }
+                        if ($errors->has('password.confirmed')) {
+                            $filteredErrors[] = 'Passwords do not match.';
+                        }
+                    }
+
+                    $errorString = '';
+                    foreach ($filteredErrors as $error) {
+                        $errorString .= '• ' . $error ;
+                    }
+                    // dd($errorString);
+                    $errorString = html_entity_decode($errorString);
+                    // dd($errorString);
+                    // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+                    return redirect()->back()->with('error', $errorString);
+                }
                 $password = $request->input('password');
-                DB::table('aspnetusers')
-                    ->where('email', $user->email)
-                    ->update(['password' => $password]);
+                // DB::table('aspnetusers')
+                //     ->where('email', $user->email)
+                //     ->update(['password' => $password]);
                 // Send the email notification
+                User::where('email', $user->email)->update(['password' =>  Hash::make($password)]);
+                $user->update(['emailToken' => null]);
+
                 $this->sendPasswordResetSuccessEmail($user);
                 return redirect()->route('login')->with('status', 'Password has been reset successfully. You can now login.');
+            }else{
+                return view('auth.reset-password', ['user' => $user]); // Return view
             }
-            return view('auth.reset-password', ['user' => $user]); // Return view
         } else {
-            return redirect()->route('login')->with('error', 'No account found with the given ID and token.');
+            return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
         }
     }
 
@@ -194,13 +296,26 @@ class LoginController extends Controller
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string|max:255|unique:aspnetusers',
             'email' => 'required|string|email|max:255|unique:aspnetusers',
-            'password' => 'required|string|confirmed',
+            // 'password' => 'required|string|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
+            ],
             'country' => 'required|string',
             'country_code' => 'required',
             'telephone' => 'required',
         ], [
             'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+            'password.min' => 'The password must be at least 8 characters long.',
+            'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
+            'password.confirmed' => 'Passwords do not match.',
         ]);
 
 
@@ -305,7 +420,7 @@ class LoginController extends Controller
         $user = User::where('id', $id)
             ->where('emailToken', $code)
             ->first();
-            
+
         if ($user) {
             if ($user->status == 0) {
                 $user->status = 1;
@@ -321,8 +436,7 @@ class LoginController extends Controller
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                     '<div>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</div>' .
                     '<div><b>Here are your login credentials:</b></div>
-          <div><b>Username: </b>' . $user->email . '</div>
-          <div><b>Password: </b>' . $user->password . '</div>';
+          <div><b>Username: </b>' . $user->email . '</div>';
                 $templateVars = [
                     'name' => $user->fullname,
                     'server_name' => $settings['mt5_company_name'],

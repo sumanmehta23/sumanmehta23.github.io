@@ -132,6 +132,7 @@ class MT5Controller extends Controller
             $trade_user->Group = $groupCode;
 
             $trade_user->Leverage = $leverage;
+            info("Updated User Details ", ['code' => $code, 'group' => $groupCode, 'leverage' => $leverage]);
             // dd($trade_user);
             // Update user data via API
             $updated_user = "";

@@ -28,7 +28,7 @@
                             <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
+                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit"
                                         href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
@@ -40,19 +40,19 @@
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
+                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit"
                                         href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
+                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal"
                                         href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('internal_transfer:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer" 
+                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}"  data-type="internal_transfer"
                                         href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal Transfer</a>
                                 </li>
                                 @endcan
@@ -60,7 +60,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'wallet_withdrawal'? 'active show':''}}" id="walletwithdrawal" role="tabpanel">
@@ -156,11 +156,11 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <script>
         $(document).ready(function () {
-          
+
           var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
               buttons: [
@@ -172,9 +172,13 @@
                         }
                     }
                 ],
-    
-             order: [[3, "desc"]],
-             processing: true,
+            lengthMenu: [
+                [10, 25, 50, 100, -1], // DataTable options
+                [10, 25, 50, 100, "All"] // User-facing labels
+                ],
+            pageLength: 10,
+            order: [[3, "desc"]],
+            processing: true,
             serverSide: true,
             searching: true,
             ajax: {
@@ -218,13 +222,13 @@
               { data: 'created_time', name: 'created_time', visible: false},
             ]
           });
-          
+
           $('#statusFilter').on('change', function () {
             tableWalletWithdrawal.ajax.reload();
-           
+
           });
         });
       </script>
-    
+
     @endpush
     @endsection
