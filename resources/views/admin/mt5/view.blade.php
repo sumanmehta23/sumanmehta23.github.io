@@ -1,7 +1,13 @@
 @extends('layouts.admin.admin')
 @section('content')
     @include('admin.mt5.popups')
+    <style>
+        .pointer{
+            cursor: pointer;
+        }
+    </style>
     <?php
+
 
 // include __DIR__ . "/user_actions.php";
 // include "admin_transaction.php";
