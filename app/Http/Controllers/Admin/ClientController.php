@@ -572,6 +572,21 @@ class ClientController extends Controller
         $userid = $id;
 
         $IbTotalDeposits = $user->IbTotalDeposits;
+
+        foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
+            $login = $liveAccount->code;
+            $ibdata = Ib1::where('referral_code',$user->ib1)->first();
+            if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+            }
+            $trade_user->Agent = $ibdata->indexId;
+
+            $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                }
+        }
+
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
