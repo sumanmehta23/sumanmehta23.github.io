@@ -4,18 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\KycLog;
+use App\Models\Account;
 use App\Models\KycUpdate;
+use Illuminate\Support\Str;
 use App\Models\ClientWallet;
 use Illuminate\Http\Request;
+use App\Services\MailService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Account;
-use App\Services\MailService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use App\Actions\SubscribeToKlaviyoList;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 
 class Users extends Controller
 {
@@ -215,7 +218,7 @@ class Users extends Controller
         return view('sumsub', compact('token'));
 
     }
-    public function sumsub_verify(Request $request)
+    public function sumsub_verify(Request $request ,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
             $email = Session::get('clogin');
@@ -225,6 +228,34 @@ class Users extends Controller
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
+                $timestamp=time();
+                $requestMethod="GET";
+                $secretKey = config('services.sumsub.api_secret');
+                $apiUrl = '/resources/applicants/'.$payload['applicantId'].'/status'; // URI of the request
+                $requestBody = ''; // Add your request body if needed, empty for this example
+
+                // Create the valueToSign string
+                $valueToSign = $timestamp . $requestMethod . $apiUrl;
+        
+                if (!empty($requestBody)) {
+                    $valueToSign .= $requestBody;
+                }
+        
+                // Compute HMAC SHA256 signature
+                $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
+        
+                // Convert binary signature to hexadecimal
+                $signatureHex = bin2hex($signature);
+                $response=Http::withHeaders([
+                    'X-App-Token' => config('services.sumsub.api_token'),
+                    'X-App-Access-Sig'=>$signatureHex,
+                    'X-App-Access-Ts'=>$timestamp,
+                ])->get('https://api.sumsub.com'.$apiUrl);
+                if($response->status()!=200){
+                    return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
+                }
+                $payload=$response->json();
+                
                 // Store callback log in the database
                 KycLog::create([
                     'client_id' => $email,
@@ -234,10 +265,16 @@ class Users extends Controller
                 ]);
                 // Check if review status is completed
                 if (isset($payload['reviewStatus']) && $payload['reviewStatus'] == 'completed') {
+                   
+                    // $response = $client->request('GET', 'https://api.sumsub.com/resources/applicants/67a1c0ad52ff86587fa5f1c0/status', [
+                    //     'headers' => [
+                    //       'X-App-Token' => 'sbx:qVcQDPeFQuB7xcGhX0MYvt80.pVSvzRBOm2Y4Qw4mI4G42vfDBDFJw1Ek',
+                    //     ],
+                    //   ]);
                     // Check review result
                     if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
                         // Find the user in the database
-                        $user = DB::table('aspnetusers')->where('email', $email)->first();
+                        $user = User::where('email', $email)->first();
 
                         // Check if the user's KYC is already verified
                         if ($user && $user->kyc_verify == 1) {
@@ -245,9 +282,12 @@ class Users extends Controller
                         }
 
                         // Update user's KYC status to verified
-                        DB::table('aspnetusers')
-                            ->where('email', $email)
+                        User::where('email', $email)
                             ->update(['kyc_verify' => 1]);
+                        $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
+                        if($list_id){
+                            $subscribeToKlaviyoList->handle($user, $list_id);
+                        }
 
                         return response()->json(['status' => 'true', 'message' => 'KYC Verified']);
                     } else {

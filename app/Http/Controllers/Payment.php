@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\PaymentLog;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use App\Actions\SubscribeToKlaviyoList;
 use App\Services\MailService as MailService;
 
 class Payment extends Controller
@@ -25,7 +27,7 @@ class Payment extends Controller
     {
         $this->mailService = $mailService;
     }
-    public function handlePaymentResponse(Request $request)
+    public function handlePaymentResponse(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
@@ -70,6 +72,7 @@ class Payment extends Controller
                     );
 
                     DB::commit();
+                    $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
                     Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
                     Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
                     $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
@@ -110,6 +113,7 @@ class Payment extends Controller
 
                         if ($walletDeposit) {
                             $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
+                            $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
                             return redirect('/wallet_deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
                         } else {
                             return redirect('/wallet_deposit')->with('error', "Something went wrong. Please Try Again");
@@ -127,6 +131,28 @@ class Payment extends Controller
                 }
 
             }
+    }
+    protected function getKlaviyoListId($amount)
+    {
+        $lists = [
+            'DEPOSIT_10_200' => ['min' => 10, 'max' => 200, 'id' => config('services.klaviyo.list_ids.DEPOSIT_10_200')],
+            'DEPOSIT_200_2000' => ['min' => 200, 'max' => 2000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_200_2000')],
+            'DEPOSIT_2000_5000' => ['min' => 2000, 'max' => 5000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_2000_5000')],
+            'DEPOSIT_5000_PLUS' => ['min' => 5000, 'max' => PHP_INT_MAX, 'id' => config('services.klaviyo.list_ids.DEPOSIT_5000_PLUS')],
+        ];
+        foreach ($lists as $list) {
+            if ($amount >= $list['min'] && $amount < $list['max']) {
+                return $list['id'];
+            }
+        }
+        return null; 
+    }
+    protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {   
+        $listId = $this->getKlaviyoListId($amount);
+        if($listId){
+            $subscribeToKlaviyoList->handle($user, $listId);
+        }
     }
 
     public function sendSuccessEmail($toEmail, $amount, $paymentLog,$lastInsertId)
