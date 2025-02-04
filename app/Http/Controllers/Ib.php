@@ -69,6 +69,7 @@ class Ib extends Controller
                 Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'indexId' => random_int(100000, 999999),
                     'referral_code' =>$referral_code,
                     'ib_plan_details_id' => $request->ib_plan_details_id ,
                     'name' => $user->fullname,
@@ -149,7 +150,6 @@ class Ib extends Controller
         if (!$ib) {
             return redirect()->route('ib');
         }
-
         $plan_id = $ib->planDetails->ib_category_id;
 
 

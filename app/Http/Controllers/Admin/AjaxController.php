@@ -3052,6 +3052,7 @@ class AjaxController extends Controller
 
     public function requestIB($request)
     {
+
         try {
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
@@ -3065,6 +3066,7 @@ class AjaxController extends Controller
 
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
+
                 if ($user) {
                     $ib1 = new Ib1();
                     $ib1->uid = $user->uid;
@@ -3084,7 +3086,8 @@ class AjaxController extends Controller
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'ib_plan_details_id' => $ibGroup
+                    'ib_plan_details_id' => $ibGroup,
+                    // 'indexId' => random_int(100000, 999999),
                 ]);
 
             $cacheKey = 'ib1_' . $clientId;
