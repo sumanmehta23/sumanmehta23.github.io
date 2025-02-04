@@ -7,6 +7,7 @@ use App\Models\Ib1;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\IbPlan;
+use App\Models\KycLog;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\UserLog;
@@ -27,9 +28,9 @@ use App\Services\MailService;
 use App\Models\WalletWithdraw;
 use Illuminate\Validation\Rule;
 use App\Models\ClientBankDetail;
+use Illuminate\Auth\Access\Gate;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
-use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -565,6 +566,7 @@ class ClientController extends Controller
         $userid = $id;
 
         $IbTotalDeposits = $user->IbTotalDeposits;
+        $kyc_log = KycLog::where('user_id', $id)->where('callback_payload','like','%GREEN%')->latest()->first();
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
@@ -586,7 +588,8 @@ class ClientController extends Controller
             'clients',
             'userid',
             'countries',
-            'IbTotalDeposits'
+            'IbTotalDeposits',
+            'kyc_log'
         ));
     }
 

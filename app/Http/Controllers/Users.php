@@ -155,10 +155,12 @@ class Users extends Controller
     public function sumsub()
     {
         $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key
+        $secretKey = config('services.sumsub.api_secret');
         $timestamp = time(); // Current timestamp in seconds
 
         // Example values (replace with actual values as needed)
-        $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
+        // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
+        $appToken=config('services.sumsub.api_token');
         $apiUrl = '/resources/accessTokens?userId=' . urlencode(session('clogin')) . '&levelName=basic-kyc-level'; // URI of the request
         $requestMethod = 'POST'; // HTTP method
         $requestBody = ''; // Add your request body if needed, empty for this example
@@ -226,7 +228,7 @@ class Users extends Controller
                     'client_id' => $email,
                     'user_id' => auth()->user()->id,
                     'callback_code' => json_encode($type),
-                    'callback_payload' => json_encode($payload),
+                    'callback_payload' => $payload,
                 ]);
                 // Check if review status is completed
                 if (isset($payload['reviewStatus']) && $payload['reviewStatus'] == 'completed') {
@@ -275,7 +277,7 @@ class Users extends Controller
             'client_id' => $request->applicantEmail,
             'user_id' => $request->userId,
             'callback_code' => 'Applicant ID',
-            'callback_payload' => json_encode($request->applicantId),
+            'callback_payload' => $request->applicantId,
         ]);
 
         // Return a response indicating success

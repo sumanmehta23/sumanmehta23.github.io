@@ -223,11 +223,11 @@
                                                         <span class="px-2"><span
                                                                 class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
                                                         |
-                                                        <span class="d-flex flex-column px-2">{!! $user->kyc_verify == 0
+                                                        <span class="px-2 d-flex flex-column">{!! $user->kyc_verify == 0
                                                             ? '<span class="badge bg-outline-danger">Pending KYC</span>'
                                                             : ($user->status == 1
                                                                 ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                                : '') !!}<a class="mb-1 fs-12" id="sumsub-info" href=""></a></span>
+                                                                : '') !!}@if($kyc_log)<a class="mb-1 fs-12" id="sumsub-info" href="https://cockpit.sumsub.com/checkus/#/applicant/{{$kyc_log->callback_payload['applicantId']}}/basicInfo?clientId={{config('services.sumsub.clientId')}}">{{$kyc_log->callback_payload['applicantId']}}</a>@endif</span>
                                                         |
                                                         <span
                                                             class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
