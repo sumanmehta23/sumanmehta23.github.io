@@ -310,7 +310,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
-        Route::get('/sumsub_data', [SumsubController::class, 'sumsub_data']);
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

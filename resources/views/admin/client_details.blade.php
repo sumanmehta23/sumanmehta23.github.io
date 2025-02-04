@@ -1699,30 +1699,4 @@
 
     });
 </script>
-<script src="https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
-<script>
-    function getApplicantData(email) {
-
-        $.ajax({
-            url: "{{ url('/admin/sumsub_data') }}",
-            type: "GET",
-            data: { email: email  },
-            success: function(response) {
-                if (response.token) {
-                    console.log(response);
-                } else {
-                    console.error("Failed to fetch token");
-                }
-            },
-            error: function(error) {
-                console.error("Error:", error);
-            }
-        });
-    }
-
-    const userEmail = "{{ $user->email }}";
-    getApplicantData(userEmail);
-
-</script>
-
 @endsection
