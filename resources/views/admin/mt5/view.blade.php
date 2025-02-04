@@ -1,7 +1,13 @@
 @extends('layouts.admin.admin')
 @section('content')
     @include('admin.mt5.popups')
+    <style>
+        .pointer{
+            cursor: pointer;
+        }
+    </style>
     <?php
+
 
 // include __DIR__ . "/user_actions.php";
 // include "admin_transaction.php";
@@ -31,13 +37,20 @@ if ($getUser) {
                                         <div class="card-body">
                                             <div class="text-center">
                                                 <div class="userprofile">
-                                                    <div class="avatar userpic avatar-rounded">
-                                                        <img src="/admin_assets/assets/images/users/client.jpeg"
-                                                            alt="img" style="width:100px">
+                                                    <div class="avatar userpic avatar-rounded pointer"
+                                                        onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $getUser->user_id) }}')">
+                                                        <img src="/admin_assets/assets/images/users/client.jpeg" alt="img" style="width:100px">
                                                     </div>
 
-                                                    <h3 class="mb-2 username"><?= $getUser->name ?></h3>
-                                                    <p class="mb-1 text-muted"><?= $getUser->email ?></p>
+                                                    <h3 class="mb-2 username pointer"
+                                                        onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $getUser->user_id) }}')">
+                                                        <?= $getUser->name ?>
+                                                    </h3>
+
+                                                    <p class="mb-1 text-muted pointer"
+                                                        onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $getUser->user_id) }}')">
+                                                        <?= $getUser->email ?>
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -292,6 +305,7 @@ if ($getUser) {
                     </div>
 
                     @can('bonus_transaction:viewAny')
+
                         <div class="mt-2 card custom-card">
                             <div class="card-header justify-content-between">
                                 <div class="card-title">Bonus</div>
@@ -304,6 +318,7 @@ if ($getUser) {
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
+                                                <th>Type</th>
                                                 <th>Amount</th>
                                                 <th>Status</th>
                                             </tr>
@@ -315,6 +330,7 @@ if ($getUser) {
                                             <tr>
                                                 <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
                                                 </td>
+                                                <td><?= strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
                                                 <td><?= $bns->bonus_amount ?></td>
                                                 <td><?= $bns->bonus_type ?></td>
                                             </tr>
@@ -887,7 +903,20 @@ if ($getUser) {
             $(".acc-types").select2();
 
             // Inject permission data from backend
+            // function takeAction(url) {
+            //     // window.open(url, '_blank');
+            //     window.location.href = url;
+            // }
 
+            function handleClick(event, url) {
+                if (event.button === 0) {
+                    // Left click - Navigate normally
+                    window.location.href = url;
+                } else if (event.button === 1) {
+                    // Middle click - Open in a new tab
+                    window.open(url, '_blank');
+                }
+            }
 
         </script>
     @endsection

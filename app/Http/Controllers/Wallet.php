@@ -99,7 +99,7 @@ class Wallet extends Controller
                 ->first();
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have added wallet address for Wallet.</div>' .
+                '<div>You are receiving this email because you have added a new wallet address to your account.</div>' .
                 '<div>Wallet Address: '.$request->wallet_address.' </div>' .
                 '<div>Click the link below to activate your Wallet Address</div>';
 
@@ -116,6 +116,224 @@ class Wallet extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function verify_delete_wallet_address(Request $request)
+    {
+        $wallet_id = $request->id;
+
+        // Check for pending withdrawals
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        $settings = settings();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        if ($wallet) {
+            $wallet->wallet_delete_verification = true; // or 1, depending on the DB type
+            $wallet->save();
+        }
+
+        $toEmail = $wallet->user->email;
+        $type = 'Verify Wallet Address Deletion Request';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $content =
+                '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>For security purposes, please verify this request by clicking the link below</div>';
+
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?id={$wallet->user_id}&clientWallet_id=$wallet->id",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Verify",
+            "subtitle_right" => "Wallet Address Deletion Request",
+            "btn_text" => "Verify Wallet Address Deletion"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+        return response()->json([
+                    'success' => true,
+                    'message' => 'Wallet address deletion email send successfully.'
+                ]);
+    }
+
+    public function get_editing_wallet_details(Request $request)
+    {
+        $wallet = ClientWallet::find($request->id);
+
+        if ($wallet) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $wallet->id,
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'status' => $wallet->status
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
+
+    public function verify_edit_wallet_details(Request $request)
+    {
+
+        $wallet_id = $request->id;
+        $wallet_address = $request->wallet_address;
+        $wallet_network = $request->wallet_network;
+        $wallet_name = $request->wallet_name;
+        $wallet_status = $request->status;
+
+        // Check for pending withdrawals
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        $settings = settings();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        $toEmail = $wallet->user->email;
+        $type = 'Update your wallet details';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $content =
+                '<div>We received a request to edit your wallet address details</div>' .
+                '<div>New Wallet Address: '.$wallet_address.' </div>'.
+                '<div>New Wallet Network: '.$wallet_network.' </div>'.
+                '<div>New Wallet Name: '.$wallet_name.' </div>'.
+                '<div>For security purposes, please verify this request by clicking the link below</div>';
+
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/edit_wallet_details?id={$wallet_id}&wallet_address={$wallet_address}&wallet_network={$wallet_network}&wallet_name={$wallet_name}&status={$wallet_status}",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Verify",
+            "subtitle_right" => "Wallet Details",
+            "btn_text" => "Verify Edited Wallet Details"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+        return response()->json([
+                    'success' => true,
+                    'message' => 'Wallet address deletion email send successfully.'
+                ]);
+    }
+
+    public function edit_wallet_details(Request $request)
+    {
+        $wallet_details = $request->all();
+        $wallet_id = $request->id;
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        if($wallet){
+            $wallet->wallet_name = $wallet_details['wallet_name'];
+            $wallet->wallet_network = $wallet_details['wallet_network'];
+            $wallet->wallet_address = $wallet_details['wallet_address'];
+            $wallet->status = $wallet_details['status'];
+            $wallet->save();
+
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Wallet Address Updated';
+            $htmlContent = "";
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $content =
+                '<div>We’re writing to confirm that your request to update your wallet details has been successfully verified and processed:</div>'.
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
+                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
+                '<div>The wallet details is now updated. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+            $templateVars = [
+                'name' => $wallet->user->fullname,
+                'server_name' => $settings['mt5_company_name'],
+                'site_link' => $settings['copyright_site_name_text'] . "/login",
+                'email' => $settings['email_from_address'],
+                "content" => $content,
+                "title_right" => "Wallet Address Updation",
+                "subtitle_right" => "Verified",
+                "btn_text" => "Login"
+            ];
+            $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
+            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
+
+        }
+        return redirect()->route('user-profile')->with('error', 'Something went wrong');
+    }
+
+    public function delete_wallet_address(Request $request)
+    {
+        $wallet_id = $request->clientWallet_id;
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+        // Delete the wallet
+        $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
+
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - Wallet Address Deletion Verified';
+        $htmlContent = "";
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content =
+            '<div>We’re writing to confirm that your request to delete the following wallet address has been successfully verified and processed:</div>'.
+            '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+            '<div>The wallet address is now removed from your wallet. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/login",
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Wallet Address Deletion",
+            "subtitle_right" => "Verified",
+            "btn_text" => "Login"
+        ];
+        $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
+        if ($deleted) {
+            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Address succesfully deleted');
+        } else {
+            return redirect()->route('user-profile')->with('error', 'Something went wrong');
+        }
+    }
+
+
     public function wallet_address_verify(Request $request){
         $settings = settings();
         $id = $request->query('id');
@@ -207,6 +425,8 @@ class Wallet extends Controller
         $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->where('verified', 1)
+            ->where('wallet_delete_verification', 0)
+            ->where('deleted_at', NULL)
             ->get();
         $settings = $this->settings;
         $liveaccount_details = Account::with('accountType')
@@ -283,7 +503,7 @@ class Wallet extends Controller
         if ($response->successful()) {
 
             $responsdata=$response->json();
-            Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
+            // Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
             PaymentLog::where('id', $paymentId)->update([
                 'payment_req' => json_encode($responsdata),
                 'payment_url' => $responsdata['ipn_token'],

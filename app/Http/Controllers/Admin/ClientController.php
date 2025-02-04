@@ -7,6 +7,7 @@ use App\Models\Ib1;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\IbPlan;
+use App\Models\KycLog;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\UserLog;
@@ -25,20 +26,30 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Services\MailService;
 use App\Models\WalletWithdraw;
+use Illuminate\Validation\Rule;
 use App\Models\ClientBankDetail;
+use Illuminate\Auth\Access\Gate;
 use App\Models\RelationshipManager;
 use App\Http\Controllers\Controller;
-use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
+use App\MT5\MTWebAPI;
+use App\Services\MT5Service;
+use App\MT5\MTRetCode;
 
 class ClientController extends Controller
 {
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         // Gate::validate('view-client');
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
     public function index()
     {
@@ -253,7 +264,21 @@ class ClientController extends Controller
                 $emailConfirmed = 1;
                 try {
                     // Insert new user into the database
-                    $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    // $lastInsertId = DB::table('aspnetusers')->insertGetId([
+                    //     'email' => $email,
+                    //     'fullname' => $fullname,
+                    //     'password' => $password,
+                    //     'country_code' => $country_code,
+                    //     'number' => $number,
+                    //     'username' => $email,
+                    //     'referral' => $referral,
+                    //     'emailToken' => $code,
+                    //     'country' => $country,
+                    //     'status' => $status,
+                    //     'email_confirmed' => $emailConfirmed,
+                    // ]);
+
+                    $user = User::create([
                         'email' => $email,
                         'fullname' => $fullname,
                         'password' => $password,
@@ -267,10 +292,10 @@ class ClientController extends Controller
                         'email_confirmed' => $emailConfirmed,
                     ]);
 
-                    if ($lastInsertId) {
+                    if ($user) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
-                            'user_id' => $lastInsertId,
+                            'user_id' => $user->id,
                             'email' => $email,
                             'type' => 'client_add',
                             'value' => json_encode($request->except(['addUser', 'password', 'confirm_password']))
@@ -312,16 +337,78 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
+
+        $user_id = $request->input('id');
+        $validatedData = Validator::make($request->all(), [
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('aspnetusers', 'email')->ignore($user_id),
+            ],
+            'password' => [
+                'sometimes', // Apply validation only if password is provided
+                'nullable',
+                'string',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
+            ],
+            'confirm_password' => 'required_with:password|same:password',
+        ]);
+
+        if ($validatedData->fails()) {
+            $errors = $validatedData->errors();
+            $filteredErrors = [];
+
+            // Check which specific regex rule failed and return only unmet requirements
+            if ($errors->has('password')) {
+                $password = $request->password;
+
+                if (!preg_match('/[a-z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                }
+                if (!preg_match('/[A-Z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                }
+                if (!preg_match('/\d/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one number.';
+                }
+                if (!preg_match('/[\W_]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one special character.';
+                }
+                if (strlen($password) < 8) {
+                    $filteredErrors[] = 'The password must be at least 8 characters long.';
+                }
+                if ($errors->has('password.confirmed')) {
+                    $filteredErrors[] = 'Passwords do not match.';
+                }
+            }
+            if ($errors->has('email')) {
+                $filteredErrors[] = $errors->get('email')[0];
+            }
+            $errorString = '';
+            foreach ($filteredErrors as $error) {
+                $errorString .= '• ' . $error ;
+            }
+            $errorString = html_entity_decode($errorString);
+            // dd($errorString);
+            // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+            return redirect()->back()->with('error', $errorString);
+        }
         if ($request->has('updateUser')) {
-            $email = $request->input('email');
+            // $email = $request->input('email');
+            $email = $validatedData->validated()['email'];
             $fullname = $request->input('fullname');
             $password = $request->input('password');
+
             $confirmPassword = $request->input('confirm_password');
             $country = $request->input('country');
             $country_code = $request->input('country_code');
             // $number = $request->input('telephone');
             $number = $request->country_code.$request->telephone;
-            $user_id = $request->input('id');
+
             $emailNotification = $request->input('email_notification');
 
             $countryCode = Country::where('country_name', $request->country)
@@ -343,27 +430,45 @@ class ClientController extends Controller
             }
             $status = 1;
             $emailConfirmed = 1;
-
             try {
-                // Update user in the database
-                $affectedRows = DB::table('aspnetusers')
-                    ->where(DB::raw('id'), $user_id)
-                    ->update([
-                        'fullname' => $fullname,
-                        'password' => $password,
-                        'number' => $number,
-                        'country_code' => $country_code,
-                        'country' => $country
-                    ]);
+
+                $user = User::find($user_id);
+
+                if ($user) {
+
+                    $user->fullname = $fullname;
+                    if($password){
+                        $user->password = $password;
+                    }
+                    $user->number = $number;
+                    $user->country_code = $country_code;
+                    $user->country = $country;
+                    $user->email = $email;
+
+                    $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
+                }
+
+                // $affectedRows = DB::table('aspnetusers')
+                //     ->where(DB::raw('id'), $user_id)
+                //     ->update([
+                //         'fullname' => $fullname,
+                //         'password' => $password,
+                //         'number' => $number,
+                //         'country_code' => $country_code,
+                //         'country' => $country,
+                //         'email' => $email,
+                //     ]);
+
 
                 // If update is successful
-                if ($affectedRows > 0) {
+                if ($user) {
                     $updateData = [
                         'user_id' => $user_id,
                         'email' => $email,
                         'type' => 'client_update',
                         'value' => json_encode($request->except(['updateUser', 'password', 'confirm_password']))
                     ];
+                    // dd($updateData);
                     // Log the update (you need to implement this function if not already available)
                     $this->addToUserLog($updateData);
 
@@ -431,7 +536,6 @@ class ClientController extends Controller
     }
     public function clientDetails(Request $request)
     {
-
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
         $countries = Country::all();
@@ -468,6 +572,23 @@ class ClientController extends Controller
 
         $userid = $id;
 
+        $IbTotalDeposits = $user->IbTotalDeposits;
+
+        foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
+            $login = $liveAccount->code;
+            $ibdata = Ib1::where('referral_code',$user->ib1)->first();
+            if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+            }
+            $trade_user->Agent = $ibdata->indexId;
+
+            $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                }
+        }
+
+        $kyc_log = KycLog::where('user_id', $id)->where('callback_payload','like','%GREEN%')->latest()->first();
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
@@ -488,7 +609,9 @@ class ClientController extends Controller
             'country_code',
             'clients',
             'userid',
-            'countries'
+            'countries',
+            'IbTotalDeposits',
+            'kyc_log'
         ));
     }
 

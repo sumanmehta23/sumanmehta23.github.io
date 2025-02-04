@@ -227,7 +227,7 @@
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar" <?php echo $marginTopStyle; ?>>
+            <nav class="pc-sidebar" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
@@ -418,15 +418,14 @@
                 </div>
             @endif
             @if(config("services.sales.promotion"))
-            <div class=" w-100 sales-banner-container">
+            {{-- <div class=" w-100 sales-banner-container">
                 <div class="banner-link" ><div class="lqh-sale-banner">
                     <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
                     </div></div>
-            </div>
-            
+            </div> --}}
             @endif
-            
-            <header class="pc-header" <?php echo $marginTopStyle; ?>>
+
+            <header class="pc-header" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">

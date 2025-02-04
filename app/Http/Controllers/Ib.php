@@ -149,7 +149,6 @@ class Ib extends Controller
         if (!$ib) {
             return redirect()->route('ib');
         }
-
         $plan_id = $ib->planDetails->ib_category_id;
 
 
@@ -184,6 +183,7 @@ class Ib extends Controller
             for ($i = 1; $i <= 15; $i++) {
                 Account::select('id', 'code', 'user_id', 'account_type_id')
                     ->where('demo', false)
+                    ->where('account_request_status', 1)
                     ->whereHas('user', function ($query) use ($referral_code, $i) {
                         $query->where("ib$i", $referral_code)->where('status', 1);
                     })
@@ -378,6 +378,7 @@ class Ib extends Controller
         }
         $live_accs = Account::where('user_id', $userId)
             ->where('demo', false)
+            ->where('account_request_status', 1)
             ->orderBy('id', 'desc')
             ->get();
 

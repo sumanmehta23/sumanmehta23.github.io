@@ -148,7 +148,7 @@
                                                 $status = 'Approved';
                                                 $rowClass = 'wallet-plus';
                                             } else if($transaction->status == 2 || $transaction->status == 3){
-                                                $status = 'Rejected';
+                                                $status = 'Cancelled';
                                                 $rowClass = 'wallet-minus';
                                             }
                                             $dateTime = explode(' ', $transaction->date_added);

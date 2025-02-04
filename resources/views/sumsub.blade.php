@@ -15,11 +15,11 @@
 
 <body>
     <div id="sumsub-websdk-container"></div>
-
     <script>
         localStorage.setItem("isVerified", "false");
-
+let applicantId='';
         function launchWebSdk(accessToken, applicantEmail, applicantPhone) {
+
             let snsWebSdkInstance = snsWebSdk
                 .init(accessToken, () => getNewAccessToken())
                 .withConf({
@@ -35,16 +35,24 @@
                     console.log("Step completed: ", payload);
                     // Handle the step completion event
                 })
+                .on("idCheck.onApplicantLoaded", (payload) => {
+                    // console.log("onApplicantLoaded: ", payload);
+                    applicantId=payload.applicantId;
+                    // Handle the step completion event
+                })
                 .on("idCheck.onError", (error) => {
                     // Handle the error event
                 })
                 .onMessage((type, payload) => {
+                    // console.log("Received message:", type, payload,applicantId);
+                    payload.applicantId=applicantId;
                     $.ajax({
                         url: "{{ url('/sumsub_verify') }}",
                         type: "POST",
                         data: {
                             type: type,
                             payload: payload,
+
                             sumsub: "action"
                         },
                         headers: {
@@ -58,6 +66,21 @@
                                     var json_data = data;
                                 }
                                 if (json_data.status == "true") {
+                                    var applicantId = json_data.applicantId;
+                                    $.ajax({
+                                            url: "{{ url('/log_kyc_verification') }}", // Endpoint for logging KYC verification
+                                            type: "POST",
+                                            data: {
+                                                applicantId: applicantId,
+                                                applicantEmail: applicantEmail,  // Ensure this variable is set
+                                                userId: "{{ auth()->user()->id }}", // Pass the authenticated user's ID
+                                                _token: $('meta[name="csrf-token"]').attr('content') // CSRF token for security
+                                            },
+                                            success: function(response) {
+                                                // Handle the success of logging if needed
+                                                console.log('KYC log saved:', response);
+                                            }
+                                        });
                                     swal.fire({
                                         icon: "success",
                                         title: "Your KYC has been successfully verified",
@@ -84,7 +107,6 @@
         function getNewAccessToken() {
             return Promise.resolve("{{ $token }}");
         }
-
         launchWebSdk("{{ $token }}");
     </script>
 </body>

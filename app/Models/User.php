@@ -47,6 +47,37 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected static function booted()
+    {
+        parent::booted();
+        // dd('check');
+
+        static::updated(function ($user) {
+
+            // Check if the email was updated
+            if ($user->isDirty('email')) {
+                // Get the old and new email values
+                $oldEmail = $user->getOriginal('email');
+                $newEmail = $user->email;
+
+                
+                // Update the email in related tables
+                Account::where('email', $oldEmail)->update(['email' => $newEmail]);
+                WalletWithdraw::where('email', $oldEmail)->update(['email' => $newEmail]);
+                WalletDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TradeWithdrawals::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TradeDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                TotalBalance::where('email', $oldEmail)->update(['email' => $newEmail]);
+                BonusTransaction::where('email', $oldEmail)->update(['email' => $newEmail]);
+                DemoDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
+                Ib1::where('email', $oldEmail)->update(['email' => $newEmail]);
+                LoginHistory::where('email', $oldEmail)->update(['email' => $newEmail]);
+                
+                // Add other table updates as necessary
+            }
+        });
+    }
+
     public function BonusTransaction()
     {
         return $this->hasMany(BonusTransaction::class);
@@ -236,31 +267,53 @@ class User extends Authenticatable
     }
 
     public function getClientsAttribute()
-{
-    if (!$this->ib) {
-        return collect(); // Return an empty collection if the user has no IB.
+    {
+        if (!$this->ib) {
+            return collect(); // Return an empty collection if the user has no IB.
+        }
+
+        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+
+        // Dynamically build the query for all 15 levels using a single query.
+        $clients = IbClientList::where(function ($query) use ($referralCode) {
+            for ($i = 1; $i <= 15; $i++) {
+                $query->orWhere("ib$i", $referralCode);
+            }
+        })->get();
+
+        // Group clients by level (ib1, ib2, ..., ib15)
+        $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
+            foreach (range(1, 15) as $level) {
+                if ($client["ib$level"] === $referralCode) {
+                    return [$level => $client];
+                }
+            }
+            return [];
+        });
+
+        return $groupedClients;
     }
 
-    $referralCode = $this->ib->referral_code ?: $this->ib->email;
-
-    // Dynamically build the query for all 15 levels using a single query.
-    $clients = IbClientList::where(function ($query) use ($referralCode) {
-        for ($i = 1; $i <= 15; $i++) {
-            $query->orWhere("ib$i", $referralCode);
+    public function getIbTotalDepositsAttribute()
+    {
+        if (!$this->ib) {
+            return 0; // Return 0 if the user has no IB.
         }
-    })->get();
 
-    // Group clients by level (ib1, ib2, ..., ib15)
-    $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
-        foreach (range(1, 15) as $level) {
-            if ($client["ib$level"] === $referralCode) {
-                return [$level => $client];
+        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+
+        // Dynamically build the query for all 15 levels using a single query.
+        $clients = IbClientList::where(function ($query) use ($referralCode) {
+            for ($i = 1; $i <= 15; $i++) {
+                $query->orWhere("ib$i", $referralCode);
             }
-        }
-    });
+        })->get();
 
-    return $groupedClients;
-}
+        // Calculate the total sum of 'total_deposit'
+        $totalDeposit = $clients->sum('total_deposit');
+
+        return $totalDeposit;
+    }
 
     public function getTicketStatusAttribute()
     {
@@ -291,8 +344,7 @@ class User extends Authenticatable
             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
             '<div>You are receiving this email because you have registered for a Trading Account.</div>' .
             '<div>Click the link below to activate your Trading Account</div>';
-        $code = Str::random(60);
-        $this->emailToken=$code;
+        $code=$this->emailToken;
         $templateVars = [
             'name' => $this->fullname,
             'server_name' => $settings['mt5_company_name'],

@@ -8,10 +8,27 @@ use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\RelationshipManager;
 use App\Models\User;
+use App\Services\MailService;
 use DB;
+use Illuminate\Support\Facades\Log;
+use App\MT5\MTRetCode;
+use App\Models\TradeWithdrawals;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
+use App\MT5\MTEnDealAction;
+use App\MT5\MTWebAPI;
+use App\Http\Controllers\ControllerB;
+
 
 class ClientAccController extends Controller
 {
+    protected $mailService;
+    protected $api;
+    public function __construct(MailService  $mailService,MTWebAPI $api)
+    {
+        $this->mailService = $mailService;
+        $this->api = $api;
+    }
     public function live_accounts()
     {
         // $role = session('userData')['userRole'];
@@ -83,8 +100,12 @@ class ClientAccController extends Controller
         // $totalaccounts = $rmCondition->count();
         return view('admin.client_accounts.demo_accounts');
     }
+
     public function requested_accounts()
     {
         return view('admin.client_accounts.requested_accounts');
     }
+
+    
+
 }

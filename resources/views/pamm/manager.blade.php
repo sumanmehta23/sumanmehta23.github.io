@@ -9,13 +9,13 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 col-lg-6">
+                            {{-- <div class="col-md-6 col-lg-6">
                                 <div>
                                     <iframe id="pamm-widget-iframe-register" src="{{ config('services.pamm.url') }}/app/auth/register/manager" style="width: 1px; min-width: 100%; border: medium; overflow: hidden;" scrolling="no">
                                     </iframe>
                                 </div>
-                            </div>
-                            <div class="col-md-6 col-lg-6">
+                            </div> --}}
+                            <div class="col-md-12 col-lg-12">
                                 <div>
                                     <iframe id="pamm-widget-iframe-login" src="{{ config('services.pamm.url') }}/app/auth/manager" style="width: 1px; min-width: 100%; border: medium; overflow: hidden;" scrolling="no">
                                     </iframe>

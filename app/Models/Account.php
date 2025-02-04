@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */
-    use HasFactory,HasUuids;
+    use HasFactory,HasUuids, SoftDeletes;
     protected $guarded = [];
     public function casts()
     {
@@ -56,6 +57,16 @@ class Account extends Model
     public function tradeWithdrawals()
     {
         return $this->hasMany(TradeWithdrawals::class);
+    }
+
+    public function getTotalBonusDepositAttribute()
+    {
+        // Sum all bonus amounts where 'admin_remark' contains 'Credit'
+        $bonusDeposit = $this->BonusTransaction->filter(function($transaction) {
+            return (strpos($transaction->admin_remark, 'Credit')) == false;
+        })->sum('bonus_amount');
+
+        return $bonusDeposit;
     }
 
 }

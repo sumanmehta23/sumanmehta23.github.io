@@ -15,8 +15,13 @@ use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\MT5\MTProtocolConsts;
 use App\Http\Controllers\Controller;
+use App\Models\Ib1;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Log;
+use App\Models\TradeWithdrawals;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
+use Illuminate\Support\Facades\DB;
 class MT5Accounts extends Controller
 {
     protected $api;
@@ -265,7 +270,7 @@ class MT5Accounts extends Controller
         }
 
          $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
-
+         $ibdata = Ib1::where('referral_code',$ib)->first();
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -283,6 +288,7 @@ class MT5Accounts extends Controller
             $new_user->Name = $user->fullname??$user->email;
             $new_user->Email = $user->email;
             $new_user->LeadSource = $user->ib1?? "" ;
+            $new_user->Agent = $ibdata->indexId?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -306,6 +312,7 @@ class MT5Accounts extends Controller
                     'account_request_status' => '1',
                 ]);
                 $this->sendMail($new_user, 'Live');
+                // return redirect()->back()->with('success', $response['message']);
                 return redirect()->back()->with('success', $response['message']);
             } else {
                 return redirect()->back()->with('error', $response['message']);
@@ -332,7 +339,7 @@ class MT5Accounts extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
-                    '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+                    '<div>Thank you for choosing LQH Markets. Your request for a new trading account will be approved  within 24-48 hours.</div>
 
                     <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
                     <p>Best Regards.</p>
@@ -341,11 +348,11 @@ class MT5Accounts extends Controller
                     'name' => $user->fullname,
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "",
+                    "title_right" => "Account Creation Request Pending",
                     "subtitle_right" => "",
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->back()->with('success', 'Account created successfully');
+                return redirect()->back()->with('success', 'Account Request Received Your request has been submitted.');
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
@@ -433,7 +440,7 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-
+            $ibdata = Ib1::where('referral_code',$ib)->first();
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
@@ -451,6 +458,7 @@ class MT5Accounts extends Controller
                 $new_user->Name = $user->fullname??$user->email;
                 $new_user->Email = $user->email;
                 $new_user->LeadSource = $user->ib1?? "" ;
+                $new_user->Agent = $ibdata->indexId?? "" ;
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
@@ -507,119 +515,249 @@ class MT5Accounts extends Controller
                     return redirect()->back()->with('error', 'No account found to update.');
                 }
             }
-        }else{
+        }
+        // else{
 
-            $validatedData = $request->validate([
-                'options' => 'required|string',
-                'leverage' => 'required|string',
-                'demo_deposit' => 'required|numeric|min:1',
-            ]);
-            // $user = auth()->user();
-            $user = User::where('id', $request->client_id)->first();
+        //     $validatedData = $request->validate([
+        //         'options' => 'required|string',
+        //         'leverage' => 'required|string',
+        //         'demo_deposit' => 'required|numeric|min:1',
+        //     ]);
+        //     // $user = auth()->user();
+        //     $user = User::where('id', $request->client_id)->first();
 
-            $email = $user->email;
+        //     $email = $user->email;
 
-            $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
+        //     $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
-            if($group->ac_min_deposit){
-                $validatedData = $request->validate([
-                    'options' => 'required|string',
-                    'leverage' => 'required|string',
-                    'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
-                ]);
-            }
+        //     if($group->ac_min_deposit){
+        //         $validatedData = $request->validate([
+        //             'options' => 'required|string',
+        //             'leverage' => 'required|string',
+        //             'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
+        //         ]);
+        //     }
 
-            if ($request->request_status == 1) {
+        //     if ($request->request_status == 1) {
 
-                $new_user = $this->api->UserCreate();
-                $new_user->MainPassword = $this->generatePassword();
-                $new_user->Group = $group->ac_group;
-                $new_user->type = $group->ac_name;
-                $new_user->Leverage = $validatedData['leverage'];
-                $new_user->ZipCode = $user->zipcode;
-                $new_user->Country = $user->country;
-                $new_user->State = $user->state;
-                $new_user->City = $user->city;
-                $new_user->Address = $user->address;
-                $new_user->Phone = $user->number;
-                $new_user->Currency = 'USD';
-                $new_user->Company = $settings['mt5_company_name'];
-                $new_user->Name =  $user->fullname??$user->email;
-                $new_user->Email = $user->email;
-                $new_user->LeadSource = $user->ib1 ?? "" ;
-                $new_user->PhonePassword = $this->generatePassword();
-                $new_user->InvestPassword = $this->generatePassword();
-                $new_user->Login = $this->generateRandomNumber();
-                $response = $this->CreateAccount($new_user, $user_server, 'Demo');
+        //         $new_user = $this->api->UserCreate();
+        //         $new_user->MainPassword = $this->generatePassword();
+        //         $new_user->Group = $group->ac_group;
+        //         $new_user->type = $group->ac_name;
+        //         $new_user->Leverage = $validatedData['leverage'];
+        //         $new_user->ZipCode = $user->zipcode;
+        //         $new_user->Country = $user->country;
+        //         $new_user->State = $user->state;
+        //         $new_user->City = $user->city;
+        //         $new_user->Address = $user->address;
+        //         $new_user->Phone = $user->number;
+        //         $new_user->Currency = 'USD';
+        //         $new_user->Company = $settings['mt5_company_name'];
+        //         $new_user->Name =  $user->fullname??$user->email;
+        //         $new_user->Email = $user->email;
+        //         $new_user->LeadSource = $user->ib1 ?? "" ;
+        //         $new_user->PhonePassword = $this->generatePassword();
+        //         $new_user->InvestPassword = $this->generatePassword();
+        //         $new_user->Login = $this->generateRandomNumber();
+        //         $response = $this->CreateAccount($new_user, $user_server, 'Demo');
 
-                if ($response['status']) {
+        //         if ($response['status']) {
 
-                    $account = Account::where('id', $request->account_id)->first();
-                    // dd($account);
-                    if($account)
-                    {
-                        $account->update([
-                            'user_id' => $user->id,
-                            'name' => $new_user->Name,
-                            'demo' => true,
-                            'email' => $new_user->Email,
-                            'code' => $new_user->Login,
-                            'account_type_id' => $validatedData['options'],
-                            'leverage' => $new_user->Leverage,
-                            'currency' => $new_user->Currency,
-                            'trader_password' => $new_user->MainPassword,
-                            'invester_password' => $new_user->InvestPassword,
-                            'phone_password' => $new_user->PhonePassword,
-                            'balance' => $validatedData['demo_deposit'],
-                            'account_request_status' => 1,
-                        ]);
-                    }
-                    $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
-                    if ($errorCode != MTRetCode::MT_RET_OK) {
-                        $error = MTRetCode::GetError($errorCode);
-                        Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
-                        return redirect()->back()->with('success', $error);
-                    } else {
+        //             $account = Account::where('id', $request->account_id)->first();
+        //             // dd($account);
+        //             if($account)
+        //             {
+        //                 $account->update([
+        //                     'user_id' => $user->id,
+        //                     'name' => $new_user->Name,
+        //                     'demo' => true,
+        //                     'email' => $new_user->Email,
+        //                     'code' => $new_user->Login,
+        //                     'account_type_id' => $validatedData['options'],
+        //                     'leverage' => $new_user->Leverage,
+        //                     'currency' => $new_user->Currency,
+        //                     'trader_password' => $new_user->MainPassword,
+        //                     'invester_password' => $new_user->InvestPassword,
+        //                     'phone_password' => $new_user->PhonePassword,
+        //                     'balance' => $validatedData['demo_deposit'],
+        //                     'account_request_status' => 1,
+        //                 ]);
+        //             }
+        //             $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
+        //             if ($errorCode != MTRetCode::MT_RET_OK) {
+        //                 $error = MTRetCode::GetError($errorCode);
+        //                 Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+        //                 return redirect()->back()->with('success', $error);
+        //             } else {
 
-                        $data = [
-                            'user_id' => $user->id,
-                            'account_id'=>$account->id,
-                            'email' => $new_user->Email,
-                            'code' => $new_user->Login,
-                            'deposit_amount' => $validatedData['demo_deposit'],
-                            'Status' => 1
-                        ];
+        //                 $data = [
+        //                     'user_id' => $user->id,
+        //                     'account_id'=>$account->id,
+        //                     'email' => $new_user->Email,
+        //                     'code' => $new_user->Login,
+        //                     'deposit_amount' => $validatedData['demo_deposit'],
+        //                     'Status' => 1
+        //                 ];
 
-                        DemoDeposit::create($data);
-                    }
-                    $this->sendMail($new_user, 'Demo');
-                    return redirect()->back()->with('success', $response['message']);
+        //                 DemoDeposit::create($data);
+        //             }
+        //             $this->sendMail($new_user, 'Demo');
+        //             return redirect()->back()->with('success', $response['message']);
+        //         } else {
+        //             return redirect()->back()->with('error', $response['message']);
+        //         }
+        //     }elseif($request->request_status == 2){
+
+        //         $account = Account::where('id', $request->account_id)->first();
+        //         // dd($account);
+        //         if($account)
+        //         {
+        //             $account->update([
+        //                 'user_id' => $user->id,
+        //                 'name' => $user->fullname??$user->email,
+        //                 'demo' => true,
+        //                 'email' => $user->email,
+        //                 'code' => 'Rejected',
+        //                 'account_type_id' => $validatedData['options'],
+        //                 'leverage' => $validatedData['leverage'],
+        //                 'currency' => 'USD',
+        //                 'balance' => $validatedData['demo_deposit'],
+        //                 'account_request_status' => 0,
+        //             ]);
+        //             return redirect()->back()->with('success', 'Account Rejected');
+        //         }else{
+        //             return redirect()->back()->with('error', 'No account found to update.');
+        //         }
+        //     }
+        // }
+    }
+
+
+    public function deleteAccounts(Request $request)
+    {
+        $validatedData = $request->validate([
+            'id' => 'required',
+            'email' => 'required|email',
+        ]);
+
+        $account = Account::with('user')->where('id', $request->id)->first();
+
+        $settings = settings();
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+        try {
+            $login = $account->code;
+
+            if($account->balance > 0) {
+                $balance = abs((float)$account->balance) * -1;
+                $comment = 'Withdraw';
+                $ticket = NULL;
+                $errorCode = $this->api->TradeBalance($login, $typed = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
                 } else {
-                    return redirect()->back()->with('error', $response['message']);
-                }
-            }elseif($request->request_status == 2){
-
-                $account = Account::where('id', $request->account_id)->first();
-                // dd($account);
-                if($account)
-                {
-                    $account->update([
-                        'user_id' => $user->id,
-                        'name' => $user->fullname??$user->email,
-                        'demo' => true,
-                        'email' => $user->email,
-                        'code' => 'Rejected',
-                        'account_type_id' => $validatedData['options'],
-                        'leverage' => $validatedData['leverage'],
-                        'currency' => 'USD',
-                        'balance' => $validatedData['demo_deposit'],
-                        'account_request_status' => 0,
-                    ]);
-                    return redirect()->back()->with('success', 'Account Rejected');
-                }else{
-                    return redirect()->back()->with('error', 'No account found to update.');
+                    try {
+                        TradeWithdrawals::create([
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'account_id' => $account->id,
+                            'withdrawal_amount' => $account->balance ,
+                            'withdraw_type' => 'Wallet Withdrawal',
+                            // 'withdraw_to' => $to_account_id,
+                            'wallet_qr' => '',
+                            'Status' => 1
+                        ]);
+                        TotalBalance::create([
+                            'account_id' => $account->id,
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'deposit_amount' => $account->balance ,
+                        ]);
+                        WalletDeposit::create([
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'deposit_amount' => $account->balance ,
+                            'deposit_type' => 'Internal Transfer',
+                            'status' => 1,
+                        ]);
+                        // RateLimiter::clear($key);
+                    } catch (\Exception $e) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Something Went Wrong !!! Please Try Again'
+                        ], 400);
+                    }
                 }
             }
+
+
+            if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
+
+                $error = MTRetCode::GetError($error_code);
+                Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($login));
+                return ["status" => false, "message" => $error];
+            } else {
+                Log::info('MT5 account deleted successfully'.json_encode($login).' with server response ');
+            }
+
+            if ($account) {
+                $account->delete(); // Soft delete the account
+
+                // Refresh the model to include the `deleted_at` timestamp
+                $account->refresh();
+
+                $email = $validatedData['email'];
+                $type = $account->demo == "1" ? "Demo account" : "Live account";
+
+                $from = $settings['email_from_address'];
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $emailSubject = $settings['admin_title'] . ' - Account Deleted';
+                $content = '<div>We would like to inform you that your account has been deleted.</div>
+                            <div> Below are the details for your reference:</div>
+                            <br>
+                            <div><b>Account code: </b>' . $account->code . '</div>
+                            <div><b>Account type: </b>' . $type . '</div>
+                            <div><b>Created On: </b>' . $account->created_at . '</div>
+                            <div><b>Deleted On: </b>' . $account->deleted_at . '</div>
+                            <br>
+                            <div>If this action was performed in error or if you have any questions, please don’t hesitate to contact our support team.</div>
+                            <br>
+                            <div>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com.</div>
+                            <br>
+                            <div>Best regards,</div>
+                            <div>LQH Markets Team</div>';
+                $templateVars = [
+                    'name' => $account->name,
+                    'site_link' => $settings['copyright_site_name_text'],
+                    'email' => $settings['email_from_address'],
+                    'content' => $content,
+                    'title_right' => 'Account',
+                    'subtitle_right' => 'Deleted',
+                    'btn_text' => 'Go To Dashboard',
+                ];
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+                return redirect()->back()->with('success', 'Account deleted successfully.');
+            } else {
+                return redirect()->back()->with('error', 'Account not found.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+            session()->flash('error', 'Exception: ' . $e->getMessage());
         }
     }
 
@@ -649,7 +787,7 @@ class MT5Accounts extends Controller
         $userAcc = Account::where('user_id', $user->id)->where('demo',1)->get();
         // dd(count($userAcc));
 
-        if($userAcc && count($userAcc)<2)
+        if($userAcc)
         {
 
             $new_user = $this->api->UserCreate();
@@ -711,55 +849,56 @@ class MT5Accounts extends Controller
             } else {
                 return redirect()->back()->with('error', $response['message']);
             }
-        }else{
-
-            $account = Account::create([
-                'user_id' => $user->id,
-                'name' => $user->fullname??$user->email,
-                'demo' => true,
-                'email' => $user->email,
-                'account_type_id' => $validatedData['options'],
-                'leverage' => $validatedData['leverage'],
-                'currency' => 'USD',
-                'balance' => $validatedData['demo_deposit'],
-                'account_request_status' => 0,
-                // 'code' => $new_user->Login,
-                // 'trader_password' => $new_user->MainPassword,
-                // 'invester_password' => $new_user->InvestPassword,
-                // 'phone_password' => $new_user->PhonePassword,
-            ]);
-
-            if($account){
-
-                $settings = settings();
-
-                $from = $settings['email_from_address'];
-                $emailSubject = 'Account send for approval';
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $content =
-                    '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
-
-                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
-                    <p>Best Regards.</p>
-                <p>LQH Markets Team</p>';
-                $templateVars = [
-                    'name' =>  $user->fullname,
-                    'email' => $settings['email_from_address'],
-                    "content" => $content,
-                    "title_right" => "",
-                    "subtitle_right" => "",
-                ];
-
-                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-
-                return redirect()->back()->with('success', 'Account created successfully');
-
-            } else {
-                return redirect()->back()->with('error', 'Account not created');
-            }
         }
+        // else{
+
+        //     $account = Account::create([
+        //         'user_id' => $user->id,
+        //         'name' => $user->fullname??$user->email,
+        //         'demo' => true,
+        //         'email' => $user->email,
+        //         'account_type_id' => $validatedData['options'],
+        //         'leverage' => $validatedData['leverage'],
+        //         'currency' => 'USD',
+        //         'balance' => $validatedData['demo_deposit'],
+        //         'account_request_status' => 0,
+        //         // 'code' => $new_user->Login,
+        //         // 'trader_password' => $new_user->MainPassword,
+        //         // 'invester_password' => $new_user->InvestPassword,
+        //         // 'phone_password' => $new_user->PhonePassword,
+        //     ]);
+
+        //     if($account){
+
+        //         $settings = settings();
+
+        //         $from = $settings['email_from_address'];
+        //         $emailSubject = 'Account send for approval';
+        //         $headers = "MIME-Version: 1.0" . "\r\n";
+        //         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        //         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        //         $content =
+        //             '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+
+        //             <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+        //             <p>Best Regards.</p>
+        //         <p>LQH Markets Team</p>';
+        //         $templateVars = [
+        //             'name' =>  $user->fullname,
+        //             'email' => $settings['email_from_address'],
+        //             "content" => $content,
+        //             "title_right" => "Account Creation Request Pending",
+        //             "subtitle_right" => "",
+        //         ];
+
+        //         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+        //         return redirect()->back()->with('success', 'Account created successfully');
+
+        //     } else {
+        //         return redirect()->back()->with('error', 'Account not created');
+        //     }
+        // }
     }
 
     public function sendMail($new_user, $type)

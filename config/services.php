@@ -56,5 +56,10 @@ return [
     'sales'=>[
         'promotion'=>env('SALES_PROMOTION',false),
         'promotiontext'=>env('SALES_PROMOTION_TEXT'),
+    ],
+    'sumsub'=>[
+        'api_token'=>env('SUMSUB_API_TOKEN',''),
+        'api_secret'=>env('SUMSUB_API_SECRET',''),
+        'clientId'=>env('SUMSUB_CLIENT_ID',''),
     ]
 ];
