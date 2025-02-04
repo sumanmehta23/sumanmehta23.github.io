@@ -52,7 +52,7 @@ class Wallet extends Controller
             ->get();
         // Fetch withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
+            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount','verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
@@ -712,7 +712,7 @@ class Wallet extends Controller
     public function withdrawal(Request $request)
     {
         $settings = settings();
-        
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -784,7 +784,7 @@ class Wallet extends Controller
             'verified' => 0
         ]);
 
-        
+
         $toEmail = $user->email;
         $type = 'Withdrawal Details Verification';
         $from = $settings['email_from_address'];
@@ -795,7 +795,7 @@ class Wallet extends Controller
         $WalletWithdrawal = WalletWithdraw::where('user_id', $user->id)
                 ->latest('created_at') // Specify the column to order by
                 ->first();
-                
+
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                 '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.
@@ -813,15 +813,15 @@ class Wallet extends Controller
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
         // RateLimiter::clear($key);
-        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
+        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!. Please verify your email for withdrawal confirmation.');
     }
 
     public function wallet_withdrawal_verify(Request $request){
-        
+
          if(!auth()->check()){
             return redirect('/login');
          }
-         
+
         $settings = settings();
         $id = auth()->user()->id;
         $walletWithdrawal_id = $request->query('walletWithdrawal_id');

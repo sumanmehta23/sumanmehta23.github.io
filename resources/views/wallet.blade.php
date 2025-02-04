@@ -138,12 +138,17 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {{-- {{ dd($wallet_history) }} --}}
                                     @foreach ($wallet_history as $transaction)
                                         <?php
                                             if ($transaction->status == 0) {
-                                                $status = 'Pending';
-                                                $rowClass = 'wallet-pending';
+                                                if($transaction->verified == 0){
+                                                    $status = 'Email Verification Pending';
+                                                    $rowClass = 'wallet-pending';
+                                                }else{
+                                                    $status = 'Pending';
+                                                    $rowClass = 'wallet-pending';
+                                                }
+
                                             } else if($transaction->status == 1) {
                                                 $status = 'Approved';
                                                 $rowClass = 'wallet-plus';
