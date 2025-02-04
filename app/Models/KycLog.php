@@ -11,4 +11,8 @@ class KycLog extends Model
     use HasFactory,HasUlids;
 
     protected $guarded = [];
+
+    protected $casts=[
+        'callback_payload'=>'array'
+    ];
 }

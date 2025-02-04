@@ -17,7 +17,7 @@
     <div id="sumsub-websdk-container"></div>
     <script>
         localStorage.setItem("isVerified", "false");
-
+let applicantId='';
         function launchWebSdk(accessToken, applicantEmail, applicantPhone) {
 
             let snsWebSdkInstance = snsWebSdk
@@ -35,17 +35,24 @@
                     console.log("Step completed: ", payload);
                     // Handle the step completion event
                 })
+                .on("idCheck.onApplicantLoaded", (payload) => {
+                    // console.log("onApplicantLoaded: ", payload);
+                    applicantId=payload.applicantId;
+                    // Handle the step completion event
+                })
                 .on("idCheck.onError", (error) => {
                     // Handle the error event
                 })
                 .onMessage((type, payload) => {
-                    console.log("Received message:", type, payload);
+                    // console.log("Received message:", type, payload,applicantId);
+                    payload.applicantId=applicantId;
                     $.ajax({
                         url: "{{ url('/sumsub_verify') }}",
                         type: "POST",
                         data: {
                             type: type,
                             payload: payload,
+
                             sumsub: "action"
                         },
                         headers: {
