@@ -2649,6 +2649,9 @@ class AjaxController extends Controller
                 ->addColumn('id', function($row){
                     return $row->id;
                 })
+                ->addColumn('agent_id', function($row){
+                    return $row->indexId;
+                })
                 ->editColumn('name', function ($row) {
                     if($row->planDetails){
                         $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';

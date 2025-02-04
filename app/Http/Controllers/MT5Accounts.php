@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\MT5\MTProtocolConsts;
 use App\Http\Controllers\Controller;
+use App\Models\Ib1;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Log;
 use App\Models\TradeWithdrawals;
@@ -269,6 +270,7 @@ class MT5Accounts extends Controller
         }
 
          $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
+         $ibIndex = Ib1::where('referral_code',$ib)->first();
 
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
@@ -287,7 +289,7 @@ class MT5Accounts extends Controller
             $new_user->Name = $user->fullname??$user->email;
             $new_user->Email = $user->email;
             $new_user->LeadSource = $user->ib1?? "" ;
-            $new_user->Agent = $user->ib1?? "" ;
+            $new_user->Agent = $ibIndex->indexId?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -457,7 +459,7 @@ class MT5Accounts extends Controller
                 $new_user->Name = $user->fullname??$user->email;
                 $new_user->Email = $user->email;
                 $new_user->LeadSource = $user->ib1?? "" ;
-                $new_user->Agent = $user->ib1?? "" ;
+                $new_user->Agent = $ibIndex->indexId?? "" ;
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
