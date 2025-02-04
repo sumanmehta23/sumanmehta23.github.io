@@ -270,8 +270,7 @@ class MT5Accounts extends Controller
         }
 
          $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
-         $ibIndex = Ib1::where('referral_code',$ib)->first();
-
+         $ibdata = Ib1::where('referral_code',$ib)->first();
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -289,7 +288,7 @@ class MT5Accounts extends Controller
             $new_user->Name = $user->fullname??$user->email;
             $new_user->Email = $user->email;
             $new_user->LeadSource = $user->ib1?? "" ;
-            $new_user->Agent = $ibIndex->indexId?? "" ;
+            $new_user->Agent = $ibdata->indexId?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -441,7 +440,7 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-            $ibIndex = Ib1::where('referral_code',$ib)->first();
+            $ibdata = Ib1::where('referral_code',$ib)->first();
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
@@ -459,7 +458,7 @@ class MT5Accounts extends Controller
                 $new_user->Name = $user->fullname??$user->email;
                 $new_user->Email = $user->email;
                 $new_user->LeadSource = $user->ib1?? "" ;
-                $new_user->Agent = $ibIndex->indexId?? "" ;
+                $new_user->Agent = $ibdata->indexId?? "" ;
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
