@@ -106,10 +106,12 @@ class Users extends Controller
         // Update password
         $user->update(['password' => Hash::make($request->new_password)]);
 
-        auth()->logoutOtherDevices($request->new_password);
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // auth()->logoutOtherDevices($request->new_password);
+        // Auth::logout();
+        // $request->session()->invalidate();
+        // $request->session()->regenerateToken();
+
+        Auth::logoutOtherDevices($request->new_password);
 
         return response()->json(['success' => 'Password Successfully Changed']);
     }
