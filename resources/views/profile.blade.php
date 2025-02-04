@@ -609,51 +609,11 @@
 
         $(".edit_wallet_address").click(function (e) {
             e.preventDefault();
-
             const wallet_id = this.getAttribute("data-id");
+            
+            console.log(wallet_id);
+            $('#editBankModal2').modal('show');
 
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to undo this action!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ route('edit_wallet_address') }}", // Update to match your route
-                        data: {
-                            id: wallet_id,
-                            _token: "{{ csrf_token() }}" // Ensure CSRF protection
-                        },
-                        success: function (data) {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Verify Your Email To Edit Wallet Address"
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Warning",
-                                    text: data.message || "Something went wrong!"
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "An error occurred while editing wallet address. Please try again."
-                            });
-                        }
-                    });
-                }
-            });
         });
 
         $(document).ready(function() {

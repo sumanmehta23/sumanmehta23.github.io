@@ -187,11 +187,6 @@ class Wallet extends Controller
         $settings = settings();
         $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
 
-        // if ($wallet) {
-        //     $wallet->wallet_delete_verification = true; // or 1, depending on the DB type
-        //     $wallet->save();
-        // }
-
         $toEmail = $wallet->user->email;
         $type = 'Approve your wallet details';
         $from = $settings['email_from_address'];
