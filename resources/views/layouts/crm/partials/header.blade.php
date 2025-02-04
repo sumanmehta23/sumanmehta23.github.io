@@ -227,7 +227,7 @@
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar" <?php echo $marginTopStyle; ?>>
+            <nav class="pc-sidebar" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
@@ -424,8 +424,8 @@
                     </div></div>
             </div> --}}
             @endif
-            
-            <header class="pc-header" <?php echo $marginTopStyle; ?>>
+
+            <header class="pc-header" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">
