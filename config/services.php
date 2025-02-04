@@ -61,5 +61,8 @@ return [
         'api_token'=>env('SUMSUB_API_TOKEN',''),
         'api_secret'=>env('SUMSUB_API_SECRET',''),
         'clientId'=>env('SUMSUB_CLIENT_ID',''),
+    ],
+    'klaviyo'=>[
+        'list_ids'=>json_decode(env('KLAVIYO_LIST_IDS','[]'),true),
     ]
 ];

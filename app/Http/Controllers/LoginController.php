@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Actions\SubscribeToKlaviyoList;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
@@ -289,7 +290,7 @@ class LoginController extends Controller
         $countries = Country::all();
         return view('auth.register', compact('countries'));
     }
-    public function addUser(Request $request)
+    public function addUser(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         // dd($request->all());
         // Validate the request data
@@ -407,6 +408,10 @@ class LoginController extends Controller
                 "subtitle_right" => "Your Account"
             ];
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+            $list_id = @config('services.klaviyo.list_ids')['ACCOUNT_CREATED'];
+            if($list_id){
+                $subscribeToKlaviyoList->handle($user, $list_id);
+            }
             return redirect()->route('register')->with('status', 'We have sent an email to ' . $toEmail . '. Please click on the confirmation link in the email to activate your account and login.');
         }
         return back()->withErrors(['error' => 'Registration failed. Please try again.']);
