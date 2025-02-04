@@ -406,6 +406,13 @@
                                                                                             <i class="f-24 ti ti-toggle-right"></i>
                                                                                         </a>
                                                                                     @endif
+                                                                                    <span class="badge text-warning edit_wallet_address"
+                                                                                        data-id="{{ $acc->id }}"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Edit Wallet Address">
+                                                                                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                                                                    </span>
+
                                                                                     <span class="badge text-danger delete_wallet_address"
                                                                                         data-id="{{ $acc->id }}"
                                                                                         data-bs-toggle="tooltip"
@@ -593,6 +600,55 @@
                                 icon: "error",
                                 title: "Error",
                                 text: "An error occurred while deleting wallet address. Please try again."
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        $(".edit_wallet_address").click(function (e) {
+            e.preventDefault();
+
+            const wallet_id = this.getAttribute("data-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to undo this action!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('edit_wallet_address') }}", // Update to match your route
+                        data: {
+                            id: wallet_id,
+                            _token: "{{ csrf_token() }}" // Ensure CSRF protection
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Verify Your Email To Edit Wallet Address"
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Warning",
+                                    text: data.message || "Something went wrong!"
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "An error occurred while editing wallet address. Please try again."
                             });
                         }
                     });
