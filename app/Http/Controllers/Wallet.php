@@ -170,9 +170,34 @@ class Wallet extends Controller
                 ]);
     }
 
-    public function edit_wallet_address(Request $request)
+    public function get_editing_wallet_details(Request $request)
     {
+        $wallet = ClientWallet::find($request->id);
+
+        if ($wallet) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $wallet->id,
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'status' => $wallet->status
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
+
+    public function verify_edit_wallet_details(Request $request)
+    {
+
         $wallet_id = $request->id;
+        $wallet_address = $request->wallet_address;
+        $wallet_network = $request->wallet_network;
+        $wallet_name = $request->wallet_name;
+        $wallet_status = $request->status;
 
         // Check for pending withdrawals
         $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
@@ -188,7 +213,7 @@ class Wallet extends Controller
         $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
 
         $toEmail = $wallet->user->email;
-        $type = 'Approve your wallet details';
+        $type = 'Update your wallet details';
         $from = $settings['email_from_address'];
         $emailSubject = $settings['admin_title'] . ' - ' . $type;
         $headers = "MIME-Version: 1.0" . "\r\n";
@@ -197,18 +222,20 @@ class Wallet extends Controller
 
         $content =
                 '<div>We received a request to edit your wallet address details</div>' .
-                '<div>New Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>New Wallet Address: '.$wallet_address.' </div>'.
+                '<div>New Wallet Network: '.$wallet_network.' </div>'.
+                '<div>New Wallet Name: '.$wallet_name.' </div>'.
                 '<div>For security purposes, please verify this request by clicking the link below</div>';
 
         $templateVars = [
             'name' => $wallet->user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "/delete_wallet_address?id={$wallet->user_id}&clientWallet_id=$wallet->id",
+            'site_link' => $settings['copyright_site_name_text'] . "/edit_wallet_details?id={$wallet_id}&wallet_address={$wallet_address}&wallet_network={$wallet_network}&wallet_name={$wallet_name}&status={$wallet_status}",
             'email' => $from,
             "content" => $content,
             "title_right" => "Verify",
-            "subtitle_right" => "Wallet Address Deletion Request",
-            "btn_text" => "Verify Wallet Address Deletion"
+            "subtitle_right" => "Wallet Details",
+            "btn_text" => "Verify Edited Wallet Details"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
@@ -216,6 +243,58 @@ class Wallet extends Controller
                     'success' => true,
                     'message' => 'Wallet address deletion email send successfully.'
                 ]);
+    }
+
+    public function edit_wallet_details(Request $request)
+    {
+        $wallet_details = $request->all();
+        $wallet_id = $request->id;
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        if($wallet){
+            $wallet->wallet_name = $wallet_details['wallet_name'];
+            $wallet->wallet_network = $wallet_details['wallet_network'];
+            $wallet->wallet_address = $wallet_details['wallet_address'];
+            $wallet->status = $wallet_details['status'];
+            $wallet->save();
+
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Wallet Address Updated';
+            $htmlContent = "";
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $content =
+                '<div>We’re writing to confirm that your request to update your wallet details has been successfully verified and processed:</div>'.
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
+                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
+                '<div>The wallet details is now updated. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+            $templateVars = [
+                'name' => $wallet->user->fullname,
+                'server_name' => $settings['mt5_company_name'],
+                'site_link' => $settings['copyright_site_name_text'] . "/login",
+                'email' => $settings['email_from_address'],
+                "content" => $content,
+                "title_right" => "Wallet Address Updation",
+                "subtitle_right" => "Verified",
+                "btn_text" => "Login"
+            ];
+            $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
+            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
+
+        }
+        return redirect()->route('user-profile')->with('error', 'Something went wrong');
     }
 
     public function delete_wallet_address(Request $request)

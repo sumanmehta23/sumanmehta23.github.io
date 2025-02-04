@@ -169,6 +169,7 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-sm-12">
+                            <input type="hidden" class="form-control" name="id">
                             <div class="form-group"><label class="form-label">Wallet Name</label>
                                 <input type="text" class="form-control" autofocus name="wallet_name" required>
                             </div>
@@ -234,7 +235,7 @@
     $("#editDetailsForm").submit(function(e) {
         e.preventDefault();
         $.ajax({
-            url: "{{ route('wallet.edit') }}",
+            url: "{{ route('wallet.verify_edit') }}",
             type: "POST",
             data: $(this).serialize(),
             beforeSend: function() {
@@ -244,7 +245,7 @@
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
                 if (data.success == true) {
                     Swal.fire({
-                        title: "Check email to verify new wallet address",
+                        title: "Check email to verify new wallet details",
                         icon: "success"
                     }).then((val) => {
                         location.reload();

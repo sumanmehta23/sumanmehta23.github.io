@@ -609,12 +609,36 @@
 
         $(".edit_wallet_address").click(function (e) {
             e.preventDefault();
-            const wallet_id = this.getAttribute("data-id");
-            
-            console.log(wallet_id);
-            $('#editBankModal2').modal('show');
 
+            const wallet_id = this.getAttribute("data-id");
+
+            // Send an AJAX request to fetch the wallet details
+            $.ajax({
+                url: "/get_editing_wallet_details", // Change to your actual API endpoint
+                type: "GET",
+                data: { id: wallet_id },
+                success: function (response) {
+                    if (response.success) {
+                        // Populate modal fields with the fetched data
+                        $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
+                        $("#editBankModal2 select[name='wallet_network']").val(response.data.wallet_network);
+                        $("#editBankModal2 input[name='wallet_address']").val(response.data.wallet_address);
+                        $("#editBankModal2 select[name='status']").val(response.data.status);
+                        $("#editBankModal2 input[name='id']").val(response.data.id);
+
+                        // Show the modal
+                        $("#editBankModal2").modal("show");
+                    } else {
+                        alert("Failed to fetch wallet details.");
+                    }
+                },
+                error: function () {
+                    alert("Error fetching wallet details.");
+                }
+            });
         });
+
+
 
         $(document).ready(function() {
         // Show "Edit Picture" text when hovering over the image
