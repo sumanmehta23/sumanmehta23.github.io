@@ -441,7 +441,7 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-
+            $ibIndex = Ib1::where('referral_code',$ib)->first();
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
