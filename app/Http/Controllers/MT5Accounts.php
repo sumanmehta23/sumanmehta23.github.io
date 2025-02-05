@@ -56,8 +56,12 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
+
         session()->remove('error');
         $user= auth()->user();
+        if($user->id != $account->user_id){
+            return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
+        }
         $code=$account->code;
         $type=$account->demo ? 'Demo' : 'Live';
         // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
