@@ -383,6 +383,7 @@ class LoginController extends Controller
         $userData['country_code'] =$request->country_code;
         $userData['number'] =$number;
         $userData['username'] =$request->email;
+        $userData['gender'] =$request->gender;
 
         $userData['emailToken'] =$code;
         $userData['country'] =$request->country;
