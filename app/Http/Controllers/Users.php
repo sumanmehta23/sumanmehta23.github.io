@@ -99,8 +99,6 @@ class Users extends Controller
             ], 422);
         }
 
-        // $email = auth()->user()->email;
-        // $user = DB::table('aspnetusers')->where('email', $email)->first();
         $user = Auth::user();
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json(['message' => 'Current password is incorrect'], 422);
@@ -109,12 +107,12 @@ class Users extends Controller
         // Update password
         $user->update(['password' => Hash::make($request->new_password)]);
 
-        // auth()->logoutOtherDevices($request->new_password);
-        // Auth::logout();
-        // $request->session()->invalidate();
-        // $request->session()->regenerateToken();
-
         Auth::logoutOtherDevices($request->new_password);
+
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json(['success' => 'Password Successfully Changed']);
     }
@@ -236,14 +234,14 @@ class Users extends Controller
 
                 // Create the valueToSign string
                 $valueToSign = $timestamp . $requestMethod . $apiUrl;
-        
+
                 if (!empty($requestBody)) {
                     $valueToSign .= $requestBody;
                 }
-        
+
                 // Compute HMAC SHA256 signature
                 $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
-        
+
                 // Convert binary signature to hexadecimal
                 $signatureHex = bin2hex($signature);
                 $response=Http::withHeaders([
@@ -255,7 +253,7 @@ class Users extends Controller
                     return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
                 }
                 $payload=$response->json();
-                
+
                 // Store callback log in the database
                 KycLog::create([
                     'client_id' => $email,
@@ -265,7 +263,7 @@ class Users extends Controller
                 ]);
                 // Check if review status is completed
                 if (isset($payload['reviewStatus']) && $payload['reviewStatus'] == 'completed') {
-                   
+
                     // $response = $client->request('GET', 'https://api.sumsub.com/resources/applicants/67a1c0ad52ff86587fa5f1c0/status', [
                     //     'headers' => [
                     //       'X-App-Token' => 'sbx:qVcQDPeFQuB7xcGhX0MYvt80.pVSvzRBOm2Y4Qw4mI4G42vfDBDFJw1Ek',

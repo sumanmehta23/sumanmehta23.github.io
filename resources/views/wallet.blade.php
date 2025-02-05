@@ -148,7 +148,6 @@
                                                     $status = 'Pending';
                                                     $rowClass = 'wallet-pending';
                                                 }
-
                                             } else if($transaction->status == 1) {
                                                 $status = 'Approved';
                                                 $rowClass = 'wallet-plus';
