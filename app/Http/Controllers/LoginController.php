@@ -295,7 +295,13 @@ class LoginController extends Controller
         // dd($request->all());
         // Validate the request data
         $validator = Validator::make($request->all(), [
-            'fullname' => 'required|string|max:255|unique:aspnetusers',
+            'fullname' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:aspnetusers',
+                'regex:/^(?!.*<script).*$/i' // Prevents `<script>` tags
+            ],
             'email' => 'required|string|email|max:255|unique:aspnetusers',
             // 'password' => 'required|string|confirmed',
             'password' => [
@@ -313,6 +319,7 @@ class LoginController extends Controller
             'telephone' => 'required',
         ], [
             'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
+            'fullname.regex' => 'The name cannot contain script tags.',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
