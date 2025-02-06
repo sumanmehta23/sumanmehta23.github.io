@@ -274,7 +274,11 @@ class MT5Accounts extends Controller
         }
 
          $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
-         $ibdata = Ib1::where('referral_code',$ib)->first();
+
+        $ibdata = '';
+        if ($ib) {
+            $ibdata = Ib1::where('referral_code',$ib)->first();
+        }
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -444,7 +448,10 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-            $ibdata = Ib1::where('referral_code',$ib)->first();
+            $ibdata = '';
+            if($ib){
+                $ibdata = Ib1::where('referral_code',$ib)->first();
+            }
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
