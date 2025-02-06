@@ -194,8 +194,8 @@
                     </div>
                     <div class="flex-grow-1 text-end"><button type="button" class="btn btn-link-danger btn-pc-default"
                             data-bs-dismiss="modal">Cancel</button>
-                        <input class="btn btn-primary" type="submit" name="add_wallet_details"
-                            value="Add Wallet Details">
+                        <input class="btn btn-primary" type="submit" name="update_wallet_details"
+                            value="Update Wallet Details">
                     </div>
                 </div>
             </form>
