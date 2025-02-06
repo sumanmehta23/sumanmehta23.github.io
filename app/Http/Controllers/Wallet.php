@@ -214,7 +214,7 @@ class Wallet extends Controller
         $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
 
         $toEmail = $wallet->user->email;
-        $type = 'Update your wallet details';
+        $type = 'Wallet Edit Confirmation Required';
         $from = $settings['email_from_address'];
         $emailSubject = $settings['admin_title'] . ' - ' . $type;
         $headers = "MIME-Version: 1.0" . "\r\n";
@@ -222,11 +222,26 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-                '<div>We received a request to edit your wallet address details</div>' .
-                '<div>New Wallet Address: '.$wallet_address.' </div>'.
-                '<div>New Wallet Network: '.$wallet_network.' </div>'.
-                '<div>New Wallet Name: '.$wallet_name.' </div>'.
-                '<div>For security purposes, please verify this request by clicking the link below</div>';
+                '<div>We received a request to update the details of your saved wallet. Please review the changes below:</div>' .
+                '<br>'.
+                '<div>Previous Wallet Details:</div>'.
+                '<br>'.
+                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
+                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<br>'.
+                '<div>Updated Wallet Details:</div>'.
+                '<br>'.
+                '<div>Wallet Name: '.$wallet_name.' </div>'.
+                '<div>Wallet Network: '.$wallet_network.' </div>'.
+                '<div>Wallet Address: '.$wallet_address.' </div>'.
+                '<br>'.
+                '<div>For security purposes, please verify this request by clicking the link below</div>'.
+                '<br>'.
+                '<div>If you did not request this change, please contact our support team immediately at support@lqhmarkets.com.</div>'.
+                '<br>'.
+                '<div>Best regards,</div>'.
+                '<div>LQH Markets Team</div>';
 
         $templateVars = [
             'name' => $wallet->user->fullname,
@@ -236,7 +251,7 @@ class Wallet extends Controller
             "content" => $content,
             "title_right" => "Verify",
             "subtitle_right" => "Wallet Details",
-            "btn_text" => "Verify Edited Wallet Details"
+            "btn_text" => "Confirm Wallet Edit"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
@@ -608,10 +623,10 @@ class Wallet extends Controller
                 return $list['id'];
             }
         }
-        return null; 
+        return null;
     }
     protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
-    {   
+    {
         $listId = $this->getKlaviyoListId($amount);
         if($listId){
             $subscribeToKlaviyoList->handle($user, $listId);
