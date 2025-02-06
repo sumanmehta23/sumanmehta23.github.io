@@ -114,7 +114,7 @@ class TradeWithdrawal extends Controller
         $to_account_id = $request->input('withdraw_to', '');
 
         $request->validate([
-            'withdraw_amount' => 'required|numeric|min:1'
+            'withdraw_amount' => 'required|numeric|min:.01'
         ]);
 
         // Get the account balance
