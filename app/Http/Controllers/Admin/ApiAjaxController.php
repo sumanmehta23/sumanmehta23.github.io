@@ -24,9 +24,9 @@ class ApiAjaxController extends Controller
     {
         $rules = [
             'id'           => ['nullable', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
-            'ib_cat_name'  => ['required', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+            'ib_cat_name'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
             'ib_cat_desc'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
-            'is_active'    => ['required', 'in:0,1'],
+            'is_active'    => ['nullable', 'in:0,1'],
         ];
 
         $messages = [
