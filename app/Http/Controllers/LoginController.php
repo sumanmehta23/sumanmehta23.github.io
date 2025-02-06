@@ -36,19 +36,19 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // $key = 'login:' . (auth()->id() ?: $request->ip());
-        // if (RateLimiter::tooManyAttempts($key, 3)) {
-        //     $retryAfter = RateLimiter::availableIn($key);
-        //     $hours = floor($retryAfter / 3600);
-        //     $minutes = floor(($retryAfter % 3600) / 60);
-        //     $seconds = $retryAfter % 60;
-        //     $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
-        //     return redirect()->back()->with(
-        //         'error',
-        //         "Too many requests. Please wait {$formattedTime} before trying again."
-        //     );
-        // }
-        // RateLimiter::hit($key, 300);
+        $key = 'login:' . (auth()->id() ?: $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            $hours = floor($retryAfter / 3600);
+            $minutes = floor(($retryAfter % 3600) / 60);
+            $seconds = $retryAfter % 60;
+            $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+            return redirect()->back()->with(
+                'error',
+                "Too many requests. Please wait {$formattedTime} before trying again."
+            );
+        }
+        RateLimiter::hit($key, 300);
         // Validate form inputs
         $request->validate([
             'email' => 'required|email',
@@ -299,7 +299,7 @@ class LoginController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:aspnetusers',
+
                 'regex:/^(?!.*<script).*$/i' // Prevents `<script>` tags
             ],
             'email' => 'required|string|email|max:255|unique:aspnetusers',
@@ -318,7 +318,6 @@ class LoginController extends Controller
             'country_code' => 'required',
             'telephone' => 'required',
         ], [
-            'fullname.unique' => 'The name you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'fullname.regex' => 'The name cannot contain script tags.',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'password.min' => 'The password must be at least 8 characters long.',
