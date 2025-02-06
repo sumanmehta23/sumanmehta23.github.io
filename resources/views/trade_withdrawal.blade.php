@@ -125,6 +125,8 @@
                                                                     <input type="number" class="form-control"
                                                                         name="withdraw_amount"
                                                                         aria-label="Amount (to the nearest dollar)"
+                                                                        min="0.01"
+                                                                        step="0.01"
                                                                         required>
                                                                     <span class="input-group-text">.00</span>
                                                                 </div>
