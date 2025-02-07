@@ -242,20 +242,32 @@
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
             },
             success: function(data) {
+                console.log(data);
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
-                if (data.success == true) {
+                if (data.success === true) {
                     Swal.fire({
-                        title: "Check email to verify new wallet details",
+                        title: "Check your email to verify new wallet details",
                         icon: "success"
-                    }).then((val) => {
+                    }).then(() => {
                         location.reload();
                     });
                 } else {
                     Swal.fire({
-                        title: "Something went wrong",
+                        title: data.message || "Something went wrong",
                         icon: "error"
                     });
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+                Swal.fire({
+                    title: "An error occurred",
+                    text: xhr.responseJSON?.message || "Please try again later.",
+                    icon: "error"
+                });
+            },
+            complete: function() {
+                $("#editDetailsForm input, #editDetailsForm select, #editDetailsForm button").removeAttr("disabled");
             }
         });
     })

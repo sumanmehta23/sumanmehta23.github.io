@@ -206,7 +206,7 @@ class Wallet extends Controller
         if ($pendingWithdrawals > 0) {
             return response()->json([
                 'error' => true,
-                'message' => 'Cannot delete wallet address with pending withdrawals.'
+                'message' => 'Cannot edit wallet address with pending withdrawals.'
             ]);
         }
 
@@ -257,7 +257,7 @@ class Wallet extends Controller
 
         return response()->json([
                     'success' => true,
-                    'message' => 'Wallet address deletion email send successfully.'
+                    'message' => 'Wallet address update email send successfully.'
                 ]);
     }
 
