@@ -143,7 +143,7 @@
               <div class="card-footer">
                 <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/trade-deposit" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
+                    <div class="d-grid"><a href="/trade-deposit" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Manage Funds</span></button></a></div>
                   </div>
                 </div>
               </div>
@@ -195,7 +195,7 @@
                           {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
                             <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
-                            
+
                             <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?  htmlspecialchars(isset($history->payout_req) ? json_decode($history->payout_res, true)['reason'] : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
 
 
@@ -239,7 +239,7 @@
               <div class="card-footer">
                 <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/trade-withdrawal" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
+                    <div class="d-grid"><a href="/trade-withdrawal" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Manage Funds</span></button></a></div>
                   </div>
                 </div>
               </div>
@@ -337,7 +337,7 @@
               <div class="card-footer">
                 <div class="row g-2 justify-content-center">
                   <div class="col-md-6">
-                    <div class="d-grid"><a href="/internal-transfer" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Mange Funds</span></button></a></div>
+                    <div class="d-grid"><a href="/internal-transfer" class="d-grid"><button class="btn btn-primary"><span class="text-truncate w-100">Manage Funds</span></button></a></div>
                   </div>
                 </div>
               </div>
