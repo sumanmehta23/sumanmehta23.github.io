@@ -576,17 +576,18 @@ class ClientController extends Controller
 
         foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
             $login = $liveAccount->code;
+            // dd($login);
             if($user->ib1){
                 $ibdata = Ib1::where('referral_code',$user->ib1)->first();
                 if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+                    // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
                 }
                 $trade_user->Agent = $ibdata->indexId ?? '';
 
                 $error_code = $this->api->UserUpdate($trade_user, $updated_user);
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
-                    }
+                    // if ($error_code != MTRetCode::MT_RET_OK) {
+                    //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                    // }
             }
         }
 
