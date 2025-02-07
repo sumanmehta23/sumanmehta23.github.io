@@ -227,7 +227,7 @@
                                                             ? '<span class="badge bg-outline-danger">Pending KYC</span>'
                                                             : ($user->status == 1
                                                                 ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                                : '') !!}@if($kyc_log)<a class="mb-1 fs-12" id="sumsub-info" href="https://cockpit.sumsub.com/checkus/#/applicant/{{$kyc_log->callback_payload['applicantId']}}/basicInfo?clientId={{config('services.sumsub.clientId')}}">{{$kyc_log->callback_payload['applicantId']}}</a>@endif</span>
+                                                                : '') !!}@if($kyc_log && isset($kyc_log->callback_payload['applicantId']))<a class="mb-1 fs-12" id="sumsub-info" href="https://cockpit.sumsub.com/checkus/#/applicant/{{$kyc_log->callback_payload['applicantId']}}/basicInfo?clientId={{config('services.sumsub.clientId')}}">{{$kyc_log->callback_payload['applicantId']}}</a>@endif</span>
                                                         |
                                                         <span
                                                             class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
