@@ -581,7 +581,7 @@ class ClientController extends Controller
                 if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
                 }
-                $trade_user->Agent = $ibdata->indexId;
+                $trade_user->Agent = $ibdata->indexId ?? '';
 
                 $error_code = $this->api->UserUpdate($trade_user, $updated_user);
                     if ($error_code != MTRetCode::MT_RET_OK) {
