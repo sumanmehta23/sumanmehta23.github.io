@@ -219,24 +219,27 @@
                                             <div class="user-wrap">
                                                 <h4 class="fw-normal text-uppercase">{{ $user->fullname }}</h4>
                                                 <h6 class="mb-3 fw-normal">
-                                                    <span class="px-2"><span
-                                                            class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->kyc_verify == 0
-                                                        ? '<span class="badge bg-outline-danger">Pending KYC</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">KYC Verified</span>'
-                                                            : '') !!}</span>
-                                                    |
-                                                    <span
-                                                        class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
-                                                    |
-                                                    <span class="px-2">{!! $user->status == 0
-                                                        ? '<span class="badge bg-outline-danger">Inactive</span>'
-                                                        : ($user->status == 1
-                                                            ? '<span class="badge bg-outline-success">Active</span>'
-                                                            : '') !!}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="px-2"><span
+                                                                class="fi fis fi-{{ strtolower(@$country_code->country_alpha) }} me-2"></span>{{ $user->country }}</span>
+                                                        |
+                                                        <span class="px-2 d-flex flex-column">{!! $user->kyc_verify == 0
+                                                            ? '<span class="badge bg-outline-danger">Pending KYC</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">KYC Verified</span>'
+                                                                : '') !!}@if($kyc_log && isset($kyc_log->callback_payload['applicantId']))<a class="mb-1 fs-12" id="sumsub-info" href="https://cockpit.sumsub.com/checkus/#/applicant/{{$kyc_log->callback_payload['applicantId']}}/basicInfo?clientId={{config('services.sumsub.clientId')}}">{{$kyc_log->callback_payload['applicantId']}}</a>@endif</span>
+                                                        |
+                                                        <span
+                                                            class="px-2"><strong>DOJ:</strong>{{ date('d M Y h:i A', strtotime($user->created_at)) }}</span>
+                                                        |
+                                                        <span class="px-2">{!! $user->status == 0
+                                                            ? '<span class="badge bg-outline-danger">Inactive</span>'
+                                                            : ($user->status == 1
+                                                                ? '<span class="badge bg-outline-success">Active</span>'
+                                                                : '') !!}</span>
+                                                    </div>
                                                 </h6>
+                                                <div id="sumsub-websdk-container" hidden></div>
                                                 <div class="row">
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center">

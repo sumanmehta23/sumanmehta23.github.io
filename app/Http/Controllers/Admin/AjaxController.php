@@ -745,6 +745,18 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             // dd(DataTables::of($rmCondition));
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function($q) use ($searchValue) {
+                            $q->where('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('balance', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -807,13 +819,22 @@ class AjaxController extends Controller
                 ->addColumn('account_group', function($row){
                     return $row->accountType->ac_group;
                 })
+                ->addColumn('actions', function($row){
+                    $html = "";
+                    $html .= "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
+                    <span class='badge text-danger'>
+                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-trash'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M4 7l16 0' /><path d='M10 11l0 6' /><path d='M14 11l0 6' /><path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' /><path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' /></svg>
+                    </span>
+                  </a>";
+                  return $html;
+                })
                 ->addColumn('created_date', function($row){
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('created_time', function($row){
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail', 'actions'])
                 ->make(true);
         }
 
@@ -853,6 +874,18 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function($q) use ($searchValue) {
+                            $q->where('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('balance', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
                         ? ($row->user->fullname)
@@ -1043,6 +1076,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = WalletWithdraw::where('withdraw_type','!=', 'Internal Transfer')
             ->select('wallet_withdraw.*')
+            ->where('verified', true)
             ->with(['user']);
 
 
@@ -1812,7 +1846,9 @@ class AjaxController extends Controller
 
     public function getPendingWalletWithdrawal2(Request $request)
     {
-        $query = WalletWithdraw::with(['user'])->where('status',0);
+        $query = WalletWithdraw::with(['user'])
+        ->where('verified',true)
+        ->where('status',0);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -2616,6 +2652,9 @@ class AjaxController extends Controller
                 ->addColumn('id', function($row){
                     return $row->id;
                 })
+                ->addColumn('agent_id', function($row){
+                    return $row->indexId;
+                })
                 ->editColumn('name', function ($row) {
                     if($row->planDetails){
                         $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
@@ -2825,7 +2864,10 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function($row){
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action'])
+                ->addColumn('checkbox', function($row){
+                    return "<input type='checkbox' class='row-checkbox' >";
+                })
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action', 'checkbox'])
                 ->make(true);
         }
 
@@ -3030,6 +3072,7 @@ class AjaxController extends Controller
 
             if (!$result) {
                 $user = User::whereRaw('email = ?', [$clientId])->first();
+
                 if ($user) {
                     $ib1 = new Ib1();
                     $ib1->uid = $user->uid;
@@ -3044,10 +3087,13 @@ class AjaxController extends Controller
                     $ib1->save();
                 }
             }
+
+
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
                     'status' => $ibStatus,
-                    'ib_plan_details_id' => $ibGroup
+                    'ib_plan_details_id' => $ibGroup,
+                    // 'indexId' => random_int(100000, 999999),
                 ]);
 
             $cacheKey = 'ib1_' . $clientId;
@@ -3063,6 +3109,103 @@ class AjaxController extends Controller
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function bulkIbApprove(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'client_id' => 'required', // Ensure it's a comma-separated string
+            'ib_status' => 'required', // Assuming status is an integer
+            'ib_group' => 'required', // Assuming group is an integer
+        ]);
+
+        $clientIds = explode(',', $validated['client_id']);
+        $ibStatus = $validated['ib_status'];
+        $ibGroup = $validated['ib_group'];
+
+        $results = [];
+        $successCount = 0;
+        $failureCount = 0;
+
+        foreach ($clientIds as $clientId) {
+            try {
+                $admin = Auth::guard('admin')->user();
+
+                // Attempt to fetch the IB record
+                $ibRecord = Ib1::with('user')->find($clientId);
+
+                // If IB record exists, authorize and update
+                if ($ibRecord) {
+                    Gate::forUser($admin)->authorize('ib:update', $ibRecord);
+
+                    $updated = $ibRecord->update([
+                        'status' => $ibStatus,
+                        'ib_plan_details_id' => $ibGroup,
+                    ]);
+
+                    Cache::forget('ib1_' . $clientId);
+
+                    $results[$clientId] = [
+                        'status' => $updated,
+                        'message' => $updated ? 'IB details updated successfully.' : 'Failed to update IB details.',
+                    ];
+                    $updated ? $successCount++ : $failureCount++;
+                    continue;
+                }
+
+                // If no IB record, create one
+                $user = User::find($clientId);
+
+                if (!$user) {
+                    $results[$clientId] = ['status' => false, 'message' => 'User not found'];
+                    $failureCount++;
+                    continue;
+                }
+
+                $ibRecord = new Ib1();
+                $ibRecord->fill([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'password' => $user->password,
+                    'number' => $user->number,
+                    'username' => $user->email,
+                    'name' => $user->fullname,
+                    'country' => $user->country,
+                    'emailToken' => $user->emailToken,
+                    'status' => 1,
+                ]);
+
+                $ibRecord->save();
+
+                $updated = $ibRecord->update([
+                    'status' => $ibStatus,
+                    'ib_plan_details_id' => $ibGroup,
+                ]);
+
+                Cache::forget('ib1_' . $clientId);
+
+                $results[$clientId] = [
+                    'status' => $updated,
+                    'message' => $updated ? 'IB details created and updated successfully.' : 'Failed to update newly created IB details.',
+                ];
+                $updated ? $successCount++ : $failureCount++;
+            } catch (\Exception $e) {
+                $results[$clientId] = ['status' => false, 'message' => $e->getMessage()];
+                $failureCount++;
+            }
+        }
+
+        // Return results with a session flash
+        return redirect()->back()->with([
+            'success' => "Successfully updated {$successCount} Ib requests.",
+            'error' => $failureCount > 0 ? "Failed to update {$failureCount} Ib requests." : null,
+            'details' => $results, // Optional debugging details
+        ]);
+    }
+
+
+
+
     public function getClientIbProfile(Request $request)
     {
         $id = request('userId');

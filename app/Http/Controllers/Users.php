@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\KycLog;
+use App\Models\Account;
 use App\Models\KycUpdate;
+use Illuminate\Support\Str;
 use App\Models\ClientWallet;
 use Illuminate\Http\Request;
+use App\Services\MailService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Account;
-use App\Services\MailService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use App\Actions\SubscribeToKlaviyoList;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -35,19 +39,82 @@ class Users extends Controller
     }
     public function changePassword(Request $request)
     {
-        $request->validate([
+        $rules = [
             'current_password' => 'required',
-            'new_password' => 'required|confirmed',
-        ]);
-        $email = auth()->user()->email;
-        $user = DB::table('aspnetusers')->where('email', $email)->first();
+            'new_password' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:8', // At least 8 characters
+                'regex:/[a-z]/', // At least one lowercase letter
+                'regex:/[A-Z]/', // At least one uppercase letter
+                'regex:/\d/', // At least one number
+                'regex:/[\W_]/', // At least one special character
+            ],
+        ];
 
-        if ($user &&(Hash::check($request->current_password, $user->password))) {
-            User::where('email', $email)->update(['password' =>  Hash::make($request->new_password)]);
-            return response()->json(['success' => 'Password Successfully Changed']);
-        } else {
-            return response()->json(['message' => 'Current Password is not matched'], 422);
+        $messages = [
+            'new_password.min' => 'The password must be at least 8 characters long.',
+            'new_password.regex' => [
+                'The password must contain at least one lowercase letter.',
+                'The password must contain at least one uppercase letter.',
+                'The password must contain at least one number.',
+                'The password must contain at least one special character.',
+            ],
+            'new_password.confirmed' => 'Passwords do not match.',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $filteredErrors = [];
+
+            // Check which specific regex rule failed and return only unmet requirements
+            if ($errors->has('new_password')) {
+                $password = $request->new_password;
+
+                if (!preg_match('/[a-z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                }
+                if (!preg_match('/[A-Z]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                }
+                if (!preg_match('/\d/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one number.';
+                }
+                if (!preg_match('/[\W_]/', $password)) {
+                    $filteredErrors[] = 'The password must contain at least one special character.';
+                }
+                if (strlen($password) < 8) {
+                    $filteredErrors[] = 'The password must be at least 8 characters long.';
+                }
+                if ($errors->has('new_password.confirmed')) {
+                    $filteredErrors[] = 'Passwords do not match.';
+                }
+            }
+
+            return response()->json([
+                'errors' => $filteredErrors
+            ], 422);
         }
+
+        $user = Auth::user();
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 422);
+        }
+
+        // Update password
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        Auth::logoutOtherDevices($request->new_password);
+
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['success' => 'Password Successfully Changed']);
     }
     public function changeProfileImage(Request $request)
     {
@@ -91,10 +158,12 @@ class Users extends Controller
     public function sumsub()
     {
         $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key
+        $secretKey = config('services.sumsub.api_secret');
         $timestamp = time(); // Current timestamp in seconds
 
         // Example values (replace with actual values as needed)
-        $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
+        // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
+        $appToken=config('services.sumsub.api_token');
         $apiUrl = '/resources/accessTokens?userId=' . urlencode(session('clogin')) . '&levelName=basic-kyc-level'; // URI of the request
         $requestMethod = 'POST'; // HTTP method
         $requestBody = ''; // Add your request body if needed, empty for this example
@@ -147,28 +216,63 @@ class Users extends Controller
         return view('sumsub', compact('token'));
 
     }
-    public function sumsub_verify(Request $request)
+    public function sumsub_verify(Request $request ,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
             $email = Session::get('clogin');
             $type = $request->input('type');
             $payload = $request->input('payload');
+
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
+                $timestamp=time();
+                $requestMethod="GET";
+                $secretKey = config('services.sumsub.api_secret');
+                $apiUrl = '/resources/applicants/'.$payload['applicantId'].'/status'; // URI of the request
+                $requestBody = ''; // Add your request body if needed, empty for this example
+
+                // Create the valueToSign string
+                $valueToSign = $timestamp . $requestMethod . $apiUrl;
+
+                if (!empty($requestBody)) {
+                    $valueToSign .= $requestBody;
+                }
+
+                // Compute HMAC SHA256 signature
+                $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
+
+                // Convert binary signature to hexadecimal
+                $signatureHex = bin2hex($signature);
+                $response=Http::withHeaders([
+                    'X-App-Token' => config('services.sumsub.api_token'),
+                    'X-App-Access-Sig'=>$signatureHex,
+                    'X-App-Access-Ts'=>$timestamp,
+                ])->get('https://api.sumsub.com'.$apiUrl);
+                if($response->status()!=200){
+                    return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
+                }
+                $payload=$response->json();
+
                 // Store callback log in the database
                 KycLog::create([
                     'client_id' => $email,
                     'user_id' => auth()->user()->id,
                     'callback_code' => json_encode($type),
-                    'callback_payload' => json_encode($payload),
+                    'callback_payload' => $payload,
                 ]);
                 // Check if review status is completed
                 if (isset($payload['reviewStatus']) && $payload['reviewStatus'] == 'completed') {
+
+                    // $response = $client->request('GET', 'https://api.sumsub.com/resources/applicants/67a1c0ad52ff86587fa5f1c0/status', [
+                    //     'headers' => [
+                    //       'X-App-Token' => 'sbx:qVcQDPeFQuB7xcGhX0MYvt80.pVSvzRBOm2Y4Qw4mI4G42vfDBDFJw1Ek',
+                    //     ],
+                    //   ]);
                     // Check review result
                     if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
                         // Find the user in the database
-                        $user = DB::table('aspnetusers')->where('email', $email)->first();
+                        $user = User::where('email', $email)->first();
 
                         // Check if the user's KYC is already verified
                         if ($user && $user->kyc_verify == 1) {
@@ -176,9 +280,12 @@ class Users extends Controller
                         }
 
                         // Update user's KYC status to verified
-                        DB::table('aspnetusers')
-                            ->where('email', $email)
+                        User::where('email', $email)
                             ->update(['kyc_verify' => 1]);
+                        $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
+                        if($list_id){
+                            $subscribeToKlaviyoList->handle($user, $list_id);
+                        }
 
                         return response()->json(['status' => 'true', 'message' => 'KYC Verified']);
                     } else {
@@ -187,13 +294,34 @@ class Users extends Controller
                 } else {
                     return response()->json(['status' => 'false', 'message' => 'Status in progress..']);
                 }
-            } else {
+            }else {
                 return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
             }
         }
 
         // Return a default response if session or parameters are missing
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
+    }
+
+    public function logVerification(Request $request)
+    {
+        // Validate incoming data
+        $request->validate([
+            'applicantId' => 'required|string',
+            'applicantEmail' => 'required|email',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        // Create a new KYC log entry in the database
+        KycLog::create([
+            'client_id' => $request->applicantEmail,
+            'user_id' => $request->userId,
+            'callback_code' => 'Applicant ID',
+            'callback_payload' => $request->applicantId,
+        ]);
+
+        // Return a response indicating success
+        return response()->json(['status' => 'success', 'message' => 'KYC log saved']);
     }
 
 
@@ -211,7 +339,7 @@ class Users extends Controller
 
         try {
             // Validate and update the email
-            
+
             $email = auth()->user()->email;
             // $newEmail = $validatedData->validated()['email'];
             $user = User::where('email', $email)->first();
@@ -221,7 +349,7 @@ class Users extends Controller
                 $user->email = $validatedData->validated()['email'];
                 $user->email_confirmed = 0;
                 $user->status = 0;
-                $user->save(); 
+                $user->save();
 
                 session()->forget('user');
                 session()->put('user', User::find(auth()->id()));
@@ -256,7 +384,7 @@ class Users extends Controller
                 return redirect()->back()->with('success', 'Email Successfully Changed');
             }
 
-            
+
         } catch (\Exception $e) {
             DB::rollback(); // Rollback on failure
             return redirect()->back()->with('error', 'Failed to change email.');

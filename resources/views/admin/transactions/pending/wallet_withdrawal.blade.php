@@ -171,7 +171,7 @@
              processing: true,
             serverSide: true,
             searching: true,
-            ajax: {
+            ajax: { 
                 url: '/admin/getPendingWalletWithdrawal2',
                 type: 'GET',
                 data: function(d) {

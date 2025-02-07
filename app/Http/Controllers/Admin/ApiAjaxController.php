@@ -14,6 +14,7 @@ use App\Models\AccountType;
 use App\Models\User;
 use DB;
 use Exception;
+use Illuminate\Support\Facades\Validator;
 
 // use Illuminate\Support\Facades\Hash;
 
@@ -21,7 +22,29 @@ class ApiAjaxController extends Controller
 {
     public function handleRequest(Request $request)
     {
-        
+        $rules = [
+            'id'           => ['nullable', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+            'ib_cat_name'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+            'ib_cat_desc'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+            'is_active'    => ['nullable', 'in:0,1'],
+        ];
+
+        $messages = [
+            'regex' => 'The :attribute field contains invalid content (links or scripts are not allowed).',
+        ];
+
+        // Custom attribute names for error messages
+        $attributes = [
+            'ib_cat_name' => 'Plan Name',
+            'ib_cat_desc' => 'Description',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages, $attributes);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         if ($request->has('type') && $request->type == 'leverage') {
             $leverage = Leverage::where('account_type_id', $request->id)->get();
             return response()->json($leverage);

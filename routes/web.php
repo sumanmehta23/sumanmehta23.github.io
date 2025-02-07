@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Ib1;
+use App\Models\User;
 use App\Models\Account;
 use App\Models\Permission;
 use Illuminate\Support\Str;
@@ -23,11 +24,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
+use App\Actions\SubscribeToKlaviyoList;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\InternalTransfer;
+use EonVisualMedia\LaravelKlaviyo\Klaviyo;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\MT5Controller;
@@ -35,21 +38,49 @@ use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\StaffManagement;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
-Route::get("/se",function(){
+
+Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
+    
+    // return Klaviyo::post("profile-import", [
+    //     'data' => [
+    //         'type'          => 'profile',
+    //         'attributes' => [
+    //             "location"=> [
+    //                 "address1"=> "89 E 42nd St",
+    //                 "address2"=> "1st floor",
+    //                 "city"=> "New York",
+    //                 "country"=> "United States",
+    //                 "region"=> "NY",
+    //                 "zip"=> "10017",
+    //                 "timezone"=> "America/New_York",
+    //                 "ip"=> "127.0.0.1"
+    //             ],
+    //             'email'         => 'foo@example.com',
+    //             'external_id'   => '12345',
+    //             'phone_number'  => '+12345678901',
+    //             "first_name"=> "John",
+    //             "last_name"=> "Stean",
+                
+    //         ]
+    //     ]
+    // ]);
+
+    // return config("services.klaviyo.list_ids");
     // $uuids=[];
     // for($i=0;$i<100;$i++){
     //     $uuids[]=Str::orderedUuid()->__tostring();
     // }
     // dump($uuids);
-//     // Cache::put('test-key', 'test-value', 1000);
-// $value = Cache::get('test-key');
-// dd($value); // Should output 'test-value'
+    //     // Cache::put('test-key', 'test-value', 1000);
+    // $value = Cache::get('test-key');
+    // dd($value); // Should output 'test-value'
     // $settings = DB::table('page_categories')->get()->toArray();
     // file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
     // $settings = DB::table('pages')->get()->toArray();
@@ -115,6 +146,8 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
+
 
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
@@ -157,10 +190,14 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     // Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
     Route::post('/verify_delete_wallet_address', [Wallet::class, 'verify_delete_wallet_address'])->name('verify_delete_wallet_address');
+    Route::get('/get_editing_wallet_details', [Wallet::class, 'get_editing_wallet_details'])->name('get_editing_wallet_details');
+    Route::post('/wallet/verify_edit', [Wallet::class, 'verify_edit_wallet_details'])->name('wallet.verify_edit');
+    Route::get('/edit_wallet_details', [Wallet::class, 'edit_wallet_details'])->name('edit_wallet_details');
 
     Route::get('/wallet_deposit', [Wallet::class, 'showDepositForm'])->name('wallet_deposit');
     Route::get('/wallet_withdrawal', [Wallet::class, 'showWithdrawalForm'])->name('wallet_withdrawal');
@@ -212,6 +249,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
 
     Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
+    Route::post('/bulkIbApprove', [AjaxController::class, 'bulkIbApprove']);
     Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
@@ -231,24 +269,24 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
-        ->middleware('check.permissions:wallet_deposit:viewAny');
+            ->middleware('check.permissions:wallet_deposit:viewAny');
         Route::get('/transactions/wallet-withdrawal', [Transaction::class, 'wallet_withdrawal'])->name('transactions.wallet-withdrawal')
-        ->middleware('check.permissions:wallet_withdraw:viewAny');
+            ->middleware('check.permissions:wallet_withdraw:viewAny');
         Route::get('/transactions/trading-deposit', [Transaction::class, 'trading_deposit'])->name('transactions.trading-deposit')
-        ->middleware('check.permissions:trade_deposit:viewAny');
+            ->middleware('check.permissions:trade_deposit:viewAny');
         Route::get('/transactions/trading-withdrawal', [Transaction::class, 'trading_withdrawal'])->name('transactions.trading-withdrawal')
-        ->middleware('check.permissions:trade_withdrawals:viewAny');
+            ->middleware('check.permissions:trade_withdrawals:viewAny');
         Route::get('/transactions/internal-transfer', [Transaction::class, 'internal_transfer'])->name('transactions.internal-transfer')
-        ->middleware('check.permissions:internal_transfer:viewAny');
+            ->middleware('check.permissions:internal_transfer:viewAny');
         // Route::get('/transactions/{id}', [Transaction::class, 'index'])->name('transactions')->middleware('check.permissions:wallet_deposit:viewAny');
         Route::get('/transactions/pending/wallet-deposit', [Transaction::class, 'pendingWalletDeposit'])->name('transactions.pending.wallet-deposit')
-        ->middleware('check.permissions:wallet_deposit:viewAny');
+            ->middleware('check.permissions:wallet_deposit:viewAny');
         Route::get('/transactions/pending/wallet-withdrawal', [Transaction::class, 'pendingWalletWithdrawal'])->name('transactions.pending.wallet-withdrawal')
-        ->middleware('check.permissions:wallet_withdraw:viewAny');
+            ->middleware('check.permissions:wallet_withdraw:viewAny');
         Route::get('/transactions/pending/trading-deposit', [Transaction::class, 'pendingTradingDeposit'])->name('transactions.pending.trading-deposit')
-        ->middleware('check.permissions:trade_deposit:viewAny');
+            ->middleware('check.permissions:trade_deposit:viewAny');
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
-        ->middleware('check.permissions:trade_withdrawals:viewAny');
+            ->middleware('check.permissions:trade_withdrawals:viewAny');
 
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
@@ -295,6 +333,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::get("/demoAccounts", [ClientAccController::class, 'demo_accounts'])->name('demoAccounts')->middleware('check.permissions:account:viewDemoAccounts');
             Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
+            Route::post("/deleteAccounts", [MT5Accounts::class, 'deleteAccounts'])->name('deleteAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::post('/activate_account', [MT5Accounts::class, 'activateAccount'])->name('activate_account');
         });
 
@@ -306,7 +345,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
         });
-
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

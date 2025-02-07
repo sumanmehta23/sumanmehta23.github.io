@@ -18,8 +18,9 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Services\MailService as MailService;
+use App\Actions\SubscribeToKlaviyoList;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Services\MailService as MailService;
 
 class Wallet extends Controller
 {
@@ -52,7 +53,7 @@ class Wallet extends Controller
             ->get();
         // Fetch withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
+            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount','verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
@@ -168,6 +169,148 @@ class Wallet extends Controller
                     'success' => true,
                     'message' => 'Wallet address deletion email send successfully.'
                 ]);
+    }
+
+    public function get_editing_wallet_details(Request $request)
+    {
+        $wallet = ClientWallet::find($request->id);
+
+        if ($wallet) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $wallet->id,
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'status' => $wallet->status
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
+
+    public function verify_edit_wallet_details(Request $request)
+    {
+
+        $wallet_id = $request->id;
+        $wallet_address = $request->wallet_address;
+        $wallet_network = $request->wallet_network;
+        $wallet_name = $request->wallet_name;
+        $wallet_status = $request->status;
+
+        // Check for pending withdrawals
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        $settings = settings();
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        $toEmail = $wallet->user->email;
+        $type = 'Wallet Edit Confirmation Required';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $content =
+                '<div>We received a request to update the details of your saved wallet. Please review the changes below:</div>' .
+                '<br>'.
+                '<div>Previous Wallet Details:</div>'.
+                '<br>'.
+                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
+                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<br>'.
+                '<div>Updated Wallet Details:</div>'.
+                '<br>'.
+                '<div>Wallet Name: '.$wallet_name.' </div>'.
+                '<div>Wallet Network: '.$wallet_network.' </div>'.
+                '<div>Wallet Address: '.$wallet_address.' </div>'.
+                '<br>'.
+                '<div>For security purposes, please verify this request by clicking the link below</div>'.
+                '<br>'.
+                '<div>If you did not request this change, please contact our support team immediately at support@lqhmarkets.com.</div>'.
+                '<br>'.
+                '<div>Best regards,</div>'.
+                '<div>LQH Markets Team</div>';
+
+        $templateVars = [
+            'name' => $wallet->user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/edit_wallet_details?id={$wallet_id}&wallet_address={$wallet_address}&wallet_network={$wallet_network}&wallet_name={$wallet_name}&status={$wallet_status}",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Verify",
+            "subtitle_right" => "Wallet Details",
+            "btn_text" => "Confirm Wallet Edit"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+        return response()->json([
+                    'success' => true,
+                    'message' => 'Wallet address deletion email send successfully.'
+                ]);
+    }
+
+    public function edit_wallet_details(Request $request)
+    {
+        $wallet_details = $request->all();
+        $wallet_id = $request->id;
+        $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+        $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
+
+        if ($pendingWithdrawals > 0) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Cannot delete wallet address with pending withdrawals.'
+            ]);
+        }
+
+        if($wallet){
+            $wallet->wallet_name = $wallet_details['wallet_name'];
+            $wallet->wallet_network = $wallet_details['wallet_network'];
+            $wallet->wallet_address = $wallet_details['wallet_address'];
+            $wallet->status = $wallet_details['status'];
+            $wallet->save();
+
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Wallet Address Updated';
+            $htmlContent = "";
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $content =
+                '<div>We’re writing to confirm that your request to update your wallet details has been successfully verified and processed:</div>'.
+                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
+                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
+                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
+                '<div>The wallet details is now updated. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+            $templateVars = [
+                'name' => $wallet->user->fullname,
+                'server_name' => $settings['mt5_company_name'],
+                'site_link' => $settings['copyright_site_name_text'] . "/login",
+                'email' => $settings['email_from_address'],
+                "content" => $content,
+                "title_right" => "Wallet Address Updation",
+                "subtitle_right" => "Verified",
+                "btn_text" => "Login"
+            ];
+            $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
+            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
+
+        }
+        return redirect()->route('user-profile')->with('error', 'Something went wrong');
     }
 
     public function delete_wallet_address(Request $request)
@@ -467,8 +610,29 @@ class Wallet extends Controller
             // }
         }
     }
-
-    public function secureProcessPayment(Request $request)
+    protected function getKlaviyoListId($amount)
+    {
+        $lists = [
+            'DEPOSIT_10_200' => ['min' => 10, 'max' => 200, 'id' => config('services.klaviyo.list_ids.DEPOSIT_10_200')],
+            'DEPOSIT_200_2000' => ['min' => 200, 'max' => 2000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_200_2000')],
+            'DEPOSIT_2000_5000' => ['min' => 2000, 'max' => 5000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_2000_5000')],
+            'DEPOSIT_5000_PLUS' => ['min' => 5000, 'max' => PHP_INT_MAX, 'id' => config('services.klaviyo.list_ids.DEPOSIT_5000_PLUS')],
+        ];
+        foreach ($lists as $list) {
+            if ($amount >= $list['min'] && $amount < $list['max']) {
+                return $list['id'];
+            }
+        }
+        return null;
+    }
+    protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $listId = $this->getKlaviyoListId($amount);
+        if($listId){
+            $subscribeToKlaviyoList->handle($user, $listId);
+        }
+    }
+    public function secureProcessPayment(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
@@ -547,6 +711,8 @@ class Wallet extends Controller
                     );
 
                     DB::commit();
+                    $user=User::where('id',$customerID)->first();
+                    $this->subscribeToKlaviyoList($user,$amount,$subscribeToKlaviyoList);
                     Cache::forget("user:{$customerID}:wallet_balance");
                     Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
 
@@ -584,6 +750,8 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request)
     {
+        $settings = settings();
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -651,10 +819,84 @@ class Wallet extends Controller
             'withdraw_amount' => $withdrawAmount,
             'withdraw_transaction_fee' => $withdraw_transaction_fee,
             'withdraw_type' => $withdrawType,
-            'status' => 0
+            'status' => 0,
+            'verified' => 0
         ]);
+
+
+        $toEmail = $user->email;
+        $type = 'Withdrawal Details Verification';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $WalletWithdrawal = WalletWithdraw::where('user_id', $user->id)
+                ->latest('created_at') // Specify the column to order by
+                ->first();
+
+        $content =
+                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.
+                '<div>Click the link below to activate your Wallet Withdrawal</div>';
+
+        $templateVars = [
+            'name' => $user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$WalletWithdrawal->id",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Wallet Withdrawal Request"
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
         // RateLimiter::clear($key);
-        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!.', 'You’ll receive an email notification once your request is approved and processed');
+        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!. Please verify your email for withdrawal confirmation.');
+    }
+
+    public function wallet_withdrawal_verify(Request $request){
+
+         if(!auth()->check()){
+            return redirect('/login');
+         }
+
+        $settings = settings();
+        $id = auth()->user()->id;
+        $walletWithdrawal_id = $request->query('walletWithdrawal_id');
+
+        $new_wallet_Withdrawal = WalletWithdraw::with('user')->where('user_id', $id)
+            ->where('id', $walletWithdrawal_id)
+            ->first();
+        if ($new_wallet_Withdrawal) {
+            if ($new_wallet_Withdrawal->verified  == 0) {
+                $new_wallet_Withdrawal->verified = 1;
+                $new_wallet_Withdrawal->save();
+                $from = $settings['email_from_address'];
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
+                $htmlContent = "";
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Your wallet withdrawal has been successfully confirmed.</div>';
+                $templateVars = [
+                    'name' => $new_wallet_Withdrawal->user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Wallet Withdrawal Verification",
+                    "subtitle_right" => "Successful",
+                ];
+                $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
+            } else {
+                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
+            }
+        } else {
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Wallet Withdrawal Found. Signup here');
+        }
     }
 
 }

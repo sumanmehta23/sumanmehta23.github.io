@@ -406,6 +406,13 @@
                                                                                             <i class="f-24 ti ti-toggle-right"></i>
                                                                                         </a>
                                                                                     @endif
+                                                                                    <span class="badge text-warning edit_wallet_address"
+                                                                                        data-id="{{ $acc->id }}"
+                                                                                        data-bs-toggle="tooltip"
+                                                                                        title="Edit Wallet Address">
+                                                                                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                                                                    </span>
+
                                                                                     <span class="badge text-danger delete_wallet_address"
                                                                                         data-id="{{ $acc->id }}"
                                                                                         data-bs-toggle="tooltip"
@@ -480,11 +487,13 @@
     <script>
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
+
             $.ajax({
                 type: "POST",
                 url: "{{ route('password.change') }}",
                 data: $(this).serialize(),
                 success: function(response) {
+                    console.log("Success Response:", response);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
@@ -493,11 +502,19 @@
                     });
                 },
                 error: function(xhr) {
-                    console.log(xhr);
-                    const errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                    console.log("Error Response:", xhr);
+                    let errorMessage = "Something went wrong";
+                    if (xhr.responseJSON?.errors) {
+                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join("");
+                        errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                    } else if (xhr.responseJSON?.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
                     Swal.fire({
                         icon: 'error',
-                        title: errorMessage,
+                        title: "Password Requirements Not Met",
+                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
                     });
                 }
             });
@@ -589,6 +606,39 @@
                 }
             });
         });
+
+        $(".edit_wallet_address").click(function (e) {
+            e.preventDefault();
+
+            const wallet_id = this.getAttribute("data-id");
+
+            // Send an AJAX request to fetch the wallet details
+            $.ajax({
+                url: "/get_editing_wallet_details", // Change to your actual API endpoint
+                type: "GET",
+                data: { id: wallet_id },
+                success: function (response) {
+                    if (response.success) {
+                        // Populate modal fields with the fetched data
+                        $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
+                        $("#editBankModal2 select[name='wallet_network']").val(response.data.wallet_network);
+                        $("#editBankModal2 input[name='wallet_address']").val(response.data.wallet_address);
+                        $("#editBankModal2 select[name='status']").val(response.data.status);
+                        $("#editBankModal2 input[name='id']").val(response.data.id);
+
+                        // Show the modal
+                        $("#editBankModal2").modal("show");
+                    } else {
+                        alert("Failed to fetch wallet details.");
+                    }
+                },
+                error: function () {
+                    alert("Error fetching wallet details.");
+                }
+            });
+        });
+
+
 
         $(document).ready(function() {
         // Show "Edit Picture" text when hovering over the image

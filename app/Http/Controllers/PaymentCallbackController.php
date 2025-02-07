@@ -96,6 +96,7 @@ class PaymentCallbackController extends Controller
                     'email' => $email,
                     'deposit_amount' => $amount
                 ]);
+                
             });
 
             Log::info($logData . "Transaction Confirmed\n");

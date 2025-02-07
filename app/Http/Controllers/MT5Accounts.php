@@ -15,8 +15,13 @@ use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\MT5\MTProtocolConsts;
 use App\Http\Controllers\Controller;
+use App\Models\Ib1;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Log;
+use App\Models\TradeWithdrawals;
+use App\Models\TotalBalance;
+use App\Models\WalletDeposit;
+use Illuminate\Support\Facades\DB;
 class MT5Accounts extends Controller
 {
     protected $api;
@@ -51,8 +56,12 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
+
         session()->remove('error');
         $user= auth()->user();
+        if($user->id != $account->user_id){
+            return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
+        }
         $code=$account->code;
         $type=$account->demo ? 'Demo' : 'Live';
         // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
@@ -266,6 +275,10 @@ class MT5Accounts extends Controller
 
          $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
+        $ibdata = '';
+        if ($ib) {
+            $ibdata = Ib1::where('referral_code',$ib)->first();
+        }
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -283,6 +296,7 @@ class MT5Accounts extends Controller
             $new_user->Name = $user->fullname??$user->email;
             $new_user->Email = $user->email;
             $new_user->LeadSource = $user->ib1?? "" ;
+            $new_user->Agent = $ibdata->indexId?? "" ;
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -434,7 +448,10 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-
+            $ibdata = '';
+            if($ib){
+                $ibdata = Ib1::where('referral_code',$ib)->first();
+            }
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
@@ -452,6 +469,7 @@ class MT5Accounts extends Controller
                 $new_user->Name = $user->fullname??$user->email;
                 $new_user->Email = $user->email;
                 $new_user->LeadSource = $user->ib1?? "" ;
+                $new_user->Agent = $ibdata->indexId?? "" ;
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
@@ -623,6 +641,135 @@ class MT5Accounts extends Controller
         //         }
         //     }
         // }
+    }
+
+
+    public function deleteAccounts(Request $request)
+    {
+        $validatedData = $request->validate([
+            'id' => 'required',
+            'email' => 'required|email',
+        ]);
+
+        $account = Account::with('user')->where('id', $request->id)->first();
+
+        $settings = settings();
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+        try {
+            $login = $account->code;
+
+            if($account->balance > 0) {
+                $balance = abs((float)$account->balance) * -1;
+                $comment = 'Withdraw';
+                $ticket = NULL;
+                $errorCode = $this->api->TradeBalance($login, $typed = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                } else {
+                    try {
+                        TradeWithdrawals::create([
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'account_id' => $account->id,
+                            'withdrawal_amount' => $account->balance ,
+                            'withdraw_type' => 'Wallet Withdrawal',
+                            // 'withdraw_to' => $to_account_id,
+                            'wallet_qr' => '',
+                            'Status' => 1
+                        ]);
+                        TotalBalance::create([
+                            'account_id' => $account->id,
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'deposit_amount' => $account->balance ,
+                        ]);
+                        WalletDeposit::create([
+                            'email' => $account->user->email,
+                            'user_id' => $account->user->id,
+                            'deposit_amount' => $account->balance ,
+                            'deposit_type' => 'Internal Transfer',
+                            'status' => 1,
+                        ]);
+                        // RateLimiter::clear($key);
+                    } catch (\Exception $e) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Something Went Wrong !!! Please Try Again'
+                        ], 400);
+                    }
+                }
+            }
+
+
+            if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
+
+                $error = MTRetCode::GetError($error_code);
+                Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($login));
+                return ["status" => false, "message" => $error];
+            } else {
+                Log::info('MT5 account deleted successfully'.json_encode($login).' with server response ');
+            }
+
+            if ($account) {
+                $account->delete(); // Soft delete the account
+
+                // Refresh the model to include the `deleted_at` timestamp
+                $account->refresh();
+
+                $email = $validatedData['email'];
+                $type = $account->demo == "1" ? "Demo account" : "Live account";
+
+                $from = $settings['email_from_address'];
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $emailSubject = $settings['admin_title'] . ' - Account Deleted';
+                $content = '<div>We would like to inform you that your account has been deleted.</div>
+                            <div> Below are the details for your reference:</div>
+                            <br>
+                            <div><b>Account code: </b>' . $account->code . '</div>
+                            <div><b>Account type: </b>' . $type . '</div>
+                            <div><b>Created On: </b>' . $account->created_at . '</div>
+                            <div><b>Deleted On: </b>' . $account->deleted_at . '</div>
+                            <br>
+                            <div>If this action was performed in error or if you have any questions, please don’t hesitate to contact our support team.</div>
+                            <br>
+                            <div>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com.</div>
+                            <br>
+                            <div>Best regards,</div>
+                            <div>LQH Markets Team</div>';
+                $templateVars = [
+                    'name' => $account->name,
+                    'site_link' => $settings['copyright_site_name_text'],
+                    'email' => $settings['email_from_address'],
+                    'content' => $content,
+                    'title_right' => 'Account',
+                    'subtitle_right' => 'Deleted',
+                    'btn_text' => 'Go To Dashboard',
+                ];
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+                return redirect()->back()->with('success', 'Account deleted successfully.');
+            } else {
+                return redirect()->back()->with('error', 'Account not found.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+            session()->flash('error', 'Exception: ' . $e->getMessage());
+        }
     }
 
     public function createDemoAccount(Request $request)

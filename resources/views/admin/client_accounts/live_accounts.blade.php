@@ -1,5 +1,10 @@
 @extends('layouts.admin.admin')
 @section('content')
+<style>
+    .deleteAcc{
+        cursor: pointer;
+    }
+</style>
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -39,6 +44,7 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Actions</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -82,6 +88,37 @@
             $("[name='request_status']").val(data.request_status).trigger("change");
             myModal.show();
 
+        });
+        $('.ajaxDataTable tbody tr').on('click', '.deleteAcc', function() {
+            var data = dTtable.row($(this).closest("tr")).data()
+            // console.log(data.id);
+            // console.log(data.fullemail);
+
+            Swal.fire({
+                    title: `Are you sure you want to delete this "${data.account_code}" account?`,
+
+                    html: `
+                    <form id="delete_account_form" method="post" action="deleteAccounts">
+                    @csrf
+                    <input type="hidden" name="id" value="${data.id}">
+                    <input type="hidden" name="email" value="${data.fullemail}">
+                    </form>
+                `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    preConfirm: () => {
+                    return true;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // location.href = "/admin/clientAccounts/deleteAccounts/" + data.id;
+                         document.querySelector('#delete_account_form').submit();
+                    }else {
+                        location.href = "";
+                    }
+                });
         });
     }
 
@@ -156,6 +193,10 @@
                     data: 'created_time',
                     name: 'created_time',
                     visible: false,
+
+                },{
+                    data: 'actions',
+                    name: 'actions',
 
                 },
 

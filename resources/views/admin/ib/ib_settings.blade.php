@@ -146,7 +146,7 @@
                                     </thead>
                                     <tbody>@foreach ($plans as $plan)
                                             <tr>
-                                                
+
                                                 @if(!empty($plan))
                                                     <td>{{ $plan->accountType->ac_group }}</td>
                                                     <td>{{ $plan->plan->ib_cat_name }}</td>
@@ -176,7 +176,7 @@
                                                         </button>
                                                     </td>
                                                 @endif
-                                                
+
                                             </tr>
                                             @endforeach
                                     </tbody>
@@ -210,7 +210,7 @@
                                     <label class="form-label">Name Of the Plan</label>
                                 </div>
                                 <div class="col-lg-8">
-                                    <input type="text" class="form-control" name="ib_cat_name" required>
+                                    <input type="text" class="form-control" name="ib_cat_name" id="ib_cat_name" required>
                                 </div>
                             </div>
                             <div class="mb-3 row">
@@ -218,7 +218,7 @@
                                     <label class="form-label">Description</label>
                                 </div>
                                 <div class="col-lg-8">
-                                    <input type="text" class="form-control" name="ib_cat_desc">
+                                    <input type="text" class="form-control" name="ib_cat_desc"  id="ib_cat_desc">
                                 </div>
                             </div>
                             <div class="mb-3 row">
@@ -331,7 +331,27 @@
                         }).then((val) => {
                             location.reload();
                         });
+                    }else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Something went wrong. Please try again."
+                        });
                     }
+                },
+                error: function (xhr) {
+                    let errorMsg = "An error occurred. Please try again.";
+
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        let errorMessages = Object.values(xhr.responseJSON.errors).flat().join("\n");
+                        errorMsg = errorMessages; // Laravel already provides correct names
+                    }
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Validation Error",
+                        text: errorMsg
+                    });
                 }
             });
         });

@@ -3,7 +3,7 @@
 <div class="pc-container">
     <div class="pc-content">
       @if(session('error'))
-          <div class="alert alert-danger">{{ session('error') }}</div>
+          <div class="alert alert-danger mt-4">{{ session('error') }}</div>
       @endif
       <div class="page-header mb-0 pb-0">
         <div class="page-block">

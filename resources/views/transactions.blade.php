@@ -271,13 +271,13 @@
                             }elseif($history->type == 'Wallet Transfer' && $history->source == 'TDID'){
                                 $from = 'Wallet';
                             } else {
-                                $from = $history->it_from;
+                                $from = $history->accountFrom()->withTrashed() ? $history->accountFrom()->withTrashed()->value('code') : $history->it_from;
                             }
 
                             if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
                                 $to = $history->it_to ?? 'Wallet';
                             } else {
-                                $to = !empty($history->accountTo->code) ? $history->accountTo->code : '';
+                                $to = !empty($history->accountTo()->withTrashed()) ? $history->accountTo()->withTrashed()->value('code') : '';
                             }
                         @endphp
                         <tr>

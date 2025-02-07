@@ -20,6 +20,7 @@
                 <thead>
                   <tr>
                     <th>ID</th>
+                    <th>Agent Account</th>
                     <th>Name</th>
                     <!-- <th>Country</th>
                     <th>Number</th> -->
@@ -153,7 +154,7 @@
                     extend: 'excel',
                     text: 'Export to Excel',
                     exportOptions: {
-                        columns: [6,7,0,2,3,4,8,9] // Updated column indices to match your use case
+                        columns: [6,7,0,1,2,3,4,8,9] // Updated column indices to match your use case
                     }
                 }
             ],
@@ -171,6 +172,10 @@
       columns: [{
           data: 'id',
           name: 'id'
+        },
+        {
+          data: 'agent_id',
+          name: 'agent_id'
         },
         {
           data: 'name',

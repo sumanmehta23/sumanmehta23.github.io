@@ -81,7 +81,8 @@
             Swal.fire({
                 icon: 'warning',
                 title: 'Something went wrong',
-                text: '{{ session('error') }}',
+                // text: '{{ session('error') }}',
+                html: '{{ session('error') }}',
                 showConfirmButton: true
             });
         </script>

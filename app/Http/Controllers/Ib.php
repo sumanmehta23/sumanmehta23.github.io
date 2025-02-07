@@ -149,7 +149,6 @@ class Ib extends Controller
         if (!$ib) {
             return redirect()->route('ib');
         }
-
         $plan_id = $ib->planDetails->ib_category_id;
 
 
