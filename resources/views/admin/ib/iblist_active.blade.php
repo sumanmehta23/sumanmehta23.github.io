@@ -139,7 +139,7 @@
 
   $(document).ready(function() {
     window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
-      // order: [[0, "desc"]],
+      order: [[0, "desc"]],
       destroy: true,
     //   "ajax": {
     //     "url": "/admin/ajax",
