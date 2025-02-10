@@ -2623,10 +2623,16 @@ class AjaxController extends Controller
 
         // Base query
 
-        $rmCondition = Ib1::where('status', 1)
-            ->select('ib1.*')
-            ->with(['user', 'ibWallet','planDetails.accountType']);
+        // $rmCondition = Ib1::where('status', 1)
+        //     ->select('ib1.*')
+        //     ->with(['user', 'ibWallet','planDetails.accountType']);
 
+
+        $rmCondition = Ib1::where('status', 1)
+        ->select('ib1.*')->with(['user', 'ibWallet', 'planDetails.accountType'])
+        ->leftJoin('ib_wallet as iw', 'iw.user_id', '=', 'ib1.user_id') // Assuming 'ib_wallets' is the table for 'ibWallet'
+        ->selectRaw('SUM(iw.ib_wallet) as total_deposit, SUM(iw.ib_withdraw) as total_withdrawal') // Calculate sum for both fields
+        ->groupBy('ib1.id'); 
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
@@ -2644,7 +2650,7 @@ class AjaxController extends Controller
             });
         }
 
-        $rmCondition->orderBy('id', 'desc');
+        // $rmCondition->orderBy('id', 'desc');
 
         // dd($query);
         if ($request->ajax()) {
@@ -2678,15 +2684,23 @@ class AjaxController extends Controller
 ' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
                 })
 
+                // ->addColumn('total_deposit', function ($row) {
+                //     $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
+                //     return $total_deposit;
+                // })
+                // ->addColumn('total_withdrawal', function ($row) {
+                //     $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
+                //     return $total_withdrawal;
+
+                // })
+
                 ->addColumn('total_deposit', function ($row) {
-                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
-                    return $total_deposit;
+                    return "$" . number_format($row->total_deposit, 2);
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
-                    return $total_withdrawal;
-
+                    return "$" . number_format($row->total_withdrawal, 2);
                 })
+
                 ->editColumn('ib_status', function ($row) {
                     return $row->status ;
                 })
@@ -2734,6 +2748,13 @@ class AjaxController extends Controller
                 })
 
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status','date'])
+
+                ->orderColumn('id', 'id $1') 
+                ->orderColumn('name', 'name $1')  
+                ->orderColumn('agent_id', 'indexId $1') 
+                ->orderColumn('total_deposit', 'total_deposit $1') 
+                ->orderColumn('total_withdrawal', 'total_withdrawal $1') 
+                ->orderColumn('date', 'created_at $1') 
                 ->make(true);
         }
 
