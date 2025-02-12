@@ -1170,10 +1170,10 @@ class AjaxController extends Controller
                         return $row->user->email;
                     })
                     ->addColumn('created_date', function($row){
-                        return date('Y-m-d', strtotime($row->withdraw_date));
+                        return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
                     })
                     ->addColumn('created_time', function($row){
-                        return date('H:i:s', strtotime($row->withdraw_date));
+                        return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
                     })
                     ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
                     ->make(true);
