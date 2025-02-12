@@ -119,7 +119,7 @@
                                                         <span class="fs-11 text-muted">Created On</span>
                                                     </div>
                                                     <div class="mt-2 lh-1">
-                                                        <span>{{ $details->withdraw_date }}</span>
+                                                        <span>{{ $details->created_at }}</span>
                                                     </div>
                                                 </div>
                                             </div>
