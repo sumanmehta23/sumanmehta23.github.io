@@ -1140,7 +1140,7 @@ class AjaxController extends Controller
                     })
                     ->addColumn('withdraw_date', function ($row) {
                         $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                        $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                        $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
                         return "<div class='lh-1'>
                                     $date
                                 </div>
