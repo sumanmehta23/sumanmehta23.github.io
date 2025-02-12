@@ -788,6 +788,7 @@
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
+                        filename: 'Client_List_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [0,8,9,10,2,3] // Exclude the `Name/Email` column (index 2)
                         }

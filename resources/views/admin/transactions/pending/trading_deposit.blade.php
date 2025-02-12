@@ -28,13 +28,13 @@
                             <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
+                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit"
                                         href="{{route('admin.transactions.pending.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal"
                                         href="{{route('admin.transactions.pending.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
@@ -46,12 +46,12 @@
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
+                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal"
                                         href="{{route('admin.transactions.pending.trading-withdrawal')}}" aria-selected="false">Trading
                                         Withdrawal</a>
                                 </li>
                                 @endcan
-                               
+
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
@@ -170,25 +170,26 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <script>
         $(document).ready(function () {
-          
+
           var tableTradingDeposit = $('#tableTradingDeposit').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            
+
             buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
+                        filename: 'Pending_Trading_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [0,1,2,3,4,8,9,6] // Updated column indices to match your use case
                         }
                     }
                 ],
-    
+
             order: [[3, "desc"]],
             processing: true,
             serverSide: true,
@@ -212,7 +213,7 @@
               { data: 'deposit_from', name: 'deposit_from' ,searchable: false},
               {
                 data: 'deposit_date', name: 'deposit_date',searchable: false
-                
+
               },
               { data: 'status', name: 'status',searchable: false },
               { data: 'action', name: 'action', orderable: false, searchable: false },
@@ -220,13 +221,13 @@
               { data: 'created_time', name: 'created_time', visible: false},
             ]
           });
-          
+
           $('#statusFilter').on('change', function () {
-            
+
             tableTradingDeposit.ajax.reload();
           });
         });
       </script>
-    
+
     @endpush
     @endsection

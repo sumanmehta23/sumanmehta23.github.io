@@ -234,6 +234,7 @@
                 {
                     extend: 'excel',
                     text: 'Export to Excel',
+                    filename: 'Requested_Accounts_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
                         columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
                     }

@@ -188,6 +188,7 @@
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
+                        filename: 'Wallet_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [6,7,1,2,4,8,9] // Updated column indices to match your use case
                         }

@@ -153,6 +153,7 @@
                 {
                     extend: 'excel',
                     text: 'Export to Excel',
+                    filename: 'IB_Users_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
                         columns: [6,7,0,1,2,3,4,8,9] // Updated column indices to match your use case
                     }

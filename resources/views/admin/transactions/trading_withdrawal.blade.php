@@ -28,19 +28,19 @@
                             <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
+                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit"
                                         href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal"
                                         href="{{route('admin.transactions.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
+                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit"
                                         href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
                                 </li>
                                 @endcan
@@ -53,7 +53,7 @@
                                 @endcan
                                 @can('internal_transfer:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}" data-type="internal_transfer" 
+                                    <a class="nav-link {{$id == 'internal_transfer'? 'active':''}}" data-type="internal_transfer"
                                         href="{{route('admin.transactions.internal-transfer')}}" aria-selected="false">Internal
                                         Transfer</a>
                                 </li>
@@ -62,17 +62,17 @@
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'wallet_withdrawal'? 'active show':''}}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_deposit'? 'active show':''}}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                       
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_withdrawal'? 'active show':''}}" id="tradingwithdrawal" role="tabpanel">
@@ -98,7 +98,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'internal_transfer'? 'active':''}}" id="transaction5" role="tabpanel">
-                                    
+
                                 </div>
                             </div>
                         </div>
@@ -107,11 +107,11 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <script>
         $(document).ready(function () {
-          
+
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -121,11 +121,11 @@
             //             text: 'Export to Excel',
             //         }
             //     ],
-    
+
             // order: [
             //   [0, "desc"]
             // ],
-    
+
             // "ajax": {
             //   "url": "/admin/ajax",
             //   "type": "GET",
@@ -137,12 +137,13 @@
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
+                        filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [0,1,2,3,5,7,8] // Updated column indices to match your use case
                         }
                     }
                 ],
-    
+
             order: [[3, "desc"]],
             processing: true,
             serverSide: true,
@@ -179,14 +180,14 @@
               { data: 'created_time', name: 'created_time', visible: false},
             ]
           });
-         
+
           $('#statusFilter').on('change', function () {
-            
+
             tableTradingWithdrawal.ajax.reload();
-            
+
           });
         });
       </script>
-    
+
     @endpush
     @endsection
