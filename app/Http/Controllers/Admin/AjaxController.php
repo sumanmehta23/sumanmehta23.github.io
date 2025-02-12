@@ -1139,8 +1139,8 @@ class AjaxController extends Controller
                         return $row->withdraw_type;
                     })
                     ->addColumn('withdraw_date', function ($row) {
-                        $date = date('Y-m-d', strtotime($row->withdraw_date));
-                        $time = date('H:i:s', strtotime($row->withdraw_date));
+                        $date = date('Y-m-d', strtotime($row->approved_date));
+                        $time = date('H:i:s', strtotime($row->approved_date));
                         return "<div class='lh-1'>
                                     $date
                                 </div>
@@ -2736,12 +2736,12 @@ class AjaxController extends Controller
 
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status','date'])
 
-                ->orderColumn('id', 'id $1') 
-                ->orderColumn('name', 'id $1')  
-                ->orderColumn('agent_id', 'id $1') 
-                ->orderColumn('total_deposit', 'id $1') 
-                ->orderColumn('total_withdrawal', 'id $1') 
-                ->orderColumn('date', 'id $1') 
+                ->orderColumn('id', 'id $1')
+                ->orderColumn('name', 'id $1')
+                ->orderColumn('agent_id', 'id $1')
+                ->orderColumn('total_deposit', 'id $1')
+                ->orderColumn('total_withdrawal', 'id $1')
+                ->orderColumn('date', 'id $1')
                 ->make(true);
         }
 
