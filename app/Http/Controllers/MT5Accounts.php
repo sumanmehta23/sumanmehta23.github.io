@@ -342,7 +342,7 @@ class MT5Accounts extends Controller
             if($useraccount){
 
                 $from = $settings['email_from_address'];
-                $emailSubject = 'Account send for approval';
+                $emailSubject = 'Trading Account Requested';
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
