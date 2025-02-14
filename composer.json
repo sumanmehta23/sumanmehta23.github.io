@@ -17,6 +17,7 @@
         "league/csv": "^9.21",
         "predis/predis": "^2.3",
         "realrashid/sweet-alert": "^7.2",
+        "spatie/laravel-activitylog": "^4.10",
         "yajra/laravel-datatables-oracle": "^11.1"
     },
     "require-dev": {

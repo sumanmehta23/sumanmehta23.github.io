@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
 use App\Actions\SubscribeToKlaviyoList;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Wallet extends Controller
 {
@@ -473,6 +475,16 @@ class Wallet extends Controller
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email
                 ];
+                activity()->causedBy(auth()->user()->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => auth()->user()->email,
+                        'payment_amount' => $trading_deposited1,
+                        'payment_type' => 'CreditCardPayissa',
+                        'remark' => 'Wallet Deposit'
+                    ])
+                ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
                 $currency = 'USD';
@@ -491,6 +503,16 @@ class Wallet extends Controller
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email
                 ];
+                activity()->causedBy(auth()->user()->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => auth()->user()->email,
+                        'payment_amount' => $trading_deposited1,
+                        'payment_type' => 'NowPayment',
+                        'remark' => 'Wallet Deposit'
+                    ])
+                ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
                 $currency = 'USD';
@@ -812,6 +834,16 @@ class Wallet extends Controller
             $withdrawAmount= $withdrawAmount;
             $withdraw_transaction_fee = null;
         }
+        activity()->causedBy(auth()->user()->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => auth()->user()->email,
+                    'withdraw_amount' => $withdrawAmount,
+                    'withdraw_transaction_fee' => $withdraw_transaction_fee,
+                    'remark' => 'Wallet Withdraw'
+                ])
+            ->log('Wallet Withdraw');
         WalletWithdraw::create([
             'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,

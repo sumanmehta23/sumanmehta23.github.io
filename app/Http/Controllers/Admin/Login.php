@@ -41,15 +41,15 @@ class Login extends Controller
         // Attempt to log the user in
         $user = EmployeeList::where('email', $credentials['username'])
             ->first();
-            
+
         if (!$user) {
             return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
         }
-        
+
         if (Hash::needsRehash($user->password)) {
             if ($user->password === $request->input('password')) {
                 $user->password = Hash::make($request->input('password'));
-                $user->save(); 
+                $user->save();
             } else {
                 return redirect()->back()->with('error', 'Login Details are Invalid');
             }
@@ -59,13 +59,25 @@ class Login extends Controller
             }
         }
             if ($user->status == '1') {
+                activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'id' =>auth()->guard('admin')->user()->id,
+                    'remark' => 'Login'
+                ])
+                ->log('Authentication');
                 // $credentials = $request->only('email', 'password');
 // dd($credentials);
                 if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
                     $request->session()->regenerate();
                     // return redirect()->intended('dashboard');
                 }
-                
+
                 // Store user details in session
                 // Auth::login($user);
                 // $request->session()->regenerate();
@@ -95,7 +107,7 @@ class Login extends Controller
                 //     }
                 // }
                 // Session::put('current_permissions', $current_permissions);
-                
+
                 // Log user in
                 if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
                     $this->logLoginHistory($user->email);
@@ -119,10 +131,11 @@ class Login extends Controller
                 //         return back()->with('error', 'You do not have any page permissions. Please contact the administrator.');
                 //     }
                 // }
+
             } else {
                 return back()->with('error', 'Your account is inactive. Please contact the administrator.');
             }
-        
+
     }
     private function logLoginHistory($email)
     {
@@ -139,6 +152,18 @@ class Login extends Controller
     }
     public function logout(Request $request)
     {
+        activity()
+        ->causedBy(auth()->guard('admin')->user())
+        ->withProperties([
+            'ip' => $request->ip(),
+            'email' => auth()->guard('admin')->user()->email,
+            'userRole' =>auth()->guard('admin')->user()->userRole,
+            'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
+            'username' =>auth()->guard('admin')->user()->username,
+            'id' =>auth()->guard('admin')->user()->id,
+            'remark' => 'Logout'
+        ])
+        ->log('Authentication');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

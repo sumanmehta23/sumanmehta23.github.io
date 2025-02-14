@@ -138,6 +138,16 @@ class TradeDepositController extends Controller
         if ($request->hasFile('deposit_proof')) {
             $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
         }
+        activity()->causedBy($user->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $user->email,
+                    'code' => $account->code,
+                    'deposit_amount' => $depositamount,
+                    'remark' => 'Account Deposit'
+                ])
+        ->log('Account Deposit');
         $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {

@@ -133,6 +133,16 @@ class TradeWithdrawal extends Controller
             $ticket = NULL;
             $login = $account->code;
             $email = $account->email;
+            activity()->causedBy($user_id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => $user_email,
+                        'code' => $login,
+                        'withdraw_amount' => $balance,
+                        'remark' => 'Account Withdraw'
+                    ])
+            ->log('Account Withdraw');
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);

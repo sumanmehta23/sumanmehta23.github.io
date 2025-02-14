@@ -17,8 +17,10 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\RateLimiter;
-
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 class LoginController extends Controller
+
 {
     protected $mailService;
     public function __construct(MailService $mailService)
@@ -34,8 +36,10 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
+
     public function login(Request $request)
     {
+
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $retryAfter = RateLimiter::availableIn($key);
@@ -43,6 +47,12 @@ class LoginController extends Controller
             $minutes = floor(($retryAfter % 3600) / 60);
             $seconds = $retryAfter % 60;
             $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+            activity()->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $request->input('email')
+                ])
+            ->log('Authentication');
             return redirect()->back()->with(
                 'error',
                 "Too many requests. Please wait {$formattedTime} before trying again."
@@ -60,6 +70,13 @@ class LoginController extends Controller
 
          // Check if user exists
          if (!$user) {
+            activity()->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $request->input('email'),
+                    'remark' => 'Invalid email or unverified account'
+                ])
+            ->log('Authentication');
              return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
          }
 
@@ -71,6 +88,13 @@ class LoginController extends Controller
                  $user->password = Hash::make($request->input('password'));
                  $user->save(); // Update the user's password in the database
              } else {
+                activity()->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => $user->email,
+                        'remark' => 'Incorrect password'
+                    ])
+                ->log('Authentication');
                  return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
              }
          } else {
@@ -79,7 +103,14 @@ class LoginController extends Controller
             // dd(Hash::check($request->input('password'), $user->password));
              // If password is hashed, verify it
              if (!Hash::check($request->input('password'), $user->password)) {
-                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+                activity()->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => $user->email,
+                        'remark' => 'Incorrect login details'
+                    ])
+                ->log('Authentication');
+                return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
              }
          }
          Auth::login($user);
@@ -88,6 +119,16 @@ class LoginController extends Controller
          Session::put('clogin', $user->email);
          Session::put('user', $user);
          $this->recordLoginHistory($user, $request->ip());
+
+        activity()->causedBy($user->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $user->email,
+                    'remark' => 'Login'
+                ])
+            ->log('Authentication');
+
          return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
 
     }
@@ -97,6 +138,14 @@ class LoginController extends Controller
     // Logout user
     public function logout(Request $request)
     {
+        activity()->causedBy(auth()->user()->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => auth()->user()->email,
+                    'remark' => 'Logout'
+                ])
+            ->log('Authentication');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

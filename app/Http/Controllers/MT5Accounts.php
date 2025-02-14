@@ -279,6 +279,7 @@ class MT5Accounts extends Controller
         if ($ib) {
             $ibdata = Ib1::where('referral_code',$ib)->first();
         }
+
         if ($userAcc && count($userAcc) < 2) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
@@ -303,6 +304,18 @@ class MT5Accounts extends Controller
             $response = $this->CreateAccount($new_user, $user_server, 'Live');
 
             if ($response['status']) {
+                activity()->causedBy($user->id)
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => $user->email,
+                            'type' => 'Live',
+                            'code' => $new_user->Login,
+                            'leverage' => $new_user->Leverage,
+                            'ib' => $ib,
+                            'remark' => 'Create Live Account'
+                        ])
+                ->log('Create Live Account');
                 Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
@@ -327,6 +340,18 @@ class MT5Accounts extends Controller
             }
         }else {
             $settings = settings();
+            activity()->causedBy($user->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => $user->email,
+                        'type' => 'Live',
+                        'code' => 'Pending',
+                        'leverage' => $validatedData['leverage'],
+                        'ib' => $ib,
+                        'remark' => 'Create Live Account'
+                    ])
+            ->log('Create Live Account');
             $useraccount = Account::create([
                 'user_id' => $user->id,
                 'name' => $user->fullname??$user->email,
@@ -477,7 +502,19 @@ class MT5Accounts extends Controller
 
                 if ($response['status']) {
                     $account = Account::where('id', $request->account_id)->first();
-                    // dd($account);
+
+                    activity()->causedBy(auth()->user()->id)
+                            ->withProperties(
+                                [
+                                    'ip' => $request->ip(),
+                                    'email' => auth()->user()->email,
+                                    'type' => 'Live',
+                                    'code' => $new_user->Login,
+                                    'leverage' => $new_user->Leverage,
+                                    'ib' => $ib,
+                                    'remark' => 'Create Live Account'
+                                ])
+                        ->log('Create Live Account');
                     if($account)
                     {
                         $account->update([
@@ -823,6 +860,18 @@ class MT5Accounts extends Controller
             $response = $this->CreateAccount($new_user, $user_server, 'Demo');
 
             if ($response['status']) {
+                activity()->causedBy($user->id)
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => $user->email,
+                            'type' => 'Demo',
+                            'code' => $new_user->Login,
+                            'amount' => $validatedData['demo_deposit'],
+                            'leverage' => $new_user->Leverage,
+                            'remark' => 'Create Demo Account'
+                        ])
+                ->log('Create Demo Account');
                 $account=Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,

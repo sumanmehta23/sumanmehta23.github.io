@@ -92,6 +92,16 @@ class Ib extends Controller
         $referral_code = $request->referral_code;
 
         $ib1 = Ib1::find($ib1_id);
+        activity()->causedBy(auth()->user()->id)
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'old' => $ib1->referral_code,
+                            'new' => $referral_code,
+                            'remark' => 'Update Referral'
+                        ])
+                ->log('Update Referral');
         if ($ib1) {
 
             try {
@@ -434,7 +444,16 @@ class Ib extends Controller
                 $comment = 'IB Comm. - Dep';
                 $ticket = null;
                 $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
-
+                activity()->causedBy(auth()->user()->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => auth()->user()->email,
+                        'deposit_amount' => $amount,
+                        'code' => $account->code,
+                        'remark' => 'Commission Transfer'
+                    ])
+                ->log('Commission Transfer');
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     return redirect()->back()->with('error', 'Something went wrong on Deposit. ' . $error);

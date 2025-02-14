@@ -35,7 +35,7 @@ class InternalTransfer extends Controller
                       ->orWhere('bonus_type', 'Bonus Out');
             }
         ])
-        ->where('account_request_status', "!=", "0")    
+        ->where('account_request_status', "!=", "0")
         ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
@@ -96,7 +96,17 @@ class InternalTransfer extends Controller
         }
         $email = auth()->user()->email;
         $ticket = NULL;
-
+        activity()->causedBy(auth()->user()->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => auth()->user()->email,
+                    'from' => $fromAccount->code,
+                    'to' => $toAccount->code,
+                    'transfer_amount' => $transferable_amount,
+                    'remark' => 'Internal Transfer'
+                ])
+        ->log('Internal Transfer');
         // Withdraw from the first account
         $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
         if ($errorCode != MTRetCode::MT_RET_OK) {

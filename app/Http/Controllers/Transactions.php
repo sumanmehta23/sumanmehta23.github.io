@@ -140,6 +140,17 @@ class Transactions extends Controller
         $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
+            activity()->causedBy(auth()->user()->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => auth()->user()->email,
+                        'transaction_id' => $transaction_id,
+                        'amount' => $depositAmount,
+                        'status' => $status,
+                        'remark' => 'Wallet Withdraw Cancel By Client'
+                    ])
+            ->log('Wallet Withdraw Cancel');
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
             $transaction->admin_remark = 'Cancelled by User';
