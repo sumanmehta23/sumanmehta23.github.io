@@ -8,12 +8,34 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\EmployeeList;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Models\Activity;
 
 class SettingsController extends Controller
 {
     public function index()
     {
         return view("admin.ui_settings");
+    }
+
+    public function logs(Request $request)
+    {
+        return view('admin.logs');
+    }
+
+    private function extractEvent($message)
+    {
+        if (preg_match('/event:\s?(\w+)/i', $message, $match)) {
+            return $match[1];
+        }
+        return 'Unknown';
+    }
+
+    private function extractCausedId($message)
+    {
+        if (preg_match('/id:\s?(\d+)/i', $message, $match)) {
+            return $match[1];
+        }
+        return 'N/A';
     }
 
     public function store(Request $request)

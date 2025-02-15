@@ -240,6 +240,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
 
+    Route::get('/getLogs', [AjaxController::class, 'getLogs']);
+
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
@@ -341,6 +343,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
+        Route::prefix('/logs')->group(function () {
+            Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
+        });
+
         Route::prefix('/update_password')->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;

@@ -28,25 +28,25 @@
                             <ul class="mb-3 border-0 nav nav-tabs" role="tablist">
                                 @can('wallet_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit" 
+                                    <a class="nav-link {{$id == 'wallet_deposit'? 'active':''}}" data-type="wallet_deposit"
                                         href="{{route('admin.transactions.wallet-deposit')}}" aria-selected="true">Wallet Deposit</a>
                                 </li>
                                 @endcan
                                 @can('wallet_withdraw:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal" 
+                                    <a class="nav-link {{$id == 'wallet_withdrawal'? 'active':''}}"  data-type="wallet_withdrawal"
                                         href="{{route('admin.transactions.wallet-withdrawal')}}" aria-selected="false">Wallet Withdrawal</a>
                                 </li>
                                 @endcan
                                 @can('trade_deposit:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit" 
+                                    <a class="nav-link {{$id == 'trading_deposit'? 'active':''}}"  data-type="trading_deposit"
                                         href="{{route('admin.transactions.trading-deposit')}}" aria-selected="false">Trading Deposit</a>
                                 </li>
                                 @endcan
                                 @can('trade_withdrawals:viewAny')
                                 <li class="nav-item">
-                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal" 
+                                    <a class="nav-link {{$id == 'trading_withdrawal'? 'active':''}}"  data-type="trading_withdrawal"
                                         href="{{route('admin.transactions.trading-withdrawal')}}" aria-selected="false">Trading
                                         Withdrawal</a>
                                 </li>
@@ -61,22 +61,22 @@
                             <div class="tab-content">
                                 <div class="tab-pane text-muted {{$id == 'wallet_deposit'? 'active show':''}}" id="walletdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'wallet_withdrawal'? 'active show':''}}" id="walletwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
-                                       
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_deposit'? 'active show':''}}" id="tradingdeposit" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_withdrawal'? 'active show':''}}" id="tradingwithdrawal" role="tabpanel">
                                     <div class="table-responsive">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'internal_transfer'? 'active':''}}" id="transaction5" role="tabpanel">
@@ -103,15 +103,15 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <script>
         $(document).ready(function () {
-          
+
           var tableInternalTransfer = $('#tableInternalTransfer').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            
+
             buttons: [
                     {
                         extend: 'excel',
@@ -121,7 +121,7 @@
                         }
                     }
                 ],
-    
+
             order: [[3, "desc"]],
             processing: true,
             serverSide: true,
@@ -147,11 +147,11 @@
             ]
           });
           $('#statusFilter').on('change', function () {
-            
+
             tableInternalTransfer.ajax.reload();
           });
         });
       </script>
-    
+
     @endpush
     @endsection

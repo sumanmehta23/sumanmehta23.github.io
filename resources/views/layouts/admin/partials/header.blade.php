@@ -116,8 +116,8 @@ $filePermissions = filePermissions($userRole);
             <b>DEV ENVIRONMENT</b>
         </div>
     @endif
-   
-    
+
+
     <!-- Loader -->
     <div id="loader">
         <img src="/admin_assets/assets/images/media/loader.svg" alt="">
@@ -538,6 +538,13 @@ $filePermissions = filePermissions($userRole);
                                 <li class="slide menu-item-sub">
                                     <a href="{{route('admin.ui-settings.view')}}" class="side-menu__item ">
                                         UI Settings
+                                    </a>
+                                </li>
+                                @endcan
+                                @can("setting:viewAny")
+                                <li class="slide menu-item-sub">
+                                    <a href="{{route('admin.logs.view')}}" class="side-menu__item ">
+                                        Logs
                                     </a>
                                 </li>
                                 @endcan
