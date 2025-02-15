@@ -31,7 +31,7 @@ class StaffManagement extends Controller
         return view('admin.admin_users', compact('roles'));
     }
     public function permissionsList(Request $request)
-    {  
+    {
         $id = $request->id;
         $roles = Role::where('id', $id)->first();
         $permissionGroups = PermissionGroup::with("permissions")->orderBy('name','asc')->get();
@@ -68,22 +68,54 @@ class StaffManagement extends Controller
         $role->created_by = session('userData')['client_index'];
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'role_name' => $role->name,
+                    'role_description' => $role->description,
+                    'remark' => 'Create Role'
+                ])
+            ->event('create')
+            ->log('Create Role');
+
             return redirect()->back()->with("success", "New Role Added");
         }
         return redirect()->back()->with("error", "Failed to add role");
     }
     public function updateRole(Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
         $id = $request->input('role_id');
-        $role = Role::where('role_id', $id)->firstOrFail();
+        $role = Role::where('id', $id)->firstOrFail();
+
         $role->name = $request->input('name');
         $role->description = $request->input('description');
         $role->is_active = $request->has('is_active') ? 1 : 0;
         if ($role->save()) {
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'role_name' => $role->name,
+                    'role_description' => $role->description,
+                    'status' => $role->is_active,
+                    'remark' => 'Update Role'
+                ])
+            ->event('update')
+            ->log('Update Role');
             return redirect()->back()->with("success", "Role Details Updated");
         }
         return redirect()->back()->with("error", "Failed to update role");
@@ -94,24 +126,53 @@ class StaffManagement extends Controller
             'status' => 'required|boolean',
         ]);
         $id = $request->input('role_id');
-        $role = Role::where('role_id', $id)->firstOrFail();
+        $role = Role::where('id', $id)->firstOrFail();
         $role->is_active = $request->input('status');
         if ($role->save()) {
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'role_name' => $role->name,
+                    'role_description' => $role->description,
+                    'status' => $role->is_active,
+                    'remark' => 'Update Role'
+                ])
+            ->event('update')
+            ->log('Update Role');
             return redirect()->back()->with("success", "Status Updated Successfully");
         }
         return redirect()->back()->with("error", "Failed to update role");
     }
     public function updateRolePermissions(Request $request)
     {
+
         $request->validate([
             'permissions' => 'required|array',
         ]);
         $roleId = $request->input('role_id');
         // Permission::where('role_id', $roleId)->delete();
-        
+
         $permissions = $request->input('permissions');
         $createdBy = session('userData')['client_index'];
-
+        activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'username' =>auth()->guard('admin')->user()->username,
+                'user_id' =>auth()->guard('admin')->user()->id,
+                'role_id' => $roleId,
+                'role_permissions' => $permissions,
+                'remark' => 'Update Permissions'
+            ])
+        ->event('update')
+        ->log('Update Permissions');
         // $currentPermissions = Permission::where('role_id', $roleId)->pluck('page_id')->toArray();
         // $pagesToAdd = array_diff($pages, $currentPermissions);
         // $pagesToRemove = array_diff($currentPermissions, $pages);
@@ -129,7 +190,7 @@ class StaffManagement extends Controller
         //         ]
         //     );
         // }
-        
+
         // $category_id = Page::find($pageId)->value('page_category_id');
         // Invalidate cached categories and menus for the specific roleId
         // Cache::forget('page_categories_all_role_' . $roleId); // Invalidate cached categories for this role
@@ -189,6 +250,22 @@ class StaffManagement extends Controller
 
 
         if ($user->save()) {
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'new_username' => $user->username,
+                    'new_email' => $user->email,
+                    'new_user_id' => $user->id,
+                    'new_user_role' => $user->userRole,
+                    'remark' => 'Create Admin User'
+                ])
+            ->event('create')
+            ->log('Create Admin User');
             $respMsg = $userId ? 'User Updated' : 'New User Added';
             return redirect()->back()->with('success', $respMsg);
         }

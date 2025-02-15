@@ -198,7 +198,7 @@
 
         function dTSelection() {
             $(document).on("click", ".update-role", function() {
-                let id = $(this).data("id");
+                let id = $(this).attr("data-id");
                 $.ajax({
                     url: "/admin/ajax",
                     type: "GET",
@@ -207,8 +207,9 @@
                         id: id
                     },
                     success: function(response) {
-                        response = JSON.parse(response.trim());
-                        $('#roleid').val(response.role_id);
+                        // response = JSON.parse(response);
+                        console.log(response);
+                        $('#roleid').val(response.id);
                         $('#rolename').val(response.name);
                         $('#roledesc').text(response.description);
                         $('#rolestatus').prop('checked', response.is_active == 1);

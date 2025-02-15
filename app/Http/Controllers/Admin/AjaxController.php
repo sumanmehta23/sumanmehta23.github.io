@@ -2432,7 +2432,7 @@ class AjaxController extends Controller
     public function getRoles()
     {
 
-        header('Content-Type: application/json');
+        // header('Content-Type: application/json');
         $sql = "SELECT * from roles";
         $query = DB::select($sql);
         $results = $query;
@@ -2440,7 +2440,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->is_active == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            $dat->action = ' <a data-id="' . $row->role_id . '" class="btn btn-sm btn-secondary me-1 update-role" href="#">Edit</a>' . ($row->is_active == 1 ? '<a class="btn btn-sm btn-danger" href="#" onclick="updateStatus(`' . $row->role_id . '`,0)">Deactivate</a>' : '<a class="btn btn-sm btn-success" href="#" onclick="updateStatus(`' . $row->role_id . '`,1)">Activate</a>');
+            $dat->action = ' <a data-id="' . $row->id . '" class="btn btn-sm btn-secondary me-1 update-role" href="#">Edit</a>' . ($row->is_active == 1 ? '<a class="btn btn-sm btn-danger" href="#" onclick="updateStatus(`' . $row->id . '`,0)">Deactivate</a>' : '<a class="btn btn-sm btn-success" href="#" onclick="updateStatus(`' . $row->id . '`,1)">Activate</a>');
 
             $data[] = $dat;
         }
@@ -2509,14 +2509,13 @@ class AjaxController extends Controller
     public function getRoleDetails($id)
     {
 
-        header('Content-Type: application/json');
-        $sql = "SELECT * FROM  roles WHERE role_id=" . $id;
-        $query = DB::select($sql);
-        if (count($query)) {
-            $result = $query[0];
-            return $result;
+        // header('Content-Type: application/json');
+        $role = DB::table('roles')->where('id', $id)->first();
+        if (($role)){
+            return $role;
         } else {
-            return [];
+            // return [];
+            return response()->json(['error' => 'Role not found'], 404);
         }
     }
     public function getPaymentGateways()
