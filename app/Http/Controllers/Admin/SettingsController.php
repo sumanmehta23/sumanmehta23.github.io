@@ -52,6 +52,20 @@ class SettingsController extends Controller
         }
         $user->password = Hash::make($request->newpassword);
         $user->save();
+        activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'username' =>auth()->guard('admin')->user()->username,
+                'user_id' =>auth()->guard('admin')->user()->id,
+                'new_passowrd' => $request->newpassword,
+                'old_passowrd' => $request->oldpassword,
+                'remark' => 'Update Admin Password'
+            ])
+        ->event('update')
+        ->log('Update Admin Password');
         return redirect()->back()->with('success','Password Updated Successfully');
     }
 
