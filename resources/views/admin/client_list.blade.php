@@ -1087,7 +1087,7 @@
                     cache: false,
                     data: $("#statusUpdateForm").serialize(),
                     success: function(response) {
-
+                        
                         if (response.success == true) {
                             swal.fire({
                                 icon: "success",

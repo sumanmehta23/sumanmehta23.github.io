@@ -166,6 +166,19 @@ class ClientController extends Controller
             } else {
                 RelationshipManager::create(['user_id' => $user_id, 'rm_id' => $rm_id, 'added_by' => Auth::id() ]);
             }
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'client_id' => $user_id,
+                    'rm_id' => $rm_id,
+                    'remark' => 'RM Request'
+                ])
+            ->log('RM Request');
             return redirect()->back()->with('success', 'RM Details Updated');
         }
         return redirect()->back()->with('success', 'Only Super Admin can update');
@@ -447,7 +460,25 @@ class ClientController extends Controller
 
                     $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
                 }
-
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'send_to' => $user->id,
+                        'client_fullname' => $fullname ?? '',
+                        'client_password' => $password ?? '',
+                        'client_number' => $number ?? '',
+                        'client_country_code' => $country_code ?? '',
+                        'client_country' => $country ?? '',
+                        'client_fullname' => $fullname ?? '',
+                        'client_email' => $user->email,
+                        'remark' => 'Update Client Details'
+                    ])
+                ->log('Update Client Details');
                 // $affectedRows = DB::table('aspnetusers')
                 //     ->where(DB::raw('id'), $user_id)
                 //     ->update([

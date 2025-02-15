@@ -67,12 +67,12 @@ class Login extends Controller
                     'userRole' =>auth()->guard('admin')->user()->userRole,
                     'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
                     'username' =>auth()->guard('admin')->user()->username,
-                    'id' =>auth()->guard('admin')->user()->id,
+                    'admin_id' =>auth()->guard('admin')->user()->id,
                     'remark' => 'Login'
                 ])
                 ->log('Authentication');
                 // $credentials = $request->only('email', 'password');
-// dd($credentials);
+                // dd($credentials);
                 if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
                     $request->session()->regenerate();
                     // return redirect()->intended('dashboard');

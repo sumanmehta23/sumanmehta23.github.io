@@ -194,6 +194,19 @@ class AjaxController extends Controller
         $user = User::find($requestData['id']);
         if ($user) {
             $user->sendEmailVerificationNotification();
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'send_to' => $user->id,
+                    'receiver_email' => $user->email,
+                    'remark' => 'Client Email Confirmation'
+                ])
+            ->log('Email Confirmation');
             return ['success' => true];
         } else {
             return ['success' => false,'error' => 'User not found'];
@@ -2964,7 +2977,6 @@ class AjaxController extends Controller
     }
     public function updateClientStatus($data)
     {
-
         header('Content-Type: application/json');
 
         $user_id = $data['client_id'];
@@ -2985,6 +2997,20 @@ class AjaxController extends Controller
                     'email_confirmed' => $email_confirmed,
                     'kyc_verify' => $kyc_verify,
                 ]);
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'email_confirmed' => isset($data['email_confirmed']) ?? '',
+                    'status' => isset($data['status']) ?? '',
+                    'kyc_verify' => isset($data['kyc_verify']) ?? '',
+                    'remark' => 'Update Client Status'
+                ])
+            ->log('Update Client Status');
 
             return ['success' => true];
 
@@ -3078,7 +3104,6 @@ class AjaxController extends Controller
 
     public function requestIB($request)
     {
-
         try {
             $clientId = $request['client_id'];
             $ibStatus = $request['ib_status'];
@@ -3103,7 +3128,7 @@ class AjaxController extends Controller
                     $ib1->name = $user->fullname;
                     $ib1->country = $user->country;
                     $ib1->emailToken = $user->emailToken;
-                    $ib1->status = 1;
+                    $ib1->status = $ibStatus;
                     $ib1->save();
                 }
             }
@@ -3115,7 +3140,20 @@ class AjaxController extends Controller
                     'ib_plan_details_id' => $ibGroup,
                     // 'indexId' => random_int(100000, 999999),
                 ]);
-
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'client_id' => $clientId,
+                    'ib_status' => $ibStatus,
+                    'ib_group' => $ibGroup,
+                    'remark' => 'Ib Request'
+                ])
+            ->log('Ib Request');
             $cacheKey = 'ib1_' . $clientId;
             Cache::forget($cacheKey);
 
