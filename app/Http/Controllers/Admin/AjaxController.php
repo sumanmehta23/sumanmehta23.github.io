@@ -280,6 +280,20 @@ class AjaxController extends Controller
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
             Gate::forUser($admin)->authorize('client:impersonate',$client);
+            activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'username' =>auth()->guard('admin')->user()->username,
+                'user_id' =>auth()->guard('admin')->user()->id,
+                'client_email' => $client->email,
+                'client_user_id' => $client->id,
+                'remark' => 'Switch To User'
+            ])
+        ->event('update')
+        ->log('Switch To User');
             // Log in as the new user
             Auth::login($client);
             Session::put('admin', $admin);

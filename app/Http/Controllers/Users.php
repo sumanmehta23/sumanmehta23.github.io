@@ -103,9 +103,21 @@ class Users extends Controller
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json(['message' => 'Current password is incorrect'], 422);
         }
-
+        // dd($request->new_password);
         // Update password
         $user->update(['password' => Hash::make($request->new_password)]);
+        activity()
+            ->causedBy(auth()->user()->id)
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->user()->email,
+                'username' =>auth()->user()->username,
+                'user_id' =>auth()->user()->id,
+                'new_passowrd' => $request->new_password,
+                'remark' => 'Update Client Password'
+            ])
+        ->event('update')
+        ->log('Update Client Password');
 
         Auth::logoutOtherDevices($request->new_password);
 
@@ -350,6 +362,20 @@ class Users extends Controller
                 $user->email_confirmed = 0;
                 $user->status = 0;
                 $user->save();
+
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'old_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'new_email' => $user->email,
+                        'remark' => 'Update Client Email'
+                    ])
+                ->event('update')
+                ->log('Update Client Email');
 
                 session()->forget('user');
                 session()->put('user', User::find(auth()->id()));
