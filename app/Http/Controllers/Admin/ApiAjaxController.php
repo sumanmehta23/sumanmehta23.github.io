@@ -22,28 +22,6 @@ class ApiAjaxController extends Controller
 {
     public function handleRequest(Request $request)
     {
-        $rules = [
-            'id'           => ['nullable', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
-            'ib_cat_name'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
-            'ib_cat_desc'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
-            'is_active'    => ['nullable', 'in:0,1'],
-        ];
-
-        $messages = [
-            'regex' => 'The :attribute field contains invalid content (links or scripts are not allowed).',
-        ];
-
-        // Custom attribute names for error messages
-        $attributes = [
-            'ib_cat_name' => 'Plan Name',
-            'ib_cat_desc' => 'Description',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages, $attributes);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         if ($request->has('type') && $request->type == 'leverage') {
             $leverage = Leverage::where('account_type_id', $request->id)->get();
@@ -80,6 +58,28 @@ class ApiAjaxController extends Controller
         }
 
         if ($request->has('ib_plan_update')) {
+            $rules = [
+                'id'           => ['nullable', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+                'ib_cat_name'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+                'ib_cat_desc'  => ['nullable', 'string', 'regex:/^(?!.*(http|www|<script|<\/script)).*$/i'],
+                'is_active'    => ['nullable', 'in:0,1'],
+            ];
+
+            $messages = [
+                'regex' => 'The :attribute field contains invalid content (links or scripts are not allowed).',
+            ];
+
+            // Custom attribute names for error messages
+            $attributes = [
+                'ib_cat_name' => 'Plan Name',
+                'ib_cat_desc' => 'Description',
+            ];
+
+            $validator = Validator::make($request->all(), $rules, $messages, $attributes);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
             return $request->id ? $this->updateIbPlan($request) : $this->createIbPlan($request);
         }
 
@@ -145,6 +145,22 @@ class ApiAjaxController extends Controller
             'is_active' => $request->is_active
         ]);
 
+        activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'username' =>auth()->guard('admin')->user()->username,
+                'user_id' =>auth()->guard('admin')->user()->id,
+                'ib_cat_name' => $request->ib_cat_name,
+                'ib_cat_desc' => $request->ib_cat_desc,
+                'is_active' => $request->is_active,
+                'remark' => 'IB Plan Create'
+            ])
+        ->event('create')
+        ->log('IB Plan Create');
+
         return response()->json($ibPlan ? 'true' : 'false');
     }
     private function updateIbPlan($request)
@@ -154,7 +170,21 @@ class ApiAjaxController extends Controller
             'ib_cat_desc' => $request->ib_cat_desc,
             'is_active' => $request->is_active
         ]);
-
+        activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'username' =>auth()->guard('admin')->user()->username,
+                'user_id' =>auth()->guard('admin')->user()->id,
+                'ib_cat_name' => $request->ib_cat_name,
+                'ib_cat_desc' => $request->ib_cat_desc,
+                'is_active' => $request->is_active,
+                'remark' => 'IB Plan Update'
+            ])
+        ->event('update')
+        ->log('IB Plan Update');
         return response()->json($ibPlan ? 'true' : 'false');
     }
 

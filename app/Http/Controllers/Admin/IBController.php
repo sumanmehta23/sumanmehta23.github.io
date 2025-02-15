@@ -193,7 +193,6 @@ class IBController extends Controller
         $status = $request->input('status');
         $levels = $request->input('level');
         $email = $request->session()->get('alogin');
-
         try {
 
             DB::beginTransaction();
@@ -219,6 +218,23 @@ class IBController extends Controller
                IbPlanDetails::create($data);
             }
             DB::commit();
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'ib_category_id' => $ib_category_id,
+                    'acc_type' => $acc_type,
+                    'status' => $status,
+                    'levels' => count($levels),
+                    'remark' => 'IB Commission Create'
+                ])
+            ->event('create')
+            ->log('IB Commission Create');
 
             alert()->success("IB Plan Successfully Updated");
             return redirect("/admin/ib_settings");
@@ -285,6 +301,22 @@ class IBController extends Controller
                     IbPlanDetails::create($data);
                 }
             }
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'ib_category_id' => $ibPlanId,
+                    'acc_type' => $accType,
+                    'levels' => count($level),
+                    'remark' => 'IB Commission Update'
+                ])
+            ->event('update')
+            ->log('IB Commission Update');
 
             // Return a success message using SweetAlert or any preferred method
             return redirect("/admin/ib_settings")->with('success', 'IB Plan Successfully Updated');
