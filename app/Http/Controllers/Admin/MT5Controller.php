@@ -146,6 +146,21 @@ class MT5Controller extends Controller
                         'leverage' => $leverage,
                         'account_type_id' => $account_type_id
                     ]);
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'code' => $code,
+                        'leverage' => $leverage,
+                        'account_type_id' => $account_type_id,
+                        'remark' => 'CRM Update Group Leverage'
+                    ])
+                ->event('update')
+                ->log('CRM Update Group Leverage');
                 return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
             }
         }
@@ -169,6 +184,20 @@ class MT5Controller extends Controller
                         $account->trader_password = $new_password;
                         $account->save(); // Save will apply casting and encrypt the password
                     }
+                    activity()
+                        ->causedBy(auth()->guard('admin')->user())
+                        ->withProperties([
+                            'ip' => request()->ip(),
+                            'admin_email' => auth()->guard('admin')->user()->email,
+                            'userRole' =>auth()->guard('admin')->user()->userRole,
+                            'username' =>auth()->guard('admin')->user()->username,
+                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'code' => $login,
+                            'new_password' => $new_password,
+                            'remark' => 'CRM Update Master Password'
+                        ])
+                    ->event('update')
+                    ->log('CRM Update Master Password');
                     return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
                 }
             }
@@ -183,6 +212,20 @@ class MT5Controller extends Controller
                         $account->invester_password = $new_password;
                         $account->save(); // Save will apply casting and encrypt the password
                     }
+                    activity()
+                        ->causedBy(auth()->guard('admin')->user())
+                        ->withProperties([
+                            'ip' => request()->ip(),
+                            'admin_email' => auth()->guard('admin')->user()->email,
+                            'userRole' =>auth()->guard('admin')->user()->userRole,
+                            'username' =>auth()->guard('admin')->user()->username,
+                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'code' => $login,
+                            'new_password' => $new_password,
+                            'remark' => 'CRM Update Investor Password'
+                        ])
+                    ->event('update')
+                    ->log('CRM Update Investor Password');
                     return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
                 }
             }
@@ -236,6 +279,24 @@ class MT5Controller extends Controller
                     'code' => $account->code,
                     'trading_deposited' => $amount,
                 ]);
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'client_id' => $user->id,
+                        'client_email' => $email,
+                        'deposit_amount' => $amount,
+                        'code' => $code,
+                        'account_id' => $account->id,
+                        'remark' => 'CRM Deposit'
+                    ])
+                ->event('create')
+                ->log('CRM Deposit');
+
                 $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
                 $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
@@ -318,6 +379,25 @@ class MT5Controller extends Controller
                     'bonus_currency' => $deposit_currency,
                     // 'created_by' => session('alogin')
                 ]);
+
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'client_id' => $user->id,
+                        'client_email' => $email,
+                        'bonus_amount' => $amount,
+                        'bonus_type' => $comment,
+                        'code' => $code,
+                        'account_id' => $account->id,
+                        'remark' => 'CRM Deposit Bonus'
+                    ])
+                ->event('create')
+                ->log('CRM Bonus');
 
                 $toEmail = $email;
                 $from = settings()['email_from_address'];
@@ -403,6 +483,25 @@ class MT5Controller extends Controller
                     // 'created_by' => session('alogin')
                 ]);
 
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'client_id' => $user->id,
+                        'client_email' => $email,
+                        'bonus_amount' => $amount,
+                        'bonus_type' => $comment,
+                        'code' => $code,
+                        'account_id' => $account->id,
+                        'remark' => 'CRM Credit Bonus'
+                    ])
+                ->event('create')
+                ->log('CRM Bonus');
+
                 $toEmail = $email;
                 $from = settings()['email_from_address'];
                 $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
@@ -468,7 +567,23 @@ class MT5Controller extends Controller
                     'Status'=>1,
                     'created_by' => session('alogin')
                 ]);
-
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'client_id' => $user->id,
+                        'client_email' => $email,
+                        'withdrawal_amount' => $amount,
+                        'code' => $code,
+                        'account_id' => $account->id,
+                        'remark' => 'CRM Withdraw'
+                    ])
+                ->event('create')
+                ->log('CRM Withdraw');
                 // Update total_balance table
                 // DB::table('total_balance')->insert([
                 //     'email' => $email,

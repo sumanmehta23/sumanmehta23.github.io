@@ -178,6 +178,7 @@ class ClientController extends Controller
                     'rm_id' => $rm_id,
                     'remark' => 'RM Request'
                 ])
+            ->event('update')
             ->log('RM Request');
             return redirect()->back()->with('success', 'RM Details Updated');
         }
@@ -304,7 +305,22 @@ class ClientController extends Controller
                         'status' => $status,
                         'email_confirmed' => $emailConfirmed,
                     ]);
-
+                    activity()
+                        ->causedBy(auth()->guard('admin')->user())
+                        ->withProperties([
+                            'ip' => request()->ip(),
+                            'admin_email' => auth()->guard('admin')->user()->email,
+                            'userRole' =>auth()->guard('admin')->user()->userRole,
+                            'username' =>auth()->guard('admin')->user()->username,
+                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'client_id' => $user->id,
+                            'client_email' => $email,
+                            'client_password' => $password,
+                            'status' => $status,
+                            'remark' => 'Create Client'
+                        ])
+                    ->event('create')
+                    ->log('Create Client');
                     if ($user) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
@@ -478,6 +494,7 @@ class ClientController extends Controller
                         'client_email' => $user->email,
                         'remark' => 'Update Client Details'
                     ])
+                ->event('update')
                 ->log('Update Client Details');
                 // $affectedRows = DB::table('aspnetusers')
                 //     ->where(DB::raw('id'), $user_id)

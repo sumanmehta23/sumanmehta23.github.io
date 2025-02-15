@@ -106,6 +106,7 @@ class InternalTransfer extends Controller
                     'transfer_amount' => $transferable_amount,
                     'remark' => 'Internal Transfer'
                 ])
+        ->event('create')
         ->log('Internal Transfer');
         // Withdraw from the first account
         $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);

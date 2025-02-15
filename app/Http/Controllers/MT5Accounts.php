@@ -315,6 +315,7 @@ class MT5Accounts extends Controller
                             'ib' => $ib,
                             'remark' => 'Create Live Account'
                         ])
+                ->event('create')
                 ->log('Create Live Account');
                 Account::create([
                     'user_id' => $user->id,
@@ -351,6 +352,7 @@ class MT5Accounts extends Controller
                         'ib' => $ib,
                         'remark' => 'Create Live Account'
                     ])
+            ->event('create')
             ->log('Create Live Account');
             $useraccount = Account::create([
                 'user_id' => $user->id,
@@ -514,6 +516,7 @@ class MT5Accounts extends Controller
                                     'ib' => $ib,
                                     'remark' => 'Create Live Account'
                                 ])
+                        ->event('create')
                         ->log('Create Live Account');
                     if($account)
                     {
@@ -762,7 +765,22 @@ class MT5Accounts extends Controller
 
             if ($account) {
                 $account->delete(); // Soft delete the account
-
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'client_id' => $account->user_id,
+                        'account_id' => $account->id,
+                        'code' => $account->code,
+                        'account_email' => $account->email,
+                        'remark' => 'Delete Account'
+                    ])
+                ->event('delete')
+                ->log('Delete Account');
                 // Refresh the model to include the `deleted_at` timestamp
                 $account->refresh();
 
@@ -871,6 +889,7 @@ class MT5Accounts extends Controller
                             'leverage' => $new_user->Leverage,
                             'remark' => 'Create Demo Account'
                         ])
+                ->event('create')
                 ->log('Create Demo Account');
                 $account=Account::create([
                     'user_id' => $user->id,

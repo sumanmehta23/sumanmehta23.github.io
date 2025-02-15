@@ -142,6 +142,7 @@ class TradeWithdrawal extends Controller
                         'withdraw_amount' => $balance,
                         'remark' => 'Account Withdraw'
                     ])
+            ->event('create')
             ->log('Account Withdraw');
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {

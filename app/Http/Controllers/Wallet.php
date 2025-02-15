@@ -484,6 +484,7 @@ class Wallet extends Controller
                         'payment_type' => 'CreditCardPayissa',
                         'remark' => 'Wallet Deposit'
                     ])
+                ->event('create')
                 ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
@@ -512,6 +513,7 @@ class Wallet extends Controller
                         'payment_type' => 'NowPayment',
                         'remark' => 'Wallet Deposit'
                     ])
+                ->event('create')
                 ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
@@ -843,6 +845,7 @@ class Wallet extends Controller
                     'withdraw_transaction_fee' => $withdraw_transaction_fee,
                     'remark' => 'Wallet Withdraw'
                 ])
+            ->event('create')
             ->log('Wallet Withdraw');
         WalletWithdraw::create([
             'client_wallet_id' => $clientWallet->id,

@@ -147,6 +147,7 @@ class TradeDepositController extends Controller
                     'deposit_amount' => $depositamount,
                     'remark' => 'Account Deposit'
                 ])
+        ->event('create')
         ->log('Account Deposit');
         $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
 

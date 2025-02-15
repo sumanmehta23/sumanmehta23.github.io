@@ -101,6 +101,7 @@ class Ib extends Controller
                             'new' => $referral_code,
                             'remark' => 'Update Referral'
                         ])
+                ->event('update')
                 ->log('Update Referral');
         if ($ib1) {
 
@@ -453,6 +454,7 @@ class Ib extends Controller
                         'code' => $account->code,
                         'remark' => 'Commission Transfer'
                     ])
+                ->event('create')
                 ->log('Commission Transfer');
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);

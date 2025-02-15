@@ -198,14 +198,15 @@ class AjaxController extends Controller
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
                     'ip' => request()->ip(),
-                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'user_email' => auth()->guard('admin')->user()->email,
                     'userRole' =>auth()->guard('admin')->user()->userRole,
                     'username' =>auth()->guard('admin')->user()->username,
-                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'user_id' =>auth()->guard('admin')->user()->id,
                     'send_to' => $user->id,
                     'receiver_email' => $user->email,
                     'remark' => 'Client Email Confirmation'
                 ])
+            ->event('update')
             ->log('Email Confirmation');
             return ['success' => true];
         } else {
@@ -2838,6 +2839,19 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function($q) use ($searchValue) {
+                            $q->where('id', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('name', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            // ->orWhere('total_deposit', 'LIKE', "%{$searchValue}%")
+                            // ->orWhere('total_withdrawal', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
                 ->addColumn('id', function($row){
                     return $row->id;
                 })
@@ -3001,15 +3015,16 @@ class AjaxController extends Controller
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
                     'ip' => request()->ip(),
-                    'email' => auth()->guard('admin')->user()->email,
+                    'user_email' => auth()->guard('admin')->user()->email,
                     'userRole' =>auth()->guard('admin')->user()->userRole,
                     'username' =>auth()->guard('admin')->user()->username,
-                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'user_id' =>auth()->guard('admin')->user()->id,
                     'email_confirmed' => isset($data['email_confirmed']) ?? '',
                     'status' => isset($data['status']) ?? '',
                     'kyc_verify' => isset($data['kyc_verify']) ?? '',
                     'remark' => 'Update Client Status'
                 ])
+            ->event('update')
             ->log('Update Client Status');
 
             return ['success' => true];
@@ -3144,15 +3159,16 @@ class AjaxController extends Controller
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
                     'ip' => request()->ip(),
-                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'user_email' => auth()->guard('admin')->user()->email,
                     'userRole' =>auth()->guard('admin')->user()->userRole,
                     'username' =>auth()->guard('admin')->user()->username,
-                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'user_id' =>auth()->guard('admin')->user()->id,
                     'client_id' => $clientId,
                     'ib_status' => $ibStatus,
                     'ib_group' => $ibGroup,
                     'remark' => 'Ib Request'
                 ])
+            ->event('update')
             ->log('Ib Request');
             $cacheKey = 'ib1_' . $clientId;
             Cache::forget($cacheKey);
@@ -3200,6 +3216,22 @@ class AjaxController extends Controller
                         'status' => $ibStatus,
                         'ib_plan_details_id' => $ibGroup,
                     ]);
+
+                    activity()
+                        ->causedBy(auth()->guard('admin')->user())
+                        ->withProperties([
+                            'ip' => request()->ip(),
+                            'user_email' => auth()->guard('admin')->user()->email,
+                            'userRole' =>auth()->guard('admin')->user()->userRole,
+                            'username' =>auth()->guard('admin')->user()->username,
+                            'user_id' =>auth()->guard('admin')->user()->id,
+                            'ib_plan_details_id' => $ibGroup,
+                            'ib_status' => $ibStatus,
+                            'ib_id' => $clientId,
+                            'remark' => 'Bulk Ib Request'
+                        ])
+                    ->event('update')
+                    ->log('Bulk Ib Request');
 
                     Cache::forget('ib1_' . $clientId);
 

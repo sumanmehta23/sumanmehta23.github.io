@@ -150,6 +150,7 @@ class Transactions extends Controller
                         'status' => $status,
                         'remark' => 'Wallet Withdraw Cancel By Client'
                     ])
+            ->event('delete')
             ->log('Wallet Withdraw Cancel');
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
