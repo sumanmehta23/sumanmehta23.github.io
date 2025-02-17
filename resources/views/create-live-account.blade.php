@@ -50,7 +50,13 @@
                                                                 <label class="auth-megaoption"
                                                                     for="option{{ $acc->ac_index }}"
                                                                     style="height: 230px !important;">
-                                                                    <div class="d-block m-4">
+                                                                    <div class="d-block m-4"
+                                                                        @php
+                                                                            echo strtoupper($acc->ac_name) == 'PRO' ? 'style="width: 80% !important;"' : '';
+                                                                        @endphp>
+
+
+
                                                                         <span>
                                                                             <span class="h5 d-block">
                                                                                 <strong class="float-end">
@@ -59,16 +65,12 @@
                                                                                 </strong>
                                                                                 {{ strtoupper($acc->ac_name) }}
                                                                             </span>
-                                                                            @if ( strtoupper($acc->ac_name) != 'PRO')
-                                                                                <span class="h6 d-block mt-4 f-w-400 f-12"> A
-                                                                                    commission-free account, perfect for new
-                                                                                    traders to start investing.
-                                                                                </span>
-                                                                            @else
-                                                                                <span class="h6 d-block mt-4 f-w-400 f-12" display-none style="width: 80%"> Account, perfect for new
-                                                                                    traders to start investing.
+                                                                            @if (strtoupper($acc->ac_name) != 'PRO')
+                                                                                <span class="h6 d-block mt-4 f-w-400 f-12" style="width: 80%;">
+                                                                                    A commission-free account, perfect for new traders to start investing.
                                                                                 </span>
                                                                             @endif
+
                                                                             <hr>
                                                                             <span
                                                                                 class="h6 d-block mt-3 f-w-300 f-14"><strong
