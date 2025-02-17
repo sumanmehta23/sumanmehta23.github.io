@@ -180,6 +180,14 @@
                                     $account = "<a href='/admin/view_account_details/{$client_account->id}' style='color: #007bff;'>{$log->properties['code']}</a>";
                                 }
 
+                                if (isset($log->properties['to']) && isset($log->properties['from'])) {
+                                    $to_account = \App\Models\Account::where('code', $log->properties['to'])->first();
+                                    $from_account = \App\Models\Account::where('code', $log->properties['from'])->first();
+                                    // dd($client_account);
+                                    $toAccount_url = "<a href='/admin/view_account_details/{$to_account->id}' style='color: #007bff;'>{$log->properties['to']}</a>";
+                                    $fromAccount_url = "<a href='/admin/view_account_details/{$from_account->id}' style='color: #007bff;'>{$log->properties['from']}</a>";
+                                }
+
                                 // Extract the date and time
                                 $date = $log->created_at->format('Y-m-d');
                                 $time = $log->created_at->format('H:i:s');
@@ -202,6 +210,21 @@
                                     case 'Incorrect login details':
                                         $logDescription = "<div class='log_warning'>
                                                             <span>User {$userLink} entered wrong login details</span>
+                                                        </div>";
+                                        break;
+                                    case 'Invalid email or unverified account':
+                                        $logDescription = "<div class='log_warning'>
+                                                            <span style='color: #dc3545;'>User {$userLink} entered wrong email details</span>
+                                                        </div>";
+                                        break;
+                                    case 'Switch To User':
+                                        $logDescription = "<div class='log_warning'>
+                                                            <span style='color: #28a745;'>User {$userLink} switched to <a href='/admin/client_details/{$log->properties['client_user_id']}' style='color: #007bff;'>{$log->properties['client_email']}</a></span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Client Email':
+                                        $logDescription = "<div class='log_warning'>
+                                                            <span style='color: #28a745;'>User {$userLink} entered wrong email details</span>
                                                         </div>";
                                         break;
 
@@ -269,6 +292,12 @@
                                         $withdrawal_amount = $log->properties['deposit_amount'];
                                         $logDescription = "<div class='log_warning'>
                                                             <span style='color: #28a745;'>User {$userLink} deposit  \${$withdrawal_amount} to account {$account}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Internal Transfer':
+                                        $transfer_amount = $log->properties['transfer_amount'];
+                                        $logDescription = "<div class='log_warning'>
+                                                            <span style='color: #28a745;'>User {$userLink} internal transfer  \${$transfer_amount} from account {$fromAccount_url} to {$toAccount_url}.</span>
                                                         </div>";
                                         break;
 
