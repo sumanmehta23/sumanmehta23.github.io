@@ -291,6 +291,23 @@ class Transaction extends Controller
                 'withdraw_amount' => $depositAmount,
             ]);
 
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'client_email' => $email,
+                    'userRole' =>auth()->guard('admin')->user()->userRole,
+                    'username' =>auth()->guard('admin')->user()->username,
+                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'approved_amount' => $depositAmount,
+                    'reason' => $rejection_reason,
+                    'transaction_id' => $did,
+                    'remark' => 'Manually Approved Wallet Withdraw'
+                ])
+            ->event('update')
+            ->log('Manually Approved Wallet Withdraw');
+
 
             $deposit_details = WalletWithdraw::with('user')
                     ->whereRaw('id = ?', [$did])
@@ -452,10 +469,12 @@ class Transaction extends Controller
                         'ip' => request()->ip(),
                         'user_email' => auth()->guard('admin')->user()->email,
                         'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'client_email' => $email,
                         'username' =>auth()->guard('admin')->user()->username,
                         'user_id' =>auth()->guard('admin')->user()->id,
-                        'approved_amount' => $amount,
-                        'transaction_id' => $transaction->id,
+                        'approved_amount' => $depositAmount,
+                        'transaction_id' => $transaction_id,
+                        'reason' => $rejection_reason,
                         'remark' => 'Approve Wallet Withdraw'
                     ])
                 ->event('update')
@@ -489,7 +508,22 @@ class Transaction extends Controller
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
             }elseif($status==3 && $rejection_reason == 'Invalid cryptocurrency address'){
-
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => auth()->guard('admin')->user()->email,
+                        'client_email' => $email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'approved_amount' => $depositAmount,
+                        'reason' => $rejection_reason,
+                        'transaction_id' => $transaction_id,
+                        'remark' => 'Reject Wallet Withdraw'
+                    ])
+                ->event('update')
+                ->log('Reject Wallet Withdraw');
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
                     // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];

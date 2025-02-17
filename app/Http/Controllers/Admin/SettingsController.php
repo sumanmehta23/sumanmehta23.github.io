@@ -19,7 +19,7 @@ class SettingsController extends Controller
 
     public function logs(Request $request)
     {
-        $logs = Activity::orderBy('created_at', 'desc')->paginate(20);
+        $logs = Activity::orderBy('created_at', 'desc')->paginate(10);
         return view('admin.logs'
         ,compact('logs')
         );
