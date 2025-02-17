@@ -446,6 +446,21 @@ class Transaction extends Controller
                     }
                 }
 
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'approved_amount' => $amount,
+                        'transaction_id' => $transaction->id,
+                        'remark' => 'Approve Wallet Withdraw'
+                    ])
+                ->event('update')
+                ->log('Approve Wallet Withdraw');
+
                 $deposit_details = WalletWithdraw::with('user')
                     ->whereRaw('id = ?', [$did])
                     ->first();

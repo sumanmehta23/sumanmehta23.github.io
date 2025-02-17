@@ -87,7 +87,7 @@
                                         $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
                                         $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style='color: #dc3545;'>{$log->properties['wallet_withdraw_id']}</a>";
                                         $logDescription = "<div class='log_warning'>
-                                                            <span>User {$user->email} withdrew \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link}</span>
+                                                            <span>User {$userLink} withdrew \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link}</span>
                                                         </div>";
                                         break;
 
@@ -103,8 +103,8 @@
                                 </div>
                                 <div class="log-time">
                                     <div class="log-circle-wrapper log-circle">
-                                        <div class="log_timefont">{{ $date }}</div>
-                                        <div class="log_timefont">{{ $time }}</div>
+                                        <div style="font-size: 12px">{{ $date }}</div>
+                                        <div style="font-size: 12px">{{ $time }}</div>
                                     </div>
                                 </div>
                                 <div class="log-description">
@@ -115,8 +115,6 @@
                             </div>
                         @endforeach
                     </div>
-
-
                 </div>
                 </div>
             </div>
