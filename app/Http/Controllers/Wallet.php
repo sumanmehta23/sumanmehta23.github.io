@@ -836,17 +836,6 @@ class Wallet extends Controller
             $withdrawAmount= $withdrawAmount;
             $withdraw_transaction_fee = null;
         }
-        activity()->causedBy(auth()->user()->id)
-            ->withProperties(
-                [
-                    'ip' => $request->ip(),
-                    'email' => auth()->user()->email,
-                    'withdraw_amount' => $withdrawAmount,
-                    'withdraw_transaction_fee' => $withdraw_transaction_fee,
-                    'remark' => 'Wallet Withdraw'
-                ])
-            ->event('create')
-            ->log('Wallet Withdraw');
         WalletWithdraw::create([
             'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,
@@ -907,6 +896,18 @@ class Wallet extends Controller
             if ($new_wallet_Withdrawal->verified  == 0) {
                 $new_wallet_Withdrawal->verified = 1;
                 $new_wallet_Withdrawal->save();
+                activity()->causedBy(auth()->user())
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => auth()->user()->email,
+                        'withdraw_amount' => $new_wallet_Withdrawal->withdraw_amount,
+                        'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
+                        'wallet_withdraw_id' => $walletWithdrawal_id,
+                        'remark' => 'Wallet Withdraw'
+                    ])
+                ->event('create')
+                ->log('Wallet Withdraw');
                 $from = $settings['email_from_address'];
                 $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
                 $htmlContent = "";

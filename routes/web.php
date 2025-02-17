@@ -240,8 +240,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
 
-    Route::get('/getLogs', [AjaxController::class, 'getLogs']);
-
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
@@ -265,6 +263,20 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
+
+
+    // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    // Route::get('/users/{user}', 'Users@show')->name('users.show');
+    // Route::get('/transactions/{transaction}', 'Transaction@show')->name('transactions.show');
+
+    // Route::get('/users/{user}', [Users::class, 'profile'])->name('users.show');
+    // Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
+    // Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
+    // Route::get('/transactions/{transaction}', 'TransactionController@show')->name('admin.transactions.show');
+    // Route::get('/orders/{order}', 'OrderController@show')->name('admin.orders.show');
+    // Route::get('/products/{product}', 'ProductController@show')->name('admin.products.show');
+
+
     Route::middleware(['is_admin'])->group(function () {
 
 

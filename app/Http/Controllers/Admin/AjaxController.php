@@ -2935,49 +2935,7 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function getLogs(Request $request)
-    {
-        $logs = Activity::select('*');
-        $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
 
-        $logs->orderBy('created_at', 'desc');
-
-        if ($request->ajax()) {
-            return DataTables::of($logs)
-                ->addColumn('event', function($row){
-                    return $row->event?$row->event:$row->description;
-                })
-                ->addColumn('user', function($row){
-                    $properties = $row->properties;
-                    return $row->user?$row->user->fullname:$properties['email'];
-                })
-                ->addColumn('description', function($row){
-                    $properties = $row->properties;
-                    $type = $row->description;
-                    if($type == 'Authentication' && $row->event == NULL ){
-                        $desc = $properties['remark'];
-                    }else{
-                        $desc ='';
-                    }
-                    return $desc;
-                })
-                ->addColumn('created_at', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    $time = date('H:i:s', strtotime($row->created_at));
-                    return "<div class='lh-1'>
-                                $date
-                            </div>
-                            <div class='lh-2 text-muted'>
-                                $time
-                            </div>";
-                })
-                ->rawColumns(['user','created_at','description'])
-                ->make(true);
-        }
-
-        return response()->json(['message' => 'Invalid request'], 400);
-    }
 
 //     public function getPendingIbUsers()
 //     {

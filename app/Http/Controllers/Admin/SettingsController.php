@@ -19,7 +19,11 @@ class SettingsController extends Controller
 
     public function logs(Request $request)
     {
-        return view('admin.logs');
+        $logs = Activity::latest()->paginate(20);
+        // dd($logs);
+        return view('admin.logs'
+        ,compact('logs')
+        );
     }
 
     private function extractEvent($message)
