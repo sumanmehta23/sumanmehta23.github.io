@@ -59,9 +59,16 @@
                                                                                 </strong>
                                                                                 {{ strtoupper($acc->ac_name) }}
                                                                             </span>
-                                                                            <span class="h6 d-block mt-4 f-w-400 f-12"> A
-                                                                                commission-free account, perfect for new
-                                                                                traders to start investing. </span>
+                                                                            @if ( strtoupper($acc->ac_name) != 'PRO')
+                                                                                <span class="h6 d-block mt-4 f-w-400 f-12"> A
+                                                                                    commission-free account, perfect for new
+                                                                                    traders to start investing.
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="h6 d-block mt-4 f-w-400 f-12" display-none style="width: 80%"> Account, perfect for new
+                                                                                    traders to start investing.
+                                                                                </span>
+                                                                            @endif
                                                                             <hr>
                                                                             <span
                                                                                 class="h6 d-block mt-3 f-w-300 f-14"><strong
