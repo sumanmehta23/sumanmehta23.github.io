@@ -146,10 +146,11 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
+
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
     Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');
     Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');

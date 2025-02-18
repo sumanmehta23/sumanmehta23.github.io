@@ -812,7 +812,7 @@ class Wallet extends Controller
             $withdrawAmount= $withdrawAmount;
             $withdraw_transaction_fee = null;
         }
-        WalletWithdraw::create([
+        $WalletWithdrawal = WalletWithdraw::create([
             'client_wallet_id' => $clientWallet->id,
             'email' => $userEmail,
             'user_id' => $user->id,
@@ -831,10 +831,7 @@ class Wallet extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $WalletWithdrawal = WalletWithdraw::where('user_id', $user->id)
-                ->latest('created_at') // Specify the column to order by
-                ->first();
-
+        
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                 '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.
