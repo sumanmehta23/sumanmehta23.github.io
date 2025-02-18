@@ -98,7 +98,9 @@
                 <div class="card custom-card">
                 <div class="card-body">
                     <div class="activity-log justify-content-center">
+
                         @foreach($logs as $index => $log)
+                        {{-- {{ dd($log) }} --}}
                             @php
                                 $user_id = $log->causer_id;
 
@@ -113,11 +115,9 @@
                                         }
 
                                 if (isset($log->properties['code']) && $log->properties['code'] != 'Pending' ) {
-                                    $client_account = \App\Models\Account::where('code', $log->properties['code'])->first();
-                                    // dd($client_account);
+                                    $client_account = \App\Models\Account::withTrashed()->where('code', $log->properties['code'])->first();
                                     $account = "<a href='/admin/view_account_details/{$client_account->id}' style='color: #007bff;'>{$log->properties['code']}</a>";
                                 }
-
                                 if (isset($log->properties['to']) && isset($log->properties['from'])) {
                                     $to_account = \App\Models\Account::where('code', $log->properties['to'])->first();
                                     $from_account = \App\Models\Account::where('code', $log->properties['from'])->first();
@@ -173,21 +173,24 @@
                                         break;
 
                                     case 'Create Demo Account':
-                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style=''>{$log->properties['code']}</a>";
                                         $logDescription = "<div class='log_success'>
-                                                            <span>User {$userLink} created Demo account {$accountLink} with amount {$log->properties['amount']} and leverage {$log->properties['leverage']}</span>
+                                                            <span>User {$userLink} created Demo account {$account} with amount {$log->properties['amount']} and leverage {$log->properties['leverage']}</span>
                                                         </div>";
                                         break;
 
                                     case 'Create Live Account':
-                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style=''>{$log->properties['code']}</a>";
+                                        $code = $log->properties['code'];
+                                        $account_data = \App\Models\Account::withTrashed()->where('code', $code)->first();
+                                        // dd($account_data);
+                                        $client = \App\Models\User::where('id', $account_data->user_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
                                         if ($log->properties['code'] == 'Pending') {
                                             $logDescription = "<div class=''>
                                                                 <span>User {$userLink} sent request for live account with leverage: {$log->properties['leverage']}</span>
                                                             </div>";
                                         } else {
                                             $logDescription = "<div class=''>
-                                                                <span>Live account {$accountLink} issued by {$user->email} with leverage {$log->properties['leverage']}</span>
+                                                                <span>Live account {$account} issued to user {$client_url} by {$user->email} with leverage {$log->properties['leverage']}</span>
                                                             </div>";
                                         }
                                         break;
@@ -325,13 +328,82 @@
                                                         </div>";
                                         break;
                                     case 'Delete Account':
-                                        $client_id = $log->properties['send_to'];
+                                        $client_id = $log->properties['client_id'];
+                                        $code = $log->properties['code'];
                                         $client = \App\Models\User::where('id', $client_id)->first();
                                         $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
                                         $logDescription = "<div class=''>
-                                                            <span style=''>User {$userLink} updated {$client_url} details.</span>
+                                                            <span style=''>User {$userLink} deleted client {$client_url} account {$code} .</span>
                                                         </div>";
                                         break;
+                                    case 'CRM Deposit':
+                                        $client_id = $log->properties['client_id'];
+                                        $deposit_amount = $log->properties['deposit_amount'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} deposited \${$deposit_amount} to account {$account} of user {$client_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Withdraw':
+                                        $client_id = $log->properties['client_id'];
+                                        $withdrawal_amount = $log->properties['withdrawal_amount'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} withdraw \${$withdrawal_amount} from account {$account} of user {$client_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Credit Bonus':
+                                        $client_id = $log->properties['client_id'];
+                                        $bonus_amount = $log->properties['bonus_amount'];
+                                        $bonus_type = $log->properties['bonus_type'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} {$bonus_type} \${$bonus_amount} to account {$account} of user {$client_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Deposit Bonus':
+                                        $client_id = $log->properties['client_id'];
+                                        $bonus_amount = $log->properties['bonus_amount'];
+                                        $bonus_type = $log->properties['bonus_type'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User  {$userLink} {$bonus_type} \${$bonus_amount} from account {$account} of user {$client_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Update Investor Password':
+                                        $code = $log->properties['code'];
+                                        $account_data = \App\Models\Account::where('code', $code)->first();
+                                        $client = \App\Models\User::where('id', $account_data->user_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User  {$userLink} updated account investor password of user {$client_url} having account {$account}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Update Master Password':
+                                        $code = $log->properties['code'];
+                                        $account_data = \App\Models\Account::where('code', $code)->first();
+                                        $client = \App\Models\User::where('id', $account_data->user_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User  {$userLink} updated account master password of user {$client_url} having account {$account}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'CRM Update Group Leverage':
+                                        $code = $log->properties['code'];
+                                        // $leverage = $log->properties['leverage'];
+                                        $account_data = \App\Models\Account::where('code', $code)->first();
+                                        $client = \App\Models\User::where('id', $account_data->user_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User  {$userLink} updated Group/Leverage of user {$client_url} having account {$account}.</span>
+                                                        </div>";
+                                        break;
+
+
 
                                     default:
                                         $logDescription = "<div class=''>
