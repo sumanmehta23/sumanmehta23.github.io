@@ -179,16 +179,16 @@
                                         break;
 
                                     case 'Create Live Account':
-                                        $code = $log->properties['code'];
-                                        $account_data = \App\Models\Account::withTrashed()->where('code', $code)->first();
-                                        // dd($account_data);
-                                        $client = \App\Models\User::where('id', $account_data->user_id)->first();
-                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+
                                         if ($log->properties['code'] == 'Pending') {
                                             $logDescription = "<div class=''>
                                                                 <span>User {$userLink} sent request for live account with leverage: {$log->properties['leverage']}</span>
                                                             </div>";
                                         } else {
+                                            $code = $log->properties['code'];
+                                            $account_data = \App\Models\Account::withTrashed()->where('code', $code)->first();
+                                            $client = \App\Models\User::where('id', $account_data->user_id)->first();
+                                            $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
                                             $logDescription = "<div class=''>
                                                                 <span>Live account {$account} issued to user {$client_url} by {$user->email} with leverage {$log->properties['leverage']}</span>
                                                             </div>";
