@@ -18,11 +18,11 @@
 
 .log-time {
     display: inline-block;
-    width: 6%;
+    width: 10%;
     text-align: center;
     font-size: 14px;
     color: #6c757d;
-    padding: 8px;
+    /* padding: 8px; */
     border-radius: 5px;
     background-color: #f1f1f1;
     margin-right: 15px;
@@ -33,7 +33,7 @@
     text-align: center;
     font-size: 14px;
     color: #6c757d;
-    padding: 17px;
+    /* padding: 17px; */
     border-radius: 5px;
     background-color: #f1f1f1;
     margin-right: 15px;
@@ -45,9 +45,8 @@
 
 .log-card {
     background-color: #f8f9fa;
-    padding: 15px;
+    /* padding: 15px; */
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
 }
@@ -197,7 +196,7 @@
 
                                     case 'Wallet Withdraw':
                                         $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
-                                        $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style=''>{$log->properties['wallet_withdraw_id']}</a>";
+                                        $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style='color: #007bff;'>{$log->properties['wallet_withdraw_id']}</a>";
                                         $logDescription = "<div class=''>
                                                             <span>User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link}</span>
                                                         </div>";
@@ -394,13 +393,76 @@
                                         break;
                                     case 'CRM Update Group Leverage':
                                         $code = $log->properties['code'];
-                                        // $leverage = $log->properties['leverage'];
                                         $account_data = \App\Models\Account::where('code', $code)->first();
                                         $client = \App\Models\User::where('id', $account_data->user_id)->first();
                                         $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
                                         $logDescription = "<div class=''>
-                                                            <span style=''>User  {$userLink} updated Group/Leverage of user {$client_url} having account {$account}.</span>
+                                                            <span style=''>User {$userLink} updated Group/Leverage of user {$client_url} having account {$account}.</span>
                                                         </div>";
+                                        break;
+                                    case 'IB Plan Create':
+                                        $ib_cat_name = $log->properties['ib_cat_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} created IB Plan {$ib_cat_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'IB Plan Update':
+                                        $ib_cat_name = $log->properties['ib_cat_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} updated IB Plan {$ib_cat_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'IB Commission Create':
+                                        $ib_category_id = $log->properties['ib_category_id'];
+                                        $ib_plan =  \App\Models\IbCategory::where('id', $ib_category_id)->first();
+                                        $acc_type = $log->properties['acc_type'];
+                                        $ib_group =  \App\Models\AccountType::where('id', $acc_type)->first();
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} created IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'IB Commission Update':
+                                        $ib_category_id = $log->properties['ib_category_id'];
+                                        $ib_plan =  \App\Models\IbCategory::where('id', $ib_category_id)->first();
+                                        $acc_type = $log->properties['acc_type'];
+                                        $ib_group =  \App\Models\AccountType::where('id', $acc_type)->first();
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} update IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Create Role':
+                                        $role_name = $log->properties['role_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} created new role {$role_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Role':
+                                        $role_name = $log->properties['role_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} updated role {$role_name}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Ib Request':
+                                        $ib_group = $log->properties['ib_group'];
+                                        $ib_plan =  \App\Models\IbPlanDetails::with('plan')->where('id', $ib_group)->first();
+                                        $ib_status = $log->properties['ib_status'];
+                                        $client_id = $log->properties['client_id'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        if ($ib_status==1) {
+                                            $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name}.</span>
+                                                        </div>";
+                                        }elseif($ib_status==0){
+                                            $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to pending.</span>
+                                                        </div>";
+                                        }elseif($ib_status==2){
+                                            $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to rejected.</span>
+                                                        </div>";
+                                        }
+
                                         break;
 
 
@@ -414,19 +476,19 @@
                             @endphp
 
                             <div class="activity-item">
-                                <div class="log-time">
+                                <div class="log-time px-1 py-2">
                                     <div class="log-circle-wrapper">
-                                        <div style="font-size: 12px">{{ $date }}</div>
-                                        <div style="font-size: 12px">{{ $time }}</div>
+                                        <div style="font-size: 12px">{{ $date }}{{ $time }}</div>
+                                        {{-- <div style="font-size: 12px">{{ $time }}</div> --}}
                                     </div>
                                 </div>
-                                <div class="log-ip">
+                                <div class="log-ip px-1 py-2">
                                     <div class="log-circle-wrapper">
                                         <div style="font-size: 12px">{{ $ip }}</div>
                                     </div>
                                 </div>
                                 <div class="log-description @if($index % 2 == 0) from-left @else from-right @endif">
-                                    <div class="log-card">
+                                    <div class="log-card px-1 py-2">
                                         {!! $logDescription !!}
                                     </div>
                                 </div>
