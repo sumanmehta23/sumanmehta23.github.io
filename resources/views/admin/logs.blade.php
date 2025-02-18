@@ -29,7 +29,7 @@
 }
 .log-ip {
     display: inline-block;
-    width: 6%;
+    width: 18%;
     text-align: center;
     font-size: 14px;
     color: #6c757d;
