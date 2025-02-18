@@ -3032,6 +3032,7 @@ class AjaxController extends Controller
                 ->withProperties([
                     'ip' => request()->ip(),
                     'user_email' => auth()->guard('admin')->user()->email,
+                    'client_id' => $user_id,
                     'userRole' =>auth()->guard('admin')->user()->userRole,
                     'username' =>auth()->guard('admin')->user()->username,
                     'user_id' =>auth()->guard('admin')->user()->id,

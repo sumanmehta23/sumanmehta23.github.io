@@ -90,6 +90,24 @@ class Wallet extends Controller
             'verified' => 0,
         ]);
 
+        activity()
+            ->causedBy(auth()->user()->id)
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => auth()->user()->email,
+                'username' =>auth()->user()->username,
+                'user_id' =>auth()->user()->id,
+                'wallet_name' => $request->wallet_name,
+                'wallet_currency' => 'USDT',
+                'wallet_network' => $request->wallet_network,
+                'wallet_address' => $request->wallet_address,
+                'verified' => 0,
+                'remark' => 'Created New Wallet Address'
+            ])
+        ->event('create')
+        ->log('Created New Wallet Address');
+
+
         $toEmail = $user->email;
         $type = 'Wallet Details Verification';
         $from = $settings['email_from_address'];
@@ -140,6 +158,22 @@ class Wallet extends Controller
         if ($wallet) {
             $wallet->wallet_delete_verification = true; // or 1, depending on the DB type
             $wallet->save();
+            activity()
+                ->causedBy($wallet->user->id)
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => $wallet->user->email,
+                    'username' =>$wallet->user->username,
+                    'user_id' =>$wallet->user->id,
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_currency' => 'USDT',
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'verified' => 1,
+                    'remark' => 'Verify Wallet Deletion'
+                ])
+            ->event('update')
+            ->log('Verify Wallet Deletion');
         }
 
         $toEmail = $wallet->user->email;
@@ -268,7 +302,6 @@ class Wallet extends Controller
         $wallet_details = $request->all();
         $wallet_id = $request->id;
         $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
-
         $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
 
         if ($pendingWithdrawals > 0) {
@@ -284,6 +317,23 @@ class Wallet extends Controller
             $wallet->wallet_address = $wallet_details['wallet_address'];
             $wallet->status = $wallet_details['status'];
             $wallet->save();
+
+            activity()
+                ->causedBy($wallet->user->id)
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => $wallet->user->email,
+                    'username' =>$wallet->user->username,
+                    'user_id' =>$wallet->user->id,
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_currency' => 'USDT',
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'verified' => 1,
+                    'remark' => 'Edit Wallet Details'
+                ])
+            ->event('update')
+            ->log('Edit Wallet Details');
 
             $settings = settings();
             $from = $settings['email_from_address'];
@@ -321,7 +371,22 @@ class Wallet extends Controller
         $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
         // Delete the wallet
         $deleted = ClientWallet::where('id', $wallet_id)->update(['deleted_at' => now()]);
-
+        activity()
+            ->causedBy($wallet->user->id)
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => $wallet->user->email,
+                'username' =>$wallet->user->username,
+                'user_id' =>$wallet->user->id,
+                'wallet_name' => $wallet->wallet_name,
+                'wallet_currency' => 'USDT',
+                'wallet_network' => $wallet->wallet_network,
+                'wallet_address' => $wallet->wallet_address,
+                'verified' => 1,
+                'remark' => 'Wallet Deleted'
+            ])
+        ->event('update')
+        ->log('Wallet Deleted');
         $settings = settings();
         $from = $settings['email_from_address'];
         $emailSubject = $settings['admin_title'] . ' - Wallet Address Deletion Verified';
@@ -360,10 +425,27 @@ class Wallet extends Controller
         $new_wallet_address = ClientWallet::with('user')->where('user_id', $id)
             ->where('id', $clientWallet_id)
             ->first();
+
         if ($new_wallet_address) {
             if ($new_wallet_address->verified  == 0) {
                 $new_wallet_address->verified = 1;
                 $new_wallet_address->save();
+                activity()
+                    ->causedBy($new_wallet_address->user->id)
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => $new_wallet_address->user->email,
+                        'username' =>$new_wallet_address->user->username,
+                        'user_id' =>$new_wallet_address->user->id,
+                        'wallet_name' => $new_wallet_address->wallet_name,
+                        'wallet_currency' => 'USDT',
+                        'wallet_network' => $new_wallet_address->wallet_network,
+                        'wallet_address' => $new_wallet_address->wallet_address,
+                        'verified' => 1,
+                        'remark' => 'Verified New Wallet Address'
+                    ])
+                ->event('update')
+                ->log('Verified New Wallet Address');
                 $from = $settings['email_from_address'];
                 $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
                 $htmlContent = "";

@@ -50,7 +50,8 @@ class LoginController extends Controller
             activity()->withProperties(
                 [
                     'ip' => $request->ip(),
-                    'email' => $request->input('email')
+                    'email' => $request->input('email'),
+                    'remark' => 'Too many requests'
                 ])
             ->log('Authentication');
             return redirect()->back()->with(

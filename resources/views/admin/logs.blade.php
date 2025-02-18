@@ -6,154 +6,87 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
 }
 
 .activity-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: left;
+    align-items: flex-start;
     position: relative;
-    animation: fadeIn 1s ease-in-out;
-}
-
-.activity-item.from-left {
-    animation: fadeInLeft 1s ease-in-out;
-}
-
-.activity-item.from-right {
-    animation: fadeInRight 1s ease-in-out;
-}
-
-.user-info {
-    flex: 1;
-    text-align: left;
 }
 
 .log-time {
-    position: relative;
+    display: inline-block;
+    width: 6%;
     text-align: center;
-}
-
-.log-circle-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.log-circle {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background-color: #0c5f62;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-size: 14px;
+    color: #6c757d;
+    padding: 8px;
+    border-radius: 5px;
+    background-color: #f1f1f1;
+    margin-right: 15px;
 }
-
-.log-circle-time {
-    margin-top: 5px;
-    font-size: 12px;
-    color: #777;
+.log-ip {
+    display: inline-block;
+    width: 6%;
+    text-align: center;
+    font-size: 14px;
+    color: #6c757d;
+    padding: 17px;
+    border-radius: 5px;
+    background-color: #f1f1f1;
+    margin-right: 15px;
 }
 
 .log-description {
-    flex: 3;
-    padding-left: 20px;
+    flex: 1;
 }
 
 .log-card {
     background-color: #f8f9fa;
-    padding: 10px;
+    padding: 15px;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
 }
 
-.user-email {
-    font-weight: bold;
-    color: #007bff;
+.log-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
-.log_success {
-    color: green;
+.log-card-body {
+    margin-top: 10px;
 }
 
-.log_warning {
-    color: orange;
+.pagination {
+    margin: 0;
 }
 
-.log_danger {
-    color: red;
+.page-item {
+    display: inline-block;
 }
 
-@keyframes fadeInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@media (max-width: 768px) {
-    .activity-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .log-time {
-        margin: 10px 0;
-    }
-
-    .log-description {
-        padding-left: 0;
-        padding-top: 10px;
-    }
-
-    .log-card {
-        width: 100%;
-    }
-}
-.pagination .page-item .page-link {
-    color: #007bff;
+.page-link {
+    padding: 0.5rem 0.75rem;
     border: 1px solid #ddd;
-    padding: 8px 12px;
-    margin: 2px;
-    transition: 0.3s;
-}
-.pagination .page-item .page-link:hover {
-    background-color: #007bff;
-    color: white;
-}
-.pagination .page-item.active .page-link {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
+    margin-left: -1px;
 }
 
+.page-item.active .page-link {
+    background-color: #003e40;
+    border-color: #003e40;
+    color: #fff;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+}
 </style>
 <div class="main-content app-content">
     <div class="container-fluid">
@@ -167,12 +100,17 @@
                     <div class="activity-log justify-content-center">
                         @foreach($logs as $index => $log)
                             @php
-                                // Determine user email link based on user type (Employee or Client)
                                 $user_id = $log->causer_id;
+
                                 $user = $log->causer_type == 'App\Models\EmployeeList'
-                                    ? \App\Models\EmployeeList::where('id', $user_id)->first()
-                                    : \App\Models\User::where('id', $user_id)->first();
-                                $userLink = $user ? "<a href='/admin/client_details/{$user->id}' style='color: #007bff;'>{$user->email}</a>" : "Unknown";
+                                            ? \App\Models\EmployeeList::where('id', $user_id)->first()
+                                            : \App\Models\User::where('id', $user_id)->first();
+
+                                        if ($log->causer_type == 'App\Models\EmployeeList') {
+                                            $userLink = $user ? $user->email : "Unknown";
+                                        } else {
+                                            $userLink = $user ? "<a href='/admin/client_details/{$user->id}' style='color: #007bff;'>{$user->email}</a>" : "Unknown";
+                                        }
 
                                 if (isset($log->properties['code']) && $log->properties['code'] != 'Pending' ) {
                                     $client_account = \App\Models\Account::where('code', $log->properties['code'])->first();
@@ -191,6 +129,7 @@
                                 // Extract the date and time
                                 $date = $log->created_at->format('Y-m-d');
                                 $time = $log->created_at->format('H:i:s');
+                                $ip =   $log->properties['ip'];
 
                                 // Handle special cases for specific activity types
                                 $logDescription = '';
@@ -208,41 +147,46 @@
                                         break;
 
                                     case 'Incorrect login details':
-                                        $logDescription = "<div class='log_warning'>
+                                        $logDescription = "<div class=''>
                                                             <span>User {$userLink} entered wrong login details</span>
                                                         </div>";
                                         break;
+                                    case 'Too many requests':
+                                        $logDescription = "<div class=''>
+                                                            <span>Too many login requests for User {$userLink}.</span>
+                                                        </div>";
+                                        break;
                                     case 'Invalid email or unverified account':
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #dc3545;'>User {$userLink} entered wrong email details</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} entered wrong email details</span>
                                                         </div>";
                                         break;
                                     case 'Switch To User':
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'>User {$userLink} switched to <a href='/admin/client_details/{$log->properties['client_user_id']}' style='color: #007bff;'>{$log->properties['client_email']}</a></span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} switched to <a href='/admin/client_details/{$log->properties['client_user_id']}' style='color: #007bff;'>{$log->properties['client_email']}</a></span>
                                                         </div>";
                                         break;
                                     case 'Update Client Email':
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'>User {$userLink} entered wrong email details</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} entered wrong email details</span>
                                                         </div>";
                                         break;
 
                                     case 'Create Demo Account':
-                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style='color: #28a745;'>{$log->properties['code']}</a>";
+                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style=''>{$log->properties['code']}</a>";
                                         $logDescription = "<div class='log_success'>
                                                             <span>User {$userLink} created Demo account {$accountLink} with amount {$log->properties['amount']} and leverage {$log->properties['leverage']}</span>
                                                         </div>";
                                         break;
 
                                     case 'Create Live Account':
-                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style='color: #28a745;'>{$log->properties['code']}</a>";
+                                        $accountLink = "<a href='/admin/view_account_details/{$log->properties['code']}' style=''>{$log->properties['code']}</a>";
                                         if ($log->properties['code'] == 'Pending') {
-                                            $logDescription = "<div class='log_warning'>
+                                            $logDescription = "<div class=''>
                                                                 <span>User {$userLink} sent request for live account with leverage: {$log->properties['leverage']}</span>
                                                             </div>";
                                         } else {
-                                            $logDescription = "<div class='log_warning'>
+                                            $logDescription = "<div class=''>
                                                                 <span>Live account {$accountLink} issued by {$user->email} with leverage {$log->properties['leverage']}</span>
                                                             </div>";
                                         }
@@ -250,74 +194,166 @@
 
                                     case 'Wallet Withdraw':
                                         $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
-                                        $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style='color: #dc3545;'>{$log->properties['wallet_withdraw_id']}</a>";
-                                        $logDescription = "<div class='log_warning'>
+                                        $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style=''>{$log->properties['wallet_withdraw_id']}</a>";
+                                        $logDescription = "<div class=''>
                                                             <span>User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link}</span>
                                                         </div>";
                                         break;
                                     case 'Reject Wallet Withdraw':
                                         $withdrawal_amount = $log->properties['approved_amount'];
                                         $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['transaction_id']}&email={$log->properties['client_email']}&deposit={$log->properties['approved_amount']}'  style='color: #007bff;'>{$log->properties['transaction_id']}</a>";
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #dc3545;'>User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
                                                         </div>";
                                         break;
                                     case 'Approve Wallet Withdraw':
                                         $withdrawal_amount = $log->properties['approved_amount'];
                                         $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['transaction_id']}&email={$log->properties['client_email']}&deposit={$log->properties['approved_amount']}' style='color: #007bff;'>{$log->properties['transaction_id']}</a>";
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'> User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''> User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
                                                         </div>";
                                         break;
                                     case 'Manually Approved Wallet Withdraw':
                                         $withdrawal_amount = $log->properties['approved_amount'];
                                         $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['transaction_id']}&email={$log->properties['client_email']}&deposit={$log->properties['approved_amount']}' style='color: #007bff;'>{$log->properties['transaction_id']}</a>";
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'> User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''> User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}</span>
                                                         </div>";
                                         break;
                                     case 'Wallet Withdraw Cancel By Client':
                                         $withdrawal_amount = $log->properties['amount'];
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #dc3545;'>{$log->properties['remark']} {$userLink} having amount  \${$withdrawal_amount}.</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>{$log->properties['remark']} {$userLink} having amount  \${$withdrawal_amount}.</span>
                                                         </div>";
                                         break;
                                     case 'Account Withdraw':
                                         $withdrawal_amount = $log->properties['withdraw_amount'];
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'>User {$userLink} withdraw  \${$withdrawal_amount} from account {$account}.</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} withdraw  \${$withdrawal_amount} from account {$account}.</span>
                                                         </div>";
                                         break;
                                     case 'Account Deposit':
                                         $withdrawal_amount = $log->properties['deposit_amount'];
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'>User {$userLink} deposit  \${$withdrawal_amount} to account {$account}.</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} deposit  \${$withdrawal_amount} to account {$account}.</span>
                                                         </div>";
                                         break;
                                     case 'Internal Transfer':
                                         $transfer_amount = $log->properties['transfer_amount'];
-                                        $logDescription = "<div class='log_warning'>
-                                                            <span style='color: #28a745;'>User {$userLink} internal transfer  \${$transfer_amount} from account {$fromAccount_url} to {$toAccount_url}.</span>
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} internal transfer  \${$transfer_amount} from account {$fromAccount_url} to {$toAccount_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Created New Wallet Address':
+                                        $wallet_name = $log->properties['wallet_name'];
+                                        $wallet_address = $log->properties['wallet_address'];
+                                        $wallet_network = $log->properties['wallet_network'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) created new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}). Address is not verified yet.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Verified New Wallet Address':
+                                        $wallet_name = $log->properties['wallet_name'];
+                                        $wallet_address = $log->properties['wallet_address'];
+                                        $wallet_network = $log->properties['wallet_network'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) verified new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).</span>
+                                                        </div>";
+                                        break;
+                                    case 'Edit Wallet Details':
+                                        $wallet_name = $log->properties['wallet_name'];
+                                        $wallet_address = $log->properties['wallet_address'];
+                                        $wallet_network = $log->properties['wallet_network'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) updated to wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).</span>
+                                                        </div>";
+                                        break;
+                                    case 'Verify Wallet Deletion':
+                                        $wallet_name = $log->properties['wallet_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) send verification email to delete wallet ( {$wallet_name} ).</span>
+                                                        </div>";
+                                        break;
+                                    case 'Wallet Deleted':
+                                        $wallet_name = $log->properties['wallet_name'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) deleted wallet ( {$wallet_name} ).</span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Client Password':
+                                        $new_passowrd = $log->properties['new_passowrd'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) updated password to ( {$new_passowrd} ).</span>
+                                                        </div>";
+                                        break;
+                                    case 'Commission Transfer':
+                                        $deposit_amount = $log->properties['deposit_amount'];
+                                        $code = $log->properties['code'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) transfer comission of \${$deposit_amount} to {$account}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Referral':
+                                        $new = $log->properties['new'];
+                                        $old = $log->properties['old'];
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User ({$userLink}) updated referral code from {$old} to {$new}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Client Status':
+                                        $client_id = $log->properties['client_id'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} updated client {$client_url} status.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Client Email Confirmation':
+                                        $client_id = $log->properties['send_to'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} send Email Confirmation mail to {$client_url}.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Update Client Details':
+                                        $client_id = $log->properties['send_to'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} updated {$client_url} details.</span>
+                                                        </div>";
+                                        break;
+                                    case 'Delete Account':
+                                        $client_id = $log->properties['send_to'];
+                                        $client = \App\Models\User::where('id', $client_id)->first();
+                                        $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>User {$userLink} updated {$client_url} details.</span>
                                                         </div>";
                                         break;
 
                                     default:
-                                        $logDescription = "[{$date}] Activity recorded for {$log->description}.";
+                                        $logDescription = "<div class=''>
+                                                            <span style=''>Activity recorded for {$userLink}.</span>
+                                                            </div>";
                                         break;
                                 }
                             @endphp
 
-                            <div class="activity-item d-flex align-items-center justify-content-between @if($index % 2 == 0) from-left @else from-right @endif">
-                                <div class="user-info" style="text-align: right; padding-right:20px ">
-                                    <span class="user-email ">{!! $userLink !!}</span>
-                                </div>
+                            <div class="activity-item">
                                 <div class="log-time">
-                                    <div class="log-circle-wrapper log-circle">
+                                    <div class="log-circle-wrapper">
                                         <div style="font-size: 12px">{{ $date }}</div>
                                         <div style="font-size: 12px">{{ $time }}</div>
                                     </div>
                                 </div>
-                                <div class="log-description">
+                                <div class="log-ip">
+                                    <div class="log-circle-wrapper">
+                                        <div style="font-size: 12px">{{ $ip }}</div>
+                                    </div>
+                                </div>
+                                <div class="log-description @if($index % 2 == 0) from-left @else from-right @endif">
                                     <div class="log-card">
                                         {!! $logDescription !!}
                                     </div>
@@ -325,7 +361,7 @@
                             </div>
                         @endforeach
                     </div>
-                    <div class="d-flex justify-content-center mt-4">
+                    <div class="d-flex justify-content-end mt-4"> <!-- Changed to justify-content-end -->
                         <nav>
                             <ul class="pagination">
                                 {{-- Previous Page Link --}}
@@ -359,8 +395,6 @@
                             </ul>
                         </nav>
                     </div>
-
-
                 </div>
                 </div>
             </div>
