@@ -50,13 +50,10 @@
                                                                 <label class="auth-megaoption"
                                                                     for="option{{ $acc->ac_index }}"
                                                                     style="height: 230px !important;">
-                                                                    <div class="d-block m-4"
+                                                                    <div class="d-block m-4" style="width: 80%;"
                                                                         @php
                                                                             echo strtoupper($acc->ac_name) == 'PRO' ? 'style="width: 80% !important;"' : '';
                                                                         @endphp>
-
-
-
                                                                         <span>
                                                                             <span class="h5 d-block">
                                                                                 <strong class="float-end">
@@ -65,11 +62,11 @@
                                                                                 </strong>
                                                                                 {{ strtoupper($acc->ac_name) }}
                                                                             </span>
-                                                                            @if (strtoupper($acc->ac_name) != 'PRO')
+                                                                            {{-- @if (strtoupper($acc->ac_name) != 'PRO')
                                                                                 <span class="h6 d-block mt-4 f-w-400 f-12" style="width: 80%;">
                                                                                     A commission-free account, perfect for new traders to start investing.
                                                                                 </span>
-                                                                            @endif
+                                                                            @endif --}}
 
                                                                             <hr>
                                                                             <span
