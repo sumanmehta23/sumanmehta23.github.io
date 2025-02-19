@@ -26,7 +26,7 @@ class SettingsController extends Controller
         $search = $request->input('search');
 
         $logs = Activity::query()
-                ->when($searchType == 'text' && $search, function ($query, $search) {
+                ->when($searchType == 'text' && $search, function ($query) use ($search) {
                     return $query->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
                 })
                 ->when($searchType == 'date_range' && $startDate && $endDate, function ($query) use ($startDate, $endDate) {
