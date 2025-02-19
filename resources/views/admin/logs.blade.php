@@ -96,14 +96,36 @@
                 <div class="col-xl-12">
                     <div class="card custom-card">
                         <div class="card-body">
-                            <form method="GET" action="{{ url('admin/logs') }}" class="mb-4">
+                            {{-- <form method="GET" action="{{ url('admin/logs') }}" class="mb-4">
                                 <div class="input-group">
                                     <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary" type="submit">Search</button>
                                     </div>
                                 </div>
+                            </form> --}}
+                            <form method="GET" action="{{ url('admin/logs') }}" class="mb-4">
+                                <div class="input-group">
+                                    <select name="search_type" class="form-control">
+                                        <option value="text" {{ request('search_type') == 'text' ? 'selected' : '' }}>Text</option>
+                                        <option value="date_range" {{ request('search_type') == 'date_range' ? 'selected' : '' }}>Date Range</option>
+                                        <option value="type" {{ request('search_type') == 'type' ? 'selected' : '' }}>Type</option>
+                                    </select>
+                                    <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ request('search') }}" id="search-text">
+                                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" id="start-date" style="display: none;">
+                                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" id="end-date" style="display: none;">
+                                    <select name="log_type" class="form-control" id="log-type" style="display: none;">
+                                        <option value="">Select Type</option>
+                                        <option value="Login" {{ request('log_type') == 'Login' ? 'selected' : '' }}>Login</option>
+                                        <option value="Logout" {{ request('log_type') == 'Logout' ? 'selected' : '' }}>Logout</option>
+                                        <!-- Add more options as needed -->
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                                    </div>
+                                </div>
                             </form>
+
                             <div class="activity-log justify-content-center">
 
                                 @foreach($logs as $index => $log)
