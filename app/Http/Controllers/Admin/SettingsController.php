@@ -19,10 +19,20 @@ class SettingsController extends Controller
 
     public function logs(Request $request)
     {
-        $logs = Activity::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.logs'
-        ,compact('logs')
-        );
+        // $logs = Activity::orderBy('created_at', 'desc')->paginate(10);
+
+        $search = $request->input('search');
+
+        $logs = Activity::query()
+                ->when($search, function ($query, $search) {
+                    return $query->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            //     dd($logs->toSql(), $logs->getBindings()); // Debug the query
+            // dd($logs);
+        return view('admin.logs',compact('logs'));
     }
 
     private function extractEvent($message)
