@@ -35,12 +35,29 @@ class SettingsController extends Controller
                 ->when($searchType == 'type' && $logType, function ($query) use ($logType) {
                     return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
                 })
-                ->when($searchType == 'user' && $logType, function ($query) use ($logType) {
-                    return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                ->when($searchType === 'user', function ($query) use ($search, $logType) {
+                    return $query->where(function ($subQuery) use ($search, $logType) {
+                        if ($search && $logType) {
+                            // If both search and logType are provided, apply AND condition
+                            $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"])
+                                     ->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                        } elseif ($search) {
+                            // Only search by user
+                            $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
+                        } elseif ($logType) {
+                            // Only search by log type
+                            $subQuery->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                        }
+                    });
                 })
+
+
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
-
+                // dump($logs);
+                // dump($logType);
+                // dump($searchType);
+                // dd($search);
         return view('admin.logs',compact('logs'));
     }
 

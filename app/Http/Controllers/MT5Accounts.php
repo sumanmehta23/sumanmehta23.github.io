@@ -510,6 +510,7 @@ class MT5Accounts extends Controller
                                 [
                                     'ip' => $request->ip(),
                                     'email' => auth()->user()->email,
+                                    'client_email' => $user->email,
                                     'type' => 'Live',
                                     'code' => $new_user->Login,
                                     'leverage' => $new_user->Leverage,
