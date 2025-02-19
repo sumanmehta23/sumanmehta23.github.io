@@ -107,9 +107,10 @@
                             <form method="GET" action="{{ url('admin/logs') }}" class="mb-4">
                                 <div class="input-group">
                                     <select name="search_type" class="form-control">
-                                        <option value="text" {{ request('search_type') == 'text' ? 'selected' : '' }}>Text</option>
-                                        <option value="date_range" {{ request('search_type') == 'date_range' ? 'selected' : '' }}>Date Range</option>
-                                        <option value="type" {{ request('search_type') == 'type' ? 'selected' : '' }}>Type</option>
+                                        <option value="text" {{ request('search_type') == 'text' ? 'selected' : '' }}>Search By Text</option>
+                                        <option value="user" {{ request('search_type') == 'user' ? 'selected' : '' }}>Search By User</option>
+                                        <option value="date_range" {{ request('search_type') == 'date_range' ? 'selected' : '' }}>Search By Date</option>
+                                        <option value="type" {{ request('search_type') == 'type' ? 'selected' : '' }}>Search By Type</option>
                                     </select>
                                     <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ request('search') }}" id="search-text">
                                     <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" id="start-date" style="display: none;">
@@ -118,6 +119,48 @@
                                         <option value="">Select Type</option>
                                         <option value="Login" {{ request('log_type') == 'Login' ? 'selected' : '' }}>Login</option>
                                         <option value="Logout" {{ request('log_type') == 'Logout' ? 'selected' : '' }}>Logout</option>
+                                        <option value="Incorrect login details" {{ request('log_type') == 'Incorrect login details' ? 'selected' : '' }}>Incorrect login details</option>
+                                        <option value="Too many requests" {{ request('log_type') == 'Too many requests' ? 'selected' : '' }}>Too many requests</option>
+                                        <option value="Invalid email or unverified account" {{ request('log_type') == 'Invalid email or unverified account' ? 'selected' : '' }}>Invalid email or unverified account</option>
+                                        <option value="Switch To User" {{ request('log_type') == 'Switch To User' ? 'selected' : '' }}>Switch To User</option>
+                                        <option value="Update Client Email" {{ request('log_type') == 'Update Client Email' ? 'selected' : '' }}>Update Client Email</option>
+                                        <option value="Create Demo Account" {{ request('log_type') == 'Create Demo Account' ? 'selected' : '' }}>Create Demo Account</option>
+                                        <option value="Create Live Account" {{ request('log_type') == 'Create Live Account' ? 'selected' : '' }}>Create Live Account</option>
+                                        <option value="Wallet Withdraw" {{ request('log_type') == 'Wallet Withdraw' ? 'selected' : '' }}>Wallet Withdraw</option>
+                                        <option value="Reject Wallet Withdraw" {{ request('log_type') == 'Reject Wallet Withdraw' ? 'selected' : '' }}>Reject Wallet Withdraw</option>
+                                        <option value="Approve Wallet Withdraw" {{ request('log_type') == 'Approve Wallet Withdraw' ? 'selected' : '' }}>Approve Wallet Withdraw</option>
+                                        <option value="Manually Approved Wallet Withdraw" {{ request('log_type') == 'Manually Approved Wallet Withdraw' ? 'selected' : '' }}>Manually Approved Wallet Withdraw</option>
+                                        <option value="Wallet Withdraw Cancel By Client" {{ request('log_type') == 'Wallet Withdraw Cancel By Client' ? 'selected' : '' }}>Wallet Withdraw Cancel By Client</option>
+                                        <option value="Account Withdraw" {{ request('log_type') == 'Account Withdraw' ? 'selected' : '' }}>Account Withdraw</option>
+                                        <option value="Account Deposit" {{ request('log_type') == 'Account Deposit' ? 'selected' : '' }}>Account Deposit</option>
+                                        <option value="Internal Transfer" {{ request('log_type') == 'Internal Transfer' ? 'selected' : '' }}>Internal Transfer</option>
+                                        <option value="Created New Wallet Address" {{ request('log_type') == 'Created New Wallet Address' ? 'selected' : '' }}>Created New Wallet Address</option>
+                                        <option value="Verified New Wallet Address" {{ request('log_type') == 'Verified New Wallet Address' ? 'selected' : '' }}>Verified New Wallet Address</option>
+                                        <option value="Edit Wallet Details" {{ request('log_type') == 'Edit Wallet Details' ? 'selected' : '' }}>Edit Wallet Details</option>
+                                        <option value="Verify Wallet Deletion" {{ request('log_type') == 'Verify Wallet Deletion' ? 'selected' : '' }}>Verify Wallet Deletion</option>
+                                        <option value="Wallet Deleted" {{ request('log_type') == 'Wallet Deleted' ? 'selected' : '' }}>Wallet Deleted</option>
+                                        <option value="Update Client Password" {{ request('log_type') == 'Update Client Password' ? 'selected' : '' }}>Update Client Password</option>
+                                        <option value="Commission Transfer" {{ request('log_type') == 'Commission Transfer' ? 'selected' : '' }}>Commission Transfer</option>
+                                        <option value="Update Referral" {{ request('log_type') == 'Update Referral' ? 'selected' : '' }}>Update Referral</option>
+                                        <option value="Update Client Status" {{ request('log_type') == 'Update Client Status' ? 'selected' : '' }}>Update Client Status</option>
+                                        <option value="Client Email Confirmation" {{ request('log_type') == 'Client Email Confirmation' ? 'selected' : '' }}>Client Email Confirmation</option>
+                                        <option value="Update Client Details" {{ request('log_type') == 'Update Client Details' ? 'selected' : '' }}>Update Client Details</option>
+                                        <option value="Delete Account" {{ request('log_type') == 'Delete Account' ? 'selected' : '' }}>Delete Account</option>
+                                        <option value="CRM Deposit" {{ request('log_type') == 'CRM Deposit' ? 'selected' : '' }}>CRM Deposit</option>
+                                        <option value="CRM Withdraw" {{ request('log_type') == 'CRM Withdraw' ? 'selected' : '' }}>CRM Withdraw</option>
+                                        <option value="CRM Credit Bonus" {{ request('log_type') == 'CRM Credit Bonus' ? 'selected' : '' }}>CRM Credit Bonus</option>
+                                        <option value="CRM Deposit Bonus" {{ request('log_type') == 'CRM Deposit Bonus' ? 'selected' : '' }}>CRM Deposit Bonus</option>
+                                        <option value="CRM Update Investor Password" {{ request('log_type') == 'CRM Update Investor Password' ? 'selected' : '' }}>CRM Update Investor Password</option>
+                                        <option value="CRM Update Master Password" {{ request('log_type') == 'CRM Update Master Password' ? 'selected' : '' }}>CRM Update Master Password</option>
+                                        <option value="CRM Update Group Leverage" {{ request('log_type') == 'CRM Update Group Leverage' ? 'selected' : '' }}>CRM Update Group Leverage</option>
+                                        <option value="IB Plan Create" {{ request('log_type') == 'IB Plan Create' ? 'selected' : '' }}>IB Plan Create</option>
+                                        <option value="IB Plan Update" {{ request('log_type') == 'IB Plan Update' ? 'selected' : '' }}>IB Plan Update</option>
+                                        <option value="IB Commission Create" {{ request('log_type') == 'IB Commission Create' ? 'selected' : '' }}>IB Commission Create</option>
+                                        <option value="IB Commission Update" {{ request('log_type') == 'IB Commission Update' ? 'selected' : '' }}>IB Commission Update</option>
+                                        <option value="Create Role" {{ request('log_type') == 'Create Role' ? 'selected' : '' }}>Create Role</option>
+                                        <option value="Update Role" {{ request('log_type') == 'Update Role' ? 'selected' : '' }}>Update Role</option>
+                                        <option value="Ib Request" {{ request('log_type') == 'Ib Request' ? 'selected' : '' }}>Ib Request</option>
+
                                         <!-- Add more options as needed -->
                                     </select>
                                     <div class="input-group-append">
@@ -528,7 +571,14 @@
                                 <nav>
                                     <ul class="pagination">
                                         <div class="d-flex justify-content-end mt-4">
-                                            {{ $logs->appends(['search' => request('search')])->links('pagination::bootstrap-4') }}
+                                            {{-- {{ $logs->appends(['search' => request('search')])->links('pagination::bootstrap-4') }} --}}
+                                            {{ $logs->appends([
+                                                'search' => request('search'),
+                                                'search_type' => request('search_type'),
+                                                'start_date' => request('start_date'),
+                                                'end_date' => request('end_date'),
+                                                'log_type' => request('log_type'),
+                                            ])->links('pagination::bootstrap-4') }}
                                         </div>
                                     </ul>
                                 </nav>
@@ -540,3 +590,28 @@
     </div>
 </div>
 @endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchType = document.querySelector('select[name="search_type"]');
+        const searchText = document.getElementById('search-text');
+        const startDate = document.getElementById('start-date');
+        const endDate = document.getElementById('end-date');
+        const logType = document.getElementById('log-type');
+
+        function toggleFields() {
+            const selectedType = searchType.value;
+            // searchText.style.display = selectedType === 'text' ? 'block' : 'none';
+            // startDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
+            // endDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
+            // logType.style.display = selectedType === 'type' ? 'block' : 'none';
+
+            searchText.style.display = (selectedType === 'user' || selectedType === 'text') ? 'block' : 'none';
+            logType.style.display = (selectedType === 'type' || selectedType === 'user') ? 'block' : 'none';
+            startDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
+            endDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
+        }
+
+        searchType.addEventListener('change', toggleFields);
+        toggleFields(); // Initial call to set the correct fields visible
+    });
+</script>

@@ -19,19 +19,28 @@ class SettingsController extends Controller
 
     public function logs(Request $request)
     {
-        // $logs = Activity::orderBy('created_at', 'desc')->paginate(10);
-
+        $searchType = $request->input('search_type');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $logType = $request->input('log_type');
         $search = $request->input('search');
 
         $logs = Activity::query()
-                ->when($search, function ($query, $search) {
+                ->when($searchType == 'text' && $search, function ($query, $search) {
                     return $query->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
+                })
+                ->when($searchType == 'date_range' && $startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                    return $query->whereBetween('created_at', [$startDate, $endDate]);
+                })
+                ->when($searchType == 'type' && $logType, function ($query) use ($logType) {
+                    return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                })
+                ->when($searchType == 'user' && $logType, function ($query) use ($logType) {
+                    return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
                 })
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            //     dd($logs->toSql(), $logs->getBindings()); // Debug the query
-            // dd($logs);
         return view('admin.logs',compact('logs'));
     }
 
