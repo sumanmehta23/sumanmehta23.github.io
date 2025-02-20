@@ -550,7 +550,7 @@
                                     <div class="activity-item">
                                         <div class="log-time px-1 py-2">
                                             <div class="log-circle-wrapper">
-                                                <div style="font-size: 12px">{{ $date }}{{ $time }}</div>
+                                                <div style="font-size: 12px">{{ $date }}  {{ $time }}</div>
                                                 {{-- <div style="font-size: 12px">{{ $time }}</div> --}}
                                             </div>
                                         </div>
@@ -600,11 +600,6 @@
 
         function toggleFields() {
             const selectedType = searchType.value;
-            // searchText.style.display = selectedType === 'text' ? 'block' : 'none';
-            // startDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
-            // endDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
-            // logType.style.display = selectedType === 'type' ? 'block' : 'none';
-
             searchText.style.display = (selectedType === 'user' || selectedType === 'text') ? 'block' : 'none';
             logType.style.display = (selectedType === 'type' || selectedType === 'user') ? 'block' : 'none';
             startDate.style.display = selectedType === 'date_range' ? 'block' : 'none';
