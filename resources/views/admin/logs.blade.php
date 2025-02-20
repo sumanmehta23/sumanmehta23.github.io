@@ -198,9 +198,13 @@
                                         }
 
                                         // Extract the date and time
-                                        $date = $log->created_at->format('Y-m-d');
-                                        $time = $log->created_at->format('H:i:s');
+                                        // $date = $log->created_at->format('Y-m-d');
+                                        // $time = $log->created_at->format('H:i:s');
                                         $ip =   $log->properties['ip'];
+
+                                        $dateTime = $log->created_at;
+                                        $humanTime = $dateTime->diffForHumans();
+                                        $formattedTime = $dateTime->format('Y-m-d H:i:s');
 
                                         // Handle special cases for specific activity types
                                         $logDescription = '';
@@ -548,10 +552,14 @@
                                     @endphp
 
                                     <div class="activity-item">
-                                        <div class="log-time px-1 py-2">
+                                        {{-- <div class="log-time px-1 py-2">
                                             <div class="log-circle-wrapper">
                                                 <div style="font-size: 12px">{{ $date }}  {{ $time }}</div>
-                                                {{-- <div style="font-size: 12px">{{ $time }}</div> --}}
+                                            </div>
+                                        </div> --}}
+                                        <div class="log-time px-1 py-2">
+                                            <div class="log-circle-wrapper">
+                                                <div style="font-size: 12px" title="{{ $formattedTime }}">{{ $humanTime }}</div>
                                             </div>
                                         </div>
                                         <div class="log-ip px-1 py-2">
