@@ -117,9 +117,9 @@
         </div>
         <div x-show="showPasswordConfirmation">
             <form @submit.prevent="confirmPassword()">
-                <x-text-input id="password" type="text" name="password" class="block w-1/2 mt-1" autofocus
+                <x-text-input id="password" type="text" name="password" class="block w-1/2 mt-2" autofocus
                     autocomplete="password" x-model="password" x-on:keydown.enter="confirmPassword" />
-                <x-primary-button type="submit" class="me-3">
+                <x-primary-button type="submit" class="me-3 mt-4">
                     {{ __('Confirm Password') }}
                 </x-primary-button>
             </form>
