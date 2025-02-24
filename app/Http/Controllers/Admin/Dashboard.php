@@ -96,42 +96,53 @@ class Dashboard extends Controller
     }
     public function sendMarketingEmail(MailService $mailService)
     {
+
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);
-        return;
+        // return;
+
         // Process users in chunks to save memory
         User::select('email')
-            // ->whereIn('email',['tech2@lqhmarkets.com'])
+            ->whereIn('email',['abhay@lqhmarkets.com','Jalelwabou@gmail.com','tech2@lqhmarkets.com'])
             // ->where('id','<','9dc8c7dd-3a0d-4b4f-a226-b4000fab7fe2')
             ->where('status', 1)
             ->orderBy('id', 'desc')
             ->chunk(100, function ($users) use ($mailService) {
                 foreach ($users as $user) {
-                    // if(in_array($user->email,['Sayedrihaad@gmail.com'])){
+                    // if(in_array($user->email,['abhay@lqhmarkets.com'])){
                         $this->sendmail($user->email, $mailService);
                     // }
                 }
             });
     }
-    private function sendmail($userEmail,MailService $mailService){
-
+    private function sendmail($userEmail,MailService $mailService)
+    {
         $settings = settings();
         $from = $settings['email_from_address'];
-        $emailSubject =  'Scheduled Server Maintenance – Important Update';
-         $headers = "MIME-Version: 1.0" . "\r\n";
+        $emailSubject =  'Exciting News: PAMM Accounts Are Now Live!';
+        $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '<p>As part of our ongoing commitment to improving your trading experience and delivering enhanced services, we will be performing scheduled server maintenance over the weekend.</p>
-<p>To ensure a seamless transition, we kindly request your cooperation with the following:</p>
+        $content = '<p>LQH Markets is thrilled to announce the launch of PAMM accounts!</p>
 
           <ul>
-          <li><b>Close all open positions and pending orders at least 30 minutes before the market close on Friday.</b></li>
-          <li>Please note that <b>10 minutes prior to market close,</b> the server will automatically close all trading operations.</li>
+          <li><b>Traders</b> can now become managers and allow others to invest in their trading strategies. Start here:
+
+
+                <a href="https://my.liquidityhouse.com/pamm/manager" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;padding:10px 20px 10px 20px;display:inline-block;background:'.$settings['sidebar_color'].';border-radius:0;font-size:20px;font-family:"playfair display", georgia, "times new roman", serif;font-weight:bold;font-style:normal;line-height:43.2px;color:#fff;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid '. $settings['sidebar_color']  .'">PAMM Manager</a>
+
+          </li>
+          <li><b>Investors</b> can allocate funds to their favorite traders or choose from the leaderboard of top-performing managers:
+
+                <a href="https://my.liquidityhouse.com/pamm/investor" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;padding:10px 20px 10px 20px;display:inline-block;background:'.$settings['sidebar_color'].';border-radius:0;font-size:20px;font-family:"playfair display", georgia, "times new roman", serif;font-weight:bold;font-style:normal;line-height:43.2px;color:#fff;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid '. $settings['sidebar_color']  .'">PAMM Investor</a>
+
+          </li>
 
           </ul>
-          <divThis maintenance is a crucial step in optimizing our systems to provide you with a better trading environment.</div>
-          <div>Should you have any questions or concerns regarding your account, please do not hesitate to contact our support team. We are here to assist you.</div>
-          <div>Thank you for your understanding and support.</div>
+
+          <p>To get started, you <b>must create a new MT5 live account named "PAMM"</b>. This is how you can become a manager or investor.  </p>
+
+          <p>Don’t miss this exciting opportunity!</p>
           <p>Best Regards.</p>
           <p>LQH Markets Team</p>
           ';
