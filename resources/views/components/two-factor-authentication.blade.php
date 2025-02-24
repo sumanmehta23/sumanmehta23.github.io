@@ -26,7 +26,6 @@
                 {{ __('When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s Google Authenticator application.') }}
             </p>
         </div>
-
         @if ($enabled)
             @if ($showingQrCode)
                 <div class="max-w-xl mt-4 text-sm text-gray-600 dark:text-gray-400">
@@ -81,7 +80,6 @@
 
         <div class="mt-5">
             @if (!$enabled)
-
                 <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()">
                     {{ __('Enable') }}
@@ -147,7 +145,7 @@
                 });
             },
             confirmTwoFactorAuthentication() {
-                console.log('enableTwoFactorAuthentication');
+                console.log('confirmTwoFactorAuthentication');
                 axios.post('{{ route('two-factor.confirm') }}', {
                     code: this.code
                 }).then(response => {
@@ -164,16 +162,18 @@
                 console.log('enableTwoFactorAuthentication');
                 axios.post('{{ route('two-factor.enable') }}').then(response => {
                     console.log(response.data);
+
                     // location.reload();
                 }).catch(error => {
                     if (error.response.data.message !== undefined) {
-                        this.showPasswordConfirmation = true;
+                        window.location.href = '{{ route('confirm_password') }}';
+                        // this.showPasswordConfirmation = true;
                     }
                     console.log(error.response.data);
                 });
             },
             regenerateRecoveryCodes() {
-                console.log('enableTwoFactorAuthentication');
+                console.log('regenerateRecoveryCodes');
                 axios.post('{{ route('two-factor.recovery-codes') }}').then(response => {
                     location.reload();
                 }).catch(error => {
@@ -181,7 +181,7 @@
                 });
             },
             showRecoveryCodes() {
-                console.log('enableTwoFactorAuthentication');
+                console.log('showRecoveryCodes');
                 axios.get('{{ route('two-factor.recovery-codes') }}').then(response => {
                     location.reload();
                 }).catch(error => {
@@ -189,7 +189,7 @@
                 });
             },
             disableTwoFactorAuthentication() {
-                console.log('enableTwoFactorAuthentication');
+                console.log('disableTwoFactorAuthentication');
                 axios.delete('{{ route('two-factor.disable') }}', {
                     action: 'cancel'
                 }).then(response => {

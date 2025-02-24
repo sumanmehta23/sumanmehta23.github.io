@@ -2,7 +2,7 @@
     {{ $attributes->merge([
         'type' => 'submit',
         'class' =>
-            'flex items-center gap-1 w-full justify-center btn btn-sm btn-primary d-grid me-2',
+            'flex items-center gap-1 justify-center btn btn-sm btn-primary d-grid me-2',
     ]) }}>
     <span class="flex items-center gap-1 p-2">
         {{ $slot }}

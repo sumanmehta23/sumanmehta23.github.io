@@ -149,7 +149,10 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 
 
+
 Route::middleware(['auth'])->group(function () {
+    Route::get('/confirm_password', [LoginController::class, 'showConfirmPasswordForm'])
+        ->name('confirm_password');
     Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
     Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');

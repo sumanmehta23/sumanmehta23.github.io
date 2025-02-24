@@ -8,7 +8,7 @@
     <input type="{{ $type }}" name="{{ $name }}" placeholder="{{ $placeholder }}"
         {{ $attributes->merge([
             'class' =>
-                'dark:bg-white/5 bg-[#FFFFFF0D] border dark:border-white/50 border-[#3F3F3F33] text-black-900 text-black dark:text-white text-sm rounded-xs block w-full p-3 dark:placeholder-[#999999] placeholder-[#00000066] ' .
+                'form-control' .
                 ($leftIcon ? 'pl-[35px]' : '') .
                 ($rightIcon || $rightButton ? ' pr-[35px]' : ''),
         ]) }}>

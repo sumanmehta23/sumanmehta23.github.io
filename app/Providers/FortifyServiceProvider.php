@@ -64,5 +64,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::twoFactorChallengeView(function () {
             return view('auth.two-factor-challenge');
         });
+
+        Fortify::redirects('password-confirmation', '/user-profile');
     }
 }
