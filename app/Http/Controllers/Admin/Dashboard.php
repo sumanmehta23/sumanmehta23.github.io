@@ -103,7 +103,9 @@ class Dashboard extends Controller
 
         // Process users in chunks to save memory
         User::select('email')
-            ->whereIn('email',['abhay@lqhmarkets.com','Jalelwabou@gmail.com','tech2@lqhmarkets.com','lqhmarkets@gmail.com'])
+            ->whereIn('email',['abhay@lqhmarkets.com'
+            ,'Jalelwabou@gmail.com','tech2@lqhmarkets.com','lqhmarkets@gmail.com'
+            ])
             // ->where('id','<','9dc8c7dd-3a0d-4b4f-a226-b4000fab7fe2')
             ->where('status', 1)
             ->orderBy('id', 'desc')

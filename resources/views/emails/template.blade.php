@@ -732,7 +732,7 @@ $settings=settings();
                                             <tr>
                                                 <td bgcolor="#ffffff" valign="top"
                                                     class="m_-2550223905729420962pc-w620-padding-30-40-0-40"
-                                                    style="padding:0px 60px 40px 60px; margin:0; border-radius:0; background-color:#ffffff;">
+                                                    style="padding:0px 60px 0px 60px; margin:0; border-radius:0; background-color:#ffffff;">
                                                     <table width="100%" border="0" cellpadding="0"
                                                         cellspacing="0" role="presentation"
                                                         style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0;">
@@ -1066,9 +1066,9 @@ $settings=settings();
                             </td>
                         </tr>
                     @endif
-                    <tr>
-                        <td valign="top" style="padding:0;Margin:0">
-                            <table cellpadding="0" cellspacing="0" role="presentation" width="100%"
+        <tr>
+            <td valign="top" style="padding:0;Margin:0">
+                <table cellpadding="0" cellspacing="0" role="presentation" width="100%"
                                 border="0"
                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                 <tr>
@@ -1078,7 +1078,7 @@ $settings=settings();
                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                             <tr>
                                                 <td bgcolor="#ffffff" valign="top"
-                                                    style="padding:0px 60px 40px 60px;Margin:0;border-radius:0px;background-color:#ffffff">
+                                                    style="Margin:0;border-radius:0px;background-color:#ffffff">
                                                     <table cellpadding="0" cellspacing="0" role="presentation"
                                                         width="100%" border="0"
                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
@@ -1102,26 +1102,26 @@ $settings=settings();
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                @if (!isset($content))
-                                                        <tr>
-                                                            <td align="left" valign="top"
-                                                                style="padding:0;Margin:0">
-                                                                <div
-                                                                    style="font-variant-ligatures:normal;text-align:left;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;color:#000000;line-height:21.8px;font-size:14px;letter-spacing:0.2px;font-weight:normal">
-                                                                    <div>
-                                                                        <span style="letter-spacing:0.2px">You're now ready to begin your trading journey.</span>
+                                                        @if (!isset($content))
+                                                            <tr>
+                                                                <td align="left" valign="top"
+                                                                    style="padding:0;Margin:0">
+                                                                    <div
+                                                                        style="font-variant-ligatures:normal;text-align:left;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;color:#000000;line-height:21.8px;font-size:14px;letter-spacing:0.2px;font-weight:normal">
+                                                                        <div>
+                                                                            <span style="letter-spacing:0.2px">You're now ready to begin your trading journey.</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span style="letter-spacing:0.2px">Let the trading journey begin! If you have any questions, feel free to reach out to us for assistance.</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Server">Download MetaTrader iOS </a><br>
+                                                                            <a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Server">Download MetaTrader Android</a><br>
+                                                                            <a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe">Download Desktop </a></div>
+                                                                        </div>
                                                                     </div>
-                                                                    <div>
-                                                                        <span style="letter-spacing:0.2px">Let the trading journey begin! If you have any questions, feel free to reach out to us for assistance.</span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <div><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Server">Download MetaTrader iOS </a><br>
-                                                                        <a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Server">Download MetaTrader Android</a><br>
-                                                                        <a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe">Download Desktop </a></div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
+                                                                </td>
+                                                            </tr>
                                                         @endif
 
                                                         @if (isset($site_link))
@@ -1283,8 +1283,7 @@ $settings=settings();
                                                                                                                     style="color:#000;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;font-weight:normal;line-height:17.2px;letter-spacing:-0.2px;font-variant-ligatures:normal;font-size:12px;text-align:left">
                                                                                                                     <div>
                                                                                                                         <span
-                                                                                                                            style="font-weight:700;font-style:normal">Need
-                                                                                                                            Help?</span>
+                                                                                                                            style="font-weight:700;font-style:normal">Need Help?</span>
                                                                                                                     </div>
                                                                                                                     <div>
                                                                                                                         <span>Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don’t hesitate to contact our Support Team.</span>
