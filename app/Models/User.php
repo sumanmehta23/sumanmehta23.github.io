@@ -10,13 +10,14 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,7 +27,7 @@ class User extends Authenticatable
     protected $table = 'aspnetusers';
 
     protected $primaryKey = 'id';
-     protected $guarded = [];
+    protected $guarded = [];
 
     public $timestamps = false;
 
@@ -61,7 +62,7 @@ class User extends Authenticatable
                 $oldEmail = $user->getOriginal('email');
                 $newEmail = $user->email;
 
-                
+
                 // Update the email in related tables
                 Account::where('email', $oldEmail)->update(['email' => $newEmail]);
                 WalletWithdraw::where('email', $oldEmail)->update(['email' => $newEmail]);
@@ -73,7 +74,7 @@ class User extends Authenticatable
                 DemoDeposit::where('email', $oldEmail)->update(['email' => $newEmail]);
                 Ib1::where('email', $oldEmail)->update(['email' => $newEmail]);
                 LoginHistory::where('email', $oldEmail)->update(['email' => $newEmail]);
-                
+
                 // Add other table updates as necessary
             }
         });
@@ -83,18 +84,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(BonusTransaction::class);
     }
-   // Has many live accounts
-   public function liveAccounts()
-   {
-       return $this->hasMany(Account::class)->where('demo', false);
-   }
+    // Has many live accounts
+    public function liveAccounts()
+    {
+        return $this->hasMany(Account::class)->where('demo', false);
+    }
 
-   // Has many demo accounts
-   public function demoAccounts()
-   {
-       return $this->hasMany(Account::class)->where('demo', true);
-   }
-   public function ib1Commissions()
+    // Has many demo accounts
+    public function demoAccounts()
+    {
+        return $this->hasMany(Account::class)->where('demo', true);
+    }
+    public function ib1Commissions()
     {
         return $this->hasMany(Ib1Commission::class);
     }
@@ -115,7 +116,7 @@ class User extends Authenticatable
             'user_id',
             'rm_id'
         )
-        ->withPivot('added_by');
+            ->withPivot('added_by');
     }
 
     // public function getCountry()
@@ -154,7 +155,7 @@ class User extends Authenticatable
     }
     public function countryDetail()
     {
-        return $this->belongsTo(Country::class,'country','country_name');
+        return $this->belongsTo(Country::class, 'country', 'country_name');
     }
     // public function getWalletBalance($userId)
     // {
@@ -178,10 +179,10 @@ class User extends Authenticatable
                 ->sum('deposit_amount');
 
             $totalWithdraw = WalletWithdraw::where('user_id', $this->id)
-            ->whereNotIn('status',[2,3])
+                ->whereNotIn('status', [2, 3])
                 ->sum('withdraw_amount');
             $totalWithdrawFee = WalletWithdraw::where('user_id', $this->id)
-                ->whereNotIn('status',[2,3])
+                ->whereNotIn('status', [2, 3])
                 ->sum('withdraw_transaction_fee');
 
             return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);
@@ -192,7 +193,7 @@ class User extends Authenticatable
     {
 
         return WalletDeposit::where('user_id', $this->id)
-            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
     }
@@ -331,7 +332,7 @@ class User extends Authenticatable
     }
     public function sendEmailVerificationNotification()
     {
-        $mailservice=new MailService();
+        $mailservice = new MailService();
         $settings = settings();
         $from = $settings['email_from_address'];
         $toEmail = $this->email;
@@ -345,7 +346,7 @@ class User extends Authenticatable
             '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
             '<div>You are receiving this email because you have registered for a Trading Account.</div>' .
             '<div>Click the link below to activate your Trading Account</div>';
-        $code=$this->emailToken;
+        $code = $this->emailToken;
         $templateVars = [
             'name' => $this->fullname,
             'server_name' => $settings['mt5_company_name'],
@@ -361,7 +362,7 @@ class User extends Authenticatable
 
     public function getTotalBonusAttribute()
     {
-        return $this->accounts->sum(function($account) {
+        return $this->accounts->sum(function ($account) {
             return $account->BonusTransaction->sum('bonus_amount');
         });
     }
