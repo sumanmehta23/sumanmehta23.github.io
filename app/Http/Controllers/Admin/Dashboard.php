@@ -129,12 +129,12 @@ class Dashboard extends Controller
           <li><b>Traders</b> can now become managers and allow others to invest in their trading strategies. Start here:
 
 
-                <a href="https://my.liquidityhouse.com/pamm/manager" target="_blank">PAMM Manager</a>
+                <a href="https://my.lqhmarkets.com/pamm/manager" target="_blank">PAMM Manager</a>
 
           </li>
           <li><b>Investors</b> can allocate funds to their favorite traders or choose from the leaderboard of top-performing managers:
 
-                <a href="https://my.liquidityhouse.com/pamm/investor" target="_blank">PAMM Investor</a>
+                <a href="https://my.lqhmarkets.com/pamm/investor" target="_blank">PAMM Investor</a>
 
           </li>
 
