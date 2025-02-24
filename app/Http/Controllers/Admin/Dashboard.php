@@ -129,12 +129,12 @@ class Dashboard extends Controller
           <li><b>Traders</b> can now become managers and allow others to invest in their trading strategies. Start here:
 
 
-                <a href="https://my.liquidityhouse.com/pamm/manager" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;padding:10px 20px 10px 20px;display:inline-block;background:'.$settings['sidebar_color'].';border-radius:0;font-size:20px;font-family:"playfair display", georgia, "times new roman", serif;font-weight:bold;font-style:normal;line-height:43.2px;color:#fff;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid '. $settings['sidebar_color']  .'">PAMM Manager</a>
+                <a href="https://my.liquidityhouse.com/pamm/manager" target="_blank">PAMM Manager</a>
 
           </li>
           <li><b>Investors</b> can allocate funds to their favorite traders or choose from the leaderboard of top-performing managers:
 
-                <a href="https://my.liquidityhouse.com/pamm/investor" target="_blank" class="es-button" style="mso-style-priority:100 !important;text-decoration:none !important;mso-line-height-rule:exactly;padding:10px 20px 10px 20px;display:inline-block;background:'.$settings['sidebar_color'].';border-radius:0;font-size:20px;font-family:"playfair display", georgia, "times new roman", serif;font-weight:bold;font-style:normal;line-height:43.2px;color:#fff;width:auto;text-align:center;letter-spacing:0;mso-padding-alt:0;mso-border-alt:10px solid '. $settings['sidebar_color']  .'">PAMM Investor</a>
+                <a href="https://my.liquidityhouse.com/pamm/investor" target="_blank">PAMM Investor</a>
 
           </li>
 
