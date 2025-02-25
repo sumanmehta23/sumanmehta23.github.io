@@ -161,10 +161,21 @@
                                                                                 Amount You Will Receive After Transaction:
                                                                                 <span id="amountAfterFee" style="font-weight: bold; margin-left: 10px;">$0.00</span>
                                                                             </label>
-                                                                                <input type="checkbox" id="confirmCheckbox" name="confirmCheckbox" required>
+                                                                                <input class="form-check-input mt-1" type="checkbox" id="confirmCheckbox" name="confirmCheckbox" required>
                                                                                 <label for="confirmCheckbox">I confirm this transaction.</label>
                                                                             </div>
                                                                         </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-lg-4"></div>
+                                                                <div class="col-lg-8 pb-4">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
+                                                                        <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                            Please ensure you send the correct cryptocurrency to the correct wallet address and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
+                                                                        </label>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -274,6 +285,7 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
+
 
                                                             <div class="row">
                                                                 <div class="col-lg-4"></div>

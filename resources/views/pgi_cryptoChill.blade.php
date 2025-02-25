@@ -20,14 +20,35 @@ var customerID = "{{auth()->user()->id}}";
   });
   // CC Payment gateway options Ends
   $("#paynow").attr("disabled", "true");
-  $("#crypto_deposit_amount").on('change keypress keydown keyup', function() {
-    if ($(this).val() >= 10) {
-      $("#paynow").attr("disabled", false);
-    } else {
-      $("#paynow").attr("disabled", "true");
+//   $("#crypto_deposit_amount").on('change keypress keydown keyup', function() {
+//     if ($(this).val() >= 10) {
+//       $("#paynow").attr("disabled", false);
+//     } else {
+//       $("#paynow").attr("disabled", "true");
+//     }
+//     $("#paynow").attr("data-amount", $(this).val());
+//   });
+$("#paynow").on("click", function (event) {
+    var checkboxChecked = $("#cryptoWarningCheckbox").prop("checked");
+
+    if (!checkboxChecked) {
+        event.preventDefault(); // Prevent form submission
+        alert("You must check the confirmation box before proceeding.");
     }
-    $("#paynow").attr("data-amount", $(this).val());
-  });
+});
+$("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown keyup', function() {
+    var amountValid = $("#crypto_deposit_amount").val() >= 10;
+    var checkboxChecked = $("#cryptoWarningCheckbox").prop("checked");
+
+    if (amountValid && checkboxChecked) {
+        $("#paynow").attr("disabled", false);
+    } else {
+        $("#paynow").attr("disabled", "true");
+    }
+
+    $("#paynow").attr("data-amount", $("#crypto_deposit_amount").val());
+});
+
 
   function onPaymentSuccess(data, code) {
     if(localStorage.getItem('isCalled') == 'true'){
@@ -109,7 +130,7 @@ var customerID = "{{auth()->user()->id}}";
   function onWalletPaymentSuccess(data, code) {
     // console.log(code, data)
     // console.log("Starts");
-    
+
   }
   function onWalletPaymentIncomplete(data, code) {
     console.log("onPaymentIncomplete");
@@ -117,8 +138,8 @@ var customerID = "{{auth()->user()->id}}";
     if(typeof data.payment.id != 'undefined'){
       console.log("Incomplete payment..!",data.payment.id );
     }
-    
-    
+
+
     // // if(localStorage.getItem('isCalled') == 'true'){
     // //   return true;
     // // }
@@ -140,26 +161,26 @@ var customerID = "{{auth()->user()->id}}";
     //     _deposit_type: "CryptoChill"
     //   },
     //   beforeSend: function() {
-        
-        
+
+
     //   },
     //   success: function(data) {
     //     // console.log("data==> ", data);
-        
+
     //   }
     // });
   }
   function onWalletPaymentUpdate(data, code){
-    
+
     if(typeof data != 'undefined'){
       console.log("onPaymentUpdate");
     console.log(code, data);
-   
+
     if(typeof data.payment.status == 'undefined'){
       console.log("Incomplete payment..!",data.payment.id );
       return;
     }
-    
+
     if(data.payment.status != 'paid'){
       PaymentIntiated=true;
       console.log("Payment processing..!",data.payment.is_expired );
@@ -188,7 +209,7 @@ var customerID = "{{auth()->user()->id}}";
         deposit_type: "CryptoChill"
       },
       beforeSend: function() {
-        
+
         swal.fire({
           showConfirmButton: false,
           showCancelButton: false,
@@ -201,7 +222,7 @@ var customerID = "{{auth()->user()->id}}";
       },
       success: function(data) {
         console.log(" onWalletPaymentUpdate data==> ", data);
-       
+
         if (data.status === true) {
           window.isCalled = 1;
           swal.fire({
@@ -240,7 +261,7 @@ var customerID = "{{auth()->user()->id}}";
     var message='ser Side Interruption';
     if(PaymentIntiated){
       message="Once payment is confirmed it will be reflected on your wallet";
-    
+
       swal.fire({
         icon: "info",
         allowEscapeKey: false,

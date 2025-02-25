@@ -543,6 +543,15 @@ class Wallet extends Controller
     }
     public function deposit(Request $request)
     {
+        $request->validate([
+                'confirmcryptoCheckbox' => [
+                    'required' // Ensures this checkbox is checked
+                ],
+            ],
+            [
+            'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
+            ]
+        );
         $user = auth()->user();
         try {
             // dd($request->all());
@@ -886,9 +895,13 @@ class Wallet extends Controller
                 'confirmCheckbox' => [
                     'required_if:withdraw_amount,<,99',
                 ],
+                'confirmcryptoCheckbox' => [
+                    'required' // Ensures this checkbox is checked
+                ],
             ],
             [
             'confirmCheckbox.required_if' => 'The confirmation checkbox is required when the withdrawal amount is less than 100.',
+            'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
             ]
         );
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
@@ -937,7 +950,7 @@ class Wallet extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        
+
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                 '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.

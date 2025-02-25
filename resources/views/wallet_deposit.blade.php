@@ -45,6 +45,15 @@
                     <div class="tab-content">
                         <div>
                             <div>
+                                @if ($errors->any())
+                                    <div class="alert alert-danger">
+                                        <ul>
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="row">
@@ -74,10 +83,14 @@
                                                         </div>
                                                     </div>
                                                 @else
+                                                    {{-- <div class="card">
+
+                                                    </div> --}}
                                                     <div class="card">
                                                         <div class="card-body border-bottom">
                                                             <h6>Deposit Funds</h6>
                                                         </div>
+
                                                         <div class="card-body">
 
                                                             <div class="my-4 divider">
@@ -136,7 +149,7 @@
                                                                             </label>
                                                                         </div>
                                                                     </div>
-                                                                </div> 
+                                                                </div>
                                                             </div>
                                                             <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                             <form method="post" style="padding:10px;"
@@ -361,6 +374,17 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
+                                                                            <div class="row">
+                                                                                <div class="col-lg-4"></div>
+                                                                                <div class="col-lg-8 pb-4">
+                                                                                    <div class="form-check">
+                                                                                        <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  required>
+                                                                                        <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                                            Please ensure you send the correct cryptocurrency to the correct wallet address and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
                                                                             <div class="">
                                                                                 <div class="row">
                                                                                     <div class="col-lg-4"></div>
@@ -397,7 +421,7 @@
                                                                             <input type="hidden" name="deposit_type"
                                                                                 class="tradedeposittype"
                                                                                 value="CreditCardPayissa">
-                                                                            
+
                                                                             <div class="form-group row">
                                                                                 <label
                                                                                     class="col-lg-4 col-form-label">ENTER
@@ -417,6 +441,17 @@
                                                                                             title="Minimum $10"
                                                                                             class="form-control fill ccdeposit_amount"
                                                                                             aria-label="Amount" required>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-lg-4"></div>
+                                                                                <div class="col-lg-8 pb-4">
+                                                                                    <div class="form-check">
+                                                                                        <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  >
+                                                                                        <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                                            Please ensure you send the correct cryptocurrency to the correct wallet address and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
+                                                                                        </label>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
