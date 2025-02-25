@@ -1,7 +1,5 @@
 @php
-    $user = DB::table('aspnetusers')
-        ->where('email', session('user')->email)
-        ->first();
+    $user = auth()->user();
 @endphp
 @if (isset($user))
     @if ($user->profile_image_url == null)
@@ -24,8 +22,10 @@
     <link rel="icon" href="{{ asset($settings['favicon']) }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Your partner in profitable trading. Trade forex, commodities, indices, and cryptocurrencies with low spreads and fast execution">
-    <meta name="keywords" content="forex broker, forex trading, commodities trading, indices trading, cryptocurrencies trading, low spreads, fast execution">
+    <meta name="description"
+        content="Your partner in profitable trading. Trade forex, commodities, indices, and cryptocurrencies with low spreads and fast execution">
+    <meta name="keywords"
+        content="forex broker, forex trading, commodities trading, indices trading, cryptocurrencies trading, low spreads, fast execution">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $settings['admin_title'] }} - Client Portal</title>
     <script src="{{ asset('assets/js/vuejs-datepicker.min.js') }}"></script>
@@ -36,8 +36,10 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" />
     <link rel="stylesheet" crossorigin="anonymous" href="{{ asset('assets/css/custom.css?v=4.5') }}">
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
     <script src="{{ asset('assets1/vendors/datatables.net/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('assets/js/sweetalert2.all.min.js') }}"></script>
     <script>
@@ -47,12 +49,13 @@
             }
         });
     </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')
     <?php
-        $marginTopStyle = ''; // Default value
-        if (app()->environment('local') || config("services.sales.promotion")) {
-            $marginTopStyle = 'style="margin-top: 40px;"';
-        }
+    $marginTopStyle = ''; // Default value
+    if (app()->environment('local') || config('services.sales.promotion')) {
+        $marginTopStyle = 'style="margin-top: 40px;"';
+    }
     ?>
 
     <style>
@@ -156,6 +159,7 @@
             background: none;
             box-shadow: none;
         }
+
         .submenu li {
             list-style: none;
         }
@@ -166,50 +170,62 @@
             color: #333;
             text-decoration: none;
         }
+
         .submenu li a:hover {
             background-color: #f4f4f4;
         }
+
         .caret-icon-container {
             position: absolute;
             right: 28px;
             top: 35%;
             transform: translateY(-50%);
         }
+
         .caret-icon {
             transition: transform 0.3s ease, opacity 0.3s ease;
             position: absolute;
             right: 0;
         }
+
         .caret-up {
             opacity: 0;
         }
+
         .caret-down {
             opacity: 1;
         }
+
         .pc-item.active .caret-down {
             opacity: 0;
             transform: rotate(180deg);
         }
+
         .pc-item.active .caret-up {
             opacity: 1;
             transform: rotate(0deg);
         }
+
         .pc-item.active .submenu {
             display: block;
             max-height: 500px;
             padding: 10px;
         }
+
         .no-wrap {
             white-space: nowrap;
         }
+
         .w-xs-50 {
-            width: 50% ;
+            width: 50%;
         }
+
         .w-xs-75 {
-            width: 75% ;
+            width: 75%;
         }
+
         .w-xs-100 {
-            width: 100% ;
+            width: 100%;
         }
 
         @media (min-width: 768px) {
@@ -222,21 +238,26 @@
     </style>
 </head>
 
-<body class="@if (!Auth::guest()) loggedin @endif" data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast="" <?php
-  if (!isset($_COOKIE["sitetheme"])) { ?> data-pc-theme="light" <?php } elseif ($_COOKIE["sitetheme"] == 'true') { ?> data-pc-theme="light" <?php } else { ?> data-pc-theme="dark" <?php } ?>>
+<body class="@if (!Auth::guest()) loggedin @endif" data-pc-preset="preset-7" data-pc-sidebar-caption="true"
+    data-pc-direction="ltr" data-pc-theme_contrast="" <?php
+  if (!isset($_COOKIE["sitetheme"])) { ?> data-pc-theme="light" <?php } elseif ($_COOKIE["sitetheme"] == 'true') { ?>
+    data-pc-theme="light" <?php } else { ?> data-pc-theme="dark" <?php } ?>>
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
+            <nav class="pc-sidebar" <?php echo app()->environment('local') ? $marginTopStyle : ''; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
                             @if (!isset($_COOKIE['sitetheme']))
-                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 1" alt="logo" style="width: 70%;">
+                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 1"
+                                    alt="logo" style="width: 70%;">
                             @elseif ($_COOKIE['sitetheme'] == 'true')
-                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 2" alt="logo" style="width: 70%;">
+                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 2"
+                                    alt="logo" style="width: 70%;">
                             @else
-                                <img src="/{{ $settings['admin_sidebar_logo_dark'] }}" class="img-fluid logo-lg 3" alt="logo" style="width: 70%;">
+                                <img src="/{{ $settings['admin_sidebar_logo_dark'] }}" class="img-fluid logo-lg 3"
+                                    alt="logo" style="width: 70%;">
                             @endif
                             {{-- <span class="badge bg-light-primary rounded-pill ms-2 theme-version">v1.0</span> --}}
                         </a>
@@ -246,12 +267,14 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center w-75">
                                     <div class="flex-shrink-0">
-                                        <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-70 hei-70 rounded-circle" style="object-fit: cover">
+                                        <img src="{{ $profile_image_url }}" alt="user-image"
+                                            class="user-avtar wid-70 hei-70 rounded-circle" style="object-fit: cover">
                                     </div>
                                     <div class="flex-grow-1 ms-3 me-2 w-75">
                                         @auth
-                                            <h6 class="mb-0 w-75">{{ ucfirst(session('user')->fullname) }}</h6>
-                                            <small class="ellipsis w-75" tooltip="{{ session('user')->email }}">{{ session('user')->email }}</small>
+                                            <h6 class="mb-0 w-75">{{ ucfirst(auth()->user()->fullname) }}</h6>
+                                            <small class="ellipsis w-75"
+                                                tooltip="{{ auth()->user()->email }}">{{ auth()->user()->email }}</small>
                                         @endauth
                                     </div>
                                 </div>
@@ -259,7 +282,8 @@
                                     <div class="pt-3 d-flex flex-column">
                                         <a href="/user-profile" class=""><i class="ti ti-user"></i><span>My
                                                 Account</span></a>
-                                        <a href="/logout" id="logout-link"><i class="ti ti-power"></i><span>Logout</span></a>
+                                        <a href="/logout" id="logout-link"><i
+                                                class="ti ti-power"></i><span>Logout</span></a>
                                     </div>
                                 </div>
                             </div>
@@ -276,7 +300,7 @@
                                     <span class="pc-mtext">Dashboard</span>
                                 </a>
                             </li>
-                            @if (session('user')->wallet_enabled == 1)
+                            @if (auth()->user()->wallet_enabled == 1)
                                 <li class="pc-item">
                                     <a href="/wallet" class="pc-link">
                                         <span class="pc-micon">
@@ -380,30 +404,38 @@
                     </div>
                 </div>
             </nav>
-            <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel"
+                aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="staticBackdropLabel">Platform Downloads</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_android_platform'] }}" class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png" alt="Android">
+                                    <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png"
+                                            alt="Android">
                                         <span class="pt-2 pb-3">Android</span>
                                     </a>
                                 </div>
                                 <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}" class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/appstore.png" alt="Apple iOS">
+                                    <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/appstore.png"
+                                            alt="Apple iOS">
                                         <span class="pt-2 pb-3">Apple iOS</span>
                                     </a>
                                 </div>
                                 <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}" class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png" alt="Windows">
+                                    <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
+                                        class="text-center card platform-download">
+                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png"
+                                            alt="Windows">
                                         <span class="pt-2 pb-3">Windows</span>
                                     </a>
                                 </div>
@@ -413,19 +445,20 @@
                 </div>
             </div>
             @if (app()->environment('local'))
-                <div style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
+                <div
+                    style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
                     <b>DEV ENVIRONMENT</b>
                 </div>
             @endif
-            @if(config("services.sales.promotion"))
-            {{-- <div class=" w-100 sales-banner-container">
+            @if (config('services.sales.promotion'))
+                {{-- <div class=" w-100 sales-banner-container">
                 <div class="banner-link" ><div class="lqh-sale-banner">
                     <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
                     </div></div>
             </div> --}}
             @endif
 
-            <header class="pc-header" <?php echo app()->environment('local') ? ( $marginTopStyle) : ''; ?>>
+            <header class="pc-header" <?php echo app()->environment('local') ? $marginTopStyle : ''; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">
@@ -459,7 +492,7 @@
                     <div class="ms-auto">
                         @if (session('admin'))
                             <ul>
-                                <a href="{{route('switchToAdmin')}}" class="">
+                                <a href="{{ route('switchToAdmin') }}" class="">
                                     <span>
                                         Switch Back To {{ session('admin')->username }}
                                     </span>
@@ -468,7 +501,8 @@
                         @endif
                         <ul class="list-unstyled">
                             <li class="dropdown pc-h-item">
-                                <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">
+                                <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
+                                    href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">
                                     <svg class="pc-icon">
                                         <use xlink:href="#custom-setting-2"></use>
                                     </svg>
@@ -476,8 +510,10 @@
                                 <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
                                     <a href="/user-profile" class="dropdown-item"><i class="ti ti-user"></i><span>My
                                             Account</span></a>
-                                    <a href="/support" class="dropdown-item"><i class="ti ti-headset"></i><span>Support</span></a>
-                                    <a href="/logout" class="dropdown-item" id="logout-link-2"><i class="ti ti-power"></i><span>Logout</span></a>
+                                    <a href="/support" class="dropdown-item"><i
+                                            class="ti ti-headset"></i><span>Support</span></a>
+                                    <a href="/logout" class="dropdown-item" id="logout-link-2"><i
+                                            class="ti ti-power"></i><span>Logout</span></a>
                                 </div>
                             </li>
                             {{-- <li class="pc-h-item">
@@ -489,14 +525,16 @@
                                 </a>
                             </li> --}}
                             <li class="dropdown pc-h-item d-none">
-                                <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">
+                                <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
+                                    href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">
                                     <svg class="pc-icon">
                                         <use xlink:href="#custom-notification"></use>
                                     </svg>
                                     <span class="badge bg-success pc-h-badge">3</span>
                                 </a>
                                 <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-                                    <div class="dropdown-body text-wrap header-notification-scroll position-relative" style="max-height: calc(-215px + 100vh);">
+                                    <div class="dropdown-body text-wrap header-notification-scroll position-relative"
+                                        style="max-height: calc(-215px + 100vh);">
                                         <p class="text-span">Today</p>
                                         <div class="mb-2 card">
                                             <div class="card-body">
@@ -530,26 +568,32 @@
                                 </div>
                             </li>
                             <li class="dropdown pc-h-item header-user/profile">
-                                <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="/dashboard" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
-                                    {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
+                                <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
+                                    href="/dashboard" role="button" aria-haspopup="false"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
 
-                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar" style="object-fit: cover">
+                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar"
+                                        style="object-fit: cover">
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
                                         <h5 class="m-0">Profssile</h5>
                                     </div>
                                     <div class="dropdown-body">
-                                        <div class="profile-notification-scroll position-relative" style="max-height: calc(-225px + 100vh);">
+                                        <div class="profile-notification-scroll position-relative"
+                                            style="max-height: calc(-225px + 100vh);">
                                             <div class="mb-1 d-flex">
                                                 <div class="flex-shrink-0">
-                                                    {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : session('user')->profile_image_url)) }}" alt="user-image"
+                                                    {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}" alt="user-image"
                                                         class="user-avtar wid-35"> --}}
-                                                    <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar wid-35" style="object-fit: cover">
+                                                    <img src="{{ $profile_image_url }}" alt="user-image"
+                                                        class="user-avtar wid-35" style="object-fit: cover">
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
-                                                    <h6 class="mb-1">{{ ucfirst(session('user')->fullname) }} 🖖</h6>
-                                                    <span>{{ session('user')->email }}</span>
+                                                    <h6 class="mb-1">{{ ucfirst(auth()->user()->fullname) }} 🖖
+                                                    </h6>
+                                                    <span>{{ auth()->user()->email }}</span>
                                                 </div>
                                             </div>
                                             <hr class="border-opacity-50 border-secondary">
@@ -582,10 +626,12 @@
                     </div>
                 </div>
             </header>
-            <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement" aria-labelledby="announcementLabel">
+            <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement"
+                aria-labelledby="announcementLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="announcementLabel">What's new announcement?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
                 </div>
                 {{-- <div class="offcanvas-body">
                     <p class="text-span">Today</p>
@@ -618,10 +664,12 @@
                         </div>
                     </div>
                 </div> --}}
-                <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement" aria-labelledby="announcementLabel">
+                <div class="offcanvas pc-announcement-offcanvas offcanvas-end" tabindex="-1" id="announcement"
+                    aria-labelledby="announcementLabel">
                     <div class="offcanvas-header">
                         <h5 class="offcanvas-title" id="announcementLabel">What's new announcement?</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                            aria-label="Close"></button>
                     </div>
                     {{-- <div class="offcanvas-body">
                         <p class="text-span">Today</p>

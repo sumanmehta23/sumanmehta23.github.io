@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Laravel\Fortify\TwoFactorAuthenticationProvider;
+use PragmaRX\Google2FA\Google2FA;
+use Illuminate\Validation\ValidationException;
 
 class Wallet extends Controller
 {
@@ -854,8 +857,9 @@ class Wallet extends Controller
     }
 
 
-    public function withdrawal(Request $request)
+    public function withdrawal(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
     {
+        // dd($request->all());
         $settings = settings();
 
         // Generate a unique rate-limiting key based on user or IP
@@ -875,10 +879,25 @@ class Wallet extends Controller
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $request->validate([
-            'withdraw_amount' => 'required|numeric|min:1',
+            'withdraw_amount' => 'required|numeric|min:10',
             'withdraw_type' => 'required|string',
-            'client_wallet_id' => 'required',
+            'client_wallet_id' => 'required'
         ]);
+        $user = auth()->user();
+        if ($user->two_factor_secret) {
+            $isValid = $twoFactorProvider->verify(
+                decrypt(auth()->user()->two_factor_secret),
+                $request->input('two_factor_code')
+            );
+            // dump($user);
+            // dd($isValid);
+            if (!$isValid) {
+                throw ValidationException::withMessages([
+                    'two_factor_code' => ['Invalid or expired 2FA code.'],
+                ]);
+            }
+        }
+
         $userEmail = auth()->user()->email;
         $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
@@ -937,7 +956,7 @@ class Wallet extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        
+
         $content =
                 '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                 '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.

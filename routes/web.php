@@ -121,8 +121,8 @@ Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name
 
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+// Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+// Route::post('/login', [LoginController::class, 'login']);
 Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
@@ -139,17 +139,22 @@ Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
 
 Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
-Route::get('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
+
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
-Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+
 
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    Route::get('/confirm_password', [LoginController::class, 'showConfirmPasswordForm'])
+        ->name('confirm_password');
     Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
     Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');

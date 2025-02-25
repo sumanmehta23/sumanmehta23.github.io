@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
+use App\Providers\FortifyServiceProvider;
 
 return [
 
@@ -175,6 +176,7 @@ return [
         App\Providers\IbServiceProvider::class,
         RealRashid\SweetAlert\SweetAlertServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
+        FortifyServiceProvider::class,
 
     ])->toArray(),
 

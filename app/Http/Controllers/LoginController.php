@@ -36,6 +36,12 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
+    public function showConfirmPasswordForm()
+    {
+
+        return view('auth.confirm-password');
+    }
+
 
     public function login(Request $request)
     {

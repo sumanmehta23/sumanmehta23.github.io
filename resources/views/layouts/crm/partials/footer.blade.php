@@ -309,7 +309,7 @@
     // })
 </script>
 <script type="module" src="/assets/js/custom.js?v=<?= time() ?>"></script>
-<script>
+{{-- <script>
 document.addEventListener('DOMContentLoaded', () => {
     const changeLeverageModal = document.getElementById('changeLeverage');
     const leverageSelect = document.getElementById('leverage');
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalAccountIdInput.value = accountTypeId;
         accountIdInput.value = accountId;
     });
-});
+}); --}}
 
 </script>
 

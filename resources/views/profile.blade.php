@@ -1,67 +1,79 @@
 @extends('layouts.crm.crm')
 @section('content')
-<style>
-.profile-image-container {
-    position: relative;
-    display: inline-block;
-}
+    <style>
+        .profile-image-container {
+            position: relative;
+            display: inline-block;
+        }
 
-/* Darken the image on hover */
-.profile-image-container:hover .img-profile-avatar {
-    opacity: 0.5; /* Make the image half transparent */
-}
+        /* Darken the image on hover */
+        .profile-image-container:hover .img-profile-avatar {
+            opacity: 0.5;
+            /* Make the image half transparent */
+        }
 
-/* Style the camera icon */
-.edit-icon {
-    position: absolute;
-    top: 35%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Center the icon */
-    opacity: 0; /* Hidden by default */
-    background-color: rgba(0, 0, 0, 0.43); /* Dark background */
-    color: rgb(255, 255, 255); /* White icon */
-    font-size: 45px;
-    border-radius: 50%;
-    width: 95px; /* Adjusted size */
-    height: 95px; /* Adjusted size */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.3s ease; /* Smooth transition */
-}
+        /* Style the camera icon */
+        .edit-icon {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Center the icon */
+            opacity: 0;
+            /* Hidden by default */
+            background-color: rgba(0, 0, 0, 0.43);
+            /* Dark background */
+            color: rgb(255, 255, 255);
+            /* White icon */
+            font-size: 45px;
+            border-radius: 50%;
+            width: 95px;
+            /* Adjusted size */
+            height: 95px;
+            /* Adjusted size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+            /* Smooth transition */
+        }
 
-/* Show the camera icon on hover */
-.profile-image-container:hover .edit-icon {
-    opacity: 1; /* Show the camera icon when hovering over the container */
-}
+        /* Show the camera icon on hover */
+        .profile-image-container:hover .edit-icon {
+            opacity: 1;
+            /* Show the camera icon when hovering over the container */
+        }
 
-/* Style the profile image */
-.img-profile-avatar {
-    width: 100px; /* Adjust as needed */
-    height: 100px; /* Adjust as needed */
-    margin-top: -25px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid white; /* Inner white border */
-}
+        /* Style the profile image */
+        .img-profile-avatar {
+            width: 100px;
+            /* Adjust as needed */
+            height: 100px;
+            /* Adjust as needed */
+            margin-top: -25px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            /* Inner white border */
+        }
 
-/* Increase icon size on hover */
-.edit-icon:hover i {
-    transform: scale(1.1);
-    font-size: 30px;
-}
+        /* Increase icon size on hover */
+        .edit-icon:hover i {
+            transform: scale(1.1);
+            font-size: 30px;
+        }
 
-.varification-pending{
-    --bs-text-opacity: 1;
-    color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
-}
-.varification-plus{
-    --bs-text-opacity: 1;
-    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
-}
+        .varification-pending {
+            --bs-text-opacity: 1;
+            color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+        }
 
-</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        .varification-plus {
+            --bs-text-opacity: 1;
+            color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <div class="pc-container">
         <div class="pc-content">
@@ -83,9 +95,12 @@
                             <div class="row align-items-end">
                                 <div class="col-md-auto text-md-start">
                                     <div class="profile-image-container">
-                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle" src="{{ isset($user->profile_image_url) ? Storage::url('profile_images/' . $user->profile_image_url) : '\assets\images\user.png' }}" alt="User image">
+                                        <img id="profile_image" class="img-fluid img-profile-avatar rounded-circle"
+                                            src="{{ isset($user->profile_image_url) ? Storage::url('profile_images/' . $user->profile_image_url) : '\assets\images\user.png' }}"
+                                            alt="User image">
                                         <!-- Camera Icon Input (Only Visible on Hover) -->
-                                        <input type="file" id="profile_picture_input" style="display: none;" accept="image/*">
+                                        <input type="file" id="profile_picture_input" style="display: none;"
+                                            accept="image/*">
                                         <label for="profile_picture_input" class="edit-icon">
                                             <i class="fas fa-camera"></i>
                                         </label>
@@ -95,11 +110,12 @@
                                 <div class="col">
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
-                                            <h5 class="mb-1">{{ ucfirst(session('user')->fullname) }}</h5>
+                                            <h5 class="mb-1">{{ ucfirst(auth()->user()->fullname) }}</h5>
                                             <div class="d-flex align-items-center">
-                                                <p class="mb-0 me-3">{{ session('user')->email }}</p>
+                                                <p class="mb-0 me-3">{{ auth()->user()->email }}</p>
                                                 @if ($user->email_confirmed == 0)
-                                                    <label class="badge bg-danger text-white ms-2" style="font-size: 14px;">Email update unverified</label>
+                                                    <label class="text-white badge bg-danger ms-2"
+                                                        style="font-size: 14px;">Email update unverified</label>
                                                 @endif
                                             </div>
                                         </div>
@@ -138,6 +154,13 @@
                                                 <i class="ti ti-file-text me-2"></i> Wallet Details
                                             </a>
                                         </li>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="two-factor-auth-tab" data-bs-toggle="tab"
+                                                href="#two-factor-auth" role="tab" aria-selected="false" tabindex="-1">
+                                                <i class="ti ti-file-text me-2"></i> 2FA
+                                            </a>
+                                        </li>
+
                                     </ul>
                                 </div>
                             </div>
@@ -151,43 +174,50 @@
                                                     <h5>Personal Information</h5>
                                                 </div>
                                                 <div class="card-body">
-                                                    <form action={{route("email.change")}} method="post">
+                                                    <form action={{ route('email.change') }} method="post">
                                                         @csrf
                                                         <div class="row">
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Full Name</label>
-                                                                    <input type="text" class="form-control" name="name"
-                                                                        value="{{ session('user')->fullname }}" required readonly>
+                                                                    <input type="text" class="form-control"
+                                                                        name="name"
+                                                                        value="{{ auth()->user()->fullname }}" required
+                                                                        readonly>
                                                                 </div>
                                                             </div>
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Account Email</label>
-                                                                    <input type="text" class="form-control" name="email"
-                                                                        value="{{ session('user')->email }}" required>
+                                                                    <input type="text" class="form-control"
+                                                                        name="email" value="{{ auth()->user()->email }}"
+                                                                        required>
                                                                 </div>
                                                                 {{-- <input type="text" class="form-control" name="email_confirmed"
-                                                                    value="{{ session('user')->email_confirmed }}" required readonly> --}}
+                                                                    value="{{ auth()->user()->email_confirmed }}" required readonly> --}}
                                                             </div>
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Contact Number</label>
-                                                                    <input type="text" class="form-control" name="telephone"
-                                                                        value="{{ session('user')->number }}" required readonly>
+                                                                    <input type="text" class="form-control"
+                                                                        name="telephone"
+                                                                        value="{{ auth()->user()->number }}" required
+                                                                        readonly>
                                                                 </div>
                                                             </div>
                                                             <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Gender</label>
                                                                     <input type="text" class="form-control"
-                                                                        value="{{ session('user')->gender }}" required readonly>
+                                                                        value="{{ auth()->user()->gender }}" required
+                                                                        readonly>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div class=" text-end">
-                                                            <button type="submit" name="updateEmail" value="update" class="btn btn-primary rounded">Update</button>
+                                                            <button type="submit" name="updateEmail" value="update"
+                                                                class="rounded btn btn-primary">Update</button>
                                                         </div>
 
                                                     </form>
@@ -196,28 +226,28 @@
                                                             <div class="form-group">
                                                                 <label class="form-label">Full Name</label>
                                                                 <input type="text" class="form-control"
-                                                                    value="{{ session('user')->fullname }}" disabled>
+                                                                    value="{{ auth()->user()->fullname }}" disabled>
                                                             </div>
                                                         </div>
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Account Email</label>
                                                                 <input type="text" class="form-control"
-                                                                    value="{{ session('user')->email }}" disabled>
+                                                                    value="{{ auth()->user()->email }}" disabled>
                                                             </div>
                                                         </div>
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Contact Number</label>
                                                                 <input type="text" class="form-control"
-                                                                    value="{{ session('user')->number }}" disabled>
+                                                                    value="{{ auth()->user()->number }}" disabled>
                                                             </div>
                                                         </div>
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Gender</label>
                                                                 <input type="text" class="form-control"
-                                                                    value="{{ session('user')->gender }}" disabled>
+                                                                    value="{{ auth()->user()->gender }}" disabled>
                                                             </div>
                                                         </div>
                                                     </div> --}}
@@ -246,10 +276,12 @@
                                                                     src="{{ asset('assets/images/KYC.png') }}"
                                                                     class="w-25" alt="img"></a>
                                                         </div>
-                                                        <h6 class="mb-4 text-center text-secondary f-w-400 f-16"> KYC Verification Required to Create MT5 Accounts</h6>
+                                                        <h6 class="mb-4 text-center text-secondary f-w-400 f-16"> KYC
+                                                            Verification Required to Create MT5 Accounts</h6>
                                                         <a id="verify-user-kyc" href="#" class="mt-3">
                                                             <button class="btn btn-outline-primary"><span
-                                                                    class="text-truncate">Process To Verify Now </span></button>
+                                                                    class="text-truncate">Process To Verify Now
+                                                                </span></button>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -312,17 +344,23 @@
                                                         <h5>New Password Must Contain:</h5>
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 8 characters</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At
+                                                                least 8 characters</li>
                                                             <li class="mb-0 list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 lowercase letter (a-z)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At
+                                                                least 1 lowercase letter (a-z)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 uppercase letter (A-Z)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At
+                                                                least 1 uppercase letter (A-Z)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 number (0-9)</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At
+                                                                least 1 number (0-9)</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At least 1 special character</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>At
+                                                                least 1 special character</li>
                                                             <li class="list-group-item"><i
-                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords do not match</li>
+                                                                    class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords
+                                                                do not match</li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -378,57 +416,93 @@
                                                                         <td>{{ $acc->wallet_network }}</td>
                                                                         <td>{{ $acc->wallet_address }}</td>
                                                                         @php
-                                                                            if($acc->verified == 0){
+                                                                            if ($acc->verified == 0) {
                                                                                 $verification = 'Pending';
                                                                                 $tdClass = 'varification-pending';
-                                                                            }else{
+                                                                            } else {
                                                                                 $verification = 'Approved';
                                                                                 $tdClass = 'varification-plus';
                                                                             }
                                                                         @endphp
-                                                                        <td  class="{{ $tdClass }}">{{ $verification }}</td>
+                                                                        <td class="{{ $tdClass }}">
+                                                                            {{ $verification }}</td>
                                                                         {{-- {{ dd($acc) }} --}}
                                                                         <td>
                                                                             @if ($acc->wallet_delete_verification == 0)
-                                                                                <div class="d-flex align-items-center text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
+                                                                                <div
+                                                                                    class="d-flex align-items-center text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
                                                                                     @if ($acc->status == 0)
-                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                        <a class="mt-1 wallet-action me-2"
                                                                                             data-bs-toggle="tooltip"
                                                                                             title="Inactive Wallet Address"
                                                                                             data-toggle="{{ $acc->id }}">
-                                                                                            <i class="f-24 ti ti-toggle-left"></i>
+                                                                                            <i
+                                                                                                class="f-24 ti ti-toggle-left"></i>
                                                                                         </a>
                                                                                     @else
-                                                                                        <a class="wallet-action me-2 mt-1"
+                                                                                        <a class="mt-1 wallet-action me-2"
                                                                                             data-bs-toggle="tooltip"
                                                                                             title="Active Wallet Address"
                                                                                             data-toggle="{{ $acc->id }}">
-                                                                                            <i class="f-24 ti ti-toggle-right"></i>
+                                                                                            <i
+                                                                                                class="f-24 ti ti-toggle-right"></i>
                                                                                         </a>
                                                                                     @endif
-                                                                                    <span class="badge text-warning edit_wallet_address"
+                                                                                    <span
+                                                                                        class="badge text-warning edit_wallet_address"
                                                                                         data-id="{{ $acc->id }}"
                                                                                         data-bs-toggle="tooltip"
                                                                                         title="Edit Wallet Address">
-                                                                                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                                                                        <svg xmlns='http://www.w3.org/2000/svg'
+                                                                                            width='24' height='24'
+                                                                                            viewBox='0 0 24 24'
+                                                                                            fill='none'
+                                                                                            stroke='currentColor'
+                                                                                            stroke-width='2'
+                                                                                            stroke-linecap='round'
+                                                                                            stroke-linejoin='round'
+                                                                                            class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'>
+                                                                                            <path stroke='none'
+                                                                                                d='M0 0h24v24H0z'
+                                                                                                fill='none' />
+                                                                                            <path
+                                                                                                d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' />
+                                                                                            <path
+                                                                                                d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' />
+                                                                                            <path d='M16 5l3 3' />
+                                                                                        </svg>
                                                                                     </span>
 
-                                                                                    <span class="badge text-danger delete_wallet_address"
+                                                                                    <span
+                                                                                        class="badge text-danger delete_wallet_address"
                                                                                         data-id="{{ $acc->id }}"
                                                                                         data-bs-toggle="tooltip"
                                                                                         title="Delete Wallet Address">
-                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
-                                                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                                            width="20" height="20"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            stroke-width="2"
+                                                                                            stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                                                                            <path stroke="none"
+                                                                                                d="M0 0h24v24H0z"
+                                                                                                fill="none" />
                                                                                             <path d="M4 7l16 0" />
                                                                                             <path d="M10 11l0 6" />
                                                                                             <path d="M14 11l0 6" />
-                                                                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                                                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                                                            <path
+                                                                                                d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                                                            <path
+                                                                                                d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
                                                                                         </svg>
                                                                                     </span>
                                                                                 </div>
                                                                             @elseif ($acc->wallet_delete_verification == 1)
-                                                                                <span class="text-warning">Deletion Not Verified</span>
+                                                                                <span class="text-warning">Deletion Not
+                                                                                    Verified</span>
                                                                             @endif
                                                                         </td>
                                                                     </tr>
@@ -444,7 +518,8 @@
                                                                         src="{{ asset('assets/images/empty.png') }}"
                                                                         class="w-25" alt="img"></a>
                                                             </div>
-                                                            <h6 class="mb-0 text-center text-secondary f-w-400 f-16">Please Add Your Wallet Details</h6>
+                                                            <h6 class="mb-0 text-center text-secondary f-w-400 f-16">Please
+                                                                Add Your Wallet Details</h6>
                                                         </div>
                                                     </div>
                                                 @endif
@@ -452,7 +527,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="tab-pane" id="profile-6" role="tabpanel" aria-labelledby="profile-tab-6">
+                                <div class="tab-pane" id="two-factor-auth" role="tabpanel"
+                                    aria-labelledby="profile-tab-6">
+                                    <x-two-factor-authentication />
                                 </div>
                             </div>
                         </div>
@@ -462,6 +539,18 @@
 
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let hash = window.location.hash;
+            if (hash) {
+                let tab = document.querySelector(`a[href="${hash}"]`);
+                if (tab) {
+                    new bootstrap.Tab(tab).show();
+                }
+            }
+        });
+    </script>
+
     @if (session('success'))
         <script>
             Swal.fire({
@@ -505,8 +594,10 @@
                     console.log("Error Response:", xhr);
                     let errorMessage = "Something went wrong";
                     if (xhr.responseJSON?.errors) {
-                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join("");
-                        errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join(
+                            "");
+                        errorMessage =
+                            `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
                     } else if (xhr.responseJSON?.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
@@ -558,7 +649,7 @@
                 }
             });
         });
-        $(".delete_wallet_address").click(function (e) {
+        $(".delete_wallet_address").click(function(e) {
             e.preventDefault();
 
             const wallet_id = this.getAttribute("data-id");
@@ -579,7 +670,7 @@
                             id: wallet_id,
                             _token: "{{ csrf_token() }}" // Ensure CSRF protection
                         },
-                        success: function (data) {
+                        success: function(data) {
                             if (data.success) {
                                 Swal.fire({
                                     icon: "success",
@@ -595,7 +686,7 @@
                                 });
                             }
                         },
-                        error: function (xhr) {
+                        error: function(xhr) {
                             Swal.fire({
                                 icon: "error",
                                 title: "Error",
@@ -607,7 +698,7 @@
             });
         });
 
-        $(".edit_wallet_address").click(function (e) {
+        $(".edit_wallet_address").click(function(e) {
             e.preventDefault();
 
             const wallet_id = this.getAttribute("data-id");
@@ -616,13 +707,17 @@
             $.ajax({
                 url: "/get_editing_wallet_details", // Change to your actual API endpoint
                 type: "GET",
-                data: { id: wallet_id },
-                success: function (response) {
+                data: {
+                    id: wallet_id
+                },
+                success: function(response) {
                     if (response.success) {
                         // Populate modal fields with the fetched data
                         $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
-                        $("#editBankModal2 select[name='wallet_network']").val(response.data.wallet_network);
-                        $("#editBankModal2 input[name='wallet_address']").val(response.data.wallet_address);
+                        $("#editBankModal2 select[name='wallet_network']").val(response.data
+                            .wallet_network);
+                        $("#editBankModal2 input[name='wallet_address']").val(response.data
+                            .wallet_address);
                         $("#editBankModal2 select[name='status']").val(response.data.status);
                         $("#editBankModal2 input[name='id']").val(response.data.id);
 
@@ -632,7 +727,7 @@
                         alert("Failed to fetch wallet details.");
                     }
                 },
-                error: function () {
+                error: function() {
                     alert("Error fetching wallet details.");
                 }
             });
@@ -641,48 +736,50 @@
 
 
         $(document).ready(function() {
-        // Show "Edit Picture" text when hovering over the image
-        $('#profile_image').hover(function() {
-            $('.edit-text').fadeIn(); // Show "Edit Picture" text
-        }, function() {
-            $('.edit-text').fadeOut(); // Hide "Edit Picture" text
-        });
+            // Show "Edit Picture" text when hovering over the image
+            $('#profile_image').hover(function() {
+                $('.edit-text').fadeIn(); // Show "Edit Picture" text
+            }, function() {
+                $('.edit-text').fadeOut(); // Hide "Edit Picture" text
+            });
 
-        // Trigger file input when image is clicked
-        $('#profile_image').click(function() {
-            $('#profile_picture_input').click(); // Open file input dialog
-        });
+            // Trigger file input when image is clicked
+            $('#profile_image').click(function() {
+                $('#profile_picture_input').click(); // Open file input dialog
+            });
 
-        // Handle file input change (when user selects an image)
-        $('#profile_picture_input').change(function() {
-            var formData = new FormData();
-            formData.append('profile_picture', this.files[0]);
+            // Handle file input change (when user selects an image)
+            $('#profile_picture_input').change(function() {
+                var formData = new FormData();
+                formData.append('profile_picture', this.files[0]);
 
-            $.ajax({
-                url: "{{ route('profileimage.change') }}", // Make sure this is your correct route
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(response) {
-                    // Update the image on success
-                    $('#profile_image').attr('src', response.new_image_url);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Profile picture updated successfully!',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        // Reload the page after the popup closes
-                        location.reload();
-                    });
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    alert('Error updating profile picture!');
-                }
+                $.ajax({
+                    url: "{{ route('profileimage.change') }}", // Make sure this is your correct route
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        // Update the image on success
+                        $('#profile_image').attr('src', response.new_image_url);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Profile picture updated successfully!',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            // Reload the page after the popup closes
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error
+                        alert('Error updating profile picture!');
+                    }
+                });
             });
         });
-    });
+
+
     </script>
 @endsection

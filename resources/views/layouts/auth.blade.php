@@ -64,7 +64,7 @@
         <!-- Navigation or header content -->
     </header>
     <main>
-        @yield('content')
+        {{ $slot }}
     </main>
     <footer>
         <!-- Footer content -->
