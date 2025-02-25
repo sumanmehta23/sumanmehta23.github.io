@@ -87,7 +87,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="my-4 divider"><span>WITHDRAW DETAILS</span></div>
-                                                    @if ($errors->any())
+                                                    {{-- @if ($errors->any())
                                                         <div class="alert alert-danger">
                                                             <ul>
                                                                 @foreach ($errors->all() as $error)
@@ -95,12 +95,13 @@
                                                                 @endforeach
                                                             </ul>
                                                         </div>
-                                                    @endif
+                                                    @endif --}}
                                                     <div class="wallet-withdrawal Wallet_Withdrawal">
-                                                        <form method="post" style="padding:10px;" class="md-float-material form-material">
+                                                        <form method="post"  id="withdrawForm" style="padding:10px;" class="md-float-material form-material">
                                                             @csrf
                                                             <div class="row">
                                                                 <input type="hidden" name="withdraw_type" class="withdraw-type" value="Wallet_Withdrawal">
+                                                                <input type="hidden" id="hiddenTwoFactorCode" name="two_factor_code">
                                                                 <div class="mt-2 col-12">
                                                                     <div class="form-group row">
                                                                         <label class="col-lg-4 col-form-label">
@@ -173,11 +174,112 @@
                                                                 <div class="col-lg-4"></div>
                                                                 <div class="col-lg-8">
                                                                     <div class="row g-1">
-                                                                        <input type="submit" name="wallet_withdraw" class="btn btn-primary col-12" value="Withdraw From Wallet">
+                                                                        <input
+                                                                        {{-- type="submit" --}}
+                                                                        type="button"
+                                                                        id="withdrawFromWallet" name="wallet_withdraw" class="btn btn-primary col-12" value="Withdraw From Wallet">
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </form>
+
+                                                        {{-- <form method="post" id="withdrawForm" style="padding:10px;" class="md-float-material form-material">
+                                                            @csrf
+                                                            <div class="row">
+                                                                <input type="hidden" name="withdraw_type" class="withdraw-type" value="Wallet_Withdrawal">
+                                                                <input type="hidden" id="hiddenTwoFactorCode" name="two_factor_code">
+                                                                <!-- Wallet Account Selection -->
+                                                                <div class="mt-2 col-12">
+                                                                    <div class="form-group row">
+                                                                        <label class="col-lg-4 col-form-label">
+                                                                            SELECT WALLET ACCOUNT:
+                                                                            <small class="text-muted d-block">Please select the Wallet account to which you wish to transfer your funds</small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            @if (count($client_banks) == 0)
+                                                                                <div class="form-group">
+                                                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBankModal2">
+                                                                                        <i class="ti ti-plus f-18"></i> Add Wallet Information
+                                                                                    </button>
+                                                                                </div>
+                                                                            @else
+                                                                                <select name="client_wallet_id" required class="form-control fill" style="color:black;">
+                                                                                    @foreach ($client_banks as $bank)
+                                                                                        <option value="{{ $bank->id }}">
+                                                                                            {{ $bank->wallet_name }} / {{ $bank->wallet_network != 'BTC' ? $bank->wallet_currency : $bank->wallet_network }} / {{ $bank->wallet_network }}
+                                                                                        </option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                                <small data-bs-toggle="modal" data-bs-target="#addBankModal2" style="color: var(--primary-color); cursor: pointer;">
+                                                                                    + Add another wallet
+                                                                                </small>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Wallet Balance -->
+                                                                    <div class="form-group row">
+                                                                        <label class="col-lg-4 col-form-label">
+                                                                            Your Wallet Balance:
+                                                                            <small class="text-muted d-block">(USD)</small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="mb-3 input-group">
+                                                                                <input type="number" name="wallet_balance" value="{{ $wallet_balance }}" readonly class="form-control fill">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Withdrawal Amount -->
+                                                                    <div class="form-group row">
+                                                                        <label class="col-lg-4 col-form-label">
+                                                                            ENTER AMOUNT:
+                                                                            <small class="text-muted d-block">Please enter the amount that you need to withdraw</small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="mb-3 input-group">
+                                                                                <span class="input-group-text">$</span>
+                                                                                <input type="number" min="10" id="withdrawAmount" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
+                                                                                    @if(count($client_banks) > 0) required @endif>
+                                                                                <span class="input-group-text">.00</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Submit Button (Opens 2FA Modal) -->
+                                                            <div class="row">
+                                                                <div class="col-lg-4"></div>
+                                                                <div class="col-lg-8">
+                                                                    <div class="row g-1">
+                                                                        <button type="button" class="btn btn-primary col-12" id="withdrawFromWallet">
+                                                                            Withdraw From Wallet
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form> --}}
+
+                                                        <!-- 2FA Verification Modal -->
+                                                        <div class="modal fade" id="twoFactorModal" tabindex="-1" aria-labelledby="twoFactorModalLabel" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="twoFactorModalLabel">Enter 2FA Code</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <label for="twoFactorCode">Enter your 2FA authentication code:</label>
+                                                                        <input type="text" class="form-control" id="twoFactorCode" name="two_factor_code" required maxlength="6" minlength="6">
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                                                                        <button type="button" id="submitTwoFactor" class="btn btn-primary">Confirm Withdrawal</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
                                                     <div class="wallet-withdrawal USDT_Withdrawal" style="display:none">
@@ -442,4 +544,50 @@
             }
         });
     </script>
+    <!-- Bootstrap & jQuery for Modal Handling -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        jQuery(document).ready(function () {
+            // Check if two-factor authentication is enabled for the user
+            var twoFactorEnabled = <?= json_encode(auth()->user()->two_factor_secret ? true : false); ?>;
+            console.log(twoFactorEnabled);
+            jQuery('#twoFactorModal').modal('hide');
+
+            // Handle the withdrawal button click
+            jQuery('#withdrawFromWallet').click(function () {
+                var withdrawAmount = parseFloat(jQuery('#withdrawAmount').val());
+
+                // Validate withdraw amount before proceeding
+                if (isNaN(withdrawAmount) || withdrawAmount < 10) {
+                    alert('Withdrawal amount must be at least 10.');
+                    return; // Stop execution if validation fails
+                }
+
+                if (twoFactorEnabled) {
+                    // Show the modal for 2FA **only if validation passes**
+                    jQuery('#twoFactorModal').modal('show');
+
+                    // Handle the 2FA submission
+                    jQuery('#submitTwoFactor').off('click').on('click', function () { // Prevent multiple bindings
+                        var twoFactorCode = jQuery('#twoFactorCode').val();
+
+                        // Validate the 2FA code
+                        if (twoFactorCode.length !== 6 || isNaN(twoFactorCode)) {
+                            alert('Please enter a valid 6-digit 2FA code.');
+                            return; // Prevent form submission if the code is invalid
+                        }
+
+                        // Store the code in the hidden input field and submit the form
+                        jQuery('#hiddenTwoFactorCode').val(twoFactorCode);
+                        jQuery('#withdrawForm').submit();
+                    });
+
+                } else {
+                    // If 2FA is not enabled, directly submit the form
+                    jQuery('#withdrawForm').submit();
+                }
+            });
+        });
+    </script>
+
 @endsection

@@ -539,6 +539,18 @@
 
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let hash = window.location.hash;
+            if (hash) {
+                let tab = document.querySelector(`a[href="${hash}"]`);
+                if (tab) {
+                    new bootstrap.Tab(tab).show();
+                }
+            }
+        });
+    </script>
+
     @if (session('success'))
         <script>
             Swal.fire({
@@ -767,5 +779,7 @@
                 });
             });
         });
+
+
     </script>
 @endsection

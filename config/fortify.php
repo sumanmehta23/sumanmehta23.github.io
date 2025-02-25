@@ -155,5 +155,8 @@ return [
             // 'window' => 0,
         ]),
     ],
+    'redirects'=>[
+        'password-confirmation' => '/user-profile#two-factor-auth',
+    ]
 
 ];
