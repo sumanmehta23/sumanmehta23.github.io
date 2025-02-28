@@ -27,6 +27,28 @@ class Users extends Controller
     {
         $this->mailService = $mailService;
     }
+
+
+    public function api_call(Request $request)
+    {
+        // dd($request->all());
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // Create Sanctum token
+        $token = $user->createToken('api_call')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ], 201);
+    }
+
+
+
     public function profile()
     {
         $user_id = auth()->user()->id;

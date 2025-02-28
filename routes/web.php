@@ -145,10 +145,6 @@ Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
-
-
-
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');

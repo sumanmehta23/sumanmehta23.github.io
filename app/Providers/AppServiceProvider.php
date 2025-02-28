@@ -7,7 +7,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-
+use App\Models\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') !== 'local') {
             URL::forceScheme('https');
         }
+
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+
         RateLimiter::for('deposit', function ($request) {
             // Limit to 1 request every 10 seconds
             return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
@@ -58,5 +63,7 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 5 request every 10 seconds
             return Limit::perSeconds(300, 3)->by(optional($request->user())->id ?: $request->ip());
         });
+
+
     }
 }
