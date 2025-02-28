@@ -194,9 +194,20 @@
                           </td>
                           {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+                            <p>{{ $history->status == 0 ? ($history->verified == 0 ? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+
+                            <p class="text-success">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
 
                             <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?  htmlspecialchars(isset($history->payout_req) ? json_decode($history->payout_res, true)['reason'] : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+
+                            @if(($history->verified == 0) && ($history->status == 0))
+                                <a  href="#"
+                                    class="btn btn-sm btn-outline-primary primary-btn"
+                                    onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')"
+                                    type="submit">
+                                        Resend Verification Email
+                                </a>
+                            @endif
 
 
                           </td>
@@ -408,6 +419,50 @@
         }
       });
     }
+
+    function resendWalletWithdrawalVerifyEmail(walletWithdrawalId) {
+        walletWithdrawalId = JSON.parse(walletWithdrawalId);
+
+        fetch("{{ route('resend.wallet.withdrawal.email') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+            },
+            body: JSON.stringify({ wallet_withdrawal_id: walletWithdrawalId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Success!",
+                    text: data.message,
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "OK"
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: data.message || "Error sending verification email.",
+                    confirmButtonColor: "#d33",
+                    confirmButtonText: "Try Again"
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Something went wrong. Please try again!",
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Close"
+            });
+        });
+    }
+
   </script>
 
 @endsection
