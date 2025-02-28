@@ -62,7 +62,7 @@ class Dashboard extends Controller
         $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.Status = 0";
         $pending_tw = DB::select($sql)[0];
 
-        $sql = "SELECT count(*) as counts from wallet_withdraw  trs " . $rmCondition . " trs.Status = 0";
+        $sql = "SELECT count(*) as counts from wallet_withdraw  trs " . $rmCondition . " trs.Status = 0 and trs.verified = 0";
         $pending_ww = DB::select($sql)[0];
 
         $sql = "SELECT count(*) as counts from ib1 trs " . $rmCondition . " trs.status = 0";

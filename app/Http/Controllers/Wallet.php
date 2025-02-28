@@ -990,6 +990,62 @@ class Wallet extends Controller
         return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!. Please verify your email for withdrawal confirmation.');
     }
 
+    public function resend_wallet_withdrawal_verify_email(Request $request)
+    {
+        try {
+            $request->validate([
+                'wallet_withdrawal_id' => 'required',
+            ]);
+            $user = auth()->user();
+
+            $walletWithdrawal = WalletWithdraw::with('user')
+                                                ->where('user_id',$user->id)
+                                                ->find($request->wallet_withdrawal_id);
+            // dump($user->id);
+            // dd($walletWithdrawal);
+            if (!$walletWithdrawal) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized or not found'], 403);
+            }
+
+            $settings = settings();
+            $withdrawAmount = $walletWithdrawal->withdraw_amount;
+            $toEmail = $walletWithdrawal->user->email;
+            $toName = $walletWithdrawal->user->fullname;
+            $from = $settings['email_from_address'];
+
+            $type = 'Withdrawal Details Verification';
+            $emailSubject = $settings['admin_title'] . ' - ' . $type;
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+            $content =
+                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</div>' .
+                '<div>Click the link below to activate your Wallet Withdrawal</div>';
+
+            $templateVars = [
+                'name' => $toName,
+                'server_name' => $settings['mt5_company_name'],
+                'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$walletWithdrawal->id",
+                'email' => $from,
+                "content" => $content,
+                "title_right" => "Activate",
+                "subtitle_right" => "Your Wallet Withdrawal Request"
+            ];
+
+            $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+            return response()->json(['success' => true, 'message' => 'Verification email sent successfully.']);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending wallet withdrawal verification email: ' . $e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Failed to send verification email. Please try again.']);
+        }
+    }
+
+
     public function wallet_withdrawal_verify(Request $request){
 
          if(!auth()->check()){
