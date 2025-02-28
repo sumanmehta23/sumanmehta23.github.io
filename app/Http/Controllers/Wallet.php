@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -13,19 +14,22 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Http\Controllers\Payment;
+use PragmaRX\Google2FA\Google2FA;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use App\Actions\SubscribeToKlaviyoList;
-use Illuminate\Support\Facades\RateLimiter;
-use App\Services\MailService as MailService;
+use App\Http\Resources\DepositResource;
 use Spatie\Activitylog\Models\Activity;
+use App\Http\Resources\DepositCollection;
+use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Laravel\Fortify\TwoFactorAuthenticationProvider;
-use PragmaRX\Google2FA\Google2FA;
+use App\Http\Resources\WithdrawalCollection;
+use App\Services\MailService as MailService;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\TwoFactorAuthenticationProvider;
 
 class Wallet extends Controller
 {
@@ -33,11 +37,21 @@ class Wallet extends Controller
     protected $paymentController;
     protected $mailService;
 
-    public function __construct(Payment $paymentController,MailService $mailService)
+    public function __construct(Payment $paymentController, MailService $mailService)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
+    }
+    public function alldeposits()
+    {
+        $deposits = WalletDeposit::paginate();
+        return new DepositCollection($deposits);
+    }
+    public function allwithdrawals()
+    {
+        $withdrawals = WalletWithdraw::paginate();
+        return new WithdrawalCollection($withdrawals);
     }
     public function index()
     {
@@ -58,7 +72,7 @@ class Wallet extends Controller
             ->get();
         // Fetch withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->select('id as raw_id', 'transaction_id','withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount','verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
+            ->select('id as raw_id', 'transaction_id', 'withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', 'verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
@@ -98,8 +112,8 @@ class Wallet extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => auth()->user()->email,
-                'username' =>auth()->user()->username,
-                'user_id' =>auth()->user()->id,
+                'username' => auth()->user()->username,
+                'user_id' => auth()->user()->id,
                 'wallet_name' => $request->wallet_name,
                 'wallet_currency' => 'USDT',
                 'wallet_network' => $request->wallet_network,
@@ -107,8 +121,8 @@ class Wallet extends Controller
                 'verified' => 0,
                 'remark' => 'Created New Wallet Address'
             ])
-        ->event('create')
-        ->log('Created New Wallet Address');
+            ->event('create')
+            ->log('Created New Wallet Address');
 
 
         $toEmail = $user->email;
@@ -119,13 +133,13 @@ class Wallet extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $ClientWallet = ClientWallet::where('user_id', $user->id)
-                ->latest('created_at') // Specify the column to order by
-                ->first();
+            ->latest('created_at') // Specify the column to order by
+            ->first();
         $content =
-                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have added a new wallet address to your account.</div>' .
-                '<div>Wallet Address: '.$request->wallet_address.' </div>' .
-                '<div>Click the link below to activate your Wallet Address</div>';
+            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+            '<div>You are receiving this email because you have added a new wallet address to your account.</div>' .
+            '<div>Wallet Address: ' . $request->wallet_address . ' </div>' .
+            '<div>Click the link below to activate your Wallet Address</div>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -166,8 +180,8 @@ class Wallet extends Controller
                 ->withProperties([
                     'ip' => request()->ip(),
                     'user_email' => $wallet->user->email,
-                    'username' =>$wallet->user->username,
-                    'user_id' =>$wallet->user->id,
+                    'username' => $wallet->user->username,
+                    'user_id' => $wallet->user->id,
                     'wallet_name' => $wallet->wallet_name,
                     'wallet_currency' => 'USDT',
                     'wallet_network' => $wallet->wallet_network,
@@ -175,8 +189,8 @@ class Wallet extends Controller
                     'verified' => 1,
                     'remark' => 'Verify Wallet Deletion'
                 ])
-            ->event('update')
-            ->log('Verify Wallet Deletion');
+                ->event('update')
+                ->log('Verify Wallet Deletion');
         }
 
         $toEmail = $wallet->user->email;
@@ -188,9 +202,9 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-                '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
-                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
-                '<div>For security purposes, please verify this request by clicking the link below</div>';
+            '<div>We received a request to delete the following wallet address linked to your wallet</div>' .
+            '<div>Wallet Address: ' . $wallet->wallet_address . ' </div>' .
+            '<div>For security purposes, please verify this request by clicking the link below</div>';
 
         $templateVars = [
             'name' => $wallet->user->fullname,
@@ -205,9 +219,9 @@ class Wallet extends Controller
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
         return response()->json([
-                    'success' => true,
-                    'message' => 'Wallet address deletion email send successfully.'
-                ]);
+            'success' => true,
+            'message' => 'Wallet address deletion email send successfully.'
+        ]);
     }
 
     public function get_editing_wallet_details(Request $request)
@@ -261,26 +275,26 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-                '<div>We received a request to update the details of your saved wallet. Please review the changes below:</div>' .
-                '<br>'.
-                '<div>Previous Wallet Details:</div>'.
-                '<br>'.
-                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
-                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
-                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
-                '<br>'.
-                '<div>Updated Wallet Details:</div>'.
-                '<br>'.
-                '<div>Wallet Name: '.$wallet_name.' </div>'.
-                '<div>Wallet Network: '.$wallet_network.' </div>'.
-                '<div>Wallet Address: '.$wallet_address.' </div>'.
-                '<br>'.
-                '<div>For security purposes, please verify this request by clicking the link below</div>'.
-                '<br>'.
-                '<div>If you did not request this change, please contact our support team immediately at support@lqhmarkets.com.</div>'.
-                '<br>'.
-                '<div>Best regards,</div>'.
-                '<div>LQH Markets Team</div>';
+            '<div>We received a request to update the details of your saved wallet. Please review the changes below:</div>' .
+            '<br>' .
+            '<div>Previous Wallet Details:</div>' .
+            '<br>' .
+            '<div>Wallet Name: ' . $wallet->wallet_name . ' </div>' .
+            '<div>Wallet Network: ' . $wallet->wallet_network . ' </div>' .
+            '<div>Wallet Address: ' . $wallet->wallet_address . ' </div>' .
+            '<br>' .
+            '<div>Updated Wallet Details:</div>' .
+            '<br>' .
+            '<div>Wallet Name: ' . $wallet_name . ' </div>' .
+            '<div>Wallet Network: ' . $wallet_network . ' </div>' .
+            '<div>Wallet Address: ' . $wallet_address . ' </div>' .
+            '<br>' .
+            '<div>For security purposes, please verify this request by clicking the link below</div>' .
+            '<br>' .
+            '<div>If you did not request this change, please contact our support team immediately at support@lqhmarkets.com.</div>' .
+            '<br>' .
+            '<div>Best regards,</div>' .
+            '<div>LQH Markets Team</div>';
 
         $templateVars = [
             'name' => $wallet->user->fullname,
@@ -295,9 +309,9 @@ class Wallet extends Controller
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
         return response()->json([
-                    'success' => true,
-                    'message' => 'Wallet address update email send successfully.'
-                ]);
+            'success' => true,
+            'message' => 'Wallet address update email send successfully.'
+        ]);
     }
 
     public function edit_wallet_details(Request $request)
@@ -314,7 +328,7 @@ class Wallet extends Controller
             ]);
         }
 
-        if($wallet){
+        if ($wallet) {
             $wallet->wallet_name = $wallet_details['wallet_name'];
             $wallet->wallet_network = $wallet_details['wallet_network'];
             $wallet->wallet_address = $wallet_details['wallet_address'];
@@ -326,8 +340,8 @@ class Wallet extends Controller
                 ->withProperties([
                     'ip' => request()->ip(),
                     'user_email' => $wallet->user->email,
-                    'username' =>$wallet->user->username,
-                    'user_id' =>$wallet->user->id,
+                    'username' => $wallet->user->username,
+                    'user_id' => $wallet->user->id,
                     'wallet_name' => $wallet->wallet_name,
                     'wallet_currency' => 'USDT',
                     'wallet_network' => $wallet->wallet_network,
@@ -335,8 +349,8 @@ class Wallet extends Controller
                     'verified' => 1,
                     'remark' => 'Edit Wallet Details'
                 ])
-            ->event('update')
-            ->log('Edit Wallet Details');
+                ->event('update')
+                ->log('Edit Wallet Details');
 
             $settings = settings();
             $from = $settings['email_from_address'];
@@ -346,11 +360,11 @@ class Wallet extends Controller
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $content =
-                '<div>We’re writing to confirm that your request to update your wallet details has been successfully verified and processed:</div>'.
-                '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
-                '<div>Wallet Network: '.$wallet->wallet_network.' </div>'.
-                '<div>Wallet Name: '.$wallet->wallet_name.' </div>'.
-                '<div>The wallet details is now updated. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+                '<div>We’re writing to confirm that your request to update your wallet details has been successfully verified and processed:</div>' .
+                '<div>Wallet Address: ' . $wallet->wallet_address . ' </div>' .
+                '<div>Wallet Network: ' . $wallet->wallet_network . ' </div>' .
+                '<div>Wallet Name: ' . $wallet->wallet_name . ' </div>' .
+                '<div>The wallet details is now updated. If this action was not performed by you, please contact our support team immediately at ' . $settings['email_from_address'] . ' for assistance.</div>';
             $templateVars = [
                 'name' => $wallet->user->fullname,
                 'server_name' => $settings['mt5_company_name'],
@@ -363,7 +377,6 @@ class Wallet extends Controller
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
             return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
-
         }
         return redirect()->route('user-profile')->with('error', 'Something went wrong');
     }
@@ -379,8 +392,8 @@ class Wallet extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => $wallet->user->email,
-                'username' =>$wallet->user->username,
-                'user_id' =>$wallet->user->id,
+                'username' => $wallet->user->username,
+                'user_id' => $wallet->user->id,
                 'wallet_name' => $wallet->wallet_name,
                 'wallet_currency' => 'USDT',
                 'wallet_network' => $wallet->wallet_network,
@@ -388,8 +401,8 @@ class Wallet extends Controller
                 'verified' => 1,
                 'remark' => 'Wallet Deleted'
             ])
-        ->event('update')
-        ->log('Wallet Deleted');
+            ->event('update')
+            ->log('Wallet Deleted');
         $settings = settings();
         $from = $settings['email_from_address'];
         $emailSubject = $settings['admin_title'] . ' - Wallet Address Deletion Verified';
@@ -398,9 +411,9 @@ class Wallet extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
-            '<div>We’re writing to confirm that your request to delete the following wallet address has been successfully verified and processed:</div>'.
-            '<div>Wallet Address: '.$wallet->wallet_address.' </div>'.
-            '<div>The wallet address is now removed from your wallet. If this action was not performed by you, please contact our support team immediately at '.$settings['email_from_address'].' for assistance.</div>';
+            '<div>We’re writing to confirm that your request to delete the following wallet address has been successfully verified and processed:</div>' .
+            '<div>Wallet Address: ' . $wallet->wallet_address . ' </div>' .
+            '<div>The wallet address is now removed from your wallet. If this action was not performed by you, please contact our support team immediately at ' . $settings['email_from_address'] . ' for assistance.</div>';
         $templateVars = [
             'name' => $wallet->user->fullname,
             'server_name' => $settings['mt5_company_name'],
@@ -420,7 +433,8 @@ class Wallet extends Controller
     }
 
 
-    public function wallet_address_verify(Request $request){
+    public function wallet_address_verify(Request $request)
+    {
         $settings = settings();
         $id = $request->query('id');
         $clientWallet_id = $request->query('clientWallet_id');
@@ -438,8 +452,8 @@ class Wallet extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'user_email' => $new_wallet_address->user->email,
-                        'username' =>$new_wallet_address->user->username,
-                        'user_id' =>$new_wallet_address->user->id,
+                        'username' => $new_wallet_address->user->username,
+                        'user_id' => $new_wallet_address->user->id,
                         'wallet_name' => $new_wallet_address->wallet_name,
                         'wallet_currency' => 'USDT',
                         'wallet_network' => $new_wallet_address->wallet_network,
@@ -447,8 +461,8 @@ class Wallet extends Controller
                         'verified' => 1,
                         'remark' => 'Verified New Wallet Address'
                     ])
-                ->event('update')
-                ->log('Verified New Wallet Address');
+                    ->event('update')
+                    ->log('Verified New Wallet Address');
                 $from = $settings['email_from_address'];
                 $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Address';
                 $htmlContent = "";
@@ -518,13 +532,13 @@ class Wallet extends Controller
 
         $wallet_balance = (float) $total_wd - ((float) $total_ww + (float) $total_wwf);
 
-        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals','wallet_balance'));
+        return view('wallet_deposit', compact('kyc_user', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
     public function showWithdrawalForm()
     {
-        $user=auth()->user();
+        $user = auth()->user();
         $email = $user->email;
-        $userId=$user->id;
+        $userId = $user->id;
         $client_banks = ClientWallet::where('user_id', $userId)
             ->where('status', 1)
             ->where('verified', 1)
@@ -541,18 +555,19 @@ class Wallet extends Controller
             ->select(DB::raw('SUM(equity) as equity'), DB::raw('SUM(balance) as balance'))
             ->first();
 
-        $wallet_balance =$user->wallet_balance;
+        $wallet_balance = $user->wallet_balance;
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
     public function deposit(Request $request)
     {
-        $request->validate([
+        $request->validate(
+            [
                 'confirmcryptoCheckbox' => [
                     'required' // Ensures this checkbox is checked
                 ],
             ],
             [
-            'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
+                'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
             ]
         );
         $user = auth()->user();
@@ -570,16 +585,17 @@ class Wallet extends Controller
                     "initiated_by" => $user->email
                 ];
                 activity()->causedBy(auth()->user()->id)
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
-                        'payment_amount' => $trading_deposited1,
-                        'payment_type' => 'CreditCardPayissa',
-                        'remark' => 'Wallet Deposit'
-                    ])
-                ->event('create')
-                ->log('Wallet Deposit');
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'payment_amount' => $trading_deposited1,
+                            'payment_type' => 'CreditCardPayissa',
+                            'remark' => 'Wallet Deposit'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
                 $currency = 'USD';
@@ -589,7 +605,7 @@ class Wallet extends Controller
                 } else {
                     return redirect()->back()->with('error', 'Something went wrong in NowPayment. Please try again other Payment methods or try again later.');
                 }
-            }elseif ($deposit_type == "Now Payment") {
+            } elseif ($deposit_type == "Now Payment") {
                 $data = [
                     "payment_amount" => $trading_deposited1,
                     "payment_type" => "NowPayment",
@@ -599,16 +615,17 @@ class Wallet extends Controller
                     "initiated_by" => $user->email
                 ];
                 activity()->causedBy(auth()->user()->id)
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
-                        'payment_amount' => $trading_deposited1,
-                        'payment_type' => 'NowPayment',
-                        'remark' => 'Wallet Deposit'
-                    ])
-                ->event('create')
-                ->log('Wallet Deposit');
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'payment_amount' => $trading_deposited1,
+                            'payment_type' => 'NowPayment',
+                            'remark' => 'Wallet Deposit'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
                 $currency = 'USD';
@@ -626,17 +643,17 @@ class Wallet extends Controller
     }
     private function createCCPayment($amount, $currency, $orderId, $paymentId)
     {
-        $user=auth()->user();
-        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
+        $user = auth()->user();
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
-         $url = config("services.payissa.url").'/control/wallet.php?address='.config("services.payissa.address").'&callback='.urlencode($success_url);
+        $url = config("services.payissa.url") . '/control/wallet.php?address=' . config("services.payissa.address") . '&callback=' . urlencode($success_url);
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->get($url);
         if ($response->successful()) {
 
-            $responsdata=$response->json();
+            $responsdata = $response->json();
             // Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
             PaymentLog::where('id', $paymentId)->update([
                 'payment_req' => json_encode($responsdata),
@@ -644,15 +661,15 @@ class Wallet extends Controller
                 'remarks' => $success_url,
             ]);
             $amount += (4 / 100) * $amount;
-            $url=config("services.payissa.checkouturl").'/process-payment.php?address='.$responsdata['address_in']."&amount=".$amount."&provider=wert&email=".$user->email."&currency=".$currency;
+            $url = config("services.payissa.checkouturl") . '/process-payment.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&provider=wert&email=" . $user->email . "&currency=" . $currency;
 
-            return ['invoice_url'=>$url];
+            return ['invoice_url' => $url];
         }
         return null;
     }
     private function createPayment($amount, $currency, $orderId, $paymentId)
     {
-        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" .$paymentId . "&status=success";
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
         $url = 'https://api.nowpayments.io/v1/invoice';
         $data = [
@@ -743,14 +760,14 @@ class Wallet extends Controller
         }
         return null;
     }
-    protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    protected function subscribeToKlaviyoList(User $user, $amount, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $listId = $this->getKlaviyoListId($amount);
-        if($listId){
+        if ($listId) {
             $subscribeToKlaviyoList->handle($user, $listId);
         }
     }
-    public function secureProcessPayment(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    public function secureProcessPayment(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
@@ -758,7 +775,7 @@ class Wallet extends Controller
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
         $callback_id = $payload['callback_id'] ?? null;
-        $callbackToken=config('services.cryptochill.callbacktoken');
+        $callbackToken = config('services.cryptochill.callbacktoken');
         // Validate the signature
         if ($callback_id !== null) {
             $is_valid = $signature === $this->encodeHmac($callbackToken, $callback_id);
@@ -768,7 +785,7 @@ class Wallet extends Controller
 
         // Throw an error if the signature does not match
         if (!$is_valid) {
-            info('Failed to verify CryptoChill callback signature: ' . $callback_id ." and token is  ".$callbackToken);
+            info('Failed to verify CryptoChill callback signature: ' . $callback_id . " and token is  " . $callbackToken);
             throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
         }
 
@@ -798,7 +815,7 @@ class Wallet extends Controller
 
             if ($deposit_to === "wallet") {
                 // Check for duplicate transaction
-                $existingDeposit =WalletDeposit::where('transaction_id', $transactionId)->first();
+                $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingDeposit) {
                     return response()->json(['status' => 'true']);
                 }
@@ -825,12 +842,12 @@ class Wallet extends Controller
 
                     // Update total balance
                     TotalBalance::create(
-                        ['email' => $email,'user_id'=>$customerID,'deposit_amount' => $amount]
+                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
                     );
 
                     DB::commit();
-                    $user=User::where('id',$customerID)->first();
-                    $this->subscribeToKlaviyoList($user,$amount,$subscribeToKlaviyoList);
+                    $user = User::where('id', $customerID)->first();
+                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
                     Cache::forget("user:{$customerID}:wallet_balance");
                     Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
 
@@ -910,7 +927,8 @@ class Wallet extends Controller
         $userEmail = auth()->user()->email;
         $user = auth()->user();
         $withdrawAmount = $request->input('withdraw_amount');
-        $request->validate([
+        $request->validate(
+            [
                 'confirmCheckbox' => [
                     'required_if:withdraw_amount,<,99',
                 ],
@@ -919,13 +937,13 @@ class Wallet extends Controller
                 ],
             ],
             [
-            'confirmCheckbox.required_if' => 'The confirmation checkbox is required when the withdrawal amount is less than 100.',
-            'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
+                'confirmCheckbox.required_if' => 'The confirmation checkbox is required when the withdrawal amount is less than 100.',
+                'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
             ]
         );
         $withdrawType = str_replace('_', ' ', $request->input('withdraw_type'));
-        $clientWalletId= $request->input('client_wallet_id');
-        $clientWallet=ClientWallet::where('id', $clientWalletId)->where('user_id',$user->id)->firstOrFail();
+        $clientWalletId = $request->input('client_wallet_id');
+        $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user->id)->firstOrFail();
 
         $totalDeposits = WalletDeposit::where('email', $userEmail)
             ->where('status', 1)
@@ -939,15 +957,14 @@ class Wallet extends Controller
             ->whereNotIn('status', [2, 3])
             ->sum('withdraw_transaction_fee');
 
-        $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals +(float) $totalWithdrawalsFee);
+        $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
         if ($withdrawAmount > $walletBalance) {
             return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
-        }
-        else if($withdrawAmount < 100){
-            $withdrawAmount = $withdrawAmount-5;
+        } else if ($withdrawAmount < 100) {
+            $withdrawAmount = $withdrawAmount - 5;
             $withdraw_transaction_fee = 5;
-        }else{
-            $withdrawAmount= $withdrawAmount;
+        } else {
+            $withdrawAmount = $withdrawAmount;
             $withdraw_transaction_fee = null;
         }
         $WalletWithdrawal = WalletWithdraw::create([
@@ -971,9 +988,9 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have requested a withdrawal of amount $'. $withdrawAmount .' from your wallet.</div>'.
-                '<div>Click the link below to activate your Wallet Withdrawal</div>';
+            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+            '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</div>' .
+            '<div>Click the link below to activate your Wallet Withdrawal</div>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -987,7 +1004,7 @@ class Wallet extends Controller
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
         // RateLimiter::clear($key);
-        return redirect()->back()->with('success','Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!. Please verify your email for withdrawal confirmation.');
+        return redirect()->back()->with('success', 'Withdrawal Request of $' . $withdrawAmount . ' Successfully Submitted!. Please verify your email for withdrawal confirmation.');
     }
 
     public function resend_wallet_withdrawal_verify_email(Request $request)
@@ -999,8 +1016,8 @@ class Wallet extends Controller
             $user = auth()->user();
 
             $walletWithdrawal = WalletWithdraw::with('user')
-                                                ->where('user_id',$user->id)
-                                                ->find($request->wallet_withdrawal_id);
+                ->where('user_id', $user->id)
+                ->find($request->wallet_withdrawal_id);
             // dump($user->id);
             // dd($walletWithdrawal);
             if (!$walletWithdrawal) {
@@ -1037,7 +1054,6 @@ class Wallet extends Controller
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
             return response()->json(['success' => true, 'message' => 'Verification email sent successfully.']);
-
         } catch (\Exception $e) {
             Log::error('Error sending wallet withdrawal verification email: ' . $e->getMessage());
 
@@ -1046,11 +1062,12 @@ class Wallet extends Controller
     }
 
 
-    public function wallet_withdrawal_verify(Request $request){
+    public function wallet_withdrawal_verify(Request $request)
+    {
 
-         if(!auth()->check()){
+        if (!auth()->check()) {
             return redirect('/login');
-         }
+        }
 
         $settings = settings();
         $id = auth()->user()->id;
@@ -1064,17 +1081,18 @@ class Wallet extends Controller
                 $new_wallet_Withdrawal->verified = 1;
                 $new_wallet_Withdrawal->save();
                 activity()->causedBy(auth()->user())
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
-                        'withdraw_amount' => $new_wallet_Withdrawal->withdraw_amount,
-                        'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
-                        'wallet_withdraw_id' => $walletWithdrawal_id,
-                        'remark' => 'Wallet Withdraw'
-                    ])
-                ->event('create')
-                ->log('Wallet Withdraw');
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'withdraw_amount' => $new_wallet_Withdrawal->withdraw_amount,
+                            'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
+                            'wallet_withdraw_id' => $walletWithdrawal_id,
+                            'remark' => 'Wallet Withdraw'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Wallet Withdraw');
                 $from = $settings['email_from_address'];
                 $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
                 $htmlContent = "";
@@ -1101,5 +1119,4 @@ class Wallet extends Controller
             return redirect()->route('dashboard')->with('error', 'Sorry! No Wallet Withdrawal Found. Signup here');
         }
     }
-
 }

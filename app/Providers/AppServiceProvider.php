@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Request;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Models\Sanctum\PersonalAccessToken;
-use Laravel\Sanctum\Sanctum;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -63,7 +64,5 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 5 request every 10 seconds
             return Limit::perSeconds(300, 3)->by(optional($request->user())->id ?: $request->ip());
         });
-
-
     }
 }

@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Users;
+use App\Http\Controllers\Wallet;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,8 +16,12 @@ use App\Http\Controllers\Users;
 |
 */
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
+    Route::get('withdrawals', [Wallet::class, 'allwithdrawals'])->name('account.deactivate');
+});
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/tokens/fetch', [Users::class,'api_call']);
+Route::post('/tokens/fetch', [Users::class, 'api_call']);

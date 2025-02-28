@@ -26,39 +26,39 @@ class SettingsController extends Controller
         $search = $request->input('search');
 
         $logs = Activity::query()
-                ->when($searchType == 'text' && $search, function ($query) use ($search) {
-                    return $query->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
-                })
-                ->when($searchType == 'date_range' && $startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                    return $query->whereBetween('created_at', [$startDate, $endDate]);
-                })
-                ->when($searchType == 'type' && $logType, function ($query) use ($logType) {
-                    return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
-                })
-                ->when($searchType === 'user', function ($query) use ($search, $logType) {
-                    return $query->where(function ($subQuery) use ($search, $logType) {
-                        if ($search && $logType) {
-                            // If both search and logType are provided, apply AND condition
-                            $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"])
-                                     ->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
-                        } elseif ($search) {
-                            // Only search by user
-                            $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
-                        } elseif ($logType) {
-                            // Only search by log type
-                            $subQuery->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
-                        }
-                    });
-                })
+            ->when($searchType == 'text' && $search, function ($query) use ($search) {
+                return $query->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
+            })
+            ->when($searchType == 'date_range' && $startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                return $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->when($searchType == 'type' && $logType, function ($query) use ($logType) {
+                return $query->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+            })
+            ->when($searchType === 'user', function ($query) use ($search, $logType) {
+                return $query->where(function ($subQuery) use ($search, $logType) {
+                    if ($search && $logType) {
+                        // If both search and logType are provided, apply AND condition
+                        $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"])
+                            ->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                    } elseif ($search) {
+                        // Only search by user
+                        $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
+                    } elseif ($logType) {
+                        // Only search by log type
+                        $subQuery->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                    }
+                });
+            })
 
 
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-                // dump($logs);
-                // dump($logType);
-                // dump($searchType);
-                // dd($search);
-        return view('admin.logs',compact('logs'));
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        // dump($logs);
+        // dump($logType);
+        // dump($searchType);
+        // dd($search);
+        return view('admin.logs', compact('logs'));
     }
 
     private function extractEvent($message)
@@ -76,7 +76,30 @@ class SettingsController extends Controller
         }
         return 'N/A';
     }
+    public function create_apitoken()
+    {
+        return view("admin.create_apitoken");
+    }
+    public function store_apitoken(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|unique:personal_access_tokens,name,except,id',
+            'password' => ['required', function ($attribute, $value, $fail) {
+                if (!Hash::check($value, auth()->guard('admin')->user()->password)) {
+                    $fail(__('The provided password is incorrect.'));
+                }
+            }],
+        ]);
 
+        $user = auth()->guard('admin')->user();
+        // if (!Hash::check($request->password, $user->password)) {
+        //     return response()->json(['error' => 'Incorrect password'], 403);
+        // }
+        $employee = EmployeeList::where('id', $user->id)->first();
+        // $user->tokens()->delete();
+        $token = $employee->createToken($validatedData['name']);
+        return redirect()->back()->with('success', 'API Token Created Successfully.Please store this token in a safe place. This will not be shown again.' . $token->plainTextToken);
+    }
     public function store(Request $request)
     {
         $req = $request->except(["_token", "update"]);
@@ -108,8 +131,8 @@ class SettingsController extends Controller
         ]);
         $user = EmployeeList::where('email', session('alogin'))->first();
 
-        if (!Hash::check($request->oldpassword, $user->password)){
-            return redirect()->back()->with('error','Old password you entered is invalid');
+        if (!Hash::check($request->oldpassword, $user->password)) {
+            return redirect()->back()->with('error', 'Old password you entered is invalid');
         }
         $user->password = Hash::make($request->newpassword);
         $user->save();
@@ -118,16 +141,15 @@ class SettingsController extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => auth()->guard('admin')->user()->email,
-                'userRole' =>auth()->guard('admin')->user()->userRole,
-                'username' =>auth()->guard('admin')->user()->username,
-                'user_id' =>auth()->guard('admin')->user()->id,
+                'userRole' => auth()->guard('admin')->user()->userRole,
+                'username' => auth()->guard('admin')->user()->username,
+                'user_id' => auth()->guard('admin')->user()->id,
                 'new_passowrd' => $request->newpassword,
                 'old_passowrd' => $request->oldpassword,
                 'remark' => 'Update Admin Password'
             ])
-        ->event('update')
-        ->log('Update Admin Password');
-        return redirect()->back()->with('success','Password Updated Successfully');
+            ->event('update')
+            ->log('Update Admin Password');
+        return redirect()->back()->with('success', 'Password Updated Successfully');
     }
-
 }

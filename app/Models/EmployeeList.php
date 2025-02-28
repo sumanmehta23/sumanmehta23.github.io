@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class EmployeeList extends Authenticatable
 {
-    use HasUuids,HasUuids ;
+    use HasApiTokens, HasUuids, HasUuids;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];
@@ -25,7 +27,7 @@ class EmployeeList extends Authenticatable
             'rm_id',
             'user_id'
         )
-        ->withPivot('added_by');
+            ->withPivot('added_by');
     }
     public function hasPermission($permission)
     {

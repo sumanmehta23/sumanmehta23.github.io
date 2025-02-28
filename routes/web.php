@@ -206,7 +206,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet_deposit', [Wallet::class, 'deposit'])->name('wallet_deposit_store');
     Route::post('/wallet_withdrawal', [Wallet::class, 'withdrawal'])->name('wallet_withdrawal_store');
     Route::post('/resend-wallet-withdrawal-email', [Wallet::class, 'resend_wallet_withdrawal_verify_email'])
-    ->name('resend.wallet.withdrawal.email');
+        ->name('resend.wallet.withdrawal.email');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
@@ -366,6 +366,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::prefix('/update_password')->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
             Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
+        });
+        Route::prefix('/api-token')->group(function () {
+            Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:setting:update');
+            Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:setting:update']);
         });
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
