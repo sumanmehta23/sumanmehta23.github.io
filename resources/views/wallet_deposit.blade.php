@@ -450,7 +450,8 @@
                                                                                     <div class="form-check">
                                                                                         <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  >
                                                                                         <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                                            Please ensure you send the correct cryptocurrency to the correct wallet address and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
+                                                                                            Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, This option may not be available in your country.
+                                                                                            In that case, please use cryptocurrency to deposit.
                                                                                         </label>
                                                                                     </div>
                                                                                 </div>
