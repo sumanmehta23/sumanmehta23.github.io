@@ -37,5 +37,23 @@
                 </form>
             </div>
         </div>
+        {{-- Display all tokens in table --}}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($tokens as $token)
+                    <tr>
+                        <td>{{ $token->name }}</td>
+                        <td>DELETE</td>
+                    </tr>
+                @endforeach
+
+            </tbody>
+        </table>
     </div>
 @endsection

@@ -78,7 +78,11 @@ class SettingsController extends Controller
     }
     public function create_apitoken()
     {
-        return view("admin.create_apitoken");
+        $user = auth()->guard('admin')->user();
+
+        $employee = EmployeeList::where('id', $user->id)->first();
+        $tokens = $employee->tokens()->get();
+        return view("admin.create_apitoken", compact('tokens'));
     }
     public function store_apitoken(Request $request)
     {
