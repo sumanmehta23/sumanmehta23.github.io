@@ -45,31 +45,38 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card custom-card">
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($tokens as $token)
+                                        <tr>
+                                            <td>{{ $token->name }}</td>
+                                            <td>{{ $token->created_at->format('Y-m-d') }}<br>{{ $token->created_at->format('H:i:s') }}</td>
+                                            <td>
+                                                <form action="{{ route('admin.apitoken.destroy', $token->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this token?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
 
-        <table class="table mt-4">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($tokens as $token)
-                    <tr>
-                        <td>{{ $token->name }}</td>
-                        <td>{{ $token->created_at->format('Y-m-d') }}<br>{{ $token->created_at->format('H:i:s') }}</td>
-                        <td>
-                            <form action="{{ route('admin.apitoken.destroy', $token->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this token?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-
-            </tbody>
-        </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </div>
 @endsection
