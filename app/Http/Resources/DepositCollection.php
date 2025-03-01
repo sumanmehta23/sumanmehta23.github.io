@@ -22,6 +22,7 @@ class DepositCollection extends ResourceCollection
                 return [
                     'id' => $deposit->id,
                     'amount' => $deposit->deposit_amount,
+                    'deposit_type' => $deposit->deposit_type,
                     'email' => $deposit->email,
                     'status' => $deposit->status,
                     'created_at' => $deposit->created_at->toDateTimeString(),

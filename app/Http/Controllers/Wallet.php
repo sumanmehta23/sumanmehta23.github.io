@@ -45,12 +45,12 @@ class Wallet extends Controller
     }
     public function alldeposits()
     {
-        $deposits = WalletDeposit::paginate();
+        $deposits = WalletDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
         return new DepositCollection($deposits);
     }
     public function allwithdrawals()
     {
-        $withdrawals = WalletWithdraw::paginate();
+        $withdrawals = WalletWithdraw::where('withdraw_type','Wallet Withdrawal')->where('status',1)->paginate();
         return new WithdrawalCollection($withdrawals);
     }
     public function index()

@@ -22,6 +22,8 @@ class WithdrawalCollection extends ResourceCollection
                 return [
                     'id' => $withdrawal->id,
                     'amount' => $withdrawal->withdraw_amount,
+                    'withdraw_transaction_fee' => $withdrawal->withdraw_transaction_fee,
+                    'type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'transaction_id' => $withdrawal->transaction_id,
                     'status' => $withdrawal->status,
