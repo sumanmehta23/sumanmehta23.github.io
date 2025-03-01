@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\EmployeeList;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Models\Activity;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class SettingsController extends Controller
 {
@@ -102,8 +103,18 @@ class SettingsController extends Controller
         $employee = EmployeeList::where('id', $user->id)->first();
         // $user->tokens()->delete();
         $token = $employee->createToken($validatedData['name']);
-        return redirect()->back()->with('success', 'API Token Created Successfully.Please store this token in a safe place. This will not be shown again.' . $token->plainTextToken);
+        return redirect()->back()->with('success', 'API Token Created Successfully.Please store this token in a safe place. This will not be shown again. \n' . $token->plainTextToken);
     }
+    public function destroy_apitoken($id)
+    {
+
+        $token = PersonalAccessToken::findOrFail($id);
+        // dd($token);
+        $token->delete();
+
+        return redirect()->back()->with('success', 'API Token deleted successfully.');
+    }
+
     public function store(Request $request)
     {
         $req = $request->except(["_token", "update"]);

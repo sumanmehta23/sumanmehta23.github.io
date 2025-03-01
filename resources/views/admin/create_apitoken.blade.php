@@ -37,11 +37,12 @@
                 </form>
             </div>
         </div>
-        {{-- Display all tokens in table --}}
-        <table class="table">
+
+        <table class="table mt-4">
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -49,7 +50,14 @@
                 @foreach ($tokens as $token)
                     <tr>
                         <td>{{ $token->name }}</td>
-                        <td>DELETE</td>
+                        <td>{{ $token->created_at->format('Y-m-d') }}<br>{{ $token->created_at->format('H:i:s') }}</td>
+                        <td>
+                            <form action="{{ route('admin.apitoken.destroy', $token->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this token?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
 
