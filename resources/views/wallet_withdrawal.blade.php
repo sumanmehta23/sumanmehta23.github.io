@@ -1,4 +1,12 @@
 @extends('layouts.crm.crm')
+<style>
+    .modal-dialog {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+</style>
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
@@ -274,7 +282,7 @@
 
                                                         <!-- 2FA Verification Modal -->
                                                         <div class="modal fade" id="twoFactorModal" tabindex="-1" aria-labelledby="twoFactorModalLabel" aria-hidden="true">
-                                                            <div class="modal-dialog">
+                                                            <div class="modal-dialog modal-dialog-centered"> <!-- This class centers the modal -->
                                                                 <div class="modal-content">
                                                                     <div class="modal-header">
                                                                         <h5 class="modal-title" id="twoFactorModalLabel">Enter 2FA Code</h5>
@@ -291,6 +299,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+
                                                     </div>
 
                                                     <div class="wallet-withdrawal USDT_Withdrawal" style="display:none">
