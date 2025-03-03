@@ -325,8 +325,7 @@
                                             <?php endif; ?>
                                             <li><a href="#tab-info" data-bs-toggle="tab" class="">ADDITIONAL
                                                     INFO</a></li>
-                                            <li><a href="#tab-profile" data-bs-toggle="tab" class="">PROFILE
-                                                    SETTINGS</a></li>
+                                            <li><a href="#tab-profile" data-bs-toggle="tab" class="">PROFILE SETTINGS</a></li>
                                         </ul>
                                     </div>
                                 </div>

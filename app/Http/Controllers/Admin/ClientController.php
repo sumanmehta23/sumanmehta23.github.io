@@ -675,6 +675,7 @@ class ClientController extends Controller
         if ($user) {
             $code = md5(uniqid(rand()));
             $user->update(['emailToken' => $code]);
+            $user->update(['email_token_time' => now()]);
             $content =
                 '<div>Welcome to ' . htmlspecialchars(settings()['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
                 '<div>We have received a request to reset the password associated with your account. If you initiated this request, please click the link below to reset your password:
