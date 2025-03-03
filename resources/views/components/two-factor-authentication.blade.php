@@ -161,6 +161,9 @@
                         title: 'Error',
                         text: error.response.data.message || 'Something went wrong. Please try again.',
                     });
+                    if(error.response.data.message == "Password confirmation required."){
+                        window.location.href = '{{ route('confirm_password') }}#two-factor-auth';
+                    }
                 });
             },
             enableTwoFactorAuthentication() {
