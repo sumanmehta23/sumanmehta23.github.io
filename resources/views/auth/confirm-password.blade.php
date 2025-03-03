@@ -42,6 +42,32 @@
 </div>
 @endsection
 
+{{-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let form = document.getElementById("password-confirm-form");
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let formData = new FormData(form);
+
+            axios.post("{{ route('password.confirm') }}", formData)
+                .then(response => {
+                    console.log("Password confirmed:", response.data);
+
+                    return axios.post("{{ route('two-factor.enable') }}");
+                })
+                .then(response => {
+                    console.log("Two-Factor Authentication enabled:", response.data);
+
+                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                })
+                .catch(error => {
+                    console.error("Error:", error.response.data);
+                });
+        });
+    });
+</script> --}}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         let form = document.getElementById("password-confirm-form");
@@ -64,6 +90,12 @@
                 })
                 .catch(error => {
                     console.error("Error:", error.response.data);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Incorrect Password',
+                        text: 'Please enter the correct password to proceed.',
+                    });
                 });
         });
     });
