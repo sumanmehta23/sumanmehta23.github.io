@@ -156,6 +156,11 @@
                     }
                 }).catch(error => {
                     console.log(error.response.data);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.response.data.message || 'Something went wrong. Please try again.',
+                    });
                 });
             },
             enableTwoFactorAuthentication() {
