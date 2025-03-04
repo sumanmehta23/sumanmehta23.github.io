@@ -126,6 +126,7 @@
                                         <option value="Update Client Email" {{ request('log_type') == 'Update Client Email' ? 'selected' : '' }}>Update Client Email</option>
                                         <option value="Create Demo Account" {{ request('log_type') == 'Create Demo Account' ? 'selected' : '' }}>Create Demo Account</option>
                                         <option value="Create Live Account" {{ request('log_type') == 'Create Live Account' ? 'selected' : '' }}>Create Live Account</option>
+                                        <option value="Wallet Deposits" {{ request('log_type') == 'Wallet Deposits' ? 'selected' : '' }}>Wallet Deposit</option>
                                         <option value="Wallet Withdraw" {{ request('log_type') == 'Wallet Withdraw' ? 'selected' : '' }}>Wallet Withdraw</option>
                                         <option value="Reject Wallet Withdraw" {{ request('log_type') == 'Reject Wallet Withdraw' ? 'selected' : '' }}>Reject Wallet Withdraw</option>
                                         <option value="Approve Wallet Withdraw" {{ request('log_type') == 'Approve Wallet Withdraw' ? 'selected' : '' }}>Approve Wallet Withdraw</option>
