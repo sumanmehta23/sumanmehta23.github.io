@@ -105,7 +105,7 @@ class PaymentCallbackController extends Controller
                             'payment_amount' => $amount,
                             'payment_type' => $depositType,
                             'transaction_id' => $transactionId,
-                            'remark' => 'Wallet Deposits'
+                            'remark' => 'Wallet Deposit Success'
                         ]
                     )
                     ->event('create')
