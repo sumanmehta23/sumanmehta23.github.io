@@ -15,7 +15,7 @@ class PaymentCallbackController extends Controller
         $payload = $request->json()->all();
         $signature = $payload['signature'] ?? null;
         $callbackId = $payload['callback_id'] ?? null;
-        
+
         if ($callbackId !== null) {
             $isValid = $signature === $this->encodeHmac(config('services.cryptochill.callbacktoken'), $callbackId);
         } else {
@@ -70,7 +70,7 @@ class PaymentCallbackController extends Controller
 
         return response("Invalid callback status.", 400);
     }
-        
+
     protected function encodeHmac($token, $data)
     {
         return hash_hmac('sha256', $data, $token);
@@ -96,7 +96,21 @@ class PaymentCallbackController extends Controller
                     'email' => $email,
                     'deposit_amount' => $amount
                 ]);
-                
+
+                activity()->causedBy(auth()->user()->id)
+                    ->withProperties(
+                        [
+                            'ip' => request()->ip(),
+                            'email' => auth()->user()->email,
+                            'payment_amount' => $amount,
+                            'payment_type' => $depositType,
+                            'transaction_id' => $transactionId,
+                            'remark' => 'Wallet Deposits'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Wallet Deposit');
+
             });
 
             Log::info($logData . "Transaction Confirmed\n");
@@ -143,4 +157,3 @@ class PaymentCallbackController extends Controller
         return response("true", 200);
     }
 }
- 

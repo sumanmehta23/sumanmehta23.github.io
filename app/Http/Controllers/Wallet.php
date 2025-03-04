@@ -584,18 +584,7 @@ class Wallet extends Controller
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email
                 ];
-                activity()->causedBy(auth()->user()->id)
-                    ->withProperties(
-                        [
-                            'ip' => $request->ip(),
-                            'email' => auth()->user()->email,
-                            'payment_amount' => $trading_deposited1,
-                            'payment_type' => 'CreditCardPayissa',
-                            'remark' => 'Wallet Deposit'
-                        ]
-                    )
-                    ->event('create')
-                    ->log('Wallet Deposit');
+
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
                 $currency = 'USD';
@@ -614,18 +603,6 @@ class Wallet extends Controller
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email
                 ];
-                activity()->causedBy(auth()->user()->id)
-                    ->withProperties(
-                        [
-                            'ip' => $request->ip(),
-                            'email' => auth()->user()->email,
-                            'payment_amount' => $trading_deposited1,
-                            'payment_type' => 'NowPayment',
-                            'remark' => 'Wallet Deposit'
-                        ]
-                    )
-                    ->event('create')
-                    ->log('Wallet Deposit');
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
                 $currency = 'USD';
