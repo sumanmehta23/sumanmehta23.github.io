@@ -209,12 +209,20 @@
                                         // Handle special cases for specific activity types
                                         $logDescription = '';
                                         switch ($log->properties['remark'] ?? '') {
-                                            case 'Wallet Deposit':
+                                            case 'Wallet Deposits':
                                                 $amount = $log->properties['payment_amount'];
                                                 $method = $log->properties['payment_type'];
                                                 $transaction_id = $log->properties['transaction_id'];
                                                 $logDescription = "<div class=''>
                                                                     <span style=''>User {$userLink} deposited ${$amount} by using method {$method} having transaction id {$transaction_id}.</span>
+                                                                </div>";
+                                            break;
+                                            case 'Wallet Deposit':
+                                                $amount = $log->properties['payment_amount'];
+                                                $method = $log->properties['payment_type'];
+                                                $transaction_id = $log->properties['transaction_id'];
+                                                $logDescription = "<div class=''>
+                                                                    <span style=''>User {$userLink} deposited ${$amount} by using method {$method}.</span>
                                                                 </div>";
                                             break;
 
