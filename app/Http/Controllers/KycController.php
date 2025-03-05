@@ -69,6 +69,15 @@ class KycController extends Controller
                 return response()->json(['status' => 'false', 'message' => 'User not found']);
             }
             if ($user->kyc_verify) {
+                $log = KycLog::where('user_id', $user->id)->first();
+                if (!$log) {
+                    KycLog::create([
+                        'client_id' => $email,
+                        'user_id' => $user->id,
+                        'callback_code' => json_encode($type),
+                        'callback_payload' => $payload,
+                    ]);
+                }
                 return response()->json(['status' => 'true', 'message' => 'Your KYC Already Verified']);
             }
             // Store callback log in the database
