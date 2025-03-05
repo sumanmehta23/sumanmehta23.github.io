@@ -62,7 +62,6 @@ return [
         'api_secret' => env('SUMSUB_API_SECRET', ''),
         'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
         'clientId' => env('SUMSUB_CLIENT_ID', ''),
-        'externalUserIdMap' => json_decode(env('SUMSUB_EXTERNAL_USER_ID_MAP', '{}'), true),
     ],
     'klaviyo' => [
         'list_ids' => json_decode(env('KLAVIYO_LIST_IDS', '[]'), true),
