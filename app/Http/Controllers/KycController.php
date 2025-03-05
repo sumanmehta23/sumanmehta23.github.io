@@ -63,7 +63,10 @@ class KycController extends Controller
         $email = $payload['externalUserId'];
         // $subscribeToKlaviyoList = new SubscribeToKlaviyoList();
         if ($type == 'applicantReviewed') {
-
+            $externalUserIdMap = config('services.sumsub.externalUserIdMap');
+            if (isset($externalUserIdMap[$email])) {
+                $payload["externalUserId"] = $email = $externalUserIdMap[$email];
+            }
             $user = User::where("email", $email)->first();
             if (!$user) {
                 return response()->json(['status' => 'false', 'message' => 'User not found']);
