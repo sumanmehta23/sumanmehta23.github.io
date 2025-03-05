@@ -251,8 +251,8 @@ class Users extends Controller
     }
     public function sumsub_verify(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
-        if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
-            $email = Session::get('clogin');
+        if (auth()->check() && $request->has(['sumsub', 'type', 'payload'])) {
+            $email = auth()->user()->email;
             $type = $request->input('type');
             $payload = $request->input('payload');
 

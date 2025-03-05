@@ -46,12 +46,14 @@ class KycController extends Controller
             'HMAC_SHA512_HEX' => 'sha512',
             default => throw new \RuntimeException('Unsupported algorithm'),
         };
+
         $secretKey = config('services.sumsub.api_secret');
         $res = $digest === hash_hmac(
             $algo,
             $return,
             $secretKey
         );
+        info(json_encode([$digest, $res, $return]));
         if (!$res) {
             return response()->json(['status' => 'false', 'message' => 'Invalid Request']);
         }
