@@ -53,11 +53,10 @@ class Users extends Controller
     {
         $user_id = auth()->user()->id;
         $bank_accounts = ClientWallet::where('user_id', $user_id)->get();
-        $user = User::where('id',$user_id)->first();
+        $user = User::where('id', $user_id)->first();
 
         // $verf_docs = KycUpdate::where('user_id', $user_id)->orderBy('id', 'desc')->get();
         return view('profile', compact('bank_accounts', 'user'));
-
     }
     public function changePassword(Request $request)
     {
@@ -133,13 +132,13 @@ class Users extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => auth()->user()->email,
-                'username' =>auth()->user()->username,
-                'user_id' =>auth()->user()->id,
+                'username' => auth()->user()->username,
+                'user_id' => auth()->user()->id,
                 'new_passowrd' => $request->new_password,
                 'remark' => 'Update Client Password'
             ])
-        ->event('update')
-        ->log('Update Client Password');
+            ->event('update')
+            ->log('Update Client Password');
 
         Auth::logoutOtherDevices($request->new_password);
 
@@ -191,14 +190,15 @@ class Users extends Controller
 
     public function sumsub()
     {
+        $user = auth()->user();
         $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key
         $secretKey = config('services.sumsub.api_secret');
         $timestamp = time(); // Current timestamp in seconds
 
         // Example values (replace with actual values as needed)
         // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
-        $appToken=config('services.sumsub.api_token');
-        $apiUrl = '/resources/accessTokens?userId=' . urlencode(session('clogin')) . '&levelName=basic-kyc-level'; // URI of the request
+        $appToken = config('services.sumsub.api_token');
+        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level'; // URI of the request
         $requestMethod = 'POST'; // HTTP method
         $requestBody = ''; // Add your request body if needed, empty for this example
 
@@ -248,9 +248,8 @@ class Users extends Controller
         curl_close($curl);
         $token = $auth->token ?? null;
         return view('sumsub', compact('token'));
-
     }
-    public function sumsub_verify(Request $request ,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    public function sumsub_verify(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         if (Session::has('clogin') && $request->has(['sumsub', 'type', 'payload'])) {
             $email = Session::get('clogin');
@@ -260,10 +259,10 @@ class Users extends Controller
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
-                $timestamp=time();
-                $requestMethod="GET";
+                $timestamp = time();
+                $requestMethod = "GET";
                 $secretKey = config('services.sumsub.api_secret');
-                $apiUrl = '/resources/applicants/'.$payload['applicantId'].'/status'; // URI of the request
+                $apiUrl = '/resources/applicants/' . $payload['applicantId'] . '/status'; // URI of the request
                 $requestBody = ''; // Add your request body if needed, empty for this example
 
                 // Create the valueToSign string
@@ -278,15 +277,15 @@ class Users extends Controller
 
                 // Convert binary signature to hexadecimal
                 $signatureHex = bin2hex($signature);
-                $response=Http::withHeaders([
+                $response = Http::withHeaders([
                     'X-App-Token' => config('services.sumsub.api_token'),
-                    'X-App-Access-Sig'=>$signatureHex,
-                    'X-App-Access-Ts'=>$timestamp,
-                ])->get('https://api.sumsub.com'.$apiUrl);
-                if($response->status()!=200){
+                    'X-App-Access-Sig' => $signatureHex,
+                    'X-App-Access-Ts' => $timestamp,
+                ])->get('https://api.sumsub.com' . $apiUrl);
+                if ($response->status() != 200) {
                     return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
                 }
-                $payload=$response->json();
+                $payload = $response->json();
 
                 // Store callback log in the database
                 KycLog::create([
@@ -317,7 +316,7 @@ class Users extends Controller
                         User::where('email', $email)
                             ->update(['kyc_verify' => 1]);
                         $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
-                        if($list_id){
+                        if ($list_id) {
                             $subscribeToKlaviyoList->handle($user, $list_id);
                         }
 
@@ -328,7 +327,7 @@ class Users extends Controller
                 } else {
                     return response()->json(['status' => 'false', 'message' => 'Status in progress..']);
                 }
-            }else {
+            } else {
                 return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
             }
         }
@@ -378,7 +377,7 @@ class Users extends Controller
             // $newEmail = $validatedData->validated()['email'];
             $user = User::where('email', $email)->first();
 
-            if($user){
+            if ($user) {
 
                 $user->email = $validatedData->validated()['email'];
                 $user->email_confirmed = 0;
@@ -390,14 +389,14 @@ class Users extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'old_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'user_id' => auth()->guard('admin')->user()->id,
                         'new_email' => $user->email,
                         'remark' => 'Update Client Email'
                     ])
-                ->event('update')
-                ->log('Update Client Email');
+                    ->event('update')
+                    ->log('Update Client Email');
 
                 session()->forget('user');
                 session()->put('user', User::find(auth()->id()));
@@ -405,7 +404,7 @@ class Users extends Controller
                 // DB::commit();
                 $settings = settings();
                 $from = $settings['email_from_address'];
-                $toEmail = $user->email;//which email use to send message
+                $toEmail = $user->email; //which email use to send message
                 $uid = uniqid();
                 $emailSubject = $settings['admin_title'] . ' - Activate Your New Email Address';
                 $htmlContent = "";
@@ -431,13 +430,9 @@ class Users extends Controller
 
                 return redirect()->back()->with('success', 'Email Successfully Changed');
             }
-
-
         } catch (\Exception $e) {
             DB::rollback(); // Rollback on failure
             return redirect()->back()->with('error', 'Failed to change email.');
         }
     }
-
-
 }
