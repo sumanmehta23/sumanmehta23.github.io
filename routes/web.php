@@ -3,6 +3,7 @@
 use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Account;
+use App\Models\KycUpdate;
 use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
 use App\Actions\SubscribeToKlaviyoList;
+use App\Http\Controllers\KycController;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
@@ -45,7 +47,6 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Models\KycUpdate;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
@@ -118,7 +119,7 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
     // $settings = \App\Models\Account::get()->toArray();
     // file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
 });
-Route::post('/user/kyc/listener', [KycUpdate::class, 'listener'])->name('kyc.listener');
+Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
