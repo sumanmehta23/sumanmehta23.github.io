@@ -47,7 +47,7 @@ class KycController extends Controller
             default => throw new \RuntimeException('Unsupported algorithm'),
         };
 
-        $secretKey = config('services.sumsub.api_secret');
+        $secretKey = config('services.sumsub.webhook_secret');
         $res = $digest === hash_hmac(
             $algo,
             $return,

@@ -30,39 +30,40 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-    'ip_geolocation'=>[
-        'url'=>env('IP_GEOLOCATION_URL'),
-        'key'=>env('IP_GEOLOCATION_API_KEY')
+    'ip_geolocation' => [
+        'url' => env('IP_GEOLOCATION_URL'),
+        'key' => env('IP_GEOLOCATION_API_KEY')
     ],
-    'cryptochill'=>[
-        'callbacktoken'=>env('CRYPTOCHILL_CALLBACK_TOKEN'),
-        'key'=>env('CRYPTOCHILL_API_KEY'),
-        'secret'=>env('CRYPTOCHILL_API_SECRET'),
-        'profileid'=>env('CRYPTOCHILL_PROFILE_ID'),
-        'accountid'=>env('CRYPTOCHILL_ACCOUNT_ID')
+    'cryptochill' => [
+        'callbacktoken' => env('CRYPTOCHILL_CALLBACK_TOKEN'),
+        'key' => env('CRYPTOCHILL_API_KEY'),
+        'secret' => env('CRYPTOCHILL_API_SECRET'),
+        'profileid' => env('CRYPTOCHILL_PROFILE_ID'),
+        'accountid' => env('CRYPTOCHILL_ACCOUNT_ID')
     ],
-    'payissa'=>[
-        'url'=>env('PAYISSA_URL','https://api.payissa.com'),
-        'checkouturl'=>env('PAYISSA_CHECKOUT_URL','https://checkout.payissa.com'),
-        'address'=>env('PAYISSA_WALLET_ADDRESS'),
+    'payissa' => [
+        'url' => env('PAYISSA_URL', 'https://api.payissa.com'),
+        'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://checkout.payissa.com'),
+        'address' => env('PAYISSA_WALLET_ADDRESS'),
     ],
-    'brevo'=>[
-        'url'=>env('BREVO_URL','https://api.brevo.com/v3/'),
-        'api_key'=>env('BREVO_API_KEY')
+    'brevo' => [
+        'url' => env('BREVO_URL', 'https://api.brevo.com/v3/'),
+        'api_key' => env('BREVO_API_KEY')
     ],
-    'pamm' =>[
-        'url' =>env('PAMM_URL'),
+    'pamm' => [
+        'url' => env('PAMM_URL'),
     ],
-    'sales'=>[
-        'promotion'=>env('SALES_PROMOTION',false),
-        'promotiontext'=>env('SALES_PROMOTION_TEXT'),
+    'sales' => [
+        'promotion' => env('SALES_PROMOTION', false),
+        'promotiontext' => env('SALES_PROMOTION_TEXT'),
     ],
-    'sumsub'=>[
-        'api_token'=>env('SUMSUB_API_TOKEN',''),
-        'api_secret'=>env('SUMSUB_API_SECRET',''),
-        'clientId'=>env('SUMSUB_CLIENT_ID',''),
+    'sumsub' => [
+        'api_token' => env('SUMSUB_API_TOKEN', ''),
+        'api_secret' => env('SUMSUB_API_SECRET', ''),
+        'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
+        'clientId' => env('SUMSUB_CLIENT_ID', ''),
     ],
-    'klaviyo'=>[
-        'list_ids'=>json_decode(env('KLAVIYO_LIST_IDS','[]'),true),
+    'klaviyo' => [
+        'list_ids' => json_decode(env('KLAVIYO_LIST_IDS', '[]'), true),
     ]
 ];
