@@ -191,7 +191,6 @@ class Users extends Controller
     public function sumsub()
     {
         $user = auth()->user();
-        $secretKey = 'dpROMBlvbrtOvPvrjwQGxkRRawRgkHW8'; // Replace with your actual secret key
         $secretKey = config('services.sumsub.api_secret');
         $timestamp = time(); // Current timestamp in seconds
 
