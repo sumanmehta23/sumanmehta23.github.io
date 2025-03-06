@@ -792,6 +792,12 @@
                         exportOptions: {
                             columns: [0,8,9,10,2,3] // Exclude the `Name/Email` column (index 2)
                         }
+                    },
+                    {
+                        text: 'Export All',
+                        action: function () {
+                            window.location.href = "/admin/export-all-clients";
+                        }
                     }
                 ],
             })
@@ -1087,7 +1093,7 @@
                     cache: false,
                     data: $("#statusUpdateForm").serialize(),
                     success: function(response) {
-                        
+
                         if (response.success == true) {
                             swal.fire({
                                 icon: "success",

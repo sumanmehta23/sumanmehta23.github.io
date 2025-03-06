@@ -1,5 +1,12 @@
 @extends('layouts.crm.crm')
 @section('content')
+<style>
+    @media (max-width: 768px) { /* Adjust breakpoint as needed */
+        .mob_width {
+            width: 150%;
+        }
+    }
+</style>
     <div class="pc-container">
         <div class="pc-content">
             <div class="pb-0 mb-0 page-header">
@@ -69,7 +76,7 @@
                                         <div class="row g-1">
                                             @if ($walletenabled)
                                                 <div class="col-6 col-lg-6 col-xl-6">
-                                                    <div class="border rounded address-check trade-withdraw-type">
+                                                    <div class="border rounded address-check trade-withdraw-type mob_width">
                                                         <div class="form-check">
                                                             <input type="radio" name="withdraw_type"
                                                                 class="form-check-input input-primary tradefund-deposit"
