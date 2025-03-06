@@ -1,4 +1,3 @@
-
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <section x-data="twoFA()">
@@ -83,10 +82,6 @@
 
         <div class="mt-5 d-flex justify-content-between align-items-center gap-3">
             @if (!$enabled)
-                {{-- <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
-                    @click="enableTwoFactorAuthentication()">
-                    {{ __('Enable') }}
-                </x-primary-button> --}}
                 <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()" x-show="enableButtonVisible" x-cloak>
                     {{ __('Enable') }}
