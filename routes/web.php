@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\View\Components\TwoFactorAuthentication;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
@@ -230,11 +231,14 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         return ini_get('memory_limit');
     });
+
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
     Route::get('/ajax', [AjaxController::class, 'index']);
+
+    Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
     Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
@@ -287,7 +291,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::middleware(['is_admin'])->group(function () {
 
-
+        Route::post('/two-factor/enable', [TwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
 
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')

@@ -15,7 +15,9 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        return view("admin.ui_settings");
+        $enabled = 0;
+        $showingRecoveryCodes = '';
+        return view("admin.ui_settings", compact('enabled','showingRecoveryCodes'));
     }
 
     public function logs(Request $request)

@@ -171,6 +171,16 @@
                         </div>
                     </form>
                 </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="card custom-card">
+                        <div class="card-header">
+                            <div class="card-title">Two Factor Authentication </div>
+                        </div>
+                        <div class="card-body">
+                            <x-admin-two-factor-authentication/>
+                            {{-- <x-two-factor-authentication /> --}}
+                        </div>
+                </div>
             </div>
         </div>
     </div>

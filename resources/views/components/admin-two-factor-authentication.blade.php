@@ -1,4 +1,6 @@
+
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <section x-data="twoFA()">
     <header>
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -81,8 +83,12 @@
 
         <div class="mt-5 d-flex justify-content-between align-items-center gap-3">
             @if (!$enabled)
-                <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
+                {{-- <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()">
+                    {{ __('Enable') }}
+                </x-primary-button> --}}
+                <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
+                    @click="enableTwoFactorAuthentication()" x-show="enableButtonVisible" x-cloak>
                     {{ __('Enable') }}
                 </x-primary-button>
             @else
@@ -114,36 +120,55 @@
 
             @endif
         </div>
-        {{-- <div x-show="showPasswordConfirmation">
-            <form @submit.prevent="confirmPassword()">
-                <x-text-input id="password" type="text" name="password" class="block w-1/2 mt-2" autofocus
-                    autocomplete="password" x-model="password" x-on:keydown.enter="confirmPassword" />
-                <x-primary-button type="submit" class="me-3 mt-4">
-                    {{ __('Confirm Password') }}
-                </x-primary-button>
+        <div id='password_confirmation' x-show="showPasswordConfirmation">
+            <form id="password-confirm-form" method="POST">
+                @csrf
+                <div>
+                    <x-input-label for="password" :value="__('Password')" />
+                    <x-input-field id="password" class="block w-100 mt-1" type="password" name="password" required autocomplete="current-password" />
+                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                </div>
+                <div class="flex justify-end mt-4">
+                    <x-primary-button type="button" @click="confirmPassword()">
+                        {{ __('Confirm') }}
+                    </x-primary-button>
+                </div>
             </form>
-        </div> --}}
+        </div>
     </div>
 </section>
 <script>
     let twoFA = () => {
         return {
             invalidCode: false,
-            // showPasswordConfirmation: false,
+            showPasswordConfirmation: false,
             code: '',
-            // confirmPassword() {
-            //     axios.post('{{ route('two-factor.confirm') }}', {
-            //         code: this.code
-            //     }).then(response => {
-            //         if (response.data.errors == undefined) {
-            //             location.reload();
-            //         } else {
-            //             this.invalidCode = true;
-            //         }
-            //     }).catch(error => {
-            //         console.log(error.response.data);
-            //     });
-            // },
+            enableButtonVisible: true,
+            confirmPassword() {
+                let form = document.getElementById("password-confirm-form");
+                let formData = new FormData(form);
+
+                axios.post("{{ route('admin.password.confirm') }}", formData)
+                    .then(response => {
+                        console.log("Password confirmed:", response.data);
+                        this.showPasswordConfirmation = false;
+                        this.enableButtonVisible = true; // Show Enable button again
+
+                        return axios.post("{{ route('two-factor.enable') }}");
+                    })
+                    .then(response => {
+                        console.log("Two-Factor Authentication enabled:", response.data);
+                        window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    })
+                    .catch(error => {
+                        console.error("Error:", error.response.data);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Incorrect Password',
+                            text: 'Please enter the correct password to proceed.',
+                        });
+                    });
+            },
             confirmTwoFactorAuthentication() {
                 console.log('confirmTwoFactorAuthentication');
                 axios.post('{{ route('two-factor.confirm') }}', {
@@ -159,7 +184,7 @@
                     console.log(error.response.data);
 
                     if(error.response.data.message == "Password confirmation required."){
-                        window.location.href = '{{ route('confirm_password') }}#two-factor-auth';
+                        window.location.href = '{{ route('confirm_password') }}';
                     }else{
                         Swal.fire({
                             icon: 'error',
@@ -173,20 +198,24 @@
                 console.log('enableTwoFactorAuthentication');
                 axios.post('{{ route('two-factor.enable') }}').then(response => {
                     location.reload();
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    window.location.href = '{{ route('user-profile') }}';
                 }).catch(error => {
-                    if (error.response.data.message !== undefined) {
-                        window.location.href = '{{ route('confirm_password') }}';
-                        // this.showPasswordConfirmation = true;
+                    console.log(error.response.data.message);
+                    if (error.response.data.message === "Unauthenticated.") {
+                        this.showPasswordConfirmation = true;
+                        this.$nextTick(() => {
+                            this.enableButtonVisible = false; // Move it inside nextTick
+                        });
+                    } else {
+                        window.location.href = '{{ route('admin.ui-settings.view') }}';
                     }
-                    console.log(error.response.data);
                 });
             },
             regenerateRecoveryCodes() {
                 console.log('regenerateRecoveryCodes');
                 axios.post('{{ route('two-factor.recovery-codes') }}').then(response => {
                     location.reload();
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    window.location.href = '{{ route('user-profile') }}';
                 }).catch(error => {
                     console.log(error.response.data);
                     window.location.href = '{{ route('confirm_password') }}';
@@ -214,4 +243,13 @@
             },
         }
     }
+    document.addEventListener("DOMContentLoaded", function () {
+        let form = document.getElementById("password-confirm-form");
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            twoFA().confirmPassword();
+        });
+    });
+
 </script>

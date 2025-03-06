@@ -42,6 +42,24 @@ class LoginController extends Controller
         return view('auth.confirm-password');
     }
 
+    public function confirmPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $admin = Auth::guard('admin')->user(); // Get the authenticated admin user
+
+        if (!$admin || !Hash::check($request->password, $admin->password)) {
+            dump('sssss');
+            return back()->withErrors(['password' => 'The password is incorrect.']);
+        }
+        // Store the timestamp in session to mark password confirmation
+        $request->session()->put('auth.password_confirmed_at', time());
+
+        return redirect()->intended(route('admin.dashboard')); // Redirect to admin dashboard or intended page
+    }
+
 
     public function login(Request $request)
     {
