@@ -782,7 +782,10 @@
                 ],
                 lengthChange: true,
                 pageLength: 10,
-                lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
+                lengthMenu: [
+                    [10, 25, 50, 100, 500, 1000, -1], // DataTable options
+                    [10, 25, 50, 100, 500, 1000, "All"] // User-facing labels
+                ],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
                     {
@@ -1087,7 +1090,7 @@
                     cache: false,
                     data: $("#statusUpdateForm").serialize(),
                     success: function(response) {
-                        
+
                         if (response.success == true) {
                             swal.fire({
                                 icon: "success",
