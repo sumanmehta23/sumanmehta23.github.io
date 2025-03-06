@@ -666,7 +666,9 @@
                 ajax: {
                     url: '/admin/getClientList',
                     type: 'GET',
-                    data: {},
+                    data: function (d) {
+                        d.getAll = true; // Pass a parameter to tell the server to fetch all data
+                    },
                     dataSrc: function(json) {
                         return json.data;
                     }
