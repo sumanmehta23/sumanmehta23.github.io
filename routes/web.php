@@ -237,6 +237,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/ajax', [AjaxController::class, 'index']);
 
     Route::get('/getClientList', [AjaxController::class, 'getClientList']);
+    Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
     Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
     Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
     Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);

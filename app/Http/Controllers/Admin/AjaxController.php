@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
 {
@@ -3364,5 +3365,38 @@ class AjaxController extends Controller
                 ->make(true);
         }
 
+    }
+
+    public function exportAllClients(Request $request)
+    {
+        $fileName = 'Client_List_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At']);
+
+            // Fetch client data
+            User::chunk(500, function ($clients) use ($handle) {
+                foreach ($clients as $client) {
+                    fputcsv($handle, [
+                        $client->id,
+                        $client->fullname,
+                        $client->email,
+                        $client->number,
+                        $client->country,
+                        $client->created_at,
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
     }
 }
