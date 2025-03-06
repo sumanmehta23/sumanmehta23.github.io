@@ -666,9 +666,7 @@
                 ajax: {
                     url: '/admin/getClientList',
                     type: 'GET',
-                    data: function (d) {
-                        d.getAll = true; // Pass a parameter to tell the server to fetch all data
-                    },
+                    data: {},
                     dataSrc: function(json) {
                         return json.data;
                     }
@@ -784,10 +782,7 @@
                 ],
                 lengthChange: true,
                 pageLength: 10,
-                lengthMenu: [
-                    [10, 25, 50, 100, 500, 1000, -1], // DataTable options
-                    [10, 25, 50, 100, 500, 1000, "All"] // User-facing labels
-                ],
+                lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
                     {

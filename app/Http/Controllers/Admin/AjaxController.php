@@ -368,7 +368,6 @@ class AjaxController extends Controller
         })
         ->groupBy('aspnetusers.email');
 
-
         // $admin=Auth::guard('admin')->user();
         // dd($admin);
 
