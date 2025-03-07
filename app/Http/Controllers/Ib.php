@@ -86,6 +86,28 @@ class Ib extends Controller
         return response()->json(['status' => 'false', 'message' => 'Invalid request method']);
     }
 
+    public function ibResend(Request $request)
+    {
+        $userId = auth()->user()->id;
+
+        try {
+            $ib = Ib1::where('user_id', $userId)->where('status', 2)->first();
+
+            if (!$ib) {
+                return redirect()->route('ib')->with('error', 'IB not found or invalid status');
+            }
+
+            // Update the IB status
+            $ib->status = 0;
+            $ib->save();
+
+            return response()->json(['status' => 'true', 'message' => 'IB status updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'false', 'message' => 'Something went wrong', 'error' => $e->getMessage()]);
+        }
+    }
+
+
     public function ibUpdateReferral(Request $request)
     {
         $ib1_id = $request->ib1_id;
@@ -155,6 +177,7 @@ class Ib extends Controller
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::with('planDetails')
             ->where('user_id', $userId)
+            ->where('status', 1)
             ->whereNotNull('ib_plan_details_id')
             ->first();
         if (!$ib) {
