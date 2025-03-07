@@ -52,6 +52,10 @@ class SyncAccountTradesJob implements ShouldQueue
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
         $this->account = Account::find($this->accountId);
+        if (!$this->account) {
+            Log::error('Account not found for id: ' . $this->accountId);
+            return;
+        }
         info('Syncing account trades for account: ' . $this->account->code);
         $login = $this->account->code;
         $from = 'September 01,2024';
