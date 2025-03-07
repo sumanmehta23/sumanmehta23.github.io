@@ -1956,7 +1956,7 @@ class AjaxController extends Controller
         // }
 
         // Fetch data
-        $query->orderByDesc('id')->get();
+        // $query->orderByDesc('id')->get();
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -1977,6 +1977,23 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
+
+                ->orderColumn('amount', function ($query, $order) {
+                    $query->orderBy('withdraw_amount', $order);
+                })
+                ->orderColumn('fee', function ($query, $order) {
+                    $query->orderBy('withdraw_transaction_fee', $order);
+                })
+                ->orderColumn('payment_mode', function ($query, $order) {
+                    $query->orderBy('withdraw_type', $order);
+                })
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('created_at', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('status', $order);
+                })
+
                 ->addColumn('amount', function($row){
                     return $row->withdraw_amount;
                 })
