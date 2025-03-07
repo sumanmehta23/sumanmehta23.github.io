@@ -144,7 +144,7 @@
                     }
                 ],
 
-            order: [[3, "desc"]],
+            order: [[0, "desc"]],
             processing: true,
             serverSide: true,
             searching: true,
@@ -176,8 +176,8 @@
               },
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
-              { data: 'created_date', name: 'created_date', visible: false},
-              { data: 'created_time', name: 'created_time', visible: false},
+              { data: 'created_date', name: 'created_date',orderable: false, visible: false},
+              { data: 'created_time', name: 'created_time',orderable: false, visible: false},
             ]
           });
 
