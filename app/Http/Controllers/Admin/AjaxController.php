@@ -1146,9 +1146,7 @@ class AjaxController extends Controller
                             });
                         }
                     })
-                    ->orderColumn('email', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.user.email', $order);
-                    })
+
                     ->orderColumn('amount', function ($query, $order) {
                         $query->orderBy('wallet_withdraw.withdraw_amount', $order);
                     })
