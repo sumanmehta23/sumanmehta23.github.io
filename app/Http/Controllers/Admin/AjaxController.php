@@ -1014,10 +1014,10 @@ class AjaxController extends Controller
         }
 
         if (isset($request->status)) {
-            $rmCondition->where('Status', $request->status);
+            $rmCondition->where('status', $request->status);
         }
 
-        $rmCondition->orderBy('id', 'desc');
+        // $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
@@ -1031,6 +1031,18 @@ class AjaxController extends Controller
                             ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
+                })
+                ->orderColumn('amount', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposit_amount', $order);
+                })
+                ->orderColumn('payment_mode', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposit_type', $order);
+                })
+                ->orderColumn('deposit_date', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposted_date', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.status', $order);
                 })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
@@ -1122,10 +1134,15 @@ class AjaxController extends Controller
         }
 
         if (isset($request->status)) {
-            $rmCondition->where('Status', $request->status);
+            if( $request->status == 2){
+                $rmCondition->whereIn('Status', [2,3]);
+            }else{
+                $rmCondition->where('Status', $request->status);
+            }
+
         }
 
-        $rmCondition->orderBy('id', 'desc');
+        // $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
                 return DataTables::of($rmCondition)
@@ -1140,6 +1157,22 @@ class AjaxController extends Controller
                                 ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                             });
                         }
+                    })
+
+                    ->orderColumn('amount', function ($query, $order) {
+                        $query->orderBy('wallet_withdraw.withdraw_amount', $order);
+                    })
+                    ->orderColumn('fee', function ($query, $order) {
+                        $query->orderBy('wallet_withdraw.withdraw_transaction_fee', $order);
+                    })
+                    ->orderColumn('payment_mode', function ($query, $order) {
+                        $query->orderBy('wallet_withdraw.withdraw_type', $order);
+                    })
+                    ->orderColumn('withdraw_date', function ($query, $order) {
+                        $query->orderBy('wallet_withdraw.created_at', $order);
+                    })
+                    ->orderColumn('status', function ($query, $order) {
+                        $query->orderBy('wallet_withdraw.status', $order);
                     })
                     ->editColumn('email', function ($row) {
                         $fullname = $row->user
@@ -1258,6 +1291,24 @@ class AjaxController extends Controller
                         });
                     }
                 })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('trade_deposits.code', $order);
+                })
+                ->orderColumn('deposit_amount', function ($query, $order) {
+                    $query->orderBy('trade_deposits.deposit_amount', $order);
+                })
+                ->orderColumn('deposit_type', function ($query, $order) {
+                    $query->orderBy('trade_deposits.deposit_type', $order);
+                })
+                ->orderColumn('deposit_from', function ($query, $order) {
+                    $query->orderBy('trade_deposits.deposit_from', $order);
+                })
+                ->orderColumn('deposit_date', function ($query, $order) {
+                    $query->orderBy('trade_deposits.deposted_date', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('trade_deposits.status', $order);
+                })
                 ->addColumn('deposit_type', function($row){
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
@@ -1348,6 +1399,14 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+
+                ->orderColumn('withdrawal_amount', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdrawal_amount', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.status', $order);
+                })
+
                 ->addColumn('code', function($row){
                     return $row->account->code;
                 })
@@ -1897,7 +1956,7 @@ class AjaxController extends Controller
         // }
 
         // Fetch data
-        $query->orderByDesc('id')->get();
+        // $query->orderByDesc('id')->get();
 
         if ($request->ajax()) {
             return DataTables::of($query)
@@ -1918,6 +1977,23 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
+
+                ->orderColumn('amount', function ($query, $order) {
+                    $query->orderBy('withdraw_amount', $order);
+                })
+                ->orderColumn('fee', function ($query, $order) {
+                    $query->orderBy('withdraw_transaction_fee', $order);
+                })
+                ->orderColumn('payment_mode', function ($query, $order) {
+                    $query->orderBy('withdraw_type', $order);
+                })
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('created_at', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('status', $order);
+                })
+
                 ->addColumn('amount', function($row){
                     return $row->withdraw_amount;
                 })
