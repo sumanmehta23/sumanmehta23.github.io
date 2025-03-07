@@ -40,18 +40,17 @@ class Ib extends Controller
     {
 
         $email = auth()->user()->email;
-        $user=auth()->user();
+        $user = auth()->user();
         $cacheKey = 'ib1_' . $user->id;
 
         if (!Cache::has($cacheKey)) {
-            $ib_result =Ib1::where('user_id', $user->id)->first();
+            $ib_result = Ib1::where('user_id', $user->id)->first();
             Cache::put($cacheKey, $ib_result, 60);
-
         } else {
-            $ib_result=Cache::get($cacheKey);
+            $ib_result = Cache::get($cacheKey);
         }
         // $ib_result = Ib1::where('user_id', $user->id)->first();
-        if($ib_result && $ib_result->status == 1) {
+        if ($ib_result && $ib_result->status == 1) {
             return redirect("/ib-profile");
         }
         return view('ib', compact('ib_result'));
@@ -69,8 +68,8 @@ class Ib extends Controller
                 Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'referral_code' =>$referral_code,
-                    'ib_plan_details_id' => $request->ib_plan_details_id ,
+                    'referral_code' => $referral_code,
+                    'ib_plan_details_id' => $request->ib_plan_details_id,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
@@ -115,31 +114,34 @@ class Ib extends Controller
 
         $ib1 = Ib1::find($ib1_id);
         activity()->causedBy(auth()->user()->id)
-                    ->withProperties(
-                        [
-                            'ip' => $request->ip(),
-                            'email' => auth()->user()->email,
-                            'old' => $ib1->referral_code,
-                            'new' => $referral_code,
-                            'remark' => 'Update Referral'
-                        ])
-                ->event('update')
-                ->log('Update Referral');
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => auth()->user()->email,
+                    'old' => $ib1->referral_code,
+                    'new' => $referral_code,
+                    'remark' => 'Update Referral'
+                ]
+            )
+            ->event('update')
+            ->log('Update Referral');
         if ($ib1) {
 
             try {
                 if ($ib1->referral_code == $referral_code) {
                     session()->flash('error', 'Referral code already saved.');
-                    return back();             }
+                    return back();
+                }
 
                 $existingReferralCode = Ib1::where('referral_code', $referral_code)->first();
                 if ($existingReferralCode) {
                     session()->flash('error', 'Referral code already registered.');
-                    return back();               }
+                    return back();
+                }
 
 
                 $ib1_referral = $ib1->referral_code;
-                if(!$ib1_referral){
+                if (!$ib1_referral) {
                     $ib1_referral = $ib1->email;
                 }
                 User::where(function ($query) use ($ib1_referral) {
@@ -147,16 +149,16 @@ class Ib extends Controller
                         $query->orWhere("ib$i", $ib1_referral);
                     }
                 })
-                ->get()
-                ->each(function ($user) use ($ib1_referral, $referral_code) {
-                    for ($i = 1; $i <= 15; $i++) {
-                        $column = "ib$i";
-                        if ($user->$column == $ib1_referral) {
-                            $user->$column = $referral_code;
+                    ->get()
+                    ->each(function ($user) use ($ib1_referral, $referral_code) {
+                        for ($i = 1; $i <= 15; $i++) {
+                            $column = "ib$i";
+                            if ($user->$column == $ib1_referral) {
+                                $user->$column = $referral_code;
+                            }
                         }
-                    }
-                    $user->save();
-                });
+                        $user->save();
+                    });
                 $ib1->referral_code = $referral_code;
                 $ib1->save();
 
@@ -164,7 +166,8 @@ class Ib extends Controller
                 return back();
             } catch (\Exception $e) {
                 session()->flash('error', $e->getMessage());
-                return back();            }
+                return back();
+            }
         }
         session()->flash('error', 'Ib1 record not found.');
         return back();
@@ -191,11 +194,17 @@ class Ib extends Controller
         if ($plan_id) {
             ini_set('max_execution_time', 600);
             ini_set("memory_limit", "1024M");
-            $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
-                ->where('status', 1)
-                ->whereNull('deleted_at')
-                ->get()
-                ->toArray();
+            $ibPlans = Cache::remember('ibPlans:' . $userId, 60 * 60, function () use ($plan_id) {
+                return IbPlanDetails::where('ib_category_id', $plan_id)->where('status', 1)
+                    ->whereNull('deleted_at')
+                    ->get()
+                    ->toArray();
+            });
+            // IbPlanDetails::where('ib_category_id', $plan_id)
+            //     ->where('status', 1)
+            //     ->whereNull('deleted_at')
+            //     ->get()
+            //     ->toArray();
             // Prepare the commission structure
             // dd($ibPlans);
             $ib_acc_plans = [];
@@ -207,8 +216,8 @@ class Ib extends Controller
                 }
             }
             // dump($ib_acc_plans);
-            $referral_code= auth()->user()->ib->referral_code;
-            if(!$referral_code){
+            $referral_code = auth()->user()->ib->referral_code;
+            if (!$referral_code) {
                 $referral_code = auth()->user()->ib->email;
             }
             // info('Getting accounts for ref code '.$referral_code." for user ".$userId);
@@ -394,10 +403,8 @@ class Ib extends Controller
                         }
                     });
             }
-
-
         }
-        $refercode =auth()->user()->ib->referral_code;
+        $refercode = auth()->user()->ib->referral_code;
         $ib_clients_total = User::where(function ($query) use ($refercode) {
             for ($i = 1; $i <= 15; $i++) {
                 $query->orWhere("ib{$i}", $refercode);
@@ -452,16 +459,16 @@ class Ib extends Controller
             $amount = $request->input('amount');
             $accountId = $request->input('account');
             $userId = auth()->user()->id;
-            $account=Account::where(['id'=>$accountId,'user_id'=>$userId])->firstOrFail();
+            $account = Account::where(['id' => $accountId, 'user_id' => $userId])->firstOrFail();
             $email = auth()->user()->email;
 
-            $balance=IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
+            $balance = IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
 
             $availableBalance = $balance->wallet - $balance->withdraw;
             if ($availableBalance >= $amount) {
 
-                if(!$availableBalance || !$amount || !$account){
-                    alert()->warning("Invalid Request","Please Select / Enter valid values");
+                if (!$availableBalance || !$amount || !$account) {
+                    alert()->warning("Invalid Request", "Please Select / Enter valid values");
                     return redirect()->back();
                 }
 
@@ -469,16 +476,17 @@ class Ib extends Controller
                 $ticket = null;
                 $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
                 activity()->causedBy(auth()->user()->id)
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
-                        'deposit_amount' => $amount,
-                        'code' => $account->code,
-                        'remark' => 'Commission Transfer'
-                    ])
-                ->event('create')
-                ->log('Commission Transfer');
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'deposit_amount' => $amount,
+                            'code' => $account->code,
+                            'remark' => 'Commission Transfer'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Commission Transfer');
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     return redirect()->back()->with('error', 'Something went wrong on Deposit. ' . $error);
@@ -498,7 +506,7 @@ class Ib extends Controller
                     IbWallet::create([
                         'email' => $email,
                         'user_id' => $userId,
-                        'account_id'=>$account->id,
+                        'account_id' => $account->id,
                         'ib_withdraw' => $amount,
                         'remark' => 'IB Comm. Withdrawl'
                     ]);
