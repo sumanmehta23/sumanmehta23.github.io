@@ -295,6 +295,20 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="pt-1 mt-1 border-2 row border-top border-default">
+                                                    <div class="col-4">
+                                                        <div class="d-flex align-items-center">
+                                                            <button
+                                                                class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                <i class="ri-code-block"></i>
+                                                            </button>
+                                                            <div>
+                                                                <div class="mb-0 text-muted fs-11">Referral Code:</div>
+                                                                <div class="mb-1 fs-12">{{ @$user->ib->referral_code }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
