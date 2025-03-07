@@ -181,15 +181,15 @@
     @push('scripts')
     <script>
         $(document).ready(function () {
-            var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
+            var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
-                        filename: 'Wallet_Withdrawal_' + new Date().toISOString().slice(0, 10),
+                        filename: 'Wallet_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [7,8,1,2,3,9,10,5] // Ensure these indices match the correct table columns
+                            columns: [6, 7, 1, 2, 4, 8, 9] // Ensuring indices match correct table columns
                         }
                     }
                 ],
@@ -198,40 +198,39 @@
                     [10, 25, 50, 100, "All"]
                 ],
                 pageLength: 10,
-                order: [[0, "desc"]], // Default sorting on the first column (Account No)
                 processing: true,
                 serverSide: true,
                 searching: true,
+                // order: [[1, "desc"]], // Default sorting by Deposit Date
                 ajax: {
-                    url: '/admin/getWalletWithdrawal2',
+                    url: '/admin/getWalletDeposit2',
                     type: 'GET',
                     data: function(d) {
                         d.status = $('select[name=status]').val();
-                        return d;
                     },
                     dataSrc: function(json) {
                         return json.data;
                     }
                 },
                 columns: [
-                    { data: 'email', name: 'email', orderable: true },
-                    { data: 'amount', name: 'amount', orderable: true },
-                    { data: 'fee', name: 'fee', orderable: true },
-                    { data: 'payment_mode', name: 'payment_mode', orderable: true },
-                    { data: 'withdraw_date', name: 'withdraw_date', orderable: true },
-                    { data: 'status', name: 'status', orderable: true },
+                    { data: 'email', name: 'email' },
+                    { data: 'amount', name: 'amount' },  // ✅ Allow sorting
+                    { data: 'payment_mode', name: 'payment_mode' }, // ✅ Allow sorting
+                    { data: 'deposit_date', name: 'deposit_date' }, // ✅ Allow sorting
+                    { data: 'status', name: 'status' },  // ✅ Allow sorting
                     { data: 'action', name: 'action', orderable: false, searchable: false },
-                    { data: 'fullname', name: 'fullname', orderable: true, visible: false },
-                    { data: 'fullemail', name: 'fullemail', orderable: true, visible: false },
-                    { data: 'created_date', name: 'created_date', orderable: true, visible: false },
-                    { data: 'created_time', name: 'created_time', orderable: true, visible: false },
+                    { data: 'fullname', name: 'fullname', visible: false },
+                    { data: 'fullemail', name: 'fullemail', visible: false },
+                    { data: 'created_date', name: 'created_date', visible: false },
+                    { data: 'created_time', name: 'created_time', visible: false }
                 ]
             });
 
             $('#statusFilter').on('change', function () {
-                tableWalletWithdrawal.ajax.reload();
+                tableWalletDeposit.ajax.reload();
             });
         });
+
 
       </script>
 

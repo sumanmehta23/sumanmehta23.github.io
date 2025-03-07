@@ -1014,10 +1014,10 @@ class AjaxController extends Controller
         }
 
         if (isset($request->status)) {
-            $rmCondition->where('Status', $request->status);
+            $rmCondition->where('status', $request->status);
         }
 
-        $rmCondition->orderBy('id', 'desc');
+        // $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
@@ -1031,6 +1031,18 @@ class AjaxController extends Controller
                             ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
+                })
+                ->orderColumn('amount', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposit_amount', $order);
+                })
+                ->orderColumn('payment_mode', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposit_type', $order);
+                })
+                ->orderColumn('deposit_date', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.deposted_date', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('wallet_deposit.status', $order);
                 })
                 ->editColumn('email', function ($row) {
                     $fullname = $row->user
