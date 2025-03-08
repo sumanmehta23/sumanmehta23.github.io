@@ -201,22 +201,23 @@ class AjaxController extends Controller
                 ->withProperties([
                     'ip' => request()->ip(),
                     'user_email' => auth()->guard('admin')->user()->email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'user_id' => auth()->guard('admin')->user()->id,
                     'send_to' => $user->id,
                     'receiver_email' => $user->email,
                     'remark' => 'Client Email Confirmation'
                 ])
-            ->event('update')
-            ->log('Email Confirmation');
+                ->event('update')
+                ->log('Email Confirmation');
             return ['success' => true];
         } else {
-            return ['success' => false,'error' => 'User not found'];
+            return ['success' => false, 'error' => 'User not found'];
         }
     }
 
-    public function getPermissions(Request $request){
+    public function getPermissions(Request $request)
+    {
 
 
 
@@ -229,14 +230,13 @@ class AjaxController extends Controller
         // dd($query);
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
-            ->addColumn('action', function($row){
-                return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
-            })
+                ->addColumn('action', function ($row) {
+                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
                 ->make(true);
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
-
     }
     public function getListOfGroups($string)
     {
@@ -274,28 +274,28 @@ class AjaxController extends Controller
 
         $clientId = $validated['client_id'];
 
-        $admin = EmployeeList::where('id',$request->admin_user['id'])->first();
+        $admin = EmployeeList::where('id', $request->admin_user['id'])->first();
 
         try {
             $admin = Auth::guard('admin')->user();
 
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
-            Gate::forUser($admin)->authorize('client:impersonate',$client);
+            Gate::forUser($admin)->authorize('client:impersonate', $client);
             activity()
-            ->causedBy(auth()->guard('admin')->user())
-            ->withProperties([
-                'ip' => request()->ip(),
-                'user_email' => auth()->guard('admin')->user()->email,
-                'userRole' =>auth()->guard('admin')->user()->userRole,
-                'username' =>auth()->guard('admin')->user()->username,
-                'user_id' =>auth()->guard('admin')->user()->id,
-                'client_email' => $client->email,
-                'client_user_id' => $client->id,
-                'remark' => 'Switch To User'
-            ])
-        ->event('update')
-        ->log('Switch To User');
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'user_id' => auth()->guard('admin')->user()->id,
+                    'client_email' => $client->email,
+                    'client_user_id' => $client->id,
+                    'remark' => 'Switch To User'
+                ])
+                ->event('update')
+                ->log('Switch To User');
             // Log in as the new user
             Auth::login($client);
             Session::put('admin', $admin);
@@ -309,29 +309,28 @@ class AjaxController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to impersonate the user. Please try again.'.$e->getMessage(),
+                'message' => 'Failed to impersonate the user. Please try again.' . $e->getMessage(),
             ], 500);
         }
     }
     public function switchToAdmin(Request $request)
     {
-        if(Auth::user() instanceof User && Session::has('admin')){
-            $admin=Session::get('admin');
+        if (Auth::user() instanceof User && Session::has('admin')) {
+            $admin = Session::get('admin');
             Session::forget('user');
             Auth::logout();
             // $request->session()->invalidate();
             // $request->session()->regenerateToken();
             Auth::guard('admin')->loginUsingId($admin->id);
 
-             return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard');
             // Auth::logout();
             // $request->session()->invalidate();
             // $request->session()->regenerateToken();
             // Session::forget('admin');
-        }else{
+        } else {
             return redirect()->route('admin.login');
         }
-
     }
 
     public function getClientList(Request $request)
@@ -349,25 +348,25 @@ class AjaxController extends Controller
                 $query->select('emplist.id', 'username');
             }
         ])
-        ->select([
-            'aspnetusers.id',
-            'aspnetusers.email',
-            'aspnetusers.fullname',
-            'aspnetusers.number',
-            'aspnetusers.ib1',
-            'aspnetusers.status',
-            'aspnetusers.email_confirmed',
-            'aspnetusers.country',
-            'aspnetusers.kyc_verify',
-            'aspnetusers.country_code',
-        ])
-        ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
-            // Ensure that only users linked to the admin's rm_id are retrieved
-            $q->whereHas('employee', function ($query) use ($admin) {
-                $query->where('relationship_manager.rm_id', $admin->id);
-            });
-        })
-        ->groupBy('aspnetusers.email');
+            ->select([
+                'aspnetusers.id',
+                'aspnetusers.email',
+                'aspnetusers.fullname',
+                'aspnetusers.number',
+                'aspnetusers.ib1',
+                'aspnetusers.status',
+                'aspnetusers.email_confirmed',
+                'aspnetusers.country',
+                'aspnetusers.kyc_verify',
+                'aspnetusers.country_code',
+            ])
+            ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
+                // Ensure that only users linked to the admin's rm_id are retrieved
+                $q->whereHas('employee', function ($query) use ($admin) {
+                    $query->where('relationship_manager.rm_id', $admin->id);
+                });
+            })
+            ->groupBy('aspnetusers.email');
 
         // $admin=Auth::guard('admin')->user();
         // dd($admin);
@@ -419,7 +418,7 @@ class AjaxController extends Controller
         //     ->groupBy('ap.email');
 
         // $query->when(session('userData')['userRole'] != "Super Admin", function ($query) {
-            // $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
+        // $query->leftJoin('aspnetusers AS user', 'user.email', '=', 'ap.email');
         // });
 
         // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -453,7 +452,7 @@ class AjaxController extends Controller
                         </a>";
                 })
                 ->editColumn('user_country', function ($row) {
-                    $countryAlpha = strtolower($row->countryDetail ? $row->countryDetail->country_alpha :'');
+                    $countryAlpha = strtolower($row->countryDetail ? $row->countryDetail->country_alpha : '');
                     return $countryAlpha ? "<span class='fi fis fi-{$countryAlpha}'></span> {$row->countryDetail->country_alpha}" : '-';
                 })
                 ->editColumn('phone', function ($row) {
@@ -474,7 +473,7 @@ class AjaxController extends Controller
                 })
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
-                    $ib_email  =$row->getParentIb() ? $row->getParentIb()->email : '';
+                    $ib_email  = $row->getParentIb() ? $row->getParentIb()->email : '';
                     $svg = $ib_name !== 'noIB' ? "<div class='me-2'>
                                 <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-user-pentagon text-dark'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'></path>
@@ -527,9 +526,9 @@ class AjaxController extends Controller
                         $success = ($row->status == 0) ? 'bg-success' : 'bg-success text-white';
                     }
                     // if (Auth::guard('admin')->user()->can('update', $row)) {
-                        $html .= "<span class='statusToggle' data-status='{$row->status}'>";
-                        if ($row->status == 0) {
-                            $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
+                    $html .= "<span class='statusToggle' data-status='{$row->status}'>";
+                    if ($row->status == 0) {
+                        $html .= "<span class='badge text-danger {$success}' data-bs-toggle='tooltip' title='Inactive User'>
                                         <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
                                             <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
                                             <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
@@ -539,8 +538,8 @@ class AjaxController extends Controller
                                             <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
                                         </svg>
                                     </span>";
-                        } elseif ($row->status == 1) {
-                            $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
+                    } elseif ($row->status == 1) {
+                        $html .= "<span class='badge text-success {$success}' data-bs-toggle='tooltip' title='Active User'>
                                         <svg xmlns='http://www.w3.org/2000/svg' width='25' height='25' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='25' class='tabler-icon tabler-icon-user-scan'>
                                             <path d='M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0'></path>
                                             <path d='M4 8v-2a2 2 0 0 1 2 -2h2'></path>
@@ -550,8 +549,8 @@ class AjaxController extends Controller
                                             <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
                                         </svg>
                                     </span>";
-                        }
-                        $html .= "</span>";
+                    }
+                    $html .= "</span>";
                     // }
                     if ($row->email_confirmed == 0) {
                         $html .= "<span class='resendToggle' data-status='{$row->email_confirmed}'>";
@@ -583,15 +582,15 @@ class AjaxController extends Controller
                                 </span>
                               </span>";
 
-                              if (Auth::guard('admin')->user()->can('client:update', $row)) {
-                    $html .= "<span class='editClient' data-enc='{$row->id}'>
+                    if (Auth::guard('admin')->user()->can('client:update', $row)) {
+                        $html .= "<span class='editClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Client'>
                                     <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
                                 </span>
                               </span>";
-                              }
-                              if (Auth::guard('admin')->user()->can('client:impersonate', $row)) {
-                    $html .= "<span class='switchClient' data-enc='{$row->id}'>
+                    }
+                    if (Auth::guard('admin')->user()->can('client:impersonate', $row)) {
+                        $html .= "<span class='switchClient' data-enc='{$row->id}'>
                                 <span class='badge text-secondary' data-bs-toggle='tooltip' title='Switch Client'>
                                     <svg xmlns='http://www.w3.org/2000/svg' class='icon icon-tabler icon-tabler-arrows-shuffle' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
@@ -602,12 +601,12 @@ class AjaxController extends Controller
                                     </svg>
                                 </span>
                               </span>";
-                              }
+                    }
 
                     return $html;
                 })
 
-                ->rawColumns(['created_at', 'user_country' ,'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action','ib_name','ib_email'])
+                ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email'])
                 ->make(true);
         }
 
@@ -620,7 +619,7 @@ class AjaxController extends Controller
     {
         // dump( session('userData'));
         $role = session('userData')['userRole'];
-        $alogin =session('userData')['id'];
+        $alogin = session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
         // dd($alogin);
         // Base query
@@ -667,7 +666,7 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('code', function($row) {
+                ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
                     return "<a href='" . (($row->code && $row->code != 'Rejected') ? '/admin/view_account_details/' . $row->id : '#') . "'>
                                 <div class='row align-items-center'>
@@ -675,8 +674,8 @@ class AjaxController extends Controller
                                             alt='user-image' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span class='text-truncate w-100'>" .
-                                                    ($row->code ? $row->code : 'Pending') .
-                                                "</span>
+                        ($row->code ? $row->code : 'Pending') .
+                        "</span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
                                                 class='text-truncate w-100'> $accountGroup </span>
@@ -688,7 +687,7 @@ class AjaxController extends Controller
                 // ->addColumn('leverage', function($row){
                 //     return $row->leverage;
                 // })
-                ->addColumn('balance', function($row){
+                ->addColumn('balance', function ($row) {
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
@@ -701,39 +700,38 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('account_code', function($row){
+                ->addColumn('account_code', function ($row) {
                     return $row->code;
                 })
-                ->addColumn('account_group', function($row){
+                ->addColumn('account_group', function ($row) {
                     return $row->accountType->ac_group;
                 })
-                ->addColumn('account_request_status', function($row){
+                ->addColumn('account_request_status', function ($row) {
 
-                    if($row->account_request_status == 1 ){
+                    if ($row->account_request_status == 1) {
                         return "<button class=' badge bg-outline-success'>Approved</button>";
-                    // }elseif($row->account_request_status == 2){
-                    //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
-                    }elseif($row->account_request_status == 0){
+                        // }elseif($row->account_request_status == 2){
+                        //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
+                    } elseif ($row->account_request_status == 0) {
                         return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
                     }
-
                 })
                 ->editColumn('request_status', function ($row) {
-                    return $row->account_request_status ;
+                    return $row->account_request_status;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail', 'account_request_status', 'request_status'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'request_status'])
                 ->make(true);
         }
 
@@ -744,7 +742,7 @@ class AjaxController extends Controller
     {
         // dump( session('userData'));
         $role = session('userData')['userRole'];
-        $alogin =session('userData')['id'];
+        $alogin = session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
         // dd($alogin);
         // Base query
@@ -777,12 +775,12 @@ class AjaxController extends Controller
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
-                        $rmCondition->where(function($q) use ($searchValue) {
+                        $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('code', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                            // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -803,7 +801,7 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('code', function($row) {
+                ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
@@ -823,7 +821,7 @@ class AjaxController extends Controller
                 // ->addColumn('leverage', function($row){
                 //     return $row->leverage;
                 // })
-                ->addColumn('balance', function($row){
+                ->addColumn('balance', function ($row) {
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
@@ -836,34 +834,34 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('account_code', function($row){
+                ->addColumn('account_code', function ($row) {
                     return $row->code;
                 })
-                ->addColumn('account_group', function($row){
+                ->addColumn('account_group', function ($row) {
                     return $row->accountType->ac_group;
                 })
-                ->addColumn('actions', function($row){
+                ->addColumn('actions', function ($row) {
                     $html = "";
                     $html .= "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
                     <span class='badge text-danger'>
                         <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-trash'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M4 7l16 0' /><path d='M10 11l0 6' /><path d='M14 11l0 6' /><path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' /><path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' /></svg>
                     </span>
                   </a>";
-                  return $html;
+                    return $html;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'actions'])
                 ->make(true);
         }
 
@@ -873,13 +871,13 @@ class AjaxController extends Controller
     {
         $role = session('userData')['userRole'];
         // $alogin = session('alogin');
-        $alogin =session('userData')['id'];
+        $alogin = session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
 
         // Base query
         $rmCondition = Account::where('demo', true)
             ->select('accounts.*')
-            ->where('account_request_status',1)
+            ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
@@ -906,12 +904,12 @@ class AjaxController extends Controller
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
-                        $rmCondition->where(function($q) use ($searchValue) {
+                        $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('code', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                            // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -932,7 +930,7 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('code', function($row) {
+                ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
@@ -949,10 +947,10 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('leverage', function($row){
+                ->addColumn('leverage', function ($row) {
                     return $row->leverage;
                 })
-                ->addColumn('balance', function($row){
+                ->addColumn('balance', function ($row) {
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
@@ -965,25 +963,25 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('account_code', function($row){
+                ->addColumn('account_code', function ($row) {
                     return $row->code;
                 })
-                ->addColumn('account_group', function($row){
+                ->addColumn('account_group', function ($row) {
                     return $row->accountType->ac_group;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at','fullname','fullemail'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail'])
                 ->make(true);
         }
 
@@ -996,7 +994,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
 
         // Base query
-        $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
+        $rmCondition = WalletDeposit::where('deposit_type', '!=', 'Internal Transfer')
             ->select('wallet_deposit.*')
             ->with(['user']);
 
@@ -1026,9 +1024,9 @@ class AjaxController extends Controller
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('deposit_amount', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1061,10 +1059,10 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->deposit_amount;
                 })
-                ->addColumn('payment_mode', function($row){
+                ->addColumn('payment_mode', function ($row) {
                     return $row->deposit_type;
                 })
                 ->addColumn('deposit_date', function ($row) {
@@ -1077,31 +1075,31 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a class='btn btn-sm btn-primary' href='/admin/wallet_deposit_details?id={$row->id}'>View</a>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->user->email;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->deposted_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->deposted_date));
                 })
-                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date','status','action'])
+                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -1115,7 +1113,7 @@ class AjaxController extends Controller
         $userGroups = explode(',', session('user_groups'));
 
         // Base query
-        $rmCondition = WalletWithdraw::where('withdraw_type','!=', 'Internal Transfer')
+        $rmCondition = WalletWithdraw::where('withdraw_type', '!=', 'Internal Transfer')
             ->select('wallet_withdraw.*')
             ->where('verified', true)
             ->with(['user']);
@@ -1134,52 +1132,51 @@ class AjaxController extends Controller
         }
 
         if (isset($request->status)) {
-            if( $request->status == 2){
-                $rmCondition->whereIn('Status', [2,3]);
-            }else{
+            if ($request->status == 2) {
+                $rmCondition->whereIn('Status', [2, 3]);
+            } else {
                 $rmCondition->where('Status', $request->status);
             }
-
         }
 
         // $rmCondition->orderBy('id', 'desc');
 
         if ($request->ajax()) {
-                return DataTables::of($rmCondition)
-                    ->filter(function ($rmCondition) use ($request) {
-                        if (!empty($request->search['value'])) {
-                            $searchValue = $request->search['value'];
-                            $rmCondition->where(function($q) use ($searchValue) {
-                                $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
+            return DataTables::of($rmCondition)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('withdraw_transaction_fee', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('withdraw_type', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('email', 'LIKE', "%{$searchValue}%")
                                 ->orWhereRaw("DATE_FORMAT(withdraw_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
-                            });
-                        }
-                    })
+                        });
+                    }
+                })
 
-                    ->orderColumn('amount', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.withdraw_amount', $order);
-                    })
-                    ->orderColumn('fee', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.withdraw_transaction_fee', $order);
-                    })
-                    ->orderColumn('payment_mode', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.withdraw_type', $order);
-                    })
-                    ->orderColumn('withdraw_date', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.created_at', $order);
-                    })
-                    ->orderColumn('status', function ($query, $order) {
-                        $query->orderBy('wallet_withdraw.status', $order);
-                    })
-                    ->editColumn('email', function ($row) {
-                        $fullname = $row->user
-                            ? ($row->user->fullname)
-                            : 'Unknown';
-                        $email = $row->user ? $row->user->email : 'No Email';
-                        return "<a href='/admin/client_details/{$row->user->id}'>
+                ->orderColumn('amount', function ($query, $order) {
+                    $query->orderBy('wallet_withdraw.withdraw_amount', $order);
+                })
+                ->orderColumn('fee', function ($query, $order) {
+                    $query->orderBy('wallet_withdraw.withdraw_transaction_fee', $order);
+                })
+                ->orderColumn('payment_mode', function ($query, $order) {
+                    $query->orderBy('wallet_withdraw.withdraw_type', $order);
+                })
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('wallet_withdraw.created_at', $order);
+                })
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('wallet_withdraw.status', $order);
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
                                     <div class='d-flex align-items-center'>
                                         <div class='me-2'>
                                             <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
@@ -1190,55 +1187,54 @@ class AjaxController extends Controller
                                         </div>
                                     </div>
                                 </a>";
-                    })
-                    ->addColumn('amount', function($row){
-                        return $row->withdraw_amount;
-                    })
-                    ->addColumn('fee', function($row){
-                        return $row->withdraw_transaction_fee;
-                    })
-                    ->addColumn('payment_mode', function($row){
-                        return $row->withdraw_type;
-                    })
-                    ->addColumn('withdraw_date', function ($row) {
-                        $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                        $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                        return "<div class='lh-1'>
+                })
+                ->addColumn('amount', function ($row) {
+                    return $row->withdraw_amount;
+                })
+                ->addColumn('fee', function ($row) {
+                    return $row->withdraw_transaction_fee;
+                })
+                ->addColumn('payment_mode', function ($row) {
+                    return $row->withdraw_type;
+                })
+                ->addColumn('withdraw_date', function ($row) {
+                    $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                    $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
                                     $date
                                 </div>
                                 <div class='lh-2 text-muted'>
                                     $time
                                 </div>";
-                    })
-                    ->addColumn('status', function($row){
-                        if($row->status == 1){
-                            return "<div class='badge bg-outline-success'>Approved</div>";
-                        }elseif($row->status == 2){
-                            return "<div class='badge bg-outline-danger'>Rejected</div>";
-                        }elseif($row->status == 3){
-                            return "<div class='badge bg-outline-danger'>Declined</div>";
-                        }
-                        else{
-                            return "<div class='badge bg-outline-primary'>Pending</div>";
-                        }
-                    })
-                    ->addColumn('action', function($row){
-                        return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
-                    })
-                    ->addColumn('fullname', function($row){
-                        return $row->user->fullname;
-                    })
-                    ->addColumn('fullemail', function($row){
-                        return $row->user->email;
-                    })
-                    ->addColumn('created_date', function($row){
-                        return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    })
-                    ->addColumn('created_time', function($row){
-                        return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                    })
-                    ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
-                    ->make(true);
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    } elseif ($row->status == 2) {
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    } elseif ($row->status == 3) {
+                        return "<div class='badge bg-outline-danger'>Declined</div>";
+                    } else {
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('action', function ($row) {
+                    return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('fullname', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('created_date', function ($row) {
+                    return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('created_time', function ($row) {
+                    return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                })
+                ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
+                ->make(true);
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
@@ -1283,11 +1279,11 @@ class AjaxController extends Controller
                 ->filter(function ($query) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
-                        $query->where(function($q) use ($searchValue) {
+                        $query->where(function ($q) use ($searchValue) {
                             $q->where('deposit_type', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1309,7 +1305,7 @@ class AjaxController extends Controller
                 ->orderColumn('status', function ($query, $order) {
                     $query->orderBy('trade_deposits.status', $order);
                 })
-                ->addColumn('deposit_type', function($row){
+                ->addColumn('deposit_type', function ($row) {
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
                     }
@@ -1320,7 +1316,7 @@ class AjaxController extends Controller
                     }
                     return $deposit_type;
                 })
-                ->addColumn('deposit_from', function($row){
+                ->addColumn('deposit_from', function ($row) {
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
                     }
@@ -1341,25 +1337,25 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->deposted_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->deposted_date));
                 })
-                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from','deposit_date','status','action'])
+                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -1371,7 +1367,7 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
-                ->with(['user', 'withdrawTo', 'account']);
+            ->with(['user', 'withdrawTo', 'account']);
 
         if (!isset($_GET['id'])) {
             // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -1407,13 +1403,13 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.status', $order);
                 })
 
-                ->addColumn('code', function($row){
+                ->addColumn('code', function ($row) {
                     return $row->account->code;
                 })
-                ->addColumn('withdraw_type', function($row){
+                ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
-                ->addColumn('withdraw_to', function($row){
+                ->addColumn('withdraw_to', function ($row) {
                     if ($row->withdraw_to) {
                         $acc = Account::where('id', $row->withdraw_to)->first();
                     }
@@ -1429,25 +1425,25 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->withdraw_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->withdraw_date));
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to','withdraw_date','status','action'])
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -1484,13 +1480,13 @@ class AjaxController extends Controller
         // $query->orderByDesc('id')->get();
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->addColumn('email', function($row){
+                ->addColumn('email', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->deposit_amount;
                 })
-                ->addColumn('transfer_from', function($row){
+                ->addColumn('transfer_from', function ($row) {
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
                     }
@@ -1501,19 +1497,19 @@ class AjaxController extends Controller
                     }
                     return ($row->deposit_from && $acc) ? $acc->code : $transfer_from;
                 })
-                ->addColumn('transfer_to', function($row){
+                ->addColumn('transfer_to', function ($row) {
                     return $row->code;
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->rawColumns(['email', 'amount', 'transfer_from', 'transfer_to','status'])
+                ->rawColumns(['email', 'amount', 'transfer_from', 'transfer_to', 'status'])
                 ->make(true);
         }
 
@@ -1596,10 +1592,10 @@ class AjaxController extends Controller
                 ->editColumn('amount', function ($row) {
                     return $row->ib_wallet ?? $row->ib_withdraw;
                 })
-                ->addColumn('type', function($row){
+                ->addColumn('type', function ($row) {
                     return $row->ib_wallet ? 'Commission' : 'Transfer';
                 })
-                ->addColumn('account', function($row){
+                ->addColumn('account', function ($row) {
                     $code = $row->account->code;
                     $email = $row->account->email;
                     return "
@@ -1832,9 +1828,9 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
 
         // Base query
-        $rmCondition = WalletDeposit::where('deposit_type','!=', 'Internal Transfer')
+        $rmCondition = WalletDeposit::where('deposit_type', '!=', 'Internal Transfer')
             ->select('wallet_deposit.*')
-            ->where('status',0)
+            ->where('status', 0)
             ->with(['user']);
 
 
@@ -1863,8 +1859,8 @@ class AjaxController extends Controller
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('withdraw_amount', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(deposted_date, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1885,10 +1881,10 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->withdraw_amount;
                 })
-                ->addColumn('payment_mode', function($row){
+                ->addColumn('payment_mode', function ($row) {
                     return $row->deposit_type;
                 })
                 ->addColumn('deposit_date', function ($row) {
@@ -1901,31 +1897,31 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a class='btn btn-sm btn-primary' href='/admin/wallet_deposit_details?id={$row->id}'>View</a>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->user->email;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->deposted_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->deposted_date));
                 })
-                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date','status','action'])
+                ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -1935,8 +1931,8 @@ class AjaxController extends Controller
     public function getPendingWalletWithdrawal2(Request $request)
     {
         $query = WalletWithdraw::with(['user'])
-        ->where('verified',true)
-        ->where('status',0);
+            ->where('verified', true)
+            ->where('status', 0);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -1994,13 +1990,13 @@ class AjaxController extends Controller
                     $query->orderBy('status', $order);
                 })
 
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->withdraw_amount;
                 })
-                ->addColumn('fee', function($row){
+                ->addColumn('fee', function ($row) {
                     return $row->withdraw_transaction_fee;
                 })
-                ->addColumn('payment_mode', function($row){
+                ->addColumn('payment_mode', function ($row) {
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
@@ -2013,33 +2009,33 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }elseif($row->status == 3){
+                    } elseif ($row->status == 3) {
                         return "<div class='badge bg-outline-danger'>Decline</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a class='btn btn-sm btn-primary' href='/admin/wallet_withdrawal_details?id={$row->id}'>View</a>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->user->email;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->withdraw_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->withdraw_date));
                 })
-                ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date','status','action'])
+                ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -2051,7 +2047,7 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeDeposit::with(['user', 'account'])
-                    ->where('status', 0);
+            ->where('status', 0);
         if (!isset($_GET['id'])) {
             // if (session('userData')['userRole'] == "Relationship Manager") {
             //     $rmId = session('alogin');
@@ -2078,13 +2074,13 @@ class AjaxController extends Controller
                 ->editColumn('id', function ($row) {
                     return $row->id;
                 })
-                ->addColumn('account_no', function($row){
+                ->addColumn('account_no', function ($row) {
                     return $row->code;
                 })
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->deposit_amount;
                 })
-                ->addColumn('deposit_type', function($row){
+                ->addColumn('deposit_type', function ($row) {
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
                     }
@@ -2095,7 +2091,7 @@ class AjaxController extends Controller
                     }
                     return $deposit_type;
                 })
-                ->addColumn('deposit_from', function($row){
+                ->addColumn('deposit_from', function ($row) {
                     if ($row->deposit_from) {
                         $acc = Account::where('id', $row->deposit_from)->first();
                     }
@@ -2116,25 +2112,25 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->deposted_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->deposted_date));
                 })
-                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from','deposit_date','status','action'])
+                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -2143,7 +2139,7 @@ class AjaxController extends Controller
 
     public function getPendingTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status',0);
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status', 0);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {
@@ -2168,16 +2164,16 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->addColumn('account_no', function($row){
+                ->addColumn('account_no', function ($row) {
                     return $row->account->code;
                 })
-                ->addColumn('amount', function($row){
+                ->addColumn('amount', function ($row) {
                     return $row->withdrawal_amount;
                 })
-                ->addColumn('withdraw_type', function($row){
+                ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
-                ->addColumn('withdraw_to', function($row){
+                ->addColumn('withdraw_to', function ($row) {
                     // if ($row->withdraw_to) {
                     //     $acc = Account::where('id', $row->withdraw_to)->first();
                     // }
@@ -2193,25 +2189,25 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    }else{
+                    } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->withdraw_date));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->withdraw_date));
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to','withdraw_date','status','action'])
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
                 ->make(true);
         }
 
@@ -2444,14 +2440,14 @@ class AjaxController extends Controller
         $query = DB::select($sql);
         $results = $query;
         $data = [];
-        $admin=Auth::guard('admin')->user();
+        $admin = Auth::guard('admin')->user();
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
-            if($admin->can('employee:update')){
+            if ($admin->can('employee:update')) {
                 $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
-            }else{
-                $dat->action='';
+            } else {
+                $dat->action = '';
             }
             // $dat->action = (session('userData')['userRole'] == "Super Admin" ? '<a data-id="' . $row->client_index . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>' : '');
             $data[] = $dat;
@@ -2602,7 +2598,7 @@ class AjaxController extends Controller
 
         // header('Content-Type: application/json');
         $role = DB::table('roles')->where('id', $id)->first();
-        if (($role)){
+        if (($role)) {
             return $role;
         } else {
             // return [];
@@ -2720,7 +2716,8 @@ class AjaxController extends Controller
         }
         return ['data' => $data];
     }
-    public function getIbUsers2(Request $request){
+    public function getIbUsers2(Request $request)
+    {
 
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
@@ -2729,7 +2726,7 @@ class AjaxController extends Controller
 
         $rmCondition = Ib1::where('status', 1)
             ->select('ib1.*')
-            ->with(['user', 'ibWallet','planDetails.accountType']);
+            ->with(['user', 'ibWallet', 'planDetails.accountType']);
 
 
         if ($role !== "Super Admin") {
@@ -2756,25 +2753,25 @@ class AjaxController extends Controller
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
-                        $rmCondition->where(function($q) use ($searchValue) {
+                        $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('id', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
-                ->addColumn('id', function($row){
+                ->addColumn('id', function ($row) {
                     return $row->id;
                 })
-                ->addColumn('agent_id', function($row){
+                ->addColumn('agent_id', function ($row) {
                     return $row->indexId;
                 })
                 ->editColumn('name', function ($row) {
-                    if($row->planDetails){
+                    if ($row->planDetails) {
                         $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
-                    }else{
+                    } else {
                         $small = '';
                     }
 
@@ -2789,11 +2786,10 @@ class AjaxController extends Controller
                 ->addColumn('total_withdrawal', function ($row) {
                     $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
                     return $total_withdrawal;
-
                 })
 
                 ->editColumn('ib_status', function ($row) {
-                    return $row->status ;
+                    return $row->status;
                 })
 
                 ->addColumn('status', function ($row) {
@@ -2815,7 +2811,7 @@ class AjaxController extends Controller
                                 </button>";
                     }
                 })
-                ->addColumn('date', function($row){
+                ->addColumn('date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->created_at));
                     $time = date('H:i:s', strtotime($row->created_at));
                     return "<div class='lh-1'>
@@ -2825,20 +2821,20 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->created_at));
                 })
 
-                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status','date'])
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status', 'date'])
 
                 ->orderColumn('id', 'id $1')
                 ->orderColumn('name', 'id $1')
@@ -2850,51 +2846,50 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
-
     }
-//     public function getIbUsers()
-//     {
+    //     public function getIbUsers()
+    //     {
 
-//         $rmCondition = "";
-//         if (session('userData')['userRole'] == "Relationship Manager") {
-//             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
-//         }
-//         header('Content-Type: application/json');
-//         $sql = "SELECT
-//     ib1.*,
-//     account_types.ac_name as grp,
-//     sum(ib_wallet.ib_wallet) as deposit,
-//     sum(ib_wallet.ib_withdraw) as withdraw
-// FROM
-//     ib1
-// LEFT JOIN
-//     ib_wallet
-// ON
-//     ib1.email = ib_wallet.email
-// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-//     group by ib1.email";
-//         $query = DB::select($sql);
-//         $results = $query;
-//         $data = [];
-//         foreach ($results as $row) {
-//             $data[] = [
-//                 'id' => $row->id,
-//                 'enc' => ($row->user_id),
-//                 // 'ib_category_id' => $row->ib_category_id,
-//                 'ib_plan_details_id' => $row->ib_plan_details_id,
-//                 'grp' => $row->grp,
-//                 'name' => $row->name,
-//                 'email' => $row->email,
-//                 'country' => $row->country,
-//                 'number' => $row->number,
-//                 'date' => $row->reg_date,
-//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-//                 'status' => $row->status
-//             ];
-//         }
-//         return ['data' => $data];
-//     }
+    //         $rmCondition = "";
+    //         if (session('userData')['userRole'] == "Relationship Manager") {
+    //             $rmCondition = "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+    //         }
+    //         header('Content-Type: application/json');
+    //         $sql = "SELECT
+    //     ib1.*,
+    //     account_types.ac_name as grp,
+    //     sum(ib_wallet.ib_wallet) as deposit,
+    //     sum(ib_wallet.ib_withdraw) as withdraw
+    // FROM
+    //     ib1
+    // LEFT JOIN
+    //     ib_wallet
+    // ON
+    //     ib1.email = ib_wallet.email
+    // LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+    //     group by ib1.email";
+    //         $query = DB::select($sql);
+    //         $results = $query;
+    //         $data = [];
+    //         foreach ($results as $row) {
+    //             $data[] = [
+    //                 'id' => $row->id,
+    //                 'enc' => ($row->user_id),
+    //                 // 'ib_category_id' => $row->ib_category_id,
+    //                 'ib_plan_details_id' => $row->ib_plan_details_id,
+    //                 'grp' => $row->grp,
+    //                 'name' => $row->name,
+    //                 'email' => $row->email,
+    //                 'country' => $row->country,
+    //                 'number' => $row->number,
+    //                 'date' => $row->reg_date,
+    //                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+    //                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+    //                 'status' => $row->status
+    //             ];
+    //         }
+    //         return ['data' => $data];
+    //     }
 
     public function getPendingIbUsers2(Request $request)
     {
@@ -2905,8 +2900,8 @@ class AjaxController extends Controller
 
         $rmCondition = Ib1::where('status', 0)
             ->select('ib1.*')
-            ->with(['user', 'ibWallet','planDetails.accountType'])
-            ->where('status',0);
+            ->with(['user', 'ibWallet', 'planDetails.accountType'])
+            ->where('status', 0);
 
 
         if ($role !== "Super Admin") {
@@ -2932,38 +2927,38 @@ class AjaxController extends Controller
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
-                        $rmCondition->where(function($q) use ($searchValue) {
+                        $rmCondition->where(function ($q) use ($searchValue) {
                             $q->where('id', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('name', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                            // ->orWhere('total_deposit', 'LIKE', "%{$searchValue}%")
-                            // ->orWhere('total_withdrawal', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhere('name', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('total_deposit', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('total_withdrawal', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
-                ->addColumn('id', function($row){
+                ->addColumn('id', function ($row) {
                     return $row->id;
                 })
-                ->addColumn('name', function($row){
-                    if($row->planDetails){
+                ->addColumn('name', function ($row) {
+                    if ($row->planDetails) {
                         $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
-                    }else{
+                    } else {
                         $small = '';
                     }
 
                     return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
                 })
-                ->addColumn('total_deposit', function($row){
-                    $total_deposit = $row->ibWallet ? $row->ibWallet->sum('ib_wallet') : '$'+0;
+                ->addColumn('total_deposit', function ($row) {
+                    $total_deposit = $row->ibWallet ? $row->ibWallet->sum('ib_wallet') : '$' + 0;
                     return $total_deposit;
                 })
-                ->addColumn('total_withdrawal', function($row){
-                    $total_withdrawal = $row->ibWallet ? $row->ibWallet->sum('ib_withdraw') : '$'+0;
+                ->addColumn('total_withdrawal', function ($row) {
+                    $total_withdrawal = $row->ibWallet ? $row->ibWallet->sum('ib_withdraw') : '$' + 0;
                     return $total_withdrawal;
                 })
                 ->editColumn('ib_status', function ($row) {
-                    return $row->status ;
+                    return $row->status;
                 })
                 ->addColumn('date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->created_at));
@@ -2975,36 +2970,36 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->addColumn('status', function($row){
-                    if($row->status == 1){
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
                         return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-                    }elseif($row->status == 2){
+                    } elseif ($row->status == 2) {
                         return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-                    }elseif($row->status == 0){
+                    } elseif ($row->status == 0) {
                         return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-                    }else{
+                    } else {
                         return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
                     }
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
-                ->addColumn('fullname', function($row){
+                ->addColumn('fullname', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('fullemail', function($row){
+                ->addColumn('fullemail', function ($row) {
                     return $row->email;
                 })
-                ->addColumn('created_date', function($row){
+                ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
-                ->addColumn('created_time', function($row){
+                ->addColumn('created_time', function ($row) {
                     return date('H:i:s', strtotime($row->created_at));
                 })
-                ->addColumn('checkbox', function($row){
+                ->addColumn('checkbox', function ($row) {
                     return "<input type='checkbox' class='row-checkbox' >";
                 })
-                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal','date','status','action', 'checkbox'])
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'date', 'status', 'action', 'checkbox'])
                 ->make(true);
         }
 
@@ -3013,51 +3008,51 @@ class AjaxController extends Controller
 
 
 
-//     public function getPendingIbUsers()
-//     {
+    //     public function getPendingIbUsers()
+    //     {
 
-//         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
-//         if (session('userData')['userRole'] == "Relationship Manager") {
-//             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
-//         } else {
-//             $rmCondition .= " where (1) ";
-//         }
-//         header('Content-Type: application/json');
-//         $sql = "SELECT
-//     ib1.*,
-//     account_types.ac_name as grp,
-//     sum(ib_wallet.ib_wallet) as deposit,
-//     sum(ib_wallet.ib_withdraw) as withdraw
-// FROM
-//     ib1
-// LEFT JOIN
-//     ib_wallet
-// ON
-//     ib1.email = ib_wallet.email
-// LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
-// and ib1.status = 0
-//     group by ib1.email";
-//         $query = DB::select($sql);
-//         $results = $query;
-//         $data = [];
-//         foreach ($results as $row) {
-//             $data[] = [
-//                 'id' => $row->indexId,
-//                 'enc' => ($row->user_id),
-//                 'acc_type' => $row->acc_type,
-//                 'grp' => $row->grp,
-//                 'name' => $row->name,
-//                 'email' => $row->email,
-//                 'country' => $row->country,
-//                 'number' => $row->number,
-//                 'date' => $row->reg_date,
-//                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
-//                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
-//                 'status' => $row->status
-//             ];
-//         }
-//         return ['data' => $data];
-//     }
+    //         $rmCondition = " left join aspnetusers user on(user.email=ib1.email) ";
+    //         if (session('userData')['userRole'] == "Relationship Manager") {
+    //             $rmCondition .= "  left join relationship_manager rm on(rm.user_id=ib1.email) where rm.rm_id='" . session('alogin') . "'";
+    //         } else {
+    //             $rmCondition .= " where (1) ";
+    //         }
+    //         header('Content-Type: application/json');
+    //         $sql = "SELECT
+    //     ib1.*,
+    //     account_types.ac_name as grp,
+    //     sum(ib_wallet.ib_wallet) as deposit,
+    //     sum(ib_wallet.ib_withdraw) as withdraw
+    // FROM
+    //     ib1
+    // LEFT JOIN
+    //     ib_wallet
+    // ON
+    //     ib1.email = ib_wallet.email
+    // LEFT JOIN account_types on account_types.ac_index = ib1.indexId " . $rmCondition . "
+    // and ib1.status = 0
+    //     group by ib1.email";
+    //         $query = DB::select($sql);
+    //         $results = $query;
+    //         $data = [];
+    //         foreach ($results as $row) {
+    //             $data[] = [
+    //                 'id' => $row->indexId,
+    //                 'enc' => ($row->user_id),
+    //                 'acc_type' => $row->acc_type,
+    //                 'grp' => $row->grp,
+    //                 'name' => $row->name,
+    //                 'email' => $row->email,
+    //                 'country' => $row->country,
+    //                 'number' => $row->number,
+    //                 'date' => $row->reg_date,
+    //                 'total_deposit' => $row->deposit ? '$' . $row->deposit : '$0',
+    //                 'total_withdrawal' => $row->withdraw ? '$' . $row->withdraw : '$0',
+    //                 'status' => $row->status
+    //             ];
+    //         }
+    //         return ['data' => $data];
+    //     }
 
 
 
@@ -3066,7 +3061,7 @@ class AjaxController extends Controller
 
         header('Content-Type: application/json');
         // $sql = "SELECT * FROM  emplist WHERE id='" . $id;
-        return EmployeeList::select("id","role_id",'username','email','gender','dob','number','address','company_name','status')->where("id",$id)->first();
+        return EmployeeList::select("id", "role_id", 'username', 'email', 'gender', 'dob', 'number', 'address', 'company_name', 'status')->where("id", $id)->first();
         // $query = DB::select($sql);
         // $result = $query[0];
         // unset($result->password);
@@ -3094,7 +3089,7 @@ class AjaxController extends Controller
             ->where("id", $user_id)
             ->first();
         $admin = Auth::guard('admin')->user();
-        Gate::forUser($admin)->authorize('client:update',$user);
+        Gate::forUser($admin)->authorize('client:update', $user);
         try {
 
             $updated = User::where("id", $user_id)
@@ -3109,16 +3104,16 @@ class AjaxController extends Controller
                     'ip' => request()->ip(),
                     'user_email' => auth()->guard('admin')->user()->email,
                     'client_id' => $user_id,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'user_id' => auth()->guard('admin')->user()->id,
                     'email_confirmed' => isset($data['email_confirmed']) ?? '',
                     'status' => isset($data['status']) ?? '',
                     'kyc_verify' => isset($data['kyc_verify']) ?? '',
                     'remark' => 'Update Client Status'
                 ])
-            ->event('update')
-            ->log('Update Client Status');
+                ->event('update')
+                ->log('Update Client Status');
 
             return ['success' => true];
 
@@ -3180,33 +3175,33 @@ class AjaxController extends Controller
     {
 
         $results = EmployeeList::with('role')
-        ->whereHas('role', function ($query) {
-            $query->where('name', 'Relationship Manager');
-        })
-        ->select('id','client_index', 'email', 'username')
-        ->get();
-            return $results;
-        }
+            ->whereHas('role', function ($query) {
+                $query->where('name', 'Relationship Manager');
+            })
+            ->select('id', 'client_index', 'email', 'username')
+            ->get();
+        return $results;
+    }
 
     public function getClientDetails($data)
     {
 
         $result = DB::table('aspnetusers')
-        ->join('countries', 'aspnetusers.country', '=', 'countries.country_name')
-        ->select(
-            'aspnetusers.id',
-            'aspnetusers.email',
-            'aspnetusers.fullname',
-            'aspnetusers.country',
-            // 'aspnetusers.country_code',
-            // 'aspnetusers.number AS telephone',
-            DB::raw('concat(countries.country_code) as country_code'),
-            DB::raw('REGEXP_REPLACE(aspnetusers.number, concat(countries.country_code), "") AS telephone')
-        )
-        ->where('aspnetusers.id', '=', $data['id'])
-        ->first();
+            ->join('countries', 'aspnetusers.country', '=', 'countries.country_name')
+            ->select(
+                'aspnetusers.id',
+                'aspnetusers.email',
+                'aspnetusers.fullname',
+                'aspnetusers.country',
+                // 'aspnetusers.country_code',
+                // 'aspnetusers.number AS telephone',
+                DB::raw('concat(countries.country_code) as country_code'),
+                DB::raw('REGEXP_REPLACE(aspnetusers.number, concat(countries.country_code), "") AS telephone')
+            )
+            ->where('aspnetusers.id', '=', $data['id'])
+            ->first();
 
-            // dd($result);
+        // dd($result);
         return (array) $result;
     }
 
@@ -3218,7 +3213,7 @@ class AjaxController extends Controller
             $ibGroup = $request['ib_group'];
             $result = Ib1::with('user')->where('user_id', $clientId)->first();
             $admin = Auth::guard('admin')->user();
-            Gate::forUser($admin)->authorize('ib:update',$result);
+            Gate::forUser($admin)->authorize('ib:update', $result);
             if ($result) {
                 $clientId = $result->user->id;
             }
@@ -3253,16 +3248,16 @@ class AjaxController extends Controller
                 ->withProperties([
                     'ip' => request()->ip(),
                     'user_email' => auth()->guard('admin')->user()->email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'user_id' => auth()->guard('admin')->user()->id,
                     'client_id' => $clientId,
                     'ib_status' => $ibStatus,
                     'ib_group' => $ibGroup,
                     'remark' => 'Ib Request'
                 ])
-            ->event('update')
-            ->log('Ib Request');
+                ->event('update')
+                ->log('Ib Request');
             $cacheKey = 'ib1_' . $clientId;
             Cache::forget($cacheKey);
 
@@ -3315,16 +3310,16 @@ class AjaxController extends Controller
                         ->withProperties([
                             'ip' => request()->ip(),
                             'user_email' => auth()->guard('admin')->user()->email,
-                            'userRole' =>auth()->guard('admin')->user()->userRole,
-                            'username' =>auth()->guard('admin')->user()->username,
-                            'user_id' =>auth()->guard('admin')->user()->id,
+                            'userRole' => auth()->guard('admin')->user()->userRole,
+                            'username' => auth()->guard('admin')->user()->username,
+                            'user_id' => auth()->guard('admin')->user()->id,
                             'ib_plan_details_id' => $ibGroup,
                             'ib_status' => $ibStatus,
                             'ib_id' => $clientId,
                             'remark' => 'Bulk Ib Request'
                         ])
-                    ->event('update')
-                    ->log('Bulk Ib Request');
+                        ->event('update')
+                        ->log('Bulk Ib Request');
 
                     Cache::forget('ib1_' . $clientId);
 
@@ -3396,16 +3391,16 @@ class AjaxController extends Controller
 
         $user = User::with('ib')->findOrFail($id);
 
-        if(isset($user->clients[$level])){
+        if (isset($user->clients[$level])) {
             $query = $user->clients[$level];
-        }else{
+        } else {
             $query = [];
         }
 
         if ($request->ajax()) {
             return DataTables::of($query)
 
-            ->editColumn('email', function ($row) {
+                ->editColumn('email', function ($row) {
                     return " <div class='row align-items-center'>
                                 <div class='col-auto pe-0'>
                                     <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
@@ -3419,28 +3414,27 @@ class AjaxController extends Controller
                                     </p>
                                 </div>
                             </div>";
-            })
+                })
 
-            ->editColumn('total_accounts', function ($row) {
+                ->editColumn('total_accounts', function ($row) {
                     return $row->liveaccounts;
-            })
+                })
 
-            ->editColumn('total_deposit', function ($row) {
+                ->editColumn('total_deposit', function ($row) {
                     return $row->total_deposit ? $row->total_deposit : "$";
-            })
+                })
 
-            ->editColumn('profile_status', function ($row) {
-                    if($row->email_confirmed == 1){
+                ->editColumn('profile_status', function ($row) {
+                    if ($row->email_confirmed == 1) {
                         return " <span  class='badge btn bg-success'>Active</span>";
-                    }else{
+                    } else {
                         return "<span class='badge btn bg-info'>Not Verified</span>";
                     }
-            })
+                })
 
                 ->rawColumns(['email', 'profile_status'])
                 ->make(true);
         }
-
     }
 
     public function exportAllClients(Request $request)
