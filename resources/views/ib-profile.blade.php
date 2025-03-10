@@ -117,7 +117,7 @@
                                                             <p class="mb-0">Deposits</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00' ?></h5>
+                                                    <h5 class="mb-0 f-w-500">$ <?= isset($IbTotalDeposits) ? $IbTotalDeposits : '0.00' ?></h5>
                                                 </div>
                                             </div>
                                         </div>
