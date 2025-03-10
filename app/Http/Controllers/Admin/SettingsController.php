@@ -186,8 +186,14 @@ class SettingsController extends Controller
 
     public function email_broadcast(Request $request)
     {
-        return view("admin.email_broadcast");
+        // Fetch emails where status = 1 and email_confirmed = 1
+        $emails = User::where('status', 1)
+                    ->where('email_confirmed', 1)
+                    ->pluck('email'); // Only fetch the 'email' column
+
+        return view("admin.email_broadcast", compact('emails'));
     }
+
 
     public function send_email_broadcast(Request $request)
     {
