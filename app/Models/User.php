@@ -313,8 +313,27 @@ class User extends Authenticatable
 
         // Calculate the total sum of 'total_deposit'
         $totalDeposit = $clients->sum('total_deposit');
-
         return $totalDeposit;
+    }
+
+    public function getIbTotalWithdrawalAttribute()
+    {
+        if (!$this->ib) {
+            return 0; // Return 0 if the user has no IB.
+        }
+
+        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+
+        // Dynamically build the query for all 15 levels using a single query.
+        $clients = IbClientList::where(function ($query) use ($referralCode) {
+            for ($i = 1; $i <= 15; $i++) {
+                $query->orWhere("ib$i", $referralCode);
+            }
+        })->get();
+
+        // Calculate the total sum of 'total_deposit'
+        $totalWithdrawal = $clients->sum('total_withdrawal');
+        return $totalWithdrawal;
     }
 
     public function getTicketStatusAttribute()

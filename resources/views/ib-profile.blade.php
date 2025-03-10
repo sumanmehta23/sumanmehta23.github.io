@@ -67,8 +67,8 @@
                                                 <div class="p-3 card-body">
                                                     <div class="gap-1 d-flex align-items-center justify-content-between">
                                                         <div class="gap-1 d-flex align-items-center">
-                                                            <h5 class="mb-0 f-w-500">$
-                                                                <?= isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00' ?>
+                                                            <h5 class="mb-0 f-w-500">
+                                                                @money(isset($ib_wallet_raw->wallet) ? $ib_wallet_raw->wallet : '0.00')
                                                             </h5>
                                                         </div>
                                                         <div class="avtar avtar-s bg-light-primary"><i
@@ -85,8 +85,8 @@
                                                 <div class="p-3 card-body">
                                                     <div class="gap-1 d-flex align-items-center justify-content-between">
                                                         <div class="gap-1 d-flex align-items-center">
-                                                            <h5 class="mb-0 f-w-500">$
-                                                                <?= isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00' ?>
+                                                            <h5 class="mb-0 f-w-500">
+                                                                @money(isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00')
                                                             </h5>
                                                         </div>
                                                         <div class="avtar avtar-s bg-light-primary"><i
@@ -117,7 +117,7 @@
                                                             <p class="mb-0">Deposits</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ <?= isset($IbTotalDeposits) ? $IbTotalDeposits : '0.00' ?></h5>
+                                                    <h5 class="mb-0 f-w-500">@money(isset($IbTotalDeposits) ? $IbTotalDeposits : '0.00')</h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -134,7 +134,7 @@
                                                             <p class="mb-0">Withdrawals</p>
                                                         </div>
                                                     </div>
-                                                    <h5 class="mb-0 f-w-500">$ <?= isset($ib_wallet_raw->withdraw) ? $ib_wallet_raw->withdraw : '0.00' ?></h5>
+                                                    <h5 class="mb-0 f-w-500">@money(isset($IbTotalWithdrawal) ? $IbTotalWithdrawal : '0.00')</h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -155,7 +155,7 @@
                                                 <div class="mt-1 row align-items-center">
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
-                                                            $<?= number_format($ib_wallet, 2) ?></h3>
+                                                         @money($ib_wallet)</h3>
                                                         <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
                                                     </div>
                                                 </div>
@@ -178,8 +178,8 @@
                                                                 class="mb-0 form-check-label d-block"
                                                                 for="<?= $acc->id ?>"><span><span
                                                                         class="h5 d-block"><span
-                                                                            class="float-end badge bg-light-primary f-14 fw-medium">$
-                                                                            <?= $acc->balance ?></span><span>
+                                                                            class="float-end badge bg-light-primary f-14 fw-medium">
+                                                                            @money($acc->balance)</span><span>
                                                                             <img src="/assets/images/mt5.png"
                                                                                 class="hei-30">
                                                                             <?= $acc->code ?></span></span><span

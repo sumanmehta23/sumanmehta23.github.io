@@ -434,7 +434,8 @@ class Ib extends Controller
         $user = User::with('ib')->findOrFail($userId);
 
         $IbTotalDeposits = $user->IbTotalDeposits;
-        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId','IbTotalDeposits'));
+        $IbTotalWithdrawal = $user->IbTotalWithdrawal;
+        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId','IbTotalDeposits','IbTotalWithdrawal'));
     }
     public function ibReference(Request $request)
     {

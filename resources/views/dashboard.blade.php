@@ -19,7 +19,7 @@
                                         </svg></div>
                                 </div>
                                 <div>
-                                    <h2 class="text-center text-white">${{ $walletBalance }}</h2>
+                                    <h2 class="text-center text-white">@money($walletBalance)</h2>
                                 </div>
                             </div><a href="/wallet_deposit"><small class="text-white">FUND NOW</small></a>
 
@@ -39,7 +39,7 @@
                                     </a><a href="/transactions" class="dropdown-item">View Transactions</a></div>
                             </div>
                         </div>
-                        <h4 class="mb-1 f-w-400">${{ $totalDeposit }}</h4>
+                        <h4 class="mb-1 f-w-400">@money($totalDeposit)</h4>
                         <p class="mb-0 text-muted">Total Deposits</p>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
                                         Transactions</a></div>
                             </div>
                         </div>
-                        <h4 class="mb-1 f-w-400">${{ $totalWithdrawal }}</h4>
+                        <h4 class="mb-1 f-w-400">@money($totalWithdrawal)</h4>
                         <p class="mb-0 text-muted">Total Withdrawals</p>
                     </div>
                 </div>
@@ -163,9 +163,8 @@
                                                             </div>
                                                         </td>
                                                         <td class="f-w-400 f-16">{{ $liveAccount->leverage }}</td>
-                                                        <td class="text-end f-w-400 f-16">$
-                                                            {{ $liveAccount->balance ?? '0.00' }}</td>
-                                                        <td class="text-end f-w-400 f-16">$ {{ $liveAccount->equity }}</td>
+                                                        <td class="text-end f-w-400 f-16">@money($liveAccount->balance ?? '0.00')</td>
+                                                        <td class="text-end f-w-400 f-16">@money($liveAccount->equity)</td>
 
                                                         {{-- <td class="text-end f-w-200">
                                                             @if ($liveAccount->code && $liveAccount->code != 'Rejected' )
@@ -282,10 +281,8 @@
                                                             </div>
                                                         </td>
                                                         <td class="f-w-400 f-16">{{ $demoAccount->leverage }}</td>
-                                                        <td class="text-end f-w-400 f-16">$
-                                                            {{ $demoAccount->balance ?? '0.00' }}</td>
-                                                        <td class="text-end f-w-400 f-16">$ {{ $demoAccount->equity }}
-                                                        </td>
+                                                        <td class="text-end f-w-400 f-16">@money($demoAccount->balance ?? '0.00')</td>
+                                                        <td class="text-end f-w-400 f-16">@money($demoAccount->equity)</td>
                                                         @if ($demoAccount->code && $demoAccount->code != 'Rejected')
                                                             <td class="text-end f-w-200">
                                                                 <div class="d-flex align-items-center">
