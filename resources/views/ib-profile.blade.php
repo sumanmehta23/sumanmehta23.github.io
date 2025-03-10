@@ -173,10 +173,10 @@
                                                     <div class="p-2 border card">
                                                         <div class="mb-0 form-check"><input type="radio" name="account"
                                                                 class="form-check-input input-primary"
-                                                                id="<?= $acc->id ?>"
-                                                                value="<?= $acc->id ?>"><label
+                                                                id="{{ $acc->id }}"
+                                                                value="{{ $acc->id }}"><label
                                                                 class="mb-0 form-check-label d-block"
-                                                                for="<?= $acc->id ?>"><span><span
+                                                                for="{{ $acc->id }}"><span><span
                                                                         class="h5 d-block"><span
                                                                             class="float-end badge bg-light-primary f-14 fw-medium">
                                                                             @money($acc->balance)</span><span>
