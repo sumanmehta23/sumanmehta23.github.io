@@ -22,6 +22,7 @@ class Transactions extends Controller
     }
     public function index()
     {
+
         $email = $email = auth()->user()->email;
 
         $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
@@ -34,6 +35,10 @@ class Transactions extends Controller
             ->where('withdraw_type', 'Wallet Withdrawal')
             ->orderBy('id', 'desc')
             ->get();
+
+            if($email == 'info@jalelabou.com' || $email == 'abhay@lqhmarkets.com'){
+                dd($withdrawal_history);
+            }
 
         // Fetching internal transfers
 

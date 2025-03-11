@@ -227,7 +227,7 @@
                                                             <p class="mb-0 text-muted f-20"><small>Equity</small></p>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            <h4 class="mb-1 f-w-400">${{ $equity ?? '' }}</h4>
+                                                            <h4 class="mb-1 f-w-400">@money($equity)</h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -245,7 +245,7 @@
                                                             <p class="mb-0 text-muted f-20"><small>Free Margin</small></p>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            <h4 class="mb-1 f-w-400">${{ $freemargin ?? '' }}</h4>
+                                                            <h4 class="mb-1 f-w-400">@money($freemargin)</h4>
                                                         </div>
                                                     </div>
                                                 </div>
