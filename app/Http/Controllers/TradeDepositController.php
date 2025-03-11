@@ -127,13 +127,6 @@ class TradeDepositController extends Controller
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
         // Check if there's enough balance
 
-
-        if($user->email == 'nasimautomation@gmail.com'){
-            dump($depositdata['deposit'], gettype($depositdata['deposit']));
-            dd($walletBalance, gettype($walletBalance));
-
-        }
-
         if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < (float)$depositdata['deposit']) {
             return response()->json([
                 'success' => false,
