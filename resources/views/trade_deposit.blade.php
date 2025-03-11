@@ -170,7 +170,7 @@
                                                                                     id="deposit_amount" type="number"
                                                                                     class="form-control fill tradedeposit_amount"
                                                                                     aria-label="Amount" step="0.01"
-                                                                                    min="0.01" required>
+                                                                                    min="0.001" required>
                                                                             </div>
                                                                         </div>
                                                                     </div>
