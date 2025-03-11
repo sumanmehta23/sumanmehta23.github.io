@@ -10,9 +10,25 @@ use App\Models\EmployeeList;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Models\Activity;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Services\MailService as MailService;
+use App\Services\MT5Service;
+use App\MT5\MTWebAPI;
+use App\Models\User;
 
 class SettingsController extends Controller
 {
+    protected $mailService;
+    protected $mt5Service;
+    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    {
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
+        $this->mailService = $mailService;
+        // $this->api = $api;
+
+    }
+
     public function index()
     {
         return view("admin.ui_settings");
@@ -167,4 +183,50 @@ class SettingsController extends Controller
             ->log('Update Admin Password');
         return redirect()->back()->with('success', 'Password Updated Successfully');
     }
+
+    public function email_broadcast(Request $request)
+    {
+        // Fetch emails where status = 1 and email_confirmed = 1
+        $emails = User::where('status', 1)
+                    ->where('email_confirmed', 1)
+                    ->pluck('email'); // Only fetch the 'email' column
+
+        return view("admin.email_broadcast", compact('emails'));
+    }
+
+
+    public function send_email_broadcast(Request $request)
+    {
+        $request->validate([
+            'emails' => 'required|string',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $emails = explode(',', $request->emails);
+        $emails = array_map('trim', $emails);
+        $subject = $request->subject;
+        $content = $request->message; // CKEditor provides HTML content
+
+        foreach ($emails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $settings = settings();
+                $emailSubject = $settings['admin_title'] . ' ' . $subject;
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'email' => settings()['email_from_address'],
+                    'content' => $content, // Ensure this contains HTML
+                    "title_right" => "",
+                    "subtitle_right" => ""
+                ];
+
+                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+            }
+        }
+
+        return back()->with('success', 'Emails sent successfully!');
+    }
+
 }
