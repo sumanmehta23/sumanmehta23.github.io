@@ -59,7 +59,7 @@
                                     <i class="ti ti-plus me-2"></i> Activate Wallet
                                 </button>
                             @else --}}
-                                <span class="text-center h2">${{ $wallet_balance }}</span>
+                                <span class="text-center h2">@money($wallet_balance)</span>
                             {{-- @endif --}}
                         </div>
 
