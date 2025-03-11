@@ -72,6 +72,10 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        if(($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')){
+            return redirect()->back()->with('error', 'You are blocked by admin.');
+        }
+
          // Find the user by email
          $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
 
