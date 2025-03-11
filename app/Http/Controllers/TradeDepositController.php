@@ -126,7 +126,8 @@ class TradeDepositController extends Controller
 
         $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
         // Check if there's enough balance
-        if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < $depositdata['deposit']) {
+
+        if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < (float)$depositdata['deposit']) {
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong',
