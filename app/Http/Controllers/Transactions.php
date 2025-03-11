@@ -36,9 +36,7 @@ class Transactions extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-            if($email == 'info@jalelabou.com' || $email == 'abhay@lqhmarkets.com'){
-                dd($withdrawal_history);
-            }
+
 
         // Fetching internal transfers
 

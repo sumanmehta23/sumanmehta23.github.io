@@ -198,7 +198,8 @@
 
                             <p class="text-success">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
 
-                            <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?  htmlspecialchars(isset($history->payout_req) ? json_decode($history->payout_res, true)['reason'] : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+                            <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?
+                            htmlspecialchars(isset($history->payout_req) ? $history->admin_remark : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
 
                             @if(($history->verified == 0) && ($history->status == 0))
                                 <a  href="#"
