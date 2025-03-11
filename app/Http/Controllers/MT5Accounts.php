@@ -1098,4 +1098,28 @@ class MT5Accounts extends Controller
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';
         return redirect()->back()->with('success', $message);
     }
+
+   public function updateNickname(Request $request)
+    {
+        $request->validate([
+            'nickname' => 'required|string|min:3|max:50',
+            'account_id' => 'required|exists:accounts,id', // Ensure account_id exists in the database
+        ]);
+
+        $user = auth()->user();
+
+        $account = Account::where('user_id', $user->id)
+                        ->where('id', $request->account_id)
+                        ->first();
+
+        if (!$account) {
+            return response()->json(['message' => 'Account not found or unauthorized'], 404);
+        }
+
+        $account->account_nick_name = $request->nickname;
+        $account->save(); // Save the updated account nickname
+
+        return response()->json(['message' => 'Nickname updated successfully!']);
+    }
+
 }

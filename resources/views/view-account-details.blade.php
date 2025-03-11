@@ -99,7 +99,7 @@
                                 <label class="form-label f-12" for="exampleInputNickName">
                                     Update Nick Name
                                 </label>
-                                <input type="text" class="form-control f-12" name="nickName" required id="password" placeholder="Nick Name">
+                                <input type="text" class="form-control f-12" name="nickName" required id="nickName" placeholder="Nick Name">
                             </div>
                         </div>
                     </div>
@@ -142,9 +142,11 @@
                                                         <h2 class="mb-0 f-w-500">
                                                             <span class="text-truncate">{{ $code }}</span>
                                                         </h2>
-                                                        <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
-                                                        {{-- <p class="mb-0 text-muted f-12"><span
-                                                                class="text-truncate w-100"></span></p> --}}
+                                                        @if ($account->account_nick_name)
+                                                            <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
+                                                            {{-- <p class="mb-0 text-muted f-12"><span
+                                                                    class="text-truncate w-100"></span></p> --}}
+                                                        @endif
                                                         <button class="btn btn-sm btn-primary w-25 updateNickName" onclick="editNickname()">Edit Nick Name</button>
                                                     </div>
 
@@ -515,27 +517,44 @@
         });
         $("#nickNameForm").on("submit", function(e) {
             e.preventDefault();
-            var pass = $("#password").val();
-            var cpass = $("#confirm_password").val();
-            if (validatePassword(pass) == "true") {
-                if (pass == cpass) {
-                    $("#passwordForm").off();
-                    $("#passwordForm").submit();
-                } else {
-                    swal.fire({
-                        icon: "info",
-                        title: "Passwords not matched"
-                    });
-                    $("#confirm_password").val("")
-                    return false;
-                }
-            } else {
+            var nickname = $("#nickName").val();
+            var account_id = $("input[name='account_id']").val();
+
+            if (nickname.length < 3) {
                 swal.fire({
                     icon: "info",
-                    title: "Password not matched requirement.",
-                    text: validatePassword(pass)
-                })
+                    title: "Nickname must be at least 3 characters."
+                });
+                return false;
             }
+
+            $.ajax({
+                url: "/update-nickname",
+                type: "POST",
+                data: {
+                    nickname: nickname,
+                    account_id: account_id,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    swal.fire({
+                        icon: "success",
+                        title: "Nickname updated successfully!"
+                    }).then((val) => {
+                            location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    swal.fire({
+                        icon: "error",
+                        title: "Error updating nickname",
+                        text: xhr.responseJSON.message || "Something went wrong!"
+                    }).then((val) => {
+                            location.reload();
+                    });
+                }
+            });
         });
+
     </script>
 @endsection
