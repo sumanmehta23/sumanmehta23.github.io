@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
+use App\Models\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -87,8 +88,10 @@ class Home extends Controller
     public function getLiveAccountDetails($email)
     {
         $liveaccount_details = auth()->user()->liveAccounts()
+            ->with('accountType')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id']);
+
         return $liveaccount_details;
     }
     public function getDemoAccountDetails($email)

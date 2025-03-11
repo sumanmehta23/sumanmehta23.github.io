@@ -240,6 +240,7 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -247,6 +248,8 @@ class MT5Accounts extends Controller
         ]);
 
         $user = auth()->user();
+        $nick_name = $request->nick_name;
+
         $email = $user->email;
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
         $referral=$user->referral;
@@ -322,7 +325,7 @@ class MT5Accounts extends Controller
                     'name' => $new_user->Name,
                     'demo'=> false,
                     'email' => $new_user->Email,
-                    // 'name' => $new_user->Name,
+                    'account_nick_name' =>  $nick_name,
                     'code' => $new_user->Login,
                     'account_type_id' => $account_type_id,
                     'leverage' => $new_user->Leverage,
@@ -359,6 +362,7 @@ class MT5Accounts extends Controller
                 'name' => $user->fullname??$user->email,
                 'demo'=> false,
                 'email' => $user->email,
+                'account_nick_name' =>  $nick_name,
                 'account_type_id' => $account_type_id,
                 'leverage' => $validatedData['leverage'],
                 'currency' => 'USD',
