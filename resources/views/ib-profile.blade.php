@@ -52,7 +52,7 @@
                                                 <div class="p-3 card-body">
                                                     <div class="gap-1 d-flex align-items-center justify-content-between">
                                                         <div class="gap-1 d-flex align-items-center">
-                                                            <h3 class="mb-0 f-w-500"><?= $ib_clients_total ?></h3>
+                                                            <h3 class="mb-0 f-w-500">{{ $ib_clients_total }}</h3>
                                                         </div>
                                                         <div class="avtar avtar-s bg-light-primary"><i
                                                                 class="ti ti-mood-kid f-18"></i></div>
@@ -182,7 +182,7 @@
                                                                             @money($acc->balance)</span><span>
                                                                             <img src="/assets/images/mt5.png"
                                                                                 class="hei-30">
-                                                                            <?= $acc->code ?></span></span><span
+                                                                            {{ $acc->code }}</span></span><span
                                                                         class="mt-2 mb-0 text-muted"><span class="mt-2 float-end text-muted f-12"> Current Balance</span></span></span></label></div>
                                                     </div>
                                                 </div>
@@ -200,7 +200,7 @@
                                             </div><label class="form-label" for="exampleFormControlSelect1">Enter
                                                 Amount</label>
                                             <div class="mb-3 input-group"><span class="input-group-text">$</span><input
-                                                    type="number" name="amount" max="<?= $ib_wallet ?>"
+                                                    type="number" name="amount" max="{{ $ib_wallet }}"
                                                     class="form-control" required aria-label="Amount (to the nearest dollar)"><span
                                                     class="input-group-text">.00</span>
                                                 <!---->
