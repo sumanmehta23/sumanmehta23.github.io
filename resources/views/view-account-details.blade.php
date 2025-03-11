@@ -74,6 +74,43 @@
             </form>
         </div>
     </div>
+    <div id="updateNickNameModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form method="post" id="nickNameForm">
+                @csrf
+                <input type="hidden" name="account_id" value="{{ $account->id }}">
+                <div class="modal-content" style="width: 200%;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalCenterTitle">Update Nick Name</h5><button type="button"
+                            class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="p-2 f-w-400">{{ $code }}</h5>
+                            </div>
+                        </div>
+                        <div class="mt-0 mb-0 row">
+                            <div class="form-group">
+                                <label class="form-label f-12" for="exampleInputNickName">
+                                    Update Nick Name
+                                </label>
+                                <input type="text" class="form-control f-12" name="nickName" required id="password" placeholder="Nick Name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-primary"
+                            data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
+                            name="updateNickName" value="true">
+                            <!----> Update Nick Name</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="pc-container">
         <div class="pc-content">
             <div class="page-header">
@@ -101,13 +138,16 @@
                                                         <img src="/assets/images/mt5.png" alt="user-image"
                                                             class="rounded wid-60 hei-60">
                                                     </div>
-                                                    <div class="col">
+                                                    <div class="col d-flex align-items-left gap-3">
                                                         <h2 class="mb-0 f-w-500">
                                                             <span class="text-truncate">{{ $code }}</span>
                                                         </h2>
-                                                        <p class="mb-0 text-muted f-12"><span
-                                                                class="text-truncate w-100"></span></p>
+                                                        <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
+                                                        {{-- <p class="mb-0 text-muted f-12"><span
+                                                                class="text-truncate w-100"></span></p> --}}
+                                                        <button class="btn btn-sm btn-primary w-25 updateNickName" onclick="editNickname()">Edit Nick Name</button>
                                                     </div>
+
                                                 </div>
                                             </div>
                                             <div class="col-sm-6 text-sm-end">
@@ -446,6 +486,34 @@
         });
 
         $("#passwordForm").on("submit", function(e) {
+            e.preventDefault();
+            var pass = $("#password").val();
+            var cpass = $("#confirm_password").val();
+            if (validatePassword(pass) == "true") {
+                if (pass == cpass) {
+                    $("#passwordForm").off();
+                    $("#passwordForm").submit();
+                } else {
+                    swal.fire({
+                        icon: "info",
+                        title: "Passwords not matched"
+                    });
+                    $("#confirm_password").val("")
+                    return false;
+                }
+            } else {
+                swal.fire({
+                    icon: "info",
+                    title: "Password not matched requirement.",
+                    text: validatePassword(pass)
+                })
+            }
+        });
+
+        $(".updateNickName").click(function() {
+            $("#updateNickNameModal").modal("show");
+        });
+        $("#nickNameForm").on("submit", function(e) {
             e.preventDefault();
             var pass = $("#password").val();
             var cpass = $("#confirm_password").val();
