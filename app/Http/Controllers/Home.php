@@ -60,15 +60,24 @@ class Home extends Controller
     }
     public function getTotalDeposit($userId)
     {
-        $totalDeposit = TotalBalance::where('user_id', $userId)
-            ->sum('trading_deposited');
+        // $totalDeposit = TotalBalance::where('user_id', $userId)
+        //     ->sum('trading_deposited');
+        $totalDeposit = WalletDeposit::where('user_id', $this->id)
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->where('status', 1)
+            ->sum('deposit_amount');
         $totalDeposit = $totalDeposit ?: 0;
         return $totalDeposit;
     }
     public function getTotalWithdrawal($userId)
     {
-        $totalWithdrawal = TotalBalance::where('user_id', $userId)
-            ->sum('trading_withdrawal');
+        // $totalWithdrawal = TotalBalance::where('user_id', $userId)
+        //     ->sum('trading_withdrawal');
+        $totalWithdrawal = WalletWithdraw::where('user_id', $this->id)
+            ->where('withdraw_type', 'Wallet Withdrawal')
+            ->where('status', 1)
+            ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+            ->value('total');
         return $totalWithdrawal ?: 0;
     }
     public function getLiveAccountCount($userId)
