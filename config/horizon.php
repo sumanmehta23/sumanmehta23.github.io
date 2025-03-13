@@ -235,6 +235,12 @@ return [
             'supervisor-1' => [
                 'maxProcesses' => 3,
             ],
+            'supervisor-2' => [
+                'maxProcesses' => 20,
+            ],
+            'supervisor-3' => [
+                'maxProcesses' => 20,
+            ]
         ],
     ],
 ];

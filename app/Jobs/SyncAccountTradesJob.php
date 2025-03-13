@@ -25,7 +25,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $api;
     protected  $account;
     protected $accountId;
-    protected $newTrades = true;
+    protected $newTrades = false;
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
@@ -40,7 +40,14 @@ class SyncAccountTradesJob implements ShouldQueue
         $this->ib_acc_plans = $ib_acc_plans;
         $this->onQueue('syncaccountstrades');
     }
+    protected function calculateLotSize($volumeInitialExt, $contractSize)
+    {
+        if ($contractSize == 0) {
+            throw new Exception("Contract size cannot be zero");
+        }
 
+        return $volumeInitialExt / (100_000_000 / $contractSize);
+    }
     /**
      * Execute the job.
      */
@@ -56,7 +63,7 @@ class SyncAccountTradesJob implements ShouldQueue
             Log::error('Account not found for id: ' . $this->accountId);
             return;
         }
-        info('Syncing account trades for account: ' . $this->account->code);
+        // info('Syncing account trades for account: ' . $this->account->code);
         $login = $this->account->code;
         $from = 'September 01,2024';
         $to = 'March 31,2080';
@@ -90,8 +97,10 @@ class SyncAccountTradesJob implements ShouldQueue
             if ($orders) {
                 $ibcommissions = [];
                 $orderIdsAndCodes = [];
-
                 foreach ($orders as $item) {
+                    // if ($item->State != 4) {
+                    //     continue;
+                    // }
                     $symbolWithoutP = $item->Symbol;
                     if (!isset($symbolmap[$symbolWithoutP])) {
                         try {
@@ -109,7 +118,7 @@ class SyncAccountTradesJob implements ShouldQueue
                     if (in_array($item->Order . '-' . $item->Login, $processedOrders)) {
                         continue;
                     }
-
+                    $lotSize = $this->calculateLotSize($item->VolumeInitial, $item->ContractSize);
                     $existingCommission = Ib1Commission::where('order_id', $item->Order)
                         ->where('code', $item->Login)
                         ->exists();
@@ -128,6 +137,7 @@ class SyncAccountTradesJob implements ShouldQueue
                         'code' => $item->Login,
                         'init_volume' => $item->VolumeInitial,
                         'symbol' => $symbolWithoutP,
+                        'orderstate' => $item->State,
                         'volume' => $item->VolumeInitial * $b,
                         'time_closed' => Carbon::createFromTimestamp($item->TimeDone),
                         'created_at' => now(),
@@ -168,7 +178,7 @@ class SyncAccountTradesJob implements ShouldQueue
         }
         if ($this->newTrades) {
             // ($referral_code, $userId, $ib_acc_plans)
-            info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
+            // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
             DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
         }
     }
