@@ -65,7 +65,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                                 if ($plan_id) {
                                     $ib_acc_plans = $this->getIbPlanDetails($ib1->user_id, $plan_id);
                                     $ib_level = $j;
-                                    if (in_array($this->referral_code, ['sensei', 'wealthytrades', '66H5XC'])) {
+                                    if (in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])) {
                                         $commission = 3;
                                     } else {
                                         $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
