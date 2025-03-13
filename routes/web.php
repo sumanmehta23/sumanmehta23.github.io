@@ -124,8 +124,8 @@ Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name
 
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
-// Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-// Route::post('/login', [LoginController::class, 'login']);
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
 Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
@@ -174,6 +174,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
 
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
+
+    Route::post('/update-nickname', [MT5Accounts::class, 'updateNickname'])->name('update.nickname');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
 
@@ -377,6 +379,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:setting:update']);
             Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:setting:update']);
         });
+
+        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
+        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
+
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

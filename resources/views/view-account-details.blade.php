@@ -74,6 +74,43 @@
             </form>
         </div>
     </div>
+    <div id="updateNickNameModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form method="post" id="nickNameForm">
+                @csrf
+                <input type="hidden" name="account_id" value="{{ $account->id }}">
+                <div class="modal-content" style="width: 200%;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalCenterTitle">Update Nick Name</h5><button type="button"
+                            class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="p-2 f-w-400">{{ $code }}</h5>
+                            </div>
+                        </div>
+                        <div class="mt-0 mb-0 row">
+                            <div class="form-group">
+                                <label class="form-label f-12" for="exampleInputNickName">
+                                    Update Nick Name
+                                </label>
+                                <input type="text" class="form-control f-12" name="nickName" required id="nickName" placeholder="Nick Name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-primary"
+                            data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
+                            name="updateNickName" value="true">
+                            <!----> Update Nick Name</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="pc-container">
         <div class="pc-content">
             <div class="page-header">
@@ -101,13 +138,18 @@
                                                         <img src="/assets/images/mt5.png" alt="user-image"
                                                             class="rounded wid-60 hei-60">
                                                     </div>
-                                                    <div class="col">
+                                                    <div class="col d-flex align-items-left gap-3">
                                                         <h2 class="mb-0 f-w-500">
                                                             <span class="text-truncate">{{ $code }}</span>
                                                         </h2>
-                                                        <p class="mb-0 text-muted f-12"><span
-                                                                class="text-truncate w-100"></span></p>
+                                                        @if ($account->account_nick_name)
+                                                            <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
+                                                            {{-- <p class="mb-0 text-muted f-12"><span
+                                                                    class="text-truncate w-100"></span></p> --}}
+                                                        @endif
+                                                        <button class="btn btn-sm btn-primary w-25 updateNickName" onclick="editNickname()">Edit Nick Name</button>
                                                     </div>
+
                                                 </div>
                                             </div>
                                             <div class="col-sm-6 text-sm-end">
@@ -227,7 +269,7 @@
                                                             <p class="mb-0 text-muted f-20"><small>Equity</small></p>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            <h4 class="mb-1 f-w-400">${{ $equity ?? '' }}</h4>
+                                                            <h4 class="mb-1 f-w-400">@money($equity)</h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -245,7 +287,7 @@
                                                             <p class="mb-0 text-muted f-20"><small>Free Margin</small></p>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            <h4 class="mb-1 f-w-400">${{ $freemargin ?? '' }}</h4>
+                                                            <h4 class="mb-1 f-w-400">@money($freemargin)</h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -469,5 +511,50 @@
                 })
             }
         });
+
+        $(".updateNickName").click(function() {
+            $("#updateNickNameModal").modal("show");
+        });
+        $("#nickNameForm").on("submit", function(e) {
+            e.preventDefault();
+            var nickname = $("#nickName").val();
+            var account_id = $("input[name='account_id']").val();
+
+            if (nickname.length < 3) {
+                swal.fire({
+                    icon: "info",
+                    title: "Nickname must be at least 3 characters."
+                });
+                return false;
+            }
+
+            $.ajax({
+                url: "/update-nickname",
+                type: "POST",
+                data: {
+                    nickname: nickname,
+                    account_id: account_id,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    swal.fire({
+                        icon: "success",
+                        title: "Nickname updated successfully!"
+                    }).then((val) => {
+                            location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    swal.fire({
+                        icon: "error",
+                        title: "Error updating nickname",
+                        text: xhr.responseJSON.message || "Something went wrong!"
+                    }).then((val) => {
+                            location.reload();
+                    });
+                }
+            });
+        });
+
     </script>
 @endsection

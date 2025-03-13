@@ -186,7 +186,8 @@ class Ib extends Controller
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->planDetails->ib_category_id;
+
+        $plan_id = $ib->planDetails ? $ib->planDetails->ib_category_id : '';
 
 
         $ib_email = auth()->user()->email;
@@ -217,9 +218,11 @@ class Ib extends Controller
             }
             // dump($ib_acc_plans);
             $referral_code = auth()->user()->ib->referral_code;
+
             if (!$referral_code) {
                 $referral_code = auth()->user()->ib->email;
             }
+
             // info('Getting accounts for ref code '.$referral_code." for user ".$userId);
             // dd($referral_code);
             // Loop through levels and fetch associated client accounts
@@ -422,14 +425,17 @@ class Ib extends Controller
             ->where('account_request_status', 1)
             ->orderBy('id', 'desc')
             ->get();
-
         for ($i = 1; $i <= 7; $i++) {
-            $ib_clients[$i] = IbClientList::where("ib$i", $referral_code)->get();
+            $ib_clients[$i] = IbClientList::where("ib$i", $refercode)->get();
         }
         $histories = IbWallet::where('user_id', $userId)->get();
         // info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
         // dd($ib_wallet);
-        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId'));
+        $user = User::with('ib')->findOrFail($userId);
+
+        $IbTotalDeposits = $user->IbTotalDeposits;
+        $IbTotalWithdrawal = $user->IbTotalWithdrawal;
+        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId','IbTotalDeposits','IbTotalWithdrawal'));
     }
     public function ibReference(Request $request)
     {

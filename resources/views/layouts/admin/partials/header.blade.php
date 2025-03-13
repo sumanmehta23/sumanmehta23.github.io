@@ -578,6 +578,13 @@ $filePermissions = filePermissions($userRole);
                                         </a>
                                     </li>
                                 @endcan
+                                @can('setting:update')
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.emailbroadcast') }}" class="side-menu__item ">
+                                            Email Broadcasting
+                                        </a>
+                                    </li>
+                                @endcan
 
                             </ul>
                         </li>

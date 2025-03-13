@@ -60,7 +60,7 @@
 
     <style>
         .pc-sidebar .navbar-content {
-            overflow-y: scroll;
+            /* overflow-y: scroll; */
         }
 
         body .swal2-container {

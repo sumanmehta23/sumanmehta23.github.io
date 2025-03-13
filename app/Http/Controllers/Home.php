@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
+use App\Models\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -60,15 +61,24 @@ class Home extends Controller
     }
     public function getTotalDeposit($userId)
     {
-        $totalDeposit = TotalBalance::where('user_id', $userId)
-            ->sum('trading_deposited');
+        // $totalDeposit = TotalBalance::where('user_id', $userId)
+        //     ->sum('trading_deposited');
+        $totalDeposit = WalletDeposit::where('user_id', $userId)
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->where('status', 1)
+            ->sum('deposit_amount');
         $totalDeposit = $totalDeposit ?: 0;
         return $totalDeposit;
     }
     public function getTotalWithdrawal($userId)
     {
-        $totalWithdrawal = TotalBalance::where('user_id', $userId)
-            ->sum('trading_withdrawal');
+        // $totalWithdrawal = TotalBalance::where('user_id', $userId)
+        //     ->sum('trading_withdrawal');
+        $totalWithdrawal = WalletWithdraw::where('user_id', $userId)
+            ->where('withdraw_type', 'Wallet Withdrawal')
+            ->where('status', 1)
+            ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+            ->value('total');
         return $totalWithdrawal ?: 0;
     }
     public function getLiveAccountCount($userId)
@@ -78,8 +88,10 @@ class Home extends Controller
     public function getLiveAccountDetails($email)
     {
         $liveaccount_details = auth()->user()->liveAccounts()
+            ->with('accountType')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id']);
+
         return $liveaccount_details;
     }
     public function getDemoAccountDetails($email)
