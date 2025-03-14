@@ -98,8 +98,7 @@ class ClientController extends Controller
                 ->leftJoin('relationship_manager as rm', 'aspnetusers.id', '=', 'rm.user_id')
                 ->where('rm.rm_id', $alogin)
                 ->count();
-
-        }else{
+        } else {
             $total_clients = DB::table("aspnetusers")->count();
         }
 
@@ -152,7 +151,7 @@ class ClientController extends Controller
     {
         $role = Role::find(Session::get('userData.role_id'));
 
-        if ($request->has('rmUpdate') && $role && $role->name ="Super Admin") {
+        if ($request->has('rmUpdate') && $role && $role->name = "Super Admin") {
             $user_id = $request->input('user_id');
             // $result = DB::table('aspnetusers')
             //     ->select('id')
@@ -162,24 +161,24 @@ class ClientController extends Controller
             $rm_id = $request->input('rm_id');
             $exists = RelationshipManager::where('user_id', $user_id)->count();
             if ($exists > 0) {
-                RelationshipManager::where('user_id', $user_id  )->update(['rm_id' => $rm_id]);
+                RelationshipManager::where('user_id', $user_id)->update(['rm_id' => $rm_id]);
             } else {
-                RelationshipManager::create(['user_id' => $user_id, 'rm_id' => $rm_id, 'added_by' => Auth::id() ]);
+                RelationshipManager::create(['user_id' => $user_id, 'rm_id' => $rm_id, 'added_by' => Auth::id()]);
             }
             activity()
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
                     'ip' => request()->ip(),
                     'admin_email' => auth()->guard('admin')->user()->email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'admin_id' =>auth()->guard('admin')->user()->id,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
                     'client_id' => $user_id,
                     'rm_id' => $rm_id,
                     'remark' => 'RM Request'
                 ])
-            ->event('update')
-            ->log('RM Request');
+                ->event('update')
+                ->log('RM Request');
             return redirect()->back()->with('success', 'RM Details Updated');
         }
         return redirect()->back()->with('success', 'Only Super Admin can update');
@@ -227,7 +226,7 @@ class ClientController extends Controller
                         $user = DB::table('aspnetusers')->where('id', $user_id)->first();
 
                         $this->addToUserLog([
-                            'user_id'=> $user_id,
+                            'user_id' => $user_id,
                             'email' => $user->email,
                             'type' => 'ib',
                             'value' => json_encode($logdata)
@@ -310,17 +309,17 @@ class ClientController extends Controller
                         ->withProperties([
                             'ip' => request()->ip(),
                             'admin_email' => auth()->guard('admin')->user()->email,
-                            'userRole' =>auth()->guard('admin')->user()->userRole,
-                            'username' =>auth()->guard('admin')->user()->username,
-                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'userRole' => auth()->guard('admin')->user()->userRole,
+                            'username' => auth()->guard('admin')->user()->username,
+                            'admin_id' => auth()->guard('admin')->user()->id,
                             'client_id' => $user->id,
                             'client_email' => $email,
                             'client_password' => $password,
                             'status' => $status,
                             'remark' => 'Create Client'
                         ])
-                    ->event('create')
-                    ->log('Create Client');
+                        ->event('create')
+                        ->log('Create Client');
                     if ($user) {
                         // Log the user addition (you need to implement this function if not already available)
                         $logData = [
@@ -419,7 +418,7 @@ class ClientController extends Controller
             }
             $errorString = '';
             foreach ($filteredErrors as $error) {
-                $errorString .= '• ' . $error ;
+                $errorString .= '• ' . $error;
             }
             $errorString = html_entity_decode($errorString);
             // dd($errorString);
@@ -436,17 +435,17 @@ class ClientController extends Controller
             $country = $request->input('country');
             $country_code = $request->input('country_code');
             // $number = $request->input('telephone');
-            $number = $request->country_code.$request->telephone;
+            $number = $request->country_code . $request->telephone;
 
             $emailNotification = $request->input('email_notification');
 
             $countryCode = Country::where('country_name', $request->country)
-            ->select('country_code')
-            ->first();
+                ->select('country_code')
+                ->first();
 
             $code = $countryCode ? $countryCode->country_code : 'null';
 
-            if($country_code != $code){
+            if ($country_code != $code) {
                 return redirect()->back()->with('error', 'Update failed! No changes were made due to a mismatch between the country and its code');
             }
 
@@ -466,7 +465,7 @@ class ClientController extends Controller
                 if ($user) {
 
                     $user->fullname = $fullname;
-                    if($password){
+                    if ($password) {
                         $user->password = $password;
                     }
                     $user->number = $number;
@@ -481,9 +480,9 @@ class ClientController extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'send_to' => $user->id,
                         'client_fullname' => $fullname ?? '',
                         'client_password' => $password ?? '',
@@ -494,8 +493,8 @@ class ClientController extends Controller
                         'client_email' => $user->email,
                         'remark' => 'Update Client Details'
                     ])
-                ->event('update')
-                ->log('Update Client Details');
+                    ->event('update')
+                    ->log('Update Client Details');
                 // $affectedRows = DB::table('aspnetusers')
                 //     ->where(DB::raw('id'), $user_id)
                 //     ->update([
@@ -541,7 +540,6 @@ class ClientController extends Controller
                 }
             } catch (\Exception $e) {
                 return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
-
             }
         }
     }
@@ -571,7 +569,6 @@ class ClientController extends Controller
             'type' => $data['type'],
             'value' => $data['value']
         ]);
-
     }
     function add_to_user_log($data)
     {
@@ -587,14 +584,13 @@ class ClientController extends Controller
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
         $countries = Country::all();
-        $acc_groups = IBPlan::with('category')
-        ->where('status', 1)
-        ->groupBy('ib_plan_cat_id')
-        ->get();
-
+        $acc_groups = IbPlan::with('category')
+            ->where('status', 1)
+            ->groupBy('ib_plan_cat_id')
+            ->get();
         $acc_types = AccountType::with('mt5Group')
-        ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
-        ->get();
+            ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
+            ->get();
 
         // Get all the required data directly from $user
         $total_wd = $user->total_wd;  // Accessor for total wallet deposit
@@ -603,7 +599,7 @@ class ClientController extends Controller
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
-        $live_accounts = $user->liveAccounts->where('account_request_status',1)->where('deleted_at',NULL);  // Relationship for live accounts
+        $live_accounts = $user->liveAccounts->where('account_request_status', 1)->where('deleted_at', NULL);  // Relationship for live accounts
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
@@ -625,23 +621,23 @@ class ClientController extends Controller
         foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
             $login = $liveAccount->code;
             // dd($login);
-            if($user->ib1){
-                $ibdata = Ib1::where('referral_code',$user->ib1)->first();
+            if ($user->ib1) {
+                $ibdata = Ib1::where('referral_code', $user->ib1)->first();
                 if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
                     // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
                 }
-                if($trade_user){
+                if ($trade_user) {
                     $trade_user->Agent = $ibdata->indexId ?? '';
 
                     $error_code = $this->api->UserUpdate($trade_user, $updated_user);
-                        // if ($error_code != MTRetCode::MT_RET_OK) {
-                        //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
-                        // }
+                    // if ($error_code != MTRetCode::MT_RET_OK) {
+                    //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                    // }
                 }
             }
         }
 
-        $kyc_log = KycLog::where('user_id', $id)->where('callback_payload','like','%GREEN%')->latest()->first();
+        $kyc_log = KycLog::where('user_id', $id)->where('callback_payload', 'like', '%GREEN%')->latest()->first();
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',

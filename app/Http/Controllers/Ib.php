@@ -180,7 +180,7 @@ class Ib extends Controller
 
         $userId = $user->id;
         $ib_wallet = 0.00;
-        // AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
+        AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::with('planDetails')
             ->where('user_id', $userId)
             ->where('status', 1)
@@ -212,7 +212,6 @@ class Ib extends Controller
             ->where('account_request_status', 1)
             ->orderBy('id', 'desc')
             ->get();
-        // dd($live_accs);
 
         $user = User::with('ib')->findOrFail($userId);
 
