@@ -299,21 +299,19 @@ class User extends Authenticatable
     public function getIbTotalDepositsAttribute()
     {
         if (!$this->ib) {
-            return 0; // Return 0 if the user has no IB.
+            return 0; // Return 0 if the user has no IB
         }
 
-        $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
+        $referralCode = $this->ib->referral_code ?: $this->ib->getAttribute('referral_code');
 
-        // Dynamically build the query for all 15 levels using a single query.
-        $clients = IbClientList::where(function ($query) use ($referralCode) {
+        // Perform a single query to calculate the total deposit
+        $totalDeposit = IbClientList::where(function ($query) use ($referralCode) {
             for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib$i", $referralCode);
+                $query->orWhere("ib{$i}", $referralCode);
             }
-        })->get();
+        })->sum('total_deposit'); // Directly sum in SQL, avoids loading all models into memory
 
-        // Calculate the total sum of 'total_deposit'
-        $totalDeposit = $clients->sum('total_deposit');
-        return $totalDeposit;
+        return $totalDeposit ?? 0;
     }
 
     public function getIbTotalWithdrawalAttribute()
@@ -323,17 +321,16 @@ class User extends Authenticatable
         }
 
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
-
         // Dynamically build the query for all 15 levels using a single query.
-        $clients = IbClientList::where(function ($query) use ($referralCode) {
+        $totalWithdrawal = IbClientList::where(function ($query) use ($referralCode) {
             for ($i = 1; $i <= 15; $i++) {
                 $query->orWhere("ib$i", $referralCode);
             }
-        })->get();
+        })->sum('total_withdrawal');
 
         // Calculate the total sum of 'total_deposit'
-        $totalWithdrawal = $clients->sum('total_withdrawal');
-        return $totalWithdrawal;
+        // $totalWithdrawal = $clients->sum('total_withdrawal');
+        return $totalWithdrawal ?? 0;
     }
 
     public function getTicketStatusAttribute()

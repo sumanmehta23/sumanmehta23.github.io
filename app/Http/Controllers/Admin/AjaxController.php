@@ -12,14 +12,15 @@ use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Permission;
 use App\Models\EmployeeList;
+use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
@@ -3391,11 +3392,9 @@ class AjaxController extends Controller
 
         $user = User::with('ib')->findOrFail($id);
 
-        if (isset($user->clients[$level])) {
-            $query = $user->clients[$level];
-        } else {
-            $query = [];
-        }
+        $query = IbClientList::where(function ($query) use ($user, $level) {
+            $query->orWhere("ib$level", $user->ib->referral_code);
+        });
 
         if ($request->ajax()) {
             return DataTables::of($query)
