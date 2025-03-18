@@ -394,122 +394,97 @@
                                             <div class="card-body table-card">
                                                 @if (count($bank_accounts) > 0)
                                                     <div class="card-body">
-                                                        <table class="table">
-                                                            <thead>
-                                                                <tr>
-                                                                    {{-- <th>#</th> --}}
-                                                                    <th>Wallet Name</th>
-                                                                    <th>Currency</th>
-                                                                    <th>Network</th>
-                                                                    <th>Address</th>
-                                                                    <th>Verified</th>
-                                                                    <th>Status / Action</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @foreach ($bank_accounts as $acc)
-                                                                    {{-- {{ dd($acc) }} --}}
+                                                        <div class="table-responsive">
+                                                            <table class="table">
+                                                                <thead>
                                                                     <tr>
-                                                                        {{-- <td>CWA{{ sprintf('%04u', $acc->id) }}</td> --}}
-                                                                        <td>{{ $acc->wallet_name }}</td>
-                                                                        <td>{{ $acc->wallet_currency }}</td>
-                                                                        <td>{{ $acc->wallet_network }}</td>
-                                                                        <td>{{ $acc->wallet_address }}</td>
-                                                                        @php
-                                                                            if ($acc->verified == 0) {
-                                                                                $verification = 'Pending';
-                                                                                $tdClass = 'varification-pending';
-                                                                            } else {
-                                                                                $verification = 'Approved';
-                                                                                $tdClass = 'varification-plus';
-                                                                            }
-                                                                        @endphp
-                                                                        <td class="{{ $tdClass }}">
-                                                                            {{ $verification }}</td>
-                                                                        {{-- {{ dd($acc) }} --}}
-                                                                        <td>
-                                                                            @if ($acc->wallet_delete_verification == 0)
-                                                                                <div
-                                                                                    class="d-flex align-items-center text-start {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
-                                                                                    @if ($acc->status == 0)
-                                                                                        <a class="mt-1 wallet-action me-2"
-                                                                                            data-bs-toggle="tooltip"
-                                                                                            title="Inactive Wallet Address"
-                                                                                            data-toggle="{{ $acc->id }}">
-                                                                                            <i
-                                                                                                class="f-24 ti ti-toggle-left"></i>
-                                                                                        </a>
-                                                                                    @else
-                                                                                        <a class="mt-1 wallet-action me-2"
-                                                                                            data-bs-toggle="tooltip"
-                                                                                            title="Active Wallet Address"
-                                                                                            data-toggle="{{ $acc->id }}">
-                                                                                            <i
-                                                                                                class="f-24 ti ti-toggle-right"></i>
-                                                                                        </a>
-                                                                                    @endif
-                                                                                    <span
-                                                                                        class="badge text-warning edit_wallet_address"
-                                                                                        data-id="{{ $acc->id }}"
-                                                                                        data-bs-toggle="tooltip"
-                                                                                        title="Edit Wallet Address">
-                                                                                        <svg xmlns='http://www.w3.org/2000/svg'
-                                                                                            width='24' height='24'
-                                                                                            viewBox='0 0 24 24'
-                                                                                            fill='none'
-                                                                                            stroke='currentColor'
-                                                                                            stroke-width='2'
-                                                                                            stroke-linecap='round'
-                                                                                            stroke-linejoin='round'
-                                                                                            class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'>
-                                                                                            <path stroke='none'
-                                                                                                d='M0 0h24v24H0z'
-                                                                                                fill='none' />
-                                                                                            <path
-                                                                                                d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' />
-                                                                                            <path
-                                                                                                d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' />
-                                                                                            <path d='M16 5l3 3' />
-                                                                                        </svg>
-                                                                                    </span>
-
-                                                                                    <span
-                                                                                        class="badge text-danger delete_wallet_address"
-                                                                                        data-id="{{ $acc->id }}"
-                                                                                        data-bs-toggle="tooltip"
-                                                                                        title="Delete Wallet Address">
-                                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                            width="20" height="20"
-                                                                                            viewBox="0 0 24 24"
-                                                                                            fill="none"
-                                                                                            stroke="currentColor"
-                                                                                            stroke-width="2"
-                                                                                            stroke-linecap="round"
-                                                                                            stroke-linejoin="round"
-                                                                                            class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
-                                                                                            <path stroke="none"
-                                                                                                d="M0 0h24v24H0z"
-                                                                                                fill="none" />
-                                                                                            <path d="M4 7l16 0" />
-                                                                                            <path d="M10 11l0 6" />
-                                                                                            <path d="M14 11l0 6" />
-                                                                                            <path
-                                                                                                d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                                                            <path
-                                                                                                d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                                                                                        </svg>
-                                                                                    </span>
-                                                                                </div>
-                                                                            @elseif ($acc->wallet_delete_verification == 1)
-                                                                                <span class="text-warning">Deletion Not
-                                                                                    Verified</span>
-                                                                            @endif
-                                                                        </td>
+                                                                        <th>Wallet Name</th>
+                                                                        <th>Currency</th>
+                                                                        <th>Network</th>
+                                                                        <th>Address</th>
+                                                                        <th class="text-center">Verified</th>
+                                                                        <th class="text-center">Status / Action</th>
                                                                     </tr>
-                                                                @endforeach
-                                                            </tbody>
-                                                        </table>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach ($bank_accounts as $acc)
+                                                                        <tr>
+                                                                            <td>{{ $acc->wallet_name }}</td>
+                                                                            <td>{{ $acc->wallet_currency }}</td>
+                                                                            <td>{{ $acc->wallet_network }}</td>
+                                                                            <td>{{ $acc->wallet_address }}</td>
+                                                                            @php
+                                                                                if ($acc->verified == 0) {
+                                                                                    $verification = 'Pending';
+                                                                                    $tdClass = 'varification-pending';
+                                                                                } else {
+                                                                                    $verification = 'Approved';
+                                                                                    $tdClass = 'varification-plus';
+                                                                                }
+                                                                            @endphp
+                                                                            <td class="{{ $tdClass }} text-center">
+                                                                                {{ $verification }}
+                                                                                @if ($verification == 'Pending' && $acc->wallet_delete_verification == 0)
+                                                                                    <div class="pt-2">
+                                                                                        <a href="#" class="btn btn-sm btn-outline-primary primary-btn"        onclick="resendWalletAddressConfirmationVerifyEmail('{{ $acc->wallet_address }}', '{{ $acc->id }}')" type="submit">
+                                                                                            Resend Verification Email
+                                                                                        </a>
+                                                                                    </div>
+                                                                                @endif
+                                                                            </td>
+
+                                                                            <td class="text-center">
+                                                                                @if ($acc->wallet_delete_verification == 0)
+                                                                                    <div class="d-flex justify-content-center
+                                                                                        {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
+
+                                                                                        @if ($acc->status == 0)
+                                                                                            <a class="mt-1 wallet-action me-2" data-bs-toggle="tooltip" title="Inactive Wallet Address" data-toggle="{{ $acc->id }}">
+                                                                                                <i class="f-24 ti ti-toggle-left"></i>
+                                                                                            </a>
+                                                                                        @else
+                                                                                            <a class="mt-1 wallet-action me-2" data-bs-toggle="tooltip" title="Active Wallet Address" data-toggle="{{ $acc->id }}">
+                                                                                                <i class="f-24 ti ti-toggle-right"></i>
+                                                                                            </a>
+                                                                                        @endif
+
+                                                                                        <span class="badge text-warning edit_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Edit Wallet Address">
+                                                                                            <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'>
+                                                                                                <path stroke='none' d='M0 0h24v24H0z' fill='none' />
+                                                                                                <path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' />
+                                                                                                <path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' />
+                                                                                                <path d='M16 5l3 3' />
+                                                                                            </svg>
+                                                                                        </span>
+
+                                                                                        <span class="badge text-danger delete_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Delete Wallet Address">
+                                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                                                                <path d="M4 7l16 0" />
+                                                                                                <path d="M10 11l0 6" />
+                                                                                                <path d="M14 11l0 6" />
+                                                                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                                                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                                                            </svg>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                @elseif ($acc->wallet_delete_verification == 1)
+                                                                                    <span class="text-warning">Deletion Not Verified</span>
+                                                                                    <div class="pt-2">
+                                                                                        <a href="#" class="btn btn-sm btn-outline-primary primary-btn"
+                                                                                        onclick="resendWalletAddressDeleteConfirmationVerifyEmail('{{ $acc->wallet_address }}', '{{ $acc->id }}')" type="submit">
+                                                                                            Resend Verification Email
+                                                                                        </a>
+                                                                                    </div>
+                                                                                @endif
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
+
                                                 @else
                                                     <div class="auth-main">
                                                         <div class="card-body">
@@ -780,6 +755,96 @@
             });
         });
 
+        function resendWalletAddressConfirmationVerifyEmail(walletAddress, id) {
+            console.log("Sending request...");
+
+            $.ajax({
+                url: "{{ route('resend.wallet.confirmation') }}",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+                },
+                data: JSON.stringify({ wallet_address: walletAddress, wallet_id: id }),
+                success: function (data) {
+                    console.log("Server Response:", data);
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success!",
+                            text: data.message,
+                            confirmButtonColor: "#3085d6",
+                            confirmButtonText: "OK"
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Oops...",
+                            text: data.message || "Error sending verification email.",
+                            confirmButtonColor: "#d33",
+                            confirmButtonText: "Try Again"
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: "Something went wrong. Please try again!",
+                        confirmButtonColor: "#d33",
+                        confirmButtonText: "Close"
+                    });
+                }
+            });
+        }
+
+
+        function resendWalletAddressDeleteConfirmationVerifyEmail(walletAddress, id) {
+            console.log("Sending request...");
+
+            $.ajax({
+                url: "{{ route('resend.wallet.delete.confirmation') }}",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+                },
+                data: JSON.stringify({ wallet_address: walletAddress, wallet_id: id }),
+                success: function (data) {
+                    console.log("Server Response:", data);
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success!",
+                            text: data.message,
+                            confirmButtonColor: "#3085d6",
+                            confirmButtonText: "OK"
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Oops...",
+                            text: data.message || "Error sending verification email.",
+                            confirmButtonColor: "#d33",
+                            confirmButtonText: "Try Again"
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: "Something went wrong. Please try again!",
+                        confirmButtonColor: "#d33",
+                        confirmButtonText: "Close"
+                    });
+                }
+            });
+        }
 
     </script>
 @endsection

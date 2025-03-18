@@ -215,6 +215,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('resend.wallet.withdrawal.email');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
+    Route::post('/resend_wallet_address_confirmation', [Wallet::class, 'resend_wallet_address_confirmation_email'])->name('resend.wallet.confirmation');
+    Route::post('/resend_wallet_address_delete_confirmation', [Wallet::class, 'resend_wallet_address_delete_confirmation_email'])->name('resend.wallet.delete.confirmation');
+
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
     // Route::post('/change_email', [Users::class, 'changeEmail'])->name('email.change');
 

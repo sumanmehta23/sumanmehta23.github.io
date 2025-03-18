@@ -155,6 +155,103 @@ class Wallet extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function resend_wallet_address_confirmation_email(Request $request)
+    {
+        $settings = settings();
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not authenticated.');
+        }
+
+        $toEmail = $user->email;
+        $type = 'Wallet Details Verification';
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+
+        // Fetch wallet details
+        $ClientWallet = ClientWallet::where('user_id', $user->id)
+            ->where('id', $request->wallet_id)
+            ->first();
+
+        if (!$ClientWallet) {
+            return redirect()->back()->with('error', 'Wallet not found.');
+        }
+
+        $walletAddress = htmlspecialchars($request->wallet_address, ENT_QUOTES, 'UTF-8');
+
+        $content = '
+            <div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>
+            <div>You are receiving this email because you have added a new wallet address to your account.</div>
+            <div>Wallet Address: ' . $walletAddress . '</div>
+            <div>Click the link below to activate your Wallet Address:</div>
+        ';
+
+        $templateVars = [
+            'name' => $user->fullname,
+            'server_name' => $settings['mt5_company_name'],
+            'site_link' => htmlspecialchars($settings['copyright_site_name_text'], ENT_QUOTES, 'UTF-8') .
+                "/wallet_address_verify?id={$user->id}&clientWallet_id={$ClientWallet->id}",
+            'email' => $from,
+            'content' => $content,
+            'title_right' => 'Activate',
+            'subtitle_right' => 'Your Wallet Address'
+        ];
+
+        try {
+            $this->mailService->sendEmail($toEmail, $emailSubject, '', '', $templateVars);
+            return response()->json(['success' => true, 'message' => 'Verification email sent successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to send verification email: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function resend_wallet_address_delete_confirmation_email(Request $request)
+    {
+        try {
+            $settings = settings();
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $wallet_id = $request->input('wallet_id');
+            $wallet = ClientWallet::with('user')->where('id', $wallet_id)->first();
+
+            if (!$wallet) {
+                return response()->json(['error' => 'Wallet not found'], 404);
+            }
+
+            $toEmail = $user->email;
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Verify Wallet Address Deletion Request';
+
+            $content = '<div>We received a request to delete the following wallet address linked to your wallet:</div>' .
+                    '<div>Wallet Address: ' . e($request->input('wallet_address')) . '</div>' .
+                    '<div>For security purposes, please verify this request by clicking the link below:</div>';
+
+            $templateVars = [
+                'name' => $wallet->user->fullname,
+                'server_name' => $settings['mt5_company_name'],
+                'site_link' => url("/delete_wallet_address?id={$wallet->user_id}&clientWallet_id={$wallet->id}"),
+                'email' => $from,
+                'content' => $content,
+                'title_right' => 'Verify',
+                'subtitle_right' => 'Wallet Address Deletion Request',
+                'btn_text' => 'Verify Wallet Address Deletion'
+            ];
+
+            $this->mailService->sendEmail($toEmail, $emailSubject, '', '', $templateVars);
+
+            return response()->json(['success' => 'Verification email sent successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Something went wrong', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
     public function verify_delete_wallet_address(Request $request)
     {
         $wallet_id = $request->id;
