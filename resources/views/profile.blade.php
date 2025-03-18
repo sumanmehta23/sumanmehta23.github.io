@@ -174,7 +174,7 @@
                                                     <h5>Personal Information</h5>
                                                 </div>
                                                 <div class="card-body">
-                                                    <form action={{ route('email.change') }} method="post">
+                                                    {{-- <form action={{ route('email.change') }} method="post"> --}}
                                                         @csrf
                                                         <div class="row">
                                                             <div class="col-sm-6">
@@ -191,7 +191,7 @@
                                                                     <label class="form-label">Account Email</label>
                                                                     <input type="text" class="form-control"
                                                                         name="email" value="{{ auth()->user()->email }}"
-                                                                        required>
+                                                                        readonly>
                                                                 </div>
                                                                 {{-- <input type="text" class="form-control" name="email_confirmed"
                                                                     value="{{ auth()->user()->email_confirmed }}" required readonly> --}}
@@ -205,22 +205,22 @@
                                                                         readonly>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-sm-6">
+                                                            {{-- <div class="col-sm-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Gender</label>
                                                                     <input type="text" class="form-control"
                                                                         value="{{ auth()->user()->gender }}" required
                                                                         readonly>
                                                                 </div>
-                                                            </div>
+                                                            </div> --}}
                                                         </div>
 
-                                                        <div class=" text-end">
+                                                        {{-- <div class=" text-end">
                                                             <button type="submit" name="updateEmail" value="update"
                                                                 class="rounded btn btn-primary">Update</button>
-                                                        </div>
+                                                        </div> --}}
 
-                                                    </form>
+                                                    {{-- </form> --}}
                                                     {{-- <div class="row">
                                                         <div class="col-sm-6">
                                                             <div class="form-group">
