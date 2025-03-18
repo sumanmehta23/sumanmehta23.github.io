@@ -185,7 +185,7 @@ class User extends Authenticatable
                 ->whereNotIn('status', [2, 3])
                 ->sum('withdraw_transaction_fee');
 
-            return (float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee);
+            return round((float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee), 2);
         });
     }
 
