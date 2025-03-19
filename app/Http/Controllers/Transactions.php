@@ -144,6 +144,9 @@ class Transactions extends Controller
 
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
 
+        if($transaction->status == 1){
+            return redirect()->back()->with('status', 'Your transaction is already approved.');
+        }
         if ($transaction) {
             activity()->causedBy(auth()->user()->id)
                 ->withProperties(
