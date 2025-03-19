@@ -144,7 +144,6 @@ class Transactions extends Controller
 
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
 
-
         if ($transaction) {
             activity()->causedBy(auth()->user()->id)
                 ->withProperties(
