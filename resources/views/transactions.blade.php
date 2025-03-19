@@ -389,36 +389,36 @@
         if(status==3){
             statuscode='cancel';
         }
-      Swal.fire({
-        title: `Are you sure you want to ${statuscode} this transaction?`,
-        html: `
-        <form id="updateTransactionForm" method="post" action="/update-transaction">
-          @csrf
-          <input type="hidden" name="email" value="${email}">
-          <input type="hidden" name="amount" value="${amount}">
-          <input type="hidden" name="status" value="${status}">
-          <input type="hidden" name="statuscode" value="${statuscode}">
-          <input type="hidden" name="transaction_id" value="${parsedData}">
-          <input type="hidden" name="action" value="update_transaction">
-            ${
-              status == 3
-                  ? `
+        Swal.fire({
+            title: `Are you sure you want to ${statuscode} this transaction?`,
+            html: `
+            <form id="updateTransactionForm" method="post" action="/update-transaction">
+            @csrf
+            <input type="hidden" name="email" value="${email}">
+            <input type="hidden" name="amount" value="${amount}">
+            <input type="hidden" name="status" value="${status}">
+            <input type="hidden" name="statuscode" value="${statuscode}">
+            <input type="hidden" name="transaction_id" value="${parsedData}">
+            <input type="hidden" name="action" value="update_transaction">
+                ${
+                status == 3
+                    ? `
 
-          `
-                  : ''
+            `
+                    : ''
+                }
+            </form>
+        `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+        }).then((result) => {
+            console.log(result);
+            if (result.isConfirmed) {
+            document.querySelector('#updateTransactionForm').submit();
             }
-          </form>
-      `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
-      }).then((result) => {
-        console.log(result);
-        if (result.isConfirmed) {
-          document.querySelector('#updateTransactionForm').submit();
-        }
-      });
+        });
     }
 
     function resendWalletWithdrawalVerifyEmail(walletWithdrawalId) {

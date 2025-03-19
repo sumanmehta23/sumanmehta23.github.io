@@ -268,7 +268,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
-
+    Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
 
     Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
 
@@ -385,6 +385,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
         Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
+
+        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:setting:update');
+        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:setting:update');
 
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;

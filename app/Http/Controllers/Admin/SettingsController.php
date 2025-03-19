@@ -14,6 +14,7 @@ use App\Services\MailService as MailService;
 use App\Services\MT5Service;
 use App\MT5\MTWebAPI;
 use App\Models\User;
+use App\Models\RestrictIps;
 
 class SettingsController extends Controller
 {
@@ -227,6 +228,95 @@ class SettingsController extends Controller
         }
 
         return back()->with('success', 'Emails sent successfully!');
+    }
+
+
+    public function ip_ban(Request $request)
+    {
+
+        return view("admin.ip_ban");
+    }
+
+    public function send_ip_ban_reason(Request $request)
+    {
+
+        $request->validate([
+            "ip" => 'required',
+            'reason' => 'required'
+        ]);
+
+        $reqip = explode(',', $request->ip);
+        $ips = array_map('trim', $reqip);
+        $reason = $request->reason;
+
+        foreach ($ips as $ip) {
+            $log = Activity::whereJsonContains('properties->ip', $ip)->first();
+            if (isset($log->properties)) {
+                $email = $log->properties['email'];
+                $user = User::where('email', $email)->first();
+                RestrictIps::create([
+                    'ip' => $ip,
+                    'email' => $email,
+                    'block_reason' => $reason,
+                ]);
+
+                $settings = settings();
+                $toEmail = $email;
+                if($reason == 'hft'){
+                    $type = 'Account Termination Notice - Violation of Trading Terms';
+                }
+
+                $from = $settings['email_from_address'];
+                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                if($reason == 'hft'){
+                    $content =
+                    '<p>
+                        This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use   of high-frequency trading (HFT) algorithms on our live trading platform.
+                    </p>'.
+                    '<p>
+                        Our monitoring systems have detected trading patterns consistent with automated high-frequency trading on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                    </p>'.
+                    '<p>
+                        As a result of this violation:
+                    </p>'.
+                        '<ul>
+                            <li>Your trading account has been permanently terminated</li>
+                            <li>Any pending trades have been closed</li>
+                            <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
+                            <li>Your account details have been flagged in our system to prevent future registration</li>
+                        </ul>'.
+                    '<p>
+                        This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
+                    </p>'.
+                    '<p>
+                        For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
+                    </p>'.
+                    '<p>
+                        Regards,
+                    </p>'.
+                    '<p>
+                        Compliance Team<br>
+                        LQH Markets
+                    </p>';
+                }
+
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'email' => settings()['email_from_address'],
+                    'content' => $content, // Ensure this contains HTML
+                    "title_right" => "",
+                    "subtitle_right" => ""
+                ];
+                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+            }
+        }
+
+        return back()->with('error', 'Something went wrong');
     }
 
 }

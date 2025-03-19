@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\RestrictIps;
 
 class AjaxController extends Controller
 {
@@ -3467,5 +3468,46 @@ class AjaxController extends Controller
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
 
         return $response;
+    }
+
+
+    public function getBlockedIPs(Request $request)
+    {
+        $query = RestrictIps::with(['user']);
+
+        // Fetch data
+        $query = $query->orderByDesc('created_at')->get();
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('ip', function ($row) {
+                    return $row->ip;
+                })
+                ->addColumn('name', function ($row) {
+
+                    return $row->user->fullname;
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('reason', function ($row) {
+                    return $row->block_reason;
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->rawColumns(['ip', 'name', 'email', 'reason', 'date'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
 }
