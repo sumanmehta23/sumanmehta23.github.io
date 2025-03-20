@@ -239,87 +239,75 @@ class SettingsController extends Controller
 
     public function send_ip_ban_reason(Request $request)
     {
-
         $request->validate([
             "ip" => 'required',
             "emails" => 'required',
             'reason' => 'required'
         ]);
 
-        $reqip = explode(',', $request->ip);
-        $reqemails = explode(',', $request->emails);
-        $ips = array_map('trim', $reqip);
-        $emails = array_map('trim', $reqemails);
+        $ips = array_map('trim', explode(',', $request->ip));
+        $emails = array_map('trim', explode(',', $request->emails));
         $reason = $request->reason;
 
-        foreach ($ips as $ip) {
-            foreach($emails as $email){
-                $user = User::where('email', $email)->first();
+        try {
+            foreach ($ips as $ip) {
+                foreach ($emails as $email) {
+                    $settings = settings();
+                    $user = User::where('email', $email)->firstOrFail();
+                    RestrictIps::create(['ip' => $ip, 'email' => $email, 'block_reason' => $reason]);
+                    $from = $settings['email_from_address'];
 
-                RestrictIps::create([
-                    'ip' => $ip,
-                    'email' => $email,
-                    'block_reason' => $reason,
-                ]);
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                $settings = settings();
-                $toEmail = $email;
-                if($reason == 'HFT'){
-                    $type = 'Account Termination Notice - Violation of Trading Terms';
-                }
+                    if ($reason === 'HFT') {
+                        $type = 'Account Termination Notice - Violation of Trading Terms';
 
-                $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - ' . $type;
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-
-                if($reason == 'HFT'){
-                    $content =
-                    '<p>
-                        This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use   of high-frequency trading (HFT) algorithms on our live trading platform.
-                    </p>'.
-                    '<p>
-                        Our monitoring systems have detected trading patterns consistent with automated high-frequency trading on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
-                    </p>'.
-                    '<p>
-                        As a result of this violation:
-                    </p>'.
+                        $content = '<p>
+                            This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of high-frequency trading (HFT) algorithms on our live trading platform.
+                        </p>' .
+                        '<p>
+                            Our monitoring systems have detected trading patterns consistent with automated high-frequency trading on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                        </p>' .
+                        '<p>
+                            As a result of this violation:
+                        </p>' .
                         '<ul>
                             <li>Your trading account has been permanently terminated</li>
                             <li>Any pending trades have been closed</li>
                             <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
                             <li>Your account details have been flagged in our system to prevent future registration</li>
-                        </ul>'.
-                    '<p>
-                        This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
-                    </p>'.
-                    '<p>
-                        For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
-                    </p>'.
-                    '<p>
-                        Regards,
-                    </p>'.
-                    '<p>
-                        Compliance Team<br>
-                        LQH Markets
-                    </p>';
+                        </ul>' .
+                        '<p>
+                            This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
+                        </p>' .
+                        '<p>
+                            For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
+                        </p>' .
+                        '<p>
+                            Regards,<br>
+                            Compliance Team<br>
+                            LQH Markets
+                        </p>';
+                        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                        $templateVars = [
+                            'name' => $user->fullname,
+                            'email' => settings()['email_from_address'],
+                            'content' => $content,
+                            "title_right" => "",
+                            "subtitle_right" => ""
+                        ];
+                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    }
                 }
-
-
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'email' => settings()['email_from_address'],
-                    'content' => $content, // Ensure this contains HTML
-                    "title_right" => "",
-                    "subtitle_right" => ""
-                ];
-                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
             }
+            return back()->with('success', 'IP ban applied and email sent successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
-
-        return back()->with('error', 'Something went wrong');
     }
+
 
     public function delete_ip_ban(Request $request)
     {
