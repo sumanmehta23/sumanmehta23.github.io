@@ -112,7 +112,7 @@
             },
             columns: [
             { data: 'ip', name: 'ip' },
-            { data: 'name', name: 'name' },
+            { data: 'fullname', name: 'fullname' },
             { data: 'email', name: 'email' },
             { data: 'reason', name: 'reason' },
             { data: 'date', name: 'date' },
