@@ -3478,17 +3478,17 @@ class AjaxController extends Controller
         )->with(['user']);
 
         // Apply search filter
-    if (!empty($request->search['value'])) {
-        $searchValue = $request->search['value'];
-        $query->where(function ($q) use ($searchValue) {
-            $q->where('ip', 'LIKE', "%{$searchValue}%")
-                ->orWhereHas('user', function ($q) use ($searchValue) {
-                    $q->where('fullname', 'LIKE', "%{$searchValue}%")
-                      ->orWhere('email', 'LIKE', "%{$searchValue}%");
-                })
-                ->orWhere('block_reason', 'LIKE', "%{$searchValue}%");
-        });
-    }
+        if (!empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('ip', 'LIKE', "%{$searchValue}%")
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
+                        $q->where('fullname', 'LIKE', "%{$searchValue}%")
+                        ->orWhere('email', 'LIKE', "%{$searchValue}%");
+                    })
+                    ->orWhere('block_reason', 'LIKE', "%{$searchValue}%");
+            });
+        }
 
         if ($request->ajax()) {
             return DataTables::of($query)
