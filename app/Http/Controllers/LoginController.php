@@ -5,6 +5,7 @@ use App\Actions\SubscribeToKlaviyoList;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
+use App\Models\RestrictIps;
 use App\Models\Country;
 use Illuminate\Support\Str;
 use App\Models\LoginHistory;
@@ -46,6 +47,10 @@ class LoginController extends Controller
     public function login(Request $request)
     {
 
+        $restriction = RestrictIps::where('ip',$request->ip())->where('email', $request->email)->first();
+        if($restriction){
+            return redirect()->back()->with('error', 'You are blocked by admin.');
+        }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $retryAfter = RateLimiter::availableIn($key);

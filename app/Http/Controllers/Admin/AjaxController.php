@@ -3480,6 +3480,17 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($rmCondition) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $rmCondition->where(function ($q) use ($searchValue) {
+                            $q->where('ip', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('name', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw('block_reason',"LIKE", "%{$searchValue}%");
+                        });
+                    }
+                })
                 ->addColumn('ip', function ($row) {
                     return $row->ip;
                 })
@@ -3503,7 +3514,10 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
-                ->rawColumns(['ip', 'name', 'email', 'reason', 'date'])
+                ->addColumn('action', function ($row) {
+                    return "<a class='btn btn-sm btn-danger' href='/admin/delete_ip_ban?id={$row->id}&ip={$row->ip}'>Delete</a>";
+                })
+                ->rawColumns(['ip', 'name', 'email', 'reason', 'date','action'])
                 ->make(true);
         }
 

@@ -13,22 +13,47 @@
                         <form action="{{ route('admin.send_ip_ban_reason') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label for="emails" class="form-label">Client Ip's (Comma Separated)</label>
+                                <label for="emails" class="form-label">Restrict Ip's (Comma Separated)</label>
                                 <textarea name="ip" id="ip" class="form-control" rows="3" placeholder="Enter multiple Ip's separated by commas"></textarea>
                             </div>
                             <div class="mb-3">
-                                <label for="subject" class="form-label">Ban Reason</label>
+                                <label for="emails" class="form-label">Restrict Email's (Comma Separated)</label>
+                                <textarea name="emails" id="emails" class="form-control" rows="3" placeholder="Enter multiple Emails separated by commas"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Restrict Reason</label>
                                 <select class="form-select" required name="reason">
                                     <option value="" selected disabled>Select Reason</option>
-                                    <option value="hft">HFT</option>
+                                    <option value="HFT">HFT</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary">Block IP</button>
+                            <button type="submit" class="btn btn-primary">Block IP & Email</button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+        @if (session('success'))
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: true
+                });
+            </script>
+        @endif
+        @if (session('error'))
+            <script>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Something went wrong',
+                    // text: '{{ session('error') }}',
+                    html: '{{ session('error') }}',
+                    showConfirmButton: true
+                });
+            </script>
+        @endif
         <div class="row">
             <div class="col-xl-12">
               <div class="card custom-card">
@@ -41,7 +66,8 @@
                           <th>Name</th>
                           <th>Email</th>
                           <th>Reason</th>
-                          <th>Ban Date</th>
+                          <th>Restriction Date</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -89,7 +115,8 @@
             { data: 'name', name: 'name' },
             { data: 'email', name: 'email' },
             { data: 'reason', name: 'reason' },
-            { data: 'created_at', name: 'created_at' },
+            { data: 'date', name: 'date' },
+            { data: 'action', name: 'action' },
             ]
         });
 

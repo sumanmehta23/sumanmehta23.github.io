@@ -242,18 +242,20 @@ class SettingsController extends Controller
 
         $request->validate([
             "ip" => 'required',
+            "emails" => 'required',
             'reason' => 'required'
         ]);
 
         $reqip = explode(',', $request->ip);
+        $reqemails = explode(',', $request->emails);
         $ips = array_map('trim', $reqip);
+        $emails = array_map('trim', $reqemails);
         $reason = $request->reason;
 
         foreach ($ips as $ip) {
-            $log = Activity::whereJsonContains('properties->ip', $ip)->first();
-            if (isset($log->properties)) {
-                $email = $log->properties['email'];
+            foreach($emails as $email){
                 $user = User::where('email', $email)->first();
+
                 RestrictIps::create([
                     'ip' => $ip,
                     'email' => $email,
@@ -262,7 +264,7 @@ class SettingsController extends Controller
 
                 $settings = settings();
                 $toEmail = $email;
-                if($reason == 'hft'){
+                if($reason == 'HFT'){
                     $type = 'Account Termination Notice - Violation of Trading Terms';
                 }
 
@@ -272,7 +274,7 @@ class SettingsController extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                if($reason == 'hft'){
+                if($reason == 'HFT'){
                     $content =
                     '<p>
                         This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use   of high-frequency trading (HFT) algorithms on our live trading platform.
@@ -318,5 +320,23 @@ class SettingsController extends Controller
 
         return back()->with('error', 'Something went wrong');
     }
+
+    public function delete_ip_ban(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'id' => 'required',
+        ]);
+
+        // Find and delete the IP ban
+        $deleted = RestrictIps::where('id', $request->id)->delete();
+
+        if ($deleted) {
+            return back()->with('success', 'Ban on IP '.$request->ip.' deleted successfully.');
+        } else {
+            return back()->with('error', 'Failed to delete IP ban.');
+        }
+    }
+
 
 }
