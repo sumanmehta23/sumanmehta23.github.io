@@ -249,9 +249,16 @@ class SettingsController extends Controller
         $emails = array_map('trim', explode(',', $request->emails));
         $reason = $request->reason;
 
+        $processedEmails = []; // Array to track sent emails
+
         try {
             foreach ($ips as $ip) {
                 foreach ($emails as $email) {
+
+                    if (in_array($email, $processedEmails)) {
+                        continue;
+                    }
+
                     $settings = settings();
                     $user = User::where('email', $email)->firstOrFail();
                     RestrictIps::create(['ip' => $ip, 'email' => $email, 'block_reason' => $reason]);
@@ -299,6 +306,7 @@ class SettingsController extends Controller
                             "subtitle_right" => ""
                         ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                        $processedEmails[] = $email;
                     }
                 }
             }
