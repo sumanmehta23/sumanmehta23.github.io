@@ -103,6 +103,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Ib1::class);
     }
+
     public function parentib()
     {
         return $this->hasOne(Ib1::class, 'referral_code', 'ib1');

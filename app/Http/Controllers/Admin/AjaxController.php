@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\RestrictIps;
 
 class AjaxController extends Controller
 {
@@ -3467,5 +3468,77 @@ class AjaxController extends Controller
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
 
         return $response;
+    }
+
+
+    public function getBlockedIPs(Request $request)
+    {
+        $query = RestrictIps::select(
+            'restrict_ips.*',
+        )->with(['user']);
+
+        // Apply search filter
+        if (!empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('ip', 'LIKE', "%{$searchValue}%")
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
+                        $q->where('fullname', 'LIKE', "%{$searchValue}%")
+                        ->orWhere('email', 'LIKE', "%{$searchValue}%");
+                    })
+                    ->orWhere('block_reason', 'LIKE', "%{$searchValue}%");
+            });
+        }
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->orderColumn('ip', function ($query, $order) {
+                    $query->orderBy('restrict_ips.ip', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('restrict_ips.email', $order);
+                })
+                ->orderColumn('reason', function ($query, $order) {
+                    $query->orderBy('restrict_ips.block_reason', $order);
+                })
+                ->orderColumn('date', function ($query, $order) {
+                    $query->orderBy('restrict_ips.created_at', $order);
+                })
+                ->orderColumn('fullname', function ($query, $order) {
+                    $query->orderBy(User::select('fullname')
+                        ->whereColumn('email', 'restrict_ips.email'), $order);
+                })
+                ->addColumn('ip', function ($row) {
+                    return $row->ip;
+                })
+                ->addColumn('fullname', function ($row) {
+
+                    return $row->user->fullname;
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('reason', function ($row) {
+                    return $row->block_reason;
+                })
+                ->addColumn('date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('action', function ($row) {
+                    return "<a class='btn btn-sm btn-danger' href='/admin/delete_ip_ban?id={$row->id}&ip={$row->ip}'>Delete</a>";
+                })
+                ->rawColumns(['ip', 'name', 'email', 'reason', 'date','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+
     }
 }

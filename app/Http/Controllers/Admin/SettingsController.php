@@ -14,6 +14,7 @@ use App\Services\MailService as MailService;
 use App\Services\MT5Service;
 use App\MT5\MTWebAPI;
 use App\Models\User;
+use App\Models\RestrictIps;
 
 class SettingsController extends Controller
 {
@@ -228,5 +229,110 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Emails sent successfully!');
     }
+
+
+    public function ip_ban(Request $request)
+    {
+
+        return view("admin.ip_ban");
+    }
+
+    public function send_ip_ban_reason(Request $request)
+    {
+        $request->validate([
+            "ip" => 'required',
+            "emails" => 'required',
+            'reason' => 'required'
+        ]);
+
+        $ips = array_map('trim', explode(',', $request->ip));
+        $emails = array_map('trim', explode(',', $request->emails));
+        $reason = $request->reason;
+
+        $processedEmails = []; // Array to track sent emails
+
+        try {
+            foreach ($ips as $ip) {
+                foreach ($emails as $email) {
+
+                    if (in_array($email, $processedEmails)) {
+                        continue;
+                    }
+
+                    $settings = settings();
+                    $user = User::where('email', $email)->firstOrFail();
+                    RestrictIps::create(['ip' => $ip, 'email' => $email, 'block_reason' => $reason]);
+                    $from = $settings['email_from_address'];
+
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                    if ($reason === 'HFT') {
+                        $type = 'Account Termination Notice - Violation of Trading Terms';
+
+                        $content = '<p>
+                            This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of high-frequency trading (HFT) algorithms on our live trading platform.
+                        </p>' .
+                        '<p>
+                            Our monitoring systems have detected trading patterns consistent with automated high-frequency trading on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                        </p>' .
+                        '<p>
+                            As a result of this violation:
+                        </p>' .
+                        '<ul>
+                            <li>Your trading account has been permanently terminated</li>
+                            <li>Any pending trades have been closed</li>
+                            <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
+                            <li>Your account details have been flagged in our system to prevent future registration</li>
+                        </ul>' .
+                        '<p>
+                            This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
+                        </p>' .
+                        '<p>
+                            For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
+                        </p>' .
+                        '<p>
+                            Regards,<br>
+                            Compliance Team<br>
+                            LQH Markets
+                        </p>';
+                        $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                        $templateVars = [
+                            'name' => $user->fullname,
+                            'email' => settings()['email_from_address'],
+                            'content' => $content,
+                            "title_right" => "",
+                            "subtitle_right" => ""
+                        ];
+                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                        $processedEmails[] = $email;
+                    }
+                }
+            }
+            return back()->with('success', 'IP ban applied and email sent successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        }
+    }
+
+
+    public function delete_ip_ban(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'id' => 'required',
+        ]);
+
+        // Find and delete the IP ban
+        $deleted = RestrictIps::where('id', $request->id)->delete();
+
+        if ($deleted) {
+            return back()->with('success', 'Ban on IP '.$request->ip.' deleted successfully.');
+        } else {
+            return back()->with('error', 'Failed to delete IP ban.');
+        }
+    }
+
 
 }

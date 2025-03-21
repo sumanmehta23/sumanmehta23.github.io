@@ -119,7 +119,7 @@ class Transactions extends Controller
         return view('transactions', compact('deposit_history', 'withdrawal_history', 'internal_transfer'));
     }
     public function updateTransaction(Request $request){
-        // dd($request->all());
+
         $settings = settings();
         $status = $request->status;
         if ($status == '3') {
@@ -141,7 +141,9 @@ class Transactions extends Controller
         $did = $request->input('transaction_id');
         // dd($did);
         $transaction_id = $request->input('id');
+
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+
         if($transaction->status == 1){
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }

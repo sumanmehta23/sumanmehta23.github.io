@@ -580,6 +580,13 @@ $filePermissions = filePermissions($userRole);
                                 @endcan
                                 @can('setting:update')
                                     <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.ip_ban') }}" class="side-menu__item ">
+                                            Ban IP's
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('setting:update')
+                                    <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.emailbroadcast') }}" class="side-menu__item ">
                                             Email Broadcasting
                                         </a>
