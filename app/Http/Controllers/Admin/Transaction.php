@@ -235,12 +235,13 @@ class Transaction extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $emailSubject = $settings['admin_title'] . ' - Wallet Withdrawal Amount Update';
             $content = '
-                <p>We are writing to provide an update regarding the termination of your trading account with <strong>LQH Markets</strong>.</p>
+                <p>We are writing to provide an update regarding the termination of your trading account with LQH Markets.</strong>.</p>
             
-                <p>In lieu of this restriction, we have processed a refund of your original deposit under your withdrawal request. 
-                Please note that this refund applies <strong>solely to your initial deposit</strong> and does not include any profits or additional funds accrued through the account.</p>
+                <p>In lieu of this restriction, we have processed a refund of your original deposit under your withdrawal request. Please note that this refund applies solely to your initial deposit and does not include any profits or additional funds accrued through the account.</p>
+
+                <p>If you have previously made a withdrawal, we will issue the remaining balance to ensure that the total refunded amount matches your original deposit.</p>
             
-                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at 
+                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at  
                 <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.</p>
             
                 <p>Best regards,</p>
