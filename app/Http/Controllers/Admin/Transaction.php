@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers\admin;
 
+use PDO;
 use Exception;
+use App\Models\Ib1;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
-use App\MT5\MTEnDealAction;
-use App\Models\TotalBalance;
-use App\Models\Ib1;
-use App\Models\EmployeeList;
-use App\Models\RelationshipManager;
-use App\Models\WalletWithdraw;
 use App\Models\Account;
+use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
+use App\Models\EmployeeList;
+use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
+use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
+use App\Models\RelationshipManager;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\TradeDeposit;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
-use PDO;
-use Illuminate\Support\Facades\Auth;
 
 class Transaction extends Controller
 {
@@ -191,6 +192,22 @@ class Transaction extends Controller
         }
 
         if($walletWithdrawal){
+            $totalDeposits = WalletDeposit::where('email', $walletWithdrawal->user->email)
+                ->where('status', 1)
+                ->sum('deposit_amount');
+
+            $totalWithdrawals = WalletWithdraw::where('email', $walletWithdrawal->user->email)
+                ->whereNotIn('status', [2, 3])
+                ->sum('withdraw_amount');
+
+            $totalWithdrawalsFee = WalletWithdraw::where('email', $walletWithdrawal->user->email)
+                ->whereNotIn('status', [2, 3])
+                ->sum('withdraw_transaction_fee');
+
+            $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
+            if ($amount > $walletBalance) {
+                return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
+            } 
 
            if($amount >= 100){
             $walletWithdrawal->withdraw_transaction_fee = 0;
