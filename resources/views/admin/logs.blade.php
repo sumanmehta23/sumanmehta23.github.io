@@ -203,7 +203,7 @@
                                         // Extract the date and time
                                         // $date = $log->created_at->format('Y-m-d');
                                         // $time = $log->created_at->format('H:i:s');
-                                        $ip =   $log->properties['ip'];
+                                        $ip =   @$log->properties['ip'];
 
                                         $dateTime = $log->created_at;
                                         $humanTime = $dateTime->diffForHumans();
