@@ -529,7 +529,7 @@
                                                 break;
                                             case 'Ib Request':
                                                 $ib_group = $log->properties['ib_group'];
-                                                $ib_plan =  \App\Models\IbPlanDetails::with('plan')->where('id', $ib_group)->first();
+                                                $ib_plan = \App\Models\IbPlanDetails::with('plan')->withTrashed()->where('id', $ib_group)->first();
                                                 $ib_status = $log->properties['ib_status'];
                                                 $client_id = $log->properties['client_id'];
                                                 $client = \App\Models\User::where('id', $client_id)->first();
