@@ -281,6 +281,9 @@
                                                 @php
                                                     $userData = json_encode(session('userData'));
                                                 @endphp
+                                                <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                    Edit
+                                                </button>
                                                 <button
                                                     onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->withdraw_transaction_fee }}',1)"
                                                     type="button" class="m-1 btn btn-success btn-space">
@@ -369,6 +372,32 @@
             </div>
         @endif
     </div>
+    <!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Withdrawal Amount</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.update_wallet_withdraw_amount') }}">
+                @csrf
+                <input type="hidden" name="id" value="{{ $details->id }}">
+                <div class="modal-body">
+                    <p>
+                        <strong>Amount:</strong>
+                        <input class="form-control d-inline-block w-auto align-middle ms-2" type="number" name="amount" value="{{ $details->withdraw_amount }}">
+                    </p>                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
     <script>
         function takeAction(data, email, amount, status) {
             const sanitizedData = data.replace(/\\/g, '\\\\');

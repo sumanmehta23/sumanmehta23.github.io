@@ -356,6 +356,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
+        Route::post('/update_wallet_withdraw_amount', [Transaction::class, 'walletWithdrawalAmountUpdate'])->name('update_wallet_withdraw_amount');
 
         Route::prefix('/clientAccounts')->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');

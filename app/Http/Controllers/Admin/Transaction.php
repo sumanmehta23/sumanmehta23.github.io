@@ -22,6 +22,7 @@ use App\Models\TradeDeposit;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
 use PDO;
+use Illuminate\Support\Facades\Auth;
 
 class Transaction extends Controller
 {
@@ -177,6 +178,75 @@ class Transaction extends Controller
             // dd($client_wallet);
             // dd($details);
             return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
+        }
+    }
+
+    public function walletWithdrawalAmountUpdate(Request $request){
+
+        $amount = $request->amount;
+        $walletWithdrawal = WalletWithdraw::find($request->id);
+
+        if(!$amount){
+            return redirect()->back()->with('error', 'Please enter Amount');
+        }
+
+        if($walletWithdrawal){
+
+           if($amount >= 100){
+            $walletWithdrawal->withdraw_transaction_fee = 0;
+           }
+           $walletWithdrawal->withdraw_amount = $amount;
+           $walletWithdrawal->save();
+
+           activity('wallet-withdrawal')->causedBy(auth()->user()->id)
+           ->performedOn($walletWithdrawal)
+           ->withProperties(
+               [
+                'withdrawal_id' => $walletWithdrawal->id,
+                'updated_amount' => $amount,
+                'updated_by' => Auth::id()
+               ]
+           )
+           ->event('update')
+           ->log("Withdrawal amount updated by " . Auth::user()->name);
+
+        //    Send Mail Work Starts
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $emailSubject = $settings['admin_title'] . ' - Wallet Withdrawal Amount Update';
+            $content = '
+                <p>We are writing to provide an update regarding the termination of your trading account with <strong>LQH Markets</strong>.</p>
+            
+                <p>In lieu of this restriction, we have processed a refund of your original deposit under your withdrawal request. 
+                Please note that this refund applies <strong>solely to your initial deposit</strong> and does not include any profits or additional funds accrued through the account.</p>
+            
+                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at 
+                <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.</p>
+            
+                <p>Best regards,</p>
+            
+                <p><strong>Jacob Larnit</strong><br>
+                Head of Compliance<br>
+                LQH Markets</p>
+            ';
+        
+
+            $templateVars = [
+                'name' => $walletWithdrawal->user->fullname,
+                'email' => $settings['email_from_address'],
+                'content' => $content,
+                'title_right' => 'Wallet Withdrawal',
+                'subtitle_right' => 'Amount Update',
+            ];
+            $this->mailService->sendEmail($walletWithdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+        //    Send Mail Work Starts
+
+           return redirect()->back()->with('success', 'Amount updated successfully!');
+        }else{
+            return redirect()->back()->with('error', 'No withdrawal found');
         }
     }
     public function trading_deposit_details(Request $request)
