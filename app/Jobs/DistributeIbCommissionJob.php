@@ -20,6 +20,10 @@ class DistributeIbCommissionJob implements ShouldQueue
     protected $userId;
     protected $ib_acc_plans;
     protected $accountId;
+    protected $buffer = [];
+    protected $finalResults = [];
+    protected $processedtrades = [];
+    protected $discardedIds = [];
     /**
      * Create a new job instance.
      */
@@ -42,8 +46,9 @@ class DistributeIbCommissionJob implements ShouldQueue
         DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
         for ($i = 1; $i <= 15; $i++) {
 
-
-            Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id', 'ibWallet'])
+            $this->buffer = [];
+            $this->finalResults = [];
+            $ibcommissions = Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id', 'ibWallet'])
                 ->whereHas('user', function ($query) use ($i) {
                     $query->where("ib$i", $this->referral_code)->where('status', 1);
                 })
@@ -52,108 +57,138 @@ class DistributeIbCommissionJob implements ShouldQueue
                 })
                 ->where('status', 0)
                 ->where('orderstate', 4)
-                ->chunk(10, function ($ibcommissions) use ($i) {
-                    $walletsToCreate = [];
-                    foreach ($ibcommissions as $ca) {
-                        for ($j = 1; $j <= 15; $j++) {
-                            if ($ca->user->{'ib' . $j}) {
-                                $ib1 = Cache::remember('ib1user:' . $ca->user->{'ib' . $j}, 60 * 60, function () use ($ca, $j) {
-                                    return Ib1::with('planDetails')->where('referral_code', $ca->user->{'ib' . $j})->first();
-                                });
+                ->orderBy('expert_position_id')
+                ->orderBy('time_closed')
+                ->cursor();
+            // ->chunkById(200, function ($ibcommissions) use ($i) {
+            $finalResults = $walletsToCreate = [];
+            $mergedTrades = collect($this->buffer)->flatten(1)->merge($ibcommissions)->flatten(1);
+            $groupedTrades = $mergedTrades->groupBy('expert_position_id');
+            $newBuffer = [];
 
-                                $plan_id = $ib1->planDetails->ib_category_id;
-                                if ($plan_id) {
-                                    $ib_acc_plans = $this->getIbPlanDetails($ib1->user_id, $plan_id);
-                                    $ib_level = $j;
-                                    if (in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])) {
-                                        $commission = 3;
-                                    } else {
-                                        $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-                                    }
-                                    if ($commission) {
+            foreach ($groupedTrades as $positionId => $tradeGroup) {
+                // Ensure each tradeGroup is sorted by time_closed to correctly determine open and close trades
+                $tradeGroup = $tradeGroup->sortBy('time_closed')->values();
+                if ($tradeGroup->count() < 2) {
+                    // Store incomplete trades in buffer for the next chunk
+                    $newBuffer[$positionId] = $tradeGroup;
+                    continue;
+                }
 
-                                        // if ($ca->order_id == 311606) {
-                                        //     info($this->referral_code);
-                                        //     info(json_encode([$commission]));
-                                        //     info(json_encode($ca));
-                                        //     info(json_encode($ib_acc_plans));
-                                        // }
-                                        $ib_level_name = "IB Level $ib_level - D$i";
-                                        $ib_wallet = ((float)$commission) * $ca->volume;
+                // First trade is open, last trade is close
+                $openTrade = $tradeGroup->first();
+                $closeTrade = $tradeGroup->last();
 
-                                        $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
+                // Ensure they are not collections, just in case
+                if (!($openTrade instanceof \Illuminate\Database\Eloquent\Model)) {
+                    info("Unexpected open trade format: " . json_encode($tradeGroup));
+                    continue;
+                }
 
-                                        if ($formatted_ib_wallet < 0.0000001) {
-                                            $formatted_ib_wallet = '0.0000000000'; // Handle small values
-                                        }
-                                        $existingWallet = IbWallet::where('user_id', $this->userId)
-                                            ->where('order_id', $ca->order_id)
-                                            ->exists();
+                if (!($closeTrade instanceof \Illuminate\Database\Eloquent\Model)) {
+                    info("Unexpected close trade format: " . json_encode($tradeGroup));
+                    continue;
+                }
 
-                                        if (!$existingWallet) {
-                                            $walletsToCreate[] = [
-                                                'id' => (string)Str::orderedUuid(),
-                                                'ib_wallet' => $formatted_ib_wallet,
-                                                'email' => $this->referral_code,
-                                                'code' => $ca->code,
-                                                'user_id' => $this->userId,
-                                                'account_id' => $ca->account->id,
-                                                'order_id' => $ca->order_id,
-                                                'ib1_commission_id' => $ca->id,
-                                                'ib_level' => $ib_level_name,
-                                                'created_at' => now(),
-                                                'updated_at' => now(),
-                                            ];
-                                        }
-                                    }
-                                }
+                // Now it should be safe to access properties
+                $openTime = \Carbon\Carbon::parse($openTrade->time_closed);
+                $closeTime = \Carbon\Carbon::parse($closeTrade->time_closed);
+                $duration = $openTime->diffInSeconds($closeTime);
+
+                if ($duration >= 10) {
+                    // Store valid trade
+                    $this->processedtrades[] = $closeTrade->expert_position_id;
+
+                    $finalResults[] = $closeTrade;
+                } else {
+                    $this->discardedIds = $closeTrade->expert_position_id;
+                }
+            }
+
+            $this->buffer = $newBuffer;
+            $this->processTrades($finalResults, $i);
+            // });
+            if (count($this->buffer) > 0) {
+                $this->processTrades(collect($this->buffer)->flatten(1), $i);
+            }
+        }
+
+        collect($this->processedtrades)->chunk(50)->each(function ($chunk) {
+            Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 1]);
+        });
+
+        collect($this->discardedIds)->chunk(50)->each(function ($chunk) {
+            Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 10]);
+        });
+    }
+    protected function processTrades($trades, $i)
+    {
+        $walletsToCreate = [];
+        foreach ($trades as $ca) {
+
+            for ($j = 1; $j <= 15; $j++) {
+                if ($ca->user->{'ib' . $j}) {
+                    $ib1 = Cache::remember('ib1user:' . $ca->user->{'ib' . $j}, 60 * 60, function () use ($ca, $j) {
+                        return Ib1::with('planDetails')->where('referral_code', $ca->user->{'ib' . $j})->first();
+                    });
+
+                    $plan_id = $ib1->planDetails->ib_category_id;
+                    if ($plan_id) {
+                        $ib_acc_plans = $this->getIbPlanDetails($ib1->user_id, $plan_id);
+                        $ib_level = $j;
+                        if (in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])) {
+                            $commission = 3;
+                        } else {
+                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
+                        }
+                        if ($commission) {
+                            // if ($ca->order_id == 311606) {
+                            //     info($this->referral_code);
+                            //     info(json_encode([$commission]));
+                            //     info(json_encode($ca));
+                            //     info(json_encode($ib_acc_plans));
+                            // }
+                            $ib_level_name = "IB Level $ib_level - D$i";
+                            $ib_wallet = ((float)$commission) * $ca->volume;
+
+                            $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
+
+                            if ($formatted_ib_wallet < 0.0000001) {
+                                $formatted_ib_wallet = '0.0000000000'; // Handle small values
+                            }
+                            $existingWallet = IbWallet::where('user_id', $this->userId)
+                                ->where('order_id', $ca->order_id)
+                                ->exists();
+
+                            if (!$existingWallet) {
+                                $walletsToCreate[] = [
+                                    'id' => (string)Str::orderedUuid(),
+                                    'ib_wallet' => $formatted_ib_wallet,
+                                    'email' => $this->referral_code,
+                                    'code' => $ca->code,
+                                    'user_id' => $this->userId,
+                                    'account_id' => $ca->account->id,
+                                    'order_id' => $ca->order_id,
+                                    'ib1_commission_id' => $ca->id,
+                                    'ib_level' => $ib_level_name,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
                             }
                         }
-
-                        // $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
-                        // $commission = $this->ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-                        // if ($commission) {
-                        //     $ib_level_name = "IB Level $ib_level - D$i";
-                        //     $ib_wallet = ((float)$commission / 2) * $ca->volume;
-
-                        //     $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
-
-                        //     if ($formatted_ib_wallet < 0.0000001) {
-                        //         $formatted_ib_wallet = '0.0000000000'; // Handle small values
-                        //     }
-                        //     $existingWallet = IbWallet::where('user_id', $this->userId)
-                        //         ->where('order_id', $ca->order_id)
-                        //         ->exists();
-
-                        //     if (!$existingWallet) {
-                        //         $walletsToCreate[] = [
-                        //             'id' => (string)Str::orderedUuid(),
-                        //             'ib_wallet' => $formatted_ib_wallet,
-                        //             'email' => $this->referral_code,
-                        //             'code' => $ca->code,
-                        //             'user_id' => $this->userId,
-                        //             'account_id' => $ca->account->id,
-                        //             'order_id' => $ca->order_id,
-                        //             'ib1_commission_id' => $ca->id,
-                        //             'ib_level' => $ib_level_name,
-                        //             'created_at' => now(),
-                        //             'updated_at' => now(),
-                        //         ];
-                        //     }
-                        // }
-                        $ca->status = 1;
-                        $ca->save();
                     }
+                }
+            }
+            $this->processedtrades[] = $ca->id;
+        }
 
-                    if (count($walletsToCreate) > 0) {
-                        try {
-                            // dump($walletsToCreate);
-                            IbWallet::insert($walletsToCreate);
-                        } catch (Exception $e) {
-                            logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
-                        }
-                    }
-                });
+        if (count($walletsToCreate) > 0) {
+            try {
+                // dump($walletsToCreate);
+                IbWallet::insert($walletsToCreate);
+            } catch (Exception $e) {
+                logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
+            }
         }
     }
     private function getIbPlanDetails($user, $plan_id)

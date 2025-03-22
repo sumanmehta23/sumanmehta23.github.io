@@ -60,6 +60,7 @@ class SyncAccountTrades extends Command
         $ib_wallet = 0.00;
         Ib1::with('planDetails')
             ->where('status', 1)
+            // ->where('referral_code', 'wealthytrades')
             ->whereNotNull('ib_plan_details_id')
             ->chunk(100, function ($ib1s) {
 
@@ -90,14 +91,14 @@ class SyncAccountTrades extends Command
                         for ($i = 1; $i <= 15; $i++) {
                             Account::select('id', 'code', 'user_id', 'account_type_id')
                                 ->where('demo', false)
-                                // ->where('code', 670293)
+                                // ->where('code', 637279)
                                 ->where('account_request_status', 1)
                                 ->whereHas('user', function ($query) use ($referral_code, $i) {
                                     $query->where("ib$i", $referral_code)->where('status', 1);
                                 })
                                 ->chunk(100, function ($clientLiveAccs) use ($referral_code, $i, $ib_acc_plans, $userId) {
                                     foreach ($clientLiveAccs as $client) {
-                                        // if ($client->code != 670293) {
+                                        // if ($client->code != 637279) {
                                         //     continue;
                                         // }
                                         // ($accountId, $referral_code, $ib_user_id, $ib_acc_plans)

@@ -97,6 +97,7 @@ class SyncAccountTradesJob implements ShouldQueue
             if ($orders) {
                 $ibcommissions = [];
                 $orderIdsAndCodes = [];
+
                 foreach ($orders as $item) {
                     // if ($item->State != 4) {
                     //     continue;
@@ -134,6 +135,7 @@ class SyncAccountTradesJob implements ShouldQueue
                         'user_id' => $this->account->user_id,
                         'account_id' => $this->account->id,
                         'order_id' => $item->Order,
+                        'expert_position_id' => $item->ExpertPositionID,
                         'code' => $item->Login,
                         'init_volume' => $item->VolumeInitial,
                         'symbol' => $symbolWithoutP,
