@@ -204,10 +204,10 @@ class Transaction extends Controller
                 ->whereNotIn('status', [2, 3])
                 ->sum('withdraw_transaction_fee');
 
-            $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
+            $walletBalance = ((float) $totalDeposits + (float) $walletWithdrawal->withdraw_amount) - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
             if ($amount > $walletBalance) {
                 return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
-            } 
+            }
 
            if($amount >= 100){
             $walletWithdrawal->withdraw_transaction_fee = 0;
@@ -236,21 +236,21 @@ class Transaction extends Controller
             $emailSubject = $settings['admin_title'] . ' - Wallet Withdrawal Amount Update';
             $content = '
                 <p>We are writing to provide an update regarding the termination of your trading account with LQH Markets.</strong>.</p>
-            
+
                 <p>In lieu of this restriction, we have processed a refund of your original deposit under your withdrawal request. Please note that this refund applies solely to your initial deposit and does not include any profits or additional funds accrued through the account.</p>
 
                 <p>If you have previously made a withdrawal, we will issue the remaining balance to ensure that the total refunded amount matches your original deposit.</p>
-            
-                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at  
+
+                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at
                 <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.</p>
-            
+
                 <p>Best regards,</p>
-            
+
                 <p><strong>Jacob Larnit</strong><br>
                 Head of Compliance<br>
                 LQH Markets</p>
             ';
-        
+
 
             $templateVars = [
                 'name' => $walletWithdrawal->user->fullname,
