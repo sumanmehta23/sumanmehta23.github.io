@@ -65,7 +65,7 @@ class SyncAccountTrades extends Command
             ->chunk(100, function ($ib1s) {
 
                 foreach ($ib1s as $ib1) {
-                    $plan_id = $ib1->planDetails->ib_category_id;
+                    $plan_id = isset($ib1->planDetails->ib_category_id)?$ib1->planDetails->ib_category_id:'';
                     if ($plan_id) {
                         $userId = $ib1->user_id;
                         // info('Syncing account trades for IB1: ' . $ib1->id);
