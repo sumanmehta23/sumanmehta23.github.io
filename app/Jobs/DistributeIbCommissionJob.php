@@ -59,8 +59,8 @@ class DistributeIbCommissionJob implements ShouldQueue
                 ->where('orderstate', 4)
                 ->orderBy('expert_position_id')
                 ->orderBy('time_closed')
-                ->cursor();
-            // ->chunkById(200, function ($ibcommissions) use ($i) {
+//                ->cursor();
+             ->chunkById(200, function ($ibcommissions) use ($i) {
             $finalResults = $walletsToCreate = [];
             $mergedTrades = collect($this->buffer)->flatten(1)->merge($ibcommissions)->flatten(1);
             $groupedTrades = $mergedTrades->groupBy('expert_position_id');
@@ -107,7 +107,7 @@ class DistributeIbCommissionJob implements ShouldQueue
 
             $this->buffer = $newBuffer;
             $this->processTrades($finalResults, $i);
-            // });
+             });
             if (count($this->buffer) > 0) {
                 $this->processTrades(collect($this->buffer)->flatten(1), $i);
             }
@@ -121,70 +121,155 @@ class DistributeIbCommissionJob implements ShouldQueue
             Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 10]);
         });
     }
-    protected function processTrades($trades, $i)
+//    protected function processTrades($trades, $i)
+//    {
+//        $walletsToCreate = [];
+//
+//        foreach ($trades as $ca) {
+//
+//            for ($j = 1; $j <= 15; $j++) {
+//                if ($ca->user->{'ib' . $j}) {
+//                    $ib1 = Cache::remember('ib1user:' . $ca->user->{'ib' . $j}, 3600, function () use ($ca, $j) {
+//                        return Ib1::with('planDetails')->where('referral_code', $ca->user->{'ib' . $j})->first();
+//                    });
+//
+//                    $plan_id = $ib1->planDetails->ib_category_id;
+//                    if ($plan_id) {
+//                        $ib_acc_plans = $this->getIbPlanDetails($ib1->user_id, $plan_id);
+//                        $ib_level = $j;
+//                        if (in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])) {
+//                            $commission = 3;
+//                        } else {
+//                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
+//                        }
+//                        if ($commission) {
+//
+//                            $ib_level_name = "IB Level $ib_level - D$i";
+//                            $ib_wallet = ((float)$commission) * $ca->volume;
+//
+//                            $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
+//
+//                            if ($formatted_ib_wallet < 0.0000001) {
+//                                $formatted_ib_wallet = '0.0000000000'; // Handle small values
+//                            }
+//                            $existingWallet = IbWallet::where('user_id', $this->userId)
+//                                ->where('order_id', $ca->order_id)
+//                                ->exists();
+//
+//                            if (!$existingWallet) {
+//                                $walletsToCreate[] = [
+//                                    'id' => (string)Str::orderedUuid(),
+//                                    'ib_wallet' => $formatted_ib_wallet,
+//                                    'email' => $this->referral_code,
+//                                    'code' => $ca->code,
+//                                    'user_id' => $this->userId,
+//                                    'account_id' => $ca->account->id,
+//                                    'order_id' => $ca->order_id,
+//                                    'ib1_commission_id' => $ca->id,
+//                                    'ib_level' => $ib_level_name,
+//                                    'created_at' => now(),
+//                                    'updated_at' => now(),
+//                                ];
+//
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            $this->processedtrades[] = $ca->id;
+//        }
+//
+//        if (count($walletsToCreate) > 0) {
+//            try {
+//                // dump($walletsToCreate);
+//                $walletsToCreate = collect($walletsToCreate)
+//                    ->unique(fn ($wallet) => $wallet['order_id'] . '_' . $wallet['user_id'])
+//                    ->values()
+//                    ->toArray();
+//                IbWallet::insert($walletsToCreate);
+//            } catch (Exception $e) {
+//                logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
+//            }
+//        }
+//    }
+    protected function processTrades($trades, $i): void
     {
         $walletsToCreate = [];
+        $existingWallets = IbWallet::where('user_id', $this->userId)
+            ->whereIn('order_id', collect($trades)->pluck('order_id')->unique())
+            ->pluck('order_id')
+            ->flip();
+
         foreach ($trades as $ca) {
+            $user = $ca->user;
+            $accountTypeId = $ca->account->account_type_id;
+            $orderId = $ca->order_id;
+
+            if (isset($existingWallets[$orderId])) {
+                continue; // Skip processing if wallet entry already exists
+            }
 
             for ($j = 1; $j <= 15; $j++) {
-                if ($ca->user->{'ib' . $j}) {
-                    $ib1 = Cache::remember('ib1user:' . $ca->user->{'ib' . $j}, 60 * 60, function () use ($ca, $j) {
-                        return Ib1::with('planDetails')->where('referral_code', $ca->user->{'ib' . $j})->first();
-                    });
-
-                    $plan_id = $ib1->planDetails->ib_category_id;
-                    if ($plan_id) {
-                        $ib_acc_plans = $this->getIbPlanDetails($ib1->user_id, $plan_id);
-                        $ib_level = $j;
-                        if (in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])) {
-                            $commission = 3;
-                        } else {
-                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-                        }
-                        if ($commission) {
-                            // if ($ca->order_id == 311606) {
-                            //     info($this->referral_code);
-                            //     info(json_encode([$commission]));
-                            //     info(json_encode($ca));
-                            //     info(json_encode($ib_acc_plans));
-                            // }
-                            $ib_level_name = "IB Level $ib_level - D$i";
-                            $ib_wallet = ((float)$commission) * $ca->volume;
-
-                            $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
-
-                            if ($formatted_ib_wallet < 0.0000001) {
-                                $formatted_ib_wallet = '0.0000000000'; // Handle small values
-                            }
-                            $existingWallet = IbWallet::where('user_id', $this->userId)
-                                ->where('order_id', $ca->order_id)
-                                ->exists();
-
-                            if (!$existingWallet) {
-                                $walletsToCreate[] = [
-                                    'id' => (string)Str::orderedUuid(),
-                                    'ib_wallet' => $formatted_ib_wallet,
-                                    'email' => $this->referral_code,
-                                    'code' => $ca->code,
-                                    'user_id' => $this->userId,
-                                    'account_id' => $ca->account->id,
-                                    'order_id' => $ca->order_id,
-                                    'ib1_commission_id' => $ca->id,
-                                    'ib_level' => $ib_level_name,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
-                            }
-                        }
-                    }
+                $referralCode = $user->{'ib' . $j};
+                if (!$referralCode) {
+                    continue;
                 }
+
+                // Cache IB user lookup to avoid duplicate DB calls
+                $ib1 = Cache::remember("ib1user:{$referralCode}", 3600, function () use ($referralCode) {
+                    return Ib1::with('planDetails')->where('referral_code', $referralCode)->first();
+                });
+
+                if (!$ib1 || !$ib1->planDetails) {
+                    continue;
+                }
+
+                $planId = $ib1->planDetails->ib_category_id;
+                if (!$planId) {
+                    continue;
+                }
+
+                $ibAccPlans = $this->getIbPlanDetails($ib1->user_id, $planId);
+                $ibLevel = $j;
+
+                $commission = in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])
+                    ? 3
+                    : ($ibAccPlans[$accountTypeId][$ibLevel]["d$i"] ?? null);
+
+                if (!$commission) {
+                    continue;
+                }
+
+                $ibWalletAmount = ((float)$commission) * $ca->volume;
+                $formattedIbWallet = number_format($ibWalletAmount, 10, '.', '');
+
+                if ($formattedIbWallet < 0.0000001) {
+                    $formattedIbWallet = '0.0000000000'; // Handle small values
+                }
+
+                $walletsToCreate[] = [
+                    'id' => (string)Str::orderedUuid(),
+                    'ib_wallet' => $formattedIbWallet,
+                    'email' => $this->referral_code,
+                    'code' => $ca->code,
+                    'user_id' => $this->userId,
+                    'account_id' => $ca->account->id,
+                    'order_id' => $orderId,
+                    'ib1_commission_id' => $ca->id,
+                    'ib_level' => "IB Level $ibLevel - D$i",
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
             }
             $this->processedtrades[] = $ca->id;
         }
 
-        if (count($walletsToCreate) > 0) {
+        if (!empty($walletsToCreate)) {
             try {
-                // dump($walletsToCreate);
+                $walletsToCreate = collect($walletsToCreate)
+                    ->unique(fn ($wallet) => $wallet['order_id'] . '_' . $wallet['user_id'])
+                    ->values()
+                    ->toArray();
                 IbWallet::insert($walletsToCreate);
             } catch (Exception $e) {
                 logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
@@ -193,7 +278,7 @@ class DistributeIbCommissionJob implements ShouldQueue
     }
     private function getIbPlanDetails($user, $plan_id)
     {
-        $ibPlans = Cache::remember('ibPlans:' . $user, 60 * 60, function () use ($plan_id) {
+        $ibPlans = Cache::remember('ibPlans:' . $user, 3600, function () use ($plan_id) {
             return IbPlanDetails::where('ib_category_id', $plan_id)->where('status', 1)
                 ->whereNull('deleted_at')
                 ->get()

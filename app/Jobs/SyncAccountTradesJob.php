@@ -8,6 +8,9 @@ use App\MT5\MTWebAPI;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 use App\Services\MT5Service;
 use App\Models\Ib1Commission;
@@ -17,10 +20,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Bus\Batchable;
 
 class SyncAccountTradesJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
     protected $mt5Service;
     protected $api;
     protected  $account;
@@ -53,12 +57,14 @@ class SyncAccountTradesJob implements ShouldQueue
      */
     public function handle(): void
     {
+        try{
         $api = new MTWebAPI;
-        $mt5Service = new MT5Service($api);
-        $this->mt5Service = $mt5Service;
+        $this->mt5Service= new MT5Service($api);
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
-        $this->account = Account::find($this->accountId);
+        $this->account = Cache::remember("account:{$this->accountId}", now()->addMinutes(10), function () {
+            return Account::find($this->accountId);
+        });
         if (!$this->account) {
             Log::error('Account not found for id: ' . $this->accountId);
             return;
@@ -86,7 +92,9 @@ class SyncAccountTradesJob implements ShouldQueue
         $maxTries = 10;
         $attempts = 0;
         $processedOrders = [];
-
+        $symbolMappings = Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
+            return Symbol::pluck('path', 'symbol')->toArray();
+        });
         while ($offset < $total && $attempts < $maxTries) {
             $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
             if ($error_code != MTRetCode::MT_RET_OK) {
@@ -103,25 +111,25 @@ class SyncAccountTradesJob implements ShouldQueue
                     //     continue;
                     // }
                     $symbolWithoutP = $item->Symbol;
-                    if (!isset($symbolmap[$symbolWithoutP])) {
+                    if (!isset($symbolMappings[$symbolWithoutP])) {
                         try {
                             $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
-                            $symbolmap[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
+                            $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
                         } catch (Exception $e) {
                             Log::error('Error fetching symbol: ' . $e->getMessage());
-                            $symbolmap[$symbolWithoutP] = 'error/path';
+                            $symbolMappings[$symbolWithoutP] = 'error/path';
                         }
                     }
 
-                    $symbolpath = $symbolmap[$symbolWithoutP];
-                    $b = (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) ? 0.00001 : 0.0001;
-
+                    $symbolpath = $symbolMappings[$symbolWithoutP];
+                    $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
                     if (in_array($item->Order . '-' . $item->Login, $processedOrders)) {
                         continue;
                     }
-                    $lotSize = $this->calculateLotSize($item->VolumeInitial, $item->ContractSize);
+//                    $lotSize = $this->calculateLotSize($item->VolumeInitial, $item->ContractSize);
                     $existingCommission = Ib1Commission::where('order_id', $item->Order)
                         ->where('code', $item->Login)
+                        ->limit(1)
                         ->exists();
 
                     if ($existingCommission) {
@@ -146,7 +154,7 @@ class SyncAccountTradesJob implements ShouldQueue
                         'updated_at' => now(),
                     ];
 
-                    if (count($ibcommissions) >= 50) {
+                    if (count($ibcommissions) == 500) {
                         try {
                             Ib1Commission::insert($ibcommissions);
                             $this->newTrades = true;
@@ -182,6 +190,10 @@ class SyncAccountTradesJob implements ShouldQueue
             // ($referral_code, $userId, $ib_acc_plans)
             // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
             DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+        }
+        } catch (\Exception $e) {
+            \Log::error("SyncAccountTradesJob failed: " . $e->getMessage());
+            throw $e; // Ensure the job registers as failed
         }
     }
 }
