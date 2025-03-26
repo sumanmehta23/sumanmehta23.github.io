@@ -67,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
         });
         Gate::define('viewPulse', function (User $user) {
 
-            return in_array($user->email, [
+            return in_array(auth()->guard('admin')->user()->email, [
                 'admin@lqhmarkets.com'
             ]);
 
