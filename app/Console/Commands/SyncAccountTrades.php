@@ -62,7 +62,7 @@ class SyncAccountTrades extends Command
             ->where('status', 1)
             // ->where('referral_code', 'wealthytrades')
             ->whereNotNull('ib_plan_details_id')
-            ->chunk(100, function ($ib1s) {
+            ->chunk(500, function ($ib1s) {
 
                 foreach ($ib1s as $ib1) {
                     $plan_id = isset($ib1->planDetails->ib_category_id)?$ib1->planDetails->ib_category_id:'';
@@ -96,7 +96,7 @@ class SyncAccountTrades extends Command
                                 ->whereHas('user', function ($query) use ($referral_code, $i) {
                                     $query->where("ib$i", $referral_code)->where('status', 1);
                                 })
-                                ->chunk(100, function ($clientLiveAccs) use ($referral_code, $i, $ib_acc_plans, $userId) {
+                                ->chunk(500, function ($clientLiveAccs) use ($referral_code, $i, $ib_acc_plans, $userId) {
                                     foreach ($clientLiveAccs as $client) {
                                         // if ($client->code == 754568) {
                                             SyncAccountTradesJob::dispatch($client->id, $referral_code, $userId, $ib_acc_plans)->onQueue('syncaccountstrades');
