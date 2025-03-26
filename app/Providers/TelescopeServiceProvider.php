@@ -61,6 +61,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 'admin@lqhmarkets.com'
             ]);
         });
+
     }
     protected function authorization()
     {

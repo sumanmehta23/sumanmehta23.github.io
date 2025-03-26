@@ -65,12 +65,6 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 5 request every 10 seconds
             return Limit::perSeconds(300, 3)->by(optional($request->user())->id ?: $request->ip());
         });
-        Gate::define('viewPulse', function (User $user) {
 
-            return in_array(auth()->guard('admin')->user()->email, [
-                'admin@lqhmarkets.com'
-            ]);
-
-        });
     }
 }
