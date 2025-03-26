@@ -47,9 +47,57 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Models\Ib1Commission;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
+    $trades = Ib1Commission::where('code', 637279)
+        ->orderBy('time_closed', 'asc')
+        ->get()
+        ->groupBy('expert_position_id');
+    $processedTrades = $trades->map(function ($tradeGroup) {
+        if ($tradeGroup->count() < 2) {
+            return null; // Discard trades without a closing entry
+        }
 
+        // First trade is open, last trade is close
+        $openTrade = $tradeGroup->first();
+        $closeTrade = $tradeGroup->last();
+
+        $openTime = \Carbon\Carbon::parse($openTrade->time_closed);
+        $closeTime = \Carbon\Carbon::parse($closeTrade->time_closed);
+        $duration = $openTime->diffInSeconds($closeTime);
+
+        if ($duration < 10) {
+            Ib1Commission::where('expert_position_id', $openTrade->expert_position_id)->update(['orderstate' => 25]);
+            return null;
+        }
+
+        return [
+            'expert_position_id' => $openTrade->expert_position_id,
+            'symbol' => $openTrade->symbol,
+            'open_time' => $openTrade->time_closed,
+            'close_time' => $closeTrade->time_closed,
+            'duration' => $duration,
+        ];
+    })->filter(); // Remove null values
+
+    // Convert to array if needed
+    $processedTradesArray = $processedTrades->values()->toArray();
+
+    // Debug output
+    dd($processedTradesArray);
+    // ->map(function ($trade) {
+    //     return [
+    //         'order_id' => $trade->order_id,
+    //         'symbol' => $trade->symbol,
+    //         'open_time' => $trade->time_closed,
+    //         'close_time' => optional($trade->closeTrade)->time,
+    //         'trade_duration_seconds' => optional($trade->closeTrade)->time
+    //             ? \Carbon\Carbon::parse($trade->time)->diffInSeconds($trade->closeTrade->time)
+    //             : null,
+    //     ];
+    // });
+    return $trades;
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
