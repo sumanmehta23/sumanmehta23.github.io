@@ -113,11 +113,11 @@ class DistributeIbCommissionJob implements ShouldQueue
             }
         }
 
-        collect($this->processedtrades)->chunk(50)->each(function ($chunk) {
+        collect($this->processedtrades)->chunk(250)->each(function ($chunk) {
             Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 1]);
         });
 
-        collect($this->discardedIds)->chunk(50)->each(function ($chunk) {
+        collect($this->discardedIds)->chunk(250)->each(function ($chunk) {
             Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 10]);
         });
     }
