@@ -102,6 +102,8 @@ class SyncAccountTradesJob implements ShouldQueue
                     // if ($item->State != 4) {
                     //     continue;
                     // }
+                    dump('test');
+                    dd($item);
                     $symbolWithoutP = $item->Symbol;
                     if (!isset($symbolmap[$symbolWithoutP])) {
                         try {
