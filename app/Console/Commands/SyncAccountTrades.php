@@ -98,9 +98,9 @@ class SyncAccountTrades extends Command
                                 })
                                 ->chunk(100, function ($clientLiveAccs) use ($referral_code, $i, $ib_acc_plans, $userId) {
                                     foreach ($clientLiveAccs as $client) {
-                                        if ($client->code == 754568) {
+                                        // if ($client->code == 754568) {
                                             SyncAccountTradesJob::dispatch($client->id, $referral_code, $userId, $ib_acc_plans)->onQueue('syncaccountstrades');
-                                        }
+                                        // }
                                         // ($accountId, $referral_code, $ib_user_id, $ib_acc_plans)
 
                                     }
