@@ -116,7 +116,8 @@
                                                             <label class="form-label" for="exampleFormControlSelect1">Enter Amount</label>
                                                             <div class="mb-3 input-group">
                                                                 <span class="input-group-text">USD</span>
-                                                                <input type="number" min="1"
+                                                                <input type="number" min="0.01"
+                                                                        step="0.01"
                                                                     class="form-control transferable_amount"
                                                                     name="transferable_amount" required>
                                                             </div>
