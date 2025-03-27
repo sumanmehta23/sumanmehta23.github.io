@@ -198,7 +198,7 @@ return [
             'queue' => ['syncaccountstrades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 5,
+            'maxProcesses' => 20,
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
@@ -236,7 +236,7 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-2' => [
-                'maxProcesses' => 40,
+                'maxProcesses' => 20,
             ],
             'supervisor-3' => [
                 'maxProcesses' => 20,
