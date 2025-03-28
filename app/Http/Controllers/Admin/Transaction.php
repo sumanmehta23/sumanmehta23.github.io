@@ -431,6 +431,7 @@ class Transaction extends Controller
     }
     public function update_wallet_withdrawal(Request $request)
     {
+
         $settings = settings();
         $status = $request->status;
         // dd($request->all());
@@ -459,8 +460,11 @@ class Transaction extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
-        // dd($transaction);
+
         if ($transaction) {
+            if($transaction->status == 3){
+                return redirect()->back()->with('error', "Transaction already cancelled");
+            }
             $transaction->admin_remark = $rejection_reason;
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;
