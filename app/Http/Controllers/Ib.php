@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Ib extends Controller
 {
@@ -238,6 +239,19 @@ class Ib extends Controller
     }
     public function processTransfer(Request $request)
     {
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'processTransfer:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with('error', "Too many requests. Please wait {$retryAfter} seconds before trying again.");
+        }
+
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         if ($request->has('transfer')) {
             // Validate the request input
             $request->validate([
