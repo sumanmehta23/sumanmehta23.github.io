@@ -308,6 +308,7 @@ class Ib extends Controller
                     IbWallet::create([
                         'email' => $email,
                         'user_id' => $userId,
+                        'order_id' => rand(10000, 9999999),
                         'account_id' => $account->id,
                         'ib_withdraw' => $amount,
                         'remark' => 'IB Comm. Withdrawl'
