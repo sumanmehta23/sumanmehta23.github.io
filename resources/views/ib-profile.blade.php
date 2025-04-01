@@ -215,10 +215,9 @@
                                                 <!---->
                                             </div><label class="form-label" for="exampleFormControlSelect1">Enter
                                                 Amount</label>
-                                            <div class="mb-3 input-group"><span class="input-group-text">$</span><input
-                                                    type="number" name="amount" max="{{ $ib_wallet }}" class="form-control"
-                                                    required aria-label="Amount (to the nearest dollar)"><span
-                                                    class="input-group-text">.00</span>
+                                            <div class="mb-3 input-group"><span class="input-group-text">$</span>
+                                                <input type="number" name="amount" min="0.01" step="0.01" max="{{ $ib_wallet }}" class="form-control" required aria-label="Amount (to the nearest dollar)">
+                                                    <span class="input-group-text">.00</span>
                                                 <!---->
                                             </div>
                                             <div class="mt-4 mb-5 d-grid"><button class="btn btn-outline-secondary"
