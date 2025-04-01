@@ -383,9 +383,7 @@
                                                             <div class="col-xl-3">
                                                                 <h4 class="mb-3 text-muted fw-normal">WALLET</h4>
                                                                 <?php if ($user->wallet_enabled): ?>
-                                                                {{ if($user->email =='darkosarpongroy@yahoo.com'){
-                                                                    dd($wallet_balance);
-                                                                } }}
+
                                                                 <h4 class="fw-normal">@money($wallet_balance) </h4>
                                                                 <?php else: ?>
                                                                 <button type="button"
