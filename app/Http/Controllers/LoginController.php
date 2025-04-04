@@ -177,7 +177,24 @@ class LoginController extends Controller
 
     }
 
-
+    public function verify_2fa(Request $request)
+    {
+        dd($request->all());
+        $user = auth()->user();
+        if ($user->two_factor_secret) {
+            $isValid = $twoFactorProvider->verify(
+                decrypt(auth()->user()->two_factor_secret),
+                $request->input('two_factor_code')
+            );
+            // dump($user);
+            // dd($isValid);
+            if (!$isValid) {
+                throw ValidationException::withMessages([
+                    'two_factor_code' => ['Invalid or expired 2FA code.'],
+                ]);
+            }
+        }
+    }
 
     // Logout user
     public function logout(Request $request)
