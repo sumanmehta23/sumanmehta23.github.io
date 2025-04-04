@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasUuids, HasUuids;
+    use HasApiTokens, HasUuids, HasUuids,TwoFactorAuthenticatable;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];

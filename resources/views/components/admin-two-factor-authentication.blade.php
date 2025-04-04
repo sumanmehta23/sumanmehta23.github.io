@@ -42,25 +42,25 @@
                 </div>
 
                 <div class="inline-block p-2 mt-4">
-                    {!! $user->twoFactorQrCodeSvg() !!}
+                    {!! auth()->user()->twoFactorQrCodeSvg() !!}
                 </div>
 
                 <div class="max-w-xl mt-4 text-sm text-gray-600 dark:text-gray-400">
                     <p class="font-semibold">
-                        {{ __('Setup Key') }}: {{ decrypt($user->two_factor_secret) }}
+                        {{ __('Setup Key') }}: {{ decrypt(auth()->user()->two_factor_secret) }}
                     </p>
                 </div>
 
                 @if ($showingConfirmation)
                     <div class="mt-4">
-                        <x-input-label for="code" value="{{ __('Code') }}" />
+                        <label for="code">Code</label>
 
-                        <x-text-input id="code" type="text" name="code" class="block w-25 mt-1"
+                        <input id="code" type="text" name="code"class="form-control block w-25 mt-1"
                             inputmode="numeric" autofocus autocomplete="one-time-code" x-model="code"
                             x-on:keydown.enter="confirmTwoFactorAuthentication" />
 
-                        <x-input-error for="code" class="mt-2"
-                            messages="The provided two factor authentication code was invalid." x-show="invalidCode" />
+                        {{-- <x-input-error for="code" class="mt-2"
+                            messages="The provided two factor authentication code was invalid." x-show="invalidCode" /> --}}
                     </div>
                 @endif
             @endif
@@ -72,8 +72,8 @@
                     </p>
                 </div>
 
-                <div class="grid max-w-xl gap-1 px-4 py-4 mt-4 font-mono text-sm bg-gray-100 rounded-lg dark:bg-gray-900 dark:text-gray-100">
-                    @foreach (json_decode(decrypt($user->two_factor_recovery_codes), true) as $code)
+                <div class="flex max-w-xl gap-1 px-4 py-4 mt-4 font-mono text-sm bg-gray-100 rounded-lg dark:bg-gray-900 dark:text-gray-100">
+                    @foreach (json_decode(decrypt(auth()->user()->two_factor_recovery_codes), true) as $code)
                         <div>{{ $code }}</div>
                     @endforeach
                 </div>
@@ -82,35 +82,35 @@
 
         <div class="mt-5 d-flex justify-content-between align-items-center gap-3">
             @if (!$enabled)
-                <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
+                <Button type="submit" class="btn btn-primary me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()" x-show="enableButtonVisible" x-cloak>
                     {{ __('Enable') }}
-                </x-primary-button>
+                </Button>
             @else
                 @if ($showingRecoveryCodes)
-                    <x-primary-button type="button" class="me-3" wire:loading.attr="disabled"
+                    <Button type="button" class="btn btn-primary me-3" wire:loading.attr="disabled"
                         @click="regenerateRecoveryCodes()">
                         {{ __('Regenerate Recovery Codes') }}
-                    </x-primary-button>
+                    </Button>
                 @elseif ($showingConfirmation)
-                    <x-primary-button type="button" class="me-3 p-2" wire:loading.attr="disabled"
+                    <Button type="button" class="btn btn-primary me-3" wire:loading.attr="disabled"
                         @click="confirmTwoFactorAuthentication()">
                         {{ __('Confirm') }}
-                    </x-primary-button>
+                    </Button>
                 @else
-                    <x-secondary-button class="me-3" @click="showRecoveryCodes()">
+                    <Button class="me-3" @click="showRecoveryCodes()">
                         {{ __('Show Recovery Codes') }}
-                    </x-secondary-button>
+                    </Button>
                 @endif
 
                 @if ($showingConfirmation)
-                    <x-secondary-button wire:loading.attr="disabled" class="p-3" @click="disableTwoFactorAuthentication()">
+                    <Button wire:loading.attr="disabled" class="btn btn-primary me-3" @click="disableTwoFactorAuthentication()">
                         {{ __('Cancel') }}
-                    </x-secondary-button>
+                    </Button>
                 @else
-                    <x-danger-button wire:loading.attr="disabled" @click="disableTwoFactorAuthentication()">
+                    <Button class="btn btn-primary" wire:loading.attr="disabled" @click="disableTwoFactorAuthentication()">
                         {{ __('Disable') }}
-                    </x-danger-button>
+                    </Button>
                 @endif
 
             @endif
@@ -119,14 +119,13 @@
             <form id="password-confirm-form" method="POST">
                 @csrf
                 <div>
-                    <x-input-label for="password" :value="__('Password')" />
-                    <x-input-field id="password" class="block w-100 mt-1" type="password" name="password" required autocomplete="current-password" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    <label for="password">Password</label>
+                    <input id="password" class="form-control block w-80 mt-1" type="password" name="password" required autocomplete="current-password">
                 </div>
                 <div class="flex justify-end mt-4">
-                    <x-primary-button type="button" @click="confirmPassword()">
+                    <Button class="btn btn-primary me-3" type="button" @click="confirmPassword()">
                         {{ __('Confirm') }}
-                    </x-primary-button>
+                    </Button>
                 </div>
             </form>
         </div>
@@ -140,38 +139,43 @@
             code: '',
             enableButtonVisible: true,
             confirmPassword() {
-                let form = document.getElementById("password-confirm-form");
-                let formData = new FormData(form);
+                const password = document.getElementById("password").value;
+                const formData = new FormData();
+                formData.append("password", password);
 
                 axios.post("{{ route('admin.password.confirm') }}", formData)
                     .then(response => {
                         console.log("Password confirmed:", response.data);
                         this.showPasswordConfirmation = false;
-                        this.enableButtonVisible = true; // Show Enable button again
-
-                        return axios.post("{{ route('two-factor.enable') }}");
-                    })
-                    .then(response => {
-                        console.log("Two-Factor Authentication enabled:", response.data);
-                        window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                        this.enableButtonVisible = true;
+                        axios.post("{{ route('admin.two-factor.enable') }}");
+                        location.reload();
                     })
                     .catch(error => {
-                        console.error("Error:", error.response.data);
+                        console.error("Error:", error);
+                        let errorMessage = 'Something went wrong. Please try again.';
+                        if (error.response && error.response.data) {
+                            if (error.response.data.error) {
+                                errorMessage = error.response.data.error;
+                            } else if (error.response.data.message) {
+                                errorMessage = error.response.data.message;
+                            }
+                        }
+
                         Swal.fire({
                             icon: 'error',
-                            title: 'Incorrect Password',
-                            text: 'Please enter the correct password to proceed.',
+                            title: 'Authentication Failed',
+                            text: errorMessage,
                         });
                     });
             },
             confirmTwoFactorAuthentication() {
                 console.log('confirmTwoFactorAuthentication');
-                axios.post('{{ route('two-factor.confirm') }}', {
+                axios.post('{{ route('admin.two-factor.confirm') }}', {
                     code: this.code
                 }).then(response => {
                     if (response.data.errors == undefined) {
                         location.reload();
-                        window.location.href = '{{ route('user-profile') }}#two-factor-auth';
                     } else {
                         this.invalidCode = true;
                     }
@@ -179,7 +183,7 @@
                     console.log(error.response.data);
 
                     if(error.response.data.message == "Password confirmation required."){
-                        window.location.href = '{{ route('confirm_password') }}';
+                        window.location.href = "{{ route('admin.password.confirm') }}";
                     }else{
                         Swal.fire({
                             icon: 'error',
@@ -208,12 +212,11 @@
             },
             regenerateRecoveryCodes() {
                 console.log('regenerateRecoveryCodes');
-                axios.post('{{ route('two-factor.recovery-codes') }}').then(response => {
+                axios.post('{{ route('admin.two-factor.recovery-codes') }}').then(response => {
                     location.reload();
-                    window.location.href = '{{ route('user-profile') }}';
                 }).catch(error => {
                     console.log(error.response.data);
-                    window.location.href = '{{ route('confirm_password') }}';
+                    location.reload();
                 });
             },
             showRecoveryCodes() {
@@ -226,7 +229,7 @@
             },
             disableTwoFactorAuthentication() {
                 console.log('disableTwoFactorAuthentication');
-                axios.delete('{{ route('two-factor.disable') }}', {
+                axios.delete('{{ route('admin.two-factor.disable') }}', {
                     action: 'cancel'
                 }).then(response => {
                     location.reload();
@@ -242,6 +245,7 @@
         let form = document.getElementById("password-confirm-form");
 
         form.addEventListener("submit", function (event) {
+            console.log('abhay');
             event.preventDefault();
             twoFA().confirmPassword();
         });

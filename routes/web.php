@@ -8,6 +8,7 @@ use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
+use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
 use App\Http\Controllers\Home;
 use App\Http\Controllers\Users;
@@ -42,13 +43,13 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\TradeDepositController;
+use App\View\Components\TwoFactorAuthentication;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Models\Ib1Commission;
-use App\View\Components\TwoFactorAuthentication;
+use App\View\Components\AdminTwoFactorAuthentication;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
@@ -298,7 +299,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::middleware(['is_admin'])->group(function () {
 
-        Route::post('/two-factor/enable', [TwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
+        Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
+        Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
+        Route::post('/two-factor/confirm', [AdminTwoFactorAuthentication::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
+        Route::post('/two-factor/recovery-codes', [AdminTwoFactorAuthentication::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
 
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')

@@ -49,16 +49,20 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $admin = Auth::guard('admin')->user(); // Get the authenticated admin user
+        $admin = Auth::guard('admin')->user(); // Assuming you're using 'admin' guard
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
-            dump('sssss');
-            return back()->withErrors(['password' => 'The password is incorrect.']);
+            return response()->json([
+                'message' => 'The password is incorrect.'
+            ], 422); // 422 Unprocessable Entity for validation-like errors
         }
+
         // Store the timestamp in session to mark password confirmation
         $request->session()->put('auth.password_confirmed_at', time());
 
-        return redirect()->intended(route('admin.dashboard')); // Redirect to admin dashboard or intended page
+        return response()->json([
+            'message' => 'Password confirmed successfully.'
+        ]);
     }
 
 
