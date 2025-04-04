@@ -158,6 +158,7 @@ class LoginController extends Controller
          Session::put('user', $user);
          $this->recordLoginHistory($user, $request->ip());
          Session::put('2fa:user_id', $user->id);
+
         activity()->causedBy($user->id)
             ->withProperties(
                 [
@@ -166,11 +167,12 @@ class LoginController extends Controller
                     'remark' => 'Login'
                 ])
             ->log('Authentication');
-            if($user->two_factor_secret){
-                return redirect()->route('verify-2fa');
-             }else{
-                return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
-             }
+
+        if($user->two_factor_secret){
+            return redirect()->route('verify-2fa');
+        }else{
+            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
+        }
 
 
     }
