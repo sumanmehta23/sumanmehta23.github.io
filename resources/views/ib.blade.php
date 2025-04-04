@@ -40,6 +40,13 @@
                   </a>
                 @elseif ($ib_result->status == 0)
                   <span class="badge bg-light-warning mt-4 mb-5">Pending Approval</span>
+                @elseif ($ib_result->status == 2)
+                  <span class="badge bg-light-warning mt-4 mb-5">Approval Rejected</span>
+                  <a href="#" class="d-grid ib_enrol">
+                    <button class="btn btn-primary ib-resend">
+                      <span class="text-truncate w-100">Resend Approval</span>
+                    </button>
+                  </a>
                 @endif
 
               </div>
@@ -71,6 +78,36 @@
           if (data.status == 'true') {
             Swal.fire({
               title: "You're officially enrolled as an Introducing Broker",
+              text: "Welcome to the team!",
+              icon: "success"
+            }).then((val) => {
+              location.reload();
+            });
+          }
+        }
+      });
+    });
+    $(".ib-resend").click(function() {
+      $.ajax({
+        url: "{{ route('ib-resend') }}",
+        data: "ib_resend=true",
+        type: "POST",
+        beforeSend: function() {
+          Swal.fire({
+            showConfirmButton: false,
+            showCancelButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: function() {
+              Swal.enableLoading();
+            }
+          });
+        },
+        success: function(data) {
+          Swal.close();
+          if (data.status == 'true') {
+            Swal.fire({
+              title: "You'r Ib request is resent",
               text: "Welcome to the team!",
               icon: "success"
             }).then((val) => {

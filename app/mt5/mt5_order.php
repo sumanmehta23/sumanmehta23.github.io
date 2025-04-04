@@ -1,4 +1,5 @@
 <?php
+
 namespace App\MT5;
 
 
@@ -6,15 +7,15 @@ namespace App\MT5;
  * Class get order
  */
 class MTOrderProtocol
-  {
+{
   private $m_connect; // connection to MT5 server
   /**
    * @param MTConnect $connect - connect to MT5 server
    */
   public function __construct($connect)
-    {
+  {
     $this->m_connect = $connect;
-    }
+  }
   /**
    * Get order
    * @param string $ticket - number of ticket
@@ -22,31 +23,28 @@ class MTOrderProtocol
    * @return MTRetCode
    */
   public function OrderGet($ticket, &$order)
-    {
+  {
     //--- send request
     $data = array(MTProtocolConsts::WEB_PARAM_TICKET => $ticket);
-    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET, $data))
-      {
+    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET, $data)) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'send order get failed');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- get answer
-    if (($answer = $this->m_connect->Read()) == null)
-      {
+    if (($answer = $this->m_connect->Read()) == null) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'answer order get is empty');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- parse answer
-    if (($error_code = $this->ParseOrder(MTProtocolConsts::WEB_CMD_ORDER_GET, $answer, $order_answer)) != MTRetCode::MT_RET_OK)
-      {
+    if (($error_code = $this->ParseOrder(MTProtocolConsts::WEB_CMD_ORDER_GET, $answer, $order_answer)) != MTRetCode::MT_RET_OK) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'parse order get failed: [' . $error_code . ']' . MTRetCode::GetError($error_code));
       return $error_code;
-      }
+    }
     //--- get object from json
     $order = $order_answer->GetFromJson();
     //---
     return MTRetCode::MT_RET_OK;
-    }
+  }
   /**
    * check answer from MetaTrader 5 server
    * @param string $command - command
@@ -55,7 +53,7 @@ class MTOrderProtocol
    * @return MTRetCode
    */
   private function ParseOrder($command, &$answer, &$order_answer)
-    {
+  {
     $pos = 0;
     //--- get command answer
     $command_real = $this->m_connect->GetCommand($answer, $pos);
@@ -64,22 +62,20 @@ class MTOrderProtocol
     $order_answer = new MTOrderAnswer();
     //--- get param
     $pos_end = -1;
-    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null)
-      {
-      switch ($param['name'])
-      {
+    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null) {
+      switch ($param['name']) {
         case MTProtocolConsts::WEB_PARAM_RETCODE:
           $order_answer->RetCode = $param['value'];
           break;
       }
-      }
+    }
     //--- check ret code
     if (($ret_code = MTConnect::GetRetCode($order_answer->RetCode)) != MTRetCode::MT_RET_OK) return $ret_code;
     //--- get json
     if (($order_answer->ConfigJson = $this->m_connect->GetJson($answer, $pos_end)) == null) return MTRetCode::MT_RET_REPORT_NODATA;
     //---
     return MTRetCode::MT_RET_OK;
-    }
+  }
   /**
    * check answer from MetaTrader 5 server
    * @param  string $answer - answer from server
@@ -87,7 +83,7 @@ class MTOrderProtocol
    * @return MTRetCode
    */
   private function ParseOrderPage(&$answer, &$order_answer)
-    {
+  {
     $pos = 0;
     //--- get command answer
     $command_real = $this->m_connect->GetCommand($answer, $pos);
@@ -96,22 +92,20 @@ class MTOrderProtocol
     $order_answer = new MTOrderPageAnswer();
     //--- get param
     $pos_end = -1;
-    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null)
-      {
-      switch ($param['name'])
-      {
+    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null) {
+      switch ($param['name']) {
         case MTProtocolConsts::WEB_PARAM_RETCODE:
           $order_answer->RetCode = $param['value'];
           break;
       }
-      }
+    }
     //--- check ret code
     if (($ret_code = MTConnect::GetRetCode($order_answer->RetCode)) != MTRetCode::MT_RET_OK) return $ret_code;
     //--- get json
     if (($order_answer->ConfigJson = $this->m_connect->GetJson($answer, $pos_end)) == null) return MTRetCode::MT_RET_REPORT_NODATA;
     //---
     return MTRetCode::MT_RET_OK;
-    }
+  }
   /**
    * Get total order for login
    * @param string $login - user login
@@ -119,31 +113,28 @@ class MTOrderProtocol
    * @return MTRetCode
    */
   public function OrderGetTotal($login, &$total)
-    {
+  {
     //--- send request
     $data = array(MTProtocolConsts::WEB_PARAM_LOGIN => $login);
-    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET_TOTAL, $data))
-      {
+    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET_TOTAL, $data)) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'send order get total failed');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- get answer
-    if (($answer = $this->m_connect->Read()) == null)
-      {
+    if (($answer = $this->m_connect->Read()) == null) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'answer order get total is empty');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- parse answer
-    if (($error_code = $this->ParseOrderTotal($answer, $order_answer)) != MTRetCode::MT_RET_OK)
-      {
+    if (($error_code = $this->ParseOrderTotal($answer, $order_answer)) != MTRetCode::MT_RET_OK) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'parse order get total failed: [' . $error_code . ']' . MTRetCode::GetError($error_code));
       return $error_code;
-      }
+    }
     //--- get total
     $total = $order_answer->Total;
     //---
     return MTRetCode::MT_RET_OK;
-    }
+  }
   /**
    * Get order
    * @param int $login - number of ticket
@@ -153,32 +144,29 @@ class MTOrderProtocol
    * @return MTRetCode
    */
   public function OrderGetPage($login, $offset, $total, &$orders)
-    {
+  {
     //--- send request
     $data = array(MTProtocolConsts::WEB_PARAM_LOGIN => $login, MTProtocolConsts::WEB_PARAM_OFFSET => $offset, MTProtocolConsts::WEB_PARAM_TOTAL => $total);
     //---
-    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET_PAGE, $data))
-      {
+    if (!$this->m_connect->Send(MTProtocolConsts::WEB_CMD_ORDER_GET_PAGE, $data)) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'send order get page failed');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- get answer
-    if (($answer = $this->m_connect->Read()) == null)
-      {
+    if (($answer = $this->m_connect->Read()) == null) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'answer order get page is empty');
       return MTRetCode::MT_RET_ERR_NETWORK;
-      }
+    }
     //--- parse answer
-    if (($error_code = $this->ParseOrderPage($answer, $order_answer)) != MTRetCode::MT_RET_OK)
-      {
+    if (($error_code = $this->ParseOrderPage($answer, $order_answer)) != MTRetCode::MT_RET_OK) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, 'parse order get page failed: [' . $error_code . ']' . MTRetCode::GetError($error_code));
       return $error_code;
-      }
+    }
     //--- get object from json
     $orders = $order_answer->GetArrayFromJson();
     //---
     return MTRetCode::MT_RET_OK;
-    }
+  }
   /**
    * Check answer from MetaTrader 5 server
    * @param  $answer string server answer
@@ -186,7 +174,7 @@ class MTOrderProtocol
    * @return false
    */
   private function ParseOrderTotal(&$answer, &$order_answer)
-    {
+  {
     $pos = 0;
     //--- get command answer
     $command = $this->m_connect->GetCommand($answer, $pos);
@@ -195,10 +183,8 @@ class MTOrderProtocol
     $order_answer = new MTOrderTotalAnswer();
     //--- get param
     $pos_end = -1;
-    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null)
-      {
-      switch ($param['name'])
-      {
+    while (($param = $this->m_connect->GetNextParam($answer, $pos, $pos_end)) != null) {
+      switch ($param['name']) {
         case MTProtocolConsts::WEB_PARAM_RETCODE:
           $order_answer->RetCode = $param['value'];
           break;
@@ -206,19 +192,19 @@ class MTOrderProtocol
           $order_answer->Total = (int)$param['value'];
           break;
       }
-      }
+    }
     //--- check ret code
     if (($ret_code = MTConnect::GetRetCode($order_answer->RetCode)) != MTRetCode::MT_RET_OK) return $ret_code;
     //---
     return MTRetCode::MT_RET_OK;
-    }
   }
+}
 
 /**
  * order types
  */
 class MTEnOrderType
-  {
+{
   const OP_BUY             = 0; // buy order
   const OP_SELL            = 1; // sell order
   const OP_BUY_LIMIT       = 2; // buy limit order
@@ -231,26 +217,26 @@ class MTEnOrderType
   //--- enumeration borders
   const OP_FIRST = MTEnOrderType::OP_BUY;
   const OP_LAST  = MTEnOrderType::OP_CLOSE_BY;
-  }
+}
 
 /**
  * order filling types
  */
 class MTEnOrderFilling
-  {
+{
   const ORDER_FILL_FOK    = 0; // fill or kill
   const ORDER_FILL_IOC    = 1; // immediate or cancel
   const ORDER_FILL_RETURN = 2; // return order in queue
   //--- enumeration borders
   const ORDER_FILL_FIRST = MTEnOrderFilling::ORDER_FILL_FOK;
   const ORDER_FILL_LAST  = MTEnOrderFilling::ORDER_FILL_RETURN;
-  }
+}
 
 /**
  * order expiration types
  */
 class MTEnOrderTime
-  {
+{
   const ORDER_TIME_GTC           = 0; // good till cancel
   const ORDER_TIME_DAY           = 1; // good till day
   const ORDER_TIME_SPECIFIED     = 2; // good till specified
@@ -258,13 +244,13 @@ class MTEnOrderTime
   //--- enumeration borders
   const ORDER_TIME_FIRST = MTEnOrderTime::ORDER_TIME_GTC;
   const ORDER_TIME_LAST  = MTEnOrderTime::ORDER_TIME_SPECIFIED_DAY;
-  }
+}
 
 /**
  * order state
  */
 class MTEnOrderState
-  {
+{
   const ORDER_STATE_STARTED        = 0; // order started
   const ORDER_STATE_PLACED         = 1; // order placed in system
   const ORDER_STATE_CANCELED       = 2; // order canceled by client
@@ -278,13 +264,13 @@ class MTEnOrderState
   //--- enumeration borders
   const ORDER_STATE_FIRST = MTEnOrderState::ORDER_STATE_STARTED;
   const ORDER_STATE_LAST  = MTEnOrderState::ORDER_STATE_REQUEST_CANCEL;
-  }
+}
 
 /**
  * order activation state
  */
 class MTEnOrderActivation
-  {
+{
   const ACTIVATION_NONE       = 0; // none
   const ACTIVATION_PENDING    = 1; // pending order activated
   const ACTIVATION_STOPLIMIT  = 2; // stop-limit order activated
@@ -293,13 +279,13 @@ class MTEnOrderActivation
   //--- enumeration borders
   const ACTIVATION_FIRST = MTEnOrderActivation::ACTIVATION_NONE;
   const ACTIVATION_LAST  = MTEnOrderActivation::ACTIVATION_STOPOUT;
-  }
+}
 
 /**
  * order creation reasons
  */
 class MTEnOrderReason
-  {
+{
   const ORDER_REASON_CLIENT           = 0;  // order placed manually
   const ORDER_REASON_EXPERT           = 1;  // order placed by expert
   const ORDER_REASON_DEALER           = 2;  // order placed by dealer
@@ -322,13 +308,13 @@ class MTEnOrderReason
   //--- enumeration borders
   const ORDER_REASON_FIRST = MTEnOrderReason::ORDER_REASON_CLIENT;
   const ORDER_REASON_LAST  = MTEnOrderReason::ORDER_REASON_SPLIT;
-  }
+}
 
 /**
  * order activation flags
  */
 class MTEnTradeActivationFlags
-  {
+{
   const ACTIV_FLAGS_NO_LIMIT      = 0x01;
   const ACTIV_FLAGS_NO_STOP       = 0x02;
   const ACTIV_FLAGS_NO_SLIMIT     = 0x04;
@@ -339,13 +325,13 @@ class MTEnTradeActivationFlags
   //---
   const ACTIV_FLAGS_NONE = 0x00;
   const ACTIV_FLAGS_ALL  = 0x7F;
-  }
+}
 
 /**
  * modification flags
  */
 class MTEnOrderTradeModifyFlags
-  {
+{
   const MODIFY_FLAGS_ADMIN          = 0x001;
   const MODIFY_FLAGS_MANAGER        = 0x002;
   const MODIFY_FLAGS_POSITION       = 0x004;
@@ -358,13 +344,13 @@ class MTEnOrderTradeModifyFlags
   //--- enumeration borders
   const MODIFY_FLAGS_NONE = 0x000;
   const MODIFY_FLAGS_ALL  = 0x1FF;
-  }
+}
 
 /**
  * Order information
  */
 class MTOrder
-  {
+{
   //--- order ticket
   public $Order;
   //--- order ticket in external system (exchange, ECN, etc)
@@ -437,22 +423,22 @@ class MTOrder
   public $ActivationPrice;
   //--- order activation flag (type is MTEnTradeActivationFlags)
   public $ActivationFlags;
-  }
+}
 
 /**
  * Answer on request order_get_total
  */
 class MTOrderTotalAnswer
-  {
+{
   public $RetCode = '-1';
   public $Total = 0;
-  }
+}
 
 /**
  * get order page answer
  */
 class MTOrderPageAnswer
-  {
+{
   public $RetCode = '-1';
   public $ConfigJson = '';
   /**
@@ -460,29 +446,28 @@ class MTOrderPageAnswer
    * @return array(MTOrder)
    */
   public function GetArrayFromJson()
-    {
+  {
     $objects = MTJson::Decode($this->ConfigJson);
     if ($objects == null) return null;
     $result = array();
     //---
-    foreach ($objects as $obj)
-      {
+    foreach ($objects as $obj) {
       $info = MTOrderJson::GetFromJson($obj);
       //---
       $result[] = $info;
-      }
+    }
     //---
     $objects = null;
     //---
     return $result;
-    }
   }
+}
 
 /**
  * get order page answer
  */
 class MTOrderAnswer
-  {
+{
   public $RetCode = '-1';
   public $ConfigJson = '';
   /**
@@ -490,23 +475,23 @@ class MTOrderAnswer
    * @return array(MTOrder)
    */
   public function GetFromJson()
-    {
+  {
     $obj = MTJson::Decode($this->ConfigJson);
     if ($obj == null) return null;
     //---
     return MTOrderJson::GetFromJson($obj);
-    }
   }
+}
 
 class MTOrderJson
-  {
+{
   /**
    * Get MTOrder from json object
    * @param object $obj
    * @return MTOrder
    */
   public static function GetFromJson($obj)
-    {
+  {
     if ($obj == null) return null;
     $info = new MTOrder();
     //---
@@ -541,9 +526,9 @@ class MTOrderJson
       $info->VolumeInitialExt = MTUtils::ToNewVolume($info->VolumeInitial);
     $info->VolumeCurrent = (int)$obj->VolumeCurrent;
     if (isset($obj->VolumeCurrentExt))
-       $info->VolumeCurrentExt = (int)$obj->VolumeCurrentExt;
+      $info->VolumeCurrentExt = (int)$obj->VolumeCurrentExt;
     else
-       $info->VolumeCurrentExt = MTUtils::ToNewVolume($info->VolumeCurrent);
+      $info->VolumeCurrentExt = MTUtils::ToNewVolume($info->VolumeCurrent);
     $info->ExpertID = (float)$obj->ExpertID;
     $info->ExpertPositionID = (float)$obj->PositionID;
     $info->PositionByID = (float)$obj->PositionByID;
@@ -554,5 +539,5 @@ class MTOrderJson
     $info->ActivationFlags = (int)$obj->ActivationFlags;
     //---
     return $info;
-    }
   }
+}

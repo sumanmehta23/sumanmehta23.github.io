@@ -42,7 +42,7 @@ class InternalTransfer extends Controller
     }
     public function processTransfer(Request $request)
     {
-        // dd($request->all());
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -71,9 +71,8 @@ class InternalTransfer extends Controller
         $validated = $request->validate([
             'fromAccount' => 'required',
             'toAccount' => 'required|different:fromAccount',
-            'transferable_amount' => 'required|numeric|min:1',
+            'transferable_amount' => 'required|numeric|min:.01',
         ]);
-
         $fromAccountId = $request->input('fromAccount');
         $toAccountId = $request->input('toAccount');
         $userId=auth()->user()->id;
@@ -81,6 +80,7 @@ class InternalTransfer extends Controller
         $toAccount = Account::where(['id'=> $toAccountId,'user_id'=>$userId])->firstOrFail();
         // dump($fromAccount);
         // dd($toAccount);
+
         $total_bonus = BonusTransaction::where('account_id', $fromAccount->id)
             ->where(function($query) {
                 $query->where('bonus_type', 'Bonus In')

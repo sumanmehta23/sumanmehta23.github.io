@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers\admin;
 
+use PDO;
 use Exception;
+use App\Models\Ib1;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
-use App\MT5\MTEnDealAction;
-use App\Models\TotalBalance;
-use App\Models\Ib1;
-use App\Models\EmployeeList;
-use App\Models\RelationshipManager;
-use App\Models\WalletWithdraw;
 use App\Models\Account;
+use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
+use App\Models\EmployeeList;
+use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+use App\Models\WalletDeposit;
+use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
+use App\Models\RelationshipManager;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\TradeDeposit;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
-use PDO;
 
 class Transaction extends Controller
 {
@@ -177,6 +179,92 @@ class Transaction extends Controller
             // dd($client_wallet);
             // dd($details);
             return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
+        }
+    }
+
+    public function walletWithdrawalAmountUpdate(Request $request){
+
+        $amount = $request->amount;
+        $walletWithdrawal = WalletWithdraw::find($request->id);
+
+        if(!$amount){
+            return redirect()->back()->with('error', 'Please enter Amount');
+        }
+
+        if($walletWithdrawal){
+            $totalDeposits = WalletDeposit::where('email', $walletWithdrawal->user->email)
+                ->where('status', 1)
+                ->sum('deposit_amount');
+
+            $totalWithdrawals = WalletWithdraw::where('email', $walletWithdrawal->user->email)
+                ->whereNotIn('status', [2, 3])
+                ->sum('withdraw_amount');
+
+            $totalWithdrawalsFee = WalletWithdraw::where('email', $walletWithdrawal->user->email)
+                ->whereNotIn('status', [2, 3])
+                ->sum('withdraw_transaction_fee');
+
+            $walletBalance = ((float) $totalDeposits + (float) $walletWithdrawal->withdraw_amount) - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
+            if ($amount > $walletBalance) {
+                return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
+            }
+
+           if($amount >= 100){
+            $walletWithdrawal->withdraw_transaction_fee = 0;
+           }
+           $walletWithdrawal->withdraw_amount = $amount;
+           $walletWithdrawal->save();
+
+           activity('wallet-withdrawal')->causedBy(auth()->user()->id)
+           ->performedOn($walletWithdrawal)
+           ->withProperties(
+               [
+                'withdrawal_id' => $walletWithdrawal->id,
+                'updated_amount' => $amount,
+                'updated_by' => Auth::id()
+               ]
+           )
+           ->event('update')
+           ->log("Withdrawal amount updated by " . Auth::user()->name);
+
+        //    Send Mail Work Starts
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $emailSubject = $settings['admin_title'] . ' - Wallet Withdrawal Amount Update';
+            $content = '
+                <p>We are writing to provide an update regarding the termination of your trading account with LQH Markets.</strong>.</p>
+
+                <p>In lieu of this restriction, we have processed a refund of your original deposit under your withdrawal request. Please note that this refund applies solely to your initial deposit and does not include any profits or additional funds accrued through the account.</p>
+
+                <p>If you have previously made a withdrawal, we will issue the remaining balance to ensure that the total refunded amount matches your original deposit.</p>
+
+                <p>Should you have any questions or require further clarification, please do not hesitate to contact our compliance department at
+                <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.</p>
+
+                <p>Best regards,</p>
+
+                <p><strong>Jacob Larnit</strong><br>
+                Head of Compliance<br>
+                LQH Markets</p>
+            ';
+
+
+            $templateVars = [
+                'name' => $walletWithdrawal->user->fullname,
+                'email' => $settings['email_from_address'],
+                'content' => $content,
+                'title_right' => 'Wallet Withdrawal',
+                'subtitle_right' => 'Amount Update',
+            ];
+            $this->mailService->sendEmail($walletWithdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+        //    Send Mail Work Starts
+
+           return redirect()->back()->with('success', 'Amount updated successfully!');
+        }else{
+            return redirect()->back()->with('error', 'No withdrawal found');
         }
     }
     public function trading_deposit_details(Request $request)
@@ -343,6 +431,7 @@ class Transaction extends Controller
     }
     public function update_wallet_withdrawal(Request $request)
     {
+
         $settings = settings();
         $status = $request->status;
         // dd($request->all());
@@ -371,8 +460,11 @@ class Transaction extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
-        // dd($transaction);
+
         if ($transaction) {
+            if($transaction->status == 3){
+                return redirect()->back()->with('error', "Transaction already cancelled");
+            }
             $transaction->admin_remark = $rejection_reason;
             $transaction->Status =$status;
             $transaction->transaction_id = $transaction_id;

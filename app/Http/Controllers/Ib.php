@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Ib extends Controller
 {
@@ -40,18 +41,17 @@ class Ib extends Controller
     {
 
         $email = auth()->user()->email;
-        $user=auth()->user();
+        $user = auth()->user();
         $cacheKey = 'ib1_' . $user->id;
 
         if (!Cache::has($cacheKey)) {
-            $ib_result =Ib1::where('user_id', $user->id)->first();
+            $ib_result = Ib1::where('user_id', $user->id)->first();
             Cache::put($cacheKey, $ib_result, 60);
-
         } else {
-            $ib_result=Cache::get($cacheKey);
+            $ib_result = Cache::get($cacheKey);
         }
         // $ib_result = Ib1::where('user_id', $user->id)->first();
-        if($ib_result && $ib_result->status == 1) {
+        if ($ib_result && $ib_result->status == 1) {
             return redirect("/ib-profile");
         }
         return view('ib', compact('ib_result'));
@@ -69,8 +69,8 @@ class Ib extends Controller
                 Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'referral_code' =>$referral_code,
-                    'ib_plan_details_id' => $request->ib_plan_details_id ,
+                    'referral_code' => $referral_code,
+                    'ib_plan_details_id' => $request->ib_plan_details_id,
                     'name' => $user->fullname,
                     'password' => $user->password,
                     'number' => $user->number,
@@ -86,6 +86,28 @@ class Ib extends Controller
         return response()->json(['status' => 'false', 'message' => 'Invalid request method']);
     }
 
+    public function ibResend(Request $request)
+    {
+        $userId = auth()->user()->id;
+
+        try {
+            $ib = Ib1::where('user_id', $userId)->where('status', 2)->first();
+
+            if (!$ib) {
+                return redirect()->route('ib')->with('error', 'IB not found or invalid status');
+            }
+
+            // Update the IB status
+            $ib->status = 0;
+            $ib->save();
+
+            return response()->json(['status' => 'true', 'message' => 'IB status updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'false', 'message' => 'Something went wrong', 'error' => $e->getMessage()]);
+        }
+    }
+
+
     public function ibUpdateReferral(Request $request)
     {
         $ib1_id = $request->ib1_id;
@@ -93,31 +115,34 @@ class Ib extends Controller
 
         $ib1 = Ib1::find($ib1_id);
         activity()->causedBy(auth()->user()->id)
-                    ->withProperties(
-                        [
-                            'ip' => $request->ip(),
-                            'email' => auth()->user()->email,
-                            'old' => $ib1->referral_code,
-                            'new' => $referral_code,
-                            'remark' => 'Update Referral'
-                        ])
-                ->event('update')
-                ->log('Update Referral');
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => auth()->user()->email,
+                    'old' => $ib1->referral_code,
+                    'new' => $referral_code,
+                    'remark' => 'Update Referral'
+                ]
+            )
+            ->event('update')
+            ->log('Update Referral');
         if ($ib1) {
 
             try {
                 if ($ib1->referral_code == $referral_code) {
                     session()->flash('error', 'Referral code already saved.');
-                    return back();             }
+                    return back();
+                }
 
                 $existingReferralCode = Ib1::where('referral_code', $referral_code)->first();
                 if ($existingReferralCode) {
                     session()->flash('error', 'Referral code already registered.');
-                    return back();               }
+                    return back();
+                }
 
 
                 $ib1_referral = $ib1->referral_code;
-                if(!$ib1_referral){
+                if (!$ib1_referral) {
                     $ib1_referral = $ib1->email;
                 }
                 User::where(function ($query) use ($ib1_referral) {
@@ -125,16 +150,16 @@ class Ib extends Controller
                         $query->orWhere("ib$i", $ib1_referral);
                     }
                 })
-                ->get()
-                ->each(function ($user) use ($ib1_referral, $referral_code) {
-                    for ($i = 1; $i <= 15; $i++) {
-                        $column = "ib$i";
-                        if ($user->$column == $ib1_referral) {
-                            $user->$column = $referral_code;
+                    ->get()
+                    ->each(function ($user) use ($ib1_referral, $referral_code) {
+                        for ($i = 1; $i <= 15; $i++) {
+                            $column = "ib$i";
+                            if ($user->$column == $ib1_referral) {
+                                $user->$column = $referral_code;
+                            }
                         }
-                    }
-                    $user->save();
-                });
+                        $user->save();
+                    });
                 $ib1->referral_code = $referral_code;
                 $ib1->save();
 
@@ -142,7 +167,8 @@ class Ib extends Controller
                 return back();
             } catch (\Exception $e) {
                 session()->flash('error', $e->getMessage());
-                return back();            }
+                return back();
+            }
         }
         session()->flash('error', 'Ib1 record not found.');
         return back();
@@ -150,236 +176,30 @@ class Ib extends Controller
 
     public function ib_profile()
     {
-        $userId = auth()->user()->id;
+
+        $user = auth()->user();
+
+        $userId = $user->id;
         $ib_wallet = 0.00;
         AccountHelper::updateLiveAndDemoAccounts($userId, $this->api);
         $ib = Ib1::with('planDetails')
             ->where('user_id', $userId)
+            ->where('status', 1)
             ->whereNotNull('ib_plan_details_id')
             ->first();
         if (!$ib) {
             return redirect()->route('ib');
         }
-        $plan_id = $ib->planDetails->ib_category_id;
-
-
-        $ib_email = auth()->user()->email;
+        $ib_email = $user->email;
         //  dd($plan_id);
-        if ($plan_id) {
-            ini_set('max_execution_time', 600);
-            ini_set("memory_limit", "1024M");
-            $ibPlans = IbPlanDetails::where('ib_category_id', $plan_id)
-                ->where('status', 1)
-                ->whereNull('deleted_at')
-                ->get()
-                ->toArray();
-            // Prepare the commission structure
-            // dd($ibPlans);
-            $ib_acc_plans = [];
-            foreach ($ibPlans as $plan) {
-                $ib_acc_plans[$plan['account_type_id']][$plan['level_id']] = [];
 
-                for ($i = 1; $i <= $plan['level_id']; $i++) {
-                    $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
-                }
-            }
-            // dump($ib_acc_plans);
-            $referral_code= auth()->user()->ib->referral_code;
-            if(!$referral_code){
-                $referral_code = auth()->user()->ib->email;
-            }
-            // info('Getting accounts for ref code '.$referral_code." for user ".$userId);
-            // dd($referral_code);
-            // Loop through levels and fetch associated client accounts
-            for ($i = 1; $i <= 15; $i++) {
-                Account::select('id', 'code', 'user_id', 'account_type_id')
-                    ->where('demo', false)
-                    ->where('account_request_status', 1)
-                    ->whereHas('user', function ($query) use ($referral_code, $i) {
-                        $query->where("ib$i", $referral_code)->where('status', 1);
-                    })
-                    ->chunk(100, function ($clientLiveAccs) use ($referral_code, $i) {
-                        foreach ($clientLiveAccs as $client) {
-                            $login = $client->code;
-                            $from = 'September 01,2024';
-                            $to = 'March 31,2080';
-                            $total = 0;
-
-                            $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
-                            if ($error_code != MTRetCode::MT_RET_OK) {
-                                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-                                continue;
-                            }
-
-                            $closedOrderHistory = $total;
-                            if ($closedOrderHistory == 0) {
-                                continue;
-                            }
-
-                            $offset = Ib1Commission::where('code', $login)->count();
-                            $total = $closedOrderHistory;
-
-                            $maxTries = 10;
-                            $attempts = 0;
-                            $processedOrders = [];
-
-                            while ($offset < $total && $attempts < $maxTries) {
-                                $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
-                                if ($error_code != MTRetCode::MT_RET_OK) {
-                                    session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-                                    break;
-                                }
-
-                                if ($orders) {
-                                    $ibcommissions = [];
-                                    $orderIdsAndCodes = [];
-
-                                    foreach ($orders as $item) {
-                                        $symbolWithoutP = $item->Symbol;
-                                        if (!isset($symbolmap[$symbolWithoutP])) {
-                                            try {
-                                                $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
-                                                $symbolmap[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
-                                            } catch (Exception $e) {
-                                                logger()->error('Error fetching symbol: ' . $e->getMessage());
-                                                $symbolmap[$symbolWithoutP] = 'error/path';
-                                            }
-                                        }
-
-                                        $symbolpath = $symbolmap[$symbolWithoutP];
-                                        $b = (strpos($symbolpath, 'Energy') !== false || strpos($symbolpath, 'Indices') !== false || strpos($symbolpath, 'Cryptocurrencies') !== false) ? 0.00001 : 0.0001;
-
-                                        if (in_array($item->Order . '-' . $item->Login, $processedOrders)) {
-                                            continue;
-                                        }
-
-                                        $existingCommission = Ib1Commission::where('order_id', $item->Order)
-                                            ->where('code', $item->Login)
-                                            ->exists();
-
-                                        if ($existingCommission) {
-                                            continue;
-                                        }
-
-                                        $processedOrders[] = $item->Order . '-' . $item->Login;
-
-                                        $ibcommissions[] = [
-                                            'id' => (string)Str::orderedUuid(),
-                                            'user_id' => $client->user_id,
-                                            'account_id' => $client->id,
-                                            'order_id' => $item->Order,
-                                            'code' => $item->Login,
-                                            'init_volume' => $item->VolumeInitial,
-                                            'symbol' => $symbolWithoutP,
-                                            'volume' => $item->VolumeInitial * $b,
-                                            'time_closed' => Carbon::createFromTimestamp($item->TimeDone),
-                                            'created_at' => now(),
-                                            'updated_at' => now(),
-                                        ];
-
-                                        if (count($ibcommissions) >= 50) {
-                                            try {
-                                                Ib1Commission::insert($ibcommissions);
-                                            } catch (Exception $e) {
-                                                logger()->error('Error inserting commission: ' . $e->getMessage());
-                                            }
-                                            $ibcommissions = [];
-                                        }
-                                    }
-
-                                    if (count($ibcommissions) > 0) {
-                                        try {
-                                            Ib1Commission::insert($ibcommissions);
-                                        } catch (Exception $e) {
-                                            logger()->error('Error inserting commission: ' . $e->getMessage());
-                                        }
-                                    }
-                                }
-
-                                $offset += count($orders);
-
-                                $attempts++;
-                                if ($attempts >= $maxTries) {
-                                    logger()->warning("Reached max tries for account: $login after $attempts attempts.");
-                                }
-                            }
-
-                            if ($attempts >= $maxTries) {
-                                session()->flash('error', "Reached maximum attempts for account: $login. Skipping.");
-                            }
-                        }
-                    });
-            }
-
-            //Calculate IB Wallet
-            for ($i = 1; $i <= 15; $i++) {
-                DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
-
-                Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id', 'ibWallet'])
-                    ->whereHas('user', function ($query) use ($referral_code, $i) {
-                        $query->where("ib$i", $referral_code)->where('status', 1);
-                    })
-                    ->whereDoesntHave('ibWallet', function ($query) use ($userId) {
-                        $query->where('user_id', $userId);
-                    })
-                    ->where('status', 0)
-                    ->chunk(100, function ($client_live_accs) use ($referral_code, $userId, $ib_acc_plans, $i) {
-                        $walletsToCreate = [];
-
-                        foreach ($client_live_accs as $ca) {
-                            $ib_level = collect(range(1, 15))->takeWhile(fn($iter) => $ca->user->{'ib' . $iter} !== null)->count();
-                            $commission = $ib_acc_plans[$ca->account->account_type_id][$ib_level]["d$i"] ?? null;
-
-                            if ($commission) {
-                                $ib_level_name = "IB Level $ib_level - D$i";
-                                $ib_wallet = ((float)$commission / 2) * $ca->volume;
-
-                                $formatted_ib_wallet = number_format($ib_wallet, 10, '.', '');
-
-                                if ($formatted_ib_wallet < 0.0000001) {
-                                    $formatted_ib_wallet = '0.0000000000'; // Handle small values
-                                }
-
-                                $existingWallet = IbWallet::where('user_id', $userId)
-                                    ->where('order_id', $ca->order_id)
-                                    ->exists();
-
-                                if (!$existingWallet) {
-                                    $walletsToCreate[] = [
-                                        'id' => (string)Str::orderedUuid(),
-                                        'ib_wallet' => $formatted_ib_wallet,
-                                        'email' => $referral_code,
-                                        'code' => $ca->code,
-                                        'user_id' => $userId,
-                                        'account_id' => $ca->account->id,
-                                        'order_id' => $ca->order_id,
-                                        'ib1_commission_id' => $ca->id,
-                                        'ib_level' => $ib_level_name,
-                                        'created_at' => now(),
-                                        'updated_at' => now(),
-                                    ];
-                                }
-                            }
-                        }
-
-                        if (count($walletsToCreate) > 0) {
-                            try {
-                                IbWallet::insert($walletsToCreate);
-                            } catch (Exception $e) {
-                                logger()->error('Error inserting IB wallet records: ' . $e->getMessage());
-                            }
-                        }
-                    });
-            }
-
-
-        }
-        $refercode =auth()->user()->ib->referral_code;
+        $refercode = $user->ib->referral_code;
         $ib_clients_total = User::where(function ($query) use ($refercode) {
             for ($i = 1; $i <= 15; $i++) {
                 $query->orWhere("ib{$i}", $refercode);
             }
         })->distinct('email')->count('email');
+
         $ib_wallet_raw = IbWallet::where('user_id', $userId)
             ->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')
             ->first();
@@ -388,18 +208,17 @@ class Ib extends Controller
             $ib_wallet = $ib_wallet_raw->wallet - $ib_wallet_raw->withdraw;
         }
         $live_accs = Account::where('user_id', $userId)
+            ->select('id', 'balance', 'code')
             ->where('demo', false)
             ->where('account_request_status', 1)
             ->orderBy('id', 'desc')
             ->get();
 
-        for ($i = 1; $i <= 7; $i++) {
-            $ib_clients[$i] = IbClientList::where("ib$i", $referral_code)->get();
-        }
-        $histories = IbWallet::where('user_id', $userId)->get();
-        // info("IB Profile for user ".$userId." with wallet ".json_encode($ib_wallet));
-        // dd($ib_wallet);
-        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'ib_clients', 'histories', 'userId'));
+        $user = User::with('ib')->findOrFail($userId);
+
+        $IbTotalDeposits = $user->IbTotalDeposits;
+        $IbTotalWithdrawal = $user->IbTotalWithdrawal;
+        return view('ib-profile', compact('ib_wallet_raw', 'ib', 'ib_clients_total', 'ib_wallet', 'live_accs', 'userId', 'IbTotalDeposits', 'IbTotalWithdrawal'));
     }
     public function ibReference(Request $request)
     {
@@ -420,25 +239,38 @@ class Ib extends Controller
     }
     public function processTransfer(Request $request)
     {
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'processTransfer:' . (auth()->id() ?: $request->ip());
+
+        // Check if the user has exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with('error', "Too many requests. Please wait {$retryAfter} seconds before trying again.");
+        }
+
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         if ($request->has('transfer')) {
             // Validate the request input
             $request->validate([
-                'amount' => 'required|numeric|min:1', // Ensure amount is a positive number
+                'amount' => 'required|numeric|min:.01', // Ensure amount is a positive number
                 'account' => 'required|exists:accounts,id', // Ensure account ID is valid
             ]);
             $amount = $request->input('amount');
             $accountId = $request->input('account');
             $userId = auth()->user()->id;
-            $account=Account::where(['id'=>$accountId,'user_id'=>$userId])->firstOrFail();
+            $account = Account::where(['id' => $accountId, 'user_id' => $userId])->firstOrFail();
             $email = auth()->user()->email;
 
-            $balance=IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
+            $balance = IbWallet::where('user_id', $userId)->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')->first();
 
             $availableBalance = $balance->wallet - $balance->withdraw;
             if ($availableBalance >= $amount) {
 
-                if(!$availableBalance || !$amount || !$account){
-                    alert()->warning("Invalid Request","Please Select / Enter valid values");
+                if (!$availableBalance || !$amount || !$account) {
+                    alert()->warning("Invalid Request", "Please Select / Enter valid values");
                     return redirect()->back();
                 }
 
@@ -446,16 +278,17 @@ class Ib extends Controller
                 $ticket = null;
                 $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
                 activity()->causedBy(auth()->user()->id)
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
-                        'deposit_amount' => $amount,
-                        'code' => $account->code,
-                        'remark' => 'Commission Transfer'
-                    ])
-                ->event('create')
-                ->log('Commission Transfer');
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'deposit_amount' => $amount,
+                            'code' => $account->code,
+                            'remark' => 'Commission Transfer'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Commission Transfer');
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     return redirect()->back()->with('error', 'Something went wrong on Deposit. ' . $error);
@@ -475,7 +308,8 @@ class Ib extends Controller
                     IbWallet::create([
                         'email' => $email,
                         'user_id' => $userId,
-                        'account_id'=>$account->id,
+                        'order_id' => rand(10000, 9999999),
+                        'account_id' => $account->id,
                         'ib_withdraw' => $amount,
                         'remark' => 'IB Comm. Withdrawl'
                     ]);

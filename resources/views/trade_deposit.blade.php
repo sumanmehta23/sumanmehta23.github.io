@@ -169,7 +169,8 @@
                                                                                 <input name="user[deposit]"
                                                                                     id="deposit_amount" type="number"
                                                                                     class="form-control fill tradedeposit_amount"
-                                                                                    aria-label="Amount" required>
+                                                                                    aria-label="Amount" step="0.001"
+                                                                                    min="0.001" required>
                                                                             </div>
                                                                         </div>
                                                                     </div>

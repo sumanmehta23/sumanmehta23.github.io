@@ -188,53 +188,56 @@ class IBController extends Controller
 
     public function updateIbPlan(Request $request)
     {
+
         $ib_category_id = $request->input('ib_category_id');
-        $acc_type = $request->input('acc_type');
+        $acc_types = $request->input('acc_type');
         $status = $request->input('status');
         $levels = $request->input('level');
         $email = $request->session()->get('alogin');
         try {
 
-            DB::beginTransaction();
-            $IbPlanDetails = IbPlanDetails::where('ib_category_id', $ib_category_id)
-            ->where('account_type_id', $acc_type)->first();
+            foreach($acc_types as $acc_type){
+                DB::beginTransaction();
+                $IbPlanDetails = IbPlanDetails::where('ib_category_id', $ib_category_id)
+                ->where('account_type_id', $acc_type)->first();
 
-            if($IbPlanDetails){
-                $IbPlanDetails->update(['deleted_at' => now()]);
-            }
-
-            foreach ($levels as $key => $divs) {
-                $data = [
-                    'ib_category_id' => $ib_category_id,
-                    'account_type_id' => $acc_type,
-                    'level_id' => $key,
-                    'updated_by' => $email,
-                ];
-
-                foreach ($divs as $d => $val) {
-                    $data[$d] = $val;
+                if($IbPlanDetails){
+                    $IbPlanDetails->update(['deleted_at' => now()]);
                 }
 
-               IbPlanDetails::create($data);
-            }
-            DB::commit();
+                foreach ($levels as $key => $divs) {
+                    $data = [
+                        'ib_category_id' => $ib_category_id,
+                        'account_type_id' => $acc_type,
+                        'level_id' => $key,
+                        'updated_by' => $email,
+                    ];
 
-            activity()
-                ->causedBy(auth()->guard('admin')->user())
-                ->withProperties([
-                    'ip' => request()->ip(),
-                    'user_email' => auth()->guard('admin')->user()->email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'user_id' =>auth()->guard('admin')->user()->id,
-                    'ib_category_id' => $ib_category_id,
-                    'acc_type' => $acc_type,
-                    'status' => $status,
-                    'levels' => count($levels),
-                    'remark' => 'IB Commission Create'
-                ])
-            ->event('create')
-            ->log('IB Commission Create');
+                    foreach ($divs as $d => $val) {
+                        $data[$d] = $val;
+                    }
+
+                IbPlanDetails::create($data);
+                }
+                DB::commit();
+
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => auth()->guard('admin')->user()->email,
+                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'username' =>auth()->guard('admin')->user()->username,
+                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'ib_category_id' => $ib_category_id,
+                        'acc_type' => $acc_type,
+                        'status' => $status,
+                        'levels' => count($levels),
+                        'remark' => 'IB Commission Create'
+                    ])
+                ->event('create')
+                ->log('IB Commission Create');
+            }
 
             alert()->success("IB Plan Successfully Updated");
             return redirect("/admin/ib_settings");

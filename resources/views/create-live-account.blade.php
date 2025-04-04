@@ -105,6 +105,18 @@
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
                                         </div>
+                                        <div class="row mt-2 is_account">
+                                            <div class="col-3">
+                                                <label class="form-label">Nick Name(Optional)</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <input name="nick_name"
+                                                id="nick_name" type="text"
+                                                class="form-control fill"
+                                                aria-label="Text">
+                                                <div class="invalid-feedback" style="display: block !important;"></div>
+                                            </div>
+                                        </div>
                                         <div class="row mt-3 is_account">
                                             <div class="col-3"></div>
                                             <div class="col-9">

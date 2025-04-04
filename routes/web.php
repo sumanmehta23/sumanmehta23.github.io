@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Models\Ib1Commission;
 use App\View\Components\TwoFactorAuthentication;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
@@ -125,8 +126,8 @@ Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name
 
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
-// Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-// Route::post('/login', [LoginController::class, 'login']);
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
 Route::get('/forgot-password', [LoginController::class, 'forgot_password']);
 Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
@@ -175,6 +176,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/view-account-details/{account}', [MT5Accounts::class, 'changeMt5Password'])->where('account', '.*')->name('change-mt5-password');
 
     Route::get('/getLeverage', [MT5Accounts::class, 'getLeverage'])->name('get-leverage');
+
+    Route::post('/update-nickname', [MT5Accounts::class, 'updateNickname'])->name('update.nickname');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
 
@@ -189,6 +192,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ib', [Ib::class, 'index'])->name('ib');
     Route::post('/ib-profile', [Ib::class, 'processTransfer'])->name('ib-profile-store');
     Route::post('/ib-enroll', [Ib::class, 'ibEnroll'])->name('ib-enroll');
+    Route::post('/ib-resend', [Ib::class, 'ibResend'])->name('ib-resend');
     Route::post('/ib-update-referral', [Ib::class, 'ibUpdateReferral'])->name('ib-update-referral');
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
@@ -213,8 +217,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('resend.wallet.withdrawal.email');
     Route::post('/wallet_payment', [Wallet::class, 'processPayment'])->name('wallet_payment');
     Route::post('/change_password', [Users::class, 'changePassword'])->name('password.change');
+    Route::post('/resend_wallet_address_confirmation', [Wallet::class, 'resend_wallet_address_confirmation_email'])->name('resend.wallet.confirmation');
+    Route::post('/resend_wallet_address_delete_confirmation', [Wallet::class, 'resend_wallet_address_delete_confirmation_email'])->name('resend.wallet.delete.confirmation');
+
     Route::post('/change_profileimage', [Users::class, 'changeProfileImage'])->name('profileimage.change');
-    Route::post('/change_email', [Users::class, 'changeEmail'])->name('email.change');
+    // Route::post('/change_email', [Users::class, 'changeEmail'])->name('email.change');
 
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
@@ -266,7 +273,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
-
+    Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
 
     Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
 
@@ -354,6 +361,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/trading_deposit_details', [Transaction::class, 'trading_deposit_details']);
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
+        Route::post('/update_wallet_withdraw_amount', [Transaction::class, 'walletWithdrawalAmountUpdate'])->name('update_wallet_withdraw_amount');
 
         Route::prefix('/clientAccounts')->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
@@ -380,6 +388,14 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:setting:update']);
             Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:setting:update']);
         });
+
+        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
+        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
+
+        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:setting:update');
+        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:setting:update');
+        Route::get('/delete_ip_ban', [SettingsController::class, 'delete_ip_ban'])->name('delete_ip_ban')->middleware('check.permissions:setting:update');
+
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
         Route::get("/iblist_active", [IBController::class, 'list_active'])->name('ib.active.list')->middleware('check.permissions:ib:viewAny');;;

@@ -42,6 +42,7 @@
                     <thead>
                       <tr>
                         <th></th>
+                        <th>Nick Name</th>
                         <th>Leverage</th>
                         <th class="text-end">Balance</th>
                         <th class="text-end">Equity</th>
@@ -74,11 +75,12 @@
                                     {{ $acc->code ?? 'Pending' }}
                                 </h4> --}}
                                 <p class="mb-0 text-muted ms-2 f-12">
-                                  <span class="text-truncate w-100">{{ $acc->email }}</span>
+                                  <span class="text-truncate w-100">{{ $acc->accountType->ac_name }}</span>
                                 </p>
                               </div>
                             </div>
                           </td>
+                          <td class="f-w-400 f-16">{{ $acc->account_nick_name }}</td>
                           <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
                           <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
                           <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>

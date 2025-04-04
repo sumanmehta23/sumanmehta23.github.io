@@ -169,7 +169,9 @@
                                     </div>
                                 </div>
                             </form>
-
+                            <div class="d-flex justify-content-left mb-3">
+                                <button id="exportLogs" class="btn btn-primary">Export Logs</button>
+                            </div>
                             <div class="activity-log justify-content-center">
 
                                 @foreach($logs as $index => $log)
@@ -201,7 +203,7 @@
                                         // Extract the date and time
                                         // $date = $log->created_at->format('Y-m-d');
                                         // $time = $log->created_at->format('H:i:s');
-                                        $ip =   $log->properties['ip'];
+                                        $ip =   @$log->properties['ip'];
 
                                         $dateTime = $log->created_at;
                                         $humanTime = $dateTime->diffForHumans();
@@ -529,7 +531,7 @@
                                                 break;
                                             case 'Ib Request':
                                                 $ib_group = $log->properties['ib_group'];
-                                                $ib_plan =  \App\Models\IbPlanDetails::with('plan')->where('id', $ib_group)->first();
+                                                $ib_plan = \App\Models\IbPlanDetails::with('plan')->withTrashed()->where('id', $ib_group)->first();
                                                 $ib_status = $log->properties['ib_status'];
                                                 $client_id = $log->properties['client_id'];
                                                 $client = \App\Models\User::where('id', $client_id)->first();
@@ -623,5 +625,48 @@
 
         searchType.addEventListener('change', toggleFields);
         toggleFields(); // Initial call to set the correct fields visible
+
+
+        document.getElementById('exportLogs').addEventListener('click', function() {
+
+        let csvContent = "data:text/csv;charset=utf-8,Time,IP,User ,Description\n";
+
+
+        // Gather log data from the DOM
+
+        const logs = document.querySelectorAll('.activity-item'); // Adjust the selector based on your HTML structure
+
+
+        logs.forEach(item => {
+
+            const time = item.querySelector('.log-time div').innerText; // Adjust based on your HTML structure
+
+            const ip = item.querySelector('.log-ip div').innerText; // Adjust based on your HTML structure
+
+            const user = item.querySelector('.log-description').innerText; // Adjust based on your HTML structure
+
+            const description = item.querySelector('.log-card').innerText.replace(/,/g, ''); // Adjust based on your HTML structure
+
+
+            const row = `${time},${ip},${user},${description}\n`;
+
+            csvContent += row;
+
+        });
+
+
+        const encodedUri = encodeURI(csvContent);
+
+        const link = document.createElement("a");
+
+        link.setAttribute("href", encodedUri);
+
+        link.setAttribute("download", "activity_logs.csv");
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        });
     });
 </script>

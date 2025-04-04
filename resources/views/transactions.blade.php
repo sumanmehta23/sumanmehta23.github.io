@@ -198,7 +198,8 @@
 
                             <p class="text-success">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
 
-                            <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?  htmlspecialchars(isset($history->payout_req) ? json_decode($history->payout_res, true)['reason'] : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+                            <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?
+                            htmlspecialchars(isset($history->payout_req) ? $history->admin_remark : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
 
                             @if(($history->verified == 0) && ($history->status == 0))
                                 <a  href="#"
@@ -388,36 +389,36 @@
         if(status==3){
             statuscode='cancel';
         }
-      Swal.fire({
-        title: `Are you sure you want to ${statuscode} this transaction?`,
-        html: `
-        <form id="updateTransactionForm" method="post" action="/update-transaction">
-          @csrf
-          <input type="hidden" name="email" value="${email}">
-          <input type="hidden" name="amount" value="${amount}">
-          <input type="hidden" name="status" value="${status}">
-          <input type="hidden" name="statuscode" value="${statuscode}">
-          <input type="hidden" name="transaction_id" value="${parsedData}">
-          <input type="hidden" name="action" value="update_transaction">
-            ${
-              status == 3
-                  ? `
+        Swal.fire({
+            title: `Are you sure you want to ${statuscode} this transaction?`,
+            html: `
+            <form id="updateTransactionForm" method="post" action="/update-transaction">
+            @csrf
+            <input type="hidden" name="email" value="${email}">
+            <input type="hidden" name="amount" value="${amount}">
+            <input type="hidden" name="status" value="${status}">
+            <input type="hidden" name="statuscode" value="${statuscode}">
+            <input type="hidden" name="transaction_id" value="${parsedData}">
+            <input type="hidden" name="action" value="update_transaction">
+                ${
+                status == 3
+                    ? `
 
-          `
-                  : ''
+            `
+                    : ''
+                }
+            </form>
+        `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+        }).then((result) => {
+            console.log(result);
+            if (result.isConfirmed) {
+            document.querySelector('#updateTransactionForm').submit();
             }
-          </form>
-      `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
-      }).then((result) => {
-        console.log(result);
-        if (result.isConfirmed) {
-          document.querySelector('#updateTransactionForm').submit();
-        }
-      });
+        });
     }
 
     function resendWalletWithdrawalVerifyEmail(walletWithdrawalId) {

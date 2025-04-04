@@ -5,6 +5,7 @@ use App\Actions\SubscribeToKlaviyoList;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
+use App\Models\RestrictIps;
 use App\Models\Country;
 use Illuminate\Support\Str;
 use App\Models\LoginHistory;
@@ -64,6 +65,10 @@ class LoginController extends Controller
     public function login(Request $request)
     {
 
+        $restriction = RestrictIps::where('ip',$request->ip())->where('email', $request->email)->first();
+        if($restriction){
+            return redirect()->back()->with('error', 'You are blocked by admin.');
+        }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $retryAfter = RateLimiter::availableIn($key);
@@ -89,6 +94,10 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
+        if(($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')){
+            return redirect()->back()->with('error', 'You are blocked by admin.');
+        }
 
          // Find the user by email
          $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
@@ -534,7 +543,7 @@ class LoginController extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('login')->with('status', 'WoW! Your Account is Now Activated');
+                return redirect()->route('login')->with('status', 'Your Account is Now Activated');
             } else {
                 return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
             }
