@@ -153,7 +153,8 @@ Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post')
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/verify-2fa', [LoginController::class, 'verify_2fa'])->name('verify-2fa');
+    Route::get('/two_factor_auth', [LoginController::class, 'two_factor_auth'])->name('two_factor_auth');
+    Route::post('/verify-2fa', [LoginController::class, 'verify_two_factor_auth'])->name('verify-2fa');
 
     Route::get('/delete_wallet_address', [Wallet::class, 'delete_wallet_address'])->name('delete_wallet_address');
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');

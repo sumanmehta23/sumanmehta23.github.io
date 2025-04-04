@@ -43,7 +43,7 @@
                                 <div  class="col-12">
                                     <div  class="form-group">
                                         <label for="email" class="form-label">Otp</label>
-                                        <input type="text" name="otp" class="form-control" required autofocus>
+                                        <input type="text" name="code" class="form-control" required autofocus>
                                     </div>
                                 </div>
                             </div>

@@ -20,6 +20,7 @@ use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Laravel\Fortify\TwoFactorAuthenticationProvider;
 class LoginController extends Controller
 
 {
@@ -31,9 +32,9 @@ class LoginController extends Controller
     // Show login form
     public function showLoginForm()
     {
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
+        // if (Auth::check()) {
+        //     return redirect()->route('dashboard');
+        // }
         return view('auth.login');
     }
 
@@ -169,29 +170,32 @@ class LoginController extends Controller
             ->log('Authentication');
 
         if($user->two_factor_secret){
-            return redirect()->route('verify-2fa');
+            return redirect()->route('two_factor_auth');
         }else{
             return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
         }
 
-
     }
 
-    public function verify_2fa(Request $request)
+    public function two_factor_auth()
     {
-        dd($request->all());
+        return view('auth.verify-2fa');
+    }
+
+    public function verify_two_factor_auth(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
+    {
         $user = auth()->user();
-        if ($user->two_factor_secret) {
+        if ($user && $user->two_factor_secret) {
             $isValid = $twoFactorProvider->verify(
-                decrypt(auth()->user()->two_factor_secret),
-                $request->input('two_factor_code')
+                decrypt($user->two_factor_secret),
+                $request->input('code')
             );
-            // dump($user);
-            // dd($isValid);
             if (!$isValid) {
-                throw ValidationException::withMessages([
-                    'two_factor_code' => ['Invalid or expired 2FA code.'],
-                ]);
+                return redirect()->back()->with('error', 'Invalid Two Factor Authentication Code.');
+            }
+            else{
+                // If valid, continue to intended page
+                return redirect()->intended(route('dashboard')); // or any page you want
             }
         }
     }
