@@ -312,7 +312,12 @@ class SettingsController extends Controller
                     }
                 }
             }
-            return back()->with('success', 'IP ban applied and email sent successfully.');
+            if($reason === 'Manually'){
+                return back()->with('success', 'IP and Email ban applied successfully.');
+            }else{
+                return back()->with('success', 'IP ban applied and email sent successfully.');
+            }
+
         } catch (Exception $e) {
             return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }

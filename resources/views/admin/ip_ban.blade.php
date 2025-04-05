@@ -25,6 +25,7 @@
                                 <select class="form-select" required name="reason">
                                     <option value="" selected disabled>Select Reason</option>
                                     <option value="HFT">HFT</option>
+                                    <option value="Manually">Restrict (With no email sent)</option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Block IP & Email</button>
