@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
 
 class Login extends Controller
@@ -158,21 +158,36 @@ class Login extends Controller
     public function verify_two_factor_auth(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
     {
         $user = auth()->guard('admin')->user();
-        if ($user && $user->two_factor_secret) {
-            $isValid = $twoFactorProvider->verify(
-                decrypt($user->two_factor_secret),
-                $request->input('code')
-            );
-            if (!$isValid) {
-                return redirect()->back()->with('error', 'Invalid Two Factor Authentication Code.');
-            }
-            else{
-                // If valid, continue to intended page
-                // return redirect()->intended(route('dashboard')); // or any page you want
-                return redirect('admin/dashboard');
-            }
+
+        if (!$user || !$user->two_factor_secret) {
+            return redirect()->back()->with('error', '2FA is not set up.');
         }
+
+        $mode = $request->input('mode'); // either 'auth' or 'recovery'
+        $inputCode = $mode === 'recovery'
+            ? $request->input('recovery_code')
+            : $request->input('code');
+
+        if (!$inputCode) {
+            return redirect()->back()->with('error', 'Please enter your ' . ($mode === 'recovery' ? 'recovery' : 'authenticator') . ' code.');
+        }
+
+        $isValid = $twoFactorProvider->verify(
+            decrypt($user->two_factor_secret),
+            $inputCode
+        );
+
+        if (!$isValid) {
+            return redirect()->back()->with('error', $mode === 'recovery'
+                ? 'Invalid Two Factor Recovery Code.'
+                : 'Invalid Two Factor Authentication Code.'
+            );
+        }
+
+        // ✅ 2FA successful
+        return redirect('admin/dashboard');
     }
+
 
     private function logLoginHistory($email)
     {

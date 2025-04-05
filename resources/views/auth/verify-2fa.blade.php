@@ -25,32 +25,53 @@
                     <div  class="card-body">
                         <form method="POST" action="{{ route('verify-2fa') }}">
                             @csrf
-                            <div  class="text-center">
-                                <h3  class="mb-3 text-center">2FA</h3>
-                                <p  class="mb-4 fs-6">Please enter your 2fa code here.</p>
+
+                            <div class="text-center">
+                                <h3 class="mb-3">2FA</h3>
+                                <p class="mb-4 fs-6">Please enter your 2FA code here.</p>
                             </div>
+
                             @if (session('status'))
                                 <div class="alert alert-success">
                                     {{ session('status') }}
                                 </div>
                             @endif
+
                             @if (session('error'))
                                 <div class="alert alert-danger">
                                     {{ session('error') }}
                                 </div>
                             @endif
-                            <div  class="mt-4 row">
-                                <div  class="col-12">
-                                    <div  class="form-group">
-                                        <label for="email" class="form-label">Otp</label>
-                                        <input type="text" name="code" class="form-control" required autofocus>
-                                    </div>
+
+                            {{-- Toggle link --}}
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <a href="/" id="back_link" class="text-primary small">Go Back</a>
+                                </div>
+                                <div>
+                                    <a href="#" id="toggle_mode_link" class="text-primary small">Use Recovery Code</a>
                                 </div>
                             </div>
-                            <div  class="col-sm-12">
-                                <div  class="d-grid">
-                                    <button type="submit" class="btn btn-primary">Verify</button>
-                                </div>
+
+                            {{-- Mode display (optional) --}}
+                            <div class="mb-2 text-muted small" hidden>
+                                Mode: <span id="mode-display" class="fw-bold">auth</span>
+                            </div>
+
+                            {{-- Authenticator Code field --}}
+                            <div id="auth_code_field" class="form-group mb-3">
+                                <label for="code" class="form-label">Authenticator Code</label>
+                                <input type="text" name="code" class="form-control" autofocus>
+                            </div>
+
+                            {{-- Recovery Code field --}}
+                            <div id="recovery_code_field" class="form-group mb-3" style="display: none;">
+                                <label for="recovery_code" class="form-label">Recovery Code</label>
+                                <input type="text" name="recovery_code" class="form-control">
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-primary">Verify</button>
                             </div>
                         </form>
                     </div>
@@ -159,4 +180,43 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const authField = document.getElementById('auth_code_field');
+        const recoveryField = document.getElementById('recovery_code_field');
+        const toggleLink = document.getElementById('toggle_mode_link');
+        const modeDisplay = document.getElementById('mode-display');
+
+        // Add hidden mode input
+        const form = document.querySelector('form');
+        const modeInput = document.createElement('input');
+        modeInput.type = 'hidden';
+        modeInput.name = 'mode';
+        modeInput.value = 'auth'; // default mode
+        form.appendChild(modeInput);
+
+        function setMode(mode) {
+            if (mode === 'auth') {
+                authField.style.display = 'block';
+                recoveryField.style.display = 'none';
+                toggleLink.textContent = 'Use Recovery Code';
+            } else {
+                authField.style.display = 'none';
+                recoveryField.style.display = 'block';
+                toggleLink.textContent = 'Use Authenticator Code';
+            }
+            modeInput.value = mode;
+            modeDisplay.textContent = mode;
+        }
+
+        toggleLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            const newMode = modeInput.value === 'auth' ? 'recovery' : 'auth';
+            setMode(newMode);
+        });
+
+        // Initialize
+        setMode('auth');
+    });
+</script>
 @endsection

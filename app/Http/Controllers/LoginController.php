@@ -184,21 +184,37 @@ class LoginController extends Controller
 
     public function verify_two_factor_auth(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
     {
-        $user = auth()->user();
-        if ($user && $user->two_factor_secret) {
-            $isValid = $twoFactorProvider->verify(
-                decrypt($user->two_factor_secret),
-                $request->input('code')
-            );
-            if (!$isValid) {
-                return redirect()->back()->with('error', 'Invalid Two Factor Authentication Code.');
-            }
-            else{
-                // If valid, continue to intended page
-                return redirect()->intended(route('dashboard')); // or any page you want
-            }
+        $user = auth()->user(); // Use the appropriate guard if needed
+
+        if (!$user || !$user->two_factor_secret) {
+            return redirect()->back()->with('error', 'Two-factor authentication is not set up.');
         }
+
+        $mode = $request->input('mode'); // 'auth' or 'recovery'
+        $inputCode = $mode === 'recovery'
+            ? $request->input('recovery_code')
+            : $request->input('code');
+
+        if (!$inputCode) {
+            return redirect()->back()->with('error', 'Please enter your ' . ($mode === 'recovery' ? 'recovery' : 'authenticator') . ' code.');
+        }
+
+        $isValid = $twoFactorProvider->verify(
+            decrypt($user->two_factor_secret),
+            $inputCode
+        );
+
+        if (!$isValid) {
+            return redirect()->back()->with('error', $mode === 'recovery'
+                ? 'Invalid Two Factor Recovery Code.'
+                : 'Invalid Two Factor Authentication Code.'
+            );
+        }
+
+        // ✅ Success: 2FA verified
+        return redirect()->intended(route('dashboard'));
     }
+
 
     // Logout user
     public function logout(Request $request)

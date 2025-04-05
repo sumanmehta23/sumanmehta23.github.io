@@ -71,19 +71,13 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6">
-                                                    <form method="POST" action="{{ route('admin.verify_two_factor_auth') }}"> {{-- <-- specify action --}}
+                                                    <form method="POST" action="{{ route('admin.verify_two_factor_auth') }}">
                                                         @csrf
                                                         <div class="p-4 p-lg-5">
                                                             <div>
                                                                 <h5 class="text-primary">Verify 2FA</h5>
-                                                                <p class="text-muted">Enter Your 2FA Code.</p>
+                                                                <p class="text-muted">Enter your authentication or recovery code.</p>
                                                             </div>
-
-                                                            @if (session('msg'))
-                                                                <div>
-                                                                    <strong class="text-danger">{{ session('msg') }}</strong>
-                                                                </div>
-                                                            @endif
 
                                                             @if (session('error'))
                                                                 <div>
@@ -91,32 +85,37 @@
                                                                 </div>
                                                             @endif
 
-                                                            <div class="mt-4">
-                                                                <div class="card-body">
-                                                                    <div class="form-group">
-                                                                        <label for="code" class="form-label">Code</label>
-                                                                        <input id="code" type="number" class="form-control" name="code" required autofocus>
-                                                                    </div>
+                                                            {{-- Toggle link --}}
+                                                            <div class="form-group mt-4">
+                                                                <a href="#" id="toggle_mode_link" class="text-primary">Use Recovery Code</a>
+                                                            </div>
 
-                                                                    <div class="form-group pt-4">
-                                                                        <input type="submit" class="btn btn-dark w-100" value="Login">
-                                                                        <button class="btn btn-honor w-100 btn-load" disabled style="display: none;">
-                                                                            <span class="d-flex align-items-center">
-                                                                                <span class="flex-shrink-0 spinner-border" role="status">
-                                                                                    <span class="visually-hidden">Logging In...</span>
-                                                                                </span>
-                                                                                <span class="flex-grow-1 ms-2">Logging In...</span>
-                                                                            </span>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
+                                                            {{-- Current Mode Display (for debugging or UX) --}}
+                                                            <div class="form-group mt-2" hidden>
+                                                                <small>Mode: <span id="mode-display" class="fw-bold">auth</span></small>
+                                                            </div>
+
+                                                            {{-- Authenticator Code Field --}}
+                                                            <div id="auth_code_field" class="form-group mt-3">
+                                                                <label for="code" class="form-label">Authenticator Code</label>
+                                                                <input id="code" type="number" class="form-control" name="code" autofocus>
+                                                            </div>
+
+                                                            {{-- Recovery Code Field --}}
+                                                            <div id="recovery_code_field" class="form-group mt-3" style="display: none;">
+                                                                <label for="recovery_code" class="form-label">Recovery Code</label>
+                                                                <input id="recovery_code" type="text" class="form-control" name="recovery_code">
+                                                            </div>
+
+                                                            <div class="form-group pt-4">
+                                                                <input type="submit" class="btn btn-dark w-100" value="Login">
                                                             </div>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>y
                                 </div>
                             </div>
                         </div>
@@ -127,4 +126,44 @@
         <script src="{{ asset('admin_assets/assets/admin_files/jquery.min.js') }}"></script>
         <script src="{{ asset('admin_assets/assets/admin_files/sweetalert-2.all.min.js') }}"></script>
     </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const authField = document.getElementById('auth_code_field');
+            const recoveryField = document.getElementById('recovery_code_field');
+            const toggleLink = document.getElementById('toggle_mode_link');
+            const modeDisplay = document.getElementById('mode-display');
+
+            // Add hidden mode input
+            const form = document.querySelector('form');
+            const modeInput = document.createElement('input');
+            modeInput.type = 'hidden';
+            modeInput.name = 'mode';
+            modeInput.value = 'auth'; // default
+            form.appendChild(modeInput);
+
+            function setMode(mode) {
+                if (mode === 'auth') {
+                    authField.style.display = 'block';
+                    recoveryField.style.display = 'none';
+                    toggleLink.textContent = 'Use Recovery Code';
+                } else {
+                    authField.style.display = 'none';
+                    recoveryField.style.display = 'block';
+                    toggleLink.textContent = 'Use Authenticator Code';
+                }
+                modeInput.value = mode;
+                modeDisplay.textContent = mode;
+            }
+
+            toggleLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const newMode = modeInput.value === 'auth' ? 'recovery' : 'auth';
+                setMode(newMode);
+            });
+
+            // Initialize
+            setMode('auth');
+        });
+    </script>
+
 @endsection
