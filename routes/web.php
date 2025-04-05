@@ -245,6 +245,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     });
 
     Route::get('/', [Login::class, 'showLoginForm']);
+    Route::get('/verify_2fa', [Login::class, 'verify_2fa'])->name('verify_2fa');
+    Route::post('/verify_two_factor_auth', [Login::class, 'verify_two_factor_auth'])->name('verify_two_factor_auth');
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);

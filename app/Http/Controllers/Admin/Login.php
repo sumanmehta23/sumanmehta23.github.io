@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Laravel\Fortify\TwoFactorAuthenticationProvider;
 
 class Login extends Controller
 {
@@ -22,9 +23,17 @@ class Login extends Controller
     public function showLoginForm()
     {
         if (Auth::guard('admin')->check()) {
-            return redirect()->route('admin.dashboard');
+            if(Auth::guard('admin')->user()->two_factor_secret){
+                return view('admin.verify_2fa');
+            }else{
+                return redirect()->route('admin.dashboard');
+            }
         }
         return view('admin.login');
+    }
+    public function verify_2fa()
+    {
+        return view('admin.verify_2fa');
     }
     public function adminLogin(Request $request)
     {
@@ -58,85 +67,113 @@ class Login extends Controller
                 return redirect()->back()->with('error', 'Your login details are invalid.');
             }
         }
-            if ($user->status == '1') {
-                activity()
-                ->causedBy(auth()->guard('admin')->user())
-                ->withProperties([
-                    'ip' => $request->ip(),
-                    'email' => auth()->guard('admin')->user()->email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'admin_id' =>auth()->guard('admin')->user()->id,
-                    'remark' => 'Login'
-                ])
-                ->log('Authentication');
-                // $credentials = $request->only('email', 'password');
-                // dd($credentials);
-                if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
-                    $request->session()->regenerate();
-                    // return redirect()->intended('dashboard');
-                }
-
-                // Store user details in session
-                // Auth::login($user);
-                // $request->session()->regenerate();
-                Cache::flush();
-                Session::put('alogin', $user->email);
-                Session::put('userRoleID', $user->role_id);
-                Session::put('userRole', $user->userRole);
-                Session::put('userID', $user->client_index);
-                Session::put('userData', $user->toArray());
-                // Fetch permissions
-                // $permissions = DB::table('permissions as p')
-                //     ->join('pages as pg', 'p.page_id', '=', 'pg.id')
-                //     ->where('p.role_id', $user->role_id)
-                //     ->where('pg.is_submenu', 0)
-                //     ->orderBy('pg.page_order', 'asc')
-                //     ->get(['p.page_id', 'pg.filename']);
-
-                // $current_permissions=[];
-                // foreach ($permissions as $permission) {
-                //     $current_permissions[] = $permission->filename;
-                //     $submenus = DB::table('pages')
-                //         ->where('is_submenu', $permission->page_id)
-                //         ->orderBy('page_order', 'asc')
-                //         ->get();
-                //     foreach ($submenus as $submenu) {
-                //         $current_permissions[] = $submenu->filename;
-                //     }
-                // }
-                // Session::put('current_permissions', $current_permissions);
-
-                // Log user in
-                if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
-                    $this->logLoginHistory($user->email);
-                    return redirect('admin/dashboard');
-                }
-                // if (in_array('/admin/dashboard', $current_permissions)) {
-                //     $this->logLoginHistory($user->email);
-                    return redirect('admin/dashboard');
-                // } else {
-                //     $first_php_page = '';
-                //     foreach ($current_permissions as $permission) {
-                //         if (strpos($permission, '.php') !== false) {
-                //             $first_php_page = $permission;
-                //             break;
-                //         }
-                //     }
-                //     if (!empty($first_php_page)) {
-                //         $this->logLoginHistory($user->email);
-                //         return redirect($first_php_page);
-                //     } else {
-                //         return back()->with('error', 'You do not have any page permissions. Please contact the administrator.');
-                //     }
-                // }
-
-            } else {
-                return back()->with('error', 'Your account is inactive. Please contact the administrator.');
+        if ($user->status == '1') {
+            activity()
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => $request->ip(),
+                'email' => auth()->guard('admin')->user()->email,
+                'userRole' =>auth()->guard('admin')->user()->userRole,
+                'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
+                'username' =>auth()->guard('admin')->user()->username,
+                'admin_id' =>auth()->guard('admin')->user()->id,
+                'remark' => 'Login'
+            ])
+            ->log('Authentication');
+            // $credentials = $request->only('email', 'password');
+            // dd($credentials);
+            if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
+                $request->session()->regenerate();
+                // return redirect()->intended('dashboard');
             }
 
+            // Store user details in session
+            // Auth::login($user);
+            // $request->session()->regenerate();
+            Cache::flush();
+            Session::put('alogin', $user->email);
+            Session::put('userRoleID', $user->role_id);
+            Session::put('userRole', $user->userRole);
+            Session::put('userID', $user->client_index);
+            Session::put('userData', $user->toArray());
+            // Fetch permissions
+            // $permissions = DB::table('permissions as p')
+            //     ->join('pages as pg', 'p.page_id', '=', 'pg.id')
+            //     ->where('p.role_id', $user->role_id)
+            //     ->where('pg.is_submenu', 0)
+            //     ->orderBy('pg.page_order', 'asc')
+            //     ->get(['p.page_id', 'pg.filename']);
+
+            // $current_permissions=[];
+            // foreach ($permissions as $permission) {
+            //     $current_permissions[] = $permission->filename;
+            //     $submenus = DB::table('pages')
+            //         ->where('is_submenu', $permission->page_id)
+            //         ->orderBy('page_order', 'asc')
+            //         ->get();
+            //     foreach ($submenus as $submenu) {
+            //         $current_permissions[] = $submenu->filename;
+            //     }
+            // }
+            // Session::put('current_permissions', $current_permissions);
+
+            // Log user in
+            if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
+                $this->logLoginHistory($user->email);
+                if($user->two_factor_secret){
+                    return redirect('admin/verify_2fa');
+                }else{
+                    return redirect('admin/dashboard');
+                }
+
+            }
+            // if (in_array('/admin/dashboard', $current_permissions)) {
+            //     $this->logLoginHistory($user->email);
+            if($user->two_factor_secret){
+                return redirect('admin/verify_2fa');
+            }else{
+                return redirect('admin/dashboard');
+            }
+            // } else {
+            //     $first_php_page = '';
+            //     foreach ($current_permissions as $permission) {
+            //         if (strpos($permission, '.php') !== false) {
+            //             $first_php_page = $permission;
+            //             break;
+            //         }
+            //     }
+            //     if (!empty($first_php_page)) {
+            //         $this->logLoginHistory($user->email);
+            //         return redirect($first_php_page);
+            //     } else {
+            //         return back()->with('error', 'You do not have any page permissions. Please contact the administrator.');
+            //     }
+            // }
+
+        } else {
+            return back()->with('error', 'Your account is inactive. Please contact the administrator.');
+        }
     }
+
+    public function verify_two_factor_auth(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
+    {
+        $user = auth()->guard('admin')->user();
+        if ($user && $user->two_factor_secret) {
+            $isValid = $twoFactorProvider->verify(
+                decrypt($user->two_factor_secret),
+                $request->input('code')
+            );
+            if (!$isValid) {
+                return redirect()->back()->with('error', 'Invalid Two Factor Authentication Code.');
+            }
+            else{
+                // If valid, continue to intended page
+                // return redirect()->intended(route('dashboard')); // or any page you want
+                return redirect('admin/dashboard');
+            }
+        }
+    }
+
     private function logLoginHistory($email)
     {
         $country = '';

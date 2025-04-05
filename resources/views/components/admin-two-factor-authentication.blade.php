@@ -80,7 +80,7 @@
             @endif
         @endif
 
-        <div class="mt-5 d-flex justify-content-between align-items-center gap-3">
+        <div class="mt-5 mb-5 d-flex justify-content-between align-items-center gap-3">
             @if (!$enabled)
                 <Button type="submit" class="btn btn-primary me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()" x-show="enableButtonVisible" x-cloak>
@@ -235,8 +235,7 @@
                     location.reload();
                 }).catch(error => {
                     console.log(error.response.data);
-                    location.reload();
-                    window.location.href = '{{ route('confirm_password') }}#two-factor-auth';
+                    this.showPasswordConfirmation = true;
                 });
             },
         }
