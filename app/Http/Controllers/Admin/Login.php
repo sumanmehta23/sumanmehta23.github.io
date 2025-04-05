@@ -172,10 +172,32 @@ class Login extends Controller
             return redirect()->back()->with('error', 'Please enter your ' . ($mode === 'recovery' ? 'recovery' : 'authenticator') . ' code.');
         }
 
-        $isValid = $twoFactorProvider->verify(
-            decrypt($user->two_factor_secret),
-            $inputCode
-        );
+        $isValid = false;
+
+        if ($mode === 'recovery') {
+            // 🔐 Get and decrypt recovery codes
+            $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+
+            // ✅ Check if code exists
+            if (in_array($inputCode, $recoveryCodes)) {
+                $isValid = true;
+
+                // 🔄 Optionally remove used recovery code
+                $recoveryCodes = array_diff($recoveryCodes, [$inputCode]);
+
+                // 🔒 Save updated recovery code list
+                $user->forceFill([
+                    'two_factor_recovery_codes' => encrypt(json_encode(array_values($recoveryCodes))),
+                ])->save();
+            }
+
+        } else {
+            // 🔐 Authenticator code check
+            $isValid = $twoFactorProvider->verify(
+                decrypt($user->two_factor_secret),
+                $inputCode
+            );
+        }
 
         if (!$isValid) {
             return redirect()->back()->with('error', $mode === 'recovery'
