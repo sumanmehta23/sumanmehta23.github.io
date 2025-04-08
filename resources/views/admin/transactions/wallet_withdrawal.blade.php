@@ -12,13 +12,20 @@
             <div class="mb-3 row">
                 <div class="col-md-4">
                   <label for="statusFilter">Filter by Status:</label>
-                  <select id="statusFilter" class="form-select" name="status">
+                  {{-- <select id="statusFilter" class="form-select" name="status">
                     <option value="">All</option>
                     <option value="1">Approved</option>
                     <option value="2">Rejected</option>
                     <option value="0">Pending</option>
                     <!-- Add other status options as needed -->
+                  </select> --}}
+                  <select id="statusFilter" class="form-select" name="status">
+                        <option value="" {{ request('status') === null ? 'selected' : '' }}>All</option>
+                        <option value="1" {{ request('status') == 1 ? 'selected' : '' }}>Approved</option>
+                        <option value="2" {{ request('status') == 2 ? 'selected' : '' }}>Rejected</option>
+                        <option value="0" {{ request('status') == 0 ? 'selected' : '' }}>Pending</option>
                   </select>
+
                 </div>
               </div>
             <div class="row">

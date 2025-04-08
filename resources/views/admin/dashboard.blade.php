@@ -330,7 +330,7 @@
                                     Latest Pending Withdrawals
                                 </div>
                                 <div>
-                                    <a href="/admin/transactions/wallet-withdrawal" class="btn btn-primary-light">View
+                                    <a href="/admin/transactions/wallet-withdrawal?status=0" class="btn btn-primary-light">View
                                         All</a>
                                 </div>
                             </div>
