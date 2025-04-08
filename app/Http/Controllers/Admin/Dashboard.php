@@ -89,7 +89,7 @@ class Dashboard extends Controller
         $results = DB::select($sql);
 
         // $sql = "SELECT trs.* from wallet_withdraws trs " . $rmCondition . " (trs.status=0) order by trs.raw_id desc limit 10";
-        $sql = "SELECT trs.*, au.id AS user_id FROM wallet_withdraws trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 ORDER BY trs.raw_id DESC LIMIT 10";
+        $sql = "SELECT trs.*, au.id AS user_id FROM wallet_withdraws trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 AND trs.verified = 1 ORDER BY trs.raw_id DESC LIMIT 10";
         $wallet_withdraws = DB::select($sql);
 
         return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws'));
