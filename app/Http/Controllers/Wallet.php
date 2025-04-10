@@ -960,8 +960,6 @@ class Wallet extends Controller
                         'status' => 1,
                         'deposit_currency' => 'USD',
                         'deposit_date' => now(),
-                        'callback_data' => $callback_data,
-                        'callback_code' => $callback_code,
                     ]);
 
                     // Update total balance
