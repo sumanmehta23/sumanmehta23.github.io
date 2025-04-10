@@ -45,6 +45,7 @@ class TradeDepositController extends Controller
         ->where('account_request_status', 1)
         ->where('demo', false)
         ->get();
+        dd($liveaccount_details);
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
         $totals = Account::where('user_id', $user->id)

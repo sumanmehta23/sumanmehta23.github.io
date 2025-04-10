@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('trade_deposits', function (Blueprint $table) {
             $table->string('transaction_id')->nullable()->after('id');
+            $table->text('callback_data')->nullable()->after('transaction_id');
+            $table->text('callback_code')->nullable()->after('callback_data');
         });
     }
 
@@ -22,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('trade_deposits', function (Blueprint $table) {
-            $table->dropColumn('transaction_id');
+            $table->dropColumn(['transaction_id', 'callback_data', 'callback_code']);
         });
     }
 };

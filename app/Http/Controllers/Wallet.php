@@ -870,7 +870,6 @@ class Wallet extends Controller
         // Check if the callback status is transaction confirmed or complete
         if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
             $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
-
             if (isset($passedData['customerID'])) {
                 $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
             }
@@ -935,7 +934,7 @@ class Wallet extends Controller
                     Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
-            }elseif($deposit_to === "account"){
+            }elseif($deposit_to === "Account"){
                 $account = Account::where('id',$customerAccountID)->first();
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
@@ -959,7 +958,9 @@ class Wallet extends Controller
                         'code' => $account->code,
                         'status' => 1,
                         'deposit_currency' => 'USD',
-                        'deposit_date' => now(),
+                        'deposted_date' => now(),
+                        'callback_data' => $callback_data,
+                        'callback_code' => $callback_code,
                     ]);
 
                     // Update total balance
