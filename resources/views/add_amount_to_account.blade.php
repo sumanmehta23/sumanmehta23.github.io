@@ -5,7 +5,7 @@
 
   var customerID = "{{auth()->user()->id}}";
   var customerEmail = "{{auth()->user()->email}}";
-  var depositTo=  'account';
+  var depositTo=  'Account';
 
   // CC Payment gateway options
   $("#ccpay").attr("disabled", "true");

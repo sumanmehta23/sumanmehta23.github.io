@@ -27,6 +27,7 @@ use App\Http\Resources\DepositCollection;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Traits\LogsActivity;
 use App\Http\Resources\WithdrawalCollection;
+use App\Models\TradeDeposit;
 use App\Services\MailService as MailService;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
@@ -888,6 +889,8 @@ class Wallet extends Controller
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
+
+
             if ($deposit_to === "wallet") {
                 // Check for duplicate transaction
                 $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
@@ -933,12 +936,12 @@ class Wallet extends Controller
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
             }elseif($deposit_to === "account"){
+                $account = Account::where('id',$customerAccountID)->first();
                 // Check for duplicate transaction
-                $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
+                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingDeposit) {
                     return response()->json(['status' => 'true']);
                 }
-
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
                 $callback_code = json_encode($payload['transaction']["status"]);
@@ -946,15 +949,17 @@ class Wallet extends Controller
                 try {
                     DB::beginTransaction();
 
-                    WalletDeposit::create([
+                    TradeDeposit::create([
                         'user_id' => $customerID,
                         'email' => $email,
                         'deposit_type' => $deposit_type,
                         'deposit_amount' => $amount,
-                        'company_bank' => $deposit_type,
+                        'account_id' => $customerAccountID,
                         'transaction_id' => $transactionId,
+                        'code' => $account->code,
                         'status' => 1,
-                        'currency_type' => 'USD',
+                        'deposit_currency' => 'USD',
+                        'deposit_date' => now(),
                         'callback_data' => $callback_data,
                         'callback_code' => $callback_code,
                     ]);
