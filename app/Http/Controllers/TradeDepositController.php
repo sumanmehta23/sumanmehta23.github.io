@@ -62,6 +62,7 @@ class TradeDepositController extends Controller
     }
     public function deposit(Request $request)
     {
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -114,28 +115,28 @@ class TradeDepositController extends Controller
         $ticket = NULL;
 
         // Calculate wallet balance
-        $totalDeposits = WalletDeposit::where('user_id', $user->id)
-        ->where('status', 1)
-        ->sum('deposit_amount');
+        // $totalDeposits = WalletDeposit::where('user_id', $user->id)
+        // ->where('status', 1)
+        // ->sum('deposit_amount');
 
-        $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
-            ->whereNotIn('status', [2,3])
-            ->sum('withdraw_amount');
-        $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
-            ->whereNotIn('status', [2,3])
-            ->sum('withdraw_transaction_fee');
+        // $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
+        //     ->whereNotIn('status', [2,3])
+        //     ->sum('withdraw_amount');
+        // $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
+        //     ->whereNotIn('status', [2,3])
+        //     ->sum('withdraw_transaction_fee');
 
-        $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
+        // $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
         // Check if there's enough balance
 
 
-        if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < (float)$depositdata['deposit']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error' => "Insufficient wallet balance!",
-            ], 402);
-        }
+        // if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < (float)$depositdata['deposit']) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Something went wrong',
+        //         'error' => "Insufficient wallet balance!",
+        //     ], 402);
+        // }
         // Handle file upload for deposit proof
         $depositProofPath = null;
         if ($request->hasFile('deposit_proof')) {

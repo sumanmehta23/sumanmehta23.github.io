@@ -301,7 +301,7 @@
                                 </a>
                             </li>
                             @if (auth()->user()->wallet_enabled == 1)
-                                <li class="pc-item">
+                                {{-- <li class="pc-item">
                                     <a href="/wallet" class="pc-link">
                                         <span class="pc-micon">
                                             <svg class="pc-icon">
@@ -310,7 +310,7 @@
                                         </span>
                                         <span class="pc-mtext">My Wallet</span>
                                     </a>
-                                </li>
+                                </li> --}}
                                 <li class="pc-item">
                                     <a href="/transactions" class="pc-link">
                                         <span class="pc-micon">
@@ -332,7 +332,7 @@
                                         <span class="pc-mtext">Transactions</span>
                                     </a>
                                 </li>
-                                <li class="pc-item">
+                                {{-- <li class="pc-item">
                                     <a href="/wallet" class="pc-link">
                                         <span class="pc-micon">
                                             <svg class="pc-icon">
@@ -341,7 +341,7 @@
                                         </span>
                                         <span class="pc-mtext">My Wallet</span>
                                     </a>
-                                </li>
+                                </li> --}}
                             @endif
                             <li class="pc-item">
                                 <a href="/liveAccounts" class="pc-link">
