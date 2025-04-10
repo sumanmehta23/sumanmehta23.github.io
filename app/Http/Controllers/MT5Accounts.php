@@ -45,6 +45,7 @@ class MT5Accounts extends Controller
             ->get();
         return view('live_accounts', compact('results'));
     }
+
     public function demoAccounts()
     {
 
