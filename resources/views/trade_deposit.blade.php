@@ -59,7 +59,7 @@
                                                             <div class="col-md-3 col-lg-4 col-xl-4">
                                                                 <div class="border rounded address-check">
                                                                     <div class="form-check paycard">
-                                                                        <input id="liveaccount{{ $liveaccount->code }}"
+                                                                        <input id="{{ $liveaccount->code }}"
                                                                             type="radio" name="live-account"
                                                                             class="select-liveaccount form-check-input input-primary"
                                                                             data-mindep="{{ $liveaccount->mindep }}"
@@ -90,100 +90,187 @@
                                                     <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span>
                                                     </div>
                                                     <div class="row g-1">
-                                                        @if ($walletenabled)
-                                                            <div class="col-6 col-lg-6 col-xl-6">
-                                                                <div
-                                                                    class="border rounded address-check trade-deposit-type">
-                                                                    <div class="form-check">
-                                                                        <input type="radio" name="deposit_type"
-                                                                            class="form-check-input input-primary tradefund-deposit"
-                                                                            id="walletpayment" value="Wallet Transfer"
-                                                                            data-type="Wallet-Transfer">
-                                                                        <label class="form-check-label d-block"
-                                                                            for="walletpayment">
-                                                                            <span class="p-2 card-body d-block">
-                                                                                <span
-                                                                                    class="d-flex justify-content-between">
-                                                                                    <span>
-                                                                                        <span
-                                                                                            class="mb-1 h6 f-w-500 d-block">Wallets</span>
-                                                                                        <span class="f-10 text-muted">Wallet
-                                                                                            Transfer</span>
+                                                        <div class="col-6 col-lg-6 col-xl-6">
+                                                            <div
+                                                                class="border rounded address-check trade-deposit-type">
+                                                                <div class="form-check">
+                                                                    <input type="radio" name="deposit_type"
+                                                                        checked
+                                                                        class="form-check-input input-primary tradefund-deposit"
+                                                                        id="cryptochill" value="CryptoChill"
+                                                                        data-type="CryptoChill">
+                                                                    <label class="form-check-label d-block"
+                                                                        for="cryptochill">
+                                                                        <span class="p-2 card-body d-block">
+                                                                            <span
+                                                                                class="d-flex align-items-center justify-content-between">
+                                                                                <span>Crypto</span>
+                                                                                    <span
+                                                                                        class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                        <img src="/assets/images/crypto_payments2.png"
+                                                                                            alt="CryptoChill" class="w-xs-75 w-md-25">
                                                                                     </span>
-                                                                                    <span class=" d-flex align-items-end">
-                                                                                        <span>
-                                                                                            <span
-                                                                                                class="mb-1 text-right h6 f-w-500 d-block"
-                                                                                                style="text-align:end">$<?php echo $wallet_balance; ?></span>
-                                                                                            <span
-                                                                                                class="f-10 text-muted">Current
-                                                                                                Balance</span>
-                                                                                        </span>
-                                                                                    </span>
-                                                                                </span>
                                                                             </span>
-                                                                        </label>
-                                                                    </div>
+                                                                        </span>
+                                                                    </label>
                                                                 </div>
                                                             </div>
-                                                        @endif
+                                                        </div>
+                                                         <div class="col-6 col-lg-6 col-xl-6">
+                                                            <div
+                                                                class="border rounded address-check trade-deposit-type">
+                                                                <div class="form-check">
+                                                                    <input type="radio" name="deposit_type"
+                                                                        checked
+                                                                        class="form-check-input input-primary tradefund-deposit"
+                                                                        id="option_cc" value="CreditCardPayissa"
+                                                                        data-type="CreditCardPayissa">
+                                                                    <label class="form-check-label d-block"
+                                                                        for="option_cc">
+                                                                        <span class="p-2 card-body d-block">
+                                                                            <span
+                                                                                class="d-flex align-items-center justify-content-between">
+                                                                                <span class="no-wrap">Credit Card</span>
+                                                                                    <span
+                                                                                        class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                        <img src="/assets/images/credit-card.png"
+                                                                                            alt="Credit Card"
+                                                                                            class="w-xs-100 w-md-25">
+                                                                                    </span>
+                                                                            </span>
+                                                                        </span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
-                                                    <div class="Wallet-Transfer trade-deposit-details">
-                                                        <form method="post" id="tradeDepositForm">
+                                                    <div class="CryptoChill trade-deposit-details">
+                                                        <form method="post">
                                                             @csrf
                                                             <input type="hidden" name="user[email]"
-                                                                value="{{ auth()->user()->email }}" required
-                                                                class="form-control fill">
-                                                            <input class="user_code" type="hidden"
-                                                                name="user[account_id]" value="" readonly required>
-
+                                                                value="{{ session('clogin') }}" min="10"
+                                                                required class="form-control fill">
+                                                            <input class="user_code form-control fill" type="hidden"
+                                                                name="code" value="">
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">
-                                                                    <input type="hidden" name="user[deposit_type]"
-                                                                        class="tradedeposittype" value="BANK DEPOSIT">
-
+                                                                    <input type="hidden"
+                                                                        name="user[deposit_type]"
+                                                                        class="tradedeposittype"
+                                                                        value="CryptoChill">
                                                                     <div class="form-group row">
-                                                                        <label class="col-lg-4 col-form-label">DEPOSIT
-                                                                            CURRENCY:
-                                                                            <small class="text-muted d-block"> Please
-                                                                                select the currency you wish to use for the
-                                                                                payment </small>
-                                                                        </label>
-                                                                        <div class="col-lg-8">
-                                                                            <select class="form-select" required>
-                                                                                <option value="USD">USD</option>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group row">
-                                                                        <label class="col-lg-4 col-form-label">ENTER AMOUNT:
-                                                                            <small class="text-muted d-block"> Please enter
-                                                                                the amount to be deposited in selected
-                                                                                currency</small>
+                                                                        <label
+                                                                            class="col-lg-4 col-form-label">ENTER
+                                                                            AMOUNT:
+                                                                            <small
+                                                                                class="text-muted d-block">Please
+                                                                                enter the amount to be
+                                                                                deposited</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
                                                                             <div class="mb-3 input-group">
-                                                                                <span class="input-group-text">USD</span>
+                                                                                <span
+                                                                                    class="input-group-text">USD</span>
                                                                                 <input name="user[deposit]"
-                                                                                    id="deposit_amount" type="number"
+                                                                                    id="crypto_deposit_amount"
+                                                                                    min="10" type="number"
                                                                                     class="form-control fill tradedeposit_amount"
-                                                                                    aria-label="Amount" step="0.001"
-                                                                                    min="0.001" required>
+                                                                                    placeholder="Minimum $10"
+                                                                                    aria-label="Amount" required>
                                                                             </div>
                                                                         </div>
                                                                     </div>
+                                                                    <div class="row">
+                                                                        <div class="col-lg-4"></div>
+                                                                        <div class="col-lg-8 pb-4">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  required>
+                                                                                <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                                    Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="">
+                                                                        <div class="row">
+                                                                            <div class="col-lg-4"></div>
+                                                                            <div class="col-lg-8">
+                                                                                <div class="row g-1">
+                                                                                    <input type="button"
+                                                                                        id="paynow"
+                                                                                        data-amount="10"
+                                                                                        data-currency="USD"
+                                                                                        data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
+                                                                                        class="btn btn-primary cryptochill-button col-12"
+                                                                                        value="Deposit To Trading Account">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    <div class="CreditCardPayissa trade-deposit-details" style="display:none">
+                                                        <form method="post">
+                                                            @csrf
+                                                            <input type="hidden" name="email"
+                                                                value="{{ session('clogin') }}" min="10"
+                                                                required class="form-control fill">
+                                                            <input class="user_code" type="hidden"
+                                                                name="user[code]" value=""
+                                                                class="form-control fill" readonly required>
+                                                            <div class="row">
+                                                                <div class="mt-2 col-12">
+                                                                    <input type="hidden" name="deposit_type"
+                                                                        class="tradedeposittype"
+                                                                        value="CreditCardPayissa">
 
+                                                                    <div class="form-group row">
+                                                                        <label
+                                                                            class="col-lg-4 col-form-label">ENTER
+                                                                            AMOUNT:
+                                                                            <small
+                                                                                class="text-muted d-block">Please
+                                                                                enter the amount to be deposited </small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="mb-3 input-group">
+                                                                                <span
+                                                                                    class="input-group-text">USD</span>
+                                                                                <input placeholder="Minimum $10"
+                                                                                    name="deposit"
+                                                                                    id="deposit_amount_cc"
+                                                                                    type="number" min="10"
+                                                                                    title="Minimum $10"
+                                                                                    class="form-control fill ccdeposit_amount"
+                                                                                    aria-label="Amount" required>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-lg-4"></div>
+                                                                        <div class="col-lg-8 pb-4">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  >
+                                                                                <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                                    Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, This option may not be available in your country.
+                                                                                    In that case, please use cryptocurrency to deposit.
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                     <div class="">
                                                                         <div class="row">
                                                                             <div class="col-lg-4"></div>
                                                                             <div class="col-lg-8">
                                                                                 <div class="row g-1">
                                                                                     <input type="submit"
-                                                                                        name="a[register]"
+                                                                                        name="ccpay"
+                                                                                        id="ccpay"
                                                                                         class="btn btn-primary col-12"
-                                                                                        value="Deposit To Trade Account">
+                                                                                        value="Deposit To Trading Account">
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -287,29 +374,5 @@
             </div>
         </div>
     </div>
-    <script>
-        $("#tradeDepositForm").submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                type: "POST",
-                url: "{{ route('trade-deposit') }}",
-                data: $(this).serialize(),
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: response.success
-                    }).then(() => {
-                        window.location.href = '{{ route('trade-deposit') }}';
-                    });
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: xhr.responseJSON.message,
-                        text: xhr.responseJSON.error
-                    });
-                }
-            });
-        });
-    </script>
+    @include('add_amount_to_account')
 @endsection
