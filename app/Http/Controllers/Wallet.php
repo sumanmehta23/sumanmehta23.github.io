@@ -31,6 +31,9 @@ use App\Models\TradeDeposit;
 use App\Services\MailService as MailService;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
+use App\MT5\MTEnDealAction;
+use App\MT5\MTRetCode;
+use App\Services\MT5Service;
 
 class Wallet extends Controller
 {
@@ -38,11 +41,17 @@ class Wallet extends Controller
     protected $paymentController;
     protected $mailService;
 
-    public function __construct(Payment $paymentController, MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+
+    public function __construct(Payment $paymentController, MailService $mailService,MT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
     public function alldeposits()
     {
@@ -935,7 +944,19 @@ class Wallet extends Controller
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
             }elseif($deposit_to === "Account"){
+
+                $settings = settings();
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
+
                 $account = Account::where('id',$customerAccountID)->first();
+
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingDeposit) {
@@ -945,41 +966,56 @@ class Wallet extends Controller
                 $callback_data = json_encode($payload);
                 $callback_code = json_encode($payload['transaction']["status"]);
 
-                try {
-                    DB::beginTransaction();
+                $comment = 'Deposit';
+                $ticket = NULL;
 
-                    TradeDeposit::create([
-                        'user_id' => $customerID,
-                        'email' => $email,
-                        'deposit_type' => $deposit_type,
-                        'deposit_amount' => $amount,
-                        'account_id' => $customerAccountID,
-                        'transaction_id' => $transactionId,
-                        'code' => $account->code,
-                        'status' => 1,
-                        'deposit_currency' => 'USD',
-                        'deposted_date' => now(),
-                        'callback_data' => $callback_data,
-                        'callback_code' => $callback_code,
-                    ]);
+                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                } else {
+                    try {
+                        DB::beginTransaction();
 
-                    // Update total balance
-                    TotalBalance::create(
-                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
-                    );
+                        TradeDeposit::create([
+                            'user_id' => $customerID,
+                            'account_id' => $customerAccountID,
+                            'email' => $email,
+                            'code' => $account->code,
+                            'deposit_amount' => $amount,
+                            'deposit_type' => $deposit_type,
+                            'deposit_from' => $deposit_type,
+                            'status' => 1,
+                            'deposit_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => $callback_data,
+                            'callback_code' => $callback_code,
+                        ]);
 
-                    DB::commit();
-                    $user = User::where('id', $customerID)->first();
-                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                    Cache::forget("user:{$customerID}:wallet_balance");
-                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+                        // Update total balance
+                        TotalBalance::create(
+                            ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                        );
 
-                    return response()->json(['status' => 'true']);
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
-                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                        DB::commit();
+                        $user = User::where('id', $customerID)->first();
+                        // $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                        // Cache::forget("user:{$customerID}:wallet_balance");
+                        // Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                        return response()->json(['status' => 'true']);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    }
                 }
+
             } else {
                 // If depositTo is not "wallet", handle other cases
                 if (!isset($passedData['accountID'])) {

@@ -333,11 +333,6 @@
                                                                 </div>
                                                             </form>
 
-
-
-
-
-
                                                             <div class="CryptoChill trade-deposit-details">
                                                                 <form method="post">
                                                                     @csrf
