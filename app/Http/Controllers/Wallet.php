@@ -884,10 +884,55 @@ class Wallet extends Controller
             $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
+            $customerAccountID = $passedData['clientAccountID'];
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
             if ($deposit_to === "wallet") {
+                // Check for duplicate transaction
+                $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
+                if ($existingDeposit) {
+                    return response()->json(['status' => 'true']);
+                }
+
+                // Prepare callback data and insert it into the database
+                $callback_data = json_encode($payload);
+                $callback_code = json_encode($payload['transaction']["status"]);
+
+                try {
+                    DB::beginTransaction();
+
+                    WalletDeposit::create([
+                        'user_id' => $customerID,
+                        'email' => $email,
+                        'deposit_type' => $deposit_type,
+                        'deposit_amount' => $amount,
+                        'company_bank' => $deposit_type,
+                        'transaction_id' => $transactionId,
+                        'status' => 1,
+                        'currency_type' => 'USD',
+                        'callback_data' => $callback_data,
+                        'callback_code' => $callback_code,
+                    ]);
+
+                    // Update total balance
+                    TotalBalance::create(
+                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                    );
+
+                    DB::commit();
+                    $user = User::where('id', $customerID)->first();
+                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                    Cache::forget("user:{$customerID}:wallet_balance");
+                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                    return response()->json(['status' => 'true']);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                }
+            }elseif($deposit_to === "account"){
                 // Check for duplicate transaction
                 $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingDeposit) {
