@@ -222,7 +222,7 @@
                                                             <input class="user_code" type="hidden"
                                                                 name="user[code]" value=""
                                                                 class="form-control fill" readonly required>
-                                                            <input type="hidden" name="selected_account_code" id="selected_account_code" value="">
+                                                            {{-- <input type="hidden" name="selected_account_code" id="selected_account_code" value=""> --}}
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">
                                                                     <input type="hidden" name="deposit_type"
@@ -377,21 +377,18 @@
         </div>
     </div>
     @include('add_amount_to_account')
-    <script>
+    {{-- <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const radioButtons = document.querySelectorAll(".select-liveaccount");
             const selectedIdInput = document.getElementById("selected_account_code");
 
-            radioButtons.forEach(function (radio) {
-                radio.addEventListener("change", function () {
-                    console.log(this.value);
-                    if (this.checked) {
-                        selectedIdInput.value = this.value;
-                    }
-                });
+            // Handle radio button change
+            $('.select-liveaccount').on('change', function () {
+                const clientAccountId = $(this).val();
+                console.log(clientAccountId); // Log selected value
+                selectedIdInput.value = clientAccountId; // Update hidden input value
             });
 
-            // Optional: prevent submission if not selected
+            // Optional: prevent form submission if no account selected
             const form = document.getElementById("CreditCardPayissaForm");
             form.addEventListener("submit", function (e) {
                 if (!selectedIdInput.value) {
@@ -400,7 +397,5 @@
                 }
             });
         });
-    </script>
-
-
+    </script> --}}
 @endsection

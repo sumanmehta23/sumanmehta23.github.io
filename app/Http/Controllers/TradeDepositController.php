@@ -66,7 +66,6 @@ class TradeDepositController extends Controller
     }
     public function deposit(Request $request)
     {
-        dd($request->all());
         $request->validate(
             [
                 'confirmcryptoCheckbox' => [
@@ -78,10 +77,12 @@ class TradeDepositController extends Controller
             ]
         );
         $user = auth()->user();
+
         try {
             // dd($request->all());
             $trading_deposited1 = $request->input('deposit');
             $deposit_type = $request->input('deposit_type');
+
             if ($deposit_type == "CreditCardPayissa") {
                 $data = [
                     "payment_amount" => $trading_deposited1,
@@ -89,7 +90,8 @@ class TradeDepositController extends Controller
                     "payment_reference_id" => "Wallet",
                     "user_id" => $user->id,
                     "payment_status" => "Initiated",
-                    "initiated_by" => $user->email
+                    "initiated_by" => $user->email,
+                    "account_id" => $request['user']['code']
                 ];
 
                 $paymentLog = PaymentLog::create($data);
@@ -247,7 +249,6 @@ class TradeDepositController extends Controller
 
     private function createCCPayment($amount, $currency, $orderId, $paymentId)
     {
-
         $user = auth()->user();
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";

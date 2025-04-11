@@ -19,13 +19,21 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use App\Actions\SubscribeToKlaviyoList;
 use App\Services\MailService as MailService;
+use App\Services\MT5Service;
+use App\Models\TradeDeposit;
 
 class Payment extends Controller
 {
     protected $mailService;
-    public function __construct(MTWebAPI $api, MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+    public function __construct(MTWebAPI $api,MailService $mailService,MT5Service $mt5Service)
     {
+        $this->settings = settings();
         $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
     public function handlePaymentResponse(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
@@ -50,46 +58,87 @@ class Payment extends Controller
                 $email = $paymentLog->initiated_by;
                 $amount = $responsedata['value_coin'];
                 $transactionId = $responsedata['txid_in'];
-                try {
-                    DB::beginTransaction();
 
-                    $walletDeposit=  WalletDeposit::create([
-                        'user_id' => $paymentLog->user_id,
-                        'email' => $email,
-                        'deposit_type' => "CreditCardPayissa",
-                        'deposit_amount' => $amount,
-                        'company_bank' => "CreditCardPayissa",
-                        'transaction_id' => $transactionId,
-                        'status' => 1,
-                        'currency_type' => 'USD',
-                        'callback_data' => json_encode($responsedata),
-                        'callback_code' => "success",
-                    ]);
+                $settings = settings();
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
 
-                    // Update total balance
-                    TotalBalance::create(
-                        ['email' => $email,'user_id'=>$paymentLog->user_id,'deposit_amount' => $amount]
-                    );
+                $account = Account::where('id',$paymentLog->account_id)->first();
 
-                    DB::commit();
-                    $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
-                    Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
-                    Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
-                    $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
-                    return response()->json(['status' => 'true']);
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
-                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                $comment = 'CreditCardPayissa';
+                $ticket = NULL;
+
+                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                } else {
+                    try {
+                        DB::beginTransaction();
+
+                        // $walletDeposit=  WalletDeposit::create([
+                        //     'user_id' => $paymentLog->user_id,
+                        //     'email' => $email,
+                        //     'deposit_type' => "CreditCardPayissa",
+                        //     'deposit_amount' => $amount,
+                        //     'company_bank' => "CreditCardPayissa",
+                        //     'transaction_id' => $transactionId,
+                        //     'status' => 1,
+                        //     'currency_type' => 'USD',
+                        //     'callback_data' => json_encode($responsedata),
+                        //     'callback_code' => "success",
+                        // ]);
+
+                        $tradeDeposit = TradeDeposit::create([
+                            'user_id' => $paymentLog->user_id,
+                            'account_id' => $paymentLog->account_id,
+                            'email' => $email,
+                            'code' => $account->code,
+                            'deposit_amount' => $amount,
+                            'deposit_type' => 'CreditCardPayissa',
+                            'deposit_from' => 'CreditCardPayissa',
+                            'status' => 1,
+                            'deposit_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => json_encode($responsedata),
+                            'callback_code' => "success",
+                        ]);
+
+                        // Update total balance
+                        TotalBalance::create(
+                            ['email' => $email,'user_id'=>$paymentLog->user_id,'deposit_amount' => $amount]
+                        );
+
+                        DB::commit();
+                        $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
+                        Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
+                        Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
+                        // $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
+                        $this->sendSuccessEmail($email, $amount, $paymentLog,$tradeDeposit->id);
+                        return response()->json(['status' => 'true']);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    }
                 }
-                
-                
             }
-            
+
             return ["ok"];
             // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
         }else{
-            
+
                 $payment_res = json_encode($request->all());
                 $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
                 if ($status == "success") {
@@ -145,10 +194,10 @@ class Payment extends Controller
                 return $list['id'];
             }
         }
-        return null; 
+        return null;
     }
     protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
-    {   
+    {
         $listId = $this->getKlaviyoListId($amount);
         if($listId){
             $subscribeToKlaviyoList->handle($user, $listId);

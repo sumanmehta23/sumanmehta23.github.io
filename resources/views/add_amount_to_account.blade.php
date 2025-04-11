@@ -249,7 +249,7 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
   $('.select-liveaccount').on('change', function() {
     let clientAccountId = $(this).val();
-    console.log(clientAccountId);
+    // console.log(clientAccountId);
     CryptoChill.setup({
         account: '{{config('services.cryptochill.accountid')}}',
         profile: '{{config('services.cryptochill.profileid')}}',

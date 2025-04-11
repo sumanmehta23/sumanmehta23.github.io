@@ -1004,9 +1004,9 @@ class Wallet extends Controller
 
                         DB::commit();
                         $user = User::where('id', $customerID)->first();
-                        // $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                        // Cache::forget("user:{$customerID}:wallet_balance");
-                        // Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                        Cache::forget("user:{$customerID}:wallet_balance");
+                        Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
 
                         return response()->json(['status' => 'true']);
                     } catch (Exception $e) {
