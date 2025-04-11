@@ -450,11 +450,7 @@ $settings=settings();
                                                                                                                                                                 <div
                                                                                                                                                                     style="color:#000000;text-align:right;text-align-last:right;line-height:16.9px;font-family:Cairo, Arial, Helvetica, sans-serif;font-size:14px;font-weight:500;font-variant-ligatures:normal">
                                                                                                                                                                     <div>
-                                                                                                                                                                        <span>Your
-                                                                                                                                                                            Partner
-                                                                                                                                                                            in
-                                                                                                                                                                            Profitable
-                                                                                                                                                                            Trading</span>
+                                                                                                                                                                        <span>Your Partner in Profitable Trading</span>
                                                                                                                                                                     </div>
                                                                                                                                                                 </div>
                                                                                                                                                             </td>
