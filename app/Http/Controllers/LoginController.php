@@ -169,7 +169,7 @@ class LoginController extends Controller
                 ])
             ->log('Authentication');
 
-        if($user->two_factor_secret){
+        if($user->two_factor_secret  && $user->two_factor_confirmed_at){
             return redirect()->route('two_factor_auth');
         }else{
             return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');

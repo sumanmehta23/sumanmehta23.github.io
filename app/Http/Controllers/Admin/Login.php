@@ -120,7 +120,7 @@ class Login extends Controller
             // Log user in
             if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
                 $this->logLoginHistory($user->email);
-                if($user->two_factor_secret){
+                if($user->two_factor_secret  && $user->two_factor_confirmed_at){
                     return redirect('admin/verify_2fa');
                 }else{
                     return redirect('admin/dashboard');
@@ -129,7 +129,7 @@ class Login extends Controller
             }
             // if (in_array('/admin/dashboard', $current_permissions)) {
             //     $this->logLoginHistory($user->email);
-            if($user->two_factor_secret){
+            if($user->two_factor_secret  && $user->two_factor_confirmed_at){
                 return redirect('admin/verify_2fa');
             }else{
                 return redirect('admin/dashboard');
