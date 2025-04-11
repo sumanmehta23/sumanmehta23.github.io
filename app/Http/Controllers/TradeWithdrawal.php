@@ -18,7 +18,7 @@ use App\MT5\MTEnDealAction;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\ClientWallet;
 
 class TradeWithdrawal extends Controller
 {
@@ -58,7 +58,14 @@ class TradeWithdrawal extends Controller
             ->where('demo', false)
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','walletBalance'));
+
+        $client_banks = ClientWallet::where('user_id', $user->id)
+            ->where('status', 1)
+            ->where('verified', 1)
+            ->where('wallet_delete_verification', 0)
+            ->where('deleted_at', NULL)
+            ->get();
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','walletBalance','client_banks'));
     }
     public function withdraw(Request $request)
     {
