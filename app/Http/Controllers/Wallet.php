@@ -148,7 +148,8 @@ class Wallet extends Controller
             'email' => $from,
             "content" => $content,
             "title_right" => "Activate",
-            "subtitle_right" => "Your Wallet Address"
+            "subtitle_right" => "Your Wallet Address",
+            'btn_text' => "Verify",
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 

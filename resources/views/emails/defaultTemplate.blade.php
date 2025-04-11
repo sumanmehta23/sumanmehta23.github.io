@@ -250,7 +250,7 @@
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    @if ($btn_text)
+                                                    @if (isset($btn_text))
                                                         <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                             <tr>
                                                                 <td class="pad">
