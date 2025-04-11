@@ -153,6 +153,7 @@
                                                                 required class="form-control fill">
                                                             <input class="user_code form-control fill" type="hidden"
                                                                 name="code" value="">
+
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">
                                                                     <input type="hidden"
@@ -213,7 +214,7 @@
                                                         </form>
                                                     </div>
                                                     <div class="CreditCardPayissa trade-deposit-details" style="display:none">
-                                                        <form method="post">
+                                                        <form method="post" id="CreditCardPayissaForm">
                                                             @csrf
                                                             <input type="hidden" name="email"
                                                                 value="{{ session('clogin') }}" min="10"
@@ -221,6 +222,7 @@
                                                             <input class="user_code" type="hidden"
                                                                 name="user[code]" value=""
                                                                 class="form-control fill" readonly required>
+                                                            <input type="hidden" name="selected_account_code" id="selected_account_code" value="">
                                                             <div class="row">
                                                                 <div class="mt-2 col-12">
                                                                     <input type="hidden" name="deposit_type"
@@ -375,4 +377,30 @@
         </div>
     </div>
     @include('add_amount_to_account')
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const radioButtons = document.querySelectorAll(".select-liveaccount");
+            const selectedIdInput = document.getElementById("selected_account_code");
+
+            radioButtons.forEach(function (radio) {
+                radio.addEventListener("change", function () {
+                    console.log(this.value);
+                    if (this.checked) {
+                        selectedIdInput.value = this.value;
+                    }
+                });
+            });
+
+            // Optional: prevent submission if not selected
+            const form = document.getElementById("CreditCardPayissaForm");
+            form.addEventListener("submit", function (e) {
+                if (!selectedIdInput.value) {
+                    e.preventDefault();
+                    alert("Please select a trading account.");
+                }
+            });
+        });
+    </script>
+
+
 @endsection

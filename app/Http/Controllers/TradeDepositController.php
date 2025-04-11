@@ -19,13 +19,17 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Models\PaymentLog;
+use Illuminate\Support\Facades\Http;
 
 class TradeDepositController extends Controller
 {
     protected $api;
+    protected $settings;
 
     public function __construct(MTWebAPI $api)
     {
+        $this->settings = settings();
         $this->api = $api;
     }
     public function index()
@@ -62,146 +66,238 @@ class TradeDepositController extends Controller
     }
     public function deposit(Request $request)
     {
-
-        // Generate a unique rate-limiting key based on user or IP
-        $key = 'deposit:' . (auth()->id() ?: $request->ip());
-
-        // Check if the user has exceeded the rate limit
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $retryAfter = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => "Please wait {$retryAfter} seconds before trying again.",
-            ], 429); // HTTP 429 Too Many Requests
-        }
-
-        // Increment the rate limiter
-        RateLimiter::hit($key, 10); // Lock for 10 seconds
-
+        dd($request->all());
         $request->validate(
             [
-                'user.account_id' => 'required',
-                'user.deposit' => 'required|numeric',
-                'user.deposit_type' => 'required',
-                'deposit_proof' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:2048',
+                'confirmcryptoCheckbox' => [
+                    'required' // Ensures this checkbox is checked
+                ],
             ],
             [
-                'user.account_id.required' => 'You have to select an account to proceed.'
+                'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
             ]
         );
-        $settings = settings();
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        $user = auth()->user();
+        try {
+            // dd($request->all());
+            $trading_deposited1 = $request->input('deposit');
+            $deposit_type = $request->input('deposit_type');
+            if ($deposit_type == "CreditCardPayissa") {
+                $data = [
+                    "payment_amount" => $trading_deposited1,
+                    "payment_type" => "CreditCardPayissa",
+                    "payment_reference_id" => "Wallet",
+                    "user_id" => $user->id,
+                    "payment_status" => "Initiated",
+                    "initiated_by" => $user->email
+                ];
 
-        $depositdata = $request->input('user');
-        $email = session('clogin');
-        $depositamount = $depositdata['deposit'];
-        $email = $depositdata['email'];
-        $account_id = $depositdata['account_id'];
-        $user=auth()->user();
-        $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
-        $deposit_type = $depositdata['deposit_type']??$request['user']['deposit_type'];
-        $deposit_from = NULL;
+                $paymentLog = PaymentLog::create($data);
+                $orderId = 'ccPayissa' . $paymentLog->id;
+                $currency = 'USD';
+                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id);
+                if ($payment) {
+                    return redirect($payment['invoice_url']);
+                } else {
+                    return redirect()->back()->with('error', 'Something went wrong in NowPayment. Please try again other Payment methods or try again later.');
+                }
+            } elseif ($deposit_type == "Now Payment") {
+                $data = [
+                    "payment_amount" => $trading_deposited1,
+                    "payment_type" => "NowPayment",
+                    "user_id" => $user->id,
+                    "payment_reference_id" => "Wallet",
+                    "payment_status" => "Initiated",
+                    "initiated_by" => $user->email
+                ];
+                $paymentLog = PaymentLog::create($data);
+                $orderId = 'nowPay' . $paymentLog->id;
+                $currency = 'USD';
+                $payment = $this->createPayment($trading_deposited1, $currency, $orderId, $paymentLog->payment_id);
+                if ($payment) {
+                    return redirect($payment['invoice_url']);
+                } else {
+                    return redirect()->back()->with('error', 'Something went wrong in NowPayment. Please try again other Payment methods or try again later.');
+                }
+            }
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+            return redirect()->back()->with('error', $error);
+        }
 
+        // // Generate a unique rate-limiting key based on user or IP
+        // $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
-        $comment = "Deposit";
-        $ticket = NULL;
+        // // Check if the user has exceeded the rate limit
+        // if (RateLimiter::tooManyAttempts($key, 1)) {
+        //     $retryAfter = RateLimiter::availableIn($key);
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Too many requests',
+        //         'error' => "Please wait {$retryAfter} seconds before trying again.",
+        //     ], 429); // HTTP 429 Too Many Requests
+        // }
 
-        // Calculate wallet balance
-        // $totalDeposits = WalletDeposit::where('user_id', $user->id)
-        // ->where('status', 1)
-        // ->sum('deposit_amount');
+        // // Increment the rate limiter
+        // RateLimiter::hit($key, 10); // Lock for 10 seconds
+        // dd($request->all());
+        // $request->validate(
+        //     [
+        //         'user.account_id' => 'required',
+        //         'user.deposit' => 'required|numeric',
+        //         'user.deposit_type' => 'required',
+        //         'deposit_proof' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:2048',
+        //     ],
+        //     [
+        //         'user.account_id.required' => 'You have to select an account to proceed.'
+        //     ]
+        // );
+        // $settings = settings();
 
-        // $totalWithdrawals = WalletWithdraw::where('user_id', $user->id)
-        //     ->whereNotIn('status', [2,3])
-        //     ->sum('withdraw_amount');
-        // $totalWithdrawalsFee = WalletWithdraw::where('user_id', $user->id)
-        //     ->whereNotIn('status', [2,3])
-        //     ->sum('withdraw_transaction_fee');
+        // $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        // $this->api->Connect(
+        //     $settings['mt5_server_ip'],
+        //     $settings['mt5_server_port'],
+        //     300,
+        //     $settings['mt5_server_web_login'],
+        //     $settings['mt5_server_web_password']
+        // );
 
-        // $walletBalance = (float) $totalDeposits - ((float) $totalWithdrawals + (float) $totalWithdrawalsFee);
-        // Check if there's enough balance
+        // $depositdata = $request->input('user');
+        // $email = session('clogin');
+        // $depositamount = $depositdata['deposit'];
+        // $email = $depositdata['email'];
+        // $account_id = $depositdata['account_id'];
+        // $user=auth()->user();
+        // $account = Account::where('user_id', $user->id)->where('id', $account_id)->firstOrFail();
+        // $deposit_type = $depositdata['deposit_type']??$request['user']['deposit_type'];
+        // $deposit_from = NULL;
 
+        // dd($account);
 
-        // if ($depositdata['deposit_type'] === 'Wallet Transfer' && $walletBalance < (float)$depositdata['deposit']) {
+        // $comment = "Deposit";
+        // $ticket = NULL;
+
+        // $depositProofPath = null;
+        // if ($request->hasFile('deposit_proof')) {
+        //     $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
+        // }
+        // activity()->causedBy($user->id)
+        //     ->withProperties(
+        //         [
+        //             'ip' => $request->ip(),
+        //             'email' => $user->email,
+        //             'code' => $account->code,
+        //             'deposit_amount' => $depositamount,
+        //             'remark' => 'Account Deposit'
+        //         ])
+        // ->event('create')
+        // ->log('Account Deposit');
+        // $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
+
+        // if ($errorCode != MTRetCode::MT_RET_OK) {
+        //     $error = MTRetCode::GetError($errorCode);
+        //     // Return a JSON response with the error
         //     return response()->json([
         //         'success' => false,
         //         'message' => 'Something went wrong',
-        //         'error' => "Insufficient wallet balance!",
-        //     ], 402);
+        //         'error' => $error,
+        //     ], 400); // 400 Bad Request
+        // } else {
+
+        //     // Start a database transaction
+        //     DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+        //         $tradeId = $account->code;
+
+        //         // Insert into wallet withdraw
+        //         WalletWithdraw::create([
+        //             'user_id' => $user->id,
+        //             'email' => $email,
+        //             'withdraw_amount' => $depositamount,
+        //             'withdraw_type' => "Internal Transfer",
+        //             'transaction_id' => $tradeId,
+        //             'status' => 1,
+        //         ]);
+        //         // Insert into total balance
+        //         TotalBalance::create([
+        //             'user_id' => $user->id,
+        //             'account_id' => $account->id,
+        //             'email' => $email,
+        //             'withdraw_amount' => $depositamount,
+        //             'status' => 1,
+        //         ]);
+        //         // Insert into trade deposit
+        //         TradeDeposit::create([
+        //             'user_id' => $user->id,
+        //             'account_id' => $account->id,
+        //             'email' => $email,
+        //             'code' => $tradeId,
+        //             'deposit_amount' => $depositamount,
+        //             'deposit_type' => $deposit_type,
+        //             'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
+        //             'deposit_proof' => $depositProofPath,
+        //             'status' => 1,
+        //         ]);
+        //     });
+        //     AccountHelper::updateLiveAndDemoAccounts();
+        //     // RateLimiter::clear($key);
+        //     return response()->json(['success' => 'Funds Successfully Deposited']);
         // }
-        // Handle file upload for deposit proof
-        $depositProofPath = null;
-        if ($request->hasFile('deposit_proof')) {
-            $depositProofPath = $request->file('deposit_proof')->store('deposit_proofs', 'public');
+    }
+
+    private function createCCPayment($amount, $currency, $orderId, $paymentId)
+    {
+
+        $user = auth()->user();
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
+        $url = config("services.payissa.url") . '/control/wallet.php?address=' . config("services.payissa.address") . '&callback=' . urlencode($success_url);
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->get($url);
+        if ($response->successful()) {
+
+            $responsdata = $response->json();
+            // Log::channel("creditcardpayissa")->info("Payment link response ".json_encode($responsdata));
+            PaymentLog::where('id', $paymentId)->update([
+                'payment_req' => json_encode($responsdata),
+                'payment_url' => $responsdata['ipn_token'],
+                'remarks' => $success_url,
+            ]);
+            $amount += (4 / 100) * $amount;
+            $url = config("services.payissa.checkouturl") . '/process-payment.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&provider=wert&email=" . $user->email . "&currency=" . $currency;
+
+            return ['invoice_url' => $url];
         }
-        activity()->causedBy($user->id)
-            ->withProperties(
-                [
-                    'ip' => $request->ip(),
-                    'email' => $user->email,
-                    'code' => $account->code,
-                    'deposit_amount' => $depositamount,
-                    'remark' => 'Account Deposit'
-                ])
-        ->event('create')
-        ->log('Account Deposit');
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
-
-        if ($errorCode != MTRetCode::MT_RET_OK) {
-            $error = MTRetCode::GetError($errorCode);
-            // Return a JSON response with the error
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error' => $error,
-            ], 400); // 400 Bad Request
-        } else {
-
-            // Start a database transaction
-            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
-                $tradeId = $account->code;
-
-                // Insert into wallet withdraw
-                WalletWithdraw::create([
-                    'user_id' => $user->id,
-                    'email' => $email,
-                    'withdraw_amount' => $depositamount,
-                    'withdraw_type' => "Internal Transfer",
-                    'transaction_id' => $tradeId,
-                    'status' => 1,
-                ]);
-                // Insert into total balance
-                TotalBalance::create([
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'email' => $email,
-                    'withdraw_amount' => $depositamount,
-                    'status' => 1,
-                ]);
-                // Insert into trade deposit
-                TradeDeposit::create([
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'email' => $email,
-                    'code' => $tradeId,
-                    'deposit_amount' => $depositamount,
-                    'deposit_type' => $deposit_type,
-                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
-                    'deposit_proof' => $depositProofPath,
-                    'status' => 1,
-                ]);
-            });
-            AccountHelper::updateLiveAndDemoAccounts();
-            // RateLimiter::clear($key);
-            return response()->json(['success' => 'Funds Successfully Deposited']);
+        return null;
+    }
+    private function createPayment($amount, $currency, $orderId, $paymentId)
+    {
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
+        $url = 'https://api.nowpayments.io/v1/invoice';
+        $data = [
+            'price_amount' => $amount,
+            'price_currency' => $currency,
+            'order_id' => $orderId,
+            'success_url' => $success_url,
+            'ipn_callback_url' => $success_url . "&forceToLoad=true",
+            'cancel_url' => $cancel_url,
+        ];
+        $apiKey = $this->settings['now_payment_api_key'];
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'x-api-key' => $apiKey,
+        ])->post($url, $data);
+        if ($response->successful()) {
+            PaymentLog::where('payment_id', $paymentId)->update([
+                'payment_req' => json_encode($data),
+                'payment_url' => $response['invoice_url'],
+                'remarks' => $success_url,
+            ]);
+            return $response->json();
         }
+        return null;
     }
 }
