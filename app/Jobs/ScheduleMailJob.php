@@ -24,7 +24,7 @@ class ScheduleMailJob implements ShouldQueue
      */
     public function __construct(array $data,$toEmail,$subject)
     {
-        
+
         $this->data = $data;
         $this->toEmail = $toEmail;
         $this->subject = $subject;
@@ -37,7 +37,20 @@ class ScheduleMailJob implements ShouldQueue
     public function handle(Client $client): void
     {
         $settings=settings();
-        $htmlContent = view('emails.template', $this->data)->render();
+
+        if(strpos($this->subject, 'Withdrawal Details Verification') !== false){
+            $template = 'emails.emailVerification';
+        }else if(strpos($this->subject, 'Transaction Approved') !== false){
+            $template = 'emails.transactionApproved';
+        }elseif(strpos($this->subject, 'Fund Deposit') !== false){
+            $template = 'emails.fundsAdd';
+        }else{
+            $template = 'emails.template';
+        }
+
+        $htmlContent = view($template, $this->data)->render();
+
+        // $htmlContent = view('emails.template', $this->data)->render();
         $payload = [
             'sender' => [
                 'name' => $settings['sender_name'],
