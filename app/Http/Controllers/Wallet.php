@@ -1124,7 +1124,8 @@ class Wallet extends Controller
                 'email' => $from,
                 "content" => $content,
                 "title_right" => "Activate",
-                "subtitle_right" => "Your Wallet Withdrawal Request"
+                "subtitle_right" => "Your Wallet Withdrawal Request",
+                "btn_text" => "Verify"
             ];
 
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
