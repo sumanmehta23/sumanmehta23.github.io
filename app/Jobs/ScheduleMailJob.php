@@ -37,7 +37,7 @@ class ScheduleMailJob implements ShouldQueue
     public function handle(Client $client): void
     {
         $settings=settings();
-
+        // dd($this);
         if(strpos($this->subject, 'Withdrawal Details Verification') !== false){
             $template = 'emails.emailVerification';
         }else if(strpos($this->subject, 'Transaction Approved') !== false){
