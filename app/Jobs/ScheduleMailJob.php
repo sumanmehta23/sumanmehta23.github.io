@@ -37,6 +37,7 @@ class ScheduleMailJob implements ShouldQueue
     public function handle(Client $client): void
     {
         $settings=settings();
+        // dd($this);
         if( strpos($this->subject, 'Thank You for Confirming Your Wallet Withdrawal') !== false ||
             strpos($this->subject, 'Thank You for Confirming Your Wallet Address') !== false)
         {
