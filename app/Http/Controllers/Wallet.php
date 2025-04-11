@@ -197,7 +197,6 @@ class Wallet extends Controller
             'title_right' => 'Activate',
             'subtitle_right' => 'Your Wallet Address'
         ];
-
         try {
             $this->mailService->sendEmail($toEmail, $emailSubject, '', '', $templateVars);
             return response()->json(['success' => true, 'message' => 'Verification email sent successfully.']);
