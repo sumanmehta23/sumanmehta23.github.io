@@ -19,14 +19,22 @@ use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
 use App\Models\ClientWallet;
+use App\Services\MailService as MailService;
+use App\Services\MT5Service;
 
 class TradeWithdrawal extends Controller
 {
     protected $api;
+    protected $settings;
+    protected $mailService;
 
-    public function __construct(MTWebAPI $api)
+    public function __construct(MTWebAPI $api, MailService $mailService,MT5Service $mt5Service)
     {
+        $this->settings = settings();
         $this->api = $api;
+        $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
         $email = session('clogin');
         AccountHelper::updateLiveAndDemoAccounts($email, $api);
     }
@@ -97,6 +105,7 @@ class TradeWithdrawal extends Controller
         );
         $user_id = auth()->user()->id;
         $user_email = auth()->user()->email;
+        $user_fullname = auth()->user()->fullname;
 
         $account_id = $request->account_id;
         $request->validate([
@@ -154,10 +163,6 @@ class TradeWithdrawal extends Controller
             ->log('Account Withdraw');
             $clientWalletId = $request->input('client_wallet_id');
             $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
-            dump($balance);
-            dump($comment);
-            dump($clientWalletId);
-            dd($clientWallet);
 
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
@@ -177,11 +182,12 @@ class TradeWithdrawal extends Controller
                         'account_id' => $account->id,
                         'withdrawal_amount' => $amount,
                         'withdraw_type' => $withdraw_type,
+                        'code' => $account->code,
                         // 'withdraw_to' => $to_account_id,
                         'wallet_qr' => '',
                         'status' => 0,
                         'email_verified' => 0,
-                        'client_wallet_id' => $clientWalletId,
+                        'client_wallet_id' => $clientWallet->id,
                     ]);
 
                     // TotalBalance::create([
@@ -199,7 +205,7 @@ class TradeWithdrawal extends Controller
                     // ]);
                     DB::commit();
 
-                    $toEmail = $user->email;
+                    $toEmail = $user_email;
                     $type = 'Withdrawal Details Verification';
                     $from = $settings['email_from_address'];
                     $emailSubject = $settings['admin_title'] . ' - ' . $type;
@@ -213,17 +219,17 @@ class TradeWithdrawal extends Controller
                         '<div>Click the link below to activate your Account Withdrawal</div>';
 
                     $templateVars = [
-                        'name' => $user->fullname,
+                        'name' => $user_fullname,
                         'server_name' => $settings['mt5_company_name'],
-                        'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$WalletWithdrawal->id",
+                        'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
                         'email' => $from,
                         "content" => $content,
                         "title_right" => "Activate",
-                        "subtitle_right" => "Your Wallet Withdrawal Request"
+                        "subtitle_right" => "Your Account Withdrawal Request"
                     ];
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                     // RateLimiter::clear($key);
-                    return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
+                    return response()->json(['success' => "Verification email sent successfully."]);
                 } catch (\Exception $e) {
                     DB::rollBack();
                     echo "<pre>";
