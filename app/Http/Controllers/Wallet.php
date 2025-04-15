@@ -1044,7 +1044,6 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
     {
-        // dd($request->all());
         $settings = settings();
 
         // Generate a unique rate-limiting key based on user or IP

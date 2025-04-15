@@ -69,7 +69,7 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
-        // dd($request->account_id);
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -97,6 +97,7 @@ class TradeWithdrawal extends Controller
         );
         $user_id = auth()->user()->id;
         $user_email = auth()->user()->email;
+
         $account_id = $request->account_id;
         $request->validate([
             'account_id' => 'required',
@@ -134,7 +135,7 @@ class TradeWithdrawal extends Controller
                 'message' => 'Insufficient balance',
             ], 400);
         }
-        if ($withdraw_type == "Wallet Withdrawal") {
+        if ($withdraw_type == "Trade_Withdrawal") {
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
@@ -151,6 +152,13 @@ class TradeWithdrawal extends Controller
                     ])
             ->event('create')
             ->log('Account Withdraw');
+            $clientWalletId = $request->input('client_wallet_id');
+            $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
+            dump($balance);
+            dump($comment);
+            dump($clientWalletId);
+            dd($clientWallet);
+
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
@@ -161,8 +169,9 @@ class TradeWithdrawal extends Controller
                 ], 400);
             } else {
                 DB::beginTransaction();
+
                 try {
-                    TradeWithdrawals::create([
+                    $TradeWithdrawal = TradeWithdrawals::create([
                         'email' => $user_email,
                         'user_id' => $user_id,
                         'account_id' => $account->id,
@@ -170,22 +179,49 @@ class TradeWithdrawal extends Controller
                         'withdraw_type' => $withdraw_type,
                         // 'withdraw_to' => $to_account_id,
                         'wallet_qr' => '',
-                        'Status' => 1
+                        'status' => 0,
+                        'email_verified' => 0,
+                        'client_wallet_id' => $clientWalletId,
                     ]);
-                    TotalBalance::create([
-                        'account_id' => $account->id,
-                        'email' => $email,
-                        'user_id' => $user_id,
-                        'deposit_amount' => $amount,
-                    ]);
-                    WalletDeposit::create([
-                        'email' => $email,
-                        'user_id' => $user_id,
-                        'deposit_amount' => $amount,
-                        'deposit_type' => 'Internal Transfer',
-                        'status' => 1,
-                    ]);
+
+                    // TotalBalance::create([
+                    //     'account_id' => $account->id,
+                    //     'email' => $email,
+                    //     'user_id' => $user_id,
+                    //     'deposit_amount' => $amount,
+                    // ]);
+                    // WalletDeposit::create([
+                    //     'email' => $email,
+                    //     'user_id' => $user_id,
+                    //     'deposit_amount' => $amount,
+                    //     'deposit_type' => 'Internal Transfer',
+                    //     'status' => 1,
+                    // ]);
                     DB::commit();
+
+                    $toEmail = $user->email;
+                    $type = 'Withdrawal Details Verification';
+                    $from = $settings['email_from_address'];
+                    $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                    $content =
+                        '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                        '<div>You are receiving this email because you have requested a withdrawal of amount $' . $amount . ' from your account' .$account->code.'</div>' .
+                        '<div>Click the link below to activate your Account Withdrawal</div>';
+
+                    $templateVars = [
+                        'name' => $user->fullname,
+                        'server_name' => $settings['mt5_company_name'],
+                        'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$WalletWithdrawal->id",
+                        'email' => $from,
+                        "content" => $content,
+                        "title_right" => "Activate",
+                        "subtitle_right" => "Your Wallet Withdrawal Request"
+                    ];
+                    $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                     // RateLimiter::clear($key);
                     return response()->json(['success' => "Your Wallet Was Credited $" . $amount]);
                 } catch (\Exception $e) {
@@ -198,6 +234,65 @@ class TradeWithdrawal extends Controller
                     ], 400);
                 }
             }
+        }
+    }
+
+
+    public function account_withdrawal_verify(Request $request)
+    {
+
+        if (!auth()->check()) {
+            return redirect('/login');
+        }
+
+        $settings = settings();
+        $id = auth()->user()->id;
+        $walletWithdrawal_id = $request->query('walletWithdrawal_id');
+
+        $new_wallet_Withdrawal = WalletWithdraw::with('user')->where('user_id', $id)
+            ->where('id', $walletWithdrawal_id)
+            ->first();
+        if ($new_wallet_Withdrawal) {
+            if ($new_wallet_Withdrawal->verified  == 0) {
+                $new_wallet_Withdrawal->verified = 1;
+                $new_wallet_Withdrawal->save();
+                activity()->causedBy(auth()->user())
+                    ->withProperties(
+                        [
+                            'ip' => $request->ip(),
+                            'email' => auth()->user()->email,
+                            'withdraw_amount' => $new_wallet_Withdrawal->withdraw_amount,
+                            'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
+                            'wallet_withdraw_id' => $walletWithdrawal_id,
+                            'remark' => 'Wallet Withdraw'
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Wallet Withdraw');
+                $from = $settings['email_from_address'];
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
+                $htmlContent = "";
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
+                    '<div>Your wallet withdrawal has been successfully confirmed.</div>';
+                $templateVars = [
+                    'name' => $new_wallet_Withdrawal->user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Wallet Withdrawal Verification",
+                    "subtitle_right" => "Successful",
+                ];
+                $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
+            } else {
+                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
+            }
+        } else {
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Wallet Withdrawal Found. Signup here');
         }
     }
 }

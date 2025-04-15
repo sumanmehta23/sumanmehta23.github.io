@@ -431,7 +431,6 @@ class Transaction extends Controller
     }
     public function update_wallet_withdrawal(Request $request)
     {
-
         $settings = settings();
         $status = $request->status;
         // dd($request->all());

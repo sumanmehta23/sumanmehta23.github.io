@@ -186,12 +186,13 @@
                                                 </ul>
                                             </div>
                                         @endif --}}
-                                        <div class="wallet-withdrawal Wallet_Withdrawal">
+                                        <div class="trade-withdrawal Trade_Withdrawal">
                                             <form method="post"  id="withdrawForm" style="padding:10px;" class="md-float-material form-material">
                                                 @csrf
                                                 <div class="row">
-                                                    <input type="hidden" name="withdraw_type" class="withdraw-type" value="Wallet_Withdrawal">
+                                                    <input type="hidden" name="withdraw_type" class="withdraw-type" value="Trade_Withdrawal">
                                                     <input type="hidden" id="hiddenTwoFactorCode" name="two_factor_code">
+                                                    <input type="hidden" name="account_id" id="selectedLiveAccount">
                                                     <div class="mt-2 col-12">
                                                         <div class="form-group row">
                                                             <label class="col-lg-4 col-form-label">
@@ -264,10 +265,9 @@
                                                     <div class="col-lg-4"></div>
                                                     <div class="col-lg-8">
                                                         <div class="row g-1">
-                                                            <input
-                                                            {{-- type="submit" --}}
-                                                            type="button"
-                                                            id="withdrawFromAccount" name="account_withdraw" class="btn btn-primary col-12" value="Withdraw From Account">
+                                                            <input type="submit" name="account_withdraw"
+                                                            class="btn btn-primary col-12"
+                                                            value="Withdraw From Trade Account">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -292,7 +292,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
@@ -330,14 +329,12 @@
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
+    {{-- <script>
         $("#tradeWithdrawalForm").submit(function(e) {
             e.preventDefault();
             $.ajax({
@@ -360,7 +357,7 @@
                 }
             });
         });
-    </script>
+    </script> --}}
     @if (session('success'))
         <script>
             Swal.fire({
@@ -414,6 +411,18 @@
                 confirmCheckbox.required = false;
             }
         });
+        document.querySelectorAll('.select-liveaccount').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const selectedValue = this.value;
+                document.getElementById('selectedLiveAccount').value = selectedValue;
+            });
+        });
+
+        // Optionally: Set default if one is preselected
+        const checkedRadio = document.querySelector('.select-liveaccount:checked');
+        if (checkedRadio) {
+            document.getElementById('selectedLiveAccount').value = checkedRadio.value;
+        }
     </script>
     <!-- Bootstrap & jQuery for Modal Handling -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
