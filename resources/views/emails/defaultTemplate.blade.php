@@ -124,10 +124,22 @@
                 line-height: 20px !important;
             }
         }
+        @media (min-width: 621px) {
+            .email-main-image {
+                width: 40% !important;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .email-main-image {
+                width: 100% !important;
+            }
+        }
     </style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
 </head>
 
-<body class="body" style="background-color: #ffffff; margin: 0 auto; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none; width: 40%;">
+<body class="body email-main-image" style="background-color: #ffffff; margin: 0 auto; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
     <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
         <tbody>
             <tr>
@@ -180,7 +192,7 @@
                                 <td>
                                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
                                         <tbody>
-                                            <tr>
+                                            {{-- <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
@@ -193,6 +205,19 @@
                                                                             style="display:block;"
                                                                         />
                                                                     </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr> --}}
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
