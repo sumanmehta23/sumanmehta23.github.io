@@ -187,7 +187,7 @@
                                             <form method="post"  id="withdrawForm" style="padding:10px;" class="md-float-material form-material">
                                                 @csrf
                                                 <div class="row">
-                                                    <input type="hidden" name="withdraw_type" class="withdraw-type" value="Trade_Withdrawal">
+                                                    <input type="hidden" name="withdraw_type" class="withdraw-type" value="Trade Withdrawal">
                                                     <input type="hidden" id="hiddenTwoFactorCode" name="two_factor_code">
                                                     <input type="hidden" name="account_id" id="selectedLiveAccount">
                                                     <div class="mt-2 col-12">

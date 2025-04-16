@@ -78,7 +78,8 @@
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
                                                     <th>Withdraw Type</th>
-                                                    <th>Withdraw To</th>
+                                                    <th>Withdraw From</th>
+                                                    <th>Withdraw To Wallet</th>
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
@@ -157,6 +158,7 @@
               { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
               { data: 'withdraw_type', name: 'withdraw_type' },
+              { data: 'withdraw_from', name: 'withdraw_from' },
               { data: 'withdraw_to', name: 'withdraw_to' },
               {
                 data: 'withdraw_date', name: 'withdraw_date',

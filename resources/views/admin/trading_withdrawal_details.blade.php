@@ -206,7 +206,7 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td colspan="2">
+                                            <td>
                                                 <?php if($client_wallet):?>
                                                     <div class="d-flex align-items-center">
                                                         <div>
@@ -223,15 +223,28 @@
                                             </td>
                                             <?php if ($details->status == 0) { ?>
                                             <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <div class="lh-1">
+                                                        <span class="fs-11 text-muted">WITHDRAW FEE</span>
+                                                        </div>
+                                                        <div class="mt-2 lh-1">
+                                                        <span>$<?= number_format($details->withdraw_transaction_fee,2) ?? 0 ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="btn-list ms-auto my-auto">
+                                                    @php
+                                                        $userData = json_encode(session('userData'));
+                                                    @endphp
                                                     <button
-                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->code }})"
+                                                        onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->code }})"
                                                         type="button"
                                                         class="btn btn-success btn-space m-1">Approve</button>
                                                     <button
-                                                        onclick="takeAction('{{ $details->code }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
+                                                        onclick="takeAction('{{ json_encode($details->id) }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
                                                         type="submit"
                                                         class="btn btn-danger btn-space m-1">Reject</button>
                                                 </div>
@@ -256,7 +269,7 @@
                                                             <span class="fs-11 text-muted">ADMIN ACTION TAKEN</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>{{ $details->Js_Admin_Remark_Date }}</span>
+                                                            <span>{{ $details->approved_date }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -279,37 +292,125 @@
         @endif
     </div>
     <script>
-        function takeAction(code, email, amount, status) {
+
+        // function takeAction(code, email, amount, status) {
+        //   Swal.fire({
+        //     title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
+        //     html: `
+        //     <form id="updateTransactionForm" method="post">
+        //       @csrf
+        //       <input type="hidden" name="code" value="${code}">
+        //       <input type="hidden" name="email" value="${email}">
+        //       <input type="hidden" name="amount" value="${amount}">
+        //       <input type="hidden" name="status" value="${status}">
+        //       <input type="hidden" name="action" value="update_transaction">
+        //       <div class="col-12 mt-3 text-start">
+        //           <label for="transaction_id" class="form-label">Withdraw Reference ID</label>
+        //           <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="Add Reference ID">
+        //       </div>
+        //       <div class="col-12 mt-2 text-start">
+        //           <label for="description" class="form-label">Description</label>
+        //           <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
+        //       </div>
+        //       </form>
+        //   `,
+        //     focusConfirm: false,
+        //     showCancelButton: true,
+        //     confirmButtonText: 'Submit',
+        //     preConfirm: () => {
+        //       const description = document.querySelector('#updateTransactionForm textarea').value;
+        //       const transaction_id = document.querySelector('#transaction_id').value;
+        //       if (!description || !transaction_id) {
+        //         Swal.showValidationMessage('Please fill out all fields');
+        //         return false;
+        //       }
+        //       return true;
+        //     }
+        //   }).then((result) => {
+        //     if (result.isConfirmed) {
+        //       document.querySelector('#updateTransactionForm').submit();
+        //     }
+        //   });
+        // }
+        function takeAction(data, email, amount, status, code) {
+            const sanitizedData = data.replace(/\\/g, '\\\\');
+            // console.log(sanitizedData);
+            const parsedData = JSON.parse(sanitizedData);
+            // console.log(parsedData);
+            const now = new Date();
+            const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            if(status==2){
+                statuscode='reject';
+            }
+            // else if(status==2){
+            //     statuscode='reject';
+            // }
+            else{
+                statuscode='approve';
+            }
           Swal.fire({
-            title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
+            title: `Are you sure you want to ${statuscode} this transaction?`,
             html: `
             <form id="updateTransactionForm" method="post">
               @csrf
-              <input type="hidden" name="code" value="${code}">
               <input type="hidden" name="email" value="${email}">
+              <input type="hidden" name="code" value="${code}">
               <input type="hidden" name="amount" value="${amount}">
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_transaction">
-              <div class="col-12 mt-3 text-start">
-                  <label for="transaction_id" class="form-label">Withdraw Reference ID</label>
-                  <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="Add Reference ID">
-              </div>
-              <div class="col-12 mt-2 text-start">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
-              </div>
+                ${
+                  status == 2
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="transaction_id" class="form-label">Transaction ID</label>
+                      <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
+                      <div class="form-control">${parsedData}</div>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="rejection_reason" class="form-label">Rejection Reason</label>
+                      <select id="rejection_reason" name="rejection_reason" class="form-control">
+                          <option value="" disabled selected>Select Rejection Reason</option>
+                          <option value="Invalid cryptocurrency address">Invalid cryptocurrency address</option>
+                          <option value="Incorrect Payment Details">Incorrect Payment Details (no email sent)</option>
+                          <option value="Duplicate Transaction">Duplicate Transaction (no email sent)</option>
+                          <option value="Bonus Min Deposit">Bonus and Minimum Deposit Not Eligible for Withdrawal (no email sent)</option>
+                      </select>
+                  </div>
+              `
+                      : ''
+                }
+                ${
+                  status == 1
+                      ? `
+                  <div class="mt-2 col-12 text-start">
+                      <label for="approved_by" class="form-label">Approved By</label>
+                      <input type="hidden" id="approved_by" name="approved_by" value="${parsedData.username}">
+                      <div class="form-control">${parsedData.username}</div>
+                  </div>
+                  <div class="mt-3 col-12 text-start">
+                      <label for="approved_date" class="form-label">Approved On</label>
+                      <input type="hidden" id="approved_date" name="approved_date" value="${approved_date_time}">
+                      <div class="form-control">${approved_date_time}</div>
+                  </div>
+              `
+                      : ''
+                }
+
               </form>
           `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Submit',
             preConfirm: () => {
-              const description = document.querySelector('#updateTransactionForm textarea').value;
-              const transaction_id = document.querySelector('#transaction_id').value;
-              if (!description || !transaction_id) {
-                Swal.showValidationMessage('Please fill out all fields');
-                return false;
+              if(status==2){
+                const rejection_reason = document.querySelector('#rejection_reason').value;
+                if (!rejection_reason) {
+                    Swal.showValidationMessage('Please fill out all fields');
+                    return false;
+                }
               }
+
               return true;
             }
           }).then((result) => {

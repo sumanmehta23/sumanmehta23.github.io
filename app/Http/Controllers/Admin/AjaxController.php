@@ -2141,7 +2141,7 @@ class AjaxController extends Controller
 
     public function getPendingTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status', 0)->where('email_verified', 1)->where('withdraw_type', 'Trade_Withdrawal');
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])->where('status', 0)->where('email_verified', 1)->where('withdraw_type', 'Trade Withdrawal');
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {
@@ -2170,16 +2170,23 @@ class AjaxController extends Controller
                     return $row->account->code;
                 })
                 ->addColumn('amount', function ($row) {
+                    // dd($row);
                     return $row->withdrawal_amount;
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
+                ->addColumn('withdraw_from', function ($row) {
+                    // if ($row->withdraw_to) {
+                    //     $acc = Account::where('id', $row->withdraw_to)->first();
+                    // }
+                    return ($row->code);
+                })
                 ->addColumn('withdraw_to', function ($row) {
                     // if ($row->withdraw_to) {
                     //     $acc = Account::where('id', $row->withdraw_to)->first();
                     // }
-                    return ($row->withdraw_to) ? $row->withdraw_to : $row->withdraw_type;
+                    return ($row->withdraw_to) ? $row->withdraw_to : (($row->withdraw_to == null && $row->withdraw_type == 'Trade_Withdrawal') ? $row->clientWallet->wallet_address: $row->withdraw_type);
                 })
                 ->addColumn('withdraw_date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->withdraw_date));
@@ -2201,7 +2208,8 @@ class AjaxController extends Controller
                     }
                 })
                 ->addColumn('action', function ($row) {
-                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                    // return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                    return "<a class='btn btn-sm btn-primary' href='/admin/trading_withdrawal_details?id={$row->id}'>View</a>";
                 })
                 ->addColumn('created_date', function ($row) {
                     return date('Y-m-d', strtotime($row->withdraw_date));
