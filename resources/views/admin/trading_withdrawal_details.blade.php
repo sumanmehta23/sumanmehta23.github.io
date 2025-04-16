@@ -164,12 +164,12 @@
                                                 <div class="d-flex align-items-center">
                                                     <div>
                                                         <div class="lh-1">
-                                                            <span class="fs-11 text-muted">TRADE ID</span>
+                                                            <span class="fs-11 text-muted">TRANSACTION ID</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             {{-- {{dd($details)}} --}}
                                                             {{-- <span>{{ $details->withdraw_to != null ? $details->withdraw_to : $details->withdraw_type}}</span> --}}
-                                                            <span>{{ $details->id }}</span>
+                                                            <span>{{ $details->transaction_id }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
