@@ -344,7 +344,6 @@ class Transaction extends Controller
                         ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
                         ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                         ->first();
-            // dd($details);
             return view('admin.trading_withdrawal_details', compact('details'));
         }
     }

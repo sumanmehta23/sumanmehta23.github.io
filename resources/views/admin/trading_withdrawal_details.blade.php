@@ -127,7 +127,7 @@
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-danger-transparent">-</span>
                                                             {{-- <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span> --}}
-                                                            <span>${{@$details->account->tradeWithdrawals->sum('withdrawal_amount')}}</span>
+                                                            <span>${{@$details->account->tradeWithdrawals->where('email_verified', 1)->where('status', 1)->sum('withdrawal_amount')}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -168,7 +168,8 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             {{-- {{dd($details)}} --}}
-                                                            <span>{{ $details->withdraw_to!=null ? $details->withdraw_to : $details->withdraw_type}}</span>
+                                                            {{-- <span>{{ $details->withdraw_to != null ? $details->withdraw_to : $details->withdraw_type}}</span> --}}
+                                                            <span>{{ $details->id }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -206,6 +207,19 @@
                                         </tr>
                                         <tr>
                                             <td colspan="2">
+                                                <?php if($client_wallet):?>
+                                                    <div class="d-flex align-items-center">
+                                                        <div>
+                                                            <div class="lh-1">
+                                                            <span class="fs-11 text-muted">CLIENT WALLET DETAILS</span>
+                                                            </div>
+                                                            <div class="mt-2 lh-1">
+                                                            <div class="mb-1"><span class="text-muted me-1">Address: </span><?= $client_wallet->wallet_address ?></div>
+                                                            <div class="mb-1"><span class="text-muted me-1"> <?= $client_wallet->wallet_network != 'BTC' ? $client_wallet->wallet_currency : 'BTC' ?> / <?= $client_wallet->wallet_network ?></span></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif;?>
                                             </td>
                                             <?php if ($details->status == 0) { ?>
                                             <td>

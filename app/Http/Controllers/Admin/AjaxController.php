@@ -2141,7 +2141,7 @@ class AjaxController extends Controller
 
     public function getPendingTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status', 0);
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status', 0)->where('email_verified', 1)->where('withdraw_type', 'Trade_Withdrawal');
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {

@@ -215,7 +215,7 @@ class TradeWithdrawal extends Controller
 
                     $content =
                         '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                        '<div>You are receiving this email because you have requested a withdrawal of amount $' . $amount . ' from your account' .$account->code.'</div>' .
+                        '<div>You are receiving this email because you have requested a withdrawal of amount $' . $amount . ' from your account ' .$account->code.'</div>' .
                         '<div>Click the link below to activate your Account Withdrawal</div>';
 
                     $templateVars = [
@@ -229,7 +229,8 @@ class TradeWithdrawal extends Controller
                     ];
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                     // RateLimiter::clear($key);
-                    return response()->json(['success' => "Verification email sent successfully."]);
+                    // return response()->json(['success' => "Verification email sent successfully."]);
+                    return redirect()->back()->with('success', 'Verification email sent successfully.');
                 } catch (\Exception $e) {
                     DB::rollBack();
                     echo "<pre>";
@@ -253,52 +254,53 @@ class TradeWithdrawal extends Controller
 
         $settings = settings();
         $id = auth()->user()->id;
-        $walletWithdrawal_id = $request->query('walletWithdrawal_id');
+        $accountWithdrawal_id = $request->query('accountWithdrawal_id');
 
-        $new_wallet_Withdrawal = WalletWithdraw::with('user')->where('user_id', $id)
-            ->where('id', $walletWithdrawal_id)
+        $new_wallet_Withdrawal = TradeWithdrawals::with('user')->where('user_id', $id)
+            ->where('id', $accountWithdrawal_id)
             ->first();
+
         if ($new_wallet_Withdrawal) {
-            if ($new_wallet_Withdrawal->verified  == 0) {
-                $new_wallet_Withdrawal->verified = 1;
+            if ($new_wallet_Withdrawal->email_verified  == 0) {
+                $new_wallet_Withdrawal->email_verified = 1;
                 $new_wallet_Withdrawal->save();
                 activity()->causedBy(auth()->user())
                     ->withProperties(
                         [
                             'ip' => $request->ip(),
                             'email' => auth()->user()->email,
-                            'withdraw_amount' => $new_wallet_Withdrawal->withdraw_amount,
-                            'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
-                            'wallet_withdraw_id' => $walletWithdrawal_id,
-                            'remark' => 'Wallet Withdraw'
+                            'withdraw_amount' => $new_wallet_Withdrawal->withdrawal_amount,
+                            // 'withdraw_transaction_fee' => $new_wallet_Withdrawal->withdraw_transaction_fee,
+                            'wallet_withdraw_id' => $new_wallet_Withdrawal->id,
+                            'remark' => 'Trade Withdraw'
                         ]
                     )
                     ->event('create')
-                    ->log('Wallet Withdraw');
+                    ->log('Account Withdraw');
                 $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Wallet Withdrawal';
+                $emailSubject = $settings['admin_title'] . ' - Thank You for Confirming Your Trade Withdrawal';
                 $htmlContent = "";
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your wallet withdrawal has been successfully confirmed.</div>';
+                    '<div>Your Account withdrawal has been successfully confirmed.</div>';
                 $templateVars = [
                     'name' => $new_wallet_Withdrawal->user->fullname,
                     'server_name' => $settings['mt5_company_name'],
                     'email' => $settings['email_from_address'],
                     "content" => $content,
-                    "title_right" => "Wallet Withdrawal Verification",
+                    "title_right" => "Account Withdrawal Verification",
                     "subtitle_right" => "Successful",
                 ];
                 $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
+                return redirect()->route('trade_withdrawal')->with('status', 'WoW! Your Account Withdrawal is now Verified');
             } else {
-                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
+                return redirect()->route('dashboard')->with('error', 'Sorry! Account Withdrawal is already Verified');
             }
         } else {
-            return redirect()->route('dashboard')->with('error', 'Sorry! No Wallet Withdrawal Found. Signup here');
+            return redirect()->route('dashboard')->with('error', 'Sorry! No Account Withdrawal Found. Signup here');
         }
     }
 }

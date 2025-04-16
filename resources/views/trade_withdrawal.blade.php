@@ -159,20 +159,17 @@
                                         <div class="row g-1">
                                             <div class="col-md-3 col-lg-4 col-xl-4">
                                                 <div class="border rounded address-check">
-                                                    <div class="form-check"><input type="radio"
-                                                            name="withdraw_type"
-                                                            class="form-check-input input-primary wallet-withdraw"
-                                                            value="1" data-type="Wallet_Withdrawal"><label
-                                                            class="form-check-label d-block"
-                                                            for="payopn-check-1"><span
-                                                                class="p-2 card-body d-block"><span
-                                                                    class="mb-1 h6 f-w-500 d-block">CRYPTO
-                                                                    WITHDRAWAL</span><span
-                                                                    class="d-flex align-items-center"><span
-                                                                        class="f-10 badge bg-light-success me-1">CRYPTO
-                                                                        WALLET</span>
+                                                    <div class="form-check"><input type="radio" name="withdraw_type" class="form-check-input input-primary wallet-withdraw" value="1" data-type="Wallet_Withdrawal" id="payopn-check-1" required>
+                                                        <label class="form-check-label d-block" for="payopn-check-1">
+                                                            <span class="p-2 card-body d-block">
+                                                                <span class="mb-1 h6 f-w-500 d-block">CRYPTO WITHDRAWAL</span>
+                                                                <span class="d-flex align-items-center">
+                                                                    <span class="f-10 badge bg-light-success me-1">CRYPTO WALLET</span>
                                                                     <span class="ti ti-currency-bitcoin"></span>
-                                                                </span></span></label></div>
+                                                                </span>
+                                                            </span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -411,18 +408,8 @@
                 confirmCheckbox.required = false;
             }
         });
-        document.querySelectorAll('.select-liveaccount').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                const selectedValue = this.value;
-                document.getElementById('selectedLiveAccount').value = selectedValue;
-            });
-        });
 
-        // Optionally: Set default if one is preselected
-        const checkedRadio = document.querySelector('.select-liveaccount:checked');
-        if (checkedRadio) {
-            document.getElementById('selectedLiveAccount').value = checkedRadio.value;
-        }
+
     </script>
     <!-- Bootstrap & jQuery for Modal Handling -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -467,6 +454,20 @@
                     jQuery('#withdrawForm').submit();
                 }
             });
+
+
+            // Corrected change event for .select-liveaccount
+            jQuery('.select-liveaccount').on('change', function () {
+                const selectedValue = this.value;
+                console.log(selectedValue);
+                document.getElementById('selectedLiveAccount').value = selectedValue;
+            });
+
+             // Optionally: Set default if one is preselected
+            const checkedRadio = document.querySelector('.select-liveaccount:checked');
+            if (checkedRadio) {
+                document.getElementById('selectedLiveAccount').value = checkedRadio.value;
+            }
         });
     </script>
 @endsection
