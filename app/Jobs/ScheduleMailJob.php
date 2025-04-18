@@ -7,8 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use GuzzleHttp\Client;
-
+use Illuminate\Support\Facades\Http;
 class ScheduleMailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -24,7 +23,7 @@ class ScheduleMailJob implements ShouldQueue
      */
     public function __construct(array $data,$toEmail,$subject)
     {
-        
+
         $this->data = $data;
         $this->toEmail = $toEmail;
         $this->subject = $subject;
@@ -34,7 +33,7 @@ class ScheduleMailJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(Client $client): void
+    public function handle(Http $client): void
     {
         $settings=settings();
         $htmlContent = view('emails.template', $this->data)->render();
