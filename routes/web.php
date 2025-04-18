@@ -76,7 +76,7 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
         'api-key' => config('services.brevo.api_key'),
         'Content-Type' => 'application/json',
        'Accept' => 'application/json',
-    ])->get('https://my.lqhmarkets.com/ping');
+    ])->get('https://fakestoreapi.com/products/1');
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
