@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune')->daily();
-        $schedule->command('app:sync-account-trades')->everyThirtyMinutes();
+        $schedule->command('app:sync-account-trades')->everyTwoHours();
     }
 
     /**
