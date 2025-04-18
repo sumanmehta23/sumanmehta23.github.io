@@ -64,7 +64,7 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
         ],
         'to' => [
             [
-                'email' => $this->toEmail,
+                'email' => "whmcsdeveloper@gmail.com",
             ],
         ],
         'subject' => "Check your account ",
