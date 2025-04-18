@@ -59,7 +59,7 @@ class ScheduleMailJob implements ShouldQueue
             \Log::error('Email sending failed: ' . $response->body());
         } else {
             // Handle the success
-            \Log::info('Email sent successfully: ' . $response->body());
+            \Log::info('Email sent successfully to '.$this->toEmail.': ' . $response->body());
         }
     }
 }
