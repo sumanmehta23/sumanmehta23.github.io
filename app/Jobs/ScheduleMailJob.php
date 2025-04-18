@@ -50,9 +50,16 @@ class ScheduleMailJob implements ShouldQueue
             'subject' => $this->subject,
             'htmlContent' => $htmlContent,
         ];
-        Http::withHeaders([
+       $response= Http::withHeaders([
             'api-key' => $this->apiKey,
             'Content-Type' => 'application/json',
         ])->post('https://api.brevo.com/v3/smtp/email', $payload);
+        if ($response->failed()) {
+            // Handle the error
+            \Log::error('Email sending failed: ' . $response->body());
+        } else {
+            // Handle the success
+            \Log::info('Email sent successfully: ' . $response->body());
+        }
     }
 }
