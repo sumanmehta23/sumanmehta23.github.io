@@ -53,7 +53,22 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use function PHPUnit\Framework\throwException;
 use Laravel\Telescope\Telescope;
+Route::get('/telescope-test', function () {
+    Log::info('🛠 Telescope test route hit.');
 
+    Telescope::tag(function () {
+        return ['telescope-http-client-test'];
+    });
+
+    $response = Http::withHeaders([
+        'Accept' => 'application/json',
+    ])->get('https://jsonplaceholder.typicode.com/todos/1');
+
+    return response()->json([
+        'status' => 'done',
+        'data' => $response->json(),
+    ]);
+});
 //use Illuminate\Support\Facades\Http;
 Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
     return throwException(
