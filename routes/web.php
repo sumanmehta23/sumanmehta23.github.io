@@ -52,6 +52,7 @@ use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use function PHPUnit\Framework\throwException;
+use Laravel\Telescope\Telescope;
 
 //use Illuminate\Support\Facades\Http;
 Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
@@ -76,11 +77,17 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
         'subject' => "Check your account ",
         'htmlContent' => $htmlContent,
     ];
-   return  Http::withHeaders([
-        'api-key' => config('services.brevo.api_key'),
+    $response = Http::withHeaders([
+        'api-key' => "api key here",
         'Content-Type' => 'application/json',
-       'Accept' => 'application/json',
+        'Accept' => 'application/json',
     ])->get('https://fakestoreapi.com/products/1');
+
+    Telescope::tag(function () {
+        return ['test-client-request'];
+    });
+
+    return $response;
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
