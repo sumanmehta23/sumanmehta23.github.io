@@ -56,7 +56,7 @@ use App\View\Components\AdminTwoFactorAuthentication;
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
     $settings=settings();
-    $htmlContent = view('emails.template', $this->data)->render();
+    $htmlContent ="<p>hello , please check your acount for more details</p>";
     $payload = [
         'sender' => [
             'name' => $settings['sender_name'],
@@ -67,7 +67,7 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
                 'email' => $this->toEmail,
             ],
         ],
-        'subject' => $this->subject,
+        'subject' => "Check your account ",
         'htmlContent' => $htmlContent,
     ];
    return  Http::withHeaders([
