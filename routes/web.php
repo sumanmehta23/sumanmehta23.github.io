@@ -55,7 +55,25 @@ use App\View\Components\AdminTwoFactorAuthentication;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
-//   
+    $settings=settings();
+    $htmlContent = view('emails.template', $this->data)->render();
+    $payload = [
+        'sender' => [
+            'name' => $settings['sender_name'],
+            'email' => $settings['sender_email_address'],
+        ],
+        'to' => [
+            [
+                'email' => $this->toEmail,
+            ],
+        ],
+        'subject' => $this->subject,
+        'htmlContent' => $htmlContent,
+    ];
+   return  Http::withHeaders([
+        'api-key' => config('services.brevo.api_key'),
+        'Content-Type' => 'application/json',
+    ])->post('https://api.brevo.com/v3/smtp/email', $payload);
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
