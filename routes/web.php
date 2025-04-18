@@ -52,7 +52,9 @@ use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 //use Illuminate\Support\Facades\Http;
-
+Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
+    return response()->json(['message' => 'Hello World']);
+});
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
     $settings=settings();
@@ -73,7 +75,8 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
    return  Http::withHeaders([
         'api-key' => config('services.brevo.api_key'),
         'Content-Type' => 'application/json',
-    ])->post('https://api.brevo.com/v3/smtp/email', $payload);
+       'Accept' => 'application/json',
+    ])->get('https://my.lqhmarkets.com/ping');
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
