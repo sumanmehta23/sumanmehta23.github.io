@@ -51,9 +51,13 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
+use function PHPUnit\Framework\throwException;
+
 //use Illuminate\Support\Facades\Http;
 Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
-    return response()->json(['message' => 'Hello World']);
+    return throwException(
+        new \Exception("test")
+    );
 });
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
