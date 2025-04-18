@@ -33,7 +33,7 @@ class ScheduleMailJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(Http $client): void
+    public function handle(): void
     {
         $settings=settings();
         $htmlContent = view('emails.template', $this->data)->render();
@@ -50,12 +50,9 @@ class ScheduleMailJob implements ShouldQueue
             'subject' => $this->subject,
             'htmlContent' => $htmlContent,
         ];
-        $client->post('https://api.brevo.com/v3/smtp/email', [
-            'headers' => [
-                'api-key' => $this->apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $payload,
-        ]);
+        Http::withHeaders([
+            'api-key' => $this->apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.brevo.com/v3/smtp/email', $payload);
     }
 }
