@@ -24,17 +24,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
-use App\Services\MT5Service;
 
 class Transaction extends Controller
 {
     protected $mailService;
     protected $api;
-    public function __construct(MailService $mailService, MT5Service $mt5Service )
+    public function __construct(MailService $mailService, MTWebAPI $api)
     {
-        $this->mt5Service = $mt5Service;
         $this->mailService = $mailService;
-        $this->api = $this->mt5Service->getApi();
+        $this->api = $api;
     }
     public function index(Request $request)
     {
