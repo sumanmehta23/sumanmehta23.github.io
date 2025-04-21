@@ -39,7 +39,7 @@ class Dashboard extends Controller
         }
         // dd($rmCondition);
 
-        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer')";
+        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer', 'CryptoChill', 'CreditCardPayissa')";
         // dd($sql);
 
         $trade_deposit = DB::select($sql)[0];
