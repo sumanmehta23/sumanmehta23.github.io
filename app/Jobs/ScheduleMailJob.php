@@ -7,8 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use GuzzleHttp\Client;
-
+use Illuminate\Support\Facades\Http;
 class ScheduleMailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -24,7 +23,7 @@ class ScheduleMailJob implements ShouldQueue
      */
     public function __construct(array $data,$toEmail,$subject)
     {
-        
+
         $this->data = $data;
         $this->toEmail = $toEmail;
         $this->subject = $subject;
@@ -34,7 +33,7 @@ class ScheduleMailJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(Client $client): void
+    public function handle(): void
     {
         $settings=settings();
         $htmlContent = view('emails.template', $this->data)->render();
@@ -51,12 +50,16 @@ class ScheduleMailJob implements ShouldQueue
             'subject' => $this->subject,
             'htmlContent' => $htmlContent,
         ];
-        $client->post('https://api.brevo.com/v3/smtp/email', [
-            'headers' => [
-                'api-key' => $this->apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $payload,
-        ]);
+       $response= Http::withHeaders([
+            'api-key' => $this->apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.brevo.com/v3/smtp/email', $payload);
+        if ($response->failed()) {
+            // Handle the error
+            \Log::error('Email sending failed: ' . $response->body());
+        } else {
+            // Handle the success
+            \Log::info('Email sent successfully to '.$this->toEmail.': ' . $response->body());
+        }
     }
 }

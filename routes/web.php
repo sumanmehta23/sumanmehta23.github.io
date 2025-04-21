@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\KycUpdate;
 use App\Models\Permission;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
@@ -50,9 +51,58 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
+use function PHPUnit\Framework\throwException;
+use Laravel\Telescope\Telescope;
+Route::get('/telescope-test', function () {
+    Log::info('🛠 Telescope test route hit.');
 
+    Telescope::tag(function () {
+        return ['telescope-http-client-test'];
+    });
+
+    $response = Http::withHeaders([
+        'Accept' => 'application/json',
+    ])->get('https://jsonplaceholder.typicode.com/todos/1');
+
+    return response()->json([
+        'status' => 'done',
+        'data' => $response->json(),
+    ]);
+});
+//use Illuminate\Support\Facades\Http;
+Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
+    return throwException(
+        new \Exception("test")
+    );
+});
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
+    $settings=settings();
+    $htmlContent ="<p>hello , please check your acount for more details</p>";
+    $payload = [
+        'sender' => [
+            'name' => $settings['sender_name'],
+            'email' => $settings['sender_email_address'],
+        ],
+        'to' => [
+            [
+                'email' => "whmcsdeveloper@gmail.com",
+            ],
+        ],
+        'subject' => "Check your account ",
+        'htmlContent' => $htmlContent,
+    ];
+    $response = Http::withHeaders([
+        'api-key' => "api key here",
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
+    ])->get('https://fakestoreapi.com/products/1');
+
+    Telescope::tag(function () {
+        return ['test-client-request'];
+    });
+
+    return $response;
     // return Klaviyo::post("profile-import", [
     //     'data' => [
     //         'type'          => 'profile',
