@@ -367,20 +367,20 @@
                                                     <div class="card-body">
                                                         <div class="pb-3 row border-bottom">
                                                             @can('wallet_deposit:viewAny')
-                                                                <div class="col-xl-3">
-                                                                    <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">OLD TOTAL DEPOSIT</h4>
                                                                     <h4 class="fw-normal">@money($total_wd)
 
                                                                     </h4>
                                                                 </div>
                                                             @endcan
                                                             @can('wallet_withdraw:viewAny')
-                                                                <div class="col-xl-3">
-                                                                    <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">OLD TOTAL WITHDRAW</h4>
                                                                     <h4 class="fw-normal">@money($total_ww)</h4>
                                                                 </div>
                                                             @endcan
-                                                            <div class="col-xl-3">
+                                                            <div class="col-xl-2">
                                                                 <h4 class="mb-3 text-muted fw-normal">WALLET</h4>
                                                                 <?php if ($user->wallet_enabled): ?>
 
@@ -392,6 +392,20 @@
                                                                 </button>
                                                                 <?php endif; ?>
                                                             </div>
+                                                            @can('wallet_deposit:viewAny')
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">NEW TOTAL DEPOSIT</h4>
+                                                                    <h4 class="fw-normal">@money($total_ntd)
+
+                                                                    </h4>
+                                                                </div>
+                                                            @endcan
+                                                            @can('wallet_withdraw:viewAny')
+                                                                <div class="col-xl-3">
+                                                                    <h4 class="mb-3 text-muted fw-normal">NEW TOTAL WITHDRAW</h4>
+                                                                    <h4 class="fw-normal">@money($total_ntw)</h4>
+                                                                </div>
+                                                            @endcan
                                                         </div>
                                                         @can('account:viewLiveAccounts')
                                                             <div class="mt-3 row">
@@ -943,8 +957,7 @@
                                                             </div>
                                                             <div class="prism-toggle">
                                                                 <a href="/admin/transactions/trading_deposit"
-                                                                    class="btn btn-sm btn-primary-light">View
-                                                                    All</a>
+                                                                    class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
                                                         <div class="card-body">

@@ -3,13 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use App\Models\Country;
 use Illuminate\Support\Str;
 use App\Services\MailService;
+use App\Models\TradeWithdrawals;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Notifications\Notifiable;
+use App\Http\Controllers\TradeWithdrawal;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -205,6 +208,23 @@ class User extends Authenticatable
             ->where('withdraw_type', 'Wallet Withdrawal')
             ->where('status', 1)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
+            ->value('total');
+    }
+
+    public function getNewTotalDepositAttribute()
+    {
+        return TradeDeposit::where('user_id', $this->id)
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->where('status', 1)
+            ->sum('deposit_amount');
+    }
+
+    public function getNewTotalWithdrawalAttribute()
+    {
+        return TradeWithdrawals::where('user_id', $this->id)
+            ->where('withdraw_type', 'Trade Withdrawal')
+            ->where('status', 1)
+            ->selectRaw('SUM(withdrawal_amount + COALESCE(transaction_fee, 0)) as total')
             ->value('total');
     }
 

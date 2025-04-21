@@ -23,9 +23,11 @@
                                     <h6 class="mb-2">Total Deposit</h6>
                                     <h2 class="text-end "><i
                                             class="mdi mdi-wallet icon-size float-start text-primary text-primary-shadow"></i><span>$
-                                            {{ number_format($trade_deposit->deposit + $wallet_deposit->deposit,2) }}</span>
+                                            {{ number_format($trade_deposit->deposit + $wallet_deposit->deposit + $new_trade_deposit->deposit,2) }}</span>
                                     </h2></span>
-                                    <p class="mb-0">Trading Deposit<span class="float-end">${{ number_format($trade_deposit->deposit,2) }}
+                                    <p class="mb-0">Old Trading Deposit<span class="float-end">${{ number_format($trade_deposit->deposit,2) }}
+                                        </span></p>
+                                    <p class="mb-0">New Trading Deposit<span class="float-end">${{ number_format($new_trade_deposit->deposit,2) }}
                                         </span></p>
                                     <p class="mb-0">Wallet Deposit<span
                                             class="float-end">${{ number_format($wallet_deposit->deposit,2) }}</span></p>
@@ -41,10 +43,12 @@
                             <div class="card-widget">
                                 <h6 class="mb-2">Total Withdraw</h6>
                                 <h2 class="text-end"><i
-                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ number_format($wallet_withdrawal->withdraw,2) }}</span>
+                                        class="mdi mdi-credit-card icon-size float-start text-success text-success-shadow"></i><span>${{ number_format($wallet_withdrawal->withdraw + $new_trade_withdrawal->withdraw,2) }}</span>
                                 </h2>
                                 <p class="mb-0">Trading Withdrawal<span
                                         class="float-end">${{ number_format($trade_withdrawal->withdraw,2) }}</span></p>
+                                <p class="mb-0">New Trading Withdrawal<span
+                                        class="float-end">${{ number_format($new_trade_withdrawal->withdraw,2) }}</span></p>
                                 <p class="mb-0">Wallet Withdrawal<span
                                         class="float-end">${{ number_format($wallet_withdrawal->withdraw,2) }}</span></p>
                             </div>

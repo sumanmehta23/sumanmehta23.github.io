@@ -2672,44 +2672,72 @@ class AjaxController extends Controller
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
 
-            $data[] = [
+        // Get wallet deposits
+        $walletDeposits = WalletDeposit::where('user_id', $id)
+            ->whereNotIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer'])
+            ->get();
+
+        // Get trade deposits
+        $tradeDeposits = TradeDeposit::where('user_id', $id)
+            ->whereNotIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer', 'Commission Transfer'])
+            ->get();
+
+        // Merge both collections and sort by id descending
+        $results = $walletDeposits->merge($tradeDeposits)
+            ->sortByDesc('id')
+            ->values(); // reset the keys
+
+        // Prepare the data array
+        $data = $results->map(function ($row) {
+            return [
                 'created_on' => $row->deposted_date,
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
+                'status' => match ($row->status) {
+                    1 => '<div class="badge bg-outline-success">Approved</div>',
+                    2 => '<span class="badge bg-outline-danger">Rejected</span>',
+                    default => '<span class="badge bg-outline-primary">Pending</span>',
+                },
             ];
-        }
+        });
 
         return ['data' => $data];
     }
+
     public function getLatestWithdrawal($id)
     {
         // header('Content-Type: application/json');
         // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         // $query = DB::select($sql);
-        $query = WalletWithdraw::with('user')
+        $WalletWithdraw = WalletWithdraw::with('user')
             ->where('user_id', $id)
             ->where('withdraw_type', ['Wallet Withdrawal'])
             ->orderBy('withdraw_date', 'desc')
             ->get();
 
-        $results = $query;
+        $TradeWithdrawals = TradeWithdrawals::with('user')
+            ->where('user_id', $id)
+            ->where('withdraw_type', ['Trade Withdrawal'])
+            ->orderBy('withdraw_date', 'desc')
+            ->get();
+
+        $results = $WalletWithdraw->merge($TradeWithdrawals)
+                ->sortByDesc('id')
+                ->values(); // reset the keys
         $data = [];
         foreach ($results as $row) {
+            // dd($row);
+            $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
+            $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
+
             $data[] = [
                 'created_on' => $row->withdraw_date,
-                'from_to' => 'Wallet',
+                'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->withdraw_type,
-                'amount' => '$' . $row->withdraw_amount,
-                'fee' => '$' . $row->withdraw_transaction_fee,
+                'amount' => '$' . number_format((float)$amount, 2),
+                'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
