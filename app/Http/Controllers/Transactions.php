@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Account;
-use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
-use App\Models\TradeWithdrawals;
-use App\Models\InternalTransfer;
+use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Models\InternalTransfer;
+use App\Models\TradeWithdrawals;
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\TradeWithdrawal;
 use App\Services\MailService as MailService;
 
 
@@ -25,18 +26,30 @@ class Transactions extends Controller
 
         $email = $email = auth()->user()->email;
 
-        $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
+        // $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
+        //     ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
+        //     ->orderBy('id', 'desc')
+        //     ->get();
+
+        $deposit_history = TradeDeposit::where('user_id',  auth()->user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
+
             // dd($wallet_deposit_history);
         // Fetching withdrawal history
+
         $withdrawal_history = WalletWithdraw::where('email', $email)
             ->where('withdraw_type', 'Wallet Withdrawal')
             ->orderBy('id', 'desc')
             ->get();
 
+        $withdrawal_history = TradeWithdrawals::where('email', $email)
+            ->where('withdraw_type', 'Trade Withdrawal')
+            ->orderBy('id', 'desc')
+            ->get();
 
+        dd($withdrawal_history);
 
         // Fetching internal transfers
 

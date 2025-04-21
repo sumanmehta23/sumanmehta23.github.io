@@ -174,13 +174,21 @@ class TradeWithdrawal extends Controller
                 ], 400);
             } else {
                 DB::beginTransaction();
+                if($balance >= 100){
+                    $withdrawal_amount = $balance;
+                    $withdrawal_fee = 0;
+                }else{
+                    $withdrawal_fee = 5;
+                    $withdrawal_amount = $balance - $withdrawal_fee;
+                }
 
                 try {
                     $TradeWithdrawal = TradeWithdrawals::create([
                         'email' => $user_email,
                         'user_id' => $user_id,
                         'account_id' => $account->id,
-                        'withdrawal_amount' => $amount,
+                        'withdrawal_amount' => $withdrawal_amount,
+                        'transaction_fee' => $withdrawal_fee,
                         'withdraw_type' => $withdraw_type,
                         'code' => $account->code,
                         // 'withdraw_to' => $to_account_id,
