@@ -44,15 +44,16 @@ class Transactions extends Controller
 
         $withdrawal_history1 = WalletWithdraw::where('email', $email)
             ->where('withdraw_type', 'Wallet Withdrawal')
-            ->orderBy('id', 'desc')
+            ->orderBy('withdraw_date', 'desc')
             ->get();
 
         $withdrawal_history2 = TradeWithdrawals::where('email', $email)
             ->where('withdraw_type', 'Trade Withdrawal')
-            ->orderBy('id', 'desc')
+            ->orderBy('withdraw_date', 'desc')
             ->get();
 
-        $withdrawal_history = $withdrawal_history1->merge($withdrawal_history2)
+        $withdrawal_history = $withdrawal_history2->merge($withdrawal_history1)
+
             ->values(); // reset the keys
 
         // dd($withdrawal_history);
