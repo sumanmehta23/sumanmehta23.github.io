@@ -24,13 +24,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
+use App\Services\MT5Service;
 
 class Transaction extends Controller
 {
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $api;
+    public function __construct(MailService $mailService, MT5Service $mt5Service )
     {
+        $this->mt5Service = $mt5Service;
         $this->mailService = $mailService;
+        $this->api = $this->mt5Service->getApi();
     }
     public function index(Request $request)
     {
@@ -737,14 +741,19 @@ class Transaction extends Controller
 
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
 
+        if($transaction->status == 1){
+            return redirect()->back()->with('status', 'Your transaction is already approved.');
+        }
+
         if ($transaction) {
 
             if($transaction->status == 2){
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 
-            $transaction->admin_remark = $rejection_reason;
-            $transaction->status = $status;
+            // $transaction->admin_remark = $rejection_reason;
+            // $transaction->status = $status;
+
             // $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
@@ -895,6 +904,7 @@ class Transaction extends Controller
                     ])
                 ->event('update')
                 ->log('Reject Wallet Withdraw');
+                $this->deposit_to_account($transaction);
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
                     // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
@@ -969,6 +979,8 @@ class Transaction extends Controller
                 //     'btn_text' => 'Go To Dashboard',
                 // ];
                 // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+            }elseif($status==2 && $rejection_reason != 'Invalid cryptocurrency address'){
+                $this->deposit_to_account($transaction);
             }
             return redirect()->back()->with('status', 'Transaction Rejected Successfully');
         } else {
@@ -1113,5 +1125,18 @@ class Transaction extends Controller
     //     ];
     //     phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
     //   }
+    }
+
+    function deposit_to_account($transaction){
+        $comment = 'Cancelled Withdrawal';
+
+        $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, $transaction->withdrawal_amount, $comment, $ticket, $margin_check=true);
+
+        if ($errorCode != MTRetCode::MT_RET_OK) {
+            $error = MTRetCode::GetError($errorCode);
+            return redirect()->back()->with('error', 'Something went wrong on Deposit. ' . $error);
+        } else {
+            return redirect()->back()->with('status', 'Transaction Rejected Successfully');
+        }
     }
 }
