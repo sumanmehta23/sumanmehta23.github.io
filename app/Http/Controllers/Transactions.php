@@ -26,30 +26,36 @@ class Transactions extends Controller
 
         $email = $email = auth()->user()->email;
 
-        // $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
-        //     ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
-        //     ->orderBy('id', 'desc')
-        //     ->get();
-
-        $deposit_history = TradeDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history1 = WalletDeposit::where('user_id',  auth()->user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
+        $deposit_history2 = TradeDeposit::where('user_id',  auth()->user()->id)
+            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $deposit_history = $deposit_history1->merge($deposit_history2)
+            ->values(); // reset the keys
+
             // dd($wallet_deposit_history);
         // Fetching withdrawal history
 
-        $withdrawal_history = WalletWithdraw::where('email', $email)
+        $withdrawal_history1 = WalletWithdraw::where('email', $email)
             ->where('withdraw_type', 'Wallet Withdrawal')
             ->orderBy('id', 'desc')
             ->get();
 
-        $withdrawal_history = TradeWithdrawals::where('email', $email)
+        $withdrawal_history2 = TradeWithdrawals::where('email', $email)
             ->where('withdraw_type', 'Trade Withdrawal')
             ->orderBy('id', 'desc')
             ->get();
 
-        dd($withdrawal_history);
+        $withdrawal_history = $withdrawal_history1->merge($withdrawal_history2)
+            ->values(); // reset the keys
+
+        // dd($withdrawal_history);
 
         // Fetching internal transfers
 
