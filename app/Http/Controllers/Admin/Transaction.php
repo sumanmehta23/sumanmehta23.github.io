@@ -907,7 +907,7 @@ class Transaction extends Controller
                 ->log('Reject Wallet Withdraw');
 
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, $transaction->withdrawal_amount, $comment, $ticket, $margin_check=true);
+                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check=true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -989,7 +989,7 @@ class Transaction extends Controller
                 // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
             }elseif($status==2 && $rejection_reason != 'Invalid cryptocurrency address'){
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, $transaction->withdrawal_amount, $comment, $ticket, $margin_check=true);
+                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check=true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);

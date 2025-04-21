@@ -118,6 +118,7 @@
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td></td>
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div>
@@ -182,6 +183,18 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span>${{ $details->withdrawal_amount }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <div class="lh-1">
+                                                            <span class="fs-11 text-muted">WITHDRAWAL FEE</span>
+                                                        </div>
+                                                        <div class="lh-1 mt-2">
+                                                            <span>${{ $details->transaction_fee }}</span>
                                                         </div>
                                                     </div>
                                                 </div>

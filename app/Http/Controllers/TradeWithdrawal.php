@@ -175,11 +175,11 @@ class TradeWithdrawal extends Controller
             } else {
                 DB::beginTransaction();
                 if($balance >= 100){
-                    $withdrawal_amount = $balance;
+                    $withdrawal_amount = $amount;
                     $withdrawal_fee = 0;
                 }else{
                     $withdrawal_fee = 5;
-                    $withdrawal_amount = $balance - $withdrawal_fee;
+                    $withdrawal_amount = $amount - $withdrawal_fee;
                 }
 
                 try {

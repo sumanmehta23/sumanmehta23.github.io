@@ -83,6 +83,7 @@
                                                 <tr>
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
+                                                    <th>Withdrawal Fee</th>
                                                     <th>Withdraw Type</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
@@ -162,6 +163,7 @@
             columns: [
               { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
+              { data: 'transaction_fee', name: 'transaction_fee' },
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_to', name: 'withdraw_to' },
               {

@@ -1368,8 +1368,9 @@ class AjaxController extends Controller
     {
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
-        $query = TradeWithdrawals::select('trade_withdrawal.*')
-            ->with(['user', 'withdrawTo', 'account']);
+        $query = TradeWithdrawals::select('*')
+                ->with(['user', 'withdrawTo', 'account'])
+                ->whereIn('withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
             // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -1398,15 +1399,32 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             return DataTables::of($query)
 
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_date', $order);
+                })
+
+                ->orderColumn('withdraw_type', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_type', $order);
+                })
+
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.code', $order);
+                })
+
+                ->orderColumn('transaction_fee', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.transaction_fee', $order);
+                })
+
                 ->orderColumn('withdrawal_amount', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.withdrawal_amount', $order);
                 })
+
                 ->orderColumn('status', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.status', $order);
                 })
 
                 ->addColumn('code', function ($row) {
-                    return $row->account->code;
+                    return $row->account->code ?? '';
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
