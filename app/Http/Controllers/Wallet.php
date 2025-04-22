@@ -35,7 +35,6 @@ use Laravel\Fortify\TwoFactorAuthenticationProvider;
 use App\MT5\MTEnDealAction;
 use App\MT5\MTRetCode;
 use App\Services\MT5Service;
-
 class Wallet extends Controller
 {
     protected $settings;
