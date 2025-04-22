@@ -187,10 +187,10 @@
                             <h6 class="f-w-500">{{ $history->withdraw_type }}</h6>
                           </td>
                           <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount, 2) }}</h6>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount ?? $history->withdrawal_amount, 2) }}</h6>
                           </td>
                           <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee, 2) }}</h6>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
                           </td>
                           {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">

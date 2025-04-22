@@ -53,7 +53,6 @@ class Transactions extends Controller
             ->get();
 
         $withdrawal_history = $withdrawal_history2->merge($withdrawal_history1)
-
             ->values(); // reset the keys
 
         // dd($withdrawal_history);
