@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Traits\LogsActivity;
 use App\Http\Resources\WithdrawalCollection;
 use App\Models\TradeDeposit;
+use App\Models\TradeWithdrawals;
 use App\Services\MailService as MailService;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
@@ -1173,19 +1174,19 @@ class Wallet extends Controller
             ]);
             $user = auth()->user();
 
-            $walletWithdrawal = WalletWithdraw::with('user')
+            $tradeWithdrawal = TradeWithdrawals::with('user')
                 ->where('user_id', $user->id)
                 ->find($request->wallet_withdrawal_id);
             // dump($user->id);
             // dd($walletWithdrawal);
-            if (!$walletWithdrawal) {
+            if (!$tradeWithdrawal) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized or not found'], 403);
             }
 
             $settings = settings();
-            $withdrawAmount = $walletWithdrawal->withdraw_amount;
-            $toEmail = $walletWithdrawal->user->email;
-            $toName = $walletWithdrawal->user->fullname;
+            $withdrawAmount = $tradeWithdrawal->withdrawal_amount;
+            $toEmail = $tradeWithdrawal->user->email;
+            $toName = $tradeWithdrawal->user->fullname;
             $from = $settings['email_from_address'];
 
             $type = 'Withdrawal Details Verification';
@@ -1202,7 +1203,7 @@ class Wallet extends Controller
             $templateVars = [
                 'name' => $toName,
                 'server_name' => $settings['mt5_company_name'],
-                'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$walletWithdrawal->id",
+                'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$tradeWithdrawal->id",
                 'email' => $from,
                 "content" => $content,
                 "title_right" => "Activate",
