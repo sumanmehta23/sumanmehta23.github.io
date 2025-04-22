@@ -5,14 +5,20 @@ namespace App\Http\Controllers;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
+use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\PaymentLog;
 use App\Models\LiveAccount;
+use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
 use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
+use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Models\BonusTransaction;
+use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Payment;
 use PragmaRX\Google2FA\Google2FA;
 use Illuminate\Support\Facades\DB;
@@ -27,14 +33,10 @@ use App\Http\Resources\DepositCollection;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Traits\LogsActivity;
 use App\Http\Resources\WithdrawalCollection;
-use App\Models\TradeDeposit;
-use App\Models\TradeWithdrawals;
 use App\Services\MailService as MailService;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
-use App\MT5\MTEnDealAction;
-use App\MT5\MTRetCode;
-use App\Services\MT5Service;
+
 class Wallet extends Controller
 {
     protected $settings;
