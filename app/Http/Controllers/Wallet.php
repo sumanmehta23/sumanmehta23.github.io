@@ -1196,18 +1196,19 @@ class Wallet extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
             $content =
-                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</div>' .
-                '<div>Click the link below to activate your Wallet Withdrawal</div>';
+                '<div><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></div><br>' .
+                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account.</div><br>' .
+                '<div>Click the link below to activate your Account Withdrawal</div>';
 
             $templateVars = [
                 'name' => $toName,
                 'server_name' => $settings['mt5_company_name'],
-                'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$tradeWithdrawal->id",
+                'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$tradeWithdrawal->id",
                 'email' => $from,
                 "content" => $content,
                 "title_right" => "Activate",
-                "subtitle_right" => "Your Wallet Withdrawal Request"
+                "subtitle_right" => "Your Account Withdrawal Request",
+                "btn_text" => "Verify"
             ];
 
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
