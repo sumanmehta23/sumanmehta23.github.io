@@ -969,6 +969,26 @@ class Wallet extends Controller
                 $comment = 'Deposit';
                 $ticket = NULL;
 
+                if($account->accountType->ac_group == 'LM\B-Book\10x\DF-B'){
+                    $bonusamount = 9*$amount;
+                    if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    } else {
+                        $deposit_details = BonusTransaction::create([
+                            'email' => $email,
+                            'user_id' => $customerID,
+                            'account_id' => $customerAccountID,
+                            'code' => $account->code,
+                            'bonus_amount' => $bonusamount,
+                            'bonus_type' => 'Bonus In',
+                            'status' => 1,
+                            'admin_remark' => '10x Trader Leverage',
+                            'bonus_currency' => 'USD',
+                            // 'created_by' => session('alogin')
+                        ]);
+                    }
+                }
+
                 $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
