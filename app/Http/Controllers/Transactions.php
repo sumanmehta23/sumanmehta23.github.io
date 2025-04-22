@@ -161,7 +161,7 @@ class Transactions extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
 
-        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
 
         if($transaction->status == 1){
             return redirect()->back()->with('status', 'Your transaction is already approved.');
