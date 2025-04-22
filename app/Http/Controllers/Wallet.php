@@ -967,14 +967,14 @@ class Wallet extends Controller
                 $callback_code = json_encode($payload['transaction']["status"]);
 
                 $comment = 'Deposit';
-                $ticket = NULL;
+                $ticket1 = NULL;
 
                 if($account->accountType->ac_group == 'LM\B-Book\10x\DF-B'){
                     $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
                     if (!$existingTransaction) {
                         $bonusamount = 9*$amount;
-                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        if (($error_code1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
                         } else {
                             $deposit_details = BonusTransaction::create([
                                 'email' => $email,
@@ -992,9 +992,11 @@ class Wallet extends Controller
                     }
                 }
 
-                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
+                $ticket2 = NULL;
+                $error_code2 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, $margin_check = true);
+
+                if ($error_code2 != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($error_code2);
                     return response()->json([
                         'success' => false,
                         'message' => 'Something went wrong',
