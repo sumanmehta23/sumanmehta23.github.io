@@ -233,7 +233,8 @@ class TradeWithdrawal extends Controller
                         'email' => $from,
                         "content" => $content,
                         "title_right" => "Activate",
-                        "subtitle_right" => "Your Account Withdrawal Request"
+                        "subtitle_right" => "Your Account Withdrawal Request",
+                        "btn_text" => "Verify"
                     ];
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                     // RateLimiter::clear($key);
