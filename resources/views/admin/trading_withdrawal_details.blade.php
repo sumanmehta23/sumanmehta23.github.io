@@ -118,7 +118,6 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td></td>
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div>
@@ -242,7 +241,7 @@
                                                         <span class="fs-11 text-muted">WITHDRAW FEE</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                        <span>$<?= number_format($details->withdraw_transaction_fee,2) ?? 0 ?></span>
+                                                        <span>${{ $details->transaction_fee }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
