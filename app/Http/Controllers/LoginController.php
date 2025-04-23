@@ -560,7 +560,8 @@ class LoginController extends Controller
                 'email' => $settings['email_from_address'],
                 "content" => $content,
                 "title_right" => "Activate",
-                "subtitle_right" => "Your Account"
+                "subtitle_right" => "Your Account",
+                "btn_text" => "Activate",
             ];
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
             $list_id = @config('services.klaviyo.list_ids')['ACCOUNT_CREATED'];

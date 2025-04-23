@@ -371,7 +371,8 @@ class User extends Authenticatable
             'email' => $settings['email_from_address'],
             "content" => $content,
             "title_right" => "Activate",
-            "subtitle_right" => "Your Account"
+            "subtitle_right" => "Your Account",
+            "btn_text" => "Activate",
         ];
 
         $mailservice->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
