@@ -114,7 +114,7 @@ class TradeWithdrawal extends Controller
             'account_id.required' => 'Account is not selected.',
         ]);
 
-        $account = Account::with('accountType')
+        $account = Account::with('accountType','tradeDeposits')
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
@@ -125,6 +125,7 @@ class TradeWithdrawal extends Controller
                       ->orWhere('bonus_type', 'Bonus Out');
             })
             ->where('admin_remark', 'NOT LIKE', '%Credit%')
+            ->where('admin_remark', 'NOT LIKE', '%10x Trader Leverage%')
             ->sum('bonus_amount');
 
         $withdraw_type = $request->input('withdraw_type');
@@ -161,8 +162,38 @@ class TradeWithdrawal extends Controller
                     ])
             ->event('create')
             ->log('Account Withdraw');
+
             $clientWalletId = $request->input('client_wallet_id');
             $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
+
+            if($account->accountType->ac_group == 'LM\B-Book\10x\DF-B'){
+                $total_deposit_amount = $account->tradeDeposits->sum('deposit_amount');
+                $account_balance = $account->balance;
+
+                if($account_balance >= $total_deposit_amount){
+                    $multiple_value = $total_deposit_amount-$account_balance+(-$balance);
+                }elseif($account_balance < $total_deposit_amount){
+                    $multiple_value = $total_deposit_amount-$account_balance-($balance);
+                }
+                $bonusamount = -9*$multiple_value;
+                if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                } else {
+                    $deposit_details = BonusTransaction::create([
+                        'email' => $account->email,
+                        'user_id' => $user_id,
+                        'account_id' => $account->id,
+                        'code' => $account->code,
+                        'bonus_amount' => $bonusamount,
+                        'bonus_type' => 'Bonus Out',
+                        'status' => 1,
+                        'admin_remark' => '10x Trader Leverage',
+                        'bonus_currency' => 'USD',
+                        // 'created_by' => session('alogin')
+                    ]);
+                }
+
+            }
 
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
