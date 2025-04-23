@@ -331,7 +331,7 @@
                         <div class="card-header">
                             <div class="mb-0 card-title d-flex justify-content-between w-100">
                                 <div>
-                                    Latest Pending Withdrawals
+                                    Latest Pending Wallet Withdrawals
                                 </div>
                                 <div>
                                     <a href="/admin/transactions/wallet-withdrawal?status=0" class="btn btn-primary-light">View
@@ -500,6 +500,180 @@
                                                     <?php } else { ?>
                                                     <div>
                                                         <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->raw_id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
+                                                    <?php } ?>
+                                                </td>
+                                            @endcan
+                                        </tr>
+                                        <?php }
+                    } ?>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Row -->
+            @endcan
+            @can("wallet_withdraw:viewAny")
+            <div class="row row-sm">
+                <div class="col-lg-12">
+                    <div class="card custom-card product-sales">
+                        <div class="card-header">
+                            <div class="mb-0 card-title d-flex justify-content-between w-100">
+                                <div>
+                                    Latest Pending Trade Withdrawals
+                                </div>
+                                <div>
+                                    <a href="/admin/transactions/trading-withdrawal?status=0" class="btn btn-primary-light">View
+                                        All</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered text-nowrap border-bottom">
+                                    <thead class="border-top">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Client</th>
+                                            <th>Deposit To</th>
+                                            <th>Amount</th>
+                                            <th>Mode</th>
+                                            <th>Withdraw Date</th>
+                                            <th>Status</th>
+                                            @can("wallet_withdraw:view")
+                                                <th>Action</th>
+                                            @endcan
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+
+                    $cnt = 1;
+                    if (count($trade_withdrawals) > 0) {
+                      foreach ($trade_withdrawals as $result) {
+                    ?>
+                                        <tr>
+                                            <td>
+                                                <div><?php echo htmlentities('TWID'.$result->id); ?></div>
+                                            </td>
+                                            <td>
+                                                <a href="/admin/client_details/{{ ($result->user_id) }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                                height="28" viewBox="0 0 24 24" fill="none"
+                                                                stroke="#000000" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                size="28" color="#000000"
+                                                                class="tabler-icon tabler-icon-user-square-rounded">
+                                                                <path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path>
+                                                                <path
+                                                                    d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z">
+                                                                </path>
+                                                                <path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <div class="lh-1">
+                                                                <span><?php echo htmlentities($result->fullname); ?></span>
+                                                            </div>
+                                                            <div class="lh-1">
+                                                                <span class="fs-11 text-muted"><?php echo htmlentities($result->email); ?></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a href="/admin/client_details/{{ ($result->user_id) }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                                height="28" viewBox="0 0 24 24" fill="none"
+                                                                stroke="#000000" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                size="28" color="#000000"
+                                                                class="tabler-icon tabler-icon-user-square-rounded">
+                                                                <path d="M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z"></path>
+                                                                <path
+                                                                    d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z">
+                                                                </path>
+                                                                <path d="M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <div class="lh-1">
+                                                                <span><?php echo htmlentities($result->fullname); ?></span>
+                                                            </div>
+                                                            <div class="lh-1">
+                                                                <span class="fs-11 text-muted"><?php echo htmlentities($result->email); ?></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="amount">
+                                                    $ <?php echo htmlentities($result->withdrawal_amount); ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div><?php echo htmlentities($result->withdraw_type); ?></div>
+                                            </td>
+                                            <td>
+                                                <div class="lh-1">{{ date('Y-m-d', strtotime($result->withdraw_date)) }}
+                                                </div>
+                                                <div class="lh-2 text-muted">
+                                                    {{ date('H:i:s', strtotime($result->withdraw_date)) }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="mt-sm-1 d-block">
+
+                                                    <?php
+                              $stats = $result->status;
+                              if ($stats == 1) {
+                              ?>
+                                                    <div
+                                                        class="p-2 px-3 badge bg-success-transparent text-success rounded-pill ">
+                                                        Success</div>
+                                                    <?php }
+                              if ($stats == 2) { ?>
+                                                    <div
+                                                        class="p-2 px-3 badge bg-danger-transparent text-danger rounded-pill ">
+                                                        Cancelled</div>
+                                                    <?php }
+
+                              if ($stats == 0) { ?>
+                                                    <div
+                                                        class="p-2 px-3 badge bg-primary-transparent text-primary rounded-pill ">
+                                                        Pending</div>
+                                                    <?php
+                              } ?>
+                                                </div>
+
+                                            </td>
+                                            @can("wallet_withdraw:view")
+                                                <td>
+                                                    <?php if ($result->withdraw_type == "Trade Withdrawal") { ?>
+                                                    <div>
+                                                        <a href="/admin/trading_withdrawal_details?id=<?php echo (($result->id)); ?>&email=<?php echo htmlentities($result->email); ?>"
+                                                            class="" style="font-size: 13px;padding: 2px 20px;">
+                                                            <i class="fe fe-eye fs-14 text-info"></i>
+                                                        </a>
+                                                    </div>
+
+                                                    <?php } else { ?>
+                                                    <div>
+                                                        <a href="/admin/wallet_withdrawal_details?id=<?php echo ($result->id); ?>&email=<?php echo htmlentities($result->email); ?>&deposit=<?php echo htmlentities($result->withdraw_amount); ?>"
                                                             class="" style="font-size: 13px;padding: 2px 20px;">
                                                             <i class="fe fe-eye fs-14 text-info"></i>
                                                         </a>

@@ -99,7 +99,10 @@ class Dashboard extends Controller
         $sql = "SELECT trs.*, au.id AS user_id FROM wallet_withdraws trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 AND trs.verified = 1 ORDER BY trs.raw_id DESC LIMIT 10";
         $wallet_withdraws = DB::select($sql);
 
-        return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws','new_trade_deposit','new_trade_withdrawal'));
+        $sql = "SELECT trs.*, au.id AS user_id, au.fullname FROM trade_withdrawal trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 AND trs.email_verified = 1 AND withdraw_type = 'Trade Withdrawal' ORDER BY trs.id DESC LIMIT 10";
+        $trade_withdrawals = DB::select($sql);
+
+        return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws','new_trade_deposit','new_trade_withdrawal','trade_withdrawals'));
     }
     public function sendMarketingEmail(MailService $mailService)
     {
