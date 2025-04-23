@@ -469,5 +469,6 @@
                 document.getElementById('selectedLiveAccount').value = checkedRadio.value;
             }
         });
+
     </script>
 @endsection
