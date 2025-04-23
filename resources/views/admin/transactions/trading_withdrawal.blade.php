@@ -16,6 +16,7 @@
                     <option value="">All</option>
                     <option value="1">Approved</option>
                     <option value="2">Rejected</option>
+                    <option value="3">Cancelled By User</option>
                     <option value="0">Pending</option>
                     <!-- Add other status options as needed -->
                   </select>
