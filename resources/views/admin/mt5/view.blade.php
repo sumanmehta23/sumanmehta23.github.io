@@ -1,3 +1,6 @@
+@php
+    use Carbon\Carbon;
+@endphp
 @extends('layouts.admin.admin')
 @section('content')
     @include('admin.mt5.popups')
@@ -328,7 +331,11 @@ if ($getUser) {
                                             foreach ($bonus_trans as $bns) {
                                             ?>
                                             <tr>
-                                                <td><?= date('Y-m-d', strtotime($bns->bonus_date)) ?><br><small><?= date('H:i:s', strtotime($bns->bonus_date)) ?></small>
+                                                <td>
+                                                    {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('Y-m-d') }}<br>
+                                                    <small>
+                                                        {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('H:i:s') }}
+                                                    </small>
                                                 </td>
                                                 <td><?= strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
                                                 <td><?= $bns->bonus_amount ?></td>
