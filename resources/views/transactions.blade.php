@@ -180,7 +180,7 @@
                           <td>
                             <h6 class="f-w-500">{{ Carbon::parse($history->withdraw_date)->format('Y-m-d') }}</h6>
                             <p class="mb-0 text-muted">
-                              <small>{{ Carbon::parse($history->withdraw_date)->format('H:i A') }}</small>
+                              <small>{{ Carbon::parse($history->withdraw_date)->timezone('Etc/GMT-3')->format('H:i A') }}</small>
                             </p>
                           </td>
                           <td>
