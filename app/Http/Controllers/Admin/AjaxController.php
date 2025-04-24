@@ -2698,7 +2698,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
 
             $data[] = [
-                'created_on' => $row->deposted_date,
+                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
@@ -2724,7 +2724,7 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $data[] = [
-                'created_on' => $row->withdraw_date,
+                'created_on' =>  Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => 'Wallet',
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . $row->withdraw_amount,
@@ -2753,7 +2753,7 @@ class AjaxController extends Controller
                 $deposit_from = $row->deposit_type;
             }
             $data[] = [
-                'created_on' => $row->deposted_date,
+                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
