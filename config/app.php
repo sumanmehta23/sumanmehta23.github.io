@@ -71,9 +71,7 @@ return [
     |
     */
 
-    // 'timezone' => 'UTC',
-    'timezone' => 'Etc/GMT-3',
-
+    'timezone' => 'UTC',
 
 
     /*
