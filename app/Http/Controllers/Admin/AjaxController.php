@@ -1080,8 +1080,10 @@ class AjaxController extends Controller
                     return $row->deposit_type;
                 })
                 ->addColumn('deposit_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->deposted_date));
-                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    // $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $date = Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->deposted_date));
+                    $time = Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -1108,10 +1110,12 @@ class AjaxController extends Controller
                     return $row->user->email;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->deposted_date));
+                    // return date('Y-m-d', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->deposted_date));
+                    // return date('H:i:s', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date', 'status', 'action'])
                 ->make(true);
@@ -1212,8 +1216,11 @@ class AjaxController extends Controller
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
-                    $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                    // $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                    $date = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+
+                    // $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                    $time = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                     $date
                                 </div>
@@ -1242,10 +1249,12 @@ class AjaxController extends Controller
                     return $row->user->email;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                    // return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
+                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                    // return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
+                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
                 ->make(true);
@@ -1342,8 +1351,10 @@ class AjaxController extends Controller
                     return ($row->deposit_from && $acc) ? $acc->code : $deposit_from;
                 })
                 ->addColumn('deposit_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->deposted_date));
-                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    // $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $date = Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->deposted_date));
+                    $time = Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -1364,10 +1375,12 @@ class AjaxController extends Controller
                     return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->deposted_date));
+                    // return date('Y-m-d', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->deposted_date));
+                    // return date('H:i:s', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action'])
                 ->make(true);
@@ -1430,8 +1443,10 @@ class AjaxController extends Controller
                     return ($row->withdraw_to && $acc) ? $acc->code : $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->withdraw_date));
-                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $date = Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->withdraw_date));
+                    $time = Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -1452,10 +1467,12 @@ class AjaxController extends Controller
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->withdraw_date));
+                    // return date('Y-m-d', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->withdraw_date));
+                    // return date('H:i:s', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
                 ->make(true);
@@ -1902,8 +1919,10 @@ class AjaxController extends Controller
                     return $row->deposit_type;
                 })
                 ->addColumn('deposit_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->deposted_date));
-                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    // $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $date = Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->deposted_date));
+                    $time = Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -1930,10 +1949,12 @@ class AjaxController extends Controller
                     return $row->user->email;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->deposted_date));
+                    // return date('Y-m-d', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->deposted_date));
+                    // return date('H:i:s', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'payment_mode', 'deposit_date', 'status', 'action'])
                 ->make(true);
@@ -2014,8 +2035,10 @@ class AjaxController extends Controller
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->withdraw_date));
-                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $date = Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->withdraw_date));
+                    $time = Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -2044,10 +2067,12 @@ class AjaxController extends Controller
                     return $row->user->email;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->withdraw_date));
+                    // return date('Y-m-d', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->withdraw_date));
+                    // return date('H:i:s', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
                 ->make(true);
@@ -2117,8 +2142,10 @@ class AjaxController extends Controller
                     return ($row->deposit_from && $acc) ? $acc->code : $deposit_from;
                 })
                 ->addColumn('deposit_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->deposted_date));
-                    $time = date('H:i:s', strtotime($row->deposted_date));
+                    // $date = date('Y-m-d', strtotime($row->deposted_date));
+                    $date = Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->deposted_date));
+                    $time = Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -2139,10 +2166,12 @@ class AjaxController extends Controller
                     return "<a href='/admin/trading_deposit_details?id={$row->id}' class='' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->deposted_date));
+                    // return date('Y-m-d', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->deposted_date));
+                    // return date('H:i:s', strtotime($row->deposted_date));
+                    return Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action'])
                 ->make(true);
@@ -2194,8 +2223,10 @@ class AjaxController extends Controller
                     return ($row->withdraw_to) ? $row->withdraw_to : $row->withdraw_type;
                 })
                 ->addColumn('withdraw_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->withdraw_date));
-                    $time = date('H:i:s', strtotime($row->withdraw_date));
+                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $date = Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->withdraw_date));
+                    $time = Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -2216,10 +2247,12 @@ class AjaxController extends Controller
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->withdraw_date));
+                    // return date('Y-m-d', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->withdraw_date));
+                    // return date('H:i:s', strtotime($row->withdraw_date));
+                    return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
                 ->make(true);
