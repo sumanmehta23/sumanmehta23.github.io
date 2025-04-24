@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-
+use Carbon\Carbon;
 class WithdrawalCollection extends ResourceCollection
 {
     public $preserveKeys = true;
@@ -27,7 +27,7 @@ class WithdrawalCollection extends ResourceCollection
                     'email' => $withdrawal->email,
                     'transaction_id' => $withdrawal->transaction_id,
                     'status' => $withdrawal->status,
-                    'created_at' => $withdrawal->created_at->addHours(3)->toDateTimeString(),
+                    'created_at' => Carbon::parse($withdrawal->created_at)->addHours(3)->toDateTimeString(),
                 ];
             }),
         ];
