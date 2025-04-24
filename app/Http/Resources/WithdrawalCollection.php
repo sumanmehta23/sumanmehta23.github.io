@@ -27,7 +27,7 @@ class WithdrawalCollection extends ResourceCollection
                     'email' => $withdrawal->email,
                     'transaction_id' => $withdrawal->transaction_id,
                     'status' => $withdrawal->status,
-                    'created_at' => $withdrawal->created_at->addHours(3)->toDateTimeString(),
+                    'created_at' => $withdrawal->created_at->toDateTimeString(),
                 ];
             }),
         ];
