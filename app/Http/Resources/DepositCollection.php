@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Carbon\Carbon;
 
 class DepositCollection extends ResourceCollection
 {
@@ -25,7 +26,7 @@ class DepositCollection extends ResourceCollection
                     'deposit_type' => $deposit->deposit_type,
                     'email' => $deposit->email,
                     'status' => $deposit->status,
-                    'created_at' => $deposit->created_at->toDateTimeString(),
+                    'created_at' => Carbon::parse($row->created_at)->addHours(3)->toDateTimeString(),
                 ];
             }),
         ];
