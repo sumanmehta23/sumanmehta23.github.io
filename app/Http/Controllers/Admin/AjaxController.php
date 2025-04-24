@@ -434,7 +434,7 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->editColumn('created_at', function ($row) {
-                    $createdAt = Carbon::parse($row->created_at);
+                    $createdAt = Carbon::parse($row->created_at)->addHours(3);
                     return "<div class='d-grid'>
                             <div class='date'>{$createdAt->format('Y-m-d')}</div>
                             <div class='time text-muted'>{$createdAt->format('H:i:s')}</div>
@@ -693,8 +693,10 @@ class AjaxController extends Controller
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    $time = date('H:i:s', strtotime($row->created_at));
+                    // $date = date('Y-m-d', strtotime($row->created_at));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->created_at));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -728,10 +730,12 @@ class AjaxController extends Controller
                     return $row->account_request_status;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->created_at));
+                    // return date('Y-m-d', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->created_at));
+                    // return date('H:i:s', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'request_status'])
                 ->make(true);
@@ -827,8 +831,10 @@ class AjaxController extends Controller
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    $time = date('H:i:s', strtotime($row->created_at));
+                    // $date = date('Y-m-d', strtotime($row->created_at));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->created_at));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -858,10 +864,12 @@ class AjaxController extends Controller
                     return $html;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->created_at));
+                    // return date('Y-m-d', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->created_at));
+                    // return date('H:i:s', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'actions'])
                 ->make(true);
@@ -956,8 +964,10 @@ class AjaxController extends Controller
                     return $row->balance;
                 })
                 ->addColumn('created_at', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    $time = date('H:i:s', strtotime($row->created_at));
+                    // $date = date('Y-m-d', strtotime($row->created_at));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->created_at));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                 $date
                             </div>
@@ -978,10 +988,12 @@ class AjaxController extends Controller
                     return $row->accountType->ac_group;
                 })
                 ->addColumn('created_date', function ($row) {
-                    return date('Y-m-d', strtotime($row->created_at));
+                    // return date('Y-m-d', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
-                    return date('H:i:s', strtotime($row->created_at));
+                    // return date('H:i:s', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail'])
                 ->make(true);
