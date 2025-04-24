@@ -1,3 +1,6 @@
+@php
+    use Carbon\Carbon;
+@endphp
 @extends('layouts.admin.admin')
 @section('content')
     <!-- Start::app-content -->
@@ -33,7 +36,7 @@
                                             <td>Trade ID</td>
                                             <td>Leverage</td>
                                             <td>Balance</td>
-                                            <td>registered_date</td>
+                                            <td>Registered Date</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -89,10 +92,13 @@
                                             <td><?php echo htmlentities($result->balance); ?></td>
                                             <td>
                                                 <div class="lh-1">
-                                                    <?= date('Y-m-d', strtotime($result->registered_date)) ?>
+                                                    {{-- <?= date('Y-m-d', strtotime($result->created_at)) ?> --}}
+                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    <?= date('H:i:s', strtotime($result->registered_date)) ?></div>
+                                                    {{-- <?= date('H:i:s', strtotime($result->created_at)) ?> --}}
+                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php }
