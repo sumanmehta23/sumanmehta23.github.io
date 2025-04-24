@@ -103,9 +103,9 @@
                             </div>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{Carbon::parse($history->deposted_date)->format('Y-m-d') }}</h6>
+                            <h6 class="f-w-500">{{Carbon::parse($history->deposted_date)->addHours(3)->format('Y-m-d') }}</h6>
                             <p class="mb-0 text-muted">
-                              <small>{{ Carbon::parse($history->deposted_date)->timezone('Etc/GMT-3')->format('H:i A') }}</small>
+                              <small>{{ Carbon::parse($history->deposted_date)->addHours(3)->format('H:i A') }}</small>
                             </p>
                           </td>
                           <td>
@@ -178,9 +178,9 @@
                             </div>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{ Carbon::parse($history->withdraw_date)->format('Y-m-d') }}</h6>
+                            <h6 class="f-w-500">{{ Carbon::parse($history->withdraw_date)->addHours(3)->format('Y-m-d') }}</h6>
                             <p class="mb-0 text-muted">
-                              <small>{{ Carbon::parse($history->withdraw_date)->timezone('Etc/GMT-3')->format('H:i A') }}</small>
+                              <small>{{ Carbon::parse($history->withdraw_date)->addHours(3)->format('H:i A') }}</small>
                             </p>
                           </td>
                           <td>
