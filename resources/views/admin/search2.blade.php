@@ -45,7 +45,7 @@
                                         <tr>
                                             {{-- {{ dd($accounts) }} --}}
                                             <td>
-                                                <?php $createdAt = Carbon\Carbon::parse($result->created_at);
+                                                <?php $createdAt = Carbon\Carbon::parse($result->created_at)->addHours(3);
                                                 echo "<div class='d-grid'>
                                                         <div class='date'>{$createdAt->format('Y-m-d')}</div>
                                                         <div class='time text-muted'>{$createdAt->format('H:i:s')}</div>
@@ -116,10 +116,12 @@
 
                                             {{-- <td>
                                                 <div class="lh-1">
-                                                    <?= date('Y-m-d', strtotime($result->registered_date)) ?>
+                                                    {{-- <?= date('Y-m-d', strtotime($result->created_at)) ?> --}}
+                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    <?= date('H:i:s', strtotime($result->registered_date)) ?></div>
+                                                    {{-- <?= date('H:i:s', strtotime($result->created_at)) ?></div> --}}
+                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
                                             </td> --}}
                                         </tr>
                                         <?php }
