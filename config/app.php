@@ -72,7 +72,8 @@ return [
     */
 
     // 'timezone' => 'UTC',
-    'timezone' => 'Europe/Moscow',
+    'timezone' => 'Etc/GMT-3',
+
 
 
     /*
