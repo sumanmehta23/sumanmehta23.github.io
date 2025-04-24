@@ -1,3 +1,6 @@
+@php
+    use Carbon\Carbon;
+@endphp
 @extends('layouts.admin.admin')
 @section('content')
     <div class="main-content app-content">
@@ -265,10 +268,14 @@
                                                 <div><?php echo htmlentities($result->deposit_type); ?></div>
                                             </td>
                                             <td>
-                                                <div class="lh-1">{{ date('Y-m-d', strtotime($result->deposit_date)) }}
+                                                <div class="lh-1">
+                                                    {{-- {{ date('Y-m-d', strtotime($result->deposit_date)) }} --}}
+                                                    {{ Carbon::parse($result->deposit_date)->addHours(3)->format('Y-m-d') }}
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    {{ date('H:i:s', strtotime($result->deposit_date)) }}</div>
+                                                    {{-- {{ date('H:i:s', strtotime($result->deposit_date)) }} --}}
+                                                    {{ Carbon::parse($result->deposit_date)->addHours(3)->format('H:i:s') }}
+                                                </div>
                                             <td>
                                                 <div class="mt-sm-1 d-block">
                                                     <!-- <span class="p-2 px-3 badge bg-success-transparent rounded-pill text-success">Shipped</span> -->
@@ -456,10 +463,14 @@
                                                 <div><?php echo htmlentities($result->withdraw_type); ?></div>
                                             </td>
                                             <td>
-                                                <div class="lh-1">{{ date('Y-m-d', strtotime($result->withdraw_date)) }}
+                                                <div class="lh-1">
+                                                    {{-- {{ date('Y-m-d', strtotime($result->withdraw_date)) }} --}}
+                                                    {{ Carbon::parse($result->withdraw_date)->addHours(3)->format('Y-m-d') }}
                                                 </div>
                                                 <div class="lh-2 text-muted">
-                                                    {{ date('H:i:s', strtotime($result->withdraw_date)) }}</div>
+                                                    {{-- {{ date('H:i:s', strtotime($result->withdraw_date)) }} --}}
+                                                    {{ Carbon::parse($result->withdraw_date)->addHours(3)->format('H:i:s') }}
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="mt-sm-1 d-block">
