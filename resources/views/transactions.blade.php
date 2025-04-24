@@ -105,7 +105,7 @@
                           <td>
                             <h6 class="f-w-500">{{Carbon::parse($history->deposted_date)->format('Y-m-d') }}</h6>
                             <p class="mb-0 text-muted">
-                              <small>{{ Carbon::parse($history->deposted_date)->format('H:i A') }}</small>
+                              <small>{{ Carbon::parse($history->deposted_date)->timezone('Etc/GMT-3')->format('H:i A') }}</small>
                             </p>
                           </td>
                           <td>
@@ -303,7 +303,7 @@
                             <td>
                                 <h6 class="f-w-500">{{ Carbon::parse($history['date'])->format('Y-m-d') }}</h6>
                                 <p class="mb-0 text-muted">
-                                    <small>{{ Carbon::parse($history['date'])->format('H:i A') }}</small>
+                                    <small>{{ Carbon::parse($history['date'])->timezone('Etc/GMT-3')->format('H:i A') }}</small>
                                 </p>
                             </td>
                             <td>
