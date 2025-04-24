@@ -25,7 +25,7 @@ class DepositCollection extends ResourceCollection
                     'deposit_type' => $deposit->deposit_type,
                     'email' => $deposit->email,
                     'status' => $deposit->status,
-                    'created_at' => $deposit->created_at->toDateTimeString(),
+                    'created_at' => $deposit->created_at->addHours(3)->toDateTimeString(),
                 ];
             }),
         ];
