@@ -175,7 +175,6 @@ class TradeDepositController extends Controller
         $user = auth()->user();
 
         try {
-            dd($request->all());
             $trading_deposited1 = $request->input('deposit');
             $deposit_type = $request->input('deposit_type');
 
