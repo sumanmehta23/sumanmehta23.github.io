@@ -217,7 +217,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');
     Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
 
-    Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
+    // Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
     Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
 
