@@ -64,6 +64,102 @@ class TradeDepositController extends Controller
         // return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
         return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }
+
+    public function deposit_manually(Request $request,  $user_id, $amount, $account)
+    {
+        // Check the values coming from the route
+
+        $settings = settings();
+
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+        $user = User::findOrFail($user_id);
+        $depositamount = $amount;
+        $email = $user->email;
+        $account = Account::where('user_id', $user->id)->where('code', $account)->firstOrFail();
+
+        $deposit_type = 'Wallet Transfer';
+        $deposit_from = NULL;
+
+        $comment = "Deposit";
+        $ticket = NULL;
+
+        $depositProofPath = null;
+
+        activity()->causedBy($user->id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $user->email,
+                    'code' => $account->code,
+                    'deposit_amount' => $depositamount,
+                    'remark' => 'Account Deposit'
+                ])
+        ->event('create')
+        ->log('Account Deposit');
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
+
+        if ($errorCode != MTRetCode::MT_RET_OK) {
+            $error = MTRetCode::GetError($errorCode);
+            // Return a JSON response with the error
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error' => $error,
+            ], 400); // 400 Bad Request
+        } else {
+
+            // Start a database transaction
+            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+                $tradeId = $account->code;
+
+                // Insert into wallet withdraw
+                WalletWithdraw::create([
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'withdraw_amount' => $depositamount,
+                    'withdraw_type' => "Internal Transfer",
+                    'transaction_id' => $tradeId,
+                    'status' => 1,
+                ]);
+                // Insert into total balance
+                TotalBalance::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'email' => $email,
+                    'withdraw_amount' => $depositamount,
+                    'status' => 1,
+                ]);
+                // Insert into trade deposit
+                TradeDeposit::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'email' => $email,
+                    'code' => $tradeId,
+                    'deposit_amount' => $depositamount,
+                    'deposit_type' => $deposit_type,
+                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
+                    'deposit_proof' => $depositProofPath,
+                    'status' => 1,
+                ]);
+            });
+            AccountHelper::updateLiveAndDemoAccounts();
+            // RateLimiter::clear($key);
+            return response()->json(['success' => 'Funds Successfully Deposited']);
+        }
+
+        return back()->with('success', 'Deposit added successfully.');
+    }
+
+
+
     public function deposit(Request $request)
     {
         $request->validate(
@@ -246,6 +342,7 @@ class TradeDepositController extends Controller
         //     return response()->json(['success' => 'Funds Successfully Deposited']);
         // }
     }
+
 
     private function createCCPayment($amount, $currency, $orderId, $paymentId)
     {
