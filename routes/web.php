@@ -51,6 +51,8 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\ClientTaskController;
 use function PHPUnit\Framework\throwException;
 use Laravel\Telescope\Telescope;
 Route::get('/telescope-test', function () {
@@ -235,7 +237,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/update-nickname', [MT5Accounts::class, 'updateNickname'])->name('update.nickname');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
-
+    Route::get('/tasks', [ClientTaskController::class, 'index'])->name('tasks');
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
@@ -318,6 +320,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
+
+    Route::get('/getTasks', [AjaxController::class, 'getTasks']);
 
     //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
@@ -479,5 +483,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::resource('permissions', PermissionController::class);
         // Route::get("/roles-permissions", [SearchController::class, 'index']);
         Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+
+        // Tasks Section
+        Route::prefix('/tasks')->name('tasks.')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('index');
+            Route::get('/create', [TaskController::class, 'create'])->name('create');
+            Route::post('/store', [TaskController::class, 'store'])->name('store');
+            Route::get('/{task}/edit', [TaskController::class, 'edit'])->name('edit');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+        });
     });
 });

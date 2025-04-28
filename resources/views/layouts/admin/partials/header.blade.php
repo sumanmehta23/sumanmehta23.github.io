@@ -471,6 +471,16 @@ $filePermissions = filePermissions($userRole);
                                 </ul>
                             </li>
                         @endcan
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">TASKS</span>
+                        </li>
+
+                        <li class="slide menu-item-main">
+                            <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-list"></i>
+                                <span class="side-menu__label">Tasks</span>
+                            </a>
+                        </li>
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>
@@ -595,7 +605,6 @@ $filePermissions = filePermissions($userRole);
 
                             </ul>
                         </li>
-
                     </ul>
                     {{-- <ul class="main-menu">
 
