@@ -280,6 +280,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
+    Route::post('/new_trade_deposit', [TradeDepositController::class, 'new_trade_deposit'])->name('new_trade_deposit_store');
 
     Route::get('/trade_deposit_manually/{user_id}/{amount}/{account}', [TradeDepositController::class, 'deposit_manually']);
 
