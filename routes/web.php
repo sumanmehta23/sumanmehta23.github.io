@@ -284,7 +284,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/trade_deposit_manually/{user_id}/{amount}/{account}', [TradeDepositController::class, 'deposit_manually']);
 
-    Route::get('/transaction_deposit_manually/{trx_id}/{amount}/{account_code}', [Wallet::class, 'transaction_deposit_manually']);
+    Route::get('/transaction_deposit_manually/{trx_id}/{amount}/{account_code}/{deposit_type}', [Wallet::class, 'transaction_deposit_manually']);
 
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
     Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');

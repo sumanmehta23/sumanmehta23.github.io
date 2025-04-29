@@ -94,7 +94,7 @@ class Wallet extends Controller
         return $wallethistory;
     }
 
-    public function transaction_deposit_manually(Request $request, $trx_id, $amount,$code)
+    public function transaction_deposit_manually(Request $request, $trx_id, $amount,$code,$deposit_type)
     {
 
 
@@ -122,7 +122,7 @@ class Wallet extends Controller
         $email = $user->email;
 
 
-        $deposit_type = 'CryptoChill';
+        $deposit_type = $deposit_type;
         $deposit_from = NULL;
         $trx_id = $trx_id;
         $comment = "Deposit";
