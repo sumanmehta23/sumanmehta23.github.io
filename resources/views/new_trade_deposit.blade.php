@@ -377,7 +377,7 @@
         </div>
     </div>
     @include('add_amount_to_account')
-    <script>
+    {{-- <script>
         document.addEventListener("DOMContentLoaded", function () {
             const selectedIdInput = document.getElementById("selected_account_code");
 
@@ -396,5 +396,5 @@
                 }
             });
         });
-    </script>
+    </script> --}}
 @endsection
