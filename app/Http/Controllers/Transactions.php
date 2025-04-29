@@ -12,14 +12,21 @@ use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Services\MailService as MailService;
+use App\MT5\MTEnDealAction;
+use App\MT5\MTRetCode;
+use App\MT5\MTWebAPI;
 
 
 class Transactions extends Controller
 {
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $api;
+    protected $settings;
+    public function __construct(MailService $mailService,MTWebAPI $api)
     {
         $this->mailService = $mailService;
+        $this->settings = settings();
+        $this->api = $api;
     }
     public function index()
     {
@@ -184,6 +191,17 @@ class Transactions extends Controller
             $transaction->admin_remark = 'Cancelled by User';
             $transaction->save();
             if($status==3){
+                $comment = "Deposit";
+                $ticket = NULL;
+                $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                }
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
