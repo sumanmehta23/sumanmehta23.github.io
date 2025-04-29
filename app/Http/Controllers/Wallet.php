@@ -124,7 +124,7 @@ class Wallet extends Controller
 
         $deposit_type = 'CryptoChill';
         $deposit_from = NULL;
-
+        $trx_id = $trx_id;
         $comment = "Deposit";
         $ticket = NULL;
 
@@ -143,7 +143,7 @@ class Wallet extends Controller
         } else {
 
             // Start a database transaction
-            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type,$trx_id) {
                 $tradeId = $account->code;
 
                 // Insert into wallet withdraw
@@ -169,6 +169,9 @@ class Wallet extends Controller
                     'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
                     'deposit_proof' => $depositProofPath,
                     'status' => 1,
+                    'transaction_id' => $trx_id,
+                    'callback_code' => 'success',
+                    'callback_data' => 'manually',
                 ]);
             });
             // RateLimiter::clear($key);
