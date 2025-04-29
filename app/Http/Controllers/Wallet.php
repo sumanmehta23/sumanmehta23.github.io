@@ -97,7 +97,6 @@ class Wallet extends Controller
     public function transaction_deposit_manually(Request $request, $trx_id, $amount,$code,$deposit_type)
     {
 
-
         $settings = settings();
 
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));

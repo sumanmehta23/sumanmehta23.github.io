@@ -188,7 +188,11 @@ class User extends Authenticatable
             $totalWithdrawFee = WalletWithdraw::where('user_id', $this->id)
                 ->whereNotIn('status', [2, 3])
                 ->sum('withdraw_transaction_fee');
-
+            if($this->id == '9dc8c7e1-2691-4f0f-b3af-c5cf1604b6b1'){
+                dump($totalDeposit);
+                dump($totalWithdraw);
+                dd($totalWithdrawFee);
+            }
             return round((float) $totalDeposit - ((float) $totalWithdraw + (float) $totalWithdrawFee), 2);
         });
     }
