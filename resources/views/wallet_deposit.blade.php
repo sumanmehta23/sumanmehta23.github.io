@@ -613,5 +613,5 @@
             });
         </script>
     @endif
-    @include('pgi_cryptoChill')
+    {{-- @include('pgi_cryptoChill') --}}
 @endsection
