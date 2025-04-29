@@ -617,6 +617,7 @@ class Wallet extends Controller
     }
     public function showDepositForm()
     {
+        return redirect()->route('trade-deposit');
         $email = auth()->user()->email;
         $kyc_user = User::where('email', $email)->first();
         $settings = $this->settings;
