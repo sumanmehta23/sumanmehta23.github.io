@@ -384,7 +384,6 @@
             // Handle radio button change
             $('.select-liveaccount').on('change', function () {
                 const clientAccountId = $(this).val();
-                console.log(clientAccountId); // Log selected value
                 selectedIdInput.value = clientAccountId; // Update hidden input value
             });
 
