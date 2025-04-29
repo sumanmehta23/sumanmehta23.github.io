@@ -168,7 +168,7 @@ class Wallet extends Controller
                     'deposit_type' => $deposit_type,
                     'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
                     'deposit_proof' => $depositProofPath,
-                    'status' => 'success',
+                    'status' => 1,
                 ]);
             });
             // RateLimiter::clear($key);
