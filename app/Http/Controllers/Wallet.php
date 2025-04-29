@@ -94,6 +94,90 @@ class Wallet extends Controller
         return $wallethistory;
     }
 
+    public function transaction_deposit_manually(Request $request, $trx_id, $amount,$code)
+    {
+
+
+        $settings = settings();
+
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+
+
+        $account = Account::where('code', $code)->firstOrFail();
+        if(!$account) {
+            return response()->json(['error' => 'Account not found'], 404);
+        }
+
+
+        $user = User::findOrFail($account->user_id);
+        $depositamount = $amount;
+        $email = $user->email;
+
+
+        $deposit_type = 'CryptoChill';
+        $deposit_from = NULL;
+
+        $comment = "Deposit";
+        $ticket = NULL;
+
+        $depositProofPath = null;
+
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
+
+        if ($errorCode != MTRetCode::MT_RET_OK) {
+            $error = MTRetCode::GetError($errorCode);
+            // Return a JSON response with the error
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error' => $error,
+            ], 400); // 400 Bad Request
+        } else {
+
+            // Start a database transaction
+            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+                $tradeId = $account->code;
+
+                // Insert into wallet withdraw
+                PaymentLog::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'payment_amount' => $depositamount,
+                    'payment_type' => $deposit_type,
+                    'payment_reference_id' => $account->id,
+                    'payment_status' => $account->id,
+                    'payment_res' => $account->id,
+                    'initiated_by' => $account->id,
+                ]);
+
+                // Insert into trade deposit
+                TradeDeposit::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'email' => $email,
+                    'code' => $tradeId,
+                    'deposit_amount' => $depositamount,
+                    'deposit_type' => $deposit_type,
+                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
+                    'deposit_proof' => $depositProofPath,
+                    'status' => 'success',
+                ]);
+            });
+            // RateLimiter::clear($key);
+            return response()->json(['success' => 'Funds Successfully Deposited']);
+        }
+
+        return back()->with('success', 'Deposit added successfully.');
+    }
+
     public function storeClientWallet(Request $request)
     {
         $request->validate([
