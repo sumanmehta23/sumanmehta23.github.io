@@ -193,6 +193,18 @@ class Transactions extends Controller
             if($status==3){
                 $comment = "Deposit";
                 $ticket = NULL;
+
+                $settings = settings();
+
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
+
                 $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
