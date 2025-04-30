@@ -21,8 +21,8 @@ class WithdrawalCollection extends ResourceCollection
             'data' => $this->collection->map(function ($withdrawal) {
                 return [
                     'id' => $withdrawal->id,
-                    'amount' => $withdrawal->withdraw_amount,
-                    'withdraw_transaction_fee' => $withdrawal->withdraw_transaction_fee,
+                    'amount' => $withdrawal->withdraw_amount ?? $withdrawal->withdrawal_amount,
+                    'withdraw_transaction_fee' => $withdrawal->withdraw_transaction_fee ?? $withdrawal->transaction_fee,
                     'type' => $withdrawal->withdraw_type,
                     'email' => $withdrawal->email,
                     'transaction_id' => $withdrawal->transaction_id,
