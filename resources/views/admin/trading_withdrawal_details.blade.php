@@ -196,7 +196,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 <div class="d-flex align-items-center">
                                                     <div>
                                                         <div class="lh-1">
@@ -207,7 +207,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
+                                            </td> --}}
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div>
@@ -275,9 +275,9 @@
                                                     @php
                                                         $userData = json_encode(session('userData'));
                                                     @endphp
-                                                    <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                    {{-- <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
                                                         Edit
-                                                    </button>
+                                                    </button> --}}
                                                     <button
                                                         onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
                                                         type="button" class="m-1 btn btn-success btn-space">
@@ -290,10 +290,10 @@
                                                         <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
                                                         Reject
                                                         </button>
-                                                        <div class="form-check d-inline-block me-2">
+                                                        {{-- <div class="form-check d-inline-block me-2">
                                                             <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)">
                                                             <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
-                                                        </div>
+                                                        </div> --}}
                                                     @endif
                                                 </div>
 
@@ -349,9 +349,11 @@
                     <h5 class="modal-title" id="editModalLabel">Edit Withdrawal Amount</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="{{ route('admin.update_wallet_withdraw_amount') }}">
+                <form method="POST" action="{{ route('admin.update_trade_account_withdraw_amount') }}">
                     @csrf
                     <input type="hidden" name="id" value="{{ $details->id }}">
+                    <input type="hidden" name="withdraw_ammount" value="{{ $details->withdrawal_amount }}">
+                    <input type="hidden" name="transaction_fee" value="{{ $details->transaction_fee }}">
                     <div class="modal-body">
                         <p>
                             <strong>Amount:</strong>

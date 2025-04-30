@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\RelationshipManager;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
@@ -187,8 +188,8 @@ class Transaction extends Controller
         }
     }
 
-    public function walletWithdrawalAmountUpdate(Request $request){
-
+    public function walletWithdrawalAmountUpdate(Request $request)
+    {
         $amount = $request->amount;
         $walletWithdrawal = WalletWithdraw::find($request->id);
 
@@ -265,6 +266,91 @@ class Transaction extends Controller
                 'subtitle_right' => 'Amount Update',
             ];
             $this->mailService->sendEmail($walletWithdrawal->user->email, $emailSubject, $headers, '', $templateVars);
+        //    Send Mail Work Starts
+
+           return redirect()->back()->with('success', 'Amount updated successfully!');
+        }else{
+            return redirect()->back()->with('error', 'No withdrawal found');
+        }
+    }
+
+    public function tradeAccountWithdrawalAmountUpdate(Request $request)
+    {
+        $amount = $request->amount;
+        $withdraw_ammount = $request->withdraw_ammount;
+        $transaction_fee = $request->transaction_fee;
+        $total_amount = $withdraw_ammount + $transaction_fee;
+
+        $tradeWithdrawal = TradeWithdrawals::find($request->id);
+
+        if(!$amount){
+            return redirect()->back()->with('error', 'Please enter Amount');
+        }
+        $user = User::where('id', $tradeWithdrawal->user_id)->first();
+        $account = Account::where('id', $tradeWithdrawal->account_id)->first();
+
+
+        if($tradeWithdrawal){
+            $balance = $account->balance;
+
+            if ($amount > ($balance + $total_amount)) {
+                return redirect()->back()->with('error', 'Insufficient balance in your account.');
+            }
+
+           if($amount > $total_amount && $amount < ($balance + $total_amount)){
+                $adjusted_amount = -($amount - $total_amount);
+
+           }elseif($amount < $total_amount && $amount < ($balance + $total_amount)){
+                $adjusted_amount = ($total_amount - $amount);
+           }elseif($amount ==  $total_amount){
+                return redirect()->back()->with('error', 'Nothing to adjust');
+           }
+
+
+
+           if($amount < 100){
+            $tradeWithdrawal->transaction_fee = 5;
+            $tradeWithdrawal->withdrawal_amount = $amount - 5;
+           }else{
+            $tradeWithdrawal->transaction_fee = 0;
+            $tradeWithdrawal->withdrawal_amount = $adjusted_amount;
+           }
+
+
+
+           activity('wallet-withdrawal')->causedBy(auth()->user()->id)
+           ->performedOn($tradeWithdrawal)
+           ->withProperties(
+               [
+                'withdrawal_id' => $tradeWithdrawal->id,
+                'updated_amount' => $amount,
+                'updated_by' => Auth::id(),
+                'remark' => 'Trade Withdrawal',
+               ]
+           )
+           ->event('update')
+           ->log("Withdrawal amount updated by " . Auth::user()->name);
+
+           $comment = "Trade Withdrawal Amount Adjustment";
+           $ticket = NULL;
+
+           $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $adjusted_amount, $comment, $ticket, $margin_check=true);
+
+           if ($errorCode != MTRetCode::MT_RET_OK) {
+               $error = MTRetCode::GetError($errorCode);
+               // Return a JSON response with the error
+               return response()->json([
+                   'success' => false,
+                   'message' => 'Something went wrong',
+                   'error' => $error,
+               ], 400); // 400 Bad Request
+           }else{
+               $tradeWithdrawal->save();
+           }
+
+
+        //    Send Mail Work Starts
+
         //    Send Mail Work Starts
 
            return redirect()->back()->with('success', 'Amount updated successfully!');
