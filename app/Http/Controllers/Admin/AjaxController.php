@@ -1496,7 +1496,7 @@ class AjaxController extends Controller
                     return $row->transaction_fee;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    return $row->user->NewTotalWithdrawal;
+                    return $row->user->NewTotalWithdrawal + $row->user->TotalWw;
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
@@ -1506,7 +1506,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time'])
+                ->rawColumns(['account_no', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time'])
                 ->make(true);
         }
 
@@ -2296,7 +2296,7 @@ class AjaxController extends Controller
                     return $row->transaction_fee;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    return $row->user->NewTotalWithdrawal;
+                    return $row->user->NewTotalWithdrawal + $row->user->TotalWw;
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));

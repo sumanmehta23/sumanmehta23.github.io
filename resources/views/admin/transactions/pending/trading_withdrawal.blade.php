@@ -75,6 +75,8 @@
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
                                                     <th>Withdraw Type</th>
@@ -83,8 +85,6 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
                                                     <th>Withdraw Fee</th>
                                                     <th>Total Withdraw</th>
                                                     <th>Date</th>
@@ -114,31 +114,14 @@
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            //   buttons: [
-            //         {
-            //             extend: 'excel',
-            //             text: 'Export to Excel',
-            //         }
-            //     ],
 
-            // order: [
-            //   [0, "desc"]
-            // ],
-
-            // "ajax": {
-            //   "url": "/admin/ajax",
-            //   "type": "GET",
-            //   data: {
-            //     action: 'getTradingWithdrawal',
-            //   },
-            // },
             buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [8,9,1,10,11,2,3,12,13,6] // Updated column indices to match your use case
+                            columns: [0,1,3,10,11,4,5,12,13,8] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -164,6 +147,8 @@
                 }
             },
             columns: [
+              { data: 'name', name: 'name' },
+              { data: 'email', name: 'email'},
               { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
               { data: 'withdraw_type', name: 'withdraw_type' },
@@ -172,8 +157,6 @@
               { data: 'withdraw_date', name: 'withdraw_date',},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
-              { data: 'name', name: 'name', visible: false},
-              { data: 'email', name: 'email', visible: false},
               { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
               { data: 'total_withdrawal', name: 'total_withdrawal', visible: false},
               { data: 'created_date', name: 'created_date', visible: false},
