@@ -2274,6 +2274,18 @@ class AjaxController extends Controller
                     // return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
                     return "<a class='btn btn-sm btn-primary' href='/admin/trading_withdrawal_details?id={$row->id}'>View</a>";
                 })
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('withdrawal_fee', function ($row) {
+                    return $row->transaction_fee;
+                })
+                ->addColumn('total_withdrawal', function ($row) {
+                    return $row->user->NewTotalWithdrawal;
+                })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d');
@@ -2282,7 +2294,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_fee','total_withdrawal'])
                 ->make(true);
         }
 
