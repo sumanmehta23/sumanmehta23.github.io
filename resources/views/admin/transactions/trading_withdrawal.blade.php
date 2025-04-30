@@ -150,7 +150,12 @@
                     }
                 ],
 
-            order: [[0, "desc"]],
+            // order: [[0, "desc"]],
+            lengthMenu: [
+                [10, 25, 50, 100, -1], // DataTable options
+                [10, 25, 50, 100, "All"] // User-facing labels
+                ],
+            pageLength: 10,
             processing: true,
             serverSide: true,
             searching: true,
