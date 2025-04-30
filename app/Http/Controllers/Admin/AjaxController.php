@@ -1489,8 +1489,22 @@ class AjaxController extends Controller
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('email', function ($row) {
-                    return $row->user->email;
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
                 })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
@@ -2289,8 +2303,22 @@ class AjaxController extends Controller
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname;
                 })
-                ->addColumn('email', function ($row) {
-                    return $row->user->email;
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
                 })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
