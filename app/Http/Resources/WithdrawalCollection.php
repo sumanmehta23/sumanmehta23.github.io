@@ -27,6 +27,7 @@ class WithdrawalCollection extends ResourceCollection
                     'email' => $withdrawal->email,
                     'transaction_id' => $withdrawal->transaction_id,
                     'status' => $withdrawal->status,
+                    'approved_at' => $withdrawal->approved_date ? Carbon::parse($withdrawal->approved_date)->addHours(3)->toDateTimeString() : null,
                     'created_at' => Carbon::parse($withdrawal->created_at)->addHours(3)->toDateTimeString(),
                 ];
             }),
