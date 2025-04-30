@@ -1448,6 +1448,16 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.status', $order);
                 })
 
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.email', $order);
+                })
+
+                ->orderColumn('name', function ($query, $order) {
+                    $query->join('aspnetusers as u', 'u.email', '=', 'trade_withdrawal.email')
+                          ->orderBy('u.fullname', $order)
+                          ->select('trade_withdrawal.*'); // Required to avoid column conflicts
+                })
+
                 ->addColumn('code', function ($row) {
                     return $row->account->code ?? '';
                 })
@@ -2228,7 +2238,12 @@ class AjaxController extends Controller
 
     public function getPendingTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])->where('status', 0)->where('email_verified', 1)->where('withdraw_type', 'Trade Withdrawal');
+
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])
+                ->where('trade_withdrawal.status', 0)
+                ->where('trade_withdrawal.email_verified', 1)
+                ->where('trade_withdrawal.withdraw_type', 'Trade Withdrawal');
+
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {
@@ -2253,6 +2268,42 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_date', $order);
+                })
+
+                ->orderColumn('withdraw_type', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_type', $order);
+                })
+
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.code', $order);
+                })
+
+                ->orderColumn('transaction_fee', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.transaction_fee', $order);
+                })
+
+                ->orderColumn('withdrawal_amount', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdrawal_amount', $order);
+                })
+
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.status', $order);
+                })
+
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.email', $order);
+                })
+
+                ->orderColumn('name', function ($query, $order) {
+                    $query->join('aspnetusers as u', 'u.email', '=', 'trade_withdrawal.email')
+                            ->orderBy('u.fullname', $order)
+                            ->select('trade_withdrawal.*'); // Required to avoid column conflicts
+                })
+
+
                 ->addColumn('account_no', function ($row) {
                     return $row->account->code;
                 })

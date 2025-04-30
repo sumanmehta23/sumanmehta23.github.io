@@ -24,8 +24,18 @@
                                                 style="width:50px">
                                         </div>
                                         <div class="user-wrap">
-                                            <h4 class="fw-normal">{{ $details->fullname }}</h4>
-                                            <h6 class="text-muted mb-3 fw-normal">{{ $details->email }}</h6>
+                                            <h4 class="fw-normal d-flex align-items-center">
+                                                {{ $details->user->fullname }}
+                                                <span class="badge bg-success text-white ms-2">
+                                                    Wallet balance: ${{ number_format($details->user->wallet_balance, 2) }}
+                                                </span>
+                                                @if($details->user->total_bonus)
+                                                    <span class="badge bg-success text-white ms-2">
+                                                        Bonus: ${{ number_format($details->user->total_bonus, 2) }}
+                                                    </span>
+                                                @endif
+                                            </h4>
+                                            <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -247,7 +257,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="btn-list ms-auto my-auto">
+                                                {{-- <div class="btn-list ms-auto my-auto">
                                                     @php
                                                         $userData = json_encode(session('userData'));
                                                     @endphp
@@ -259,7 +269,35 @@
                                                         onclick="takeAction('{{ json_encode($details->id) }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
                                                         type="submit"
                                                         class="btn btn-danger btn-space m-1">Reject</button>
+                                                </div> --}}
+
+                                                <div class="my-auto btn-list ms-auto">
+                                                    @php
+                                                        $userData = json_encode(session('userData'));
+                                                    @endphp
+                                                    <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
+                                                        type="button" class="m-1 btn btn-success btn-space">
+                                                    Approve
+                                                    </button>
+                                                        {{-- <button
+                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
+                                                        type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
+                                                    @if (($details->status == 0) || ($details->payout_res != null))
+                                                        <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
+                                                        Reject
+                                                        </button>
+                                                        <div class="form-check d-inline-block me-2">
+                                                            <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)">
+                                                            <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
+                                                        </div>
+                                                    @endif
                                                 </div>
+
+
                                             </td>
                                             <?php } else { ?>
                                             <td>
@@ -303,47 +341,32 @@
             </div>
         @endif
     </div>
+        <!-- Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Withdrawal Amount</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ route('admin.update_wallet_withdraw_amount') }}">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $details->id }}">
+                    <div class="modal-body">
+                        <p>
+                            <strong>Amount:</strong>
+                            <input class="form-control d-inline-block w-auto align-middle ms-2" type="number" name="amount" value="{{ $details->withdraw_amount }}">
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
-
-        // function takeAction(code, email, amount, status) {
-        //   Swal.fire({
-        //     title: `Are you sure you want to ${status === 1 ? "approve" : "reject"} this transaction?`,
-        //     html: `
-        //     <form id="updateTransactionForm" method="post">
-        //       @csrf
-        //       <input type="hidden" name="code" value="${code}">
-        //       <input type="hidden" name="email" value="${email}">
-        //       <input type="hidden" name="amount" value="${amount}">
-        //       <input type="hidden" name="status" value="${status}">
-        //       <input type="hidden" name="action" value="update_transaction">
-        //       <div class="col-12 mt-3 text-start">
-        //           <label for="transaction_id" class="form-label">Withdraw Reference ID</label>
-        //           <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="Add Reference ID">
-        //       </div>
-        //       <div class="col-12 mt-2 text-start">
-        //           <label for="description" class="form-label">Description</label>
-        //           <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a description"></textarea>
-        //       </div>
-        //       </form>
-        //   `,
-        //     focusConfirm: false,
-        //     showCancelButton: true,
-        //     confirmButtonText: 'Submit',
-        //     preConfirm: () => {
-        //       const description = document.querySelector('#updateTransactionForm textarea').value;
-        //       const transaction_id = document.querySelector('#transaction_id').value;
-        //       if (!description || !transaction_id) {
-        //         Swal.showValidationMessage('Please fill out all fields');
-        //         return false;
-        //       }
-        //       return true;
-        //     }
-        //   }).then((result) => {
-        //     if (result.isConfirmed) {
-        //       document.querySelector('#updateTransactionForm').submit();
-        //     }
-        //   });
-        // }
         function takeAction(data, email, amount, status, code) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
             // console.log(sanitizedData);
@@ -431,6 +454,54 @@
             }
           });
         }
+
+        function handleCheckboxClick(checkbox, id, data, email, amount, status) {
+            const sanitizedData = data.replace(/\\/g, '\\\\');
+            const parsedData = JSON.parse(sanitizedData);
+            const withdraw_id = JSON.parse(id);
+            // console.log(withdraw_id);
+            if (checkbox.checked) {
+                const now = new Date();
+                const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+                Swal.fire({
+                    title: `Are you sure you wish to process this payout manually`,
+                    html: `
+                    <form id="manually_approve_withdrawal" method="post" action="manually_approve_withdrawal">
+                    @csrf
+                    <input type="hidden" name="email" value="${email}">
+                    <input type="hidden" name="amount" value="${amount}">
+                    <input type="hidden" name="status" value="${status}">
+                    <input type="hidden" name="transaction" value="Manually">
+                    <input type="hidden" name="approved_by" value="${parsedData.username}">
+                    <input type="hidden" name="approved_date" value="${approved_date_time}">
+                    <input type="hidden" name="transaction_id" value="${withdraw_id}">
+                    <input type="hidden" name="action" value="update_transaction">
+                    </form>
+                `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    preConfirm: () => {
+                    return true;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                    document.querySelector('#manually_approve_withdrawal').submit();
+                    }else {
+                        checkbox.checked = false; // Uncheck the checkbox if canceled
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const manualPayCheckbox = document.getElementById('manualPayCheckbox');
+            if (manualPayCheckbox) {
+                manualPayCheckbox.checked = false; // Ensure the checkbox starts unchecked
+            }
+        });
 
       </script>
 @endsection
