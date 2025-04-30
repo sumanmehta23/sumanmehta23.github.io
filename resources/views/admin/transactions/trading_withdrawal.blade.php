@@ -127,7 +127,7 @@
                         text: 'Export to Excel',
                         filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,1,3,10,11,5,6,12,13,8] // Updated column indices to match your use case
+                            columns: [0,1,3,10,11,5,2,12,13,8] // Updated column indices to match your use case
                         }
                     }
                 ],
