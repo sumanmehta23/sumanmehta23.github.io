@@ -377,7 +377,7 @@
             const now = new Date();
             const approved_date_time = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
-            if(status==2){
+            if(status==2 || status==3){
                 statuscode='reject';
             }
             // else if(status==2){
@@ -397,7 +397,7 @@
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_transaction">
                 ${
-                  status == 2
+                  status == 3
                       ? `
                   <div class="mt-2 col-12 text-start">
                       <label for="transaction_id" class="form-label">Transaction ID</label>

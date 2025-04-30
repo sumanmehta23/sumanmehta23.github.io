@@ -799,7 +799,7 @@ class Transaction extends Controller
 
         $status = $request->status;
 
-        if ($status == '2') {
+        if ($status == '2' || $status == '3') {
             $validatedData = $request->validate([
                 'rejection_reason' => 'required',
                 'status' => 'required|integer',
@@ -973,7 +973,7 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==2 && $rejection_reason == 'Invalid cryptocurrency address'){
+            }elseif(($status==2 || $status==3) && $rejection_reason == 'Invalid cryptocurrency address'){
                 activity()
                     ->causedBy(auth()->guard('admin')->user())
                     ->withProperties([
@@ -1072,7 +1072,7 @@ class Transaction extends Controller
                 //     'btn_text' => 'Go To Dashboard',
                 // ];
                 // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-            }elseif($status==2 && $rejection_reason != 'Invalid cryptocurrency address'){
+            }elseif(($status==2 || $status==3) && $rejection_reason != 'Invalid cryptocurrency address'){
                 $comment = 'Cancelled Withdrawal';
                 $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check=true);
 
