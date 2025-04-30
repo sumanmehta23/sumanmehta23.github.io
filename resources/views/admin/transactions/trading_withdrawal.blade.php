@@ -90,6 +90,10 @@
                                                     <th>Withdraw Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Withdraw Fee</th>
+                                                    <th>Total Withdraw</th>
                                                     <th>Date</th>
                                                     <th>Time</th>
                                                 </tr>
@@ -141,7 +145,7 @@
                         text: 'Export to Excel',
                         filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,1,2,3,5,7,8] // Updated column indices to match your use case
+                            columns: [8,9,1,10,11,2,3,12,13,6] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -167,18 +171,13 @@
               { data: 'transaction_fee', name: 'transaction_fee' },
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_to', name: 'withdraw_to' },
-              {
-                data: 'withdraw_date', name: 'withdraw_date',
-                // render: function (data, type, row) {
-                //   var dateTime = row.withdraw_date.split(' ');
-                //   var date = dateTime[0];
-                //   var time = dateTime[1];
-                //   var return_data = "<div class='d-grid'><div class='date'>" + date + "</div><div class='time text-muted'>" + time + "</div></div>";
-                //   return return_data;
-                // }
-              },
+              { data: 'withdraw_date', name: 'withdraw_date'},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
+              { data: 'name', name: 'name', visible: false},
+              { data: 'email', name: 'email', visible: false},
+              { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
+              { data: 'total_withdrawal', name: 'total_withdrawal', visible: false},
               { data: 'created_date', name: 'created_date',orderable: false, visible: false},
               { data: 'created_time', name: 'created_time',orderable: false, visible: false},
             ]
