@@ -1217,10 +1217,10 @@ class AjaxController extends Controller
                 })
                 ->addColumn('withdraw_date', function ($row) {
                     // $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    $date = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
 
                     // $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                    $time = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                     $date
                                 </div>
@@ -1250,11 +1250,11 @@ class AjaxController extends Controller
                 })
                 ->addColumn('created_date', function ($row) {
                     // return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
                     // return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
                 ->make(true);
