@@ -9,7 +9,7 @@
                     <li class="breadcrumb-item active" aria-current="page">Transaction List</li>
                 </ol>
             </div>
-            <div class="mb-3 row">
+            {{-- <div class="mb-3 row">
                 <div class="col-md-4">
                   <label for="statusFilter">Filter by Status:</label>
                   <select id="statusFilter" class="form-select" name="status">
@@ -20,7 +20,7 @@
                     <!-- Add other status options as needed -->
                   </select>
                 </div>
-              </div>
+              </div> --}}
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
