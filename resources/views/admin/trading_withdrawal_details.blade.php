@@ -275,9 +275,9 @@
                                                     @php
                                                         $userData = json_encode(session('userData'));
                                                     @endphp
-                                                    {{-- <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                    <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
                                                         Edit
-                                                    </button> --}}
+                                                    </button>
                                                     <button
                                                         onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
                                                         type="button" class="m-1 btn btn-success btn-space">

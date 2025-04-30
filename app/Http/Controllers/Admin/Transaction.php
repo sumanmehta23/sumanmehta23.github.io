@@ -307,13 +307,12 @@ class Transaction extends Controller
            }
 
 
-
            if($amount < 100){
             $tradeWithdrawal->transaction_fee = 5;
             $tradeWithdrawal->withdrawal_amount = $amount - 5;
            }else{
             $tradeWithdrawal->transaction_fee = 0;
-            $tradeWithdrawal->withdrawal_amount = $adjusted_amount;
+            $tradeWithdrawal->withdrawal_amount = $amount;
            }
 
 
