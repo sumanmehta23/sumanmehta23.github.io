@@ -1520,7 +1520,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time'])
+                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time'])
                 ->make(true);
         }
 
