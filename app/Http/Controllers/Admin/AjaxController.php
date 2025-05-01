@@ -1530,7 +1530,10 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time'])
+                ->addColumn('client_email', function ($row) {
+                    return $row->user->email;
+                })
+                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time','client_email'])
                 ->make(true);
         }
 
@@ -2385,7 +2388,10 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_fee','total_withdrawal'])
+                ->addColumn('client_email', function ($row) {
+                    return $row->user->email;
+                })
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_fee','total_withdrawal','client_email'])
                 ->make(true);
         }
 
