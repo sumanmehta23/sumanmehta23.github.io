@@ -20,7 +20,7 @@
                                 <div class="col-lg-6 col-md-12">
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="wideget-user-img">
-                                            <img src="/admin_assets/assets/images/users/client.png" alt="img"
+                                            <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img"
                                                 style="width:50px">
                                         </div>
                                         <div class="user-wrap">
@@ -35,7 +35,8 @@
                                                     </span>
                                                 @endif
                                             </h4>
-                                            <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
+
+                                            <h6 class="mb-3 text-muted fw-normal cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')">{{ $details->email }}</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -504,6 +505,16 @@
                 manualPayCheckbox.checked = false; // Ensure the checkbox starts unchecked
             }
         });
+
+        function handleClick(event, url) {
+            if (event.button === 0) {
+                // Left click - Navigate normally
+                window.location.href = url;
+            } else if (event.button === 1) {
+                // Middle click - Open in a new tab
+                window.open(url, '_blank');
+            }
+        }
 
       </script>
 @endsection
