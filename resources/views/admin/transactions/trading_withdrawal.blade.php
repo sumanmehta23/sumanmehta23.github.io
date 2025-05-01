@@ -90,6 +90,7 @@
                                                     <th>Withdraw Type</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
+                                                    <th>Approve Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
                                                     <th>Withdraw Fee</th>
@@ -162,6 +163,7 @@
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_to', name: 'withdraw_to' },
               { data: 'withdraw_date', name: 'withdraw_date'},
+              { data: 'approve_date', name: 'approve_date'},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
               { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},

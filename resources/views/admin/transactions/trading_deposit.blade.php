@@ -9,7 +9,7 @@
                     <li class="breadcrumb-item active" aria-current="page">Transaction List</li>
                 </ol>
             </div>
-            <div class="mb-3 row">
+            <div class="mb-3 row flex justify-content-between gap-3">
                 <div class="col-md-4">
                   <label for="statusFilter">Filter by Status:</label>
                   <select id="statusFilter" class="form-select" name="status">
@@ -20,6 +20,21 @@
                     <!-- Add other status options as needed -->
                   </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="typeFilter">Filter by Deposit Type:</label>
+                    <select id="typeFilter" class="form-select" name="type">
+                      <option value="">All</option>
+                      <option value="CryptoChill">CryptoChill</option>
+                      <option value="CreditCardPayissa">CreditCardPayissa</option>
+                      <option value="Wallet Transfer">Wallet Transfer</option>
+                      <option value="Internal Transfer">Internal Transfer</option>
+                      <option value="Commission Transfer">Commission Transfer</option>
+                      <option value="IB Withdraw">IB Withdraw</option>
+                      <option value="Transferencia de cartera">Transferencia de cartera</option>
+
+                      <!-- Add other status options as needed -->
+                    </select>
+                  </div>
               </div>
             <div class="row">
                 <div class="col-xl-12">
@@ -114,6 +129,8 @@
                                             <thead>
                                                 <tr>
                                                     {{-- <th>#</th> --}}
+                                                    <th>Name</th>
+                                                    <th>Email</th>
                                                     <th>Account No</th>
                                                     <th>Deposit Amount</th>
                                                     <th>Deposit Type</th>
@@ -123,6 +140,7 @@
                                                     <th>Actions</th>
                                                     <th>Date</th>
                                                     <th>Time</th>
+                                                    <th>Email</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -191,7 +209,7 @@
                         text: 'Export to Excel',
                         filename: 'Trading_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,1,2,3,4,7,8,6] // Updated column indices to match your use case
+                            columns: [0,11,2,3,4,5,7,9,10] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -208,6 +226,7 @@
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
+                        d.type = $('select[name=type]').val();
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
@@ -216,6 +235,8 @@
             },
             columns: [
             //   { data: 'id', name: '#' },
+              { data: 'name', name: 'name' },
+              { data: 'email', name: 'email' },
               { data: 'code', name: 'code' },
               { data: 'deposit_amount', name: 'deposit_amount'},
               { data: 'deposit_type', name: 'deposit_type' ,searchable: false},
@@ -228,11 +249,14 @@
               { data: 'action', name: 'action', orderable: false, searchable: false },
               { data: 'created_date', name: 'created_date', visible: false},
               { data: 'created_time', name: 'created_time', visible: false},
+              { data: 'client_email', name: 'client_email', visible: false},
             ]
           });
 
           $('#statusFilter').on('change', function () {
-
+            tableTradingDeposit.ajax.reload();
+          });
+          $('#typeFilter').on('change', function () {
             tableTradingDeposit.ajax.reload();
           });
         });

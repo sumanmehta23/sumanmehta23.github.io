@@ -155,7 +155,7 @@
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_from', name: 'withdraw_from' },
               { data: 'withdraw_to', name: 'withdraw_to' },
-              { data: 'withdraw_date', name: 'withdraw_date',},
+              { data: 'withdraw_date', name: 'withdraw_date'},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
               { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
