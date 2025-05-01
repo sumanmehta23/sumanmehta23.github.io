@@ -1520,7 +1520,7 @@ class AjaxController extends Controller
                     return $row->transaction_fee;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    return $row->user->NewTotalWithdrawal + $row->user->TotalWw;
+                    return $row->transaction_fee + $row->withdrawal_amount;
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
@@ -2378,7 +2378,7 @@ class AjaxController extends Controller
                     return $row->transaction_fee;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    return $row->user->NewTotalWithdrawal + $row->user->TotalWw;
+                    return ($row->transaction_fee + $row->withdrawal_amount);
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
