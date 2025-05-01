@@ -1393,9 +1393,9 @@ class AjaxController extends Controller
     {
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
-        $query = TradeWithdrawals::select('*')
+        $query = TradeWithdrawals::select('trade_withdrawal.*')
                 ->with(['user', 'withdrawTo', 'account'])
-                ->whereIn('withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
+                ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
             // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -1410,11 +1410,11 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('account_id', $_GET['id']);
+            $query->where('trade_withdrawal.account_id', $_GET['id']);
         }
 
         if (isset($request->status)) {
-            $query->where('Status', $request->status);
+            $query->where('trade_withdrawal.status', $request->status);
         }
 
         // Fetch data
