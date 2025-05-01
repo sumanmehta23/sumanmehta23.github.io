@@ -172,6 +172,7 @@
                                 <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
+                                <h6 class="mb-0">{{ $history->code ?? '' }}</h6>
                                 <h6 class="mb-0">{{ $history->id }}</h6>
                                 <p class="mb-0 text-muted"><small>Live Account</small></p>
                               </div>
