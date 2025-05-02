@@ -79,44 +79,16 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "varun790116@gmail.com",
-            "velicu.andreig@gmail.com",
-            "tech+96@lqhmarkets.com",
-            "dembvbakari@gmail.com",
-            "adamdennett376@yahoo.co.uk",
-            "fxandrewmm@gmail.com",
-            "berna99@live.com",
-            "ryanmarciano@gmail.com",
-            "Dan@requier.com",
-            "gtrades26@gmail.com",
-            "edi.cinej@gmail.com",
-            "tonycastro2011@hotmail.com",
-            "k.paskalevv@gmail.com",
-            "phil7.andrews90@gmail.com",
-            "jakob.pobjie@hotmail.com",
-            "abdullah.kahveci1@gmail.com",
-            "mejidimhd@gmail.com",
-            "nevio.pacino@gmx.ch",
-            "enzocm123@gmail.com",
-            "jeffwood@woodinvestments.io",
-            "njerupauline213@gmail.com",
-            "nik@ad-invent.com",
-            "abb4305@yahoo.com",
-            "echeverriavictorm766@gmail.com",
-            "shawnviau1@gmail.com",
-            "ervinpap01@gmail.com",
-            "tovell.myers@aol.com",
-            "Derikdelgado123@gmail.com",
-            "hisham.krypto@gmail.com",
-            "invest@dereklord.com",
-            "hngarcia504@gmail.com",
             "umbbrodz@hotmail.com",
             "emilswilliams2018@gmail.com",
             "hacktraderbtc@gmail.com",
             "mayadelprincipe@gmail.com"
         ];
         $amounts = [
-            1.8, 1.99, 10, 5, 1.396916, 5.9, 5.13681, 1.34, 1.29, 17, 6, 9.82, 1.24, 10, 12.41, 3.121674, 2.07, 4.16, 1.33, 2.5, 18.46, 1.562003, 1.33, 8.13, 9.7, 9.9, 1.252863, 1.3, 1.49, 2.37, 1, 9.98, 5.86, 2.88, 3.58
+            9.98,
+            5.86,
+            2.88,
+            3.58
         ];
 
         $user_ids = [];
