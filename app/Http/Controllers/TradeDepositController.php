@@ -93,7 +93,6 @@ class TradeDepositController extends Controller
             "torquatomatias159@gmail.com",
             "encarnacionwilson1988@hotmail.com",
             "palacios503.fp20@gmail.com",
-            "santoselibeth3@gmail.com",
             "rohanemmanuel09@gmail.com",
             "justin.laschet06@gmail.com",
             "ericmaroto05@gmail.com",
@@ -111,12 +110,11 @@ class TradeDepositController extends Controller
             "glowgoals54@gmail.com",
             "jersoninfa7@gmail.com",
             "kroll.bremerhaven@gmx.de",
-            "xlolopros10@gmail.com",
             "pedrosena.magalhaes@gmail.com",
             "samuelj2504@gmail.com"
         ];
         $amounts = [
-            1.99, 3.048081, 2.948899, 9.7, 5.06, 7.35, 10.267661, 4.99, 16.53, 14.72, 1.98, 16.060855, 8.291162, 9.81, 9.81, 11, 2.518308, 3.175285, 10.1, 8.25, 1.217144, 10.205886, 17.58, 2.98, 3.77, 6.04, 2.54, 15.79, 1.04, 2.26, 9.81, 15.52, 10.609773, 3.58, 8.1
+            1.99, 3.048081, 2.948899, 9.7, 5.06, 7.35, 10.267661, 4.99, 16.53, 14.72, 1.98, 16.060855, 8.291162, 9.81, 11, 2.518308, 3.175285, 10.1, 8.25, 1.217144, 10.205886, 17.58, 2.98, 3.77, 6.04, 2.54, 15.79, 1.04, 2.26, 9.81, 15.52, 3.58, 8.1
         ];
 
         $user_ids = [];
@@ -157,7 +155,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        dd('fffffffff');
+        // dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
