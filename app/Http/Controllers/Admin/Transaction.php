@@ -949,6 +949,11 @@ class Transaction extends Controller
                 $withdrawal_details = TradeWithdrawals::with('user')
                     ->whereRaw('id = ?', [$did])
                     ->first();
+                $name = $withdrawal_details->user->fullname;
+                if($email == 'abhay@lqhmarkets.com'){
+                    $email = 'Jalelwabou@gmail.com';
+                    $name = 'Jalel Wabou';
+                }
                 $from = $settings['email_from_address'];
                 $transid = "WDID" . str_pad($withdrawal_details->id, 4, '0', STR_PAD_LEFT);
                 $headers = "MIME-Version: 1.0" . "\r\n";
@@ -963,7 +968,7 @@ class Transaction extends Controller
                             <div><b>Withdrawal Date: </b>' . $withdrawal_details->withdraw_date . '</div>
                             <div><b>Withdrawal Type: </b>' . $withdrawal_details->withdraw_type . '</div>';
                 $templateVars = [
-                    'name' => $withdrawal_details->user->fullname,
+                    'name' => $name,
                     'site_link' => $settings['copyright_site_name_text'],
                     'email' => $settings['email_from_address'],
                     'content' => $content,
