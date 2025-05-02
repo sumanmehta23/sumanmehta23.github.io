@@ -78,10 +78,12 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            '19hassan19haruna19@gmail.com',
+            'kerdeljuba89@gmail.com',
+            'enriquemaldonado87@outlook.com'
         ];
         $amounts = [
-            106.224927,
+            10509.88,
+            504.9
         ];
 
         $user_ids = [];
@@ -122,7 +124,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
