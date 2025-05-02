@@ -95,12 +95,10 @@ class TradeDepositController extends Controller
             "saindou.ismaelogx@gmail.com",
             "facuciro2204@gmail.com",
             "tommyandrikc2610@gmail.com",
-            "mamamama.km8@gmail.com",
             "em9692580@gmail.com",
             "dennisvannieuwaal@live.nl",
             "emm.mym2021@gmail.com",
             "carlosg_fuentes@hotmail.com",
-            "Analuzquispe0@gmail.com",
             "Gggkuuuooo17@gmail.com",
             "barbara.daiana@hotmail.com.ar",
             "shaunsteenkamp1@gmail.com",
@@ -121,7 +119,7 @@ class TradeDepositController extends Controller
             "itfaqazam@gmail.com"
         ];
         $amounts = [
-            1.02, 5.863017, 2.22, 12.5, 5.33, 14.99, 10.281189, 2.77, 5.93, 2.94, 10.282449, 9.81, 1.91, 1.83, 10.39, 1, 8.43, 17.99, 9.52, 2.66, 8.88, 9.81, 8.49, 14.04, 1.29, 11.33, 6.48, 10.801, 9.26, 8.11, 13.288106, 1.99, 3.048081, 2.948899, 9.7, 5.06, 7.35, 10.267661, 4.99, 16.53
+            1.02, 5.863017, 2.22, 12.5, 5.33, 14.99, 10.281189, 2.77, 5.93, 2.94, 10.282449, 9.81, 1.91, 1.83, 10.39, 1, 17.99, 9.52, 2.66, 8.88, 8.49, 14.04, 1.29, 11.33, 6.48, 10.801, 9.26, 8.11, 13.288106, 1.99, 3.048081, 2.948899, 9.7, 5.06, 7.35, 10.267661, 4.99, 16.53
         ];
 
         $user_ids = [];
