@@ -20,7 +20,7 @@
                                 <div class="col-lg-6 col-md-12">
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="wideget-user-img">
-                                            <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img"
+                                            <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $details->user_id) }}'
                                                 style="width:50px">
                                         </div>
                                         <div class="user-wrap">
