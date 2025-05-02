@@ -67,6 +67,7 @@ class TradeDepositController extends Controller
 
     public function sync_amount(Request $request)
     {
+        set_time_limit(6000);
         $settings = settings();
         $results = [];
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
