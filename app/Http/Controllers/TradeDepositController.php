@@ -106,7 +106,7 @@ class TradeDepositController extends Controller
                 $user_ids[] = $user->id;
             }
 
-            $accounts = Account::where('email', $email)->get();
+            $accounts = Account::where('email', $email)->where('demo',0)->get();
             $foundValidAccount = false;
 
             foreach ($accounts as $account) {
