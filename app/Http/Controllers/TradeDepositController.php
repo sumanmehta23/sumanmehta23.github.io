@@ -97,7 +97,6 @@ class TradeDepositController extends Controller
             "sansul200697@gmail.com",
             "leor5819@gmail.com",
             "robertciobanu04@yahoo.com",
-            "yosufemam@gmail.com",
             "jackyp2510@gmail.com",
             "neduum@yahoo.com",
             "jonathan17christophe@gmail.com",
@@ -111,7 +110,7 @@ class TradeDepositController extends Controller
             "g5i4@therhsriders.com"
         ];
         $amounts = [
-            1.040833, 1.98, 5.39, 4.75, 15.42, 4.02, 7.47, 9.04, 5.27, 8.94, 3.499001, 1.1, 1.839858, 6.61, 4.63, 13.15, 6.997847, 8.65, 3.81, 2.72, 3.1, 1.100323, 11.57, 9.89, 8.99, 1.01, 11.43, 2.66, 10.307092, 1.16
+            1.040833, 1.98, 5.39, 4.75, 15.42, 4.02, 7.47, 9.04, 5.27, 8.94, 3.499001, 1.1, 1.839858, 6.61, 4.63, 13.15, 6.997847, 8.65, 2.72, 3.1, 1.100323, 11.57, 9.89, 8.99, 1.01, 11.43, 2.66, 10.307092, 1.16
         ];
 
         $user_ids = [];
