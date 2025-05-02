@@ -79,16 +79,38 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "umbbrodz@hotmail.com",
-            "emilswilliams2018@gmail.com",
-            "hacktraderbtc@gmail.com",
-            "mayadelprincipe@gmail.com"
+            "dlj@outlook.com.br",
+            "lon.executive@gmail.com",
+            "arnt.joar.jaere@oppdal.com",
+            "bvandfx@gmail.com",
+            "aasabolova@gmail.com",
+            "tobytrading27@gmail.com",
+            "heinrichbarkenhizen@gmail.com",
+            "kevin.z1033@gmail.com",
+            "jacobochanes@gmail.com",
+            "almarazalex13@gmail.com",
+            "jonazztorres@gmail.com",
+            "a.valdes.alvear@gmail.com",
+            "jvenegassuclla@gmail.com",
+            "luisfernand08739@icloud.com",
+            "willerisuiza87@gmail.com",
+            "anasmahk17@gmail.com",
+            "jcpereira86@yahoo.com",
+            "j.brand.o@hotmail.com",
+            "adrianf.5782@gmail.com",
+            "aliannysmvb2@gmail.com",
+            "ruthmyrivas@gmail.com",
+            "christiantriaz79@gmail.com",
+            "gonyumar@gmail.com",
+            "erickimo@outlook.com",
+            "jorge.torres.jg@gmail.com",
+            "victoraroca@gmail.com",
+            "alejandrobf008@gmail.com",
+            "taipec28@gmail.com",
+            "yovan.original@gmail.com"
         ];
         $amounts = [
-            9.98,
-            5.86,
-            2.88,
-            3.58
+            3, 8.32, 1.35, 13.068162, 10.14, 2.71, 1.15, 7.82, 1, 9.61, 1.98, 7.71, 1.99, 9.91, 17.45, 9.27, 9.99, 3.12, 1, 1.1, 8.04, 9.42, 6.68, 9.6, 4.88, 9.35, 1.14, 1, 5.78
         ];
 
         $user_ids = [];
@@ -129,7 +151,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
