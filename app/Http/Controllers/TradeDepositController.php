@@ -79,45 +79,49 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "emma.aulestia2024@gmail.com",
-            "ymatey98@gmail.com",
-            "nicklassand2@gmail.com",
-            "dianakarina129@gmail.com",
-            "harwinderb960@gmail.com",
-            "kleberrodrigo700@gmail.com",
-            "maninderjotkaur888@gmail.com",
-            "hemanath488@gmail.com",
-            "jayes306@gmail.com",
-            "karldage@hotmail.com",
-            "eldelamgrande89@gmail.com",
-            "a_.k4@hotmail.com",
-            "waynardo13@gmail.com",
-            "2211.robi@gmail.com",
-            "boudwinkhotem4@gmail.com",
-            "nejat2021abdela@gmail.com",
-            "liamcontreras123456@gmail.com",
-            "faxriddin.tursunov2000@gmail.com",
-            "miloudabdelkader978@gmail.com",
-            "mdsakibsikder55@gmail.com",
-            "zainalabedinalshelly@gmail.com",
-            "stevenlekxy01@gmail.com",
-            "camilacrivella@gmail.com",
-            "emagustina2020@hotmail.com",
-            "michaelmanuel191@gmail.com",
-            "ajirotututimileyin@gmail.com",
-            "lucas.domenechpro@gmail.com",
-            "jaskarangill5509@gmail.com",
-            "norbutshering553@gmail.com",
-            "jakob.dressel05@icloud.com",
             "alexabaez572@gmail.com",
             "toivo.riibak@gmail.com",
             "licturismo.hernandez@gmail.com",
             "eduhry123@gmail.com",
             "c.silvasalcedo23@gmail.com",
-            "ing.cristiancontrerastellez@gmail.com"
+            "ing.cristiancontrerastellez@gmail.com",
+            "luisrayne.84@gmail.com",
+            "scfranktello@gmail.com",
+            "mazarate711@gmail.com",
+            "danielsonderneming@gmail.com",
+            "dylanmurray225@icloud.com",
+            "nelsonmanuel1815@gmail.com",
+            "deleonelmer084@gmail.com",
+            "saindou.ismaelogx@gmail.com",
+            "facuciro2204@gmail.com",
+            "tommyandrikc2610@gmail.com",
+            "mamamama.km8@gmail.com",
+            "em9692580@gmail.com",
+            "dennisvannieuwaal@live.nl",
+            "emm.mym2021@gmail.com",
+            "carlosg_fuentes@hotmail.com",
+            "Analuzquispe0@gmail.com",
+            "Gggkuuuooo17@gmail.com",
+            "barbara.daiana@hotmail.com.ar",
+            "shaunsteenkamp1@gmail.com",
+            "mahaljan83@gmail.com",
+            "kosaiammar@gmail.com",
+            "ch8654780@gmail.com",
+            "guamangeovanny866@gmail.com",
+            "alma.ochoa.barajas@gmail.com",
+            "rickgomez649@gmail.com",
+            "floreschipunavigeronimo@gmail.com",
+            "billiet1996@icloud.com",
+            "jayakapu85@gmail.com",
+            "dorismond2005@gmail.com",
+            "bencosmedermania@gmail.com",
+            "nwpilot7@gmail.com",
+            "Cr7isbetter77@gmail.com",
+            "latinodm120@gmail.com",
+            "itfaqazam@gmail.com"
         ];
         $amounts = [
-            4.1, 3.8, 14.292379, 17.83406, 2.16, 5.05, 6.34, 3.88, 2.01, 5.57, 18.14, 2.36, 5.527377, 1.38149, 1.22, 9.99, 16.644204, 14.15, 4.332138, 1.14, 1.165876, 1.24, 9.99, 9.99, 4.888587, 1.61, 2.74, 2.651988, 9.02, 2.156538, 1.02, 5.863017, 2.22, 12.5, 5.33, 14.99
+            1.02, 5.863017, 2.22, 12.5, 5.33, 14.99, 10.281189, 2.77, 5.93, 2.94, 10.282449, 9.81, 1.91, 1.83, 10.39, 1, 8.43, 17.99, 9.52, 2.66, 8.88, 9.81, 8.49, 14.04, 1.29, 11.33, 6.48, 10.801, 9.26, 8.11, 13.288106, 1.99, 3.048081, 2.948899, 9.7, 5.06, 7.35, 10.267661, 4.99, 16.53
         ];
 
         $user_ids = [];
@@ -158,7 +162,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
