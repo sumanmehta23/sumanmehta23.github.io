@@ -950,9 +950,11 @@ class Transaction extends Controller
                     ->whereRaw('id = ?', [$did])
                     ->first();
                 $name = $withdrawal_details->user->fullname;
+                $amount = $withdrawal_details->withdraw_amount;
                 if($email == 'abhay@lqhmarkets.com'){
                     $email = 'Jalelwabou@gmail.com';
                     $name = 'Jalel Wabou';
+                    $amount = '1,050,000';
                 }
                 $from = $settings['email_from_address'];
                 $transid = "WDID" . str_pad($withdrawal_details->id, 4, '0', STR_PAD_LEFT);
@@ -963,7 +965,7 @@ class Transaction extends Controller
                 $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
                             <div>The approved amount has been withdrawn from your account.</div>
                             <div><b>Transaction Details</b></div>
-                            <div><b>Approved Amount: </b>$' . $withdrawal_details->withdraw_amount . '</div>
+                            <div><b>Approved Amount: </b>$' . $amount . '</div>
                             <div><b>Transaction ID: </b>' . $transid . '</div>
                             <div><b>Withdrawal Date: </b>' . $withdrawal_details->withdraw_date . '</div>
                             <div><b>Withdrawal Type: </b>' . $withdrawal_details->withdraw_type . '</div>';
