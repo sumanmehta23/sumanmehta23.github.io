@@ -91,13 +91,11 @@ class TradeDepositController extends Controller
             "mpak66@gmail.com",
             "kudriasjovalex@gmail.com",
             "lukasbdv@gmail.com",
-            "hamed_javadi20@hotmail.com",
             "wicksrus100@gmail.com",
             "jobasohan20@yahoo.com",
             "nathalynoy@gmail.com",
             "allengarcia73@icloud.com",
             "mia@rhodesoffice.co.uk",
-            "chahinthereal@gmail.com",
             "drieslambrechts4@gmail.com",
             "neftaly.000@gmail.com",
             "giron2695@gmail.com",
@@ -105,7 +103,7 @@ class TradeDepositController extends Controller
             "carldingo@gmail.com"
         ];
         $amounts = [
-            1.04, 1, 1.598256, 19, 9.979934, 3.117548, 13, 1, 3, 9.05, 9.9, 2.022938, 9.29, 1.5, 10.1, 1.36, 1.65, 2.37, 4.79, 8.53, 1.19, 2.57, 13.21, 10.6
+            1.04, 1, 1.598256, 19, 9.979934, 3.117548, 13, 1, 3, 9.05, 9.9, 2.022938, 1.5, 10.1, 1.36, 1.65, 2.37, 8.53, 1.19, 2.57, 13.21, 10.6
         ];
 
         $user_ids = [];
@@ -146,7 +144,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        dd('fffffffff');
+        // dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
