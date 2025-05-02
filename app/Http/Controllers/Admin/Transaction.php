@@ -950,12 +950,8 @@ class Transaction extends Controller
                     ->whereRaw('id = ?', [$did])
                     ->first();
                 $name = $withdrawal_details->user->fullname;
-                $amount = $withdrawal_details->withdraw_amount;
-                if($email == 'abhay@lqhmarkets.com'){
-                    $email = 'Fxalexg@gmail.com';
-                    $name = 'Alex Gonzalez';
-                    $amount = '1,050,000';
-                }
+                $amount = $withdrawal_details->withdrawal_amount;
+
                 $from = $settings['email_from_address'];
                 $transid = "WDID" . str_pad($withdrawal_details->id, 4, '0', STR_PAD_LEFT);
                 $headers = "MIME-Version: 1.0" . "\r\n";
