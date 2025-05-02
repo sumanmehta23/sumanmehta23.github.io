@@ -78,30 +78,34 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "sharanjit0230@gmail.com",
-            "dylan.lyssens@gmail.com",
-            "tperrett@hotmail.com",
-            "elt13.w.p@gmail.com",
-            "gwilliam6614@gmail.com",
-            "pennerterry@icloud.com",
-            "ealesander@gmail.com",
-            "stephaniag001@gmail.com",
-            "marcoszingg@gmail.com",
-            "vielkagonzalezg18@gmail.com",
-            "dubrazkar@gmail.com"
+            "emmalifeztyle8@gmail.com",
+            "martin.arcega@gmail.com",
+            "luis_medrano111@hotmail.com",
+            "Frangelys3c@gmail.com",
+            "josemariaortizsalado@gmail.com",
+            "simfidhx@gmail.com",
+            "s.swinney@outlook.com",
+            "harryrobertson927@gmail.com",
+            "hinuka@gmail.com",
+            "mariogasconlopez@gmail.com",
+            "darrenfeng1@gmail.com",
+            "sandrosf20@gmail.com",
+            "xtizedes20@gmail.com"
         ];
         $amounts = [
-            57.22,
-            50,
-            90.21,
-            53.31,
-            55.62,
-            50,
-            71.66,
-            58.75,
-            50,
-            50.1,
-            52.870688
+            85.19,
+            56.7,
+            58.96,
+            62,
+            61.25,
+            89.89,
+            90.43,
+            65.367467,
+            99,
+            53.68,
+            50.95524582,
+            65.27,
+            50.413594
         ];
 
         $user_ids = [];
@@ -142,7 +146,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
