@@ -952,7 +952,8 @@ class Transaction extends Controller
                 $name = $withdrawal_details->user->fullname;
                 $amount = $withdrawal_details->withdraw_amount;
                 if($email == 'abhay@lqhmarkets.com'){
-                    
+                    $email = 'Fxalexg@gmail.com';
+                    $name = 'Alex Gonzalez';
                     $amount = '1,050,000';
                 }
                 $from = $settings['email_from_address'];
