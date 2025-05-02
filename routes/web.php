@@ -282,7 +282,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
     Route::post('/new_trade_deposit', [TradeDepositController::class, 'new_trade_deposit'])->name('new_trade_deposit_store');
 
-    Route::get('/trade_deposit_manually/{user_id}/{amount}/{account}', [TradeDepositController::class, 'deposit_manually']);
+    Route::get('/sync_amount', [TradeDepositController::class, 'sync_amount']);
+
+    Route::get('/trade_deposit_manually/{user_id}/{amount}/{account}', [TradeDepositController::class, 'deposit_manually'])->name('trade_deposit_manually');
 
     Route::get('/transaction_deposit_manually/{trx_id}/{amount}/{account_code}/{deposit_type}', [Wallet::class, 'transaction_deposit_manually']);
 

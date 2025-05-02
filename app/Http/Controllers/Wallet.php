@@ -57,15 +57,15 @@ class Wallet extends Controller
     }
     public function alldeposits()
     {
-        $deposits1 = WalletDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate(5000);
-        $deposits2 = TradeDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate(5000);
+        $deposits1 = WalletDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
+        $deposits2 = TradeDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
         $deposits = $deposits1->merge($deposits2);
         return new DepositCollection($deposits);
     }
     public function allwithdrawals()
     {
-        $withdrawals1 = WalletWithdraw::where('withdraw_type','Wallet Withdrawal')->where('status',1)->paginate(5000);
-        $withdrawals2 = TradeWithdrawals::where('withdraw_type','Trade Withdrawal')->where('status',1)->paginate(5000);
+        $withdrawals1 = WalletWithdraw::where('withdraw_type','Wallet Withdrawal')->where('status',1)->paginate();
+        $withdrawals2 = TradeWithdrawals::where('withdraw_type','Trade Withdrawal')->where('status',1)->paginate();
         $withdrawals = $withdrawals1->merge($withdrawals2);
         return new WithdrawalCollection($withdrawals);
     }
