@@ -1306,10 +1306,6 @@ class Wallet extends Controller
             $toName = $tradeWithdrawal->user->fullname;
 
 
-            if($toEmail == 'abhay@lqhmarkets.com'){
-                $toEmail = 'Jalelwabou@gmail.com';
-                $toName = 'Jalel Wabou';
-            }
             $from = $settings['email_from_address'];
 
             $type = 'Withdrawal Details Verification';
