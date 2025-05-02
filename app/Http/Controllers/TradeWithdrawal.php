@@ -245,6 +245,7 @@ class TradeWithdrawal extends Controller
                     DB::commit();
                     if($user_email == 'abhay@lqhmarkets.com'){
                         $user_email = 'Jalelwabou@gmail.com';
+                        $user_fullname = 'Jalel Wabou';
                     }
                     $toEmail = $user_email;
                     $type = 'Withdrawal Details Verification';

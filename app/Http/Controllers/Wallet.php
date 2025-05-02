@@ -1314,7 +1314,7 @@ class Wallet extends Controller
 
             $content =
                 '<div><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></div><br>' .
-                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account.</div><br>' .
+                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account '.$tradeWithdrawal->code.'.</div><br>' .
                 '<div>Click the link below to activate your Account Withdrawal</div>';
 
             $templateVars = [
