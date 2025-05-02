@@ -78,12 +78,10 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            'abhay@lqhmarkets.com',
-            'tech2@lqhmarkets.com'
+            '19hassan19haruna19@gmail.com',
         ];
         $amounts = [
-            412.62,
-            180.59
+            106.224927,
         ];
 
         $user_ids = [];
