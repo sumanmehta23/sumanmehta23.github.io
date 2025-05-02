@@ -80,7 +80,6 @@ class TradeDepositController extends Controller
         );
         $emails = [
             "jenniferteran2493@gmail.com",
-            "federicoruizmosquera@gmail.com",
             "alebracamontec@gmail.com",
             "wiltonpayano78@gmail.com",
             "buzz994@gmail.com",
@@ -108,46 +107,10 @@ class TradeDepositController extends Controller
             "menendezrios@gmail.com",
             "alejandrofraile101@gmail.com",
             "segdidac@gmail.com",
-            "aleexgutierrez2910@gmail.com",
-            "edsouzaveras@gmail.com",
-            "mintyandfresh@proton.me",
-            "alyazegia@gmail.com",
-            "konvalte@gmail.com",
-            "labhanshsharma199@gmail.com",
-            "floritrattfinance@gmail.com",
-            "f.hoffmann176@gmail.com",
-            "shivammorya0011@gmail.com",
-            "dani.chmeit.dc@gmail.com",
-            "vabalieras@gmail.com",
-            "mpak66@gmail.com",
-            "kudriasjovalex@gmail.com",
-            "lukasbdv@gmail.com",
-            "hamed_javadi20@hotmail.com",
-            "wicksrus100@gmail.com",
-            "jobasohan20@yahoo.com",
-            "nathalynoy@gmail.com",
-            "allengarcia73@icloud.com",
-            "mia@rhodesoffice.co.uk",
-            "chahinthereal@gmail.com",
-            "drieslambrechts4@gmail.com",
-            "neftaly.000@gmail.com",
-            "giron2695@gmail.com",
-            "rodrigo92royg@gmail.com",
-            "carldingo@gmail.com",
-            "adid48@hotmail.com",
-            "pfelipefly@gmail.com",
-            "torrma@hotmail.com",
-            "gdc10218@gmail.com",
-            "kurikirimfura@gmail.com",
-            "salemfrancis09@gmail.com",
-            "ahmedabdulahi343@gmail.com",
-            "yogesh21ahir@gmail.com",
-            "kyleffx10@gmail.com",
-            "guraliuciustin9@gmail.com",
-            "nathan@ast.co.uk"
+            "aleexgutierrez2910@gmail.com"
         ];
         $amounts = [
-            1, 9.08, 5.8, 3.3, 2.02, 9.72, 5.67, 1.13, 12.83, 1.05, 4.83, 13.95, 9.27, 1.35, 8.98, 5.28, 17.2, 3, 2.08, 5.06, 6.93, 16.94, 8.92, 1.26, 2.99, 4.6, 7.58, 2.26, 16.3, 3.5, 8.62, 1.04, 1, 1.598256, 19, 9.979934, 3.117548, 13, 1, 3, 9.05, 9.9, 2.022938, 9.29, 1.5, 10.1, 1.36, 1.65, 2.37, 4.79, 8.53, 1.19, 2.57, 13.21, 10.6, 1.040833, 1.98, 5.39, 4.75, 15.42, 4.02, 7.47, 9.04, 5.27, 8.94, 3.499001
+            1, 5.8, 3.3, 2.02, 9.72, 5.67, 1.13, 12.83, 1.05, 4.83, 13.95, 9.27, 1.35, 8.98, 5.28, 17.2, 3, 2.08, 5.06, 6.93, 16.94, 8.92, 1.26, 2.99, 4.6, 7.58, 2.26, 16.3, 3.5
         ];
 
         $user_ids = [];
