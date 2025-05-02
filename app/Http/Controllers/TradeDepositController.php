@@ -78,27 +78,26 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "jaskanwarsingh09@gmail.com",
-            "angeleduardolezamaacosta@gmail.com",
-            "swaibussemakulafx@gmail.com",
-            "Babylonb788@gmail.com",
-            "gsilaghi68@yahoo.com",
-            "arsr1000abir@gmail.com",
-            "jeffrey.ikahn@protonmail.com",
-            "s20181091@ccckws.edu.hk",
-            "salaliinvesting@gmail.com",
-            "marychafla01@icloud.com",
-            "depr30@gmail.com",
-            "parisperona@gmail.com",
-            "Ryan.trades001@gmail.com",
-            "frederickmordan@gmail.com",
-            "diegorv2818@gmail.com",
-            "jonathanelezi05@gmail.com",
-            "jakobpopovych32@gmail.com",
-            "ZoeyCalame@gmail.com",
+            "jonathanwilkinson247@gmail.com",
+            "lindsayamoy@gmail.com",
+            "marius.grige@gmail.com",
+            "axellgregory3001@gmail.com",
+            "luisg27okt@gmail.com",
+            "elijaholadunjoye7@gmail.com",
+            "workneerraj@gmail.com",
+            "aracellyugartecas@gmail.com",
+            "karmaqwer518@gmail.com",
+            "fxmarcinolszewski@gmail.com",
+            "quirozwaly29@gmail.com",
+            "praslaalfin@gmail.com",
+            "smancillah@gmail.com",
+            "francissosua@gmail.com",
+            "jose.f.d.martins@hotmail.com",
+            "bardanrobert@gmail.com",
+            "yannick.steiger@brenntastuda.ch"
         ];
         $amounts = [
-            32.43, 20, 23.64, 28.91, 29.42, 44.33, 24.85, 28.87, 39.24, 29.43, 25.564595, 44.454492, 31.44, 21.233575, 21.31693, 47.693351, 32.99, 35.906818
+            36.38, 27.02, 30.03, 27.215155, 40.671419, 40.69603276, 35.99, 32.217677, 36.561662, 46.34, 21.690984, 22.37, 21.833145, 26.3, 30.94, 33.33, 48
         ];
 
         $user_ids = [];
@@ -139,7 +138,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
