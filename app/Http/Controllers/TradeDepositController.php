@@ -78,7 +78,6 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "ramirezestefhany@gmail.com",
             "jaskanwarsingh09@gmail.com",
             "angeleduardolezamaacosta@gmail.com",
             "swaibussemakulafx@gmail.com",
@@ -97,10 +96,9 @@ class TradeDepositController extends Controller
             "jonathanelezi05@gmail.com",
             "jakobpopovych32@gmail.com",
             "ZoeyCalame@gmail.com",
-            "hanaf.haji@gmail.com"
         ];
         $amounts = [
-            38.98, 32.43, 20, 23.64, 28.91, 29.42, 44.33, 24.85, 28.87, 39.24, 29.43, 25.564595, 44.454492, 31.44, 21.233575, 21.31693, 47.693351, 32.99, 35.906818, 39.77
+            32.43, 20, 23.64, 28.91, 29.42, 44.33, 24.85, 28.87, 39.24, 29.43, 25.564595, 44.454492, 31.44, 21.233575, 21.31693, 47.693351, 32.99, 35.906818
         ];
 
         $user_ids = [];
