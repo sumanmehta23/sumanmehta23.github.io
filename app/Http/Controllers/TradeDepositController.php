@@ -79,11 +79,11 @@ class TradeDepositController extends Controller
         );
         $emails = [
             'kerdeljuba89@gmail.com',
-            'enriquemaldonado87@outlook.com'
+            'marcelittaflores@hotmail.com'
         ];
         $amounts = [
             10509.88,
-            504.9
+            106.953273
         ];
 
         $user_ids = [];
