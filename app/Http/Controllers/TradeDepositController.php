@@ -79,59 +79,10 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-                    "anhmoc@hotmail.com",
-                    "Chaudhary.robbie@gmail.com",
-                    "faria.officiel@outlook.com",
-                    "zacharyarmani@hotmail.com",
-                    "michaelkouloumos@gmail.com",
-                    "mikkirosy@gmail.com",
-                    "ptacniktobias@gmail.com",
-                    "dassognomathias@gmail.com",
-                    "tim.daltonbuilding@hotmail.com",
-                    "aryansoni6@icloud.com",
-                    "denisjakus@icloud.com",
-                    "ckrakul@gmail.com",
-                    "Skllznextup@gmail.com",
-                    "jake.mcleod00@gmail.com",
-                    "tslkonrad@gmail.com",
-                    "tristent52@gmail.com",
-                    "etonko199@gmail.com",
-                    "marius.barkenhuizen@gmail.com",
-                    "obuene@gmail.com",
-                    "jorgeoffice01@gmail.com",
-                    "csavvas2003@gmail.com",
-                    "mithuneshbellam29@gmail.com",
-                    "jose.andreshernandez@hotmail.com",
-                    "jerekr28@gmail.com",
-                    "uyangany@gmail.com",
-                    "samuelrobertss22@outlook.com",
-                    "navi2077@icloud.com",
-                    "nkosininowa95@gmail.com",
-                    "baryestate@gmail.com",
-                    "Akshay.sood.1996@gmail.com",
-                    "Edgeychris@gmail.com",
-                    "abrahamjose5503@gmail.com",
-                    "sebastian.markussen@hotmail.com",
-                    "grzegorz.bloniarz@gmail.com",
-                    "Taymiller097@gmail.com",
-                    "trade.pm207@proton.me",
-                    "th.35jayrose@outlook.com",
-                    "binamybeng@gmail.com",
-                    "drake_dre@hotmail.com",
-                    "alexrayon2006@gmail.com",
-                    "mrczfx@gmail.com",
-                    "danielc2013@yahoo.ca",
-                    "filippovoconi@gmail.com",
-                    "megafiremedia@gmail.com",
-                    "rlbootcamp2024@gmail.com",
-                    "elkysime@gmail.com",
-                    "lucaseitner04@gmail.com",
-                    "zyguy114@gmail.com",
-                    "tranphi1031@Gmail.com",
-                    "dylan.yancey@proton.me"
+
         ];
         $amounts = [
-            0.704037, 0.56, 0.02, 0.23, 0.16, 0.39, 0.72, 0.3, 0.98, 0.725974, 0.56, 0.11, 0.2, 0.16, 0.51, 0.9, 0.6, 0.55, 0.55, 0.9, 0.91, 0.03, 0.99, 0.72, 0.99, 0.52, 0.45, 0.009999999998, 0.83, 0.23, 0.89, 0.6, 0.2, 0.11, 0.91, 0.09, 0.82, 0.53, 0.8, 0.92, 0.991415, 0.55, 0.61, 0.78, 0.05, 0.34, 0.607477, 0.74, 0.05, 0.198
+
         ];
 
         $user_ids = [];
@@ -181,7 +132,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
