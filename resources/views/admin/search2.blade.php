@@ -39,9 +39,6 @@
                                     <tbody>
                                         <?php
                                     foreach ($accounts as $result) {
-                                        if($result->email == 'bhattisahab12514@gmail.com'){
-                                            dd($result);
-                                        }
                                     ?>
                                         <tr>
                                             {{-- {{ dd($accounts) }} --}}
@@ -118,11 +115,11 @@
                                             {{-- <td>
                                                 <div class="lh-1">
                                                     {{-- <?= date('Y-m-d', strtotime($result->created_at)) ?> --}}
-                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
+                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
                                                 </div>
                                                 <div class="lh-2 text-muted">
                                                     {{-- <?= date('H:i:s', strtotime($result->created_at)) ?></div> --}}
-                                                    {{ Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
+                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
                                             </td> --}}
                                         </tr>
                                         <?php }
