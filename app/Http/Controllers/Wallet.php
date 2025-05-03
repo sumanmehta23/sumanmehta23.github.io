@@ -57,10 +57,23 @@ class Wallet extends Controller
     }
     public function alldeposits()
     {
-        $deposits1 = WalletDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
-        $deposits2 = TradeDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
-        $deposits = $deposits1->merge($deposits2);
-        return new DepositCollection($deposits);
+        $deposits1 = WalletDeposit::whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'Now Payment'])->get();
+        $deposits2 = TradeDeposit::whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'Now Payment'])->get();
+
+        $mergedDeposits = $deposits1->merge($deposits2);
+
+        // Paginate the merged collection
+        $perPage = 15; // Number of items per page
+        $currentPage = request()->get('page', 1); // Get the current page or default to 1
+        $paginatedDeposits = new \Illuminate\Pagination\LengthAwarePaginator(
+            $mergedDeposits->forPage($currentPage, $perPage),
+            $mergedDeposits->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return new DepositCollection($paginatedDeposits);
     }
     public function allwithdrawals()
     {
