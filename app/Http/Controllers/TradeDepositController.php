@@ -137,35 +137,44 @@ class TradeDepositController extends Controller
         $user_ids = [];
         $accounts_code = [];
 
-        foreach ($emails as $email) {
+        $batchSize = 5;
+        $emailChunks = array_chunk($emails, $batchSize);
 
-            $user = User::where('email', $email)->first();
-            if ($user) {
-                $user_ids[] = $user->id;
-            }
+        foreach ($emailChunks as $emailChunk) {
+            foreach ($emailChunk as $email) {
 
-            $accounts = Account::where('email', $email)->where('demo',0)->get();
-            $foundValidAccount = false;
-
-            foreach ($accounts as $account) {
-                $login = $account->code;
-
-                $error_code = $this->api->UserAccountGet($login, $mt5account);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-                    continue;
+                $user = User::where('email', $email)->first();
+                if ($user) {
+                    $user_ids[] = $user->id;
                 }
 
-                if ($mt5account->Balance >= 0) {
-                    $accounts_code[] = $account->code;
-                    $foundValidAccount = true;
-                    break; // Stop checking other accounts once a valid one is found
+                $accounts = Account::where('email', $email)->where('demo', 0)->get();
+                $foundValidAccount = false;
+
+                foreach ($accounts as $account) {
+                    $login = $account->code;
+
+                    $error_code = $this->api->UserAccountGet($login, $mt5account);
+                    if ($error_code != MTRetCode::MT_RET_OK) {
+                        session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                        continue;
+                    }
+
+                    if ($mt5account->Balance >= 0) {
+                        $accounts_code[] = $account->code;
+                        $foundValidAccount = true;
+                        break; // Stop checking other accounts once a valid one is found
+                    }
+                }
+
+                if (!$foundValidAccount) {
+                    $accounts_code[] = null; // No valid account with non-negative balance
                 }
             }
 
-            if (!$foundValidAccount) {
-                $accounts_code[] = null; // No valid account with non-negative balance
-            }
+            // Process the batch here if needed
+            // For example, you can add a delay or log the batch processing
+            // sleep(1); // Uncomment this line if you want to add a delay between batches
         }
 
         // dump($emails);
