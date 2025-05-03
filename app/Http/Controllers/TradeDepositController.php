@@ -79,34 +79,6 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-            "duglasruiz28@gmail.com",
-            "administracion@transmovar.com",
-            "glowgoals54@gmail.com",
-            "jersoninfa7@gmail.com",
-            "kroll.bremerhaven@gmx.de",
-            "pedrosena.magalhaes@gmail.com",
-            "samuelj2504@gmail.com",
-            "messaromar98@gmail.com",
-            "inoxibao36@gmail.com",
-            "juanpablomartignago@gmail.com",
-            "lukasnardi26@gmail.com",
-            "lapaix26@hotmail.com",
-            "aduosae.c@gmail.com",
-            "gulshirinart@gmail.com",
-            "santoosx100@gmail.com",
-            "bd2823625@gmail.com",
-            "Jassel_magtolis@icloud.com",
-            "detailw.forex@gmail.com",
-            "joaocarlos.aguiar99@gmail.com",
-            "tripmarcel934@gmail.com",
-            "mohamadrezahasani@outlook.com",
-            "sakthimechsiva@gmail.com",
-            "hurairasaeed786@gmail.com",
-            "oscartobiaspt@gmail.com",
-            "ibarrapadillaraul@gmail.com",
-            "alejandroandradagrimaldi@gmail.com",
-            "vizzinievan@gmail.com",
-            "eddychipanagarcia95@gmail.com",
             "nan_kas@icloud.com",
             "fxmtpaintingllc@gmail.com",
             "office@michaelgries.com",
@@ -114,7 +86,7 @@ class TradeDepositController extends Controller
             "capatinacosmin21@gmail.com"
         ];
         $amounts = [
-            15.79, 1.04, 2.26, 9.81, 15.52, 3.58, 8.1, 1.898309, 5.91, 14.71, 1.727025, 10, 3.367652, 4.34, 7.345633, 4.383354, 8.99, 10.87, 2.539215, 2.53, 1.17, 4.36, 18.99, 2.92, 3.83, 10, 2.95586, 6.99, 10, 7.01, 9.97, 1.02, 3
+            10, 7.01, 9.97, 1.02, 3
         ];
 
         $user_ids = [];
@@ -155,7 +127,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
