@@ -39,8 +39,9 @@
                                     <tbody>
                                         <?php
                                     foreach ($accounts as $result) {
-                                        // print_r($result);
-                                        // exit();
+                                        if($result->email == 'bhattisahab12514@gmail.com'){
+                                            dd($result);
+                                        }
                                     ?>
                                         <tr>
                                             {{-- {{ dd($accounts) }} --}}
