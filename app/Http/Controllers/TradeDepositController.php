@@ -79,27 +79,7 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_password']
         );
         $emails = [
-                    "yok3en@tassi.hu",
-                    "info@jalelabou.com",
-                    "leo050525@gmail.com",
-                    "pehnawacollections83@gmail.com",
-                    "bikramsandhu556@gmail.com",
-                    "washingtondefi@hotmail.com",
-                    "luhar.anurag22@gmail.com",
-                    "lesaldivar@gmail.com",
-                    "roshantandel52@gmail.com",
-                    "lucasfg19@gmail.com",
-                    "oli1990@me.com",
-                    "milapgajera107@gmail.com",
-                    "icloudhustle@gmail.com",
-                    "meinagashimaforex@gmail.com",
-                    "mattiatintiwork@gmail.com",
-                    "bilalmazhar112233@gmail.com",
-                    "rafithetrader@gmail.com",
-                    "Adindetony522@gmail.com",
-                    "Mtreleven19@gmail.com",
-                    "sFredy01@yahoo.com",
-                    "kennylopez2804@gmail.com",
+
                     "josephfavaleforex@gmail.com",
                     "broker@moneymarketrading.com",
                     "boggysophia@hotmail.com",
@@ -176,7 +156,7 @@ class TradeDepositController extends Controller
                     "dylan.yancey@proton.me"
         ];
         $amounts = [
-            0.24, 0.89, 0.29, 0.98, 0.41, 0.76, 0.99, 0.02, 0.55, 0.91, 0.72, 0.03, 0.99, 0.02, 0.02, 0.95, 0.08, 0.36, 0.06, 0.07, 0.1, 0.19, 0.820111, 0.62, 0.37, 0.54, 0.24, 0.62, 0.07, 0.18, 0.56, 0.146, 0.39, 0.28, 0.08, 0.04, 0.51, 0.16, 0.84, 0.63, 0.8, 0.85, 0.44, 0.0009999999997, 0.65, 0.704037, 0.56, 0.02, 0.23, 0.16, 0.39, 0.72, 0.3, 0.98, 0.725974, 0.56, 0.11, 0.2, 0.16, 0.51, 0.9, 0.6, 0.55, 0.55, 0.9, 0.91, 0.03, 0.99, 0.72, 0.99, 0.52, 0.45, 0.009999999998, 0.83, 0.23, 0.89, 0.6, 0.2, 0.11, 0.91, 0.09, 0.82, 0.53, 0.8, 0.92, 0.991415, 0.55, 0.61, 0.78, 0.05, 0.34, 0.607477, 0.74, 0.05, 0.198
+            0.19, 0.820111, 0.62, 0.37, 0.54, 0.24, 0.62, 0.07, 0.18, 0.56, 0.146, 0.39, 0.28, 0.08, 0.04, 0.51, 0.16, 0.84, 0.63, 0.8, 0.85, 0.44, 0.0009999999997, 0.65, 0.704037, 0.56, 0.02, 0.23, 0.16, 0.39, 0.72, 0.3, 0.98, 0.725974, 0.56, 0.11, 0.2, 0.16, 0.51, 0.9, 0.6, 0.55, 0.55, 0.9, 0.91, 0.03, 0.99, 0.72, 0.99, 0.52, 0.45, 0.009999999998, 0.83, 0.23, 0.89, 0.6, 0.2, 0.11, 0.91, 0.09, 0.82, 0.53, 0.8, 0.92, 0.991415, 0.55, 0.61, 0.78, 0.05, 0.34, 0.607477, 0.74, 0.05, 0.198
         ];
 
         $user_ids = [];
@@ -217,7 +197,7 @@ class TradeDepositController extends Controller
         dump($user_ids);
         dump($amounts);
         dump($accounts_code);
-        // dd('fffffffff');
+        dd('fffffffff');
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
