@@ -77,10 +77,23 @@ class Wallet extends Controller
     }
     public function allwithdrawals()
     {
-        $withdrawals1 = WalletWithdraw::where('withdraw_type','Wallet Withdrawal')->where('status',1)->paginate();
-        $withdrawals2 = TradeWithdrawals::where('withdraw_type','Trade Withdrawal')->where('status',1)->paginate();
-        $withdrawals = $withdrawals1->merge($withdrawals2);
-        return new WithdrawalCollection($withdrawals);
+        $withdrawals1 = WalletWithdraw::where('withdraw_type', 'Wallet Withdrawal')->where('status', 1)->get();
+        $withdrawals2 = TradeWithdrawals::where('withdraw_type', 'Trade Withdrawal')->where('status', 1)->get();
+
+        $mergedWithdrawals = $withdrawals1->merge($withdrawals2);
+
+        // Paginate the merged collection
+        $perPage = 15; // Number of items per page
+        $currentPage = request()->get('page', 1); // Get the current page or default to 1
+        $paginatedWithdrawals = new \Illuminate\Pagination\LengthAwarePaginator(
+            $mergedWithdrawals->forPage($currentPage, $perPage),
+            $mergedWithdrawals->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return new WithdrawalCollection($paginatedWithdrawals);
     }
     public function index()
     {
