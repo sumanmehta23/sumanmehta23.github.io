@@ -1075,8 +1075,7 @@ class Wallet extends Controller
                 );
 
                 $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
-                    $query->where('status', 1)
-                        ->where('callback_code', 'success');
+                    $query->where('status', 1);
                 }])->first();
 
                 // Check for duplicate transaction

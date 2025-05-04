@@ -45,16 +45,15 @@ class TradeDepositController extends Controller
 
             'BonusTransaction' => function ($query) {
                 $query->where('bonus_type', 'Bonus In')
-                      ->orWhere('bonus_type', 'Bonus Out');
+                    ->orWhere('bonus_type', 'Bonus Out');
             }
         ])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
-                $query->where('status', 1)
-                    ->where('callback_code', 'success');
-            }])
-        ->where('user_id', $user->id)
-        ->where('account_request_status', 1)
-        ->where('demo', false)
-        ->get()
+            $query->where('status', 1);
+        }])
+            ->where('user_id', $user->id)
+            ->where('account_request_status', 1)
+            ->where('demo', false)
+            ->get()
             ->reject(function ($account) {
                 return $account->accountType->ac_group === 'LM\\B-Book\\10x\\DF-B' && $account->successful_trade_deposits_count > 0;
             });;
@@ -66,11 +65,11 @@ class TradeDepositController extends Controller
             ->selectRaw('SUM(equity) as equity, SUM(credit) as credit, SUM(balance) as balance')
             ->first();
         $totalWd = WalletDeposit::where('user_id', $user->id)->where('status', 1)->sum('deposit_amount');
-        $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_amount');
-        $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_transaction_fee');
+        $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status', [2, 3])->sum('withdraw_amount');
+        $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status', [2, 3])->sum('withdraw_transaction_fee');
         $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
         // return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
-        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
+        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'wallet_balance'));
     }
 
     public function sync_amount(Request $request)
@@ -86,12 +85,8 @@ class TradeDepositController extends Controller
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
-        $emails = [
-
-        ];
-        $amounts = [
-
-        ];
+        $emails = [];
+        $amounts = [];
 
         $user_ids = [];
         $accounts_code = [];
@@ -177,10 +172,11 @@ class TradeDepositController extends Controller
                             'code' => $account->code,
                             'deposit_amount' => $depositamount,
                             'remark' => 'Account Deposit'
-                        ])
-                ->event('create')
-                ->log('Account Deposit');
-                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Account Deposit');
+                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -193,7 +189,7 @@ class TradeDepositController extends Controller
                 } else {
 
                     // Start a database transaction
-                    DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+                    DB::transaction(function () use ($user, $email, $account, $depositProofPath, $depositamount, $deposit_type) {
                         $tradeId = $account->code;
 
                         // Insert into wallet withdraw
@@ -230,7 +226,6 @@ class TradeDepositController extends Controller
                     // RateLimiter::clear($key);
                     // return response()->json(['success' => 'Funds Successfully Deposited']);
                 }
-
             }
         }
     }
@@ -271,10 +266,11 @@ class TradeDepositController extends Controller
                     'code' => $account->code,
                     'deposit_amount' => $depositamount,
                     'remark' => 'Account Deposit'
-                ])
-        ->event('create')
-        ->log('Account Deposit');
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check=true);
+                ]
+            )
+            ->event('create')
+            ->log('Account Deposit');
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
@@ -287,7 +283,7 @@ class TradeDepositController extends Controller
         } else {
 
             // Start a database transaction
-            DB::transaction(function () use ($user, $email,$account, $depositProofPath,$depositamount,$deposit_type) {
+            DB::transaction(function () use ($user, $email, $account, $depositProofPath, $depositamount, $deposit_type) {
                 $tradeId = $account->code;
 
                 // Insert into wallet withdraw

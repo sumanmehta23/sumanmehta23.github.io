@@ -36,8 +36,7 @@ class InternalTransfer extends Controller
                     ->orWhere('bonus_type', 'Bonus Out');
             }
         ])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
-            $query->where('status', 1)
-                ->where('callback_code', 'success');
+            $query->where('status', 1);
         }])
             ->where('account_request_status', "!=", "0")
             ->get();
@@ -81,7 +80,9 @@ class InternalTransfer extends Controller
         $toAccountId = $request->input('toAccount');
         $userId = auth()->user()->id;
         $fromAccount = Account::where(['id' => $fromAccountId, 'user_id' => $userId])->firstOrFail();
-        $toAccount = Account::where(['id' => $toAccountId, 'user_id' => $userId])->firstOrFail();
+        $toAccount = Account::where(['id' => $toAccountId, 'user_id' => $userId])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+            $query->where('status', 1);
+        }])->firstOrFail();
         // dump($fromAccount);
         //         dd($toAccount->accountType->ac_group);
 
