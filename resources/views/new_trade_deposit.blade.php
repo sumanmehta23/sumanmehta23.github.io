@@ -62,7 +62,8 @@
                                                                         <input id="{{ $liveaccount->code }}"
                                                                             type="radio" name="live-account"
                                                                             class="select-liveaccount form-check-input input-primary"
-                                                                            data-mindep="{{ $liveaccount->mindep }}"
+                                                                            data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
+                                                                               data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
                                                                             value="{{ $liveaccount->id }}">
                                                                         <label class="form-check-label d-block" required>
                                                                             <div class="p-1 my-1">

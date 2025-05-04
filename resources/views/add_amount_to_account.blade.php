@@ -10,12 +10,32 @@
   // CC Payment gateway options
   $("#ccpay").attr("disabled", "true");
   $("#deposit_amount_cc").on('change keypress keydown keyup', function() {
-    if ($(this).val() >= 10) {
+      const selectedRadio = $('input[name="live-account"]:checked');
+
+      let minDeposit= selectedRadio.data('mindeposit');
+      let maxDeposit= selectedRadio.data('maxdeposit');
+      if(typeof minDeposit != 'number'){
+          minDeposit=10;
+      }
+      if(typeof maxDeposit != 'number'){
+          maxDeposit=0;
+      }
+      var inputPlaceholder='';
+      if(minDeposit>0){
+          inputPlaceholder = 'Minimum  $'+minDeposit;
+      }
+      if(maxDeposit>0){
+          inputPlaceholder += ' Maximum $'+maxDeposit;
+      }
+
+    if ($(this).val() >= minDeposit && ($(this).val() <= maxDeposit || maxDeposit == 0)) {
       $("#ccpay").attr("disabled", false);
     } else {
       $("#ccpay").attr("disabled", "true");
     }
     $("#ccpay").attr("data-amount", $(this).val());
+
+
   });
   // CC Payment gateway options Ends
   $("#paynow").attr("disabled", "true");
@@ -38,8 +58,17 @@ $("#paynow").on("click", function (event) {
 $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown keyup', function() {
     var amountValid = $("#crypto_deposit_amount").val() >= 10;
     var checkboxChecked = $("#cryptoWarningCheckbox").prop("checked");
+    const selectedRadio = $('input[name="live-account"]:checked');
 
-    if (amountValid && checkboxChecked) {
+    var minDeposit= selectedRadio.data('mindeposit');
+    var maxDeposit= selectedRadio.data('maxdeposit');
+    if(typeof minDeposit != 'number'){
+        minDeposit=10;
+    }
+    if(typeof maxDeposit != 'number'){
+        maxDeposit=0;
+    }
+    if (amountValid && checkboxChecked && ($("#crypto_deposit_amount").val() <= maxDeposit || maxDeposit == 0)) {
         $("#paynow").attr("disabled", false);
     } else {
         $("#paynow").attr("disabled", "true");
@@ -249,7 +278,24 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
   $('.select-liveaccount').on('change', function() {
     let clientAccountId = $(this).val();
-    console.log('ssssssss');
+    var minDeposit= $(this).data('mindeposit');
+    var maxDeposit= $(this).data('maxdeposit');
+    if(typeof minDeposit != 'number'){
+        minDeposit=10;
+    }
+    if(typeof maxDeposit != 'number'){
+        maxDeposit=0;
+    }
+    var inputPlaceholder='';
+      if(minDeposit>0){
+         inputPlaceholder = 'Minimum  $'+minDeposit;
+    }
+    if(maxDeposit>0){
+         inputPlaceholder += ' Maximum $'+maxDeposit;
+    }
+    $("#crypto_deposit_amount").attr("placeholder", inputPlaceholder);
+    $("#deposit_amount_cc").attr("placeholder", inputPlaceholder);
+
     CryptoChill.setup({
         account: '{{config('services.cryptochill.accountid')}}',
         profile: '{{config('services.cryptochill.profileid')}}',

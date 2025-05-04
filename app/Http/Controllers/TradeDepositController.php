@@ -38,17 +38,26 @@ class TradeDepositController extends Controller
         $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
         // $liveaccount_details =auth()->user()->liveAccounts;
+        //Get live accounts along with number of tradeDeposits with status=1 and 'callback_code' => "success"
+
         $liveaccount_details = Account::with([
             'accountType',
+
             'BonusTransaction' => function ($query) {
                 $query->where('bonus_type', 'Bonus In')
                       ->orWhere('bonus_type', 'Bonus Out');
             }
-        ])
+        ])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                $query->where('status', 1)
+                    ->where('callback_code', 'success');
+            }])
         ->where('user_id', $user->id)
         ->where('account_request_status', 1)
         ->where('demo', false)
-        ->get();
+        ->get()
+            ->reject(function ($account) {
+                return $account->accountType->ac_group === 'LM\\B-Book\\10x\\DF-B' && $account->successful_trade_deposits_count > 0;
+            });;
 
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
@@ -60,7 +69,6 @@ class TradeDepositController extends Controller
         $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_amount');
         $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status',[2,3])->sum('withdraw_transaction_fee');
         $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
-
         // return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
         return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
     }

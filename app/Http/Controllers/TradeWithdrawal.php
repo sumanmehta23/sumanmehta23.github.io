@@ -28,7 +28,7 @@ class TradeWithdrawal extends Controller
     protected $settings;
     protected $mailService;
 
-    public function __construct(MTWebAPI $api, MailService $mailService,MT5Service $mt5Service)
+    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->api = $api;
@@ -41,7 +41,7 @@ class TradeWithdrawal extends Controller
     public function index()
     {
         $email = auth()->user()->email;
-        $user=auth()->user();
+        $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
         // $liveaccount_details = Account::with('accountType','BonusTransaction')
         //     ->where('user_id', $user->id)
@@ -51,13 +51,13 @@ class TradeWithdrawal extends Controller
             'accountType',
             'BonusTransaction' => function ($query) {
                 $query->where('bonus_type', 'Bonus In')
-                      ->orWhere('bonus_type', 'Bonus Out');
+                    ->orWhere('bonus_type', 'Bonus Out');
             }
         ])
-        ->where('user_id', $user->id)
-        ->where('account_request_status', 1)
-        ->where('demo', false)
-        ->get();
+            ->where('user_id', $user->id)
+            ->where('account_request_status', 1)
+            ->where('demo', false)
+            ->get();
 
         $walletenabled = $user->wallet_enabled ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];
@@ -73,7 +73,7 @@ class TradeWithdrawal extends Controller
             ->where('wallet_delete_verification', 0)
             ->where('deleted_at', NULL)
             ->get();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','walletBalance','client_banks'));
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks'));
     }
     public function withdraw(Request $request)
     {
@@ -114,15 +114,15 @@ class TradeWithdrawal extends Controller
             'account_id.required' => 'Account is not selected.',
         ]);
 
-        $account = Account::with('accountType','tradeDeposits')
+        $account = Account::with('accountType', 'tradeDeposits')
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
 
         $total_bonus = BonusTransaction::where('account_id', $request->account_id)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('bonus_type', 'Bonus In')
-                      ->orWhere('bonus_type', 'Bonus Out');
+                    ->orWhere('bonus_type', 'Bonus Out');
             })
             ->where('admin_remark', 'NOT LIKE', '%Credit%')
             ->where('admin_remark', 'NOT LIKE', '%10x Trader Leverage%')
@@ -159,23 +159,27 @@ class TradeWithdrawal extends Controller
                         'code' => $login,
                         'withdraw_amount' => $balance,
                         'remark' => 'Account Withdraw'
-                    ])
-            ->event('create')
-            ->log('Account Withdraw');
+                    ]
+                )
+                ->event('create')
+                ->log('Account Withdraw');
 
             $clientWalletId = $request->input('client_wallet_id');
             $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
 
-            if($account->accountType->ac_group == 'LM\B-Book\10x\DF-B'){
+            if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
                 $total_deposit_amount = $account->tradeDeposits->sum('deposit_amount');
                 $account_balance = $account->balance;
 
-                if($account_balance >= $total_deposit_amount){
-                    $multiple_value = $total_deposit_amount-$account_balance+(-$balance);
-                }elseif($account_balance < $total_deposit_amount){
-                    $multiple_value = $total_deposit_amount-$account_balance-($balance);
+                if ($account_balance >= $total_deposit_amount) {
+                    $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
+                } elseif ($account_balance < $total_deposit_amount) {
+                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
                 }
-                $bonusamount = -9*$multiple_value;
+                // if ($multiple_value > 250) {
+                //     $multiple_value = 250;
+                // }
+                $bonusamount = -9 * $multiple_value;
                 if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                 } else {
@@ -192,7 +196,6 @@ class TradeWithdrawal extends Controller
                         // 'created_by' => session('alogin')
                     ]);
                 }
-
             }
 
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
@@ -205,10 +208,10 @@ class TradeWithdrawal extends Controller
                 ], 400);
             } else {
                 DB::beginTransaction();
-                if($amount >= 100){
+                if ($amount >= 100) {
                     $withdrawal_amount = $amount;
                     $withdrawal_fee = 0;
-                }else{
+                } else {
                     $withdrawal_fee = 5;
                     $withdrawal_amount = $amount - $withdrawal_fee;
                 }
@@ -254,7 +257,7 @@ class TradeWithdrawal extends Controller
 
                     $content =
                         '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                        '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' .$account->code.'</div>' .
+                        '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</div>' .
                         '<div>Click the link below to activate your Account Withdrawal</div>';
 
                     $templateVars = [
