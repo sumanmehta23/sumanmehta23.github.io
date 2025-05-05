@@ -131,11 +131,7 @@ class TradeDepositController extends Controller
             // sleep(1); // Uncomment this line if you want to add a delay between batches
         }
 
-        // dump($emails);
-        dump($user_ids);
-        dump($amounts);
-        dump($accounts_code);
-        dd('fffffffff');
+
 
         foreach ($user_ids as $index => $user_id) {
             if ($user_id !== null) {
