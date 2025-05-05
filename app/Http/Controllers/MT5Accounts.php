@@ -444,6 +444,7 @@ class MT5Accounts extends Controller
     }
     public function activateAccount(Request $request)
     {
+        dd($request->all());
         $settings = settings();
         if($request->accountType == 0)
         {
