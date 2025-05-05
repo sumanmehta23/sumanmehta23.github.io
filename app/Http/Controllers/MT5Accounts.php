@@ -463,20 +463,22 @@ class MT5Accounts extends Controller
             $account_type_id = $validatedData['options'];
 
             //wealthytrades
-            if($referral=="wealthytrades" || $ib=="wealthytrades") {
-                $groupCode = str_replace("DF","SNSI",$group->ac_group);
-                $group = AccountType::where('ac_group', $groupCode)->first();
+            if($group->ac_group != 'LM\B-Book\10x\DF-B'){
+                if($referral=="wealthytrades" || $ib=="wealthytrades") {
+                    $groupCode = str_replace("DF","SNSI",$group->ac_group);
+                    $group = AccountType::where('ac_group', $groupCode)->first();
 
-                if($group){
-                    $_POST["options"] =$group->id;
-                    $account_type_id = $group->id;
-                }
-            }elseif(strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") {
-                $groupCode = str_replace("DF","ALEX",$group->ac_group);
-                $group = AccountType::where('ac_group', $groupCode)->first();
-                if($group){
-                    $_POST["options"] =$group->id;
-                    $account_type_id = $group->id;
+                    if($group){
+                        $_POST["options"] =$group->id;
+                        $account_type_id = $group->id;
+                    }
+                }elseif(strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") {
+                    $groupCode = str_replace("DF","ALEX",$group->ac_group);
+                    $group = AccountType::where('ac_group', $groupCode)->first();
+                    if($group){
+                        $_POST["options"] =$group->id;
+                        $account_type_id = $group->id;
+                    }
                 }
             }else{
                 $groupCode = $group->ac_group;
