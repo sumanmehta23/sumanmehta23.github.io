@@ -82,7 +82,7 @@ class MT5Controller extends Controller
             $code = $request->input('code');
             $account_type = $request->input('account_type');
             $leverage = $request->input('leverage');
-            dd($request->all());
+
             // Fetch user data from API (assume the API method and classes are available)
             $trade_user = NULL;
             $this->api->UserGet($code,$trade_user);
@@ -96,7 +96,7 @@ class MT5Controller extends Controller
                 // ], 400);
                 return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             }
- // dump($code);
+            dd($trade_user);
             // dump($account_type);
             // dump($this);
 
