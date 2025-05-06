@@ -131,9 +131,7 @@ class MT5Controller extends Controller
                     $account_type_id = $acc->id;
                 }
             }
-            if($code=514691){
-                dd($groupCode);
-            }
+
             $trade_user->Group = $groupCode;
 
             $trade_user->Leverage = $leverage;
