@@ -88,10 +88,7 @@ class MT5Controller extends Controller
             $this->api->UserGet($code,$trade_user);
 
             if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                if($code=514691){
-                    dump($error_code);
-                    dd($trade_user);
-                }
+
                 //dd(MTRetCode::GetError($error_code));
                 // return response()->json([
                 //     'status' => 'warning',
@@ -101,7 +98,10 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             }
 
-
+            if($code=514691){
+                dump($error_code);
+                dd($trade_user);
+            }
             // dump($account_type);
             // dump($this);
 
