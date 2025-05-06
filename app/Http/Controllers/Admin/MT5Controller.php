@@ -98,10 +98,7 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             }
 
-            if($code=514691){
-                dump($error_code);
-                dd($trade_user);
-            }
+
             // dump($account_type);
             // dump($this);
 
@@ -110,6 +107,9 @@ class MT5Controller extends Controller
                 ->where('id', $account_type)
                 ->first();
             $account =Account::with('user')->where('code',$code)->first();
+            if($code=514691){
+                dd($account);
+            }
             if($account){
                 $referral = $account->user->ib1;
 
