@@ -107,9 +107,7 @@ class MT5Controller extends Controller
                 ->where('id', $account_type)
                 ->first();
             $account =Account::with('user')->where('code',$code)->first();
-            if($code=514691){
-                dd($account);
-            }
+
             if($account){
                 $referral = $account->user->ib1;
 
@@ -132,6 +130,9 @@ class MT5Controller extends Controller
                     $groupCode = $acc->ac_group;
                     $account_type_id = $acc->id;
                 }
+            }
+            if($code=514691){
+                dd($groupCode);
             }
             $trade_user->Group = $groupCode;
 
