@@ -111,25 +111,27 @@ class MT5Controller extends Controller
             if($account){
                 $referral = $account->user->ib1;
 
-                if($referral && ($referral=="wealthytrades")) {
-                    $groupCode = str_replace("DF","SNSI",$acc->ac_group);
-                    $group = AccountType::where('ac_group', $groupCode)->first();
-                    // dd($group);
-                    if($group){
-                        $_POST["options"] =$group->id;
-                        $account_type_id = $group->id;
-                    }
-                }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
-                    $groupCode = str_replace("DF","ALEX",$acc->ac_group);
-                    $group = AccountType::where('ac_group', $groupCode)->first();
-                    if($group){
-                        $_POST["options"] =$group->id;
-                        $account_type_id = $group->id;
-                    }
-                }else{
-                    $groupCode = $acc->ac_group;
-                    $account_type_id = $acc->id;
-                }
+                // if($referral && ($referral=="wealthytrades")) {
+                //     $groupCode = str_replace("DF","SNSI",$acc->ac_group);
+                //     $group = AccountType::where('ac_group', $groupCode)->first();
+                //     // dd($group);
+                //     if($group){
+                //         $_POST["options"] =$group->id;
+                //         $account_type_id = $group->id;
+                //     }
+                // }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
+                //     $groupCode = str_replace("DF","ALEX",$acc->ac_group);
+                //     $group = AccountType::where('ac_group', $groupCode)->first();
+                //     if($group){
+                //         $_POST["options"] =$group->id;
+                //         $account_type_id = $group->id;
+                //     }
+                // }else{
+                //     $groupCode = $acc->ac_group;
+                //     $account_type_id = $acc->id;
+                // }
+                $groupCode = $acc->ac_group;
+                $account_type_id = $acc->id;
             }
 
             $trade_user->Group = $groupCode;
