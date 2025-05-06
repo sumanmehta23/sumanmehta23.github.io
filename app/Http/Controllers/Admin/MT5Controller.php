@@ -84,9 +84,9 @@ class MT5Controller extends Controller
             $leverage = $request->input('leverage');
 
             // Fetch user data from API (assume the API method and classes are available)
-            // $trade_user = NULL;/
-            // $this->api->UserGet($code,$trade_user);
-            // dd($code);
+            $trade_user = NULL;
+            $this->api->UserGet($code,$trade_user);
+
             if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
                 //dd(MTRetCode::GetError($error_code));
                 // return response()->json([
@@ -105,7 +105,6 @@ class MT5Controller extends Controller
                 ->where('id', $account_type)
                 ->first();
             $account =Account::with('user')->where('code',$code)->first();
-
             if($account){
                 $referral = $account->user->ib1;
 
