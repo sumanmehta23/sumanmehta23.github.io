@@ -1764,7 +1764,27 @@ class AjaxController extends Controller
                                 $time
                             </small>";
                 })
-                ->rawColumns(['date', 'account', 'type', 'amount'])
+                ->addColumn('email', function ($row) {
+                    $email = $row->account->email;
+                    return $email;
+                })
+                ->addColumn('exp_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    return $date;
+                })
+                ->addColumn('time', function ($row) {
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return $time;
+                })
+                ->addColumn('exp_account', function ($row) {
+                    $code = $row->account->code;
+                    return $code;
+                })
+                ->addColumn('exp_amount', function ($row) {
+                    $amount = ($row->ib_wallet) ?? ($row->ib_withdraw);
+                    return $amount;
+                })
+                ->rawColumns(['date', 'account', 'type', 'amount','email'])
                 ->make(true);
         }
 
