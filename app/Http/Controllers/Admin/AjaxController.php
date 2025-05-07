@@ -3019,7 +3019,7 @@ class AjaxController extends Controller
                             $q->where('id', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
                                 ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
