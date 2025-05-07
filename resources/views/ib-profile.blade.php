@@ -391,6 +391,8 @@
                                                                 <th>TOTAL ACCOUNTS</th>
                                                                 <th>TOTAL DEPOSIT</th>
                                                                 <th>PROFILE STATUS</th>
+                                                                <th>CLIENT NAME</th>
+                                                                <th>EMAIL</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -545,6 +547,22 @@
             let level = 1;
 
             var dTtable = $('#ajaxDatatable').DataTable({
+                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        className: ' btn btn-primary',
+                        filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [4, 5, 1, 2, 3] // Updated column indices to match your use case
+                        }
+                    }
+                ],
+                lengthMenu: [
+                    [10, 25, 50, 100, -1], // DataTable options
+                    [10, 25, 50, 100, "All"] // User-facing labels
+                ],
                 processing: true,
                 serverSide: true,
                 searching: true,
@@ -564,7 +582,9 @@
                     { data: 'email', name: 'email' },
                     { data: 'total_accounts', name: 'total_accounts' },
                     { data: 'total_deposit', name: 'total_deposit' },
-                    { data: 'profile_status', name: 'profile_status' }
+                    { data: 'profile_status', name: 'profile_status' },
+                    { data: 'client_name', name: 'client_name',visible: false },
+                    { data: 'client_email', name: 'client_email', visible: false },
                 ],
                 order: [[0, "desc"]]
             });

@@ -3719,8 +3719,13 @@ class AjaxController extends Controller
                         return "<span class='badge btn bg-info'>Not Verified</span>";
                     }
                 })
-
-                ->rawColumns(['email', 'profile_status'])
+                ->editColumn('client_name', function ($row) {
+                    return $row->fullname;
+                })
+                ->editColumn('client_email', function ($row) {
+                    return $row->email;
+                })
+                ->rawColumns(['email', 'profile_status', 'client_name', 'client_email'])
                 ->make(true);
         }
     }
