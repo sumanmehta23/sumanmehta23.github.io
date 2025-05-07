@@ -1672,7 +1672,7 @@
                             extend: 'excel',
                             text: 'Export to Excel',
                             className: ' btn btn-primary',
-                            filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
+                            filename: 'Ib_Clients_' + new Date().toISOString().slice(0, 10),
                             exportOptions: {
                                 columns: [4, 5, 1, 2, 3] // Updated column indices to match your use case
                             }
