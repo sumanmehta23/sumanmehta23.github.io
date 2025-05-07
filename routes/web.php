@@ -53,6 +53,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use function PHPUnit\Framework\throwException;
 use Laravel\Telescope\Telescope;
+
 Route::get('/telescope-test', function () {
     Log::info('🛠 Telescope test route hit.');
 
@@ -77,8 +78,8 @@ Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 });
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
-    $settings=settings();
-    $htmlContent ="<p>hello , please check your acount for more details</p>";
+    $settings = settings();
+    $htmlContent = "<p>hello , please check your acount for more details</p>";
     $payload = [
         'sender' => [
             'name' => $settings['sender_name'],
@@ -184,6 +185,7 @@ Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
 
 Route::get('register/ref', function () {
+
     // Get the 'refercode' from the query string
     $refercode = request()->query('refercode');
 
