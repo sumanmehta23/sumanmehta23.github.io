@@ -110,6 +110,7 @@ class TradeWithdrawal extends Controller
         $account_id = $request->account_id;
         $request->validate([
             'account_id' => 'required',
+            'withdraw_amount'=>'required|numeric|min:10',
         ], [
             'account_id.required' => 'Account is not selected.',
         ]);
@@ -132,9 +133,7 @@ class TradeWithdrawal extends Controller
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');
 
-        $request->validate([
-            'withdraw_amount' => 'required|numeric|min:.01'
-        ]);
+
 
         // Get the account balance
 
@@ -171,31 +170,38 @@ class TradeWithdrawal extends Controller
                 $total_deposit_amount = $account->tradeDeposits->sum('deposit_amount');
                 $account_balance = $account->balance;
 
-                if ($account_balance >= $total_deposit_amount) {
-                    $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
-                } elseif ($account_balance < $total_deposit_amount) {
-                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
+//                if ($account_balance >= $total_deposit_amount) {
+//                    $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
+//                } elseif ($account_balance < $total_deposit_amount) {
+//                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
+//                }
+                //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
+                $accountProfit=$account_balance-$total_deposit_amount;
+                if($amount > $accountProfit ){
+                    $multiplier=$amount-$accountProfit;
+                    if ($multiplier > 250) {
+                        $multiplier = 250;
+                    }
+                    $bonusamount = -abs(-9 * $multiplier);
+                    if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    } else {
+                        $deposit_details = BonusTransaction::create([
+                            'email' => $account->email,
+                            'user_id' => $user_id,
+                            'account_id' => $account->id,
+                            'code' => $account->code,
+                            'bonus_amount' => $bonusamount,
+                            'bonus_type' => 'Bonus Out',
+                            'status' => 1,
+                            'admin_remark' => '10x Trader Leverage',
+                            'bonus_currency' => 'USD',
+                            // 'created_by' => session('alogin')
+                        ]);
+                    }
+
                 }
-                // if ($multiple_value > 250) {
-                //     $multiple_value = 250;
-                // }
-                $bonusamount = -abs(-9 * $multiple_value);
-                if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                } else {
-                    $deposit_details = BonusTransaction::create([
-                        'email' => $account->email,
-                        'user_id' => $user_id,
-                        'account_id' => $account->id,
-                        'code' => $account->code,
-                        'bonus_amount' => $bonusamount,
-                        'bonus_type' => 'Bonus Out',
-                        'status' => 1,
-                        'admin_remark' => '10x Trader Leverage',
-                        'bonus_currency' => 'USD',
-                        // 'created_by' => session('alogin')
-                    ]);
-                }
+
             }
 
             $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
