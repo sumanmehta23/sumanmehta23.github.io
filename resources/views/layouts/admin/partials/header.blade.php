@@ -1,15 +1,3 @@
-<?php
-$requestUri = trim($_SERVER['REQUEST_URI']);
-$requestUri = parse_url($requestUri, PHP_URL_PATH);
-$userRoleID = session('userID');
-$userRole = session('userRole');
-$categories = page_categories(session('userRoleID'));
-
-// $userRoleID = session('userRoleID');
-
-$rolePermissionsList = rolePermissions($userRole);
-$filePermissions = filePermissions($userRole);
-?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="light" data-theme-mode="light"
     data-header-styles="light" data-menu-styles="light">
