@@ -144,7 +144,7 @@ class TradeWithdrawal extends Controller
                 'message' => 'Insufficient balance',
             ], 400);
         }
-        if ($withdraw_type == "Trade Withdrawal") {
+//        if ($withdraw_type == "Trade Withdrawal") {
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
@@ -290,7 +290,7 @@ class TradeWithdrawal extends Controller
                     ], 400);
                 }
             }
-        }
+//        }
     }
 
 

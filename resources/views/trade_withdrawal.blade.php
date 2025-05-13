@@ -1,12 +1,14 @@
 @extends('layouts.crm.crm')
 @section('content')
-<style>
-    @media (max-width: 768px) { /* Adjust breakpoint as needed */
-        .mob_width {
-            width: 150%;
+    <style>
+        @media (max-width: 768px) {
+
+            /* Adjust breakpoint as needed */
+            .mob_width {
+                width: 150%;
+            }
         }
-    }
-</style>
+    </style>
     <div class="pc-container">
         <div class="pc-content">
             <div class="pb-0 mb-0 page-header">
@@ -75,35 +77,35 @@
                                         </div>
                                         <div class="row g-1">
                                             @if ($walletenabled)
-                                                <div class="col-6 col-lg-6 col-xl-6">
-                                                    <div class="border rounded address-check trade-withdraw-type mob_width">
-                                                        <div class="form-check">
-                                                            <input type="radio" name="withdraw_type"
-                                                                class="form-check-input input-primary tradefund-deposit"
-                                                                id="wallet_withdraw" value="Wallet Transfer"
-                                                                data-type="Wallet-Transfer" checked>
+                                            <div class="col-6 col-lg-6 col-xl-6">
+                                                <div class="border rounded address-check trade-withdraw-type mob_width">
+                                                    <div class="form-check">
+                                                        <input type="radio" name="withdraw_type"
+                                                            class="form-check-input input-primary tradefund-deposit"
+                                                            id="wallet_withdraw" value="Wallet Transfer"
+                                                            data-type="Wallet-Transfer" checked>
 
-                                                            <label class="form-check-label d-block" for="wallet_withdraw">
-                                                                <div class="p-2 my-1">
-                                                                    <span class="row">
-                                                                        <span class="mt-1 col-6">
-                                                                            <span
-                                                                                class="pb-0 mb-0 h5 d-block f-w-500 f-14">Wallets</span>
-                                                                            <span class="f-10 text-muted">Wallet
-                                                                                Transfer</span>
-                                                                        </span>
-                                                                        <span class="pb-0 mb-0 col-6 text-end pe-3">
-                                                                            <span
-                                                                                class="mb-0 h5 d-block f-w-500">${{ $walletBalance ?? '0.0000' }}</span>
-                                                                            <span class="mb-0 text-muted f-10">Current
-                                                                                Balance</span>
-                                                                        </span>
+                                                        <label class="form-check-label d-block" for="wallet_withdraw">
+                                                            <div class="p-2 my-1">
+                                                                <span class="row">
+                                                                    <span class="mt-1 col-6">
+                                                                        <span
+                                                                            class="pb-0 mb-0 h5 d-block f-w-500 f-14">Wallets</span>
+                                                                        <span class="f-10 text-muted">Wallet
+                                                                            Transfer</span>
                                                                     </span>
-                                                                </div>
-                                                            </label>
-                                                        </div>
+                                                                    <span class="pb-0 mb-0 col-6 text-end pe-3">
+                                                                        <span class="mb-0 h5 d-block f-w-500">${{
+                                                                            $walletBalance ?? '0.0000' }}</span>
+                                                                        <span class="mb-0 text-muted f-10">Current
+                                                                            Balance</span>
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                        </label>
                                                     </div>
                                                 </div>
+                                            </div>
                                             @endif
                                         </div>
                                         <div class="my-4 divider"><span>WITHDRAW DETAILS</span></div>
@@ -132,9 +134,7 @@
                                                                     <input type="number" class="form-control"
                                                                         name="withdraw_amount"
                                                                         aria-label="Amount (to the nearest dollar)"
-                                                                        min="0.01"
-                                                                        step="0.01"
-                                                                        required>
+                                                                        min="0.01" step="0.01" required>
                                                                     <span class="input-group-text">.00</span>
                                                                 </div>
                                                             </div>
@@ -159,12 +159,16 @@
                                         <div class="row g-1">
                                             <div class="col-md-3 col-lg-4 col-xl-4">
                                                 <div class="border rounded address-check">
-                                                    <div class="form-check"><input type="radio" name="withdraw_type" class="form-check-input input-primary wallet-withdraw" value="1" data-type="Wallet_Withdrawal" id="payopn-check-1" required>
+                                                    <div class="form-check"><input type="radio" name="withdraw_type"
+                                                            class="form-check-input input-primary wallet-withdraw" value="1"
+                                                            data-type="Trade Withdrawal" id="payopn-check-1" required>
                                                         <label class="form-check-label d-block" for="payopn-check-1">
                                                             <span class="p-2 card-body d-block">
-                                                                <span class="mb-1 h6 f-w-500 d-block">CRYPTO WITHDRAWAL</span>
+                                                                <span class="mb-1 h6 f-w-500 d-block">CRYPTO
+                                                                    WITHDRAWAL</span>
                                                                 <span class="d-flex align-items-center">
-                                                                    <span class="f-10 badge bg-light-success me-1">CRYPTO WALLET</span>
+                                                                    <span class="f-10 badge bg-light-success me-1">CRYPTO
+                                                                        WALLET</span>
                                                                     <span class="ti ti-currency-bitcoin"></span>
                                                                 </span>
                                                             </span>
@@ -175,19 +179,21 @@
                                         </div>
                                         <div class="my-4 divider"><span>WITHDRAW DETAILS</span></div>
                                         {{-- @if ($errors->any())
-                                            <div class="alert alert-danger">
-                                                <ul>
-                                                    @foreach ($errors->all() as $error)
-                                                        <li>{{ $error }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
+                                        <div class="alert alert-danger">
+                                            <ul>
+                                                @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                         @endif --}}
                                         <div class="trade-withdrawal Trade_Withdrawal">
-                                            <form method="post"  id="withdrawForm" style="padding:10px;" class="md-float-material form-material">
+                                            <form method="post" id="withdrawForm" style="padding:10px;"
+                                                class="md-float-material form-material">
                                                 @csrf
                                                 <div class="row">
-                                                    <input type="hidden" name="withdraw_type" class="withdraw-type" value="Trade Withdrawal">
+                                                    <input type="hidden" name="withdraw_type" class="withdraw-type"
+                                                        value="Trade Withdrawal">
                                                     <input type="hidden" id="hiddenTwoFactorCode" name="two_factor_code">
                                                     <input type="hidden" name="account_id" id="selectedLiveAccount">
                                                     <div class="mt-2 col-12">
@@ -195,25 +201,34 @@
                                                             <label class="col-lg-4 col-form-label">
                                                                 SELECT WALLET ACCOUNT:
                                                                 <small class="text-muted d-block">
-                                                                    Please select the Wallet account to which you wish to transfer your funds
+                                                                    Please select the Wallet account to which you wish to
+                                                                    transfer your funds
                                                                 </small>
                                                             </label>
                                                             <div class="col-lg-8">
                                                                 @if (count($client_banks) == 0)
                                                                     <div class="form-group">
-                                                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBankModal2">
-                                                                            <i class="ti ti-plus f-18"></i> Add Wallet Information
+                                                                        <button type="button" class="btn btn-primary"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#addBankModal2">
+                                                                            <i class="ti ti-plus f-18"></i> Add Wallet
+                                                                            Information
                                                                         </button>
                                                                     </div>
                                                                 @else
-                                                                    <select name="client_wallet_id" required class="form-control fill" style="color:black;">
+                                                                    <select name="client_wallet_id" required
+                                                                        class="form-control fill" style="color:black;">
                                                                         @foreach ($client_banks as $bank)
                                                                             <option value="{{ $bank->id }}">
-                                                                                {{ $bank->wallet_name }} / {{ $bank->wallet_network != 'BTC' ? $bank->wallet_currency : $bank->wallet_network }} / {{ $bank->wallet_network }}
+                                                                                {{ $bank->wallet_name }} /
+                                                                                {{ $bank->wallet_network != 'BTC' ? $bank->wallet_currency : $bank->wallet_network }}
+                                                                                / {{ $bank->wallet_network }}
                                                                             </option>
                                                                         @endforeach
                                                                     </select>
-                                                                    <small data-bs-toggle="modal" data-bs-target="#addBankModal2" style="color: var(--primary-color); cursor: pointer;">
+                                                                    <small data-bs-toggle="modal"
+                                                                        data-bs-target="#addBankModal2"
+                                                                        style="color: var(--primary-color); cursor: pointer;">
                                                                         + Add another wallet
                                                                     </small>
                                                                 @endif
@@ -224,23 +239,32 @@
                                                         <div class="form-group row">
                                                             <label class="col-lg-4 col-form-label">
                                                                 ENTER AMOUNT:
-                                                                <small class="text-muted d-block">Please enter the amount that you need to withdraw</small>
+                                                                <small class="text-muted d-block">Please enter the amount
+                                                                    that you need to withdraw</small>
                                                             </label>
                                                             <div class="col-lg-8">
                                                                 <div class="mb-3 input-group">
                                                                     <span class="input-group-text">$</span>
-                                                                    <input type="number" min="10" id="withdrawAmount" class="form-control" name="withdraw_amount" aria-label="Amount (to the nearest dollar)"
+                                                                    <input type="number" min="10" id="withdrawAmount"
+                                                                        class="form-control" name="withdraw_amount"
+                                                                        aria-label="Amount (to the nearest dollar)"
                                                                         @if(count($client_banks) > 0) required @endif>
                                                                     <span class="input-group-text">.00</span>
                                                                 </div>
                                                                 <p id="message" style="color: red; display: none;"></p>
-                                                                <div id="confirmTransaction" style="display: none; margin-top: 10px;">
-                                                                <label class="col-lg-4 col-form-label" style="display: flex; align-items: center; padding-right: 10px; width: 100%;">
-                                                                    Amount You Will Receive After Transaction:
-                                                                    <span id="amountAfterFee" style="font-weight: bold; margin-left: 10px;">$0.00</span>
-                                                                </label>
-                                                                    <input class="form-check-input mt-1" type="checkbox" id="confirmCheckbox" name="confirmCheckbox" required>
-                                                                    <label for="confirmCheckbox">I confirm this transaction.</label>
+                                                                <div id="confirmTransaction"
+                                                                    style="display: none; margin-top: 10px;">
+                                                                    <label class="col-lg-4 col-form-label"
+                                                                        style="display: flex; align-items: center; padding-right: 10px; width: 100%;">
+                                                                        Amount You Will Receive After Transaction:
+                                                                        <span id="amountAfterFee"
+                                                                            style="font-weight: bold; margin-left: 10px;">$0.00</span>
+                                                                    </label>
+                                                                    <input class="mt-1 form-check-input" type="checkbox"
+                                                                        id="confirmCheckbox" name="confirmCheckbox"
+                                                                        required>
+                                                                    <label for="confirmCheckbox">I confirm this
+                                                                        transaction.</label>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -248,11 +272,17 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-lg-4"></div>
-                                                    <div class="col-lg-8 pb-4">
+                                                    <div class="pb-4 col-lg-8">
                                                         <div class="form-check">
-                                                            <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
+                                                            <input class="mt-1 form-check-input" type="checkbox"
+                                                                id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"
+                                                                required>
                                                             <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                Please ensure you send the correct cryptocurrency to the correct wallet address and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect withdrawals. Double-check all details before proceeding.
+                                                                Please ensure you send the correct cryptocurrency to the
+                                                                correct wallet address and network. Transactions are
+                                                                irreversible, and we are not responsible for any loss of
+                                                                funds due to incorrect withdrawals. Double-check all details
+                                                                before proceeding.
                                                             </label>
                                                         </div>
                                                     </div>
@@ -263,28 +293,36 @@
                                                     <div class="col-lg-8">
                                                         <div class="row g-1">
                                                             <input type="submit" name="account_withdraw"
-                                                            class="btn btn-primary col-12"
-                                                            value="Withdraw From Trade Account">
+                                                                class="btn btn-primary col-12"
+                                                                value="Withdraw From Trade Account">
                                                         </div>
                                                     </div>
                                                 </div>
                                             </form>
 
                                             <!-- 2FA Verification Modal -->
-                                            <div class="modal fade" id="twoFactorModal" tabindex="-1" aria-labelledby="twoFactorModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered"> <!-- This class centers the modal -->
+                                            <div class="modal fade" id="twoFactorModal" tabindex="-1"
+                                                aria-labelledby="twoFactorModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <!-- This class centers the modal -->
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title" id="twoFactorModalLabel">Enter 2FA Code</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <h5 class="modal-title" id="twoFactorModalLabel">Enter 2FA Code
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            <label for="twoFactorCode">Enter your 2FA authentication code:</label>
-                                                            <input type="text" class="form-control" id="twoFactorCode" name="two_factor_code" required maxlength="6" minlength="6">
+                                                            <label for="twoFactorCode">Enter your 2FA authentication
+                                                                code:</label>
+                                                            <input type="text" class="form-control" id="twoFactorCode"
+                                                                name="two_factor_code" required maxlength="6" minlength="6">
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="button" id="submitTwoFactor" class="btn btn-primary">Confirm Withdrawal</button>
+                                                            <button type="button" class="btn btn-primary"
+                                                                data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="button" id="submitTwoFactor"
+                                                                class="btn btn-primary">Confirm Withdrawal</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -331,14 +369,15 @@
             </div>
         </div>
     </div>
-    {{-- <script>
-        $("#tradeWithdrawalForm").submit(function(e) {
+    {{--
+    <script>
+        $("#tradeWithdrawalForm").submit(function (e) {
             e.preventDefault();
             $.ajax({
                 type: "POST",
                 url: "{{ route('trade-withdrawal') }}",
                 data: $(this).serialize(),
-                success: function(response) {
+                success: function (response) {
                     Swal.fire({
                         icon: 'success',
                         title: response.success
@@ -346,7 +385,7 @@
                         window.location.reload(true);
                     });
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Swal.fire({
                         icon: 'error',
                         title: xhr.responseJSON.message
@@ -463,7 +502,7 @@
                 document.getElementById('selectedLiveAccount').value = selectedValue;
             });
 
-             // Optionally: Set default if one is preselected
+            // Optionally: Set default if one is preselected
             const checkedRadio = document.querySelector('.select-liveaccount:checked');
             if (checkedRadio) {
                 document.getElementById('selectedLiveAccount').value = checkedRadio.value;
