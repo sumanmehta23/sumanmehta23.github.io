@@ -441,6 +441,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
             Route::post("/deleteAccounts", [MT5Accounts::class, 'deleteAccounts'])->name('deleteAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::post('/activate_account', [MT5Accounts::class, 'activateAccount'])->name('activate_account');
+            Route::post('/bulk_activate_account', [MT5Accounts::class, 'bulkActivateAccount'])->name('bulk_activate_account');
         });
 
         Route::prefix('/ui_settings')->group(function () {
