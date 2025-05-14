@@ -41,8 +41,7 @@
                                                                         <input type="radio" name="fromAccount"
                                                                             data-balance="{{ $acc->balance }}"
                                                                             class="form-check-input input-primary"
-                                                                            id="fA{{ $acc->id }}"
-                                                                            value="{{ $acc->id }}">
+                                                                            id="fA{{ $acc->id }}" value="{{ $acc->id }}">
                                                                         <label class="form-check-label d-block"
                                                                             for="fA{{ $acc->id }}">
                                                                             <span class="row">
@@ -57,8 +56,7 @@
                                                                                 <span class="col-6 text-end">
                                                                                     <span
                                                                                         class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0)  }}</span>
-                                                                                    <span
-                                                                                        class="mb-0 text-muted">Transferable
+                                                                                    <span class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
                                                                                 </span>
                                                                             </span>
@@ -77,35 +75,35 @@
                                                         <div class="col-md-5">
                                                             <label class="form-label">Select To Account</label>
                                                             @foreach ($liveaccount_details as $acc)
-                                                                <div class="p-3 my-3 border rounded price-check">
-                                                                    <div class="form-check">
-                                                                        <input type="radio" name="toAccount"
-                                                                            data-balance="{{ $acc->balance }}"
-                                                                            class="form-check-input input-primary"
-                                                                            id="tA{{ $acc->id }}"
-                                                                            value="{{ $acc->id }}">
-                                                                        <label class="form-check-label d-block"
-                                                                            for="tA{{ $acc->id }}">
-                                                                            <span class="row">
-                                                                                <span class="col-6">
-                                                                                    <span class="mb-0 h4 d-block">
-                                                                                        <img src="/assets/images/mt5.png"
-                                                                                            alt="user-image"
-                                                                                            class="user-avtar wid-40">
-                                                                                        {{ $acc->code }}
+                                                                @if($acc->accountType->ac_group !== 'LM\\B-Book\\10x\\DF-B' || $acc->successful_trade_deposits_count == 0)
+                                                                    <div class="p-3 my-3 border rounded price-check">
+                                                                        <div class="form-check">
+                                                                            <input type="radio" name="toAccount"
+                                                                                data-balance="{{ $acc->balance }}"
+                                                                                class="form-check-input input-primary"
+                                                                                id="tA{{ $acc->id }}" value="{{ $acc->id }}">
+                                                                            <label class="form-check-label d-block"
+                                                                                for="tA{{ $acc->id }}">
+                                                                                <span class="row">
+                                                                                    <span class="col-6">
+                                                                                        <span class="mb-0 h4 d-block">
+                                                                                            <img src="/assets/images/mt5.png"
+                                                                                                alt="user-image"
+                                                                                                class="user-avtar wid-40">
+                                                                                            {{ $acc->code }}
+                                                                                        </span>
+                                                                                    </span>
+                                                                                    <span class="col-6 text-end">
+                                                                                        <span
+                                                                                            class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0) }}</span>
+                                                                                        <span class="mb-0 text-muted">Transferable
+                                                                                            Balance</span>
                                                                                     </span>
                                                                                 </span>
-                                                                                <span class="col-6 text-end">
-                                                                                    <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0) }}</span>
-                                                                                    <span
-                                                                                        class="mb-0 text-muted">Transferable
-                                                                                        Balance</span>
-                                                                                </span>
-                                                                            </span>
-                                                                        </label>
+                                                                            </label>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+                                                                @endif
                                                             @endforeach
                                                         </div>
                                                     </div>
@@ -113,11 +111,11 @@
                                                     <div class="mt-5 row align-items-center">
                                                         <div class="col-md-6"></div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label" for="exampleFormControlSelect1">Enter Amount</label>
+                                                            <label class="form-label" for="exampleFormControlSelect1">Enter
+                                                                Amount</label>
                                                             <div class="mb-3 input-group">
                                                                 <span class="input-group-text">USD</span>
-                                                                <input type="number" min="0.01"
-                                                                        step="0.01"
+                                                                <input type="number" min="0.01" step="0.01"
                                                                     class="form-control transferable_amount"
                                                                     name="transferable_amount" required>
                                                             </div>
@@ -181,7 +179,7 @@
         </script>
     @endif
     <script>
-        $('[name="fromAccount"]').change(function() {
+        $('[name="fromAccount"]').change(function () {
             var facc = $('[name="fromAccount"]:checked').val();
             var facc_mbalance = $('[name="fromAccount"]:checked').data("balance");
             $('[name="toAccount"]').closest(".price-check").removeClass("d-none");

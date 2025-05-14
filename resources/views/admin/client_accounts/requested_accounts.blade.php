@@ -28,6 +28,7 @@
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
+                                            <th><input type="checkbox" id="select-all"></th>
                                             <td>Client</td>
                                             <td>Trade ID</td>
                                             <td>Leverage</td>
@@ -108,6 +109,59 @@
         </div>
     </div>
 
+    <div class="modal fade" id="bulkAccountUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="bulkAccountUpdatemodalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="/admin/clientAccounts/bulk_activate_account" id="BulkAccountRequestForm"  method="POST">
+                     @csrf
+                     <input type="hidden" name="client_id" id="client_id" value="">
+                     {{-- <input type="hidden" name="options" id="account_type_id" value="">
+                     <input type="hidden" name="leverage" id="leverage" value=""> --}}
+                     {{-- <input type="hidden" name="account_id" id="account_id" value=""> --}}
+                     {{-- <input type="hidden" name="accountType" id="accountType" value=""> --}}
+                     {{-- <input type="hidden" name="demo_deposit" id="demo_deposit" value=""> --}}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bulkAccountUpdatemodalLabel">Client Account Request Management</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="mb-0 modal-body custom-card card">
+                        <div class="d-flex align-items-center card-header w-100">
+                        <div class="me-2">
+                            <span class="avatar avatar-rounded">
+                            <img src="/admin_assets/assets/images/users/user.png" alt="img">
+                            </span>
+                        </div>
+                        <div class="">
+                            <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
+                            {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
+                        </div>
+
+                        </div>
+                        <div class="card-body">
+                        <div class="mb-3 row">
+                            <div class="m-auto col-lg-4">
+                            <label class="form-label">Client Account Status</label>
+                            </div>
+                            <div class="col-lg-8">
+                            <select class="form-select" required name="request_status" aria-label="Default select example">
+                                <option selected>--Status--</option>
+                                <option value="1">Approve</option>
+                                {{-- <option value="0">Pending</option> --}}
+                                <option value="2">Rejected</option>
+                            </select>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="accountRequest" value="update" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @endsection()
 @section("scripts")
 <!-- End::app-content -->
@@ -126,14 +180,14 @@
             console.log(data.id);
             $("#AccountRequestForm input,#AccountRequestForm select").not("input[name='_token']").val("").trigger("change");
             $("#clientName,#clientEmail").html("");
-            $("#account_id").val(data.id)
-            $("#clientName").html(data.fullname || "")
-            $("#clientEmail").html(data.email || "")
-            $("#client_id").val(data.user_id)
-            $("#leverage").val(data.leverage)
-            $("#accountType").val(data.demo)
-            $("#account_type_id").val(data.account_type_id)
-            $("#demo_deposit").val(data.balance)
+            $("#account_id").val(data.id);
+            $("#clientName").html(data.fullname || "");
+            $("#clientEmail").html(data.email || "");
+            $("#client_id").val(data.user_id);
+            $("#leverage").val(data.leverage);
+            $("#accountType").val(data.demo);
+            $("#account_type_id").val(data.account_type_id);
+            $("#demo_deposit").val(data.balance);
             $("[name='request_status']").val(data.request_status).trigger("change");
             myModal.show();
 
@@ -141,6 +195,20 @@
     }
 
     $(document).ready(function() {
+
+    // "Select All" functionality
+    $('#select-all').on('click', function () {
+        const isChecked = $(this).is(':checked');
+        $('.row-checkbox').prop('checked', isChecked); // Toggle all checkboxes
+
+        if (isChecked) {
+            // Add all rows to selectedRows
+            selectedRows = dTtable.rows().data().toArray();
+        } else {
+            selectedRows = []; // Clear selection
+        }
+    });
+
     window.dTtable = $('#ajaxDatatable').on("draw.dt", dTSelection).DataTable({
     // var dTtable = $('#ajaxDatatable').DataTable({
             processing: true,
@@ -155,6 +223,14 @@
                 }
             },
             columns: [
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                    return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
+                    }
+                },
                 {
                     data: 'email',
                     name: 'email'
@@ -238,9 +314,33 @@
                     exportOptions: {
                         columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
                     }
+                },
+                {
+                    text: 'Bulk Approve',
+                    className: 'btn-bulk-action', // Optional: Add a custom class for styling
+                    action: function (e, dt, node, config) {
+                        // Get selected rows
+                        const selectedRows = [];
+                        $('.row-checkbox:checked').each(function () {
+                            selectedRows.push($(this).data('id')); // Collect all selected row IDs
+                        });
+
+                        if (selectedRows.length === 0) {
+                        alert('No rows selected!');
+                        return;
+                        }
+
+                        // Populate the hidden input with selected IDs
+                        $('#BulkAccountRequestForm #client_id').val(selectedRows.join(',')); // Join IDs as a comma-separated string
+
+                        // Open the modal
+                        const modal = new bootstrap.Modal(document.getElementById('bulkAccountUpdatemodal'));
+                        modal.show();
+                    }
                 }
             ]
         });
+
     });
 
 

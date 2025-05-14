@@ -30,13 +30,16 @@ class InternalTransfer extends Controller
         $email = auth()->user()->email;
         AccountHelper::updateLiveAndDemoAccounts(auth()->user()->id, $this->api);
         $liveaccount_details = auth()->user()->liveAccounts()->with([
+            'accountType',
             'BonusTransaction' => function ($query) {
                 $query->where('bonus_type', 'Bonus In')
-                      ->orWhere('bonus_type', 'Bonus Out');
+                    ->orWhere('bonus_type', 'Bonus Out');
             }
-        ])
-        ->where('account_request_status', "!=", "0")
-        ->get();
+        ])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+            $query->where('status', 1);
+        }])
+            ->where('account_request_status', "!=", "0")
+            ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
     }
@@ -75,25 +78,28 @@ class InternalTransfer extends Controller
         ]);
         $fromAccountId = $request->input('fromAccount');
         $toAccountId = $request->input('toAccount');
-        $userId=auth()->user()->id;
-        $fromAccount = Account::where(['id'=> $fromAccountId,'user_id'=>$userId])->firstOrFail();
-        $toAccount = Account::where(['id'=> $toAccountId,'user_id'=>$userId])->firstOrFail();
+        $userId = auth()->user()->id;
+        $fromAccount = Account::where(['id' => $fromAccountId, 'user_id' => $userId])->firstOrFail();
+        $toAccount = Account::where(['id' => $toAccountId, 'user_id' => $userId])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+            $query->where('status', 1);
+        }])->firstOrFail();
         // dump($fromAccount);
-        // dd($toAccount);
+        //         dd($toAccount->accountType->ac_group);
 
         $total_bonus = BonusTransaction::where('account_id', $fromAccount->id)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('bonus_type', 'Bonus In')
-                      ->orWhere('bonus_type', 'Bonus Out');
+                    ->orWhere('bonus_type', 'Bonus Out');
             })
             ->sum('bonus_amount');
 
 
         $transferable_amount = $request->input('transferable_amount');
 
-        if((float)$transferable_amount > (float)$fromAccount->balance - (float)$total_bonus) {
+        if ((float)$transferable_amount > (float)$fromAccount->balance - (float)$total_bonus) {
             return redirect()->back()->with('error', 'Insufficient balance');
         }
+        //       dd($transferable_amount);
         $email = auth()->user()->email;
         $ticket = NULL;
         activity()->causedBy(auth()->user()->id)
@@ -105,9 +111,10 @@ class InternalTransfer extends Controller
                     'to' => $toAccount->code,
                     'transfer_amount' => $transferable_amount,
                     'remark' => 'Internal Transfer'
-                ])
-        ->event('create')
-        ->log('Internal Transfer');
+                ]
+            )
+            ->event('create')
+            ->log('Internal Transfer');
         // Withdraw from the first account
         $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
         if ($errorCode != MTRetCode::MT_RET_OK) {
@@ -116,9 +123,10 @@ class InternalTransfer extends Controller
         } else {
 
             DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
+                $customerID = auth()->user()->id;
                 TradeWithdrawals::create([
                     'email' => $email,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $customerID,
                     'account_id' => $fromAccount->id,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
@@ -126,6 +134,30 @@ class InternalTransfer extends Controller
                     'withdraw_date' => now(),
                     'status' => 1
                 ]);
+                if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
+
+                    if ($transferable_amount > 250) {
+                        $bonusamount = 9 * 250;
+                    } else {
+                        $bonusamount = 9 * $transferable_amount;
+                    }
+
+                    if (($error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                    } else {
+                        $deposit_details = BonusTransaction::create([
+                            'email' => $email,
+                            'user_id' => $customerID,
+                            'account_id' => $toAccount->id,
+                            'code' => $toAccount->code,
+                            'bonus_amount' => $bonusamount,
+                            'bonus_type' => 'Bonus In',
+                            'status' => 1,
+                            'admin_remark' => '10x Trader Leverage',
+                            'bonus_currency' => 'USD',
+                        ]);
+                    }
+                }
                 // Deposit to the second account
                 $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
@@ -142,6 +174,7 @@ class InternalTransfer extends Controller
                         'deposit_type' => 'Internal Transfer',
                         'deposit_from' => $fromAccount->id,
                         'status' => 1,
+                        'callback_code' => 'success'
                     ]);
                     TotalBalance::create([
                         'user_id' => auth()->user()->id,

@@ -62,7 +62,7 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
       type: "POST",
       data: {
         paymentGateway: "true",
-        deposit_to: "wallet",
+        deposit_to: "Account",
         code: code,
         data: data,
         time: <?= time() ?><?= rand(1111111111,99999999999) ?>,
@@ -201,7 +201,7 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
       type: "POST",
       data: {
         paymentGateway: "true",
-        deposit_to: "wallet",
+        deposit_to: "Account",
         code: code,
         data: data,
         time: <?= time() ?><?= rand(1111111111,99999999999) ?>,

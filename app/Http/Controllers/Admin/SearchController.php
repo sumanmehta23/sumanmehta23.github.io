@@ -62,7 +62,9 @@ class SearchController extends Controller
     $accounts = $query->orderByDesc('accounts.id')->get();
     // If no accounts are found, search in aspnetusers table.
     // dd($userData);
+
     if ($accounts->isEmpty()) {
+
         $userQuery = User::with([
             'ib',
             'countryDetail',
@@ -88,6 +90,7 @@ class SearchController extends Controller
         }
 
         $accounts = $userQuery->orderByDesc('id')->get();
+        
         return view("admin.search2", compact("accounts"));
     }else{
 

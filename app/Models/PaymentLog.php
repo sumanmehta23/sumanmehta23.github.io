@@ -17,7 +17,8 @@ class PaymentLog extends Model
         'payment_status',
         'initiated_by',
         'user_id',
-        'payment_res'
+        'payment_res',
+        'account_id'
     ];
     protected $guarded = [];
     public function user(){

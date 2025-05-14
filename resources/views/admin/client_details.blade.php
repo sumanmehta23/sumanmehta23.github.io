@@ -367,20 +367,20 @@
                                                     <div class="card-body">
                                                         <div class="pb-3 row border-bottom">
                                                             @can('wallet_deposit:viewAny')
-                                                                <div class="col-xl-3">
-                                                                    <h4 class="mb-3 text-muted fw-normal">TOTAL DEPOSIT</h4>
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">OLD TOTAL DEPOSIT</h4>
                                                                     <h4 class="fw-normal">@money($total_wd)
 
                                                                     </h4>
                                                                 </div>
                                                             @endcan
                                                             @can('wallet_withdraw:viewAny')
-                                                                <div class="col-xl-3">
-                                                                    <h4 class="mb-3 text-muted fw-normal">TOTAL WITHDRAW</h4>
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">OLD TOTAL WITHDRAW</h4>
                                                                     <h4 class="fw-normal">@money($total_ww)</h4>
                                                                 </div>
                                                             @endcan
-                                                            <div class="col-xl-3">
+                                                            <div class="col-xl-2">
                                                                 <h4 class="mb-3 text-muted fw-normal">WALLET</h4>
                                                                 <?php if ($user->wallet_enabled): ?>
 
@@ -392,6 +392,20 @@
                                                                 </button>
                                                                 <?php endif; ?>
                                                             </div>
+                                                            @can('wallet_deposit:viewAny')
+                                                                <div class="col-xl-2">
+                                                                    <h4 class="mb-3 text-muted fw-normal">NEW TOTAL DEPOSIT</h4>
+                                                                    <h4 class="fw-normal">@money($total_ntd)
+
+                                                                    </h4>
+                                                                </div>
+                                                            @endcan
+                                                            @can('wallet_withdraw:viewAny')
+                                                                <div class="col-xl-3">
+                                                                    <h4 class="mb-3 text-muted fw-normal">NEW TOTAL WITHDRAW</h4>
+                                                                    <h4 class="fw-normal">@money($total_ntw)</h4>
+                                                                </div>
+                                                            @endcan
                                                         </div>
                                                         @can('account:viewLiveAccounts')
                                                             <div class="mt-3 row">
@@ -943,8 +957,7 @@
                                                             </div>
                                                             <div class="prism-toggle">
                                                                 <a href="/admin/transactions/trading_deposit"
-                                                                    class="btn btn-sm btn-primary-light">View
-                                                                    All</a>
+                                                                    class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
                                                         <div class="card-body">
@@ -1160,6 +1173,8 @@
                                                                                     TOTAL DEPOSIT</th>
                                                                                 <th class="text-end" style="width: 15%;">
                                                                                     PROFILE STATUS</th>
+                                                                                <th>CLIENT NAME</th>
+                                                                                <th>EMAIL</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -1651,6 +1666,22 @@
                 let level = 1;
 
                 var dTtable = $('#ajaxDatatable').DataTable({
+                    dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            className: ' btn btn-primary',
+                            filename: 'Ib_Clients_' + new Date().toISOString().slice(0, 10),
+                            exportOptions: {
+                                columns: [4, 5, 1, 2, 3] // Updated column indices to match your use case
+                            }
+                        }
+                    ],
+                    lengthMenu: [
+                        [10, 25, 50, 100, -1], // DataTable options
+                        [10, 25, 50, 100, "All"] // User-facing labels
+                    ],
                     processing: true,
                     serverSide: true,
                     searching: true,
@@ -1671,6 +1702,8 @@
                         { data: 'total_accounts', name: 'total_accounts' },
                         { data: 'total_deposit', name: 'total_deposit' },
                         { data: 'profile_status', name: 'profile_status' },
+                        { data: 'client_name', name: 'client_name',visible: false },
+                        { data: 'client_email', name: 'client_email', visible: false },
                     ],
                     order: [
                         [0, "desc"]

@@ -1,8 +1,9 @@
 <?php
-$settings=settings();
+$settings = settings();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -313,8 +314,8 @@ $settings=settings();
                                                 <td bgcolor="#ffffff" valign="top"
                                                     class="m_-2550223905729420962pc-w520-padding-30-30-30-30 m_-2550223905729420962pc-w620-padding-35-35-35-35"
                                                     style="padding:40px;Margin:0;border-radius:0px;background-color:#ffffff">
-                                                    <table role="presentation" width="100%" border="0"
-                                                        cellpadding="0" cellspacing="0"
+                                                    <table role="presentation" width="100%" border="0" cellpadding="0"
+                                                        cellspacing="0"
                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                         <tr>
                                                             <td style="padding:0px 0px 70px 0px;Margin:0">
@@ -343,8 +344,7 @@ $settings=settings();
                                                                                                 <td align="left"
                                                                                                     valign="top"
                                                                                                     style="padding:0;Margin:0">
-                                                                                                    <table
-                                                                                                        border="0"
+                                                                                                    <table border="0"
                                                                                                         cellpadding="0"
                                                                                                         cellspacing="0"
                                                                                                         role="presentation"
@@ -382,10 +382,8 @@ $settings=settings();
                                                                                     <td valign="middle" align="right"
                                                                                         style="padding:0;Margin:0">
                                                                                         <table role="presentation"
-                                                                                            width="100%"
-                                                                                            align="right"
-                                                                                            border="0"
-                                                                                            cellpadding="0"
+                                                                                            width="100%" align="right"
+                                                                                            border="0" cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%">
                                                                                             <tr>
@@ -484,14 +482,14 @@ $settings=settings();
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <table cellspacing="0" role="presentation" width="100%"
-                                                        border="0" cellpadding="0"
+                                                    <table cellspacing="0" role="presentation" width="100%" border="0"
+                                                        cellpadding="0"
                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                         <tr>
                                                             <td class="m_-2550223905729420962pc-w620-valign-middle m_-2550223905729420962pc-w620-halign-center"
                                                                 style="padding:0;Margin:0">
-                                                                <table cellspacing="0" role="presentation"
-                                                                    width="100%" border="0" cellpadding="0"
+                                                                <table cellspacing="0" role="presentation" width="100%"
+                                                                    border="0" cellpadding="0"
                                                                     class="m_-2550223905729420962pc-width-fill m_-2550223905729420962pc-w620-gridCollapsed-0 m_-2550223905729420962pc-w620-halign-center"
                                                                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                                     <tr
@@ -509,10 +507,8 @@ $settings=settings();
                                                                                         class="m_-2550223905729420962pc-w620-halign-center m_-2550223905729420962pc-w620-valign-middle"
                                                                                         style="padding:0;Margin:0">
                                                                                         <table role="presentation"
-                                                                                            width="247"
-                                                                                            align="left"
-                                                                                            border="0"
-                                                                                            cellpadding="0"
+                                                                                            width="247" align="left"
+                                                                                            border="0" cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             class="m_-2550223905729420962pc-w620-halign-center"
                                                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:247px">
@@ -521,8 +517,7 @@ $settings=settings();
                                                                                                     valign="top"
                                                                                                     class="m_-2550223905729420962pc-w620-halign-center"
                                                                                                     style="padding:0;Margin:0">
-                                                                                                    <table
-                                                                                                        border="0"
+                                                                                                    <table border="0"
                                                                                                         cellpadding="0"
                                                                                                         cellspacing="0"
                                                                                                         role="presentation"
@@ -562,8 +557,7 @@ $settings=settings();
                                                                                                     align="left"
                                                                                                     class="m_-2550223905729420962pc-w620-halign-center"
                                                                                                     style="padding:0;Margin:0">
-                                                                                                    <table
-                                                                                                        border="0"
+                                                                                                    <table border="0"
                                                                                                         cellpadding="0"
                                                                                                         cellspacing="0"
                                                                                                         role="presentation"
@@ -610,10 +604,8 @@ $settings=settings();
                                                                                         style="padding:0;Margin:0;height:223px">
                                                                                         <table cellspacing="0"
                                                                                             role="presentation"
-                                                                                            width="100%"
-                                                                                            align="right"
-                                                                                            border="0"
-                                                                                            cellpadding="0"
+                                                                                            width="100%" align="right"
+                                                                                            border="0" cellpadding="0"
                                                                                             class="m_-2550223905729420962pc-w620-halign-center"
                                                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%">
                                                                                             <tr>
@@ -720,8 +712,7 @@ $settings=settings();
                     </tr>
                     <tr>
                         <td valign="top" style="padding:0; margin:0;">
-                            <table cellpadding="0" cellspacing="0" role="presentation" width="100%"
-                                border="0"
+                            <table cellpadding="0" cellspacing="0" role="presentation" width="100%" border="0"
                                 style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0;">
                                 <tr>
                                     <td class="m_-2550223905729420962pc-w620-spacing-0-0-0-0"
@@ -733,8 +724,8 @@ $settings=settings();
                                                 <td bgcolor="#ffffff" valign="top"
                                                     class="m_-2550223905729420962pc-w620-padding-30-40-0-40"
                                                     style="padding:0px 60px 0px 60px; margin:0; border-radius:0; background-color:#ffffff;">
-                                                    <table width="100%" border="0" cellpadding="0"
-                                                        cellspacing="0" role="presentation"
+                                                    <table width="100%" border="0" cellpadding="0" cellspacing="0"
+                                                        role="presentation"
                                                         style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0;">
                                                         <tr>
                                                             <td valign="top" align="left"
@@ -756,15 +747,17 @@ $settings=settings();
                                                                                 @if (!isset($content))
                                                                                     <div>
                                                                                         <span>Your {{ $acc_type }}
-                                                                                            MT5 account is ready! You're all set to dive into the exciting world of trading.</span>
+                                                                                            MT5 account is ready! You're all
+                                                                                            set to dive into the exciting
+                                                                                            world of trading.</span>
                                                                                     </div>
                                                                                     <div><span></span></div>
                                                                                     <div>
-                                                                                        <span>Here are your MT5 account details</span>
+                                                                                        <span>Here are your MT5 account
+                                                                                            details</span>
                                                                                     </div>
                                                                                 @else
-                                                                                    <div
-                                                                                        style="color:#000 !important;">
+                                                                                    <div style="color:#000 !important;">
                                                                                         {!! $content !!}
                                                                                     </div>
                                                                                 @endif
@@ -786,14 +779,13 @@ $settings=settings();
                     @if (!isset($content))
                         <tr>
                             <td valign="top" style="padding:0;Margin:0">
-                                <table width="100%" border="0" cellpadding="0" cellspacing="0"
-                                    role="presentation"
+                                <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"
                                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                     <tr>
                                         <td class="m_-2550223905729420962pc-w620-spacing-0-0-0-0"
                                             style="padding:0px;Margin:0">
-                                            <table border="0" cellpadding="0" cellspacing="0"
-                                                role="presentation" width="100%"
+                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+                                                width="100%"
                                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                 <tr>
                                                     <td bgcolor="#ffffff" valign="top"
@@ -804,9 +796,8 @@ $settings=settings();
                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                             <tr>
                                                                 <td style="padding:0;Margin:0">
-                                                                    <table border="0" cellpadding="0"
-                                                                        cellspacing="0" role="presentation"
-                                                                        width="100%"
+                                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                                        role="presentation" width="100%"
                                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0;width:100%">
                                                                         <tr>
                                                                             <td align="left" valign="middle"
@@ -816,8 +807,7 @@ $settings=settings();
                                                                                     border="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <div
                                                                                                 style="letter-spacing:-0.2px; line-height:26px; color:#000000; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:16px; text-align-last:left; font-weight:normal;">
@@ -831,18 +821,16 @@ $settings=settings();
                                                                             </td>
                                                                             <td align="left" valign="top"
                                                                                 style="padding:20px 10px 20px 0px; Margin:0; border-bottom:1px solid #e5e5e5;">
-                                                                                <table role="presentation"
-                                                                                    width="100%" border="0"
-                                                                                    cellpadding="0" cellspacing="0"
+                                                                                <table role="presentation" width="100%"
+                                                                                    border="0" cellpadding="0"
+                                                                                    cellspacing="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0px;">
                                                                                     <tr>
-                                                                                        <td valign="top"
-                                                                                            align="left"
+                                                                                        <td valign="top" align="left"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <table cellspacing="0"
                                                                                                 role="presentation"
-                                                                                                border="0"
-                                                                                                cellpadding="0"
+                                                                                                border="0" cellpadding="0"
                                                                                                 style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0; width:22px;">
                                                                                                 <tr>
                                                                                                     <td valign="top"
@@ -866,14 +854,18 @@ $settings=settings();
                                                                             <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px; border-bottom:1px solid #e5e5e5;">
                                                                                 <table border="0" cellpadding="0"
-                                                                                    cellspacing="0"
-                                                                                    role="presentation" width="100%"
+                                                                                    cellspacing="0" role="presentation"
+                                                                                    width="100%"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div style="font-variant-ligatures:normal; font-size:16px; text-align-last:left; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif;"><div><span>MASTER PASSWORD</span></div></div>
+                                                                                            <div
+                                                                                                style="font-variant-ligatures:normal; font-size:16px; text-align-last:left; letter-spacing:-0.2px; font-weight:normal; line-height:26px; color:#000000; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif;">
+                                                                                                <div><span>MASTER
+                                                                                                        PASSWORD</span>
+                                                                                                </div>
+                                                                                            </div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -885,8 +877,7 @@ $settings=settings();
                                                                                     border="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0px;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <table border="0"
                                                                                                 cellpadding="0"
@@ -898,7 +889,11 @@ $settings=settings();
                                                                                                         align="left"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;"><div><span>{{ $trader_password }}</span></div></div>
+                                                                                                            style="text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; font-variant-ligatures:normal; font-weight:bold; text-align:left; color:#000000;">
+                                                                                                            <div>
+                                                                                                                <span>{{ $trader_password }}</span>
+                                                                                                            </div>
+                                                                                                        </div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -914,28 +909,29 @@ $settings=settings();
                                                                             <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; width:245px; border-bottom:1px solid #e5e5e5;">
                                                                                 <table border="0" cellpadding="0"
-                                                                                    cellspacing="0"
-                                                                                    role="presentation" width="100%"
+                                                                                    cellspacing="0" role="presentation"
+                                                                                    width="100%"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div style="line-height:26px; font-weight:normal; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:left;"><div><span>INVESTOR
-                                                                                                        PASSWORD</span></div></div>
+                                                                                            <div
+                                                                                                style="line-height:26px; font-weight:normal; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; letter-spacing:-0.2px; font-variant-ligatures:normal; font-size:16px; text-align-last:left;">
+                                                                                                <div><span>INVESTOR
+                                                                                                        PASSWORD</span>
+                                                                                                </div>
+                                                                                            </div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
                                                                             </td>
                                                                             <td align="left" valign="top"
                                                                                 style="padding:20px 10px 20px 0px; Margin:0; border-bottom:1px solid #e5e5e5;">
-                                                                                <table cellspacing="0"
-                                                                                    role="presentation" width="100%"
-                                                                                    border="0" cellpadding="0"
+                                                                                <table cellspacing="0" role="presentation"
+                                                                                    width="100%" border="0" cellpadding="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0px;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <table cellpadding="0"
                                                                                                 cellspacing="0"
@@ -947,7 +943,11 @@ $settings=settings();
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
                                                                                                         <div
-                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;"><div><span>{{ $investor_password }}</span></div></div>
+                                                                                                            style="font-size:18px; font-variant-ligatures:normal; text-align:left;line-height:26px; color:#000000; text-align-last:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold;">
+                                                                                                            <div>
+                                                                                                                <span>{{ $investor_password }}</span>
+                                                                                                            </div>
+                                                                                                        </div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -963,14 +963,17 @@ $settings=settings();
                                                                             <td align="left" valign="middle"
                                                                                 style="padding:0px 20px 0px 0px; Margin:0; border-bottom:1px solid #e5e5e5; width:245px;">
                                                                                 <table border="0" cellpadding="0"
-                                                                                    cellspacing="0"
-                                                                                    role="presentation" width="100%"
+                                                                                    cellspacing="0" role="presentation"
+                                                                                    width="100%"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td valign="top"
-                                                                                            align="left"
+                                                                                        <td valign="top" align="left"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div style="font-weight:normal; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:left; letter-spacing:-0.2px; font-size:16px; line-height:26px"><div><span>LEVERAGE</span></div></div>
+                                                                                            <div
+                                                                                                style="font-weight:normal; text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; color:#000000; text-align-last:left; letter-spacing:-0.2px; font-size:16px; line-height:26px">
+                                                                                                <div><span>LEVERAGE</span>
+                                                                                                </div>
+                                                                                            </div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -982,8 +985,7 @@ $settings=settings();
                                                                                     role="presentation"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0px;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <table cellpadding="0"
                                                                                                 cellspacing="0"
@@ -994,7 +996,13 @@ $settings=settings();
                                                                                                     <td align="left"
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
-                                                                                                        <div style="font-size:18px; line-height:26px; color:#000000;text-align-last:left; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold; font-variant-ligatures:normal;"><div><span>{{ $leverage }}</span></div></div></td>
+                                                                                                        <div
+                                                                                                            style="font-size:18px; line-height:26px; color:#000000;text-align-last:left; text-align:left; font-family:Cairo, Arial, Helvetica, sans-serif; font-weight:bold; font-variant-ligatures:normal;">
+                                                                                                            <div>
+                                                                                                                <span>{{ $leverage }}</span>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </td>
                                                                                                 </tr>
                                                                                             </table>
                                                                                         </td>
@@ -1013,24 +1021,24 @@ $settings=settings();
                                                                                     role="presentation"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:separate; border-spacing:0;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
-                                                                                            <div style="text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:left; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;"><div><span>MT5
-                                                                                                        SERVER</span></div></div>
+                                                                                            <div
+                                                                                                style="text-align:left; font-variant-ligatures:normal; font-family:Cairo, Arial, Helvetica, sans-serif; text-align-last:left; line-height:26px; font-weight:normal; letter-spacing:-0.2px; font-size:16px; color:#000000;">
+                                                                                                <div><span>MT5
+                                                                                                        SERVER</span></div>
+                                                                                            </div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
                                                                             </td>
                                                                             <td align="left" valign="middle"
                                                                                 style="padding:0px; Margin:0;">
-                                                                                <table cellspacing="0"
-                                                                                    role="presentation" width="100%"
-                                                                                    border="0" cellpadding="0"
+                                                                                <table cellspacing="0" role="presentation"
+                                                                                    width="100%" border="0" cellpadding="0"
                                                                                     style="mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; border-spacing:0px;">
                                                                                     <tr>
-                                                                                        <td align="left"
-                                                                                            valign="top"
+                                                                                        <td align="left" valign="top"
                                                                                             style="padding:0; Margin:0;">
                                                                                             <table border="0"
                                                                                                 cellpadding="0"
@@ -1041,7 +1049,12 @@ $settings=settings();
                                                                                                     <td align="left"
                                                                                                         valign="top"
                                                                                                         style="padding:0; Margin:0;">
-                                                                                                        <div style="font-weight:bold; text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; color:#000000; font-variant-ligatures:normal; text-align:left;"><div><span>{{ $server_name }}</span></div></div>
+                                                                                                        <div
+                                                                                                            style="font-weight:bold; text-align-last:left; line-height:26px; font-family:Cairo, Arial, Helvetica, sans-serif; font-size:18px; color:#000000; font-variant-ligatures:normal; text-align:left;">
+                                                                                                            <div>
+                                                                                                                <span>{{ $server_name }}</span>
+                                                                                                            </div>
+                                                                                                        </div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             </table>
@@ -1066,10 +1079,9 @@ $settings=settings();
                             </td>
                         </tr>
                     @endif
-        <tr>
-            <td valign="top" style="padding:0;Margin:0">
-                <table cellpadding="0" cellspacing="0" role="presentation" width="100%"
-                                border="0"
+                    <tr>
+                        <td valign="top" style="padding:0;Margin:0">
+                            <table cellpadding="0" cellspacing="0" role="presentation" width="100%" border="0"
                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                 <tr>
                                     <td style="padding:0px;Margin:0">
@@ -1102,27 +1114,37 @@ $settings=settings();
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                        @if (!isset($content))
-                                                            <tr>
-                                                                <td align="left" valign="top"
-                                                                    style="padding:0;Margin:0">
-                                                                    <div
-                                                                        style="font-variant-ligatures:normal;text-align:left;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;color:#000000;line-height:21.8px;font-size:14px;letter-spacing:0.2px;font-weight:normal">
-                                                                        <div>
-                                                                            <span style="letter-spacing:0.2px">You're now ready to begin your trading journey.</span>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span style="letter-spacing:0.2px">Let the trading journey begin! If you have any questions, feel free to reach out to us for assistance.</span>
-                                                                        </div>
-                                                                        <div>
-                                                                            <div><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Server">Download MetaTrader iOS </a><br>
-                                                                            <a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Server">Download MetaTrader Android</a><br>
-                                                                            <a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe">Download Desktop </a></div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        @endif
+                                                                @if (!isset($content))
+                                                                    <tr>
+                                                                        <td align="left" valign="top" style="padding:0;Margin:0">
+                                                                            <div
+                                                                                style="font-variant-ligatures:normal;text-align:left;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;color:#000000;line-height:21.8px;font-size:14px;letter-spacing:0.2px;font-weight:normal">
+                                                                                <div>
+                                                                                    <span style="letter-spacing:0.2px">You're now
+                                                                                        ready to begin your trading journey.</span>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <span style="letter-spacing:0.2px">Let the
+                                                                                        trading journey begin! If you have any
+                                                                                        questions, feel free to reach out to us for
+                                                                                        assistance.</span>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <div><a
+                                                                                            href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Server">Download
+                                                                                            MetaTrader iOS </a><br>
+                                                                                        <a
+                                                                                            href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Server">Download
+                                                                                            MetaTrader Android</a><br>
+                                                                                        <a
+                                                                                            href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe">Download
+                                                                                            Desktop </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endif
 
                                                         @if (isset($site_link))
                                                             <tr>
@@ -1139,7 +1161,9 @@ $settings=settings();
                                                         @if (isset($after_btn_text))
                                                             <tr>
                                                                 <td align="left" style="padding:0;Margin:0">
-                                                                    <div style="line-height:21.8px;color:#000000;letter-spacing:-0.2px;text-align:left;font-weight:normal;text-align-last:left;font-size:14px;font-variant-ligatures:normal"><?php echo $after_btn_text; ?></div>
+                                                                    <div
+                                                                        style="line-height:21.8px;color:#000000;letter-spacing:-0.2px;text-align:left;font-weight:normal;text-align-last:left;font-size:14px;font-variant-ligatures:normal">
+                                                                        <?php    echo $after_btn_text; ?></div>
                                                                 </td>
                                                             </tr>
                                                         @endif
@@ -1152,8 +1176,8 @@ $settings=settings();
                                             <tr>
                                                 <td align="left"
                                                     style="padding:10px;Margin:0;font-family:Montserrat, sans-serif;word-break:break-word">
-                                                    <table cellspacing="0" height="0px" width="100%"
-                                                        align="center" border="0" cellpadding="0"
+                                                    <table cellspacing="0" height="0px" width="100%" align="center"
+                                                        border="0" cellpadding="0"
                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0;table-layout:fixed;vertical-align:top;border-top:0px solid #000000"
                                                         role="none">
                                                         <tr style="vertical-align:top">
@@ -1180,8 +1204,7 @@ $settings=settings();
                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                     <tr>
                         <td style="padding:0px;Margin:0">
-                            <table cellspacing="0" role="presentation" width="100%" border="0"
-                                cellpadding="0"
+                            <table cellspacing="0" role="presentation" width="100%" border="0" cellpadding="0"
                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                 <tr>
                                     <td bgcolor="#ffffff" valign="top"
@@ -1192,8 +1215,8 @@ $settings=settings();
                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%">
                                             <tr>
                                                 <td valign="top" style="padding:0;Margin:0">
-                                                    <table cellspacing="0" role="presentation" width="100%"
-                                                        border="0" cellpadding="0"
+                                                    <table cellspacing="0" role="presentation" width="100%" border="0"
+                                                        cellpadding="0"
                                                         style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                         <tr>
                                                             <td height="1" valign="top"
@@ -1219,8 +1242,7 @@ $settings=settings();
                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                     <tr>
                         <td style="padding:0px;Margin:0">
-                            <table cellspacing="0" role="presentation" width="100%" border="0"
-                                cellpadding="0"
+                            <table cellspacing="0" role="presentation" width="100%" border="0" cellpadding="0"
                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                 <tr>
                                     <td bgcolor="#ffffff" valign="top"
@@ -1240,16 +1262,15 @@ $settings=settings();
                                                             <td valign="top" align="left"
                                                                 class="m_-2550223905729420962pc-grid-td-first m_-2550223905729420962pc-w620-padding-40-0"
                                                                 style="Margin:0;padding-bottom:0px;padding-left:0px;width:100%;padding-top:0px;padding-right:20px">
-                                                                <table role="presentation" width="100%"
-                                                                    border="0" cellpadding="0" cellspacing="0"
+                                                                <table role="presentation" width="100%" border="0"
+                                                                    cellpadding="0" cellspacing="0"
                                                                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0;width:100%">
                                                                     <tr>
-                                                                        <td align="left" height="250"
-                                                                            valign="top"
+                                                                        <td align="left" height="250" valign="top"
                                                                             style="padding:0;Margin:0;height:250px">
                                                                             <table cellspacing="0" role="presentation"
-                                                                                width="100%" align="left"
-                                                                                border="0" cellpadding="0"
+                                                                                width="100%" align="left" border="0"
+                                                                                cellpadding="0"
                                                                                 style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%">
                                                                                 <tr>
                                                                                     <td align="left" valign="top"
@@ -1259,8 +1280,7 @@ $settings=settings();
                                                                                 <tr>
                                                                                     <td align="left" valign="top"
                                                                                         style="padding:0;Margin:0">
-                                                                                        <table align="left"
-                                                                                            border="0"
+                                                                                        <table align="left" border="0"
                                                                                             cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             role="presentation"
@@ -1283,10 +1303,38 @@ $settings=settings();
                                                                                                                     style="color:#000;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;font-weight:normal;line-height:17.2px;letter-spacing:-0.2px;font-variant-ligatures:normal;font-size:12px;text-align:left">
                                                                                                                     <div>
                                                                                                                         <span
-                                                                                                                            style="font-weight:700;font-style:normal">Need Help?</span>
+                                                                                                                            style="font-weight:700;font-style:normal">Need
+                                                                                                                            Help?</span>
                                                                                                                     </div>
                                                                                                                     <div>
-                                                                                                                        <span>Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don’t hesitate to contact our Support Team.</span>
+                                                                                                                        <span>Our
+                                                                                                                            customer
+                                                                                                                            support
+                                                                                                                            is
+                                                                                                                            here
+                                                                                                                            to
+                                                                                                                            help
+                                                                                                                            you
+                                                                                                                            24/5.
+                                                                                                                            If
+                                                                                                                            you
+                                                                                                                            have
+                                                                                                                            any
+                                                                                                                            questions
+                                                                                                                            or
+                                                                                                                            need
+                                                                                                                            assistance
+                                                                                                                            with
+                                                                                                                            your
+                                                                                                                            account,
+                                                                                                                            please
+                                                                                                                            don’t
+                                                                                                                            hesitate
+                                                                                                                            to
+                                                                                                                            contact
+                                                                                                                            our
+                                                                                                                            Support
+                                                                                                                            Team.</span>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </td>
@@ -1318,8 +1366,7 @@ $settings=settings();
                                                                                     <td valign="top" align="left"
                                                                                         style="padding:0;Margin:0">
                                                                                         <table role="presentation"
-                                                                                            align="left"
-                                                                                            border="0"
+                                                                                            align="left" border="0"
                                                                                             cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0">
@@ -1348,14 +1395,12 @@ $settings=settings();
                                                                                         <table cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             role="presentation"
-                                                                                            align="left"
-                                                                                            border="0"
+                                                                                            align="left" border="0"
                                                                                             style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                                                                             <tr>
                                                                                                 <td align="left"
                                                                                                     style="padding:15px 0px 0px 0px;Margin:0">
-                                                                                                    <table
-                                                                                                        align="left"
+                                                                                                    <table align="left"
                                                                                                         border="0"
                                                                                                         cellpadding="0"
                                                                                                         cellspacing="0"
@@ -1372,8 +1417,7 @@ $settings=settings();
                                                                                 <tr>
                                                                                     <td align="left" valign="top"
                                                                                         style="padding:0;Margin:0">
-                                                                                        <table align="left"
-                                                                                            border="0"
+                                                                                        <table align="left" border="0"
                                                                                             cellpadding="0"
                                                                                             cellspacing="0"
                                                                                             role="presentation"
@@ -1395,12 +1439,51 @@ $settings=settings();
                                                                                                                 <div
                                                                                                                     style="color:#000;text-align-last:left;font-family:Cairo, Arial, Helvetica, sans-serif;font-weight:normal;line-height:17.2px;letter-spacing:-0.2px;font-variant-ligatures:normal;font-size:12px;text-align:left">
                                                                                                                     <div>
-                                                                                                                        <span>All official communication from LQH Markets (LQH Integrated Ltd.) will be conducted solely through our official email addresses, using the <a href="https://www.lqhmarkets.com/">LQHMarkets.com</a> domain.</span>
-                                                                                                                        <p>Our mailing address is as follows:</p>
-                                                                                                                                LQH Integrated Ltd<br>
-                                                                                                                                A2-704A, Al Hamra Industrial Zone-FZ<br>
-                                                                                                                                RAKEZ Business Centre<br>
-                                                                                                                                Ras Al Khaimah, UAE<br>
+                                                                                                                        <span>All
+                                                                                                                            official
+                                                                                                                            communication
+                                                                                                                            from
+                                                                                                                            LQH
+                                                                                                                            Markets
+                                                                                                                            (LQH
+                                                                                                                            Integrated
+                                                                                                                            Ltd.)
+                                                                                                                            will
+                                                                                                                            be
+                                                                                                                            conducted
+                                                                                                                            solely
+                                                                                                                            through
+                                                                                                                            our
+                                                                                                                            official
+                                                                                                                            email
+                                                                                                                            addresses,
+                                                                                                                            using
+                                                                                                                            the
+                                                                                                                            <a
+                                                                                                                                href="https://www.lqhmarkets.com/">LQHMarkets.com</a>
+                                                                                                                            domain.</span>
+                                                                                                                        <p>Our
+                                                                                                                            mailing
+                                                                                                                            address
+                                                                                                                            is
+                                                                                                                            as
+                                                                                                                            follows:
+                                                                                                                        </p>
+                                                                                                                        LQH
+                                                                                                                        Integrated
+                                                                                                                        Ltd<br>
+                                                                                                                        A2-704A,
+                                                                                                                        Al
+                                                                                                                        Hamra
+                                                                                                                        Industrial
+                                                                                                                        Zone-FZ<br>
+                                                                                                                        RAKEZ
+                                                                                                                        Business
+                                                                                                                        Centre<br>
+                                                                                                                        Ras
+                                                                                                                        Al
+                                                                                                                        Khaimah,
+                                                                                                                        UAE<br>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </td>

@@ -7,6 +7,7 @@
         }
     </style>
 @endsection
+
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
@@ -338,6 +339,11 @@
                                                     <th>ACCOUNT</th>
                                                     <th>TYPE</th>
                                                     <th>AMOUNT</th>
+                                                    <th>EMAIL</th>
+                                                    <th>DATE</th>
+                                                    <th>TIME</th>
+                                                    <th>ACCOUNT</th>
+                                                    <th>AMOUNT</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -385,6 +391,8 @@
                                                                 <th>TOTAL ACCOUNTS</th>
                                                                 <th>TOTAL DEPOSIT</th>
                                                                 <th>PROFILE STATUS</th>
+                                                                <th>CLIENT NAME</th>
+                                                                <th>EMAIL</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -427,6 +435,11 @@
         </script>
     @endif
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script>
         $("[data-bs-target]").click(function () {
             var target = $(this).attr("data-bs-target");
@@ -449,7 +462,24 @@
             let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
 
             $("#commissionTbl").DataTable({
-
+                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        className: ' btn btn-primary',
+                        filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [4, 7, 2, 8, 5, 6] // Updated column indices to match your use case
+                        }
+                    }
+                ],
+                lengthMenu: [
+                    [10, 25, 50, 100, -1], // DataTable options
+                    [10, 25, 50, 100, "All"] // User-facing labels
+                ],
+                pageLength: 10,
+                processing: true,
                 serverSide: true,
                 searching: false,
                 ajax: {
@@ -463,27 +493,37 @@
                 "columns": [
                     {
                         data: 'date', name: 'date'
-
                     },
                     {
                         data: 'account', name: 'account'
-
                     },
                     {
                         data: 'type', name: 'type'
-
                     },
                     {
                         data: 'amount', name: 'amount'
-
+                    },
+                    {
+                        data: 'email', name: 'email', visible: false
+                    },
+                    {
+                        data: 'exp_date', name: 'exp_date', visible: false
+                    },
+                    {
+                        data: 'time', name: 'time', visible: false
+                    },
+                    {
+                        data: 'exp_account', name: 'exp_account', visible: false
+                    },
+                    {
+                        data: 'exp_amount', name: 'exp_amount', visible: false
                     }
+
                 ],
                 "processing": true,
                 "order": [[0, "desc"]]
             });
         });
-
-
 
 
         function updateReferralLink() {
@@ -502,13 +542,27 @@
         document.getElementById('referral-code').addEventListener('input', function () {
             updateReferralLink();
         });
-    </script>
-    <script>
-        $(document).ready(function () {
 
+        $(document).ready(function () {
             let level = 1;
 
             var dTtable = $('#ajaxDatatable').DataTable({
+                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        className: ' btn btn-primary',
+                        filename: 'Ib_Clients_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [4, 5, 1, 2, 3] // Updated column indices to match your use case
+                        }
+                    }
+                ],
+                lengthMenu: [
+                    [10, 25, 50, 100, -1], // DataTable options
+                    [10, 25, 50, 100, "All"] // User-facing labels
+                ],
                 processing: true,
                 serverSide: true,
                 searching: true,
@@ -528,11 +582,12 @@
                     { data: 'email', name: 'email' },
                     { data: 'total_accounts', name: 'total_accounts' },
                     { data: 'total_deposit', name: 'total_deposit' },
-                    { data: 'profile_status', name: 'profile_status' }
+                    { data: 'profile_status', name: 'profile_status' },
+                    { data: 'client_name', name: 'client_name',visible: false },
+                    { data: 'client_email', name: 'client_email', visible: false },
                 ],
                 order: [[0, "desc"]]
             });
-
 
             $('.client-level').on('click', function (e) {
                 e.preventDefault();

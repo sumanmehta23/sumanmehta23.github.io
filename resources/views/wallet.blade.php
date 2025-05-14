@@ -151,6 +151,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($wallet_history as $transaction)
+                                       {{-- {{  dd($transaction) }} --}}
                                         <?php
                                             if ($transaction->status == 0) {
                                                 if($transaction->verified == 0){

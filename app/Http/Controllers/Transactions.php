@@ -2,41 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Account;
-use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
-use App\Models\TradeWithdrawals;
-use App\Models\InternalTransfer;
+use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Models\InternalTransfer;
+use App\Models\TradeWithdrawals;
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\TradeWithdrawal;
 use App\Services\MailService as MailService;
+use App\MT5\MTEnDealAction;
+use App\MT5\MTRetCode;
+use App\MT5\MTWebAPI;
 
 
 class Transactions extends Controller
 {
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $api;
+    protected $settings;
+    public function __construct(MailService $mailService,MTWebAPI $api)
     {
         $this->mailService = $mailService;
+        $this->settings = settings();
+        $this->api = $api;
     }
     public function index()
     {
 
         $email = $email = auth()->user()->email;
 
-        $deposit_history = WalletDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history1 = WalletDeposit::where('user_id',  auth()->user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
-            // dd($wallet_deposit_history);
-        // Fetching withdrawal history
-        $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->where('withdraw_type', 'Wallet Withdrawal')
+
+        $deposit_history2 = TradeDeposit::where('user_id',  auth()->user()->id)
+            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
+        $deposit_history = $deposit_history1->merge($deposit_history2)
+            ->values(); // reset the keys
 
+            // dd($wallet_deposit_history);
+        // Fetching withdrawal history
+
+        $withdrawal_history1 = WalletWithdraw::where('email', $email)
+            ->where('withdraw_type', 'Wallet Withdrawal')
+            ->orderBy('withdraw_date', 'desc')
+            ->get();
+
+        $withdrawal_history2 = TradeWithdrawals::where('email', $email)
+            ->where('withdraw_type', 'Trade Withdrawal')
+            ->orderBy('withdraw_date', 'desc')
+            ->get();
+
+        $withdrawal_history = $withdrawal_history2->merge($withdrawal_history1)
+            ->values(); // reset the keys
+
+        // dd($withdrawal_history);
 
         // Fetching internal transfers
 
@@ -142,7 +168,7 @@ class Transactions extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
 
-        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
 
         if($transaction->status == 1){
             return redirect()->back()->with('status', 'Your transaction is already approved.');
@@ -165,6 +191,29 @@ class Transactions extends Controller
             $transaction->admin_remark = 'Cancelled by User';
             $transaction->save();
             if($status==3){
+                $comment = "Deposit";
+                $ticket = NULL;
+
+                $settings = settings();
+
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
+
+                $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                }
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty

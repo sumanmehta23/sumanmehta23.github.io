@@ -15,6 +15,8 @@ use App\Models\WalletWithdraw;
 use App\Models\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\TradeDeposit;
+use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\Auth;
 
 class Home extends Controller
@@ -26,7 +28,6 @@ class Home extends Controller
     public function dashboard()
     {
         $userId= auth()->user()->id;
-        $userId = auth()->user()->id;
         AccountHelper::updateLiveAndDemoAccounts($userId);
         $walletBalance = $this->getWalletBalance($userId);
         $totalDeposit = $this->getTotalDeposit($userId);
@@ -63,23 +64,33 @@ class Home extends Controller
     {
         // $totalDeposit = TotalBalance::where('user_id', $userId)
         //     ->sum('trading_deposited');
-        $totalDeposit = WalletDeposit::where('user_id', $userId)
+        $totalDeposit1 = WalletDeposit::where('user_id', $userId)
             ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
-        $totalDeposit = $totalDeposit ?: 0;
+        $totalDeposit2 = TradeDeposit::where('user_id', $userId)
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->where('status', 1)
+            ->sum('deposit_amount');
+
+        $totalDeposit = ($totalDeposit1 + $totalDeposit2) ?: 0;
         return $totalDeposit;
     }
     public function getTotalWithdrawal($userId)
     {
         // $totalWithdrawal = TotalBalance::where('user_id', $userId)
         //     ->sum('trading_withdrawal');
-        $totalWithdrawal = WalletWithdraw::where('user_id', $userId)
+        $totalWithdrawal1 = WalletWithdraw::where('user_id', $userId)
             ->where('withdraw_type', 'Wallet Withdrawal')
             ->where('status', 1)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
             ->value('total');
-        return $totalWithdrawal ?: 0;
+        $totalWithdrawal2 = TradeWithdrawals::where('user_id', $userId)
+            ->where('withdraw_type', 'Trade Withdrawal')
+            ->where('status', 1)
+            ->selectRaw('SUM(withdrawal_amount + COALESCE(transaction_fee, 0)) as total')
+            ->value('total');
+        return ($totalWithdrawal1 + $totalWithdrawal2) ?: 0;
     }
     public function getLiveAccountCount($userId)
     {

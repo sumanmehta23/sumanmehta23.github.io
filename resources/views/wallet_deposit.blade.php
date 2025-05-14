@@ -333,11 +333,6 @@
                                                                 </div>
                                                             </form>
 
-
-
-
-
-
                                                             <div class="CryptoChill trade-deposit-details">
                                                                 <form method="post">
                                                                     @csrf
@@ -618,5 +613,5 @@
             });
         </script>
     @endif
-    @include('pgi_cryptoChill')
+    {{-- @include('pgi_cryptoChill') --}}
 @endsection

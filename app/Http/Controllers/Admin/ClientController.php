@@ -594,6 +594,8 @@ class ClientController extends Controller
 
         // Get all the required data directly from $user
         $total_wd = $user->total_wd;  // Accessor for total wallet deposit
+        $total_ntd = $user->NewTotalDeposit;
+        $total_ntw = $user->NewTotalWithdrawal;
 
         $total_ww = $user->total_ww;  // Accessor for total wallet withdrawal
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
@@ -660,7 +662,9 @@ class ClientController extends Controller
             'userid',
             'countries',
             'IbTotalDeposits',
-            'kyc_log'
+            'kyc_log',
+            'total_ntd',
+            'total_ntw'
         ));
     }
 

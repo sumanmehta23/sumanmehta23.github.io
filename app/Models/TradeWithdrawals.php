@@ -29,4 +29,8 @@ class TradeWithdrawals extends Model
     {
         return $this->belongsTo(TotalBalance::class,'code','code');
     }
+    public function clientWallet()
+    {
+        return $this->belongsTo(ClientWallet::class);
+    }
 }

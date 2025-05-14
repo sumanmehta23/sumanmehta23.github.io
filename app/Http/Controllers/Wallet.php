@@ -5,14 +5,20 @@ namespace App\Http\Controllers;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
+use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\PaymentLog;
 use App\Models\LiveAccount;
+use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
 use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
+use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Models\BonusTransaction;
+use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Payment;
 use PragmaRX\Google2FA\Google2FA;
 use Illuminate\Support\Facades\DB;
@@ -37,21 +43,57 @@ class Wallet extends Controller
     protected $paymentController;
     protected $mailService;
 
-    public function __construct(Payment $paymentController, MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+
+    public function __construct(Payment $paymentController, MailService $mailService, MT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
     public function alldeposits()
     {
-        $deposits = WalletDeposit::whereIn('deposit_type',['CryptoChill','CreditCardPayissa','Now Payment'])->paginate();
-        return new DepositCollection($deposits);
+        $deposits1 = WalletDeposit::whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'Now Payment'])->get();
+        $deposits2 = TradeDeposit::whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'Now Payment'])->get();
+
+        $mergedDeposits = $deposits1->merge($deposits2);
+
+        // Paginate the merged collection
+        $perPage = 15; // Number of items per page
+        $currentPage = request()->get('page', 1); // Get the current page or default to 1
+        $paginatedDeposits = new \Illuminate\Pagination\LengthAwarePaginator(
+            $mergedDeposits->forPage($currentPage, $perPage),
+            $mergedDeposits->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return new DepositCollection($paginatedDeposits);
     }
     public function allwithdrawals()
     {
-        $withdrawals = WalletWithdraw::where('withdraw_type','Wallet Withdrawal')->where('status',1)->paginate();
-        return new WithdrawalCollection($withdrawals);
+        $withdrawals1 = WalletWithdraw::where('withdraw_type', 'Wallet Withdrawal')->where('status', 1)->get();
+        $withdrawals2 = TradeWithdrawals::where('withdraw_type', 'Trade Withdrawal')->where('status', 1)->get();
+
+        $mergedWithdrawals = $withdrawals1->merge($withdrawals2);
+
+        // Paginate the merged collection
+        $perPage = 15; // Number of items per page
+        $currentPage = request()->get('page', 1); // Get the current page or default to 1
+        $paginatedWithdrawals = new \Illuminate\Pagination\LengthAwarePaginator(
+            $mergedWithdrawals->forPage($currentPage, $perPage),
+            $mergedWithdrawals->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return new WithdrawalCollection($paginatedWithdrawals);
     }
     public function index()
     {
@@ -66,13 +108,13 @@ class Wallet extends Controller
     {
         // Fetch deposit history
         $deposit_history = WalletDeposit::where('email', $email)
-            ->select('id as raw_id', 'transaction_id', 'deposit_type as transfer_type', 'status', 'deposit_amount as amount', \DB::raw("'deposit' as type"), 'deposted_date as date_added','email')
+            ->select('id as raw_id', 'transaction_id', 'deposit_type as transfer_type', 'status', 'deposit_amount as amount', \DB::raw("'deposit' as type"), 'deposted_date as date_added', 'email')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
         // Fetch withdrawal history
         $withdrawal_history = WalletWithdraw::where('email', $email)
-            ->select('id as raw_id', 'transaction_id', 'withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', 'verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added','email')
+            ->select('id as raw_id', 'transaction_id', 'withdraw_transaction_fee', 'withdraw_type as transfer_type', 'status', 'withdraw_amount as amount', 'verified', \DB::raw("'withdrawal' as type"), 'withdraw_date as date_added', 'email')
             ->orderBy('id', 'desc')
             ->limit(5)
             ->get();
@@ -80,6 +122,92 @@ class Wallet extends Controller
         $wallethistory = $deposit_history->concat($withdrawal_history)->sortByDesc('date_added')->take(10);
 
         return $wallethistory;
+    }
+
+    public function transaction_deposit_manually(Request $request, $trx_id, $amount, $code, $deposit_type)
+    {
+
+        $settings = settings();
+
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+
+
+        $account = Account::where('code', $code)->firstOrFail();
+        if (!$account) {
+            return response()->json(['error' => 'Account not found'], 404);
+        }
+
+
+        $user = User::findOrFail($account->user_id);
+        $depositamount = $amount;
+        $email = $user->email;
+
+
+        $deposit_type = $deposit_type;
+        $deposit_from = NULL;
+        $trx_id = $trx_id;
+        $comment = "Deposit";
+        $ticket = NULL;
+
+        $depositProofPath = null;
+
+        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+
+        if ($errorCode != MTRetCode::MT_RET_OK) {
+            $error = MTRetCode::GetError($errorCode);
+            // Return a JSON response with the error
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error' => $error,
+            ], 400); // 400 Bad Request
+        } else {
+
+            // Start a database transaction
+            DB::transaction(function () use ($user, $email, $account, $depositProofPath, $depositamount, $deposit_type, $trx_id) {
+                $tradeId = $account->code;
+
+                // Insert into wallet withdraw
+                PaymentLog::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'payment_amount' => $depositamount,
+                    'payment_type' => $deposit_type,
+                    'payment_reference_id' => $account->id,
+                    'payment_status' => $account->id,
+                    'payment_res' => $account->id,
+                    'initiated_by' => $account->id,
+                ]);
+
+                // Insert into trade deposit
+                TradeDeposit::create([
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'email' => $email,
+                    'code' => $tradeId,
+                    'deposit_amount' => $depositamount,
+                    'deposit_type' => $deposit_type,
+                    'deposit_from' => ($deposit_type == 'CRM') ? 'CRM' : $deposit_type,
+                    'deposit_proof' => $depositProofPath,
+                    'status' => 1,
+                    'transaction_id' => $trx_id,
+                    'callback_code' => 'success',
+                    'callback_data' => 'manually',
+                ]);
+            });
+            // RateLimiter::clear($key);
+            return response()->json(['success' => 'Funds Successfully Deposited']);
+        }
+
+        return back()->with('success', 'Deposit added successfully.');
     }
 
     public function storeClientWallet(Request $request)
@@ -229,8 +357,8 @@ class Wallet extends Controller
             $emailSubject = $settings['admin_title'] . ' - Verify Wallet Address Deletion Request';
 
             $content = '<div>We received a request to delete the following wallet address linked to your wallet:</div>' .
-                    '<div>Wallet Address: ' . e($request->input('wallet_address')) . '</div>' .
-                    '<div>For security purposes, please verify this request by clicking the link below:</div>';
+                '<div>Wallet Address: ' . e($request->input('wallet_address')) . '</div>' .
+                '<div>For security purposes, please verify this request by clicking the link below:</div>';
 
             $templateVars = [
                 'name' => $wallet->user->fullname,
@@ -605,6 +733,7 @@ class Wallet extends Controller
     }
     public function showDepositForm()
     {
+        return redirect()->route('trade-deposit');
         $email = auth()->user()->email;
         $kyc_user = User::where('email', $email)->first();
         $settings = $this->settings;
@@ -869,7 +998,6 @@ class Wallet extends Controller
         // Check if the callback status is transaction confirmed or complete
         if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
             $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
-
             if (isset($passedData['customerID'])) {
                 $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
             }
@@ -884,8 +1012,11 @@ class Wallet extends Controller
             $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
+            $customerAccountID = $passedData['clientAccountID'];
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
+
+
 
             if ($deposit_to === "wallet") {
                 // Check for duplicate transaction
@@ -931,6 +1062,110 @@ class Wallet extends Controller
                     Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
+            } elseif ($deposit_to === "Account") {
+
+                $settings = settings();
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
+
+                $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                    $query->where('status', 1);
+                }])->first();
+
+                // Check for duplicate transaction
+                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                if ($existingDeposit) {
+                    return response()->json(['status' => 'true']);
+                }
+                // Prepare callback data and insert it into the database
+                $callback_data = json_encode($payload);
+                $callback_code = json_encode($payload['transaction']["status"]);
+
+                $comment = 'Deposit';
+                $ticket1 = NULL;
+
+                if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                    $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
+                    if (!$existingTransaction) {
+                        if ($amount > 250) {
+                            $bonusamount = 9 * 250;
+                        } else {
+                            $bonusamount = 9 * $amount;
+                        }
+
+                        if (($error_code1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $customerID,
+                                'account_id' => $customerAccountID,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
+
+                $ticket2 = NULL;
+                $error_code2 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, $margin_check = true);
+
+                if ($error_code2 != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($error_code2);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                } else {
+                    try {
+                        DB::beginTransaction();
+
+                        TradeDeposit::create([
+                            'user_id' => $customerID,
+                            'account_id' => $customerAccountID,
+                            'email' => $email,
+                            'code' => $account->code,
+                            'deposit_amount' => $amount,
+                            'deposit_type' => $deposit_type,
+                            'deposit_from' => $deposit_type,
+                            'status' => 1,
+                            'deposit_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => $callback_data,
+                            'callback_code' => $callback_code,
+                        ]);
+
+                        // Update total balance
+                        TotalBalance::create(
+                            ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                        );
+
+                        DB::commit();
+                        $user = User::where('id', $customerID)->first();
+                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                        Cache::forget("user:{$customerID}:wallet_balance");
+                        Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                        return response()->json(['status' => 'true']);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    }
+                }
             } else {
                 // If depositTo is not "wallet", handle other cases
                 if (!isset($passedData['accountID'])) {
@@ -959,7 +1194,6 @@ class Wallet extends Controller
 
     public function withdrawal(Request $request, TwoFactorAuthenticationProvider $twoFactorProvider)
     {
-        // dd($request->all());
         $settings = settings();
 
         // Generate a unique rate-limiting key based on user or IP
@@ -1089,19 +1323,21 @@ class Wallet extends Controller
             ]);
             $user = auth()->user();
 
-            $walletWithdrawal = WalletWithdraw::with('user')
+            $tradeWithdrawal = TradeWithdrawals::with('user')
                 ->where('user_id', $user->id)
                 ->find($request->wallet_withdrawal_id);
             // dump($user->id);
             // dd($walletWithdrawal);
-            if (!$walletWithdrawal) {
+            if (!$tradeWithdrawal) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized or not found'], 403);
             }
 
             $settings = settings();
-            $withdrawAmount = $walletWithdrawal->withdraw_amount;
-            $toEmail = $walletWithdrawal->user->email;
-            $toName = $walletWithdrawal->user->fullname;
+            $withdrawAmount = $tradeWithdrawal->withdrawal_amount;
+            $toEmail = $tradeWithdrawal->user->email;
+            $toName = $tradeWithdrawal->user->fullname;
+
+
             $from = $settings['email_from_address'];
 
             $type = 'Withdrawal Details Verification';
@@ -1111,18 +1347,19 @@ class Wallet extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
             $content =
-                '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</div>' .
-                '<div>Click the link below to activate your Wallet Withdrawal</div>';
+                '<div><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></div><br>' .
+                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account ' . $tradeWithdrawal->code . '.</div><br>' .
+                '<div>Click the link below to activate your Account Withdrawal</div>';
 
             $templateVars = [
                 'name' => $toName,
                 'server_name' => $settings['mt5_company_name'],
-                'site_link' => $settings['copyright_site_name_text'] . "/wallet_withdrawal_verify?walletWithdrawal_id=$walletWithdrawal->id",
+                'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$tradeWithdrawal->id",
                 'email' => $from,
                 "content" => $content,
                 "title_right" => "Activate",
-                "subtitle_right" => "Your Wallet Withdrawal Request"
+                "subtitle_right" => "Your Account Withdrawal Request",
+                "btn_text" => "Verify"
             ];
 
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);

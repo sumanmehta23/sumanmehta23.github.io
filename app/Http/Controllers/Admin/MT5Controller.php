@@ -84,10 +84,11 @@ class MT5Controller extends Controller
             $leverage = $request->input('leverage');
 
             // Fetch user data from API (assume the API method and classes are available)
-            // $trade_user = NULL;/
-            // $this->api->UserGet($code,$trade_user);
-            // dd($code);
+            $trade_user = NULL;
+            $this->api->UserGet($code,$trade_user);
+
             if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
+
                 //dd(MTRetCode::GetError($error_code));
                 // return response()->json([
                 //     'status' => 'warning',
@@ -96,7 +97,8 @@ class MT5Controller extends Controller
                 // ], 400);
                 return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
             }
- // dump($code);
+
+
             // dump($account_type);
             // dump($this);
 
@@ -109,26 +111,29 @@ class MT5Controller extends Controller
             if($account){
                 $referral = $account->user->ib1;
 
-                if($referral && ($referral=="wealthytrades")) {
-                    $groupCode = str_replace("DF","SNSI",$acc->ac_group);
-                    $group = AccountType::where('ac_group', $groupCode)->first();
-                    // dd($group);
-                    if($group){
-                        $_POST["options"] =$group->id;
-                        $account_type_id = $group->id;
-                    }
-                }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
-                    $groupCode = str_replace("DF","ALEX",$acc->ac_group);
-                    $group = AccountType::where('ac_group', $groupCode)->first();
-                    if($group){
-                        $_POST["options"] =$group->id;
-                        $account_type_id = $group->id;
-                    }
-                }else{
-                    $groupCode = $acc->ac_group;
-                    $account_type_id = $acc->id;
-                }
+                // if($referral && ($referral=="wealthytrades")) {
+                //     $groupCode = str_replace("DF","SNSI",$acc->ac_group);
+                //     $group = AccountType::where('ac_group', $groupCode)->first();
+                //     // dd($group);
+                //     if($group){
+                //         $_POST["options"] =$group->id;
+                //         $account_type_id = $group->id;
+                //     }
+                // }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
+                //     $groupCode = str_replace("DF","ALEX",$acc->ac_group);
+                //     $group = AccountType::where('ac_group', $groupCode)->first();
+                //     if($group){
+                //         $_POST["options"] =$group->id;
+                //         $account_type_id = $group->id;
+                //     }
+                // }else{
+                //     $groupCode = $acc->ac_group;
+                //     $account_type_id = $acc->id;
+                // }
+                $groupCode = $acc->ac_group;
+                $account_type_id = $acc->id;
             }
+
             $trade_user->Group = $groupCode;
 
             $trade_user->Leverage = $leverage;

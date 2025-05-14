@@ -6,9 +6,12 @@ use Exception;
 use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
+use App\Models\Account;
 use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
+use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use Illuminate\Support\Facades\DB;
@@ -23,114 +26,229 @@ use App\Services\MailService as MailService;
 class Payment extends Controller
 {
     protected $mailService;
-    public function __construct(MTWebAPI $api, MailService $mailService)
+    protected $api;
+    protected $mt5Service;
+    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
     {
+        $this->settings = settings();
         $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $this->api = $this->mt5Service->getApi();
     }
-    public function handlePaymentResponse(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    public function handlePaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
         $address_in = $request->input('address_in');
-        if(!empty($address_in)){
-            $responsedata= $request->all();
-            Log::channel("creditcardpayissa")->info('Payment callback Response: '.json_encode($responsedata));
+        $responsedata = $request->all();
+        $transactionId = $responsedata['txid_in'];
+        if (!empty($address_in)) {
+
+            Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
+            if (!in_array($responsedata['coin'], ['polygon_usdt', 'polygon_usdc'])) {
+                try {
+                    $this->notifyAdmin($responsedata);
+                } catch (\Throwable $th) {
+                    Log::channel("creditcardpayissa")->error('Error notifying admin: ' . $th->getMessage());
+                }
+
+                return response()->json(['error' => 'This crypto currency not allowed'], 400);
+            }
             $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
-            if(!$paymentLog){
+            if (!$paymentLog) {
                 return response()->json(['error' => 'Invalid Payment ID'], 400);
             }
-            $paymentlinkresponse=json_decode($paymentLog->payment_req);
-            $validationToken=$paymentlinkresponse->polygon_address_in;
+            $paymentlinkresponse = json_decode($paymentLog->payment_req);
+            $validationToken = $paymentlinkresponse->polygon_address_in;
             // && $responsedata['value_coin']==$paymentLog->payment_amount can't compare as it will never be same as intial input
-            if($responsedata['address_in'] ==$validationToken){
+            if ($responsedata['address_in'] == $validationToken) {
+                $validcoins = config("services.payissa.valid_coins");
+                if (!in_array($responsedata['coin'], $validcoins)) {
+                    //Send admin email that invalid coin was used
+                    $settings = settings();
+                    $from = $settings['email_from_address'];
+                    $emailSubject = $settings['admin_title'] . ' - Invalid Coin Payment';
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                    $content = '<div>We have detected an invalid coin payment attempt.</div>
+                      <div><b>Transaction Details</b></div>
+                      <div><b>Coin: </b>' . $responsedata['coin'] . '</div>
+                      <div><b>Transaction ID: </b>' . $transactionId . '</div>
+                      <div><b>Deposited Date: </b>' . now() . '</div>
+                      <div><b>User Email: </b>' . $paymentLog->initiated_by . '</div>';
+                    $templateVars = [
+                        'name' => 'Admin',
+                        'site_link' => $settings['copyright_site_name_text'],
+                        'email' => $settings['email_from_address'],
+                        "content" => $content,
+                        "title_right" => "Invalid Coin Payment",
+                        "subtitle_right" => "Alert",
+                        "btn_text" => "Go To Dashboard",
+                    ];
+                    $this->mailService->sendEmail($settings['admin_email'], $emailSubject, $headers, '', $templateVars);
+                    Log::channel("creditcardpayissa")->info('Invalid coin payment detected: ' . json_encode($responsedata));
+                    // Update payment log
+                    $paymentLog->update([
+                        'payment_res' => json_encode($responsedata),
+                        'payment_status' => 'failed',
+                    ]);
+                    return response()->json(['error' => 'Invalid coin payment'], 400);
+                }
                 $paymentLog->update([
                     'payment_res' => json_encode($responsedata),
                     'payment_status' => 'success',
                 ]);
                 $email = $paymentLog->initiated_by;
                 $amount = $responsedata['value_coin'];
-                $transactionId = $responsedata['txid_in'];
-                try {
-                    DB::beginTransaction();
+                $settings = settings();
+                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                $this->api->Connect(
+                    $settings['mt5_server_ip'],
+                    $settings['mt5_server_port'],
+                    300,
+                    $settings['mt5_server_web_login'],
+                    $settings['mt5_server_web_password']
+                );
 
-                    $walletDeposit=  WalletDeposit::create([
-                        'user_id' => $paymentLog->user_id,
-                        'email' => $email,
-                        'deposit_type' => "CreditCardPayissa",
-                        'deposit_amount' => $amount,
-                        'company_bank' => "CreditCardPayissa",
-                        'transaction_id' => $transactionId,
-                        'status' => 1,
-                        'currency_type' => 'USD',
-                        'callback_data' => json_encode($responsedata),
-                        'callback_code' => "success",
-                    ]);
+                $account = Account::where('id', $paymentLog->account_id)->first();
 
-                    // Update total balance
-                    TotalBalance::create(
-                        ['email' => $email,'user_id'=>$paymentLog->user_id,'deposit_amount' => $amount]
-                    );
+                $comment = 'CreditCardPayissa';
+                $ticket = NULL;
 
-                    DB::commit();
-                    $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
-                    Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
-                    Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
-                    $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
-                    return response()->json(['status' => 'true']);
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
-                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong',
+                        'error' => $error,
+                    ], 400);
+                } else {
+                    try {
+                        DB::beginTransaction();
+
+                        // $walletDeposit=  WalletDeposit::create([
+                        //     'user_id' => $paymentLog->user_id,
+                        //     'email' => $email,
+                        //     'deposit_type' => "CreditCardPayissa",
+                        //     'deposit_amount' => $amount,
+                        //     'company_bank' => "CreditCardPayissa",
+                        //     'transaction_id' => $transactionId,
+                        //     'status' => 1,
+                        //     'currency_type' => 'USD',
+                        //     'callback_data' => json_encode($responsedata),
+                        //     'callback_code' => "success",
+                        // ]);
+
+                        $tradeDeposit = TradeDeposit::create([
+                            'user_id' => $paymentLog->user_id,
+                            'account_id' => $paymentLog->account_id,
+                            'email' => $email,
+                            'code' => $account->code,
+                            'deposit_amount' => $amount,
+                            'deposit_type' => 'CreditCardPayissa',
+                            'deposit_from' => 'CreditCardPayissa',
+                            'status' => 1,
+                            'deposit_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => json_encode($responsedata),
+                            'callback_code' => "success",
+                        ]);
+
+                        // Update total balance
+                        TotalBalance::create(
+                            ['email' => $email, 'user_id' => $paymentLog->user_id, 'deposit_amount' => $amount]
+                        );
+
+                        DB::commit();
+                        $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
+                        Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
+                        Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
+                        // $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
+                        $this->sendSuccessEmail($email, $amount, $paymentLog, $tradeDeposit->id);
+                        return response()->json(['status' => 'true']);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    }
                 }
-                
-                
             }
-            
+
             return ["ok"];
             // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
-        }else{
-            
-                $payment_res = json_encode($request->all());
-                $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
-                if ($status == "success") {
-                    // Get the payment log
-                    if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
-                        // Update payment log
-                        $paymentLog->update([
-                            'payment_res' => $payment_res,
-                            'payment_status' => $status,
-                        ]);
-                        $email = $paymentLog->initiated_by;
-                        $amount = $paymentLog->payment_amount;
-                        // Create a new wallet deposit
-                        $walletDeposit = WalletDeposit::create([
-                            'email' => $email,
-                            'deposit_amount' => $amount,
-                            'deposit_type' => "Now Payment",
-                            'currency_type' => "USD",
-                            'status' => 1,
-                        ]);
+        } else {
 
-                        if ($walletDeposit) {
-                            $this->sendSuccessEmail($email, $amount, $paymentLog,$walletDeposit->id);
-                            $this->subscribeToKlaviyoList($paymentLog->user,$amount,$subscribeToKlaviyoList);
-                            return redirect('/wallet_deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
-                        } else {
-                            return redirect('/wallet_deposit')->with('error', "Something went wrong. Please Try Again");
-                        }
-                    } else {
-                        return redirect('wallet_deposit')->with('error', "Payment already processed or invalid.");
-                    }
-                } else {
-                    // Update payment log for failed payment
+            $payment_res = json_encode($request->all());
+            $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
+            $account = Account::where('id', $paymentLog->account_id)->first();
+
+            if ($status == "success" && $account) {
+                // Get the payment log
+                if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
+                    // Update payment log
                     $paymentLog->update([
                         'payment_res' => $payment_res,
                         'payment_status' => $status,
                     ]);
-                    return redirect('/wallet_deposit')->with('error', "Payment Failed: Something Went Wrong. Please try again");
-                }
+                    $email = $paymentLog->initiated_by;
+                    $amount = $paymentLog->payment_amount;
+                    // Create a new wallet deposit
+                    // $walletDeposit = WalletDeposit::create([
+                    //     'email' => $email,
+                    //     'deposit_amount' => $amount,
+                    //     'deposit_type' => "Now Payment",
+                    //     'currency_type' => "USD",
+                    //     'status' => 1,
+                    // ]);
+                    $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+                    if ($errorCode != MTRetCode::MT_RET_OK) {
+                        $error = MTRetCode::GetError($errorCode);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Something went wrong',
+                            'error' => $error,
+                        ], 400);
+                    } else {
+                        $tradeDeposit = TradeDeposit::create([
+                            'user_id' => $paymentLog->user_id,
+                            'account_id' => $paymentLog->account_id,
+                            'email' => $email,
+                            'code' => $account->code,
+                            'deposit_amount' => $amount,
+                            'deposit_type' => 'CreditCardPayissa',
+                            'deposit_from' => 'CreditCardPayissa',
+                            'status' => 1,
+                            'deposit_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => json_encode($responsedata),
+                            'callback_code' => "success",
+                        ]);
+                    }
 
+                    if ($tradeDeposit) {
+                        $this->sendSuccessEmail($email, $amount, $paymentLog, $tradeDeposit->id);
+                        $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
+                        return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
+                    } else {
+                        return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
+                    }
+                } else {
+                    return redirect('trade-deposit')->with('error', "Payment already processed or invalid.");
+                }
+            } else {
+                // Update payment log for failed payment
+                $paymentLog->update([
+                    'payment_res' => $payment_res,
+                    'payment_status' => $status,
+                ]);
+                return redirect('/trade-deposit')->with('error', "Payment Failed: Something Went Wrong. Please try again");
             }
+        }
     }
     protected function getKlaviyoListId($amount)
     {
@@ -145,24 +263,24 @@ class Payment extends Controller
                 return $list['id'];
             }
         }
-        return null; 
+        return null;
     }
-    protected function subscribeToKlaviyoList(User $user , $amount,SubscribeToKlaviyoList $subscribeToKlaviyoList)
-    {   
+    protected function subscribeToKlaviyoList(User $user, $amount, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
         $listId = $this->getKlaviyoListId($amount);
-        if($listId){
+        if ($listId) {
             $subscribeToKlaviyoList->handle($user, $listId);
         }
     }
 
-    public function sendSuccessEmail($toEmail, $amount, $paymentLog,$lastInsertId)
+    public function sendSuccessEmail($toEmail, $amount, $paymentLog, $lastInsertId)
     {
-        $paymentLog->payment_type = $paymentLog->payment_type=="CreditCardPayissa"?"Credit Card":$paymentLog->payment_type;
+        $paymentLog->payment_type = $paymentLog->payment_type == "CreditCardPayissa" ? "Credit Card" : $paymentLog->payment_type;
         $settings = settings();
         $from = $settings['email_from_address'];
         $transid = "WDID" . $lastInsertId;
         $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
-         $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content = '<div>We are pleased to inform you that your transaction has been successful.</div>
@@ -183,6 +301,32 @@ class Payment extends Controller
             "btn_text" => "Go To Dashboard",
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-
+    }
+    public function notifyAdmin($data)
+    {
+        $settings = settings();
+        $emailSubject = $settings['admin_title'] . ' - Invaid crypto coin used for Payment';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $settings['email_from_address'] . '>' . "\r\n";
+        $content = '<div>Invaid crypto coin used for Payment.</div>
+          <div><b>Transaction Details</b></div>
+          <div><b>Transaction ID: </b>' . $data['txid_in'] . '</div>
+          <div><b>Amount: </b>' . $data['value_coin'] . '</div>
+          <div><b>Address: </b>' . $data['address_in'] . '</div>
+          <div><b>Coin used: </b>' . $data['coin'] . '</div>';
+        $templateVars = [
+            'name' => 'Admin',
+            'site_link' => $settings['copyright_site_name_text'],
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Payment",
+            "subtitle_right" => "Notification",
+            "btn_text" => "Go To Dashboard",
+        ];
+        Mail::send('emails.template', ['templateVars' => $templateVars], function ($message) use ($emailSubject, $headers) {
+            $message->to($settings['admin_email'])->subject($emailSubject);
+            $message->setHeaders($headers);
+        });
     }
 }

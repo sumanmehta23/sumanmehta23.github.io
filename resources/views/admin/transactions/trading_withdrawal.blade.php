@@ -16,6 +16,7 @@
                     <option value="">All</option>
                     <option value="1">Approved</option>
                     <option value="2">Rejected</option>
+                    <option value="3">Cancelled By User</option>
                     <option value="0">Pending</option>
                     <!-- Add other status options as needed -->
                   </select>
@@ -81,15 +82,22 @@
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
+                                                    <th>Withdrawal Fee</th>
                                                     <th>Withdraw Type</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
+                                                    <th>Approve Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
+                                                    <th>Withdraw Fee</th>
+                                                    <th>Total Withdraw</th>
                                                     <th>Date</th>
                                                     <th>Time</th>
+                                                    <th>Email</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -115,36 +123,23 @@
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            //   buttons: [
-            //         {
-            //             extend: 'excel',
-            //             text: 'Export to Excel',
-            //         }
-            //     ],
-
-            // order: [
-            //   [0, "desc"]
-            // ],
-
-            // "ajax": {
-            //   "url": "/admin/ajax",
-            //   "type": "GET",
-            //   data: {
-            //     action: 'getTradingWithdrawal',
-            //   },
-            // },
             buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,1,2,3,5,7,8] // Updated column indices to match your use case
+                            columns: [0,14,3,10,11,5,2,12,13,8] // Updated column indices to match your use case
                         }
                     }
                 ],
 
-            order: [[0, "desc"]],
+            // order: [[0, "desc"]],
+            lengthMenu: [
+                [10, 25, 50, 100, -1], // DataTable options
+                [10, 25, 50, 100, "All"] // User-facing labels
+                ],
+            pageLength: 10,
             processing: true,
             serverSide: true,
             searching: true,
@@ -160,24 +155,22 @@
                 }
             },
             columns: [
+              { data: 'name', name: 'name'},
+              { data: 'email', name: 'email'},
               { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
+              { data: 'transaction_fee', name: 'transaction_fee' },
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_to', name: 'withdraw_to' },
-              {
-                data: 'withdraw_date', name: 'withdraw_date',
-                // render: function (data, type, row) {
-                //   var dateTime = row.withdraw_date.split(' ');
-                //   var date = dateTime[0];
-                //   var time = dateTime[1];
-                //   var return_data = "<div class='d-grid'><div class='date'>" + date + "</div><div class='time text-muted'>" + time + "</div></div>";
-                //   return return_data;
-                // }
-              },
+              { data: 'withdraw_date', name: 'withdraw_date'},
+              { data: 'approve_date', name: 'approve_date'},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },
+              { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
+              { data: 'total_withdrawal', name: 'total_withdrawal', visible: false},
               { data: 'created_date', name: 'created_date',orderable: false, visible: false},
               { data: 'created_time', name: 'created_time',orderable: false, visible: false},
+              { data: 'client_email', name: 'client_email',orderable: false, visible: false},
             ]
           });
 

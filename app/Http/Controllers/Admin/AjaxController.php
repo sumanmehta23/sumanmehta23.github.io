@@ -1218,10 +1218,10 @@ class AjaxController extends Controller
                 })
                 ->addColumn('withdraw_date', function ($row) {
                     // $date = $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    $date = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
 
                     // $time = $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                    $time = $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                     return "<div class='lh-1'>
                                     $date
                                 </div>
@@ -1251,11 +1251,11 @@ class AjaxController extends Controller
                 })
                 ->addColumn('created_date', function ($row) {
                     // return $row->approved_date ? date('Y-m-d', strtotime($row->approved_date)) : date('Y-m-d', strtotime($row->created_at));
-                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d') : Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
                 })
                 ->addColumn('created_time', function ($row) {
                     // return $row->approved_date ? date('H:i:s', strtotime($row->approved_date)) : date('H:i:s', strtotime($row->created_at));
-                    return $row->approved_date ? Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s') : Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
                 ->rawColumns(['email', 'amount', 'fee', 'payment_mode', 'withdraw_date', 'status', 'action'])
                 ->make(true);
@@ -1288,9 +1288,12 @@ class AjaxController extends Controller
         }
 
         if (isset($request->status)) {
-            $query->where('Status', $request->status);
+            $query->where('trade_deposits.status', $request->status);
         }
 
+        if (isset($request->type)) {
+            $query->where('trade_deposits.deposit_type', $request->type);
+        }
 
 
         if ($request->ajax()) {
@@ -1311,6 +1314,14 @@ class AjaxController extends Controller
                         });
                     }
                 })
+
+                ->orderColumn('name', function ($query, $order) {
+                    $query->join('aspnetusers as u', 'u.id', '=', 'trade_deposits.user_id')
+                          ->orderBy('u.fullname', $order)
+                          ->select('trade_deposits.*'); // Ensure columns remain consistent
+                })
+
+
                 ->orderColumn('code', function ($query, $order) {
                     $query->orderBy('trade_deposits.code', $order);
                 })
@@ -1328,6 +1339,26 @@ class AjaxController extends Controller
                 })
                 ->orderColumn('status', function ($query, $order) {
                     $query->orderBy('trade_deposits.status', $order);
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                    <div class='d-flex align-items-center'>
+                                        <div class='me-2'>
+                                            <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                        </div>
+                                        <div>
+                                            <div class='lh-1'><span>{$fullname}</span></div>
+                                            <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                        </div>
+                                    </div>
+                                </a>";
                 })
                 ->addColumn('deposit_type', function ($row) {
                     if ($row->deposit_from) {
@@ -1383,7 +1414,10 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->deposted_date));
                     return Carbon::parse($row->deposted_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action'])
+                ->addColumn('client_email', function ($row) {
+                    return $row->user->email;
+                })
+                ->rawColumns(['name','email','id', 'account_no', 'amount', 'deposit_type', 'deposit_from', 'deposit_date', 'status', 'action','client_email'])
                 ->make(true);
         }
 
@@ -1395,7 +1429,8 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
-            ->with(['user', 'withdrawTo', 'account']);
+                ->with(['user', 'withdrawTo', 'account'])
+                ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
             // if (session('userData')['userRole'] == "Relationship Manager") {
@@ -1410,11 +1445,11 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('account_id', $_GET['id']);
+            $query->where('trade_withdrawal.account_id', $_GET['id']);
         }
 
         if (isset($request->status)) {
-            $query->where('Status', $request->status);
+            $query->where('trade_withdrawal.status', $request->status);
         }
 
         // Fetch data
@@ -1424,15 +1459,46 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             return DataTables::of($query)
 
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_date', $order);
+                })
+
+                ->orderColumn('approve_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.approved_date', $order);
+                })
+
+                ->orderColumn('withdraw_type', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_type', $order);
+                })
+
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.code', $order);
+                })
+
+                ->orderColumn('transaction_fee', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.transaction_fee', $order);
+                })
+
                 ->orderColumn('withdrawal_amount', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.withdrawal_amount', $order);
                 })
+
                 ->orderColumn('status', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.status', $order);
                 })
 
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.email', $order);
+                })
+
+                ->orderColumn('name', function ($query, $order) {
+                    $query->join('aspnetusers as u', 'u.email', '=', 'trade_withdrawal.email')
+                          ->orderBy('u.fullname', $order)
+                          ->select('trade_withdrawal.*'); // Required to avoid column conflicts
+                })
+
                 ->addColumn('code', function ($row) {
-                    return $row->account->code;
+                    return $row->account->code ?? '';
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
@@ -1455,17 +1521,57 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
+                ->addColumn('approve_date', function ($row) {
+                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $date = Carbon::parse($row->approved_date)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->withdraw_date));
+                    $time = Carbon::parse($row->approved_date)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
                     } elseif ($row->status == 2) {
                         return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    } elseif ($row->status == 3) {
+                        return "<div class='badge bg-outline-danger'>Cancelled By User</div>";
                     } else {
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
                 ->addColumn('action', function ($row) {
                     return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('withdrawal_fee', function ($row) {
+                    return $row->transaction_fee;
+                })
+                ->addColumn('total_withdrawal', function ($row) {
+                    return $row->transaction_fee + $row->withdrawal_amount;
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
@@ -1475,7 +1581,10 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
+                ->addColumn('client_email', function ($row) {
+                    return $row->user->email;
+                })
+                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time','client_email'])
                 ->make(true);
         }
 
@@ -1656,7 +1765,27 @@ class AjaxController extends Controller
                                 $time
                             </small>";
                 })
-                ->rawColumns(['date', 'account', 'type', 'amount'])
+                ->addColumn('email', function ($row) {
+                    $email = $row->account->email;
+                    return $email;
+                })
+                ->addColumn('exp_date', function ($row) {
+                    $date = date('Y-m-d', strtotime($row->created_at));
+                    return $date;
+                })
+                ->addColumn('time', function ($row) {
+                    $time = date('H:i:s', strtotime($row->created_at));
+                    return $time;
+                })
+                ->addColumn('exp_account', function ($row) {
+                    $code = $row->account->code;
+                    return $code;
+                })
+                ->addColumn('exp_amount', function ($row) {
+                    $amount = ($row->ib_wallet) ?? ($row->ib_withdraw);
+                    return $amount;
+                })
+                ->rawColumns(['date', 'account', 'type', 'amount','email'])
                 ->make(true);
         }
 
@@ -2183,7 +2312,12 @@ class AjaxController extends Controller
 
     public function getPendingTradingWithdrawal2(Request $request)
     {
-        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account'])->where('status', 0);
+
+        $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])
+                ->where('trade_withdrawal.status', 0)
+                ->where('trade_withdrawal.email_verified', 1)
+                ->where('trade_withdrawal.withdraw_type', 'Trade Withdrawal');
+
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         if (!isset($_GET['id'])) {
@@ -2208,20 +2342,63 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+
+                ->orderColumn('withdraw_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_date', $order);
+                })
+
+                ->orderColumn('withdraw_type', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdraw_type', $order);
+                })
+
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.code', $order);
+                })
+
+                ->orderColumn('transaction_fee', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.transaction_fee', $order);
+                })
+
+                ->orderColumn('withdrawal_amount', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.withdrawal_amount', $order);
+                })
+
+                ->orderColumn('status', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.status', $order);
+                })
+
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.email', $order);
+                })
+
+                ->orderColumn('name', function ($query, $order) {
+                    $query->join('aspnetusers as u', 'u.email', '=', 'trade_withdrawal.email')
+                            ->orderBy('u.fullname', $order)
+                            ->select('trade_withdrawal.*'); // Required to avoid column conflicts
+                })
+
+
                 ->addColumn('account_no', function ($row) {
                     return $row->account->code;
                 })
                 ->addColumn('amount', function ($row) {
+                    // dd($row);
                     return $row->withdrawal_amount;
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
+                ->addColumn('withdraw_from', function ($row) {
+                    // if ($row->withdraw_to) {
+                    //     $acc = Account::where('id', $row->withdraw_to)->first();
+                    // }
+                    return ($row->code);
+                })
                 ->addColumn('withdraw_to', function ($row) {
                     // if ($row->withdraw_to) {
                     //     $acc = Account::where('id', $row->withdraw_to)->first();
                     // }
-                    return ($row->withdraw_to) ? $row->withdraw_to : $row->withdraw_type;
+                    return ($row->withdraw_to) ? $row->withdraw_to : (($row->withdraw_to == null && $row->withdraw_type == 'Trade_Withdrawal') ? $row->clientWallet->wallet_address: $row->withdraw_type);
                 })
                 ->addColumn('withdraw_date', function ($row) {
                     // $date = date('Y-m-d', strtotime($row->withdraw_date));
@@ -2245,7 +2422,34 @@ class AjaxController extends Controller
                     }
                 })
                 ->addColumn('action', function ($row) {
-                    return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                    // return "<a href='/admin/trading_withdrawal_details?id={$row->id}' class=' style='font-size: 13px;padding: 2px 20px;'><i class='fe fe-eye fs-14 text-info'></i></a>";
+                    return "<a class='btn btn-sm btn-primary' href='/admin/trading_withdrawal_details?id={$row->id}'>View</a>";
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('withdrawal_fee', function ($row) {
+                    return $row->transaction_fee;
+                })
+                ->addColumn('total_withdrawal', function ($row) {
+                    return ($row->transaction_fee + $row->withdrawal_amount);
                 })
                 ->addColumn('created_date', function ($row) {
                     // return date('Y-m-d', strtotime($row->withdraw_date));
@@ -2255,7 +2459,10 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->withdraw_date));
                     return Carbon::parse($row->withdraw_date)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action'])
+                ->addColumn('client_email', function ($row) {
+                    return $row->user->email;
+                })
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_fee','total_withdrawal','client_email'])
                 ->make(true);
         }
 
@@ -2692,44 +2899,72 @@ class AjaxController extends Controller
     public function getLatestDeposit($id)
     {
         header('Content-Type: application/json');
-        $sql = "SELECT * from wallet_deposit where user_id='" . $id . "' AND deposit_type NOT IN ('Internal Transfer', 'CRM', 'Wallet Transfer') order by id desc";
-        $query = DB::select($sql);
-        $results = $query;
-        $data = [];
-        foreach ($results as $row) {
 
-            $data[] = [
+        // Get wallet deposits
+        $walletDeposits = WalletDeposit::where('user_id', $id)
+            ->whereNotIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer'])
+            ->get();
+
+        // Get trade deposits
+        $tradeDeposits = TradeDeposit::where('user_id', $id)
+            ->whereNotIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer', 'Commission Transfer'])
+            ->get();
+
+        // Merge both collections and sort by id descending
+        $results = $walletDeposits->merge($tradeDeposits)
+            ->sortByDesc('id')
+            ->values(); // reset the keys
+
+        // Prepare the data array
+        $data = $results->map(function ($row) {
+            return [
                 'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->deposit_type,
                 'amount' => '$' . $row->deposit_amount,
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'),
+                'status' => match ($row->status) {
+                    1 => '<div class="badge bg-outline-success">Approved</div>',
+                    2 => '<span class="badge bg-outline-danger">Rejected</span>',
+                    default => '<span class="badge bg-outline-primary">Pending</span>',
+                },
             ];
-        }
+        });
 
         return ['data' => $data];
     }
+
     public function getLatestWithdrawal($id)
     {
         // header('Content-Type: application/json');
         // $sql = "SELECT * from trade_withdrawal where email='" . $id . "' AND withdraw_type != 'Internal Transfer' order by id desc";
         // $query = DB::select($sql);
-        $query = WalletWithdraw::with('user')
+        $WalletWithdraw = WalletWithdraw::with('user')
             ->where('user_id', $id)
             ->where('withdraw_type', ['Wallet Withdrawal'])
             ->orderBy('withdraw_date', 'desc')
             ->get();
 
-        $results = $query;
+        $TradeWithdrawals = TradeWithdrawals::with('user')
+            ->where('user_id', $id)
+            ->where('withdraw_type', ['Trade Withdrawal'])
+            ->orderBy('withdraw_date', 'desc')
+            ->get();
+
+        $results = $WalletWithdraw->merge($TradeWithdrawals)
+                ->sortByDesc('id')
+                ->values(); // reset the keys
         $data = [];
         foreach ($results as $row) {
+            // dd($row);
+            $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
+            $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
+
             $data[] = [
-                'created_on' =>  Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
-                'from_to' => 'Wallet',
+                'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
+                'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => $row->withdraw_type,
-                'amount' => '$' . $row->withdraw_amount,
-                'fee' => '$' . $row->withdraw_transaction_fee,
+                'amount' => '$' . number_format((float)$amount, 2),
+                'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')
             ];
@@ -2805,7 +3040,7 @@ class AjaxController extends Controller
                             $q->where('id', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
                                 ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
@@ -3485,8 +3720,13 @@ class AjaxController extends Controller
                         return "<span class='badge btn bg-info'>Not Verified</span>";
                     }
                 })
-
-                ->rawColumns(['email', 'profile_status'])
+                ->editColumn('client_name', function ($row) {
+                    return $row->fullname;
+                })
+                ->editColumn('client_email', function ($row) {
+                    return $row->email;
+                })
+                ->rawColumns(['email', 'profile_status', 'client_name', 'client_email'])
                 ->make(true);
         }
     }

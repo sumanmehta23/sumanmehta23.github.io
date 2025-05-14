@@ -172,6 +172,7 @@
                                 <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
                               </div>
                               <div class="ms-2">
+                                <h6 class="mb-0">{{ $history->code ?? '' }}</h6>
                                 <h6 class="mb-0">{{ $history->id }}</h6>
                                 <p class="mb-0 text-muted"><small>Live Account</small></p>
                               </div>
@@ -187,21 +188,22 @@
                             <h6 class="f-w-500">{{ $history->withdraw_type }}</h6>
                           </td>
                           <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount, 2) }}</h6>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_amount ?? $history->withdrawal_amount, 2) }}</h6>
                           </td>
                           <td>
-                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee, 2) }}</h6>
+                            <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
                           </td>
                           {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
-                            <p>{{ $history->status == 0 ? ($history->verified == 0 ? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+
+                            <p>{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
 
                             <p class="text-success">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
 
                             <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?
                             htmlspecialchars(isset($history->payout_req) ? $history->admin_remark : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
 
-                            @if(($history->verified == 0) && ($history->status == 0))
+                            @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
                                 <a  href="#"
                                     class="btn btn-sm btn-outline-primary primary-btn"
                                     onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')"

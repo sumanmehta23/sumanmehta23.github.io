@@ -55,6 +55,7 @@ use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\ClientTaskController;
 use function PHPUnit\Framework\throwException;
 use Laravel\Telescope\Telescope;
+
 Route::get('/telescope-test', function () {
     Log::info('🛠 Telescope test route hit.');
 
@@ -79,8 +80,8 @@ Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 });
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
-    $settings=settings();
-    $htmlContent ="<p>hello , please check your acount for more details</p>";
+    $settings = settings();
+    $htmlContent = "<p>hello , please check your acount for more details</p>";
     $payload = [
         'sender' => [
             'name' => $settings['sender_name'],
@@ -186,6 +187,7 @@ Route::post('/forgot-password', [LoginController::class, 'sendResetLink']);
 Route::get('/register', [LoginController::class, 'register'])->name('register');
 
 Route::get('register/ref', function () {
+
     // Get the 'refercode' from the query string
     $refercode = request()->query('refercode');
 
@@ -219,7 +221,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');
     Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
 
-    Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
+    // Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
     Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
 
@@ -282,8 +284,17 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
+    Route::post('/new_trade_deposit', [TradeDepositController::class, 'new_trade_deposit'])->name('new_trade_deposit_store');
+
+    Route::get('/sync_amount', [TradeDepositController::class, 'sync_amount']);
+
+    Route::get('/trade_deposit_manually/{user_id}/{amount}/{account}', [TradeDepositController::class, 'deposit_manually'])->name('trade_deposit_manually');
+
+    Route::get('/transaction_deposit_manually/{trx_id}/{amount}/{account_code}/{deposit_type}', [Wallet::class, 'transaction_deposit_manually']);
+
     Route::get('/trade-withdrawal', [TradeWithdrawal::class, 'index'])->name('trade-withdrawal');
     Route::post('/trade-withdrawal', [TradeWithdrawal::class, 'withdraw'])->name('trade-withdrawal_store');
+    Route::get('/account_withdrawal_verify', [TradeWithdrawal::class, 'account_withdrawal_verify'])->name('account_withdrawal_verify');
     Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 });
@@ -426,6 +437,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/trading_withdrawal_details', [Transaction::class, 'trading_withdrawal_details']);
         Route::post('/trading_withdrawal_details', [Transaction::class, 'update_trading_withdrawal']);
         Route::post('/update_wallet_withdraw_amount', [Transaction::class, 'walletWithdrawalAmountUpdate'])->name('update_wallet_withdraw_amount');
+        Route::post('/update_trade_account_withdraw_amount', [Transaction::class, 'tradeAccountWithdrawalAmountUpdate'])->name('update_trade_account_withdraw_amount');
 
         Route::prefix('/clientAccounts')->group(function () {
             Route::get("/liveAccounts", [ClientAccController::class, 'live_accounts'])->name('liveAccounts')->middleware('check.permissions:account:viewLiveAccounts');
@@ -433,6 +445,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get("/requestedAccounts", [ClientAccController::class, 'requested_accounts'])->name('requestedAccounts')->middleware('check.permissions:account:viewRequestedAccounts');
             Route::post("/deleteAccounts", [MT5Accounts::class, 'deleteAccounts'])->name('deleteAccounts')->middleware('check.permissions:account:viewLiveAccounts');
             Route::post('/activate_account', [MT5Accounts::class, 'activateAccount'])->name('activate_account');
+            Route::post('/bulk_activate_account', [MT5Accounts::class, 'bulkActivateAccount'])->name('bulk_activate_account');
         });
 
         Route::prefix('/ui_settings')->group(function () {
