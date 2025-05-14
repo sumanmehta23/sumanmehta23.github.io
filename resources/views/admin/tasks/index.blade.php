@@ -131,6 +131,7 @@
                                             <th>Task Name</th>
                                             <th>Expiration Date</th>
                                             <th>Status</th>
+                                            <th>Points</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -183,6 +184,7 @@
                     { data: 'name', name: 'name' },
                     { data: 'expiration_date', name: 'expiration_date' },
                     { data: 'status', name: 'status' },
+                    { data: 'points', name: 'points' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                 ]
             });
@@ -224,13 +226,8 @@
                 $('#editTaskPoints').val(data.points);
                 $('#editTaskStatus').val(data.status);
                 $('#editExpirationDate').val(new Date(data.expiration_date).toISOString().slice(0, 16));
-
                 $('#editTaskModal').modal('show');
             });
-
-
-            $('#editTaskForm').attr('action', '/admin/tasks/' + data.id);
-
         });
     </script>
 @endsection

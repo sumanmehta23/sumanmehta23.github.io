@@ -58,4 +58,23 @@ class TaskController extends Controller
 
         return redirect()->route('admin.tasks.index')->with('success', 'Task deleted successfully.');
     }
+
+    public function uploadScreenshot(Request $request)
+    {
+        dd($request->all());
+        $request->validate([
+            'screenshot' => 'required|image|max:2048',
+            'task_id' => 'required|exists:tasks,id',
+        ]);
+
+        $task = Task::findOrFail($request->task_id);
+
+        $path = $request->file('screenshot')->store('task_screenshots', 'public');
+
+        $task->screenshot = $path;
+        $task->save();
+
+        return response()->json(['message' => 'Screenshot uploaded!', 'path' => $path]);
+    }
+
 }

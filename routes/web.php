@@ -241,6 +241,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/tasks', [ClientTaskController::class, 'index'])->name('tasks');
 
+    Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
+
+
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
     Route::get('/ticket_details', [Tickets::class, 'showDetails'])->name('ticket_details');
