@@ -63,7 +63,7 @@
         display: flex;
         align-items: center;
         margin-bottom: 2px;
-        margin-right: 50px;
+        margin-right: 10px;
         justify-content: flex-end;
     }
 
@@ -80,7 +80,7 @@
         font-weight: bold;
         display: flex;
         align-items: center;
-        margin-right: 16px;
+        margin-right: 10px;
         cursor: pointer;
     }
 
@@ -99,7 +99,7 @@
         align-items: center;
         cursor: not-allowed;
         margin-top: -20px;
-        margin-right: 50px;
+        margin-right: 10px;
     }
 
     .complete-btn i {
@@ -133,7 +133,7 @@
               <div class="card">
                 <div class="pb-0 card-body border-bottom">
                   <div class="pt-2">
-                    <h5 class="mb-0">All Transactions</h5>
+                    <h5 class="mb-0">All Tasks</h5>
                         <div class="p-4">
                             @foreach ($tasks as $task)
                                 <div class="task-card">
@@ -152,15 +152,15 @@
                                             </span>
                                         </div>
                                         <div class="d-flex align-items-center">
-                                            <div class="me-3 pt-2">
+                                            <div class="pt-2">
                                                 <button class="upload-btn">
-                                                    <i class="fas fa-upload"></i> Upload Screenshot
+                                                    Upload Screenshot
                                                 </button>
                                                 <small>Max file size: 2MB</small>
                                             </div>
                                             <div class="pt-2">
                                                 <button class="complete-btn" disabled>
-                                                    <i class="fas fa-check"></i> Complete Task
+                                                    Complete Task
                                                 </button>
                                             </div>
                                         </div>

@@ -30,6 +30,10 @@
                             <textarea class="form-control" id="taskDescription" name="description" rows="3" required></textarea>
                         </div>
                         <div class="mb-3">
+                            <label for="taskPoints" class="form-label">Task Points</label>
+                            <input type="number" class="form-control" id="taskPoints" name="points" required>
+                        </div>
+                        <div class="mb-3">
                             <label for="taskStatus" class="form-label">Task Status</label>
                             <select class="form-control" id="taskStatus" name="status" required>
                                 <option value="1">Active</option>
