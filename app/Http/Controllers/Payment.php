@@ -46,7 +46,9 @@ class Payment extends Controller
         if (!empty($address_in)) {
 
             Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
-            if (!in_array($responsedata['coin'], ['polygon_usdt', 'polygon_usdc'])) {
+
+            if (stripos($responsedata['coin'], 'usdt') === false && stripos($responsedata['coin'], 'usdc') === false) {
+
                 try {
                     $this->notifyAdmin($responsedata);
                 } catch (\Throwable $th) {
