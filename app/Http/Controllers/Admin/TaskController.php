@@ -30,28 +30,27 @@ class TaskController extends Controller
             'status' => 'required|boolean',
             'expiration_date' => 'required|date'
         ]);
-        Task::create($request->only('name', 'title', 'description', 'status', 'expiration_date'));
+        Task::create($request->only('name', 'title', 'description', 'status', 'expiration_date','points'));
 
         return redirect()->route('admin.tasks.index')->with('success', 'Task created successfully.');
     }
 
-    public function edit(Task $task): View
-    {
-        return view('admin.tasks.edit', compact('task'));
-    }
-
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, Task $task)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'expiration_date' => 'required|date',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'points' => 'required|integer',
             'status' => 'required|boolean',
+            'expiration_date' => 'required|date'
         ]);
 
-        $task->update($request->only('name', 'expiration_date', 'status'));
+        $task->update($request->only('name', 'title', 'description', 'points', 'status', 'expiration_date'));
 
         return redirect()->route('admin.tasks.index')->with('success', 'Task updated successfully.');
     }
+
 
     public function destroy(Task $task): RedirectResponse
     {

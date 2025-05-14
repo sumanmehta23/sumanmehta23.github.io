@@ -54,6 +54,58 @@
         </div>
     </div>
 
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="editTaskModalLabel">Edit Task</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editTaskForm" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="editTaskId" name="id">
+                    <div class="modal-body">
+                        <input type="hidden" id="editTaskId" name="id">
+                        <div class="mb-3">
+                            <label for="editTaskName" class="form-label">Task Name</label>
+                            <input type="text" class="form-control" id="editTaskName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskTitle" class="form-label">Task Title</label>
+                            <input type="text" class="form-control" id="editTaskTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskDescription" class="form-label">Task Description</label>
+                            <textarea class="form-control" id="editTaskDescription" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskPoints" class="form-label">Task Points</label>
+                            <input type="number" class="form-control" id="editTaskPoints" name="points" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskStatus" class="form-label">Task Status</label>
+                            <select class="form-control" id="editTaskStatus" name="status" required>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editExpirationDate" class="form-label">Expiration Date</label>
+                            <input type="datetime-local" class="form-control" id="editExpirationDate" name="expiration_date" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <div class="main-content app-content">
         <div class="container-fluid">
             <div class="page-header">
@@ -160,6 +212,25 @@
                     }
                 });
             });
+
+            $('#tableTasks').on('click', '.editTaskBtn', function () {
+                var data = $('#tableTasks').DataTable().row($(this).closest("tr")).data();
+
+                $('#editTaskForm').attr('action', '/admin/tasks/' + data.id); // dynamically set correct route
+                $('#editTaskId').val(data.id);
+                $('#editTaskName').val(data.name);
+                $('#editTaskTitle').val(data.title);
+                $('#editTaskDescription').val(data.description);
+                $('#editTaskPoints').val(data.points);
+                $('#editTaskStatus').val(data.status);
+                $('#editExpirationDate').val(new Date(data.expiration_date).toISOString().slice(0, 16));
+
+                $('#editTaskModal').modal('show');
+            });
+
+
+            $('#editTaskForm').attr('action', '/admin/tasks/' + data.id);
+
         });
     </script>
 @endsection

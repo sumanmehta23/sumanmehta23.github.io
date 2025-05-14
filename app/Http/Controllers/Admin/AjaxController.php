@@ -3842,11 +3842,19 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             return DataTables::of($tasks)
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('admin.tasks.edit', $row->id) . '">
+                    return '<a href="javascript:void(0)"
+                                class="editTaskBtn"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->name.'"
+                                data-title="'.$row->title.'"
+                                data-description="'.$row->description.'"
+                                data-points="'.$row->points.'"
+                                data-status="'.$row->status.'"
+                                data-expiration_date="'.$row->expiration_date.'">
                                 <span class="badge text-secondary" data-bs-toggle="tooltip" title="Edit">
                                     <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
                                 </span>
-                              </a>
+                            </a>
 
 
                                 <button type="submit" data-bs-toggle="tooltip" class="deleteTask btn btn-link p-0">
