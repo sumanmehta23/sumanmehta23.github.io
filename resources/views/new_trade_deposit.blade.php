@@ -117,7 +117,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                         {{-- <div class="col-6 col-lg-6 col-xl-6">
+                                                         <div class="col-6 col-lg-6 col-xl-6">
                                                             <div
                                                                 class="border rounded address-check trade-deposit-type">
                                                                 <div class="form-check">
@@ -143,7 +143,7 @@
                                                                     </label>
                                                                 </div>
                                                             </div>
-                                                        </div> --}}
+                                                        </div>
                                                     </div>
                                                     <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                     <div class="CryptoChill trade-deposit-details">
