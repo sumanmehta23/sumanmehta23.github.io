@@ -44,7 +44,17 @@ class Payment extends Controller
         $responsedata = $request->all();
         $transactionId = $responsedata['txid_in'];
         if (!empty($address_in)) {
+
             Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
+            if (!in_array($responsedata['coin'], ['polygon_usdt', 'polygon_usdc'])) {
+                try {
+                    $this->notifyAdmin($responsedata);
+                } catch (\Throwable $th) {
+                    Log::channel("creditcardpayissa")->error('Error notifying admin: ' . $th->getMessage());
+                }
+
+                return response()->json(['error' => 'This crypto currency not allowed'], 400);
+            }
             $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
             if (!$paymentLog) {
                 return response()->json(['error' => 'Invalid Payment ID'], 400);
@@ -291,5 +301,32 @@ class Payment extends Controller
             "btn_text" => "Go To Dashboard",
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+    }
+    public function notifyAdmin($data)
+    {
+        $settings = settings();
+        $emailSubject = $settings['admin_title'] . ' - Invaid crypto coin used for Payment';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $settings['email_from_address'] . '>' . "\r\n";
+        $content = '<div>Invaid crypto coin used for Payment.</div>
+          <div><b>Transaction Details</b></div>
+          <div><b>Transaction ID: </b>' . $data['txid_in'] . '</div>
+          <div><b>Amount: </b>' . $data['value_coin'] . '</div>
+          <div><b>Address: </b>' . $data['address_in'] . '</div>
+          <div><b>Coin used: </b>' . $data['coin'] . '</div>';
+        $templateVars = [
+            'name' => 'Admin',
+            'site_link' => $settings['copyright_site_name_text'],
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Payment",
+            "subtitle_right" => "Notification",
+            "btn_text" => "Go To Dashboard",
+        ];
+        Mail::send('emails.template', ['templateVars' => $templateVars], function ($message) use ($emailSubject, $headers) {
+            $message->to($settings['admin_email'])->subject($emailSubject);
+            $message->setHeaders($headers);
+        });
     }
 }
