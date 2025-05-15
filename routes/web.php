@@ -337,6 +337,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
     Route::get('/getTasks', [AjaxController::class, 'getTasks']);
+    Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
 
     //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
@@ -508,7 +509,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/store', [TaskController::class, 'store'])->name('store');
             Route::put('/edit', [TaskController::class, 'edit'])->name('edit');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');
-
+            // Route::put('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
+            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');
             Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
         });

@@ -6,20 +6,23 @@ use DB;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\ClientTask;
 use App\Models\Permission;
+use App\Models\RestrictIps;
 use App\Models\EmployeeList;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -27,8 +30,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Models\RestrictIps;
-use App\Models\Task;
 
 class AjaxController extends Controller
 {
@@ -3871,6 +3872,82 @@ class AjaxController extends Controller
                                 </button>';
                 })
                 ->rawColumns(['name', 'expiration_date', 'status','action'])
+                ->make(true);
+        }
+    }
+
+    public function getClientTasks(Request $request)
+    {
+        $tasks = ClientTask::with('user','task')->where('client_verification', 1);
+        if ($request->ajax()) {
+            return DataTables::of($tasks)
+
+                ->addColumn('created_at', function ($row) {
+
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : '';
+                    $email = $row->user ? $row->user->email : '';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                    <div class='d-flex align-items-center'>
+                                        <div class='me-2'>
+                                            <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                        </div>
+                                        <div>
+                                            <div class='lh-1'><span>{$fullname}</span></div>
+                                            <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                        </div>
+                                    </div>
+                                </a>";
+                })
+                ->addColumn('task_name', function ($row) {
+                    return "<span>{$row->task->name}</span>" ;
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    } elseif ($row->status == 2) {
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    } else {
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('points', function ($row) {
+                    return "<span>{$row->task->points}</span>" ;
+                })
+                ->addColumn('action', function ($row) {
+                    if($row->status == 0) {
+                        return "<button class='taskToggle badge bg-outline-primary'>Pending</button>";
+                    }
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->user
+                    ? ($row->user->fullname)
+                    : '';
+                })
+                ->addColumn('client_email', function ($row) {
+                    return $row->user ? $row->user->email : '';
+                })
+                ->addColumn('date', function ($row) {
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    return $date;
+                })
+                ->addColumn('time', function ($row) {
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return $time;
+                })
+
+                ->rawColumns(['created_at', 'email', 'task_name','status','points','action','name','client_email','date','time'])
                 ->make(true);
         }
     }

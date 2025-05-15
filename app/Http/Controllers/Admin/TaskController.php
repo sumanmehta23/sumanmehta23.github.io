@@ -97,5 +97,48 @@ class TaskController extends Controller
         ]);
     }
 
+    public function approve_reject(Request $request)
+    {
+        // Validate the request first (optional but recommended)
+        $request->validate([
+            'client_id' => 'required',  // adjust table name if needed
+            'task_id' => 'required', // adjust table name
+            'request_status' => 'required', // Assuming 1 = Approve, 2 = Reject
+        ]);
+
+        // Extract values
+        $clientId = $request->input('client_id');
+        $taskId = $request->input('task_id');
+        $status = $request->input('request_status');
+
+        // Update the task status
+        $task = ClientTask::findOrFail($taskId);
+
+        // Update its status
+        $task->status = $status;
+        $task->save();
+
+        // Now $task is the updated model instance
+        // dd($task);
+        // if($task->status==1){
+        //     if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+        //         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+        //     } else {
+        //         $deposit_details = BonusTransaction::create([
+        //             'email' => $email,
+        //             'user_id' => $user->id,
+        //             'account_id' => $account->id,
+        //             'code' => $code,
+        //             'bonus_amount' => $amount,
+        //             'bonus_type' => $deposit_type,
+        //             'status' => 1,
+        //             'admin_remark' => $comment,
+        //             'bonus_currency' => $deposit_currency
+        //         ]);
+        // }
+
+        // Optional: Add a success flash message
+        return redirect()->back()->with('success', 'Task status updated successfully.');
+    }
 
 }

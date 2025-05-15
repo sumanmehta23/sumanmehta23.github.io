@@ -7,104 +7,6 @@
             opacity: 0.6;
         }
     </style>
-    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="addTaskModalLabel">Add Task</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ route('admin.tasks.store') }}">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="taskName" class="form-label">Task Name</label>
-                            <input type="text" class="form-control" id="taskName" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="taskTitle" class="form-label">Task Title</label>
-                            <input type="text" class="form-control" id="taskTitle" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="taskDescription" class="form-label">Task Description</label>
-                            <textarea class="form-control" id="taskDescription" name="description" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="taskPoints" class="form-label">Task Points</label>
-                            <input type="number" class="form-control" id="taskPoints" name="points" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="taskStatus" class="form-label">Task Status</label>
-                            <select class="form-control" id="taskStatus" name="status" required>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="expirationDate" class="form-label">Expiration Date</label>
-                            <input type="datetime-local" class="form-control" id="expirationDate" name="expiration_date" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Task Modal -->
-    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="editTaskModalLabel">Edit Task</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="editTaskForm" method="POST" action="">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" id="editTaskId" name="id">
-                    <div class="modal-body">
-                        <input type="hidden" id="editTaskId" name="id">
-                        <div class="mb-3">
-                            <label for="editTaskName" class="form-label">Task Name</label>
-                            <input type="text" class="form-control" id="editTaskName" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskTitle" class="form-label">Task Title</label>
-                            <input type="text" class="form-control" id="editTaskTitle" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskDescription" class="form-label">Task Description</label>
-                            <textarea class="form-control" id="editTaskDescription" name="description" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskPoints" class="form-label">Task Points</label>
-                            <input type="number" class="form-control" id="editTaskPoints" name="points" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskStatus" class="form-label">Task Status</label>
-                            <select class="form-control" id="editTaskStatus" name="status" required>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editExpirationDate" class="form-label">Expiration Date</label>
-                            <input type="datetime-local" class="form-control" id="editExpirationDate" name="expiration_date" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Update</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -115,24 +17,24 @@
                     <li class="breadcrumb-item active" aria-current="page">Client Tasks</li>
                 </ol>
             </div>
-            {{-- <div class="mb-3 d-flex justify-content-end">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                    Add New Task
-                </button>
-            </div> --}}
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="tableTasks" class="table table-bordered text-nowrap w-100">
+                                <table id="tableTasks" class="table tableTasks table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
+                                            <th>Completed On</th>
+                                            <th>Name/Email</th>
                                             <th>Task Name</th>
-                                            <th>Expiration Date</th>
                                             <th>Status</th>
                                             <th>Points</th>
                                             <th>Actions</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -146,31 +48,86 @@
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
+    <div class="modal fade" id="clientTasksUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="clientTasksUpdatemodalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                {{-- <form action="{{ route('admin.tasks.approve_reject') }}" id="ClientTasksRequestForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="client_id" id="client_id" value="">
+                    <input type="hidden" name="task_id" id="task_id" value=""> --}}
+                <form action="{{ route('admin.tasks.approve_reject') }}" id="ClientTasksRequestForm" method="POST">
+                    @csrf
+                    <input type="hidden" name="client_id" id="client_id" value="">
+                    <input type="hidden" name="task_id" id="task_id" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="clientTasksUpdatemodalLabel">Client Tasks Request Management</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="mb-0 modal-body custom-card card">
+                        <div class="d-flex align-items-center card-header w-100">
+                        <div class="me-2">
+                            <span class="avatar avatar-rounded">
+                            <img src="/admin_assets/assets/images/users/user.png" alt="img">
+                            </span>
+                        </div>
+                        <div class="">
+                            <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
+                            <p class="text-muted f-12" id="clientEmail"></p>
+                        </div>
 
-            var tableTasks = $('#tableTasks').DataTable({
+                        </div>
+                        <div class="card-body">
+                        <div class="mb-3 row">
+                            <div class="m-auto col-lg-4">
+                            <label class="form-label">Client Task Request Status</label>
+                            </div>
+                            <div class="col-lg-8">
+                            <select class="form-select" required name="request_status" aria-label="Default select example">
+                                <option selected>--Status--</option>
+                                <option value="1">Approve</option>
+                                <option value="2">Reject</option>
+                            </select>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="accountRequest" value="update" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var tableTasks;
+        var myModal;
+
+        $(document).ready(function () {
+            tableTasks = $('#tableTasks').DataTable({
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
                     {
                         extend: 'excel',
                         text: 'Export to Excel',
-                        filename: 'Tasks_' + new Date().toISOString().slice(0, 10),
+                        filename: 'Client_Tasks_Status' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0, 1, 2, 3] // Adjust column indices as needed
+                            columns: [6,7,2,3,4,8,9],
                         }
                     }
                 ],
                 lengthMenu: [
-                    [10, 25, 50, 100, -1], // DataTable options
-                    [10, 25, 50, 100, "All"] // User-facing labels
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
                 ],
                 pageLength: 10,
                 processing: true,
                 serverSide: true,
                 searching: true,
                 ajax: {
-                    url: '/admin/getTasks',
+                    url: '/admin/getClientTasks',
                     type: 'GET',
                     data: function(d) {
                         d.action = 'getTasks';
@@ -181,53 +138,32 @@
                     }
                 },
                 columns: [
-                    { data: 'name', name: 'name' },
-                    { data: 'expiration_date', name: 'expiration_date' },
+                    { data: 'created_at', name: 'created_at' },
+                    { data: 'email', name: 'email' },
+                    { data: 'task_name', name: 'task_name' },
                     { data: 'status', name: 'status' },
                     { data: 'points', name: 'points' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
+                    { data: 'name', name: 'name',visible: false },
+                    { data: 'client_email', name: 'client_email', visible: false },
+                    { data: 'date', name: 'date', visible: false },
+                    { data: 'time', name: 'time', visible: false }
                 ]
             });
 
-            // Add delete confirmation popup
-            $('#tableTasks').on('click', '.deleteTask', function () {
-                var data = tableTasks.row($(this).closest("tr")).data();
+            myModal = new bootstrap.Modal(document.getElementById('clientTasksUpdatemodal'));
+        });
 
-                Swal.fire({
-                    title: `Are you sure you want to delete the task "${data.name}"?`,
-                    html: `
-                        <form id="delete_task_form" method="post" action="/admin/tasks/${data.id}">
-                            @csrf
-                            @method('DELETE')
-                        </form>
-                    `,
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
-                    preConfirm: () => {
-                        return true;
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.querySelector('#delete_task_form').submit();
-                    }
-                });
-            });
-
-            $('#tableTasks').on('click', '.editTaskBtn', function () {
-                var data = $('#tableTasks').DataTable().row($(this).closest("tr")).data();
-
-                $('#editTaskForm').attr('action', '/admin/tasks/' + data.id); // dynamically set correct route
-                $('#editTaskId').val(data.id);
-                $('#editTaskName').val(data.name);
-                $('#editTaskTitle').val(data.title);
-                $('#editTaskDescription').val(data.description);
-                $('#editTaskPoints').val(data.points);
-                $('#editTaskStatus').val(data.status);
-                $('#editExpirationDate').val(new Date(data.expiration_date).toISOString().slice(0, 16));
-                $('#editTaskModal').modal('show');
-            });
+        $('#tableTasks').on('click', '.taskToggle', function () {
+            var data = tableTasks.row($(this).closest("tr")).data();
+            console.log(data); // ✅ Should now print to console
+            // Populate modal with task/user data if needed
+            $("#clientName").html(data.user?.fullname || "No name");
+            $("#clientEmail").html(data.user?.email || "No email");
+            $("#client_id").val(data.user_id);
+            $("#task_id").val(data.id);
+            myModal.show();
         });
     </script>
+
 @endsection
