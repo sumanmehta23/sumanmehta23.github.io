@@ -240,6 +240,7 @@ Route::middleware(['auth'])->group(function () {
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
     Route::get('/tasks', [ClientTaskController::class, 'index'])->name('tasks');
+    Route::post('/task/client_verify', [ClientTaskController::class, 'client_verify'])->name('task.client_verify');
 
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
@@ -503,7 +504,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         // Tasks Section
         Route::prefix('/tasks')->name('tasks.')->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('index');
-            Route::get('/create', [TaskController::class, 'create'])->name('create');
+            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks');
             Route::post('/store', [TaskController::class, 'store'])->name('store');
             Route::put('/edit', [TaskController::class, 'edit'])->name('edit');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');

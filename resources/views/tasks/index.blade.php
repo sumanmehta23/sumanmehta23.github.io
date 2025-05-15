@@ -88,6 +88,10 @@
         margin-right: 8px;
     }
 
+    .upload-btn[disabled] {
+        cursor: not-allowed;
+    }
+
     .complete-btn {
         background-color: #6c757d;
         color: #fff;
@@ -97,9 +101,13 @@
         font-weight: bold;
         display: flex;
         align-items: center;
-        cursor: not-allowed;
         margin-top: -20px;
         margin-right: 10px;
+        cursor: not-allowed;
+    }
+
+    .complete-btn[enabled] {
+        cursor: pointer;
     }
 
     .complete-btn i {
@@ -135,41 +143,11 @@
                   <div class="pt-2">
                     <h5 class="mb-0">All Tasks</h5>
                         <div class="p-4">
-                            {{-- @foreach ($tasks as $task)
-                                <div class="task-card">
-                                    <div class="task-header">
-                                        <img src="/admin_assets/assets/images/users/user.png" alt="task" class="avatar-rounded">
-                                        <div>
-                                            <span>{{ $task->name }}</span>
-                                            <div>Available until: {{ $task->expiration_date }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex flex-column align-items-end ms-auto">
-                                        <div class="pt-2">
-                                            <span class="points">
-                                                <i class="ti ti-database-import f-18"></i>
-                                                {{ $task->points }} Points
-                                            </span>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <div class="pt-2">
-                                                <button class="upload-btn">
-                                                    Upload Screenshot
-                                                </button>
-                                                <input type="file" id="profile_picture_input" style="display: none;"
-                                            accept="image/*">
-                                                <small>Max file size: 2MB</small>
-                                            </div>
-                                            <div class="pt-2">
-                                                <button class="complete-btn" disabled>
-                                                    Complete Task
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach --}}
                             @foreach ($tasks as $task)
+                                @php
+                                    $isUploaded = \DB::table('client_tasks')->where('task_id', $task->id)->whereNotNull('image_path')->exists();
+                                    $isSubmitted = \DB::table('client_tasks')->where('task_id', $task->id)->where('client_verification', 1)->whereNotNull('image_path')->exists();
+                                @endphp
                                 <div class="task-card" data-task-id="{{ $task->id }}">
                                     <div class="task-header">
                                         <img src="/admin_assets/assets/images/users/user.png" alt="task" class="avatar-rounded">
@@ -178,36 +156,44 @@
                                             <div>Available until: {{ $task->expiration_date }}</div>
                                         </div>
                                     </div>
-                                    <div class="d-flex flex-column align-items-end ms-auto">
-                                        <div class="pt-2">
-                                            <span class="points">
-                                                <i class="ti ti-database-import f-18"></i>
-                                                {{ $task->points }} Points
-                                            </span>
-                                        </div>
-                                        <div class="d-flex align-items-center">
+                                    @if (!$isSubmitted)
+                                        <div class="d-flex flex-column align-items-end ms-auto tasks">
                                             <div class="pt-2">
-                                                <button class="upload-btn" data-task-id="{{ $task->id }}">
-                                                    Upload Screenshot
-                                                </button>
-                                                <input type="file"
-                                                    id="screenshot_input_{{ $task->id }}"
-                                                    class="screenshot-input"
-                                                    data-task-id="{{ $task->id }}"
-                                                    style="display: none;"
-                                                    accept="image/*">
-                                                <small>Max file size: 2MB</small>
+                                                <span class="points">
+                                                    <i class="ti ti-database-import f-18"></i>
+                                                    {{ $task->points }} Points
+                                                </span>
                                             </div>
-                                            <div class="pt-2">
-                                                <button class="complete-btn" disabled>
-                                                    Complete Task
-                                                </button>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pt-2">
+                                                    <button class="upload-btn" data-task-id="{{ $task->id }}" style="background-color: {{ $isUploaded ? '#6c757d' : '#003e40' }};" {{ $isUploaded ? 'disabled' : '' }}>
+                                                        Upload Screenshot
+                                                    </button>
+                                                    <input type="file"
+                                                        id="screenshot_input_{{ $task->id }}"
+                                                        class="screenshot-input"
+                                                        data-task-id="{{ $task->id }}"
+                                                        style="display: none;"
+                                                        accept="image/*">
+                                                    <small>Max file size: 2MB</small>
+                                                </div>
+                                                <div class="pt-2">
+                                                    <button class="complete-btn" style="background-color: {{ $isUploaded ? '#003e40' : '#6c757d' }};" {{ $isUploaded ? '' : 'disabled' }}>
+                                                        Complete Task
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="d-flex flex-column align-items-end ms-auto tasks">
+                                            <h5 class="m-4">
+                                                Submitted
+                                            </h5>
+                                        </div>
+                                    @endif
+
                                 </div>
                             @endforeach
-
                         </div>
                   </div>
                 </div>
@@ -231,10 +217,9 @@
             const formData = new FormData();
             formData.append('screenshot', fileInput.files[0]);
             formData.append('task_id', taskId);
-            console.log();
-            console.log();
-            console.log();
-            console.log();
+            console.log(taskId);
+            console.log(fileInput);
+            console.log(formData);
             $.ajax({
                 url: "{{ route('task.screenshot.upload') }}", // Replace with your correct route
                 type: 'POST',
@@ -260,6 +245,48 @@
                     });
                 }
             });
+        });
+
+        // When the complete button is clicked
+        $('.complete-btn').on('click', function() {
+            if (!$(this).is('[disabled]')) {
+                const taskCard = $(this).closest('.task-card');
+                const taskId = taskCard.data('task-id');
+                Swal.fire({
+                    title: 'Are you sure you want to submit your task?',
+                    // icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('task.client_verify') }}", // Replace with your correct route
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            data: { task_id: taskId },
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Task submitted successfully!',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                window.location.reload();
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Submission failed!',
+                                    text: xhr.responseJSON?.message || 'Something went wrong.'
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         });
     });
 </script>

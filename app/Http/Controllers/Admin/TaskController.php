@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Task;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Models\ClientTask;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
@@ -16,9 +18,9 @@ class TaskController extends Controller
         return view('admin.tasks.index', compact('tasks'));
     }
 
-    public function create(): View
+    public function client_tasks(): View
     {
-        return view('admin.tasks.create');
+        return view('admin.tasks.client_tasks');
     }
 
     public function store(Request $request): RedirectResponse
@@ -61,20 +63,39 @@ class TaskController extends Controller
 
     public function uploadScreenshot(Request $request)
     {
-        dd($request->all());
-        $request->validate([
-            'screenshot' => 'required|image|max:2048',
-            'task_id' => 'required|exists:tasks,id',
+        // dd($request->all());
+        $validator = Validator::make($request->all(), [
+            'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         $task = Task::findOrFail($request->task_id);
+        $path = $request->file('screenshot')->store('screenshots', 'public');
+        // dd($request->task_id);
+        $clientTask = ClientTask::updateOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'task_id' => $request->task_id,
+                'status' => 0,
+            ],
+            [
+                'image_path' => $path,
+            ]
+        );
 
-        $path = $request->file('screenshot')->store('task_screenshots', 'public');
-
-        $task->screenshot = $path;
-        $task->save();
-
-        return response()->json(['message' => 'Screenshot uploaded!', 'path' => $path]);
+        return response()->json([
+            'message' => 'Screenshot uploaded!',
+            'screenshot_path' => $path,
+            'client_task_id' => $clientTask->id
+        ]);
     }
+
 
 }
