@@ -63,9 +63,9 @@ class TaskController extends Controller
 
     public function uploadScreenshot(Request $request)
     {
-        // dd($request->all());
+
         $validator = Validator::make($request->all(), [
-            'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -77,18 +77,24 @@ class TaskController extends Controller
         }
 
         $task = Task::findOrFail($request->task_id);
+
         $path = $request->file('screenshot')->store('screenshots', 'public');
         // dd($request->task_id);
-        $clientTask = ClientTask::updateOrCreate(
-            [
+        $clientTask = ClientTask::where('user_id', auth()->id())
+            ->where('task_id', $task->id)
+            ->first();
+        if ($clientTask) {
+            $clientTask->image_path = $path;
+            $clientTask->status = 0; // Optionally reset status
+            $clientTask->save();
+        } else {
+            $clientTask = ClientTask::create([
                 'user_id' => auth()->id(),
-                'task_id' => $request->task_id,
-                'status' => 0,
-            ],
-            [
+                'task_id' => $task->id,
                 'image_path' => $path,
-            ]
-        );
+                'status' => 0, // Assuming you want to default to status 0
+            ]);
+        }
 
         return response()->json([
             'message' => 'Screenshot uploaded!',

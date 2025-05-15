@@ -145,10 +145,12 @@
                         <div class="p-4">
                             @foreach ($tasks as $task)
                                 @php
-                                    $isUploaded = \DB::table('client_tasks')->where('task_id', $task->id)->whereNotNull('image_path')->exists();
-                                    $isSubmitted = \DB::table('client_tasks')->where('task_id', $task->id)->where('client_verification', 1)->whereNotNull('image_path')->exists();
+                                    $isUploaded = \DB::table('client_tasks')->where('task_id', $task->id)->where('status', 0)->where('user_id', auth()->id())->whereNotNull('image_path')->exists();
+                                    $isSubmitted = \DB::table('client_tasks')->where('task_id', $task->id)->where('user_id', auth()->id())->where('client_verification', 1)->whereIn('status', [0,1])->whereNotNull('image_path')->exists();
+                                    $clientTask = \DB::table('client_tasks')->where('task_id', $task->id)->where('user_id', auth()->id())->first();
+
                                 @endphp
-                                <div class="task-card" data-task-id="{{ $task->id }}">
+                                <div class="task-card" data-task-id="{{ $clientTask ? $clientTask->id : ''}}">
                                     <div class="task-header">
                                         <img src="/admin_assets/assets/images/users/user.png" alt="task" class="avatar-rounded">
                                         <div>
@@ -166,7 +168,7 @@
                                             </div>
                                             <div class="d-flex align-items-center">
                                                 <div class="pt-2">
-                                                    <button class="upload-btn" data-task-id="{{ $task->id }}" style="background-color: {{ $isUploaded ? '#6c757d' : '#003e40' }};" {{ $isUploaded ? 'disabled' : '' }}>
+                                                    <button class="upload-btn" data-task-id="{{ $task->id }}" style="background-color: {{ ($isUploaded)  ? '#6c757d' : '#003e40' }};" {{ ($isUploaded) ? 'disabled' : '' }}>
                                                         Upload Screenshot
                                                     </button>
                                                     <input type="file"
@@ -178,20 +180,33 @@
                                                     <small>Max file size: 2MB</small>
                                                 </div>
                                                 <div class="pt-2">
-                                                    <button class="complete-btn" style="background-color: {{ $isUploaded ? '#003e40' : '#6c757d' }};" {{ $isUploaded ? '' : 'disabled' }}>
+                                                    <button class="complete-btn" style="background-color: {{ ($isUploaded)  ? '#003e40' : '#6c757d' }};" {{ ($isUploaded)  ? '' : 'disabled' }}>
                                                         Complete Task
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     @else
+                                        @php
+                                        // dd($task);
+                                            $statusText = [
+                                                0 => 'Submitted',
+                                                1 => 'Approved',
+                                                2 => 'Rejected'
+                                            ];
+
+                                            $statusClass = [
+                                                0 => 'text-secondary', // gray
+                                                1 => 'text-success',   // green
+                                                2 => 'text-danger'     // red
+                                            ];
+                                        @endphp
                                         <div class="d-flex flex-column align-items-end ms-auto tasks">
-                                            <h5 class="m-4">
-                                                Submitted
+                                            <h5 class="m-4 {{ $statusClass[$clientTask->status] ?? 'text-muted' }}">
+                                                {{ $statusText[$clientTask->status] ?? 'Unknown' }}
                                             </h5>
                                         </div>
                                     @endif
-
                                 </div>
                             @endforeach
                         </div>
@@ -236,6 +251,7 @@
                         showConfirmButton: false,
                         timer: 1500
                     });
+                    window.location.reload();
                 },
                 error: function(xhr) {
                     Swal.fire({
@@ -252,6 +268,7 @@
             if (!$(this).is('[disabled]')) {
                 const taskCard = $(this).closest('.task-card');
                 const taskId = taskCard.data('task-id');
+
                 Swal.fire({
                     title: 'Are you sure you want to submit your task?',
                     // icon: 'question',

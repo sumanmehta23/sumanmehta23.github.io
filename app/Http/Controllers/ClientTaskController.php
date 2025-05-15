@@ -23,7 +23,7 @@ class ClientTaskController extends Controller
             'task_id' => 'required',
         ]);
 
-        $clientTask = ClientTask::where('user_id',auth()->id())->where('task_id',$request->task_id)->first();
+        $clientTask = ClientTask::where('user_id',auth()->id())->where('id',$request->task_id)->first();
         $clientTask->client_verification = 1;
         $clientTask->save();
 
