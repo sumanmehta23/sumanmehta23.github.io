@@ -37,10 +37,11 @@
                                                             <label class="form-label">Select From Account</label>
                                                             @foreach ($liveaccount_details as $acc)
                                                                 @php
-                                                                    if ($acc->email=='tammaru@gmail.com') {
-                                                                        {{ dd($acc->email) }}
+                                                                    if ($acc->email == 'tammaru@gmail.com') {
+                                                                        dd($acc);
                                                                     }
                                                                 @endphp
+
                                                                 <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="fromAccount"
