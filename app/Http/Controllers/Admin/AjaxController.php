@@ -3916,7 +3916,7 @@ class AjaxController extends Controller
                         ? Storage::url($row->image_path)
                         : asset('default-user.png'); // fallback image
 
-                    return "<img id='profile_image' class='rounded' src='{$imagePath}'  style='width: 50px; height: 50px; object-fit: cover;' />";
+                    return "<img id='profile_image' class='rounded' src='{$imagePath}' style='width: 60px; height: 60px; object-fit: cover; cursor: pointer;' data-bs-toggle='modal' data-bs-target='#imageModal' data-image='{$imagePath}' />";
                 })
                 ->addColumn('task_name', function ($row) {
                     return "<span>{$row->task->name}</span>" ;

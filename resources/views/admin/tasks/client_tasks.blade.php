@@ -97,11 +97,38 @@
         </div>
     </div>
 
+    <!-- Add a modal for displaying the full image -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Screenshot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" alt="Screenshot" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var tableTasks;
         var myModal;
 
+        function bindImageClickEvents() {
+            $('#tableTasks').find('img[data-bs-toggle="modal"]').on('click', function () {
+                const imageUrl = $(this).attr('data-image');
+                $('#modalImage').attr('src', imageUrl);
+            });
+        }
+
         $(document).ready(function () {
+            // Prevent double initialization
+            if ($.fn.DataTable.isDataTable('#tableTasks')) {
+                $('#tableTasks').DataTable().clear().destroy();
+            }
+
             tableTasks = $('#tableTasks').DataTable({
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
@@ -110,7 +137,7 @@
                         text: 'Export to Excel',
                         filename: 'Client_Tasks_Status' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [6,7,2,3,4,8,9],
+                            columns: [ 7, 8, 3, 4, 9, 10],
                         }
                     }
                 ],
@@ -125,11 +152,11 @@
                 ajax: {
                     url: '/admin/getClientTasks',
                     type: 'GET',
-                    data: function(d) {
+                    data: function (d) {
                         d.action = 'getTasks';
                         return d;
                     },
-                    dataSrc: function(json) {
+                    dataSrc: function (json) {
                         return json.data;
                     }
                 },
@@ -141,20 +168,23 @@
                     { data: 'status', name: 'status' },
                     { data: 'points', name: 'points' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
-                    { data: 'name', name: 'name',visible: false },
+                    { data: 'name', name: 'name', visible: false },
                     { data: 'client_email', name: 'client_email', visible: false },
                     { data: 'date', name: 'date', visible: false },
                     { data: 'time', name: 'time', visible: false }
-                ]
+                ],
+                drawCallback: function () {
+                    bindImageClickEvents();
+                }
             });
 
             myModal = new bootstrap.Modal(document.getElementById('clientTasksUpdatemodal'));
         });
 
+        // Modal open trigger for task approval/rejection
         $('#tableTasks').on('click', '.taskToggle', function () {
             var data = tableTasks.row($(this).closest("tr")).data();
-            console.log(data); // ✅ Should now print to console
-            // Populate modal with task/user data if needed
+            console.log(data);
             $("#clientName").html(data.user?.fullname || "No name");
             $("#clientEmail").html(data.user?.email || "No email");
             $("#client_id").val(data.user_id);
@@ -162,5 +192,6 @@
             myModal.show();
         });
     </script>
+
 
 @endsection
