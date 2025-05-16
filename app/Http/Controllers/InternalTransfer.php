@@ -91,8 +91,8 @@ class InternalTransfer extends Controller
                 $query->where('bonus_type', 'Bonus In')
                     ->orWhere('bonus_type', 'Bonus Out');
             })
+            ->whereNotIn('admin_remark',['Credit', '10x Trader Leverage'])
             ->sum('bonus_amount');
-
 
         $transferable_amount = $request->input('transferable_amount');
 
