@@ -3,15 +3,38 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Task;
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
+use App\Models\Account;
 use Illuminate\View\View;
 use App\Models\ClientTask;
+use App\MT5\MTEnDealAction;
+use App\Services\MT5Service;
 use Illuminate\Http\Request;
+use App\Services\MailService;
+use App\Helpers\AccountHelper;
+use App\Models\BonusTransaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
+    protected $api;
+    protected $settings;
+    protected $mailService;
+
+    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    {
+        $this->settings = settings();
+        $this->api = $api;
+        $this->mailService = $mailService;
+        $this->mt5Service = $mt5Service;
+        $this->mt5Service->connect();
+        $email = session('clogin');
+        AccountHelper::updateLiveAndDemoAccounts($email, $api);
+    }
+
     public function index(): View
     {
         $tasks = Task::where('status',1)->get();
@@ -118,33 +141,47 @@ class TaskController extends Controller
         $status = $request->input('request_status');
 
         // Update the task status
-        $task = ClientTask::findOrFail($taskId);
+        $task = ClientTask::with('task')->findOrFail($taskId);
+
+
+
+        $account = Account::where('user_id', $clientId)->first();
+        $settings = settings();
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+        $comment = "Task Bonus";
 
         // Update its status
+
         $task->status = $status;
         $task->save();
 
         // Now $task is the updated model instance
         // dd($task);
-        // if($task->status==1){
-        //     if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-        //         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-        //     } else {
-        //         $deposit_details = BonusTransaction::create([
-        //             'email' => $email,
-        //             'user_id' => $user->id,
-        //             'account_id' => $account->id,
-        //             'code' => $code,
-        //             'bonus_amount' => $amount,
-        //             'bonus_type' => $deposit_type,
-        //             'status' => 1,
-        //             'admin_remark' => $comment,
-        //             'bonus_currency' => $deposit_currency
-        //         ]);
-        // }
-
+        if($task->status==1){
+            if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $task->task->points, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+            } else {
+                $deposit_details = BonusTransaction::create([
+                    'email' => $account->email,
+                    'user_id' => $clientId,
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'bonus_amount' => $task->task->points,
+                    'bonus_type' => $comment,
+                    'status' => 1,
+                    'admin_remark' => $comment,
+                    'bonus_currency' => 'USD'
+                ]);
+            }
+        }
         // Optional: Add a success flash message
         return redirect()->back()->with('success', 'Task status updated successfully.');
     }
-
 }
