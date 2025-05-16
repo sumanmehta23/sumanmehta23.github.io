@@ -145,7 +145,10 @@ class TaskController extends Controller
 
 
 
-        $account = Account::where('user_id', $clientId)->first();
+        $account = Account::where('user_id', $clientId)->whereHas('accountType', function ($query) {
+            $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
+        })->first();
+
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
