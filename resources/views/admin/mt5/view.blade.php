@@ -195,7 +195,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($account->BonusTransaction)) {
-                                                                        echo "$" . number_format($account->BonusTransaction->whereNotIn('admin_remark', ['10x Trader Leverage', 'Credit'])->sum('bonus_amount') , 2) ;
+                                                                        echo "$" . number_format($account->BonusTransaction->sum('bonus_amount') , 2) ;
                                                                     }
                                                                     ?>
                                                                 </h4>
