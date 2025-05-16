@@ -99,14 +99,14 @@
 
     <!-- Add a modal for displaying the full image -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 80%; object-fit: cover;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="imageModalLabel">Screenshot</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="modalImage" src="" alt="Screenshot" class="img-fluid">
+                    <img id="modalImage" src="" style="width: 100%;" alt="Screenshot" class="img-fluid">
                 </div>
             </div>
         </div>
