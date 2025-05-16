@@ -36,10 +36,15 @@
                                                         <div class="col-md-5">
                                                             <label class="form-label">Select From Account</label>
                                                             @foreach ($liveaccount_details as $acc)
+                                                                @php
+                                                                    if ($acc->email=='tammaru@gmail.com') {
+                                                                        {{ dd($acc->email) }}
+                                                                    }
+                                                                @endphp
                                                                 <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="fromAccount"
-                                                                            data-balance="{{ $acc->balance }}"
+                                                                            data-balance="{{ $acc->balance  }}"
                                                                             class="form-check-input input-primary"
                                                                             id="fA{{ $acc->id }}" value="{{ $acc->id }}">
                                                                         <label class="form-check-label d-block"
