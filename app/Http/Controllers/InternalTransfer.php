@@ -122,6 +122,31 @@ class InternalTransfer extends Controller
             return redirect()->back()->with('error', 'Failed to withdraw from the account.');
         } else {
 
+            if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
+                $customerID = auth()->user()->id;
+                if ($transferable_amount > 250) {
+                    $bonusamount = 9 * 250;
+                } else {
+                    $bonusamount = 9 * $transferable_amount;
+                }
+
+                if (($error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, -$bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                } else {
+                    $deposit_details = BonusTransaction::create([
+                        'email' => $email,
+                        'user_id' => $customerID,
+                        'account_id' => $toAccount->id,
+                        'code' => $toAccount->code,
+                        'bonus_amount' => -$bonusamount,
+                        'bonus_type' => 'Bonus Out',
+                        'status' => 1,
+                        'admin_remark' => '10x Trader Leverage',
+                        'bonus_currency' => 'USD',
+                    ]);
+                }
+            }
+
             DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
                 $customerID = auth()->user()->id;
                 TradeWithdrawals::create([
