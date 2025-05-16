@@ -137,7 +137,7 @@
                         text: 'Export to Excel',
                         filename: 'Client_Tasks_Status' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [ 7, 8, 3, 4, 9, 10],
+                            columns: [ 7, 8, 3, 4, 5, 9, 10],
                         }
                     }
                 ],
