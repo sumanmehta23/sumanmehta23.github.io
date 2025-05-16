@@ -36,10 +36,12 @@
                                                         <div class="col-md-5">
                                                             <label class="form-label">Select From Account</label>
                                                             @foreach ($liveaccount_details as $acc)
+
+
                                                                 <div class="p-3 my-3 border rounded price-check">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="fromAccount"
-                                                                            data-balance="{{ $acc->balance }}"
+                                                                            data-balance="{{ $acc->balance  }}"
                                                                             class="form-check-input input-primary"
                                                                             id="fA{{ $acc->id }}" value="{{ $acc->id }}">
                                                                         <label class="form-check-label d-block"
@@ -55,7 +57,7 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0)  }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->whereNotIn('admin_remark', ['10x Trader Leverage', 'Credit'])->sum('bonus_amount') : 0)  }}</span>
                                                                                     <span class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
                                                                                 </span>
