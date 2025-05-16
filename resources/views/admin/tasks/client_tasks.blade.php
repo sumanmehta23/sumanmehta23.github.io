@@ -27,6 +27,7 @@
                                         <tr>
                                             <th>Completed On</th>
                                             <th>Name/Email</th>
+                                            <th>Screenshot</th>
                                             <th>Task Name</th>
                                             <th>Status</th>
                                             <th>Points</th>
@@ -51,11 +52,6 @@
     <div class="modal fade" id="clientTasksUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="clientTasksUpdatemodalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                {{-- <form action="{{ route('admin.tasks.approve_reject') }}" id="ClientTasksRequestForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="client_id" id="client_id" value="">
-                    <input type="hidden" name="task_id" id="task_id" value=""> --}}
                 <form action="{{ route('admin.tasks.approve_reject') }}" id="ClientTasksRequestForm" method="POST">
                     @csrf
                     <input type="hidden" name="client_id" id="client_id" value="">
@@ -140,6 +136,7 @@
                 columns: [
                     { data: 'created_at', name: 'created_at' },
                     { data: 'email', name: 'email' },
+                    { data: 'screenshot', name: 'screenshot' },
                     { data: 'task_name', name: 'task_name' },
                     { data: 'status', name: 'status' },
                     { data: 'points', name: 'points' },

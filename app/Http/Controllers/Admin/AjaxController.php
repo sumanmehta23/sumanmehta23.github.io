@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -3910,6 +3911,13 @@ class AjaxController extends Controller
                                     </div>
                                 </a>";
                 })
+                ->addColumn('screenshot', function ($row) {
+                    $imagePath = ($row->user && $row->image_path)
+                        ? Storage::url($row->image_path)
+                        : asset('default-user.png'); // fallback image
+
+                    return "<img id='profile_image' class='rounded' src='{$imagePath}'  style='width: 50px; height: 50px; object-fit: cover;' />";
+                })
                 ->addColumn('task_name', function ($row) {
                     return "<span>{$row->task->name}</span>" ;
                 })
@@ -3947,7 +3955,7 @@ class AjaxController extends Controller
                     return $time;
                 })
 
-                ->rawColumns(['created_at', 'email', 'task_name','status','points','action','name','client_email','date','time'])
+                ->rawColumns(['created_at', 'email','screenshot', 'task_name','status','points','action','name','client_email','date','time'])
                 ->make(true);
         }
     }
