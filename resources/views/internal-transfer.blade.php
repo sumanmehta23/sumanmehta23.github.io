@@ -38,7 +38,7 @@
                                                             @foreach ($liveaccount_details as $acc)
                                                                 @php
                                                                     if ($acc->email == 'tammaru@gmail.com') {
-                                                                        dump($acc->totalBonusDeposit);
+                                                                        dump($acc);
                                                                     }
                                                                 @endphp
 
