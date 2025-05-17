@@ -75,6 +75,60 @@ class MT5Controller extends Controller
             'activeGroup' => $activeGroup,
         ]);
     }
+
+    public function promocode(Request $request)
+    {
+        return view('admin.promocode', [
+        ]);
+    }
+    public function createPromoCode(Request $request)
+    {
+        // dd($request->all());
+        $request->validate([
+            'promo_code' => 'required',
+            'promo_percentage' => 'required|numeric|min:1|max:100',
+            'promo_status' => 'required|boolean',
+        ]);
+
+        try {
+            Promocode::create([
+                'code' => $request->promo_code,
+                'promo_percentage' => $request->promo_percentage,
+                'status' => $request->promo_status,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Promocode added successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error adding promocode']);
+        }
+    }
+
+    public function update_promocode_status(Request $request)
+    {
+        $promocode = Promocode::find($request->id);
+        if ($promocode) {
+            $promocode->status = $request->status;
+            $promocode->save();
+            return response()->json(['message' => 'Status updated successfully!']);
+        }
+        return response()->json(['message' => 'Promocode not found'], 404);
+    }
+
+    public function delete_promocode(Request $request)
+    {
+        $promocode = Promocode::find($request->id);
+
+        if ($promocode) {
+            $promocode->delete();
+            return response()->json(['message' => 'Promocode deleted successfully!']);
+        }
+
+        return response()->json(['message' => 'Promocode not found'], 404);
+    }
+
+
     public function updateAccountDetails(Request $request)
     {
 
