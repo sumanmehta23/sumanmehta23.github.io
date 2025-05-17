@@ -133,7 +133,11 @@ class TradeWithdrawal extends Controller
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');
 
-
+        if($account->code==573713){
+            dump($total_bonus);
+            dump($account);
+            dd($amount);
+        }
 
         // Get the account balance
 
