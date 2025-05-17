@@ -278,6 +278,8 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
   $('.select-liveaccount').on('change', function() {
     let clientAccountId = $(this).val();
+    let promocode = $('#promocode').val();
+
     var minDeposit= $(this).data('mindeposit');
     var maxDeposit= $(this).data('maxdeposit');
     if(typeof minDeposit != 'number'){
@@ -304,7 +306,7 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
         // onUpdate: onPaymentUpdate,
         onUpdate: onAccountPaymentUpdate,
         onSuccess: onAccountPaymentSuccess,
-        passthrough: JSON.stringify({'customerID': customerID,'customerEmail':customerEmail,'depositTo':depositTo,'clientAccountID':clientAccountId}),
+        passthrough: JSON.stringify({'customerID': customerID,'customerEmail':customerEmail,'depositTo':depositTo,'clientAccountID':clientAccountId,'promocode':promocode}),
         // onIncomplete: onPaymentIncomplete,
 
         onCancel: onAccountPaymentCancel

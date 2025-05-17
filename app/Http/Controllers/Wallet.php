@@ -1013,6 +1013,7 @@ class Wallet extends Controller
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
             $customerAccountID = $passedData['clientAccountID'];
+            $promocode = $passedData['promocode'];
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
@@ -1074,9 +1075,35 @@ class Wallet extends Controller
                     $settings['mt5_server_web_password']
                 );
 
+
+
                 $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
                     $query->where('status', 1);
                 }])->first();
+
+                if($promocode){
+                    $ticket = NULL;
+                    $promo = PromoCode::where('code', $promocode)->first();
+                    $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if($promo){
+                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $customerID,
+                                'account_id' => $customerAccountID,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonus_amount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Bonus',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
 
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
