@@ -114,6 +114,7 @@
                 <div class="modal-content">
                     <form action="#" id="editPromocodeForm" method="post">
                         @csrf
+                        <input type="text" class="form-control" name="id" hidden>
                         <div class="modal-header">
                             <h5 class="modal-title" id="promocodeModalLabel">Edit Promocode</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -161,6 +162,13 @@
     </div>
 </div>
 <script>
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     $(document).ready(function() {
         window.promoModal = new bootstrap.Modal(document.getElementById('promoModal'));
         window.editPromoModal = new bootstrap.Modal(document.getElementById('editPromoModal'));
@@ -326,13 +334,77 @@
         });
     });
 
-
     $(document).on('click', '.editPromocode', function() {
         let promoId = $(this).data('id');
-        console.log(promoId);
 
-        editPromoModal.show();
-
+        $.ajax({
+            url: `/admin/get_promocode/${promoId}`,
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    $('#editPromocodeForm input[name="promo_code"]').val(response.data.code);
+                    $('#editPromocodeForm input[name="promo_percentage"]').val(response.data.percentage);
+                    $('#editPromocodeForm select[name="promo_status"]').val(response.data.status);
+                    $('#editPromocodeForm input[name="id"]').val(response.data.id);
+                    editPromoModal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function(error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch promocode details. Please try again.'
+                });
+            }
+        });
     });
+
+
+    $("#editPromocodeForm").submit(function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: "/admin/edit/promocode",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Promocode Added",
+                        text: response.message
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.message
+                    });
+                }
+            },
+            error: function(xhr) {
+                let errors = xhr.responseJSON.errors;
+                let errorMessage = "Something went wrong.";
+
+                if (errors) {
+                    errorMessage = Object.values(errors).flat().join("\n");
+                }
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: errorMessage
+                });
+            }
+        });
+    });
+
 </script>
 @endSection

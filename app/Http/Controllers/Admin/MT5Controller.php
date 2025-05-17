@@ -84,6 +84,65 @@ class MT5Controller extends Controller
         return view('admin.promocode', [
         ]);
     }
+
+    public function get_promocode($id)
+    {
+        $promocode = Promocode::find($id);
+
+        if (!$promocode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Promocode not found.'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'code' => $promocode->code,
+                'percentage' => $promocode->promo_percentage,
+                'status' => $promocode->status,
+                'id' => $promocode->id,
+            ]
+        ]);
+    }
+
+    public function edit_promocode(Request $request)
+    {
+        $id = $request->id;
+        $promocode = Promocode::find($id);
+
+        if (!$promocode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Promocode not found.'
+            ]);
+        }
+
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'promo_code' => 'required|string|unique:promocodes,code,' . $id,
+            'promo_percentage' => 'required|numeric|min:0|max:100',
+            'promo_status' => 'required|in:active,inactive', // adjust values as needed
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ]);
+        }
+
+        $promocode->code = $request->promo_code;
+        $promocode->promo_percentage = $request->promo_percentage;
+        $promocode->status = $request->promo_status;
+        $promocode->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Promocode updated successfully',
+        ]);
+    }
+
     public function createPromoCode(Request $request)
     {
         $request->validate([
