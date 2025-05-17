@@ -185,11 +185,6 @@ class TradeWithdrawal extends Controller
                         $multiplier = 250;
                     }
                     $bonusamount = -abs(-9 * $multiplier);
-                    if($account->code==573713){
-                        dump($multiplier);
-                        dump($bonusamount);
-                        dd($accountProfit);
-                    }
 
                     if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
