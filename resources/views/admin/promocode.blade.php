@@ -180,7 +180,7 @@
                     extend: 'excel',
                     text: 'Export to Excel',
                     exportOptions: {
-                        columns: [0, 1, 2, 3] // Fixed index to match table
+                        columns: [0, 1, 3] // Fixed index to match table
                     }
                 }
             ],
