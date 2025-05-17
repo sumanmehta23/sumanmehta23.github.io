@@ -481,6 +481,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
 
+        Route::get("/promocode", [MT5Controller::class, 'promocode']);
+        Route::post("/create/promocode", [MT5Controller::class, 'createPromoCode']);
+        Route::post("/update_promocode_status", [MT5Controller::class, 'update_promocode_status']);
+        Route::post("/delete_promocode", [MT5Controller::class, 'delete_promocode']);
+
         Route::get("/view_account_details/{accountId}", [MT5Controller::class, 'view'])->where('account', '.*')->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
