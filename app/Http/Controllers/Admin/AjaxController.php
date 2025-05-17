@@ -3834,4 +3834,66 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
 
     }
+
+    public function getPromocodes(Request $request)
+    {
+        $promocodes = Promocode::where('deleted_at', NULL);
+
+        if ($request->ajax()) {
+            return DataTables::of($promocodes)
+                ->filter(function ($promocodes) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $promocodes->where(function($q) use ($searchValue) {
+                            $q->where('id', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('promo_percentage', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('status', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->addColumn('code', function($row){
+                    return $row->code ;
+                })
+                ->addColumn('promo_percentage', function($row){
+                    return $row->promo_percentage ;
+                })
+
+                
+                ->addColumn('status', function($row){
+                    $checked = $row->status == 1 ? 'checked' : '';
+                    return "<div class='form-check form-switch'>
+                                <input class='form-check-input statusToggle' type='checkbox' data-id='{$row->id}' {$checked}>
+                            </div>";
+                })
+
+                ->addColumn('created_at', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('action', function($row){
+                    $html = "";
+                    $html .= "<a class='deleteAcc pointer deletePromocode' data-bs-toggle='tooltip' data-id='{$row->id}'>
+                                <span class='badge text-danger'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-trash'>
+                                        <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                        <path d='M4 7l16 0' />
+                                        <path d='M10 11l0 6' />
+                                        <path d='M14 11l0 6' />
+                                        <path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' />
+                                        <path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' />
+                                    </svg>
+                                </span>
+                            </a>";
+                    return $html;
+                })
+                ->rawColumns(['id', 'code', 'promo_percentage', 'status', 'created_at','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
 }
