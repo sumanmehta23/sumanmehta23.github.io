@@ -107,11 +107,63 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="editPromoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+            aria-labelledby="promocodeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form action="#" id="editPromocodeForm" method="post">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="promocodeModalLabel">Edit Promocode</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="mb-0 modal-body custom-card card">
+                            <div class="card-body">
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Code</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="text" class="form-control" name="promo_code"  placeholder="Enter unique code" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Percentage</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="promo_percentage" min="0" max="100" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Status</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select class="form-select" required name="promo_status">
+                                            <option value="" selected disabled>Please select</option>
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" name="promoUpdate" value="update" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script>
     $(document).ready(function() {
         window.promoModal = new bootstrap.Modal(document.getElementById('promoModal'));
+        window.editPromoModal = new bootstrap.Modal(document.getElementById('editPromoModal'));
 
         var TablePromocode = $('#tablePromocodes').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -275,5 +327,12 @@
     });
 
 
+    $(document).on('click', '.editPromocode', function() {
+        let promoId = $(this).data('id');
+        console.log(promoId);
+
+        editPromoModal.show();
+
+    });
 </script>
 @endSection

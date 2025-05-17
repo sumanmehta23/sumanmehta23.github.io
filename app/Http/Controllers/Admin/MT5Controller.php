@@ -22,6 +22,8 @@ use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class MT5Controller extends Controller
 {
@@ -84,25 +86,35 @@ class MT5Controller extends Controller
     }
     public function createPromoCode(Request $request)
     {
-        // dd($request->all());
         $request->validate([
-            'promo_code' => 'required',
+            // “code” must be unique among NOT-deleted rows
+            'promo_code'       => [
+                'required',
+                Rule::unique('promocode', 'code')->whereNull('deleted_at'),
+            ],
             'promo_percentage' => 'required|numeric|min:1|max:100',
-            'promo_status' => 'required|boolean',
+            'promo_status'     => 'required|boolean',
         ]);
 
         try {
             Promocode::create([
-                'code' => $request->promo_code,
+                'code'             => $request->promo_code,
                 'promo_percentage' => $request->promo_percentage,
-                'status' => $request->promo_status,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'status'           => $request->promo_status,
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Promocode added successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error adding promocode']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Promocode added successfully',
+            ]);
+        } catch (\Throwable $e) {
+            // log the actual error for debugging
+            Log::error('Promocode create error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding promocode',
+            ], 500);
         }
     }
 

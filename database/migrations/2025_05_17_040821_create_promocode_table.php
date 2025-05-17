@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('promocode', function (Blueprint $table) {
             $table->uuid('id')->primary(); // Auto-increment primary key
-            $table->string('code',255)->unique(); // Promocode itself
+            $table->string('code',255); // Promocode itself
             $table->decimal('promo_percentage', 5, 2); // Bonus percentage with precision
             $table->boolean('status'); // Status (active/inactive)
             $table->timestamps(); // created_at & updated_at
