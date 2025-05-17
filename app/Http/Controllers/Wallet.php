@@ -1089,7 +1089,7 @@ class Wallet extends Controller
                         if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                             return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                         } else {
-                            $deposit_details = BonusTransaction::create([
+                            BonusTransaction::create([
                                 'email' => $email,
                                 'user_id' => $customerID,
                                 'account_id' => $customerAccountID,
