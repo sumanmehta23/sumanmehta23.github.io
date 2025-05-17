@@ -133,6 +133,8 @@ class TradeWithdrawal extends Controller
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');
 
+
+
         // Get the account balance
 
         // Check for sufficient balance
@@ -175,6 +177,12 @@ class TradeWithdrawal extends Controller
 //                }
                 //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
                 $accountProfit=$account_balance-$total_deposit_amount;
+
+                if($account->code==573713){
+                    dump($total_deposit_amount);
+                    dump($account_balance);
+                    dd($accountProfit);
+                }
                 if($amount > $accountProfit ){
                     $multiplier=$amount-$accountProfit;
                     if ($multiplier > 250) {
