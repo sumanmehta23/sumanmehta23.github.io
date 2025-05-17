@@ -176,19 +176,21 @@ class TradeWithdrawal extends Controller
 //                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
 //                }
                 //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
-                $accountProfit=$account_balance-$total_deposit_amount;
+                $accountProfit = $account_balance - $total_deposit_amount;
 
-                if($account->code==573713){
-                    dump($total_deposit_amount);
-                    dump($account_balance);
-                    dd($accountProfit);
-                }
+
                 if($amount > $accountProfit ){
                     $multiplier=$amount-$accountProfit;
                     if ($multiplier > 250) {
                         $multiplier = 250;
                     }
                     $bonusamount = -abs(-9 * $multiplier);
+                    if($account->code==573713){
+                        dump($multiplier);
+                        dump($bonusamount);
+                        dd($accountProfit);
+                    }
+
                     if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                     } else {
