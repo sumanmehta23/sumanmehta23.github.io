@@ -8,7 +8,8 @@ use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Models\BonusTransaction;
+use App\Models\Promocode;
+use App\Models\AccountType;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -16,11 +17,11 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
+use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
-use App\Models\AccountType;
-use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Services\MailService as MailService;
 
 class MT5Controller extends Controller
 {

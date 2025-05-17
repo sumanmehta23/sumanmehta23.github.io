@@ -10,16 +10,18 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\Promocode;
 use App\Models\Permission;
+use App\Models\RestrictIps;
 use App\Models\EmployeeList;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +29,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Models\RestrictIps;
 
 class AjaxController extends Controller
 {
@@ -3863,7 +3864,7 @@ class AjaxController extends Controller
                     return $row->promo_percentage ;
                 })
 
-                
+
                 ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
                     return "<div class='form-check form-switch'>
