@@ -111,6 +111,30 @@ class Payment extends Controller
 
                 $account = Account::where('id', $paymentLog->account_id)->first();
 
+                if(isset($paymentLog->promocode)){
+                    $tickets = NULL;
+                    $promo = PromoCode::where('code', $paymentLog->promocode)->first();
+                    $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if($promo){
+                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $tickets, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        } else {
+                            BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $paymentLog->user_id,
+                                'account_id' => $paymentLog->account_id,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonus_amount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Bonus',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
+
                 $comment = 'CreditCardPayissa';
                 $ticket = NULL;
 
