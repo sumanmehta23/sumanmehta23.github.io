@@ -14,6 +14,7 @@ use App\Models\TradeDeposit;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -110,6 +111,35 @@ class Payment extends Controller
                 );
 
                 $account = Account::where('id', $paymentLog->account_id)->first();
+
+                $ticket1=NULL;
+                if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                    $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
+                    if (!$existingTransaction) {
+                        if ($amount > 250) {
+                            $bonusamount = 9 * 250;
+                        } else {
+                            $bonusamount = 9 * $amount;
+                        }
+
+                        if (($error_code1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $paymentLog->user_id,
+                                'account_id' => $paymentLog->account_id,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
 
                 $comment = 'CreditCardPayissa';
                 $ticket = NULL;
