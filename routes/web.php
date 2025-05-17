@@ -330,6 +330,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
+    Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
     //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
