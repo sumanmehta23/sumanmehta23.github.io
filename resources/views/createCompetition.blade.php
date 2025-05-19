@@ -7,7 +7,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <div class="page-header-title h2">
-                                <h4 class="mb-0">Create Live MT5 Account</h4>
+                                <h4 class="mb-0">Create Competition</h4>
                             </div>
                         </div>
                     </div>
@@ -18,7 +18,7 @@
                     <div class="col-sm-11">
                         <div class="card">
                             <div class="card-header">
-                                <h5>SET UP YOUR ACCOUNT</h5>
+                                <h5>SET UP YOUR COMPETITION ACCOUNT</h5>
                             </div>
                             <div class="card-body">
                                 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -29,12 +29,12 @@
                                     </symbol>
                                 </svg>
                                 <form method="post" enctype="multipart/form-data"
-                                    action="{{ route('create-live-account') }}">
+                                    action="{{ route('createCompetition') }}">
                                     @csrf
                                     <div class="form-group mb-0">
                                         <div class="row">
                                             <div class="col-3">
-                                                <label class="form-label">Choose Account Type</label>
+                                                <label class="form-label">Choose Account</label>
                                             </div>
                                             <div class="col-9">
                                                 <div class="row">
@@ -169,7 +169,7 @@
                 title: 'Success!',
                 text: '{{ session('success') }}'
             }).then(() => {
-                window.location.href = '{{ route('liveAccounts') }}';
+                window.location.href = '{{ route('competition') }}';
             });
         </script>
     @endif

@@ -355,6 +355,17 @@
                                 </a>
                             </li>
                             <li class="pc-item">
+                                <a href="/competition" class="pc-link">
+                                    <span class="pc-micon">
+                                        <svg class="pc-icon">
+                                            <use xlink:href="#custom-shield"></use>
+                                        </svg>
+                                    </span>
+                                    <span class="pc-mtext">Competition</span>
+                                    <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
+                                </a>
+                            </li>
+                            <li class="pc-item">
                                 <a href="javascript:void(0);" class="pc-link" id="pamm-menu">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">

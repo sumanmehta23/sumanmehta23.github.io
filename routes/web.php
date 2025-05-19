@@ -5,7 +5,6 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\KycUpdate;
 use App\Models\Permission;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
@@ -15,12 +14,14 @@ use App\Http\Controllers\Home;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
 use App\Models\TradeWithdrawals;
+use Laravel\Telescope\Telescope;
 use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
@@ -39,7 +40,9 @@ use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\MT5Controller;
 use App\Http\Controllers\Admin\AjaxController;
+use function PHPUnit\Framework\throwException;
 use App\Http\Controllers\Admin\StaffManagement;
+use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SumsubController;
@@ -51,8 +54,6 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
-use function PHPUnit\Framework\throwException;
-use Laravel\Telescope\Telescope;
 
 Route::get('/telescope-test', function () {
     Log::info('🛠 Telescope test route hit.');
@@ -237,7 +238,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/update-nickname', [MT5Accounts::class, 'updateNickname'])->name('update.nickname');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
+    Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
+    Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
+    Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
 
+    Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
