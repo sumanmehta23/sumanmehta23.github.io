@@ -3832,6 +3832,11 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
-
     }
+
+    public function getLeaderboard(Request $request)
+    {
+        dd('sssss');
+    }
+
 }
