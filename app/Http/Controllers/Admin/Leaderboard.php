@@ -256,7 +256,7 @@ class Leaderboard extends Controller
             'server_name' => $settings['mt5_company_name'],
             'email' => $settings['email_from_address'],
             "title_right" => "",
-            "subtitle_right" => "Your " . $type . " Account is Ready!",
+            "subtitle_right" => "Your " . $type . " Competition is Ready!",
             "acc_type" => $new_user->type
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
