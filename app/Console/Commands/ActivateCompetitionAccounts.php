@@ -1,7 +1,4 @@
 <?php
-
-
-
 namespace App\Console\Commands;
 
 use Exception;
@@ -18,6 +15,7 @@ use Illuminate\Support\Str;
 use App\Services\MT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
+use App\Services\MailService;
 use Illuminate\Console\Command;
 use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Support\Facades\DB;
@@ -26,28 +24,29 @@ use Illuminate\Support\Facades\Cache;
 
 class ActivateCompetitionAccounts extends Command
 {
-    protected $referral_code;
-    protected $userId;
-    protected $ib_acc_plans;
-    protected $accountId;
 
     protected $api;
     protected $mailService;
     protected $mt5Service;
+
     public function __construct(MT5Service $mt5Service, MailService $mailService)
     {
+        parent::__construct(); // ← THIS IS REQUIRED
+
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
     }
 
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:accounts-sync';
+    protected $signature = 'app:activate-competition-accounts';
+
 
     /**
      * The console command description.
@@ -61,7 +60,6 @@ class ActivateCompetitionAccounts extends Command
      */
     public function handle()
     {
-        $ib_wallet = 0.00;
         Account::where('demo', 1)
             ->whereNotNull('competition_month')
             ->whereNotNull('competition_year')
@@ -108,19 +106,19 @@ class ActivateCompetitionAccounts extends Command
 
                     if ($response['status']) {
                         $acc = Account::where('id', $account->id)->first();
-                        activity()->causedBy($user)
-                            ->withProperties(
-                                [
-                                    'ip' => $request->ip(),
-                                    'email' => $user->email,
-                                    'type' => 'Demo',
-                                    'code' => $new_user->Login,
-                                    'amount' => $account->balance,
-                                    'leverage' => $new_user->Leverage,
-                                    'remark' => 'Create Demo Account'
-                                ])
-                        ->event('create')
-                        ->log('Create Demo Account');
+                        // activity()->causedBy($user)
+                        //     ->withProperties(
+                        //         [
+                        //             // 'ip' => $request->ip(),
+                        //             'email' => $user->email,
+                        //             'type' => 'Demo',
+                        //             'code' => $new_user->Login,
+                        //             'amount' => $account->balance,
+                        //             'leverage' => $new_user->Leverage,
+                        //             'remark' => 'Create Demo Account'
+                        //         ])
+                        // ->event('create')
+                        // ->log('Create Demo Account');
                         if($acc)
                         {
                             $acc->update([
@@ -128,7 +126,6 @@ class ActivateCompetitionAccounts extends Command
                                 'name' => $new_user->Name,
                                 'demo'=> true,
                                 'email' => $new_user->Email,
-                                // 'name' => $new_user->Name,
                                 'code' => $new_user->Login,
                                 'account_type_id' => $account->account_type_id,
                                 'leverage' => $new_user->Leverage,
@@ -161,7 +158,6 @@ class ActivateCompetitionAccounts extends Command
                         }else{
                             return redirect()->back()->with('error', 'No account found to update.');
                         }
-
                     } else {
                         return redirect()->back()->with('error', $response['message']);
                     }
@@ -187,11 +183,11 @@ class ActivateCompetitionAccounts extends Command
         }
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
-            Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
+            Log::error('Competition create error : ' . $error.' for user '.json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
-            Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
-            return ["status" => true, "message" => $type . " Account Created Successfully"];
+            Log::info('Competition created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
+            return ["status" => true, "message" => $type . " Competition Created Successfully"];
         }
     }
 
