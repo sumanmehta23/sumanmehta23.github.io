@@ -946,7 +946,7 @@ class MT5Accounts extends Controller
         }
 
         $userAcc = Account::where('user_id', $user->id)->where('demo',1)->get();
-        // dd(count($userAcc));
+        // dd(($userAcc));
 
         if($userAcc)
         {

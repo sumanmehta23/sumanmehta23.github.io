@@ -358,6 +358,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
     Route::get('/getCompetitionDatatable', [AjaxController::class, 'getCompetitionDatatable']);
+    Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
@@ -376,6 +377,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
+
+        Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
         Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
         Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');

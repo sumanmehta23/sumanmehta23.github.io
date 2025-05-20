@@ -58,7 +58,7 @@
     <div class="modal fade" id="accountUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="accountUpdatemodalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="/admin/clientAccounts/activate_account" id="AccountRequestForm"  method="POST">
+                <form action="/admin/competition/activate_competition" id="AccountRequestForm"  method="POST">
                      @csrf
                      <input type="hidden" name="client_id" id="client_id" value="">
                      <input type="hidden" name="options" id="account_type_id" value="">
@@ -67,7 +67,7 @@
                      <input type="hidden" name="accountType" id="accountType" value="">
                      <input type="hidden" name="demo_deposit" id="demo_deposit" value="">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="accountUpdatemodalLabel">Client Account Request Management</h5>
+                        <h5 class="modal-title" id="accountUpdatemodalLabel">Client Competition Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="mb-0 modal-body custom-card card">
@@ -86,7 +86,7 @@
                         <div class="card-body">
                         <div class="mb-3 row">
                             <div class="m-auto col-lg-4">
-                            <label class="form-label">Client Account Status</label>
+                            <label class="form-label">Client Competition Status</label>
                             </div>
                             <div class="col-lg-8">
                             <select class="form-select" required name="request_status" aria-label="Default select example">
@@ -214,7 +214,7 @@
             serverSide: true,
             searching: true,
             ajax: {
-                url: '/admin/getRequestedAccountsList',
+                url: '/admin/getRequestedCompetitionList',
                 type: 'GET',
                 data: {}, // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {

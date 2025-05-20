@@ -3835,6 +3835,135 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
+    public function getRequestedCompetitionList(Request $request)
+    {
+        // dump( session('userData'));
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+        $userGroups = explode(',', session('user_groups'));
+        // dd($alogin);
+        // Base query
+        $rmCondition = Account::select('accounts.*')
+            ->where('account_request_status', 0)
+            ->whereNotNull('competition_month')
+            ->where('demo',1)
+            ->with(['user', 'accountType']);
+
+
+        if ($role !== "Super Admin") {
+            $rmCondition->whereHas('user');
+        }
+
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+
+        if ($request->ajax()) {
+            // dd(DataTables::of($rmCondition));
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('code', function ($row) {
+                    $accountGroup = $row->accountType->ac_group;
+                    return "<a href='" . (($row->code && $row->code != 'Rejected') ? '/admin/view_account_details/' . $row->id : '#') . "'>
+                                <div class='row align-items-center'>
+                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
+                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col ps-2'>
+                                        <h6 class='mb-0'><span class='text-truncate w-100'>" .
+                        ($row->code ? $row->code : 'Pending') .
+                        "</span>
+                                        </h6>
+                                        <p class='mb-0 text-muted f-12'><span
+                                                class='text-truncate w-100'> $accountGroup </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                // ->addColumn('leverage', function($row){
+                //     return $row->leverage;
+                // })
+                ->addColumn('balance', function ($row) {
+                    return $row->balance;
+                })
+                ->addColumn('created_at', function ($row) {
+                    // $date = date('Y-m-d', strtotime($row->created_at));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->created_at));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function ($row) {
+                    return $row->email;
+                })
+                ->addColumn('account_code', function ($row) {
+                    return $row->code;
+                })
+                ->addColumn('account_group', function ($row) {
+                    return $row->accountType->ac_group;
+                })
+                ->addColumn('account_request_status', function ($row) {
+
+                    if ($row->account_request_status == 1) {
+                        return "<button class=' badge bg-outline-success'>Approved</button>";
+                        // }elseif($row->account_request_status == 2){
+                        //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
+                    } elseif ($row->account_request_status == 0) {
+                        return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
+                    }
+                })
+                ->editColumn('request_status', function ($row) {
+                    return $row->account_request_status;
+                })
+                ->addColumn('created_date', function ($row) {
+                    // return date('Y-m-d', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                })
+                ->addColumn('created_time', function ($row) {
+                    // return date('H:i:s', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'request_status'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
     public function getCompetitionDatatable(Request $request)
     {
         dd('sssss');
