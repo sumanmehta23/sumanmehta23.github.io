@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Admin\Login;
+use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -357,6 +358,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
 
+
+
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
     // Route::get('/transactions/{transaction}', 'Transaction@show')->name('transactions.show');
@@ -370,6 +373,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+
+        Route::get('/leaderboard', [Leaderboard::class, 'leaderboard'])->name('competition.leaderboard');
 
         Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
         Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');

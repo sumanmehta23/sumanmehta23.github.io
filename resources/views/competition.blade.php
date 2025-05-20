@@ -141,16 +141,14 @@
             </div>
         </div>
     </div>
-@endsection
-
-@push('scripts')
     <script>
         $(document).ready(function() {
+            console.log('abhay');
             const accountIds = [];
             $('.rank-cell').each(function() {
                 accountIds.push($(this).data('id'));
             });
-
+            console.log('abhay');
             $.ajax({
                 url: '{{ route('get-account-rank') }}',
                 type: 'GET',
@@ -169,4 +167,4 @@
             });
         });
     </script>
-@endpush
+@endsection

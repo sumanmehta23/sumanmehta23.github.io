@@ -185,14 +185,53 @@ class CompetitionController extends Controller
 
     public function getAccountRank(Request $request)
     {
+
         $ids = $request->input('ids', []);
+
         // Example: fetch ranks from the Account model, adjust as needed
-        $accounts = \App\Models\Account::whereIn('id', $ids)->get(['id', 'rank']);
-        $ranks = [];
-        foreach ($accounts as $account) {
-            $ranks[$account->id] = $account->rank ?? '-';
+        // $accounts = Account::whereIn('id', $ids)->get();
+
+
+         // Group transactions by month and account, and sum the amounts
+        $monthlyData = DB::table('accounts')
+            ->select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+                'account_id',
+                DB::raw('SUM(amount) as total_amount')
+            )
+            ->whereIn('account_id', $ids)
+            ->groupBy('month', 'account_id')
+            ->orderBy('month')
+            ->orderByDesc('total_amount')
+            ->get();
+
+        dd($monthlyData);
+        
+        // Organize data by month
+        $grouped = [];
+        foreach ($monthlyData as $data) {
+            $grouped[$data->month][] = $data;
         }
+
+        // Assign ranks within each month
+        $ranks = [];
+        foreach ($grouped as $month => $accounts) {
+            $rank = 1;
+            foreach ($accounts as $accountData) {
+                $ranks[$month][$accountData->account_id] = [
+                    'rank' => $rank++,
+                    'total' => $accountData->total_amount
+                ];
+            }
+        }
+
         return response()->json($ranks);
+
+        // $ranks = [];
+        // foreach ($accounts as $account) {
+        //     $ranks[$account->id] = $account->rank ?? '-';
+        // }
+        // return response()->json($ranks);
     }
 
 }
