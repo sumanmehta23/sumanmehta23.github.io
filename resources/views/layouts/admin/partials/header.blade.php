@@ -483,12 +483,31 @@
                                 </ul>
                             </li> --}}
 
-                            <li class="slide menu-item-main ">
-                                <a href="{{ route('admin.competition.leaderboard') }}" class="side-menu__item">
-                                    <i class="side-menu__icon fe fe-users"></i>
-                                    <span class="side-menu__label">Leaderboard</span>
+
+
+                            <li class="slide has-sub menu-item-main ">
+                                <a href="#" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-user-plus"></i>
+                                    <span class="side-menu__label">Competition</span>
+                                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 </a>
-                                <ul class="slide-menu child1">
+                                <ul class="slide-menu child1"
+                                    style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
+                                    data-popper-placement="bottom">
+                                    <li class="slide menu-item-sub ">
+                                        <a href="{{ route('admin.competition.dashboard') }}" class="side-menu__item">
+                                            <span class="side-menu__label">Dashboard</span>
+                                        </a>
+                                        <ul class="slide-menu child1">
+                                        </ul>
+                                    </li>
+                                    <li class="slide menu-item-sub ">
+                                        <a href="{{ route('admin.competition.requested') }}" class="side-menu__item">
+                                            <span class="side-menu__label">Requested Competitions</span>
+                                        </a>
+                                        <ul class="slide-menu child1">
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
 

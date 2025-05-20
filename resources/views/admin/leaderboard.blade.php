@@ -24,10 +24,10 @@
 
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                <h1 class="page-title">Competition Leaderboard</h1>
+                <h1 class="page-title">Competition Dashboard</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Leaderboard</li>
+                    <li class="breadcrumb-item active" aria-current="page">Competition Dashboard</li>
                 </ol>
             </div>
             <div class="row">
@@ -40,7 +40,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="leaderboardDatatable" class="table leaderboardDatatable table-bordered text-nowrap w-100">
+                                <table id="competitionDatatable" class="table competitionDatatable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
                                             <th>Rank</th>
@@ -68,12 +68,12 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-            var dTtable = $('#leaderboardDatatable').DataTable({
+            var dTtable = $('#competitionDatatable').DataTable({
                 processing: true,
                 serverSide: true,
                 searching: true,
                 ajax: {
-                    url: '/admin/getLeaderboard',
+                    url: '/admin/getCompetitionDatatable',
                     type: 'GET',
                     data: {},
                     dataSrc: function(json) {

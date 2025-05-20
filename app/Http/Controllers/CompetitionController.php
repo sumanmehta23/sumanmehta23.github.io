@@ -44,7 +44,7 @@ class CompetitionController extends Controller
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)
             ->whereNotNull('competition_month')
-            ->where('demo', false)
+            ->where('demo', true)
             ->orderBy('id', 'desc')
             ->get();
 
@@ -56,16 +56,14 @@ class CompetitionController extends Controller
         $user=auth()->user();
         $email  = $user->email;
 
-        $results = AccountType::whereHas('mt5Group', function ($query) {
-            $query->whereIn('mt5_group_type', ['live', 'real']);
-        })
-        ->where('is_client_group', 1)
-        ->where('ac_name', 'Competition')
-        ->orderBy('display_priority', 'DESC')
-        ->with(['mt5Group' => function ($query) {
-            $query->select('mt5_group_id', 'mt5_group_type');
-        }])
-        ->get();
+        $results = AccountType::with('mt5Group')
+            ->whereHas('mt5Group', function ($query) {
+                $query->where('mt5_group_type', 'demo');
+            })
+            ->where('is_client_group', 1)
+            ->where('ac_name', 'Competition')
+            ->orderBy('display_priority', 'desc')
+            ->get();
 
         return view('createCompetition', compact('user', 'results'));
     }
@@ -85,8 +83,10 @@ class CompetitionController extends Controller
         $validatedData = $request->validate([
             'options' => 'required|string',
             'leverage' => 'required|string',
+            'demo_deposit' => 'required',
         ]);
 
+        $demo_deposit = $request->demo_deposit;
         $user = auth()->user();
         $nick_name = $request->nick_name;
 
@@ -119,10 +119,15 @@ class CompetitionController extends Controller
         $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
         $nextMonth = date('F', strtotime('+1 month'));
+        $currentYear = date('Y');
+        $nextYear = date('Y') + 1;
+
         $existingCompetition = Account::where('user_id', $user->id)
             ->where('competition_month', $nextMonth)
-            ->where('demo', false)
+            ->where('competition_year',$currentYear)
+            ->where('demo', true)
             ->first();
+
         if ($existingCompetition) {
             return redirect()->back()->with('error', 'Competition already purchased for next month.');
         }
@@ -142,10 +147,15 @@ class CompetitionController extends Controller
                     ])
             ->event('create')
             ->log('Create Live Account');
+            if($nextMonth == 'January'){
+                $year = $nextYear;
+            }else{
+                $year = $currentYear;
+            }
             $useraccount = Account::create([
                 'user_id' => $user->id,
                 'name' => $user->fullname??$user->email,
-                'demo'=> false,
+                'demo'=> true,
                 'email' => $user->email,
                 'account_nick_name' =>  $nick_name,
                 'account_type_id' => $account_type_id,
@@ -153,7 +163,9 @@ class CompetitionController extends Controller
                 'currency' => 'USD',
                 'ib1' => $user->ib1?? "",
                 'account_request_status' => '0',
-                'competition_month' => date('F', strtotime('+1 month')),
+                'competition_month' => $nextMonth,
+                'competition_year' => $year,
+                'balance' => $demo_deposit,
 
             ]);
             if($useraccount){
@@ -206,7 +218,7 @@ class CompetitionController extends Controller
             ->get();
 
         dd($monthlyData);
-        
+
         // Organize data by month
         $grouped = [];
         foreach ($monthlyData as $data) {

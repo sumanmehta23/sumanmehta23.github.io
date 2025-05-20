@@ -26,7 +26,7 @@ use App\Services\MailService as MailService;
 
 class Leaderboard extends Controller
 {
-    public function leaderboard()
+    public function competiton_dashboard()
     {
         return view('admin.leaderboard');
     }

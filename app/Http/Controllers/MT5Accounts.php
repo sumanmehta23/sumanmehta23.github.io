@@ -243,7 +243,6 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
-
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -951,7 +950,6 @@ class MT5Accounts extends Controller
 
         if($userAcc)
         {
-
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;

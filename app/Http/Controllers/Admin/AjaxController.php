@@ -628,6 +628,7 @@ class AjaxController extends Controller
         $rmCondition = Account::select('accounts.*')
             // ->select('accounts.*')
             ->where('account_request_status', 0)
+            ->where('competition_month', null)
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
@@ -3834,7 +3835,7 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function getLeaderboard(Request $request)
+    public function getCompetitionDatatable(Request $request)
     {
         dd('sssss');
     }
