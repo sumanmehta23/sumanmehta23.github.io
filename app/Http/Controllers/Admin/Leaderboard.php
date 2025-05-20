@@ -30,4 +30,9 @@ class Leaderboard extends Controller
     {
         return view('admin.leaderboard');
     }
+
+    public function requested_competition()
+    {
+        return view('admin.requested_competition');
+    }
 }
