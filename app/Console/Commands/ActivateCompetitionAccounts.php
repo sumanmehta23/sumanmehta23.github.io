@@ -70,7 +70,7 @@ class ActivateCompetitionAccounts extends Command
 
                     $settings = settings();
                     $user = User::where('id', $account->user_id)->first();
-
+                    Log::info('Competition counts '.json_encode(count($accounts)));
                     $group = AccountType::where('id', $account->account_type_id)->firstOrFail();
 
                     $referral=$user->referral;
