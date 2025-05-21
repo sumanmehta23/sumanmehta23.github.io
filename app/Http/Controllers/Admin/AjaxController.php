@@ -11,6 +11,7 @@ use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Permission;
+use App\Models\RestrictIps;
 use App\Models\EmployeeList;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
@@ -18,8 +19,9 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
-use Yajra\DataTables\DataTables;
 
+use Yajra\DataTables\DataTables;
+use App\Exports\CompetitionExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +29,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Models\RestrictIps;
 
 class AjaxController extends Controller
 {
@@ -3964,9 +3965,201 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function getCompetitionDatatable(Request $request)
+    public function getCompetitionsData(Request $request)
+    {    
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+
+        $rmCondition = Account::select('accounts.*')
+            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_year')
+            ->whereHas('accountType', function ($query) {
+                $query->where('ac_name', 'Competition');
+            })
+            ->with(['user', 'accountType']);
+
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $rmCondition->where(function($query) use ($search) {
+                $query->whereHas('user', function($q) use ($search) {
+                    $q->where('email', 'like', "%{$search}%")
+                        ->orWhere('fullname', 'like', "%{$search}%");
+                })
+                ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('month') && !empty($request->month)) {
+            $rmCondition->where('competition_month', $request->month);
+        }
+
+        if ($request->has('year') && !empty($request->year)) {
+            $rmCondition->where('competition_year', $request->year);
+        }
+
+        if ($request->has('status') && $request->status !== '') {
+            $rmCondition->where('account_request_status', (int)$request->status);
+        }
+
+        if ($role !== "Super Admin") {
+                $rmCondition->whereHas('user');
+            }
+
+        if ($role === "Relationship Manager") {
+            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
+                $query->where('relationship_manager.rm_id', $alogin); 
+            });
+        }
+
+        $rmCondition->orderBy('id', 'desc');
+        
+        if ($request->ajax()) {
+            return DataTables::of($rmCondition)
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : 'Unknown';
+                    $email = $row->user ? $row->user->email : 'No Email';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                <div class='d-flex align-items-center'>
+                                    <div class='me-2'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                    </div>
+                                    <div>
+                                        <div class='lh-1'><span>{$fullname}</span></div>
+                                        <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+                ->addColumn('code', function ($row) {
+                    $accountGroup = $row->accountType->ac_group;
+                    return "<a href='" . (($row->code && $row->code != 'Rejected') ? '/admin/view_account_details/' . $row->id : '#') . "'>
+                                <div class='row align-items-center'>
+                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
+                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col ps-2'>
+                                        <h6 class='mb-0'><span class='text-truncate w-100'>" .
+                        ($row->code ? $row->code : 'Pending') .
+                        "</span>
+                                        </h6>
+                                        <p class='mb-0 text-muted f-12'><span
+                                                class='text-truncate w-100'> $accountGroup </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>";
+                })
+
+                ->addColumn('balance', function ($row) {
+                    return $row->balance;
+                })
+                ->addColumn('created_at', function ($row) {
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function ($row) {
+                    return $row->email;
+                })
+                ->addColumn('initial_balance', function ($row) {
+                    return $row->balance;
+                })
+                ->addColumn('profit', function ($row) {
+                    if($row->account_request_status == 0){
+                        return '<span>N/A</span>';
+                    }
+                    $profit = $row->balance - 100000;
+                    return '<span class="' . ($profit >= 0 ? 'text-success' : 'text-danger') . '">' . number_format($profit, 2) . '</span>';
+                })
+                 ->addColumn('account_status', function ($row) {
+                    if ($row->account_request_status == 1) {
+                        return "<span class='text-success'>Approved</span>";
+                    } elseif ($row->account_request_status == 0) {
+                        return "<span class='text-warning'>Pending</span>";
+                    }
+                })
+                ->addColumn('month_year', function ($row) {
+                    $monthYear = $row->competition_month . '/' . $row->competition_year;
+                    $url = route('admin.competitions.leaderboard', [
+                        'month' => $row->competition_month,
+                        'year' => $row->competition_year
+                    ]);
+
+                    return '
+                        <div class="d-flex flex-column align-items-start">
+                            <div><strong>' . e($monthYear) . '</strong></div>
+                            <a href="' . $url . '" 
+                            class="btn btn-sm btn-outline-primary mt-1"
+                            style="font-size: 0.75rem; padding: 2px 6px;"
+                            target="_blank">
+                            View Leaderboard
+                            </a>
+                        </div>
+                    ';
+                })
+                ->addColumn('account_group', function ($row) {
+                    return $row->accountType->ac_group;
+                })
+                ->addColumn('account_request_status', function ($row) {
+
+                    if ($row->account_request_status == 1) {
+                        return "<button class=' badge bg-outline-success'>Approved</button>";
+                        // }elseif($row->account_request_status == 2){
+                        //     return "<button class='ibToggle badge bg-outline-danger'>Rejected</button>";
+                    } elseif ($row->account_request_status == 0) {
+                        return "<button class='ibToggle badge bg-outline-primary'>Pending</button>";
+                    }
+                })
+
+                ->addColumn('created_date', function ($row) {
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                })
+                ->addColumn('created_time', function ($row) {
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'initial_balance', 'profit', 'month_year', 'account_status'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function leaderboard(Request $request)
     {
-        dd('sssss');
+        $month = $request->query('month');
+        $year = $request->query('year');
+     dd($year);
+        // Fetch data based on month/year (example)
+        $accounts = Account::with(['user', 'accountType'])
+            ->where('competition_month', $month)
+            ->where('competition_year', $year)
+            ->whereHas('accountType', function ($q) {
+                $q->where('caa_name', 'Competition');
+            })
+            ->get();
+
+        return view('admin.competitions.leaderboard', compact('accounts', 'month', 'year'));
+    }
+
+    public function exportCompetitions(Request $request)
+    {
+        $filters = [
+            'search' => $request->get('search'),
+            'month' => $request->get('month'),
+            'year' => $request->get('year'),
+            'status' => $request->get('status')
+        ];
+
+        return (new CompetitionExport($filters))->download('competitions_' . date('Y-m-d') . '.xlsx');
     }
 
 }

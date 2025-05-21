@@ -357,7 +357,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
-    Route::get('/getCompetitionDatatable', [AjaxController::class, 'getCompetitionDatatable']);
+    Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
+    Route::get('/competitions/leaderboard', [AjaxController::class, 'leaderboard'])
+    ->name('competitions.leaderboard');
+
+    Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
     Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
 

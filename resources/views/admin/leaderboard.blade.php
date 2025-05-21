@@ -3,6 +3,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         .pointer,
         .emailActionToggle,
@@ -24,30 +25,86 @@
 
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                <h1 class="page-title">Competition Dashboard</h1>
+                <h1 class="page-title">Competition Management</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Competition Dashboard</li>
+                    <li class="breadcrumb-item active" aria-current="page">Competition Management</li>
                 </ol>
             </div>
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
-                        <div class="card-header justify-content-between">
-                            <div class="card-title">
-                                Listed Count :
+                        <div class="card-header">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                                <div class="card-title mb-0">
+                                    Competitions
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                    <button class="btn btn-primary btn-sm export-excel">
+                                        <i class="fe fe-download me-2"></i>Export to Excel
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm export-all">
+                                        <i class="fe fe-download-cloud me-2"></i>Export All
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent">
+                                            <i class="fe fe-search"></i>
+                                        </span>
+                                        <input type="text" id="searchInput" class="form-control" placeholder="Search name, email, account...">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <select id="monthFilter" class="form-select">
+                                        <option value="">Filter by Month</option>
+                                        <option value="January">January</option>
+                                        <option value="February">February</option>
+                                        <option value="March">March</option>
+                                        <option value="April">April</option>
+                                        <option value="May">May</option>
+                                        <option value="June">June</option>
+                                        <option value="July">July</option>
+                                        <option value="August">August</option>
+                                        <option value="September">September</option>
+                                        <option value="October">October</option>
+                                        <option value="November">November</option>
+                                        <option value="December">December</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <select id="yearFilter" class="form-select">
+                                        <option value="">Filter by Year</option>
+                                        @for($i = 2023; $i <= date('Y')+1; $i++)
+                                            <option value="{{ $i }}">{{ $i }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <select id="statusFilter" class="form-select">
+                                        <option value="">Filter by Status</option>
+                                        <option value="0">Pending</option>
+                                        <option value="1">Approved</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-responsive"
                             <div class="table-responsive">
                                 <table id="competitionDatatable" class="table competitionDatatable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-                                            <th>Rank</th>
+                                            <th>Account</th>
+                                            <th>Status</th>
                                             <th>Name/Email</th>
+                                            <th>Month/Year</th>
+                                            <th>Inital Balance</th>
                                             <th>Balance</th>
                                             <th>Equity</th>
-                                            <th>Competition Month</th>
+                                            <th>Profit</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -71,23 +128,40 @@
             var dTtable = $('#competitionDatatable').DataTable({
                 processing: true,
                 serverSide: true,
-                searching: true,
+                searching: false,
                 ajax: {
-                    url: '/admin/getCompetitionDatatable',
+                    url: '/admin/getCompetitionsData',
                     type: 'GET',
-                    data: {},
+                    data: function(d) {
+                        d.search = $('#searchInput').val();
+                        d.month = $('#monthFilter').val();
+                        d.year = $('#yearFilter').val();
+                        d.status = $('#statusFilter').val();
+                    },
                     dataSrc: function(json) {
                         return json.data;
                     }
                 },
                 columns: [
                     {
-                        data: 'rank',
-                        name: 'rank'
+                        data: 'code',
+                        name: 'code'
+                    },
+                     {
+                        data: 'account_status',
+                        name: 'account_status'
                     },
                     {
-                        data: 'name_email',
-                        name: 'name_email',
+                        data: 'email',
+                        name: 'email',
+                    },
+                    {
+                        data: 'month_year',
+                        name: 'month_year',
+                    },
+                    {
+                        data: 'initial_balance',
+                        name: 'initial_balance',
                     },
                     {
                         data: 'balance',
@@ -98,34 +172,79 @@
                         name: 'equity',
                     },
                     {
-                        data: 'month',
-                        name: 'month',
-                    },
+                        data: 'profit',
+                        name: 'profit',
+                    }
                 ],
                 order: [
                     [0, "desc"]
                 ],
                 lengthChange: true,
-                pageLength: 10,
-                lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
-                dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Leaderboard_List_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [0,1,2,3,4] // Exclude the `Name/Email` column (index 2)
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-clients";
-                        }
-                    }
-                ],
-            })
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
+                dom: `<"row"<"col-sm-12"tr>>
+                      <"row align-items-center"
+                        <"col-sm-12 col-md-4"l>
+                        <"col-sm-12 col-md-4 text-center"i>
+                        <"col-sm-12 col-md-4"p>>`,
+                language: {
+                    lengthMenu: '_MENU_ records per page',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                    infoEmpty: 'No records available',
+                    infoFiltered: '(filtered from _MAX_ total records)'
+                },
+            });
+
+            // Handle filter changes
+            $('#searchInput').on('keyup', function(){
+                dTtable.ajax.reload();
+            });
+
+            $('#monthFilter, #yearFilter, #statusFilter').on('change', function(){
+                dTtable.ajax.reload();
+            });
+
+            // Handle Excel export
+            $('.export-excel').on('click', function() {
+                let currentDate = new Date().toISOString().slice(0, 10);
+                let filteredData = dTtable.rows().data().toArray();
+                
+                // Create a workbook with the filtered data
+                let wb = XLSX.utils.book_new();
+                let ws = XLSX.utils.json_to_sheet(filteredData.map(row => ({
+                    'Account': row.account_code || 'Pending',
+                    'Status': row.account_status === 1 ? 'Approved' : 'Pending',
+                    'Name': row.fullname || '',
+                    'Email': row.fullemail || '',
+                    'Month/Year': row.month_year,
+                    'Initial Balance': parseFloat(row.initial_balance || 0).toFixed(2),
+                    'Balance': parseFloat(row.balance || 0).toFixed(2),
+                    'Equity': parseFloat(row.equity || 0).toFixed(2),
+                    'Profit': row.profit ? parseFloat(row.profit).toFixed(2) : 'N/A'
+                })));
+                
+                // Set column widths
+                const colWidths = [
+                    {wch: 15}, // Account
+                    {wch: 10}, // Status
+                    {wch: 20}, // Name
+                    {wch: 30}, // Email
+                    {wch: 12}, // Month/Year
+                    {wch: 15}, // Initial Balance
+                    {wch: 15}, // Balance
+                    {wch: 15}, // Equity
+                    {wch: 15}, // Profit
+                ];
+                ws['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'Competition Data');
+                XLSX.writeFile(wb, `Competition_List_${currentDate}.xlsx`);
+            });
+
+            // Handle Export All
+            $('.export-all').on('click', function() {
+                window.location.href = "/admin/export-competitions";
+            });
         });
     </script>
 @endsection
