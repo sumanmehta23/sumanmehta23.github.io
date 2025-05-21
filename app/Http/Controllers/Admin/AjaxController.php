@@ -1625,11 +1625,14 @@ class AjaxController extends Controller
 
                     $acc = null;
                     if (is_numeric($row->deposit_from)) {
+
                         $acc = Account::find($row->deposit_from);
                     }
 
                     if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
                         $transfer_from = 'IB Wallet';
+                    }elseif($row->deposit_type == 'CRM' && $row->deposit_from == NULL){
+                        $transfer_from = $row->deposit_type;
                     } else {
                         $acc = Account::find($row->deposit_from);
                         $transfer_from = $acc;
@@ -3825,6 +3828,9 @@ class AjaxController extends Controller
                                 }
                                 if ($tradeDeposit->deposit_from == 'IB Commission' || $tradeDeposit->deposit_type == 'IB Withdraw') {
                                     $transfer_from = 'IB Wallet';
+                                }
+                                elseif($row->deposit_type == 'CRM' && $row->deposit_from == NULL){
+                                    $transfer_from = $row->deposit_type;
                                 } else {
                                     $transfer_from = $tradeDeposit->deposit_type;
                                 }
