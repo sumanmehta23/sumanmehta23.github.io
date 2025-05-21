@@ -324,6 +324,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
     Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
+    Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
     Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
 

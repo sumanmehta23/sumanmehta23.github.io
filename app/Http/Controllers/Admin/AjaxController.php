@@ -3764,6 +3764,45 @@ class AjaxController extends Controller
     }
 
 
+    public function exportAllTradingDeposit(Request $request)
+    {
+        $fileName = 'Trading_Deposit_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Name', 'Email', 'Account No', 'Deposit Amount', 'Deposit Type', 'Deposit From', 'Deposited Date', 'Status']);
+
+            // Fetch client data
+            TradeDeposit::select(
+                            'trade_deposits.*'
+                        )->with(['user', 'account'])
+                        ->chunk(500, function ($tradeDeposits) use ($handle) {
+                            foreach ($tradeDeposits as $tradeDeposit) {
+                                fputcsv($handle, [
+                                    $tradeDeposit->user->fullname,
+                                    $tradeDeposit->user->email,
+                                    $tradeDeposit->code,
+                                    $tradeDeposit->deposit_amount,
+                                    $tradeDeposit->deposit_type,
+                                    $tradeDeposit->deposit_from,
+                                    $tradeDeposit->created_at,
+                                    $tradeDeposit->status,
+                                ]);
+                            }
+                        });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
+    }
+
+
     public function getBlockedIPs(Request $request)
     {
         $query = RestrictIps::select(
