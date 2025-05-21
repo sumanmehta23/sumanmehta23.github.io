@@ -148,6 +148,7 @@ class TradeWithdrawal extends Controller
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
+            $ticket1 = NULL;
             $login = $account->code;
             $email = $account->email;
             activity()->causedBy($user_id)
@@ -224,9 +225,9 @@ class TradeWithdrawal extends Controller
                 dd('test');
             }
 
-            $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
+            $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+            if ($errorCode1 != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode1);
                 return response()->json([
                     'success' => false,
                     'message' => 'Something went wrong',
