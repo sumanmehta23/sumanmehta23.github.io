@@ -3843,7 +3843,7 @@ class AjaxController extends Controller
                                     $transferfrom,
                                     $tradeDeposit->account->code ?? 'N/A',
                                     $tradeDeposit->status,
-                                    $tradeDeposit->created_at,
+                                    $tradeDeposit->deposted_date,
                                 ]);
                             }
                         });
