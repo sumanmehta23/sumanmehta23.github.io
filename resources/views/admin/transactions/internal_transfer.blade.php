@@ -85,10 +85,13 @@
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
+                                                <th>Email</th>
                                                 <th>Amount</th>
                                                 <th>Transfer From</th>
                                                 <th>Transfer To</th>
+                                                <th>Date</th>
                                                 <th>Status</th>
+                                                <th>Created At</th>
                                                 <!-- <th>Actions</th> -->
                                             </tr>
                                         </thead>
@@ -117,12 +120,22 @@
                         extend: 'excel',
                         text: 'Export to Excel',
                         exportOptions: {
-                            columns: [0,1,2,3,4] // Updated column indices to match your use case
+                            columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
+                        }
+                    },
+                    {
+                        text: 'Export All',
+                        action: function () {
+                            window.location.href = "/admin/export-all-internal-transfer";
                         }
                     }
                 ],
 
             order: [[3, "desc"]],
+            lengthMenu: [
+                [10, 25, 50, 100, 500, 1000], // DataTable options
+                [10, 25, 50, 100, 500, 1000] // User-facing labels
+                ],
             processing: true,
             serverSide: true,
             searching: true,
@@ -138,11 +151,14 @@
                 }
             },
             columns: [
+              { data: 'name', name: 'name' },
               { data: 'email', name: 'email' },
               { data: 'amount', name: 'amount' },
               { data: 'transfer_from', name: 'transfer_from' },
               { data: 'transfer_to', name: 'transfer_to' },
+              { data: 'date', name: 'date' },
               { data: 'status', name: 'status' },
+              { data: 'created_at', name: 'created_at', visible:false },
               // { data: 'action', name: 'action', orderable: false, searchable: false },
             ]
           });

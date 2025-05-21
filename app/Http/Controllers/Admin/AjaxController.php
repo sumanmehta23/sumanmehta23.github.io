@@ -1609,7 +1609,7 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('deposit_type', 'Internal Transfer');;
+            $query->where('deposit_type', 'Internal Transfer');
         }
 
         if (isset($request->status)) {
@@ -1620,6 +1620,9 @@ class AjaxController extends Controller
         // $query->orderByDesc('id')->get();
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname;
+                })
                 ->addColumn('email', function ($row) {
                     return $row->email;
                 })
@@ -1649,7 +1652,19 @@ class AjaxController extends Controller
                         return "<div class='badge bg-outline-primary'>Pending</div>";
                     }
                 })
-                ->rawColumns(['email', 'amount', 'transfer_from', 'transfer_to', 'status'])
+                ->addColumn('date', function ($row) {
+                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->withdraw_date));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->rawColumns(['name','email', 'amount', 'transfer_from', 'transfer_to','date', 'status'])
                 ->make(true);
         }
 
@@ -3789,6 +3804,52 @@ class AjaxController extends Controller
                                     $tradeDeposit->deposit_from,
                                     $tradeDeposit->created_at,
                                     $tradeDeposit->status,
+                                ]);
+                            }
+                        });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
+    }
+
+    public function exportAllInternalTransfer(Request $request)
+    {
+        $fileName = 'Internal_Transfer_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Name', 'Email', 'Amount', 'Transfer From', 'Transfer To', 'Status', 'Created At']);
+
+            // Fetch client data
+            TradeDeposit::with(['user', 'account'])
+                        ->where('deposit_type', 'Internal Transfer')
+                        ->chunk(500, function ($tradeDeposits) use ($handle) {
+                            foreach ($tradeDeposits as $tradeDeposit) {
+                                if ($tradeDeposit->deposit_from) {
+                                    $acc = Account::where('id', $tradeDeposit->deposit_from)->first();
+                                }
+                                if ($tradeDeposit->deposit_from == 'IB Commission' || $tradeDeposit->deposit_type == 'IB Withdraw') {
+                                    $transfer_from = 'IB Wallet';
+                                } else {
+                                    $transfer_from = $tradeDeposit->deposit_type;
+                                }
+                                $transferfrom =  ($tradeDeposit->deposit_from && $acc) ? $acc->code : $transfer_from;
+
+                                fputcsv($handle, [
+                                    $tradeDeposit->user->fullname,
+                                    $tradeDeposit->user->email,
+                                    $tradeDeposit->deposit_amount,
+                                    $transferfrom,
+                                    $tradeDeposit->account->code ?? 'N/A',
+                                    $tradeDeposit->status,
+                                    $tradeDeposit->created_at,
                                 ]);
                             }
                         });
