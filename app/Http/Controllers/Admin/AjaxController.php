@@ -1606,8 +1606,12 @@ class AjaxController extends Controller
         }
 
         // Filter by status if provided
-        if ($request->filled('status')) {
+        if (isset($request->status)) {
             $query->where('trade_deposits.status', $request->status);
+        }
+
+        if (isset($request->type)) {
+            $query->where('trade_deposits.deposit_type', $request->type);
         }
 
         if ($request->ajax()) {
