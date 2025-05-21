@@ -187,6 +187,8 @@ class TradeWithdrawal extends Controller
                     $bonusamount = -abs(-9 * $multiplier);
 
                     if($account->code==817752){
+                        dump($account_balance);
+                        dump($total_deposit_amount);
                         dump($amount);
                         dump($accountProfit);
                         dump($multiplier);
