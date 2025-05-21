@@ -4002,8 +4002,8 @@ class AjaxController extends Controller
         }
 
         if ($role !== "Super Admin") {
-                $rmCondition->whereHas('user');
-            }
+            $rmCondition->whereHas('user');
+        }
 
         if ($role === "Relationship Manager") {
             $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
@@ -4071,7 +4071,7 @@ class AjaxController extends Controller
                     return $row->email;
                 })
                 ->addColumn('initial_balance', function ($row) {
-                    return $row->balance;
+                    return $row->accountType->ac_min_deposit;
                 })
                 ->addColumn('profit', function ($row) {
                     if($row->account_request_status == 0){
