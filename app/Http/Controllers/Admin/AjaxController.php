@@ -1593,7 +1593,7 @@ class AjaxController extends Controller
     {
         $query = TradeDeposit::select('trade_deposits.*')
             ->with(['user', 'account']) // Eager load user and account relationships
-            ->where('trade_deposits.deposit_type', 'Internal Transfer ');
+            ->whereIn('trade_deposits.deposit_type', ['Internal Transfer','CRM']);
 
         $role = session('userData')['userRole'] ?? null;
         $alogin = session('userData')['id'] ?? null;
@@ -3817,7 +3817,7 @@ class AjaxController extends Controller
 
             // Fetch client data
             TradeDeposit::with(['user', 'account'])
-                        ->where('deposit_type', 'Internal Transfer')
+                        ->whereIn('trade_deposits.deposit_type', ['Internal Transfer','CRM'])
                         ->chunk(500, function ($tradeDeposits) use ($handle) {
                             foreach ($tradeDeposits as $tradeDeposit) {
                                 if ($tradeDeposit->deposit_from) {
