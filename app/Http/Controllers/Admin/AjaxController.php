@@ -3829,8 +3829,8 @@ class AjaxController extends Controller
                                 if ($tradeDeposit->deposit_from == 'IB Commission' || $tradeDeposit->deposit_type == 'IB Withdraw') {
                                     $transfer_from = 'IB Wallet';
                                 }
-                                elseif($row->deposit_type == 'CRM' && $row->deposit_from == NULL){
-                                    $transfer_from = $row->deposit_type;
+                                elseif($tradeDeposit->deposit_type == 'CRM' && $tradeDeposit->deposit_from == NULL){
+                                    $transfer_from = $tradeDeposit->deposit_type;
                                 } else {
                                     $transfer_from = $tradeDeposit->deposit_type;
                                 }
