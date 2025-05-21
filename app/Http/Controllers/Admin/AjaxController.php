@@ -2994,7 +2994,7 @@ class AjaxController extends Controller
                 $deposit_from = $row->deposit_type;
             }
             $data[] = [
-                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
+                'created_on' => Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d H:i:s'),
                 'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
