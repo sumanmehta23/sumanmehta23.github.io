@@ -1454,7 +1454,6 @@ class AjaxController extends Controller
         // Fetch data
         // $query->orderByDesc('id')->get();
 
-
         if ($request->ajax()) {
             return DataTables::of($query)
 
@@ -1592,84 +1591,73 @@ class AjaxController extends Controller
 
     public function getInternalTransfer2(Request $request)
     {
-        $query = TradeDeposit::with(['user', 'account']);
-        $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
-        // Add conditions based on session and GET parameters
-        if (!isset($_GET['id'])) {
-            // if (session('userData')['userRole'] == "Relationship Manager") {
-            //     $rmId = session('alogin');
-            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-            //         $q->where('rm_id', $rmId);
-            //     });
-            // }
-            if ($role === "Relationship Manager") {
-                $query->whereHas('user.employee', function ($q) use ($alogin) {
-                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
-                });
-            }
-        } else {
-            $query->where('deposit_type', 'Internal Transfer ');
+        $query = TradeDeposit::select('trade_deposits.*')
+            ->with(['user', 'account']) // Eager load user and account relationships
+            ->where('trade_deposits.deposit_type', 'Internal Transfer ');
+
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+
+        // Filter for Relationship Manager if 'id' is not present in query string
+        if (!isset($_GET['id']) && $role === "Relationship Manager" && $alogin) {
+            $query->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin);
+            });
         }
 
-        if (isset($request->status)) {
-            $query->where('status', $request->status);
+        // Filter by status if provided
+        if ($request->filled('status')) {
+            $query->where('trade_deposits.status', $request->status);
         }
 
-        // Fetch data
-        // $query->orderByDesc('id')->get();
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->addColumn('name', function ($row) {
-                    return $row->user->fullname;
+                    return $row->user->fullname ?? '-';
                 })
                 ->addColumn('email', function ($row) {
-                    return $row->email;
+                    return $row->user->email ?? '-';
                 })
                 ->addColumn('amount', function ($row) {
                     return $row->deposit_amount;
                 })
                 ->addColumn('transfer_from', function ($row) {
-                    if ($row->deposit_from) {
-                        $acc = Account::where('id', $row->deposit_from)->first();
+
+                    $acc = null;
+                    if (is_numeric($row->deposit_from)) {
+                        $acc = Account::find($row->deposit_from);
                     }
+
                     if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
                         $transfer_from = 'IB Wallet';
                     } else {
-                        $transfer_from = $row->deposit_type;
+                        $acc = Account::find($row->deposit_from);
+                        $transfer_from = $acc;
                     }
-                    return ($row->deposit_from && $acc) ? $acc->code : $transfer_from;
+                    return ($acc) ? $acc->code : $transfer_from;
                 })
                 ->addColumn('transfer_to', function ($row) {
-                    return $row->code;
+                    return $row->account->code ?? '-';
                 })
                 ->addColumn('status', function ($row) {
-                    if ($row->status == 1) {
-                        return "<div class='badge bg-outline-success'>Approved</div>";
-                    } elseif ($row->status == 2) {
-                        return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    } else {
-                        return "<div class='badge bg-outline-primary'>Pending</div>";
-                    }
+                    return match ($row->status) {
+                        1 => "<div class='badge bg-outline-success'>Approved</div>",
+                        2 => "<div class='badge bg-outline-danger'>Rejected</div>",
+                        default => "<div class='badge bg-outline-primary'>Pending</div>",
+                    };
                 })
                 ->addColumn('date', function ($row) {
-                    // $date = date('Y-m-d', strtotime($row->withdraw_date));
-                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
-                    // $time = date('H:i:s', strtotime($row->withdraw_date));
-                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
-                    return "<div class='lh-1'>
-                                $date
-                            </div>
-                            <div class='lh-2 text-muted'>
-                                $time
-                            </div>";
+                    $created = Carbon::parse($row->created_at)->addHours(3);
+                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
+                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
                 })
-                ->rawColumns(['name','email', 'amount', 'transfer_from', 'transfer_to','date', 'status'])
+                ->rawColumns(['name', 'email', 'amount', 'transfer_from', 'transfer_to', 'date', 'status'])
                 ->make(true);
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
     }
+
 
 
     // public function getWalletDeposit()
