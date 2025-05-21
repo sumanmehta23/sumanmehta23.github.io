@@ -1609,7 +1609,7 @@ class AjaxController extends Controller
                 });
             }
         } else {
-            $query->where('deposit_type', 'Internal Transfer');
+            $query->where('deposit_type', 'Internal Transfer ');
         }
 
         if (isset($request->status)) {
