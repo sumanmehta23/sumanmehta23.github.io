@@ -262,4 +262,21 @@ class Leaderboard extends Controller
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
     }
+
+    public function leaderboard(Request $request)
+    {
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        // Fetch data based on month/year (example)
+        $accounts = Account::with(['user', 'accountType'])
+            ->where('competition_month', $month)
+            ->where('competition_year', $year)
+            ->whereHas('accountType', function ($q) {
+                $q->where('ac_name', 'Competition');
+            })
+            ->get();
+
+        return view('competitions.leaderboard', compact('accounts', 'month', 'year'));
+    }
 }

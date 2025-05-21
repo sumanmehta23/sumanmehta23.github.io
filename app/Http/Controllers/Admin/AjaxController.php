@@ -4133,23 +4133,6 @@ class AjaxController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    public function leaderboard(Request $request)
-    {
-        $month = $request->query('month');
-        $year = $request->query('year');
-     dd($year);
-        // Fetch data based on month/year (example)
-        $accounts = Account::with(['user', 'accountType'])
-            ->where('competition_month', $month)
-            ->where('competition_year', $year)
-            ->whereHas('accountType', function ($q) {
-                $q->where('caa_name', 'Competition');
-            })
-            ->get();
-
-        return view('admin.competitions.leaderboard', compact('accounts', 'month', 'year'));
-    }
-
     public function exportCompetitions(Request $request)
     {
         $filters = [

@@ -206,7 +206,6 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::middleware(['auth'])->group(function () {
-
     Route::get('/two_factor_auth', [LoginController::class, 'two_factor_auth'])->name('two_factor_auth');
     Route::post('/verify-2fa', [LoginController::class, 'verify_two_factor_auth'])->name('verify-2fa');
 
@@ -358,9 +357,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
     Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
-    Route::get('/competitions/leaderboard', [AjaxController::class, 'leaderboard'])
-    ->name('competitions.leaderboard');
-
     Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
     Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
@@ -378,7 +374,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
-
+        Route::get('/competitions/leaderboard', [Leaderboard::class, 'leaderboard'])
+            ->name('competitions.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
 
