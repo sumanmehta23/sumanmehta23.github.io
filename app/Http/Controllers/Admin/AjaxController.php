@@ -3835,7 +3835,7 @@ class AjaxController extends Controller
                                     $transfer_from = $tradeDeposit->deposit_type;
                                 }
                                 $transferfrom =  ($tradeDeposit->deposit_from && $acc) ? $acc->code : $transfer_from;
-
+                                $created = Carbon::parse($tradeDeposit->created_at)->addHours(3);
                                 fputcsv($handle, [
                                     $tradeDeposit->user->fullname,
                                     $tradeDeposit->user->email,
@@ -3843,7 +3843,7 @@ class AjaxController extends Controller
                                     $transferfrom,
                                     $tradeDeposit->account->code ?? 'N/A',
                                     $tradeDeposit->status,
-                                    $tradeDeposit->deposted_date,
+                                    $created,
                                 ]);
                             }
                         });
