@@ -1606,8 +1606,12 @@ class AjaxController extends Controller
         }
 
         // Filter by status if provided
-        if ($request->filled('status')) {
+        if (isset($request->status)) {
             $query->where('trade_deposits.status', $request->status);
+        }
+
+        if (isset($request->type)) {
+            $query->where('trade_deposits.deposit_type', $request->type);
         }
 
         if ($request->ajax()) {
@@ -1625,11 +1629,14 @@ class AjaxController extends Controller
 
                     $acc = null;
                     if (is_numeric($row->deposit_from)) {
+
                         $acc = Account::find($row->deposit_from);
                     }
 
                     if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
                         $transfer_from = 'IB Wallet';
+                    }elseif($row->deposit_type == 'CRM' && $row->deposit_from == NULL){
+                        $transfer_from = $row->deposit_type;
                     } else {
                         $acc = Account::find($row->deposit_from);
                         $transfer_from = $acc;
@@ -2991,7 +2998,7 @@ class AjaxController extends Controller
                 $deposit_from = $row->deposit_type;
             }
             $data[] = [
-                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
+                'created_on' => Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d H:i:s'),
                 'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
@@ -3825,11 +3832,14 @@ class AjaxController extends Controller
                                 }
                                 if ($tradeDeposit->deposit_from == 'IB Commission' || $tradeDeposit->deposit_type == 'IB Withdraw') {
                                     $transfer_from = 'IB Wallet';
+                                }
+                                elseif($tradeDeposit->deposit_type == 'CRM' && $tradeDeposit->deposit_from == NULL){
+                                    $transfer_from = $tradeDeposit->deposit_type;
                                 } else {
                                     $transfer_from = $tradeDeposit->deposit_type;
                                 }
                                 $transferfrom =  ($tradeDeposit->deposit_from && $acc) ? $acc->code : $transfer_from;
-
+                                $created = Carbon::parse($tradeDeposit->created_at)->addHours(3);
                                 fputcsv($handle, [
                                     $tradeDeposit->user->fullname,
                                     $tradeDeposit->user->email,
@@ -3837,7 +3847,7 @@ class AjaxController extends Controller
                                     $transferfrom,
                                     $tradeDeposit->account->code ?? 'N/A',
                                     $tradeDeposit->status,
-                                    $tradeDeposit->created_at,
+                                    $created,
                                 ]);
                             }
                         });

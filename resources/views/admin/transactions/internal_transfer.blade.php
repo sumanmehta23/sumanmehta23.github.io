@@ -20,6 +20,15 @@
                     <!-- Add other status options as needed -->
                   </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="typeFilter">Filter by Transfer Type:</label>
+                    <select id="typeFilter" class="form-select" name="type">
+                      <option value="">All</option>
+                      <option value="CRM">CRM</option>
+                      <option value="Internal Transfer">Internal Transfer</option>
+                      <!-- Add other status options as needed -->
+                    </select>
+                  </div>
               </div>
             <div class="row">
                 <div class="col-xl-12">
@@ -144,6 +153,7 @@
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
+                        d.type = $('select[name=type]').val();
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
@@ -163,7 +173,9 @@
             ]
           });
           $('#statusFilter').on('change', function () {
-
+            tableInternalTransfer.ajax.reload();
+          });
+          $('#typeFilter').on('change', function () {
             tableInternalTransfer.ajax.reload();
           });
         });
