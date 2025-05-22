@@ -68,7 +68,7 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
                 $this->formatStatus($account->account_request_status),
                 $account->user->fullname ?? 'N/A',
                 $account->user->email ?? 'N/A',
-                $this->formatMonthYear((int)$account->competition_month, (int)$account->competition_year),
+                $this->formatMonthYear($account->competition_month, (int)$account->competition_year),
                 $this->formatCurrency($account->initial_balance ?? 100000),
                 $this->formatCurrency($account->balance),
                 $this->formatCurrency($account->equity),
@@ -116,12 +116,12 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
         return $status == 1 ? 'Approved' : 'Pending';
     }
 
-    private function formatMonthYear(?int $month, ?int $year): string
-    {
+    private function formatMonthYear(?string $month, ?int $year): string
+    {   
         if (!$month || !$year) {
             return 'N/A';
         }
-        return sprintf('%02d/%d', $month, $year);
+        return $month . '/' . $year;
     }
 
     private function formatCurrency(?float $value): string

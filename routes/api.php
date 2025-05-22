@@ -19,6 +19,10 @@ use App\Http\Controllers\Wallet;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
     Route::get('withdrawals', [Wallet::class, 'allwithdrawals'])->name('account.deactivate');
+
+    // Competition routes
+    Route::get('/competition/trader-data/{account}', [\App\Http\Controllers\Api\CompetitionController::class, 'getTraderData']);
+    Route::get('/competition/current', [\App\Http\Controllers\Api\CompetitionController::class, 'getCurrentCompetition']);
 });
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

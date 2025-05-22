@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\Ib1;
 use App\Models\User;
@@ -18,6 +18,7 @@ use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
 use App\MT5\MTProtocolConsts;
 use App\Models\TradeWithdrawals;
+use App\Services\CompetitionService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,17 +30,38 @@ class Leaderboard extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
-    {
+    protected $competitionService;
+    public function __construct(
+        MT5Service $mt5Service, 
+        MailService $mailService,
+        CompetitionService $competitionService
+    ) {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
+        $this->competitionService = $competitionService;
     }
 
-    public function competiton_dashboard()
+    public function competiton_dashboard(Request $request)
     {
-        return view('admin.leaderboard');
+        $month = $request->query('month', now()->format('F'));
+        $year = $request->query('year', now()->year);
+        
+        $stats = $this->competitionService->getCurrentStats($month, $year);
+        $rankings = $this->competitionService->getRankings($month, $year);
+ 
+        return view('admin.leaderboard', [
+            'stats' => $stats,
+            'rankings' => $rankings,
+            'currentMonth' => $month,
+            'currentYear' => $year,
+            'months' => [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ],
+            'years' => range(now()->year - 1, now()->year + 1)
+        ]);
     }
 
     public function requested_competition()
@@ -265,18 +287,93 @@ class Leaderboard extends Controller
 
     public function leaderboard(Request $request)
     {
-        $month = $request->query('month');
-        $year = $request->query('year');
+        // Get month and year from request or use current
+        $month = $request->query('month', now()->format('F'));
+        $year = $request->query('year', now()->year);
+        
+        try {
+            // Get competition data from service
+            $stats = $this->competitionService->getCurrentStats($month, $year);
+            $rankings = $this->competitionService->getRankings($month, $year);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($month, $year);
+            // Get available competitions for filtering
+            $availableCompetitions = Account::select('competition_month', 'competition_year')
+                ->where('demo', true)
+                ->whereNotNull('competition_month')
+                ->whereNotNull('competition_year')
+                ->distinct()
+                ->orderBy('competition_year', 'desc')
+                ->orderBy('competition_month', 'desc')
+                ->get()
+                ->groupBy('competition_year');
+            
+            return view('competitions.leaderboard', [
+                'stats' => $stats,
+                'rankings' => $rankings,
+                'currentMonth' => $month,
+                'currentYear' => $year,
+                'months' => [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ],
+                'years' => range(now()->year - 1, now()->year + 1),
+                'availableCompetitions' => $availableCompetitions,
+                'competitionStatus' => $competitionStatus['status'],
+                'targetDate' => $competitionStatus['targetDate'],
+                'showTimer' => $competitionStatus['showTimer']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in competition leaderboard: ' . $e->getMessage());
+            return back()->with('error', 'Unable to load competition data. Please try again.');
+        }
+    }
 
-        // Fetch data based on month/year (example)
-        $accounts = Account::with(['user', 'accountType'])
-            ->where('competition_month', $month)
-            ->where('competition_year', $year)
-            ->whereHas('accountType', function ($q) {
-                $q->where('ac_name', 'Competition');
-            })
-            ->get();
+    /**
+     * Get trader performance data
+     *
+     * @param string $accountNo
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTraderData($accountNo)
+    {
+        // Generate 30 days of equity data
+        $labels = [];
+        $equity = [];
+        $currentEquity = 10000;
+        
+        for ($i = 30; $i >= 0; $i--) {
+            $labels[] = now()->subDays($i)->format('M d');
+            $change = $currentEquity * (mt_rand(-200, 300) / 10000);
+            $currentEquity += $change;
+            $equity[] = round($currentEquity, 2);
+        }
 
-        return view('competitions.leaderboard', compact('accounts', 'month', 'year'));
+        // Generate sample trades
+        $symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD', 'ETHUSD'];
+        $volumes = [0.1, 0.2, 0.5, 1.0];
+        $trades = [];
+
+        for ($i = 0; $i < 20; $i++) {
+            $trades[] = [
+                'time' => now()->subMinutes(mt_rand(1, 1440))->toDateTimeString(),
+                'type' => mt_rand(0, 1) ? 'Buy' : 'Sell',
+                'symbol' => $symbols[array_rand($symbols)],
+                'volume' => $volumes[array_rand($volumes)],
+                'price' => mt_rand(10000, 15000) / 10000,
+                'profit' => mt_rand(-500, 500) / 10
+            ];
+        }
+
+        usort($trades, function($a, $b) {
+            return strcmp($b['time'], $a['time']);
+        });
+
+        return response()->json([
+            'chart_data' => [
+                'labels' => $labels,
+                'equity' => $equity
+            ],
+            'trades' => $trades
+        ]);
     }
 }
