@@ -3986,6 +3986,10 @@ class AjaxController extends Controller
                     $q->where('email', 'like', "%{$search}%")
                         ->orWhere('fullname', 'like', "%{$search}%");
                 })
+                ->orWhere('competition_month', 'like', "%{$search}%")
+                ->orWhere('competition_year', 'like', "%{$search}%")
+                ->orWhere('balance', 'like', "%{$search}%")
+                ->orWhere('equity', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%");
             });
         }
@@ -4078,7 +4082,7 @@ class AjaxController extends Controller
                     if($row->account_request_status == 0){
                         return '<span>N/A</span>';
                     }
-                    $profit = $row->balance - 100000;
+                    $profit = $row->balance - $row->accountType->ac_min_deposit;
                     return '<span class="' . ($profit >= 0 ? 'text-success' : 'text-danger') . '">' . number_format($profit, 2) . '</span>';
                 })
                  ->addColumn('account_status', function ($row) {
