@@ -62,7 +62,7 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
     {
         try {
             $profit = $account->balance ? ($account->balance - 100000) : null;
-            
+
             return [
                 $account->code ?? 'Pending',
                 $this->formatStatus($account->account_request_status),
