@@ -270,14 +270,20 @@ class SettingsController extends Controller
                     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                    if ($reason === 'HFT') {
+                    if ($reason === 'HFT' || $reason === 'Latency Arbitrage') {
+                        if($reason === 'HFT'){
+                            $reason_text = 'high-frequency trading (HFT)';
+                        }elseif($reason === 'Latency Arbitrage'){
+                            $reason_text = 'Latency Arbitrage';
+                        }
+
                         $type = 'Account Termination Notice - Violation of Trading Terms';
 
                         $content = '<p>
-                            This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of high-frequency trading (HFT) algorithms on our live trading platform.
+                            This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of '.$reason_text.' algorithms on our live trading platform.
                         </p>' .
                         '<p>
-                            Our monitoring systems have detected trading patterns consistent with automated high-frequency trading on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                            Our monitoring systems have detected trading patterns consistent with automated '.$reason_text.' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
                         </p>' .
                         '<p>
                             As a result of this violation:
