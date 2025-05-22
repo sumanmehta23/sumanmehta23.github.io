@@ -3966,7 +3966,7 @@ class AjaxController extends Controller
     }
 
     public function getCompetitionsData(Request $request)
-    {    
+    {
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
 
@@ -3997,22 +3997,22 @@ class AjaxController extends Controller
             $rmCondition->where('competition_year', $request->year);
         }
 
-        if ($request->has('status') && $request->status !== '') {
+        if ($request->has('status') && $request->status !== null) {
             $rmCondition->where('account_request_status', (int)$request->status);
         }
 
         if ($role !== "Super Admin") {
-                $rmCondition->whereHas('user');
-            }
+            $rmCondition->whereHas('user');
+        }
 
         if ($role === "Relationship Manager") {
             $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
-                $query->where('relationship_manager.rm_id', $alogin); 
+                $query->where('relationship_manager.rm_id', $alogin);
             });
         }
 
         $rmCondition->orderBy('id', 'desc');
-        
+
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
                 ->editColumn('email', function ($row) {
@@ -4071,7 +4071,7 @@ class AjaxController extends Controller
                     return $row->email;
                 })
                 ->addColumn('initial_balance', function ($row) {
-                    return $row->balance;
+                    return $row->accountType->ac_min_deposit;
                 })
                 ->addColumn('profit', function ($row) {
                     if($row->account_request_status == 0){
@@ -4097,7 +4097,7 @@ class AjaxController extends Controller
                     return '
                         <div class="d-flex flex-column align-items-start">
                             <div><strong>' . e($monthYear) . '</strong></div>
-                            <a href="' . $url . '" 
+                            <a href="' . $url . '"
                             class="btn btn-sm btn-outline-primary mt-1"
                             style="font-size: 0.75rem; padding: 2px 6px;"
                             target="_blank">
