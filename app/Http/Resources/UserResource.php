@@ -19,10 +19,37 @@ class UserResource extends JsonResource
             $accountType = $this->accounts->first()->accountType->ac_name;
         }
 
-        $registrationDate = $this->created_at ? $this->created_at->toIso8601String() : null;
-        $lastModifiedDate = $this->updated_at ? $this->updated_at->toIso8601String() : null;
+        // Handle created_at date with type checking
+        $registrationDate = null;
+        if ($this->created_at) {
+            if ($this->created_at instanceof \Carbon\Carbon) {
+                $registrationDate = $this->created_at->toIso8601String();
+            } else {
+                // If it's a string, try to parse it or just use it directly
+                try {
+                    $registrationDate = \Carbon\Carbon::parse($this->created_at)->toIso8601String();
+                } catch (\Exception $e) {
+                    $registrationDate = $this->created_at;
+                }
+            }
+        }
 
-        $isoCountry = $this->country ? substr($this->country, 0, 2) : null;
+        // Handle updated_at date with type checking
+        $lastModifiedDate = null;
+        if ($this->updated_at) {
+            if ($this->updated_at instanceof \Carbon\Carbon) {
+                $lastModifiedDate = $this->updated_at->toIso8601String();
+            } else {
+                // If it's a string, try to parse it or just use it directly
+                try {
+                    $lastModifiedDate = \Carbon\Carbon::parse($this->updated_at)->toIso8601String();
+                } catch (\Exception $e) {
+                    $lastModifiedDate = $this->updated_at;
+                }
+            }
+        }
+
+        $isoCountry = $this->countryDetail ? $this->countryDetail->country_alpha : null;
 
         return [
             'user_id' => $this->id, // Mandatory

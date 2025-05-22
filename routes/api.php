@@ -5,6 +5,7 @@ use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DiagnosticsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -15,6 +16,13 @@ use App\Http\Controllers\Api\UserController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Diagnostic routes - only use in development/testing!
+Route::prefix('diagnostics')->group(function () {
+    Route::get('find-invalid-utf8-users', [DiagnosticsController::class, 'findInvalidUtf8Users']);
+    Route::get('find-problematic-users-by-column', [DiagnosticsController::class, 'findProblematicUsersByColumn']);
+    Route::get('scan-all-columns', [DiagnosticsController::class, 'scanAllColumns']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
