@@ -208,7 +208,7 @@
             $('.export-excel').on('click', function() {
                 let currentDate = new Date().toISOString().slice(0, 10);
                 let filteredData = dTtable.rows().data().toArray();
-                
+
                 // Create a workbook with the filtered data
                 let wb = XLSX.utils.book_new();
                 let ws = XLSX.utils.json_to_sheet(filteredData.map(row => ({
@@ -216,13 +216,13 @@
                     'Status': row.account_status === 1 ? 'Approved' : 'Pending',
                     'Name': row.fullname || '',
                     'Email': row.fullemail || '',
-                    'Month/Year': row.month_year,
+                    'Month/Year': row.competition_month+' / '+row.competition_year,
                     'Initial Balance': parseFloat(row.initial_balance || 0).toFixed(2),
                     'Balance': parseFloat(row.balance || 0).toFixed(2),
                     'Equity': parseFloat(row.equity || 0).toFixed(2),
-                    'Profit': row.profit ? parseFloat(row.profit).toFixed(2) : 'N/A'
+                    'Profit': (row.balance - row.initial_balance) ?? 'N/A'
                 })));
-                
+
                 // Set column widths
                 const colWidths = [
                     {wch: 15}, // Account
@@ -236,7 +236,7 @@
                     {wch: 15}, // Profit
                 ];
                 ws['!cols'] = colWidths;
-                
+
                 XLSX.utils.book_append_sheet(wb, ws, 'Competition Data');
                 XLSX.writeFile(wb, `Competition_List_${currentDate}.xlsx`);
             });
