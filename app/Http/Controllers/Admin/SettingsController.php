@@ -241,100 +241,100 @@ class SettingsController extends Controller
 
     public function send_ip_ban_reason(Request $request)
     {
-        $request->validate([
-            "ip" => 'required',
-            "emails" => 'required',
-            'reason' => 'required'
-        ]);
+        // $request->validate([
+        //     "ip" => 'required',
+        //     "emails" => 'required',
+        //     'reason' => 'required'
+        // ]);
 
-        $ips = collect(explode(',', $request->ip))->map('trim')->filter();
-        $emails = collect(explode(',', $request->emails))->map('trim')->filter();
-        $reason = $request->reason;
-        $settings = settings();
+        // $ips = collect(explode(',', $request->ip))->map('trim')->filter();
+        // $emails = collect(explode(',', $request->emails))->map('trim')->filter();
+        // $reason = $request->reason;
+        // $settings = settings();
 
-        try {
-            // Fetch all users in one query
-            $users = User::whereIn('email', $emails)->get()->keyBy('email');
+        // try {
+        //     // Fetch all users in one query
+        //     $users = User::whereIn('email', $emails)->get()->keyBy('email');
 
-            // Prepare bulk insert data for RestrictIps
-            $restrictIpsData = $emails->flatMap(function($email) use ($ips, $reason) {
-                return $ips->map(function($ip) use ($email, $reason) {
-                    return [
-                        'ip' => $ip,
-                        'email' => $email,
-                        'block_reason' => $reason,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ];
-                });
-            })->all();
+        //     // Prepare bulk insert data for RestrictIps
+        //     $restrictIpsData = $emails->flatMap(function($email) use ($ips, $reason) {
+        //         return $ips->map(function($ip) use ($email, $reason) {
+        //             return [
+        //                 'ip' => $ip,
+        //                 'email' => $email,
+        //                 'block_reason' => $reason,
+        //                 'created_at' => now(),
+        //                 'updated_at' => now()
+        //             ];
+        //         });
+        //     })->all();
 
-            // Bulk insert IP restrictions
-            RestrictIps::insert($restrictIpsData);
+        //     // Bulk insert IP restrictions
+        //     RestrictIps::insert($restrictIpsData);
 
-            // If reason is Manual, return early
-            if ($reason === 'Manually') {
-                return back()->with('success', 'IP and Email ban applied successfully.');
-            }
+        //     // If reason is Manual, return early
+        //     if ($reason === 'Manually') {
+        //         return back()->with('success', 'IP and Email ban applied successfully.');
+        //     }
 
-            // Prepare email content only if needed
-            if ($reason === 'HFT' || $reason === 'Latency Arbitrage') {
-                $reason_text = $reason === 'HFT' ? 'high-frequency trading (HFT)' : 'Latency Arbitrage';
-                $type = 'Account Termination Notice - Violation of Trading Terms';
+        //     // Prepare email content only if needed
+        //     if ($reason === 'HFT' || $reason === 'Latency Arbitrage') {
+        //         $reason_text = $reason === 'HFT' ? 'high-frequency trading (HFT)' : 'Latency Arbitrage';
+        //         $type = 'Account Termination Notice - Violation of Trading Terms';
 
-                $content = '<p>
-                    This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of '.$reason_text.' algorithms on our live trading platform.
-                </p>' .
-                '<p>
-                    Our monitoring systems have detected trading patterns consistent with automated '.$reason_text.' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
-                </p>' .
-                '<p>
-                    As a result of this violation:
-                </p>' .
-                '<ul>
-                    <li>Your trading account has been permanently terminated</li>
-                    <li>Any pending trades have been closed</li>
-                    <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
-                    <li>Your account details have been flagged in our system to prevent future registration</li>
-                </ul>' .
-                '<p>
-                    This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
-                </p>' .
-                '<p>
-                    For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
-                </p>' .
-                '<p>
-                    Regards,<br>
-                    Compliance Team<br>
-                    LQH Markets
-                </p>';
+        //         $content = '<p>
+        //             This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of '.$reason_text.' algorithms on our live trading platform.
+        //         </p>' .
+        //         '<p>
+        //             Our monitoring systems have detected trading patterns consistent with automated '.$reason_text.' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+        //         </p>' .
+        //         '<p>
+        //             As a result of this violation:
+        //         </p>' .
+        //         '<ul>
+        //             <li>Your trading account has been permanently terminated</li>
+        //             <li>Any pending trades have been closed</li>
+        //             <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
+        //             <li>Your account details have been flagged in our system to prevent future registration</li>
+        //         </ul>' .
+        //         '<p>
+        //             This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
+        //         </p>' .
+        //         '<p>
+        //             For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
+        //         </p>' .
+        //         '<p>
+        //             Regards,<br>
+        //             Compliance Team<br>
+        //             LQH Markets
+        //         </p>';
 
-                $emailSubject = $settings['admin_title'] . ' - ' . $type;
-                $from = $settings['email_from_address'];
-                $headers = "MIME-Version: 1.0" . "\r\n" .
-                          "Content-type:text/html;charset=UTF-8" . "\r\n" .
-                          'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        //         $emailSubject = $settings['admin_title'] . ' - ' . $type;
+        //         $from = $settings['email_from_address'];
+        //         $headers = "MIME-Version: 1.0" . "\r\n" .
+        //                   "Content-type:text/html;charset=UTF-8" . "\r\n" .
+        //                   'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                // Send emails in parallel using collection
-                $emails->each(function($email) use ($users, $emailSubject, $headers, $content, $settings) {
-                    if (isset($users[$email])) {
-                        $templateVars = [
-                            'name' => $users[$email]->fullname,
-                            'email' => $settings['email_from_address'],
-                            'content' => $content,
-                            "title_right" => "",
-                            "subtitle_right" => ""
-                        ];
-                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                    }
-                });
-            }
+        //         // Send emails in parallel using collection
+        //         $emails->each(function($email) use ($users, $emailSubject, $headers, $content, $settings) {
+        //             if (isset($users[$email])) {
+        //                 $templateVars = [
+        //                     'name' => $users[$email]->fullname,
+        //                     'email' => $settings['email_from_address'],
+        //                     'content' => $content,
+        //                     "title_right" => "",
+        //                     "subtitle_right" => ""
+        //                 ];
+        //                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+        //             }
+        //         });
+        //     }
 
-            return back()->with('success', 'IP ban applied and email sent successfully.');
-        } catch (\Exception $e) {
-            \Log::error('IP Ban Error: ' . $e->getMessage());
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
-        }
+        //     return back()->with('success', 'IP ban applied and email sent successfully.');
+        // } catch (\Exception $e) {
+        //     \Log::error('IP Ban Error: ' . $e->getMessage());
+        //     return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        // }
     }
 
 
