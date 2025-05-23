@@ -291,7 +291,7 @@
                                                 $transaction_id = $properties['wallet_withdraw_id'];
 
                                                 $logDescription = "<div class=''>
-                                                                    <span>User {$userLink} approve withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
+                                                                    <span>User {$userLink} withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id} approved.</span>
                                                                 </div>";
                                                 break;
                                             case 'Approve Account Withdraw':
