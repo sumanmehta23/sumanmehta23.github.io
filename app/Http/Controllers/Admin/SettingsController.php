@@ -383,7 +383,7 @@ class SettingsController extends Controller
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Time', 'IP', 'User', 'Description']);
 
-            $logsQuery->chunk(1000, function ($logs) use ($handle) {
+            $logsQuery->chunk(2000, function ($logs) use ($handle) {
                 foreach ($logs as $log) {
                     $user = null;
                     if ($log->causer_type == 'App\Models\EmployeeList') {
