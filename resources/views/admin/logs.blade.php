@@ -131,7 +131,8 @@
                                         <option value="Reject Wallet Withdraw" {{ request('log_type') == 'Reject Wallet Withdraw' ? 'selected' : '' }}>Reject Wallet Withdraw</option>
                                         <option value="Approve Wallet Withdraw" {{ request('log_type') == 'Approve Wallet Withdraw' ? 'selected' : '' }}>Approve Wallet Withdraw</option>
                                         <option value="Manually Approved Wallet Withdraw" {{ request('log_type') == 'Manually Approved Wallet Withdraw' ? 'selected' : '' }}>Manually Approved Wallet Withdraw</option>
-                                         <option value="Approve Account Withdraw" {{ request('log_type') == 'Approve Account Withdraw' ? 'selected' : '' }}>Approve Account Withdraw</option>
+                                         <option value="Approve Account Withdraw" {{ request('log_type') == 'Approve Account Withdraw' ? 'selected' : '' }}>Approve Trade Withdraw</option>
+                                         <option value="Trade Withdraw" {{ request('log_type') == 'Trade Withdraw' ? 'selected' : '' }}>Trade Withdraw</option>
                                         <option value="Wallet Withdraw Cancel By Client" {{ request('log_type') == 'Wallet Withdraw Cancel By Client' ? 'selected' : '' }}>Wallet Withdraw Cancel By Client</option>
                                         <option value="Account Withdraw" {{ request('log_type') == 'Account Withdraw' ? 'selected' : '' }}>Account Withdraw</option>
                                         <option value="Account Deposit" {{ request('log_type') == 'Account Deposit' ? 'selected' : '' }}>Account Deposit</option>
@@ -281,6 +282,17 @@
                                                                         <span>Live account {$account} issued to user {$client_url} by {$user->email} with leverage {$log->properties['leverage']}</span>
                                                                     </div>";
                                                 }
+                                                break;
+
+                                            case 'Trade Withdraw':
+                                                $withdrawal_amount = $log->properties['withdraw_amount'];
+                                                // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                                                $properties = json_decode($log->properties, true);
+                                                $transaction_id = $properties['wallet_withdraw_id'];
+
+                                                $logDescription = "<div class=''>
+                                                                    <span>User {$userLink} approve withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
+                                                                </div>";
                                                 break;
                                             case 'Approve Account Withdraw':
                                                 $withdrawal_amount = $log->properties['approved_amount'];
