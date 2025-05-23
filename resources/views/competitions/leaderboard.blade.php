@@ -104,22 +104,22 @@
                         </div>
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <x-competition.stats-card 
-                            title="Total Participants" 
+                        <x-competition.stats-card
+                            title="Total Participants"
                             :value="$stats['participants']"
                             icon="users"
                         />
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <x-competition.stats-card 
-                            title="Prize Pool" 
+                        <x-competition.stats-card
+                            title="Prize Pool"
                             value="Challange Account"
                             icon="bar-chart-2"
                         />
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <x-competition.stats-card 
-                            title="Average Equity" 
+                        <x-competition.stats-card
+                            title="Average Equity"
                             :value="'$' . number_format($stats['avg_equity'], 2)"
                             icon="dollar-sign"
                         />
@@ -140,8 +140,9 @@
                             <div class="card-body p-0">
                                 <div class="list-group list-group-flush">
                                     @forelse($rankings as $rank)
-                                        <a href="#" class="list-group-item list-group-item-action trader-select py-3" 
-                                           data-account="{{ $rank['account_number'] }}">
+
+                                        <a href="#" class="list-group-item list-group-item-action trader-select py-3"
+                                           data-account="{{ $rank['account_code'] }}">
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
@@ -177,7 +178,7 @@
                                                         <div class="d-flex align-items-center">
                                                             <small class="text-muted me-3">
                                                                 <i class="fe fe-hash me-1"></i>
-                                                                {{ $rank['account_number'] }}
+                                                                {{ $rank['account_code'] }}
                                                             </small>
                                                             <small class="text-muted me-3">
                                                                 <i class="fe fe-bar-chart-2 me-1"></i>
@@ -591,8 +592,9 @@ document.querySelectorAll('.trader-select').forEach(item => {
         e.preventDefault();
         document.querySelectorAll('.trader-select').forEach(el => el.classList.remove('active'));
         item.classList.add('active');
-        
+
         const accountNo = item.dataset.account;
+        // console.log(item);
         await updateTraderData(accountNo);
     });
 });
@@ -600,14 +602,14 @@ document.querySelectorAll('.trader-select').forEach(item => {
 async function updateTraderData(accountNo) {
     try {
         // Using a static test account number for development
-        const testAccountNo = '12345678';  // Replace with a real account number from your database
+        const testAccountNo = accountNo;  // Replace with a real account number from your database
         console.log('Using test account:', testAccountNo);
-        
+
         const response = await fetch(`/admin/competition/trader-data/${testAccountNo}`);
         if (!response.ok) throw new Error('Network response was not ok');
-        
+
         const data = await response.json();
-        
+
         // Update chart
         chart.data.labels = data.chart_data.labels;
         chart.data.datasets[0].data = data.chart_data.equity;
@@ -615,7 +617,7 @@ async function updateTraderData(accountNo) {
 
         // Update trading logs
         updateTradingLogs(data.trades);
-        
+
         // Update pagination buttons
         const maxPages = Math.ceil(data.trades.length / perPage);
         document.getElementById('prevPage').disabled = currentPage <= 1;
@@ -640,7 +642,7 @@ async function updateTraderData(accountNo) {
 function updateTradingLogs(trades) {
     const tbody = document.getElementById('tradingLogs');
     tbody.innerHTML = '';
-    
+
     const start = (currentPage - 1) * perPage;
     const end = start + perPage;
     const pageData = trades.slice(start, end);
@@ -663,7 +665,7 @@ function updateTradingLogs(trades) {
         const row = document.createElement('tr');
         const profitClass = trade.profit >= 0 ? 'text-success' : 'text-danger';
         const profitIcon = trade.profit >= 0 ? 'trending-up' : 'trending-down';
-        
+
         row.innerHTML = `
             <td>${new Date(trade.time).toLocaleString()}</td>
             <td>${trade.type}</td>
@@ -684,6 +686,7 @@ document.getElementById('prevPage').addEventListener('click', () => {
     if (currentPage > 1) {
         currentPage--;
         const activeTrader = document.querySelector('.trader-select.active');
+
         if (activeTrader) {
             updateTraderData(activeTrader.dataset.account);
         }

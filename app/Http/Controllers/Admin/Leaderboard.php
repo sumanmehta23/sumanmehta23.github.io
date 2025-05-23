@@ -32,7 +32,7 @@ class Leaderboard extends Controller
     protected $mt5Service;
     protected $competitionService;
     public function __construct(
-        MT5Service $mt5Service, 
+        MT5Service $mt5Service,
         MailService $mailService,
         CompetitionService $competitionService
     ) {
@@ -47,10 +47,10 @@ class Leaderboard extends Controller
     {
         $month = $request->query('month', now()->format('F'));
         $year = $request->query('year', now()->year);
-        
+
         $stats = $this->competitionService->getCurrentStats($month, $year);
         $rankings = $this->competitionService->getRankings($month, $year);
- 
+
         return view('admin.leaderboard', [
             'stats' => $stats,
             'rankings' => $rankings,
@@ -290,7 +290,7 @@ class Leaderboard extends Controller
         // Get month and year from request or use current
         $month = $request->query('month', now()->format('F'));
         $year = $request->query('year', now()->year);
-        
+
         try {
             // Get competition data from service
             $stats = $this->competitionService->getCurrentStats($month, $year);
@@ -306,7 +306,7 @@ class Leaderboard extends Controller
                 ->orderBy('competition_month', 'desc')
                 ->get()
                 ->groupBy('competition_year');
-            
+
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
@@ -336,31 +336,36 @@ class Leaderboard extends Controller
      */
     public function getTraderData($accountNo)
     {
+        $account = Account::with('trades')
+                    ->where('code', $accountNo)
+                    ->get();
+                        // dd($account);
         // Generate 30 days of equity data
         $labels = [];
         $equity = [];
         $currentEquity = 10000;
-        
-        for ($i = 30; $i >= 0; $i--) {
-            $labels[] = now()->subDays($i)->format('M d');
-            $change = $currentEquity * (mt_rand(-200, 300) / 10000);
-            $currentEquity += $change;
-            $equity[] = round($currentEquity, 2);
-        }
 
-        // Generate sample trades
-        $symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD', 'ETHUSD'];
-        $volumes = [0.1, 0.2, 0.5, 1.0];
+        // for ($i = 30; $i >= 0; $i--) {
+        //     $labels[] = now()->subDays($i)->format('M d');
+        //     $change = $currentEquity * (mt_rand(-200, 300) / 10000);
+        //     $currentEquity += $change;
+        //     $equity[] = round($currentEquity, 2);
+        // }
+
+        // // Generate sample trades
+        // $symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD', 'ETHUSD'];
+        // $volumes = [0.1, 0.2, 0.5, 1.0];
+        // $trades = [];
+
         $trades = [];
-
-        for ($i = 0; $i < 20; $i++) {
+        foreach($account[0]->trades as $trade){
             $trades[] = [
-                'time' => now()->subMinutes(mt_rand(1, 1440))->toDateTimeString(),
-                'type' => mt_rand(0, 1) ? 'Buy' : 'Sell',
-                'symbol' => $symbols[array_rand($symbols)],
-                'volume' => $volumes[array_rand($volumes)],
-                'price' => mt_rand(10000, 15000) / 10000,
-                'profit' => mt_rand(-500, 500) / 10
+                'time' => $trade->created_at,
+                'type' => $trade->type,
+                'symbol' => $trade->symbol,
+                'volume' => $trade->volume,
+                'price' => $trade->open_price,
+                'profit' => $trade->profit
             ];
         }
 

@@ -18,4 +18,5 @@ class Trade extends Model
     {
         return $this->belongsTo(Account::class);
     }
+
 }

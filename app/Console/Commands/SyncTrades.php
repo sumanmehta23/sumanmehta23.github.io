@@ -112,7 +112,8 @@ class SyncTrades extends Command
                                     'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
                                     'state' => $order->State,
                                     'comment' => $order->Comment,
-                                    'status' => 'open'
+                                    'status' => 'open',
+                                    'code' => $account->code,
                                 ]
                             );
                         } else {

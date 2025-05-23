@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Trade;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Account extends Model
 {
@@ -59,15 +60,20 @@ class Account extends Model
         return $this->hasMany(TradeWithdrawals::class);
     }
 
-    public function getTotalBonusDepositAttribute()
-{
-    // Sum all bonus amounts where 'admin_remark' is NOT 'Credit' and NOT '10x Trader Leverage'
-    $bonusDeposit = $this->BonusTransaction->filter(function ($transaction) {
-        return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage');
-    })->sum('bonus_amount');
+    public function trades()
+    {
+        return $this->hasMany(Trade::class);
+    }
 
-    return $bonusDeposit;
-}
+    public function getTotalBonusDepositAttribute()
+    {
+        // Sum all bonus amounts where 'admin_remark' is NOT 'Credit' and NOT '10x Trader Leverage'
+        $bonusDeposit = $this->BonusTransaction->filter(function ($transaction) {
+            return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage');
+        })->sum('bonus_amount');
+
+        return $bonusDeposit;
+    }
 
 
 }
