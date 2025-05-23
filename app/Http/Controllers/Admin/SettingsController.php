@@ -472,8 +472,10 @@ class SettingsController extends Controller
 
                 case 'Wallet Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
-                    $transaction_id_link = "$log->properties['wallet_withdraw_id']";
-                    $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link['wallet_withdraw_id']}";
+                    // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                    $properties = json_decode($log->properties, true);
+                    $transaction_id = $properties['wallet_withdraw_id'];
+                    $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id}";
                     break;
                 case 'Reject Wallet Withdraw':
                     $withdrawal_amount = $log->properties['approved_amount'];
