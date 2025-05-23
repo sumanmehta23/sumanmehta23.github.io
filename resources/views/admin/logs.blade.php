@@ -175,6 +175,7 @@
                             <div class="activity-log justify-content-center">
 
                                 @foreach($logs as $index => $log)
+
                                     @php
                                         $user_id = $log->causer_id;
 
@@ -627,46 +628,53 @@
         toggleFields(); // Initial call to set the correct fields visible
 
 
-        document.getElementById('exportLogs').addEventListener('click', function() {
+        // document.getElementById('exportLogs').addEventListener('click', function() {
 
-        let csvContent = "data:text/csv;charset=utf-8,Time,IP,User ,Description\n";
-
-
-        // Gather log data from the DOM
-
-        const logs = document.querySelectorAll('.activity-item'); // Adjust the selector based on your HTML structure
+        //     let csvContent = "data:text/csv;charset=utf-8,Time,IP,User ,Description\n";
 
 
-        logs.forEach(item => {
+        //     // Gather log data from the DOM
 
-            const time = item.querySelector('.log-time div').innerText; // Adjust based on your HTML structure
-
-            const ip = item.querySelector('.log-ip div').innerText; // Adjust based on your HTML structure
-
-            const user = item.querySelector('.log-description').innerText; // Adjust based on your HTML structure
-
-            const description = item.querySelector('.log-card').innerText.replace(/,/g, ''); // Adjust based on your HTML structure
+        //     const logs = document.querySelectorAll('.activity-item'); // Adjust the selector based on your HTML structure
 
 
-            const row = `${time},${ip},${user},${description}\n`;
+        //     logs.forEach(item => {
 
-            csvContent += row;
+        //         const time = item.querySelector('.log-time div').innerText; // Adjust based on your HTML structure
 
+        //         const ip = item.querySelector('.log-ip div').innerText; // Adjust based on your HTML structure
+
+        //         const user = item.querySelector('.log-description').innerText; // Adjust based on your HTML structure
+
+        //         const description = item.querySelector('.log-card').innerText.replace(/,/g, ''); // Adjust based on your HTML structure
+
+
+        //         const row = `${time},${ip},${user},${description}\n`;
+
+        //         csvContent += row;
+
+        //     });
+
+
+        //     const encodedUri = encodeURI(csvContent);
+
+        //     const link = document.createElement("a");
+
+        //     link.setAttribute("href", encodedUri);
+
+        //     link.setAttribute("download", "activity_logs.csv");
+
+        //     document.body.appendChild(link);
+
+        //     link.click();
+
+        // });
+
+        document.getElementById('exportLogs').addEventListener('click', function () {
+            const params = new URLSearchParams(window.location.search);
+            const exportUrl = `/admin/logs/export?${params.toString()}`;
+            window.location.href = exportUrl;
         });
 
-
-        const encodedUri = encodeURI(csvContent);
-
-        const link = document.createElement("a");
-
-        link.setAttribute("href", encodedUri);
-
-        link.setAttribute("download", "activity_logs.csv");
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        });
     });
 </script>
