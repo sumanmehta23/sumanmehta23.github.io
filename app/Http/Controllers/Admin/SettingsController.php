@@ -453,7 +453,14 @@ class SettingsController extends Controller
                         }
                     }
                     break;
+                case 'Approve Account Withdraw':
+                    $withdrawal_amount = $log->properties['approved_amount'];
+                    // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                    $properties = json_decode($log->properties, true);
+                    $transaction_id = $properties['transaction_id'];
 
+                    $logDescription = "User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
+                    break;
                 case 'Wallet Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
                     // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
