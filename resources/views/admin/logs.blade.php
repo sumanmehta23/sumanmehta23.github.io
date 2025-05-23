@@ -131,6 +131,7 @@
                                         <option value="Reject Wallet Withdraw" {{ request('log_type') == 'Reject Wallet Withdraw' ? 'selected' : '' }}>Reject Wallet Withdraw</option>
                                         <option value="Approve Wallet Withdraw" {{ request('log_type') == 'Approve Wallet Withdraw' ? 'selected' : '' }}>Approve Wallet Withdraw</option>
                                         <option value="Manually Approved Wallet Withdraw" {{ request('log_type') == 'Manually Approved Wallet Withdraw' ? 'selected' : '' }}>Manually Approved Wallet Withdraw</option>
+                                         <option value="Approve Account Withdraw" {{ request('log_type') == 'Approve Account Withdraw' ? 'selected' : '' }}>Approve Account Withdraw</option>
                                         <option value="Wallet Withdraw Cancel By Client" {{ request('log_type') == 'Wallet Withdraw Cancel By Client' ? 'selected' : '' }}>Wallet Withdraw Cancel By Client</option>
                                         <option value="Account Withdraw" {{ request('log_type') == 'Account Withdraw' ? 'selected' : '' }}>Account Withdraw</option>
                                         <option value="Account Deposit" {{ request('log_type') == 'Account Deposit' ? 'selected' : '' }}>Account Deposit</option>
