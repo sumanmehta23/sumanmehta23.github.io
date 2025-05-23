@@ -282,7 +282,16 @@
                                                                     </div>";
                                                 }
                                                 break;
+                                            case 'Approve Account Withdraw':
+                                                $withdrawal_amount = $log->properties['approved_amount'];
+                                                // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                                                $properties = json_decode($log->properties, true);
+                                                $transaction_id = $properties['transaction_id'];
 
+                                                $logDescription = "<div class=''>
+                                                                    <span>User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
+                                                                </div>";
+                                                break;
                                             case 'Wallet Withdraw':
                                                 $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
                                                 $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style='color: #007bff;'>{$log->properties['wallet_withdraw_id']}</a>";
