@@ -473,7 +473,7 @@ class SettingsController extends Controller
                 case 'Wallet Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
                     $transaction_id_link = "$log->properties['wallet_withdraw_id']";
-                    $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link}";
+                    $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id_link['wallet_withdraw_id']}";
                     break;
                 case 'Reject Wallet Withdraw':
                     $withdrawal_amount = $log->properties['approved_amount'];
@@ -686,7 +686,7 @@ class SettingsController extends Controller
             $csv .= '"' . implode('","', $row) . '"' . "\n";
         }
 
-        $filename = 'activity_logs_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'Activity_Logs_' . now()->format('Ymd_His') . '.csv';
 
         return Response::make($csv, 200, [
             'Content-Type' => 'text/csv',
