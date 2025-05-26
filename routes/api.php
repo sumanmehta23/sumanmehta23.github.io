@@ -34,7 +34,8 @@ Route::post('/calculate-lot-size', [LotSizeCalculatorController::class, 'index']
 
 Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
 Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
-Route::get('/trades/', [TradeController::class, 'index'])->name('api.trade.show');
+Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
+Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
 
 // Route::post('/users', [Api\Users::class, 'store'])->name('api.users.store');
 // Route::put('/users/{id}', [Api\Users::class, 'update'])->name('api.users.update');
