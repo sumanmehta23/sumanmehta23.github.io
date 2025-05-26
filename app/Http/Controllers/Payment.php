@@ -111,13 +111,42 @@ class Payment extends Controller
 
                 $account = Account::where('id', $paymentLog->account_id)->first();
 
+                $ticket1=NULL;
+                if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                    $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
+                    if (!$existingTransaction) {
+                        if ($amount > 250) {
+                            $bonusamount = 9 * 250;
+                        } else {
+                            $bonusamount = 9 * $amount;
+                        }
+
+                        if (($error_code1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $paymentLog->user_id,
+                                'account_id' => $paymentLog->account_id,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
+
                 if(isset($paymentLog->promocode)){
-                    $tickets = NULL;
+                    $ticket2 = NULL;
                     $promo = PromoCode::where('code', $paymentLog->promocode)->first();
                     $bonus_amount = ($promo->promo_percentage/100) * $amount;
                     if($promo){
-                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $tickets, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
                         } else {
                             BonusTransaction::create([
                                 'email' => $email,
@@ -136,11 +165,11 @@ class Payment extends Controller
                 }
 
                 $comment = 'CreditCardPayissa';
-                $ticket = NULL;
+                $ticket3 = NULL;
 
-                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
+                $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
+                if ($errorCode3 != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode3);
                     return response()->json([
                         'success' => false,
                         'message' => 'Something went wrong',
