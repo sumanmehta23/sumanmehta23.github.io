@@ -117,7 +117,7 @@ class UserController extends Controller
     public function show(User $user, Request $request)
     {
         try {
-            // Return with JSON encoding options to handle invalid UTF-8
+            $user = User::findOrFail($request->id);
             return (new UserResource($user))
                 ->response()
                 ->setEncodingOptions(JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
@@ -127,9 +127,10 @@ class UserController extends Controller
 
             // Fall back to manual cleaning
             $cleanedUser = $this->cleanUserData($user);
-            return (new UserResource($cleanedUser))
-                ->response()
-                ->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+            //            return (new UserResource($cleanedUser))
+            //                ->response()
+            //                ->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+            return [];
         }
     }
 

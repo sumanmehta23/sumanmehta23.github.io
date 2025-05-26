@@ -5,7 +5,8 @@ use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\DiagnosticsController;
+use App\Http\Controllers\Api\TradeController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,13 +18,6 @@ use App\Http\Controllers\Api\DiagnosticsController;
 |
 */
 
-// Diagnostic routes - only use in development/testing!
-Route::prefix('diagnostics')->group(function () {
-    Route::get('find-invalid-utf8-users', [DiagnosticsController::class, 'findInvalidUtf8Users']);
-    Route::get('find-problematic-users-by-column', [DiagnosticsController::class, 'findProblematicUsersByColumn']);
-    Route::get('scan-all-columns', [DiagnosticsController::class, 'scanAllColumns']);
-});
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
     Route::get('withdrawals', [Wallet::class, 'allwithdrawals'])->name('account.deactivate');
@@ -34,10 +28,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/tokens/fetch', [Users::class, 'api_call']);
 
-//Cell Expert Integration API 
+//Cell Expert Integration API
 
 Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
 Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
+Route::get('/trades/', [TradeController::class, 'index'])->name('api.trade.show');
+
 // Route::post('/users', [Api\Users::class, 'store'])->name('api.users.store');
 // Route::put('/users/{id}', [Api\Users::class, 'update'])->name('api.users.update');
 // Route::delete('/users/{id}', [Api\Users::class, 'destroy'])->name('api.users.destroy');
