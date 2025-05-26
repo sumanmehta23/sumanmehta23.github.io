@@ -336,30 +336,43 @@ class Leaderboard extends Controller
      */
     public function getTraderData($accountNo)
     {
-        $account = Account::with('trades')
-                    ->where('code', $accountNo)
-                    ->get();
-                        // dd($account);
-        // Generate 30 days of equity data
+        $account = Account::with(['trades', 'dailyReports' => function($query) {
+            $query->where('report_date', '>=', now()->subDays(30))
+                  ->orderBy('report_date');
+        }])->where('code', $accountNo)->firstOrFail();
+
+        // Get daily reports data
         $labels = [];
         $equity = [];
-        $currentEquity = 10000;
 
-        // for ($i = 30; $i >= 0; $i--) {
-        //     $labels[] = now()->subDays($i)->format('M d');
-        //     $change = $currentEquity * (mt_rand(-200, 300) / 10000);
-        //     $currentEquity += $change;
-        //     $equity[] = round($currentEquity, 2);
-        // }
 
-        // // Generate sample trades
-        // $symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD', 'ETHUSD'];
-        // $volumes = [0.1, 0.2, 0.5, 1.0];
-        // $trades = [];
+        // Get the last 31 days of data (30 days + current day)
+        $dailyData = $account->dailyReports->keyBy('report_date');
 
-        $trades = [];
-        foreach($account[0]->trades as $trade){
-            $trades[] = [
+        $dailyData = $account->dailyReports->keyBy(function ($item) {
+                        return $item->report_date->format('Y-m-d');
+                    });
+
+
+        // Fill in any missing dates with the last known equity value
+        $lastEquity = $account->equity ?? '0.00';
+        $daysInCurrentMonth = now()->daysInMonth;
+
+        for ($i = $daysInCurrentMonth; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dayLabel = now()->subDays($i)->format('M d');
+            $labels[] = $dayLabel;
+
+            if ($dailyData->has($date)) {
+                $lastEquity = $dailyData[$date]->equity;
+            }elseif(!$dailyData->has($date)){
+                $lastEquity = '0.00';
+            }
+            $equity[] = round($lastEquity, 2);
+        }
+        // Get trades data
+        $trades = $account->trades->map(function($trade) {
+            return [
                 'time' => $trade->created_at,
                 'type' => $trade->type,
                 'symbol' => $trade->symbol,
@@ -367,11 +380,7 @@ class Leaderboard extends Controller
                 'price' => $trade->open_price,
                 'profit' => $trade->profit
             ];
-        }
-
-        usort($trades, function($a, $b) {
-            return strcmp($b['time'], $a['time']);
-        });
+        })->sortByDesc('time')->values()->all();
 
         return response()->json([
             'chart_data' => [

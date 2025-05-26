@@ -217,7 +217,6 @@ class CompetitionController extends Controller
             ->orderByDesc('total_amount')
             ->get();
 
-        dd($monthlyData);
 
         // Organize data by month
         $grouped = [];

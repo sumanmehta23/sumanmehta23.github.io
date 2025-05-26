@@ -75,5 +75,10 @@ class Account extends Model
         return $bonusDeposit;
     }
 
+    public function dailyReports()
+    {
+        return $this->hasMany(DailyReport::class, 'account_code', 'code');
+    }
+
 
 }
