@@ -50,6 +50,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'klaviyo_last_error' => 'json',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected static function booted()
