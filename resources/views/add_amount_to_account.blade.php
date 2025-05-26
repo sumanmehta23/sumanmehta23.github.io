@@ -276,10 +276,20 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
       });
     }
   }
+
+  // Initialize promocode variable
+  let promocode = '';
+
+  // Update promocode value whenever it changes
+  $('#promocode').on('change keyup', function() {
+    promocode = $(this).val();
+  });
+
   $('.select-liveaccount').on('change', function() {
     let clientAccountId = $(this).val();
-    let promocode = $('#promocode').val();
 
+    console.log(promocode);
+    console.log('abhay');
     var minDeposit= $(this).data('mindeposit');
     var maxDeposit= $(this).data('maxdeposit');
     if(typeof minDeposit != 'number'){
