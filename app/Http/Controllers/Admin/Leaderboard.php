@@ -347,7 +347,6 @@ class Leaderboard extends Controller
 
 
         // Get the last 31 days of data (30 days + current day)
-        $dailyData = $account->dailyReports->keyBy('report_date');
 
         $dailyData = $account->dailyReports->keyBy(function ($item) {
                         return $item->report_date->format('Y-m-d');
@@ -358,18 +357,26 @@ class Leaderboard extends Controller
         $lastEquity = $account->equity ?? '0.00';
         $daysInCurrentMonth = now()->daysInMonth;
 
-        for ($i = $daysInCurrentMonth; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $dayLabel = now()->subDays($i)->format('M d');
+        $today = now();
+        $startOfMonth = $today->copy()->startOfMonth();
+        $endOfMonth = $today; // Up to today
+        $currentDate = $startOfMonth->copy();
+
+        while ($currentDate <= $endOfMonth) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $dayLabel = $currentDate->format('M d');
             $labels[] = $dayLabel;
 
-            if ($dailyData->has($date)) {
-                $lastEquity = $dailyData[$date]->equity;
-            }elseif(!$dailyData->has($date)){
+            if ($dailyData->has($dateKey)) {
+                $lastEquity = $dailyData[$dateKey]->equity;
+            } else {
                 $lastEquity = '0.00';
             }
+
             $equity[] = round($lastEquity, 2);
+            $currentDate->addDay();
         }
+
         // Get trades data
         $trades = $account->trades->map(function($trade) {
             return [
