@@ -8,7 +8,8 @@ use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Models\BonusTransaction;
+use App\Models\Promocode;
+use App\Models\AccountType;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -16,11 +17,13 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
+use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
-use App\Models\AccountType;
-use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class MT5Controller extends Controller
 {
@@ -75,6 +78,129 @@ class MT5Controller extends Controller
             'activeGroup' => $activeGroup,
         ]);
     }
+
+    public function promocode(Request $request)
+    {
+        return view('admin.promocode', [
+        ]);
+    }
+
+    public function get_promocode($id)
+    {
+        $promocode = Promocode::find($id);
+
+        if (!$promocode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Promocode not found.'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'code' => $promocode->code,
+                'percentage' => $promocode->promo_percentage,
+                'status' => $promocode->status,
+                'id' => $promocode->id,
+            ]
+        ]);
+    }
+
+    public function edit_promocode(Request $request)
+    {
+        $id = $request->id;
+        $promocode = Promocode::find($id);
+
+        if (!$promocode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Promocode not found.'
+            ]);
+        }
+
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'promo_code' => 'required|string|unique:promocodes,code,' . $id,
+            'promo_percentage' => 'required|numeric|min:0|max:100',
+            'promo_status' => 'required|in:active,inactive', // adjust values as needed
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ]);
+        }
+
+        $promocode->code = $request->promo_code;
+        $promocode->promo_percentage = $request->promo_percentage;
+        $promocode->status = $request->promo_status;
+        $promocode->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Promocode updated successfully',
+        ]);
+    }
+
+    public function createPromoCode(Request $request)
+    {
+        $request->validate([
+            // “code” must be unique among NOT-deleted rows
+            'promo_code'       => [
+                'required',
+                Rule::unique('promocode', 'code')->whereNull('deleted_at'),
+            ],
+            'promo_percentage' => 'required|numeric|min:1|max:100',
+            'promo_status'     => 'required|boolean',
+        ]);
+
+        try {
+            Promocode::create([
+                'code'             => $request->promo_code,
+                'promo_percentage' => $request->promo_percentage,
+                'status'           => $request->promo_status,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Promocode added successfully',
+            ]);
+        } catch (\Throwable $e) {
+            // log the actual error for debugging
+            Log::error('Promocode create error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding promocode',
+            ], 500);
+        }
+    }
+
+    public function update_promocode_status(Request $request)
+    {
+        $promocode = Promocode::find($request->id);
+        if ($promocode) {
+            $promocode->status = $request->status;
+            $promocode->save();
+            return response()->json(['message' => 'Status updated successfully!']);
+        }
+        return response()->json(['message' => 'Promocode not found'], 404);
+    }
+
+    public function delete_promocode(Request $request)
+    {
+        $promocode = Promocode::find($request->id);
+
+        if ($promocode) {
+            $promocode->delete();
+            return response()->json(['message' => 'Promocode deleted successfully!']);
+        }
+
+        return response()->json(['message' => 'Promocode not found'], 404);
+    }
+
+
     public function updateAccountDetails(Request $request)
     {
 

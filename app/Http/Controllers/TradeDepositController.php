@@ -339,7 +339,7 @@ class TradeDepositController extends Controller
             ]
         );
         $user = auth()->user();
-
+        $promocode = $request->promocode ?? '';
         try {
             $trading_deposited1 = $request->input('deposit');
             $deposit_type = $request->input('deposit_type');
@@ -352,13 +352,14 @@ class TradeDepositController extends Controller
                     "user_id" => $user->id,
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email,
-                    "account_id" => $request['user']['code']
+                    "account_id" => $request['user']['code'],
+                    "promocode" => $promocode,
                 ];
 
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
                 $currency = 'USD';
-                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id);
+                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id,$promocode);
                 if ($payment) {
                     return redirect($payment['invoice_url']);
                 } else {
@@ -376,7 +377,7 @@ class TradeDepositController extends Controller
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
                 $currency = 'USD';
-                $payment = $this->createPayment($trading_deposited1, $currency, $orderId, $paymentLog->payment_id);
+                $payment = $this->createPayment($trading_deposited1, $currency, $orderId, $paymentLog->payment_id,$promocode);
                 if ($payment) {
                     return redirect($payment['invoice_url']);
                 } else {
@@ -509,7 +510,7 @@ class TradeDepositController extends Controller
     }
 
 
-    private function createCCPayment($amount, $currency, $orderId, $paymentId)
+    private function createCCPayment($amount, $currency, $orderId, $paymentId,$promocode)
     {
         $user = auth()->user();
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
@@ -535,7 +536,7 @@ class TradeDepositController extends Controller
         }
         return null;
     }
-    private function createPayment($amount, $currency, $orderId, $paymentId)
+    private function createPayment($amount, $currency, $orderId, $paymentId,$promocode)
     {
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";

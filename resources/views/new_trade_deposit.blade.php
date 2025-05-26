@@ -164,6 +164,26 @@
                                                                     <div class="form-group row">
                                                                         <label
                                                                             class="col-lg-4 col-form-label">ENTER
+                                                                            PROMOCODE:
+                                                                            <small
+                                                                                class="text-muted d-block">Please
+                                                                                enter promocode</small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="mb-3 input-group">
+
+                                                                                <input name="promocode"
+                                                                                    id="promocode"
+                                                                                    type="text"
+                                                                                    class="form-control fill"
+                                                                                    placeholder="Promocode"
+                                                                                    aria-label="promocode">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="form-group row">
+                                                                        <label
+                                                                            class="col-lg-4 col-form-label">ENTER
                                                                             AMOUNT:
                                                                             <small
                                                                                 class="text-muted d-block">Please
@@ -229,6 +249,27 @@
                                                                     <input type="hidden" name="deposit_type"
                                                                         class="tradedeposittype"
                                                                         value="CreditCardPayissa">
+                                                                        
+                                                                    <div class="form-group row">
+                                                                        <label
+                                                                            class="col-lg-4 col-form-label">ENTER
+                                                                            PROMOCODE:
+                                                                            <small
+                                                                                class="text-muted d-block">Please
+                                                                                enter promocode</small>
+                                                                        </label>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="mb-3 input-group">
+
+                                                                                <input name="promocode"
+                                                                                    id="promocode"
+                                                                                    type="text"
+                                                                                    class="form-control fill"
+                                                                                    placeholder="Promocode"
+                                                                                    aria-label="promocode">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
 
                                                                     <div class="form-group row">
                                                                         <label

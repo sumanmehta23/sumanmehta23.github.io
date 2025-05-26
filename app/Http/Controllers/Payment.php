@@ -141,12 +141,36 @@ class Payment extends Controller
                     }
                 }
 
-                $comment = 'CreditCardPayissa';
-                $ticket = NULL;
+                if(isset($paymentLog->promocode)){
+                    $ticket2 = NULL;
+                    $promo = PromoCode::where('code', $paymentLog->promocode)->first();
+                    $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if($promo){
+                        if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
+                        } else {
+                            BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $paymentLog->user_id,
+                                'account_id' => $paymentLog->account_id,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonus_amount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Bonus',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
+                }
 
-                $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
+                $comment = 'CreditCardPayissa';
+                $ticket3 = NULL;
+
+                $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
+                if ($errorCode3 != MTRetCode::MT_RET_OK) {
+                    $error = MTRetCode::GetError($errorCode3);
                     return response()->json([
                         'success' => false,
                         'message' => 'Something went wrong',

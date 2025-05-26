@@ -456,6 +456,12 @@
                                         </a>
                                     </li>
 
+                                    <li class="slide menu-item-sub">
+                                        <a href="/admin/promocode" class="side-menu__item ">
+                                            Promo Code
+                                        </a>
+                                    </li>
+
                                 </ul>
                             </li>
                         @endcan
