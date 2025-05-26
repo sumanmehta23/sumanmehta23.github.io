@@ -164,7 +164,7 @@
                                                 <div class="flex-grow-1 ms-3">
                                                     {{-- {{ dd($rank) }} --}}
                                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <h6 class="mb-0 text-muted" >{{ $rank['name'] }}</h6>
+                                                        <h6 class="mb-0 text-muted" style="hover:rgb(107, 107, 107)">{{ $rank['name'] }}</h6>
                                                         <span class="badge bg-success-gradient px-2 py-1">
                                                             ${{ number_format($rank['equity'], 2) }}
                                                         </span>
@@ -466,13 +466,6 @@
 .list-group-item:hover .text-white,
 .list-group-item.active .text-white {
     color: #fff !important;
-}
-
-h6.text-white {
-    transition: color 0.3s ease;
-}
-.trader-select:hover h6.text-white {
-    color: rgb(107, 107, 107) !important;
 }
 
 .avatar {

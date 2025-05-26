@@ -118,7 +118,7 @@ class CompetitionService
                     'balance' => $account->balance,
                     'volume' => $account->lots_completed,
                     'total_trades' => $account->trades->count(),
-                    'total_profit' => $account->trades->sum('profit')
+                    'total_profit' => $account->balance - $account->initial_balance,
                 ];
             });
     }
