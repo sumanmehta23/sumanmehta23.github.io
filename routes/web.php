@@ -353,6 +353,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
+    Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
