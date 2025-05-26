@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LotSizeCalculatorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,3 +26,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/tokens/fetch', [Users::class, 'api_call']);
+Route::post('/calculate-lot-size', [LotSizeCalculatorController::class, 'index']);
