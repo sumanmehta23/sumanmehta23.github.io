@@ -4006,6 +4006,7 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
+    }
     public function getTasks(Request $request)
     {
         $tasks = Task::where('status', 1);
