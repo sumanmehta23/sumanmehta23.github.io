@@ -1085,7 +1085,12 @@ class Wallet extends Controller
                 if($promocode){
                     $ticket = NULL;
                     $promo = Promocode::where('code', $promocode)->first();
-                    $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if($amount >= 1000){
+                        $bonus_amount = ($promo->promo_percentage/100) * 1000;
+                    }else{
+                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    }
+
                     if($promo){
                         if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                             return redirect()->back()->with('error', MTRetCode::GetError($error_code));
