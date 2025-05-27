@@ -171,10 +171,9 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
   function onAccountPaymentUpdate(data, code){
 
-
+    console.log(data);
+    console.log(code);
     if(typeof data != 'undefined'){
-        console.log("onPaymentUpdate");
-        console.log(code, data);
 
         if(typeof data.payment.status == 'undefined'){
         console.log("Incomplete payment..!",data.payment.id );
@@ -278,53 +277,58 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
 
 
+// Function to setup CryptoChill with current values
+function setupCryptoChillWithValues() {
+    let clientAccountId = $('.select-liveaccount').val();
+    let promocode = $("#promocode").val();
 
-
-
-  $('.select-liveaccount').on('change', function() {
-    let clientAccountId = $(this).val();
-
-    var promocode = $("#promocode").val();
-    console.log(promocode);
-
-    console.log('abhay');
-    var minDeposit= $(this).data('mindeposit');
-    var maxDeposit= $(this).data('maxdeposit');
+    var minDeposit = $('.select-liveaccount').data('mindeposit');
+    var maxDeposit = $('.select-liveaccount').data('maxdeposit');
     if(typeof minDeposit != 'number'){
-        minDeposit=10;
+        minDeposit = 10;
     }
     if(typeof maxDeposit != 'number'){
-        maxDeposit=0;
+        maxDeposit = 0;
     }
-    var inputPlaceholder='';
-      if(minDeposit>0){
-         inputPlaceholder = 'Minimum  $'+minDeposit;
+    var inputPlaceholder = '';
+    if(minDeposit > 0){
+        inputPlaceholder = 'Minimum  $' + minDeposit;
     }
-    if(maxDeposit>0){
-         inputPlaceholder += ' Maximum $'+maxDeposit;
+    if(maxDeposit > 0){
+        inputPlaceholder += ' Maximum $' + maxDeposit;
     }
     $("#crypto_deposit_amount").attr("placeholder", inputPlaceholder);
     $("#deposit_amount_cc").attr("placeholder", inputPlaceholder);
 
-    // Listen for changes to the promocode input field
-    $("#promocode").on('change keyup paste', function() {
-        var promocode = $(this).val();
-        console.log('Promocode value changed:', promocode);
-    });
-
     CryptoChill.setup({
         account: '{{config('services.cryptochill.accountid')}}',
         profile: '{{config('services.cryptochill.profileid')}}',
-        // Event callbacks
-        // onOpen: onPaymentSuccess,
-        // onUpdate: onPaymentUpdate,
         onUpdate: onAccountPaymentUpdate,
         onSuccess: onAccountPaymentSuccess,
-        passthrough: JSON.stringify({'customerID': customerID,'customerEmail':customerEmail,'depositTo':depositTo,'clientAccountID':clientAccountId,'promocode':promocode}),
-        // onIncomplete: onPaymentIncomplete,
-
+        passthrough: JSON.stringify({
+            'customerID': customerID,
+            'customerEmail': customerEmail,
+            'depositTo': depositTo,
+            'clientAccountID': clientAccountId,
+            'promocode': promocode
+        }),
         onCancel: onAccountPaymentCancel
-    })
-  });
+    });
+}
 
-</script>
+// Listen for changes to the promocode input field
+$("#promocode").on('change keyup paste', function() {
+    setupCryptoChillWithValues();
+});
+
+// Setup initial values when page loads
+$(document).ready(function() {
+    setupCryptoChillWithValues();
+});
+
+// Listen for changes to select-liveaccount
+$('.select-liveaccount').on('change', function() {
+    setupCryptoChillWithValues();
+});
+
+  </script>
