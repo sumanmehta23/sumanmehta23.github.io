@@ -31,19 +31,19 @@ class TradeResource extends JsonResource
             'position_status' => $this->status, // Optional: Indicating the outcome (Won, Lost, Cancelled)
             'position_type' => $this->type, // Optional: A description of the Position
 
-            // Additional trade details
-            'open_price' => $this->open_price,
-            'close_price' => $this->close_price,
-            'order_id' => $this->order_id,
-            'position_id' => $this->position_id,
-            'comment' => $this->comment,
-            'sl' => $this->sl, // Stop Loss
-            'tp' => $this->tp, // Take Profit
-            'state' => $this->state,
+//            // Additional trade details
+//            'open_price' => $this->open_price,
+//            'close_price' => $this->close_price,
+//            'order_id' => $this->order_id,
+//            'position_id' => $this->position_id,
+//            'comment' => $this->comment,
+//            'sl' => $this->sl, // Stop Loss
+//            'tp' => $this->tp, // Take Profit
+//            'state' => $this->state,
 
             // Timestamps
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+//            'created_at' => $this->created_at,
+//            'updated_at' => $this->updated_at,
         ];
     }
 }
