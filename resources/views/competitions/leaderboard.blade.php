@@ -72,20 +72,20 @@
                             <div class="card-body p-0">
                                 <div class="bg-primary-gradient px-3 pt-3 pb-2 rounded-top">
                                     <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
+                                        {{-- <div class="flex-shrink-0">
                                             <div class="avatar bg-opacity-25">
                                                 <span class="avatar-title rounded">
-                                                    <i class="fe fe-trending-up text-white"></i>
+                                                    <i class="fe fe-trending-up {{ isset(auth()->user()->role) ? 'text-white' : 'text-muted' }}"></i>
                                                 </span>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                         <div class="flex-grow-1 ms-3">
-                                            <h6 class="text-white mb-0">{{ $competitionStatus }}</h6>
+                                            <h6 class="mb-0 {{ isset(auth()->user()->role) ? 'text-white' : 'text-muted' }}">{{ $competitionStatus }}</h6>
                                         </div>
                                     </div>
                                 </div>
                                 @if($showTimer)
-                                <div class="px-3 py-2">
+                                <div class="px-4 py-2">
                                     <div id="competitionTimer" class="d-flex justify-content-between">
                                         <div class="text-center">
                                             <span id="days" class="h4 mb-0 fw-bold text-primary">00</span>
