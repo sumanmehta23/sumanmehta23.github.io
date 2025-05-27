@@ -143,7 +143,11 @@ class Payment extends Controller
                 if(isset($paymentLog->promocode)){
                     $ticket2 = NULL;
                     $promo = PromoCode::where('code', $paymentLog->promocode)->first();
-                    $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if($amount >= 1000){
+                        $bonus_amount = ($promo->promo_percentage/100) * 1000;
+                    }else{
+                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    }
                     if($promo){
                         if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
                             return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
