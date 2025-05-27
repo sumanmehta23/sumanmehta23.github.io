@@ -22,6 +22,10 @@ use App\Http\Controllers\Api\TradeController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
     Route::get('withdrawals', [Wallet::class, 'allwithdrawals'])->name('account.deactivate');
+    Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
+    Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
+    Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
 });
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -32,10 +36,8 @@ Route::post('/calculate-lot-size', [LotSizeCalculatorController::class, 'index']
 
 //Cell Expert Integration API
 
-Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
-Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
-Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
-Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
+
+
 
 // Route::post('/users', [Api\Users::class, 'store'])->name('api.users.store');
 // Route::put('/users/{id}', [Api\Users::class, 'update'])->name('api.users.update');

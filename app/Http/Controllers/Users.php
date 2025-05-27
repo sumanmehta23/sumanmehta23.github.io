@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmployeeList;
 use App\Models\User;
 use App\Models\KycLog;
 use App\Models\Account;
@@ -32,17 +33,16 @@ class Users extends Controller
     public function api_call(Request $request)
     {
         // dd($request->all());
-        $user = User::where('email', $request->email)->first();
+        $user = EmployeeList::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-
         // Create Sanctum token
         $token = $user->createToken('api_call')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+//            'user' => $user,
             'token' => $token
         ], 201);
     }
