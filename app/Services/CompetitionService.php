@@ -37,6 +37,7 @@ class CompetitionService
             'total_volume' => $accounts->sum('lots_completed'),
             'avg_equity' => $accounts->avg('equity'),
             'top_performers' => $accounts->sortByDesc('equity')->take(10),
+            'top_performer' => $accounts->sortByDesc('equity')->first(),
             'month' => $month,
             'year' => $year
         ];
@@ -46,51 +47,38 @@ class CompetitionService
     /**
      * Get trader performance data
      */
-    public function getTraderData($accountId)
+    public function getTraderData($accountId, $page = 1, $perPage = 10)
     {
         // Get account with ordered trade deposits
         $account = Account::with(['tradeDeposits' => function($query) {
-            $query->orderBy('created_at', 'asc'); // Changed to ASC to calculate equity properly
+            $query->orderBy('created_at', 'desc');
         }])->findOrFail($accountId);
 
+        // Calculate pagination
         $trades = $account->tradeDeposits;
-        $monthStart = Carbon::now()->startOfMonth();
+        $total = $trades->count();
+        $trades = $trades->forPage($page, $perPage);
 
-        // Calculate running equity - start with initial balance
+        // Calculate chart data (leave this as is for the full dataset)
+        $monthStart = Carbon::now()->startOfMonth();
         $currentEquity = $account->initial_balance ?? 10000;
         $chartData = ['labels' => [], 'equity' => []];
 
-        // Initialize with starting point
-        $chartData['labels'][] = $monthStart->format('M d');
-        $chartData['equity'][] = $currentEquity;
-
-        foreach ($trades as $trade) {
-            if ($trade->created_at >= $monthStart) {
-                $currentEquity += $trade->profit;
-                $chartData['labels'][] = $trade->created_at->format('M d');
-                $chartData['equity'][] = round($currentEquity, 2);
-            }
+        foreach ($account->tradeDeposits as $trade) {
+            $currentEquity += $trade->profit;
+            $chartData['labels'][] = $trade->created_at->format('Y-m-d H:i');
+            $chartData['equity'][] = $currentEquity;
         }
-
-        // Map trades to the required format
-        $formattedTrades = $trades->where('created_at', '>=', $monthStart)
-            ->map(function($trade) {
-                return [
-                    'time' => $trade->created_at->toDateTimeString(),
-                    'type' => $trade->action ?? ($trade->profit > 0 ? 'Buy' : 'Sell'),
-                    'symbol' => $trade->symbol,
-                    'volume' => $trade->volume,
-                    'price' => $trade->price,
-                    'profit' => round($trade->profit, 2)
-                ];
-            })
-            ->values() // Reset array keys
-            ->sortByDesc('time') // Most recent first
-            ->values(); // Reset array keys again
 
         return [
             'chart_data' => $chartData,
-            'trades' => $formattedTrades
+            'trades' => $trades->values(),
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => ceil($total / $perPage)
+            ]
         ];
     }
 

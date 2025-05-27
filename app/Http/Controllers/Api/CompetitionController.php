@@ -15,9 +15,11 @@ class CompetitionController extends Controller
         $this->competitionService = $competitionService;
     }
 
-    public function getTraderData($account)
+    public function getTraderData($account, Request $request)
     {
-        $data = $this->competitionService->getTraderData($account);
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 10);
+        $data = $this->competitionService->getTraderData($account, $page, $perPage);
         return response()->json($data);
     }
 

@@ -112,13 +112,6 @@
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <x-competition.stats-card
-                            title="Total Participants"
-                            :value="$stats['participants']"
-                            icon="users"
-                        />
-                    </div>
-                    <div class="col-sm-6 col-xl-3">
-                        <x-competition.stats-card
                             title="Prize Pool"
                             value="Challange Account"
                             icon="bar-chart-2"
@@ -126,8 +119,15 @@
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <x-competition.stats-card
-                            title="Average Equity"
-                            :value="'$' . number_format($stats['avg_equity'], 2)"
+                            title="Total Participants"
+                            :value="$stats['participants']"
+                            icon="users"
+                        />
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <x-competition.stats-card
+                            title="Top performer"
+                            :value="$stats['top_performer']->name"
                             icon="dollar-sign"
                         />
                     </div>
