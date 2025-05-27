@@ -249,7 +249,7 @@
                                                                     <input type="hidden" name="deposit_type"
                                                                         class="tradedeposittype"
                                                                         value="CreditCardPayissa">
-                                                                        
+
                                                                     <div class="form-group row">
                                                                         <label
                                                                             class="col-lg-4 col-form-label">ENTER
@@ -439,4 +439,13 @@
             });
         });
     </script> --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+            $('form').on('submit', function(e) {
+                var promocode = $('#promocode').val();
+                // Now you have the promocode value
+                console.log('Promocode:', promocode);
+            });
+        });
+    </script>
 @endsection
