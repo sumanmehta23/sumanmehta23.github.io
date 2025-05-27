@@ -1132,8 +1132,7 @@ class MT5Accounts extends Controller
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';
         return redirect()->back()->with('success', $message);
     }
-
-   public function updateNickname(Request $request)
+    public function updateNickname(Request $request)
     {
         $request->validate([
             'nickname' => 'required|string|min:3|max:50',

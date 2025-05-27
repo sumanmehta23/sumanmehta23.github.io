@@ -51,6 +51,8 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\ClientTaskController;
 use function PHPUnit\Framework\throwException;
 use Laravel\Telescope\Telescope;
 
@@ -237,6 +239,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/update-nickname', [MT5Accounts::class, 'updateNickname'])->name('update.nickname');
     // Route::post('/update-leverage', [MT5Accounts::class, 'updateLeverage'])->name('update-leverage');
 
+    Route::get('/tasks', [ClientTaskController::class, 'index'])->name('tasks');
+    Route::post('/task/client_verify', [ClientTaskController::class, 'client_verify'])->name('task.client_verify');
+
+    Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
@@ -333,6 +339,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
     Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
+    Route::get('/getTasks', [AjaxController::class, 'getTasks']);
+    Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
+
     //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
@@ -505,5 +514,18 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::resource('permissions', PermissionController::class);
         // Route::get("/roles-permissions", [SearchController::class, 'index']);
         Route::get("/sendMarketEmail", [Dashboard::class, 'sendMarketingEmail']);
+
+        // Tasks Section
+        Route::prefix('/tasks')->name('tasks.')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('index');
+            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks');
+            Route::post('/store', [TaskController::class, 'store'])->name('store');
+            Route::put('/edit', [TaskController::class, 'edit'])->name('edit');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            // Route::put('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
+            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+        });
     });
 });

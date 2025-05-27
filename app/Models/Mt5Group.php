@@ -11,7 +11,7 @@ class Mt5Group extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = [];
-    
+
     public function accountTypes()
     {
         return $this->hasMany(AccountType::class, 'ac_type', 'mt5_group_id');

@@ -118,8 +118,7 @@
                                                             </div>
                                                         </div>
                                                          <div class="col-6 col-lg-6 col-xl-6">
-                                                            <div
-                                                                class="border rounded address-check trade-deposit-type">
+                                                            <div class="border rounded address-check trade-deposit-type">
                                                                 <div class="form-check">
                                                                     <input type="radio" name="deposit_type"
                                                                         checked

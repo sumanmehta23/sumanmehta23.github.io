@@ -6,11 +6,13 @@ use DB;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Promocode;
+use App\Models\ClientTask;
 use App\Models\Permission;
 use App\Models\RestrictIps;
 use App\Models\EmployeeList;
@@ -18,6 +20,7 @@ use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+
 use App\Models\WalletWithdraw;
 
 use App\Models\TradeWithdrawals;
@@ -27,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -549,7 +553,7 @@ class AjaxController extends Controller
                                             <path d='M4 16v2a2 2 0 0 0 2 2h2'></path>
                                             <path d='M16 4h2a2 2 0 0 1 2 2v2'></path>
                                             <path d='M16 20h2a2 2 0 0 0 2 -2v-2'></path>
-                                            <path d='M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2'></path>
+                                            <path d='M8 16a2 2 0 0 1 2 -2h4a4 4 0 0 1 2 2'></path>
                                         </svg>
                                     </span>";
                     }
@@ -4002,5 +4006,125 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
+    public function getTasks(Request $request)
+    {
+        $tasks = Task::where('status', 1);
+        if ($request->ajax()) {
+            return DataTables::of($tasks)
+                ->addColumn('action', function ($row) {
+                    return '<a href="javascript:void(0)"
+                                class="editTaskBtn"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->name.'"
+                                data-title="'.$row->title.'"
+                                data-description="'.$row->description.'"
+                                data-points="'.$row->points.'"
+                                data-status="'.$row->status.'"
+                                data-expiration_date="'.$row->expiration_date.'">
+                                <span class="badge text-secondary" data-bs-toggle="tooltip" title="Edit">
+                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
+                                </span>
+                            </a>
+
+
+                                <button type="submit" data-bs-toggle="tooltip" class="deleteTask btn btn-link p-0">
+                                    <span class="badge text-danger">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M4 7l16 0" />
+                                            <path d="M10 11l0 6" />
+                                            <path d="M14 11l0 6" />
+                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                        </svg>
+                                    </span>
+                                </button>';
+                })
+                ->rawColumns(['name', 'expiration_date', 'status','action'])
+                ->make(true);
+        }
+    }
+
+    public function getClientTasks(Request $request)
+    {
+        $tasks = ClientTask::with('user','task')->where('client_verification', 1);
+        if ($request->ajax()) {
+            return DataTables::of($tasks)
+
+                ->addColumn('created_at', function ($row) {
+
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->editColumn('email', function ($row) {
+                    $fullname = $row->user
+                        ? ($row->user->fullname)
+                        : '';
+                    $email = $row->user ? $row->user->email : '';
+                    return "<a href='/admin/client_details/{$row->user->id}'>
+                                    <div class='d-flex align-items-center'>
+                                        <div class='me-2'>
+                                            <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
+                                        </div>
+                                        <div>
+                                            <div class='lh-1'><span>{$fullname}</span></div>
+                                            <div class='lh-1'><span class='fs-11 text-muted'>{$email}</span></div>
+                                        </div>
+                                    </div>
+                                </a>";
+                })
+                ->addColumn('screenshot', function ($row) {
+                    $imagePath = ($row->user && $row->image_path)
+                        ? Storage::url($row->image_path)
+                        : asset('default-user.png'); // fallback image
+
+                    return "<img id='profile_image' class='rounded' src='{$imagePath}' style='width: 60px; height: 60px; object-fit: cover; cursor: pointer;' data-bs-toggle='modal' data-bs-target='#imageModal' data-image='{$imagePath}' />";
+                })
+                ->addColumn('task_name', function ($row) {
+                    return "<span>{$row->task->name}</span>" ;
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return "<div class='badge bg-outline-success'>Approved</div>";
+                    } elseif ($row->status == 2) {
+                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                    } else {
+                        return "<div class='badge bg-outline-primary'>Pending</div>";
+                    }
+                })
+                ->addColumn('points', function ($row) {
+                    return "<span>{$row->task->points}</span>" ;
+                })
+                ->addColumn('action', function ($row) {
+                    if($row->status == 0) {
+                        return "<button class='taskToggle badge bg-outline-primary'>Pending</button>";
+                    }
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->user
+                    ? ($row->user->fullname)
+                    : '';
+                })
+                ->addColumn('client_email', function ($row) {
+                    return $row->user ? $row->user->email : '';
+                })
+                ->addColumn('date', function ($row) {
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    return $date;
+                })
+                ->addColumn('time', function ($row) {
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return $time;
+                })
+
+                ->rawColumns(['created_at', 'email','screenshot', 'task_name','status','points','action','name','client_email','date','time'])
+                ->make(true);
+        }
     }
 }
