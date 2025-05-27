@@ -9,6 +9,7 @@
 
   // CC Payment gateway options
   $("#ccpay").attr("disabled", "true");
+
   $("#deposit_amount_cc").on('change keypress keydown keyup', function() {
       const selectedRadio = $('input[name="live-account"]:checked');
 
@@ -170,7 +171,6 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
   }
   function onAccountPaymentUpdate(data, code){
 
-    console.log(data);
 
     if(typeof data != 'undefined'){
         console.log("onPaymentUpdate");
@@ -277,18 +277,16 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
     }
   }
 
-  // Initialize promocode variable
-  let promocode = '';
 
-  // Update promocode value whenever it changes
-  $('#promocode').on('change keyup', function() {
-    promocode = $(this).val();
-  });
+
+
 
   $('.select-liveaccount').on('change', function() {
     let clientAccountId = $(this).val();
 
+    var promocode = $("#promocode").val();
     console.log(promocode);
+
     console.log('abhay');
     var minDeposit= $(this).data('mindeposit');
     var maxDeposit= $(this).data('maxdeposit');
@@ -307,6 +305,12 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
     }
     $("#crypto_deposit_amount").attr("placeholder", inputPlaceholder);
     $("#deposit_amount_cc").attr("placeholder", inputPlaceholder);
+
+    // Listen for changes to the promocode input field
+    $("#promocode").on('change keyup paste', function() {
+        var promocode = $(this).val();
+        console.log('Promocode value changed:', promocode);
+    });
 
     CryptoChill.setup({
         account: '{{config('services.cryptochill.accountid')}}',
