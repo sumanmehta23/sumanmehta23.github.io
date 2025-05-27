@@ -44,10 +44,8 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        Account::where('demo', 1)
-            // ->whereNotNull('competition_month')
-            // ->whereNotNull('competition_year')
-            ->whereNotNull('code')
+        Account::whereNotNull('code')
+            ->where('deleted_at',NULL)
             ->chunk(500, function ($accounts) {
                 $settings = settings();
 
