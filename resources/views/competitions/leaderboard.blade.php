@@ -1,12 +1,18 @@
 @extends(
-    auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Super Admin'
-        ? 'layouts.admin.admin'
-        : 'layouts.crm.crm'
+    isset(auth()->user()->role)
+        && (auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Super Admin')
+            ? 'layouts.admin.admin'
+            : 'layouts.crm.crm'
 )
 
 @section('content')
-<div class="main-content app-content">
-    <div class="container-fluid">
+@if(isset(auth()->user()->role))
+    <div class="main-content app-content">
+        <div class="container-fluid">
+@else
+    <div class="pc-container">
+        <div class="pc-content">
+@endif
         <!-- Page header -->
         <div class="page-header border-0 rounded-3 shadow-sm mb-4 d-block">
             <div class="page-block py-4">

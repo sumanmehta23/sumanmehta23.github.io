@@ -18,8 +18,10 @@ use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
 use App\MT5\MTProtocolConsts;
 use App\Models\TradeWithdrawals;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Services\CompetitionService;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
 
@@ -29,17 +31,19 @@ class CompetitionController extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    protected $competitionService;
+    public function __construct(MT5Service $mt5Service, MailService $mailService,CompetitionService $competitionService)
     {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
+        $this->competitionService = $competitionService;
     }
+
 
     public function competition()
     {
-
         $email = auth()->user()->email;
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)
@@ -47,6 +51,55 @@ class CompetitionController extends Controller
             ->where('demo', true)
             ->orderBy('id', 'desc')
             ->get();
+
+        // Get all competition account IDs
+        $accountIds = Account::whereNotNull('competition_month')
+            ->whereNotNull('competition_year')
+            ->where('demo', true)
+            ->pluck('id')
+            ->toArray();
+
+        // Get ranks for all competition accounts
+        $accounts = Account::whereIn('id', $accountIds)
+            ->get()
+            ->map(function ($account) {
+                return [
+                    'month' => $account->competition_year . '-' . str_pad(date('m', strtotime($account->competition_month)), 2, '0', STR_PAD_LEFT),
+                    'account_id' => $account->id,
+                    'total_amount' => $account->balance ?? 0
+                ];
+            });
+            // dd($accounts);
+        // Group by month
+        $grouped = $accounts->groupBy('month');
+
+        // Assign ranks within each month
+        $ranks = [];
+        foreach ($grouped as $month => $monthAccounts) {
+            // Sort accounts by balance in descending order
+            $sortedAccounts = $monthAccounts->sortByDesc('total_amount')->values();
+
+            $rank = 1;
+            foreach ($sortedAccounts as $accountData) {
+                $ranks[$month][$accountData['account_id']] = [
+                    'rank' => $rank++,
+                    'total' => $accountData['total_amount']
+                ];
+            }
+        }
+
+        // Add rank information to each result
+        $results = $results->map(function ($account) use ($ranks) {
+            $month = $account->competition_year . '-' . str_pad(date('m', strtotime($account->competition_month)), 2, '0', STR_PAD_LEFT);
+            if (isset($ranks[$month][$account->id])) {
+                $account->rank = $ranks[$month][$account->id]['rank'];
+                $account->total_participants = count($ranks[$month]);
+            } else {
+                $account->rank = null;
+                $account->total_participants = 0;
+            }
+            return $account;
+        });
 
         return view('competition', compact('results'));
     }
@@ -197,52 +250,87 @@ class CompetitionController extends Controller
 
     public function getAccountRank(Request $request)
     {
-
         $ids = $request->input('ids', []);
 
-        // Example: fetch ranks from the Account model, adjust as needed
-        // $accounts = Account::whereIn('id', $ids)->get();
+        // Get accounts with their competition details
+        $accounts = Account::whereIn('id', $ids)
+            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_year')
+            ->where('demo', true)
+            ->get()
+            ->map(function ($account) {
+                return [
+                    'month' => $account->competition_year . '-' . str_pad(date('m', strtotime($account->competition_month)), 2, '0', STR_PAD_LEFT),
+                    'account_id' => $account->id,
+                    'total_amount' => $account->balance ?? 0
+                ];
+            });
 
-
-         // Group transactions by month and account, and sum the amounts
-        $monthlyData = DB::table('accounts')
-            ->select(
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
-                'account_id',
-                DB::raw('SUM(amount) as total_amount')
-            )
-            ->whereIn('account_id', $ids)
-            ->groupBy('month', 'account_id')
-            ->orderBy('month')
-            ->orderByDesc('total_amount')
-            ->get();
-
-
-        // Organize data by month
-        $grouped = [];
-        foreach ($monthlyData as $data) {
-            $grouped[$data->month][] = $data;
-        }
+        // Group by month
+        $grouped = $accounts->groupBy('month');
 
         // Assign ranks within each month
         $ranks = [];
-        foreach ($grouped as $month => $accounts) {
+        foreach ($grouped as $month => $monthAccounts) {
+            // Sort accounts by balance in descending order
+            $sortedAccounts = $monthAccounts->sortByDesc('total_amount')->values();
+
             $rank = 1;
-            foreach ($accounts as $accountData) {
-                $ranks[$month][$accountData->account_id] = [
+            foreach ($sortedAccounts as $accountData) {
+                $ranks[$month][$accountData['account_id']] = [
                     'rank' => $rank++,
-                    'total' => $accountData->total_amount
+                    'total' => $accountData['total_amount']
                 ];
             }
         }
 
         return response()->json($ranks);
+    }
 
-        // $ranks = [];
-        // foreach ($accounts as $account) {
-        //     $ranks[$account->id] = $account->rank ?? '-';
-        // }
-        // return response()->json($ranks);
+    public function leaderboard(Request $request)
+    {
+        // Get month and year from request or use current
+        $month = $request->query('month', now()->format('F'));
+        $year = $request->query('year', now()->year);
+
+        try {
+            // Get competition data from service
+            $stats = $this->competitionService->getCurrentStats($month, $year);
+            $rankings = $this->competitionService->getRankings($month, $year);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($month, $year);
+            // Get available competitions for filtering
+            $availableCompetitions = Account::select('competition_month', 'competition_year')
+                ->where('demo', true)
+                ->whereNotNull('competition_month')
+                ->whereNotNull('competition_year')
+                ->distinct()
+                ->orderBy('competition_year', 'desc')
+                ->orderBy('competition_month', 'desc')
+                ->get()
+                ->groupBy('competition_year');
+            // dump($stats);
+            // dump($rankings);
+            // dump($competitionStatus);
+            // dd($availableCompetitions);
+            return view('competitions.leaderboard', [
+                'stats' => $stats,
+                'rankings' => $rankings,
+                'currentMonth' => $month,
+                'currentYear' => $year,
+                'months' => [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ],
+                'years' => range(now()->year - 1, now()->year + 1),
+                'availableCompetitions' => $availableCompetitions,
+                'competitionStatus' => $competitionStatus['status'],
+                'targetDate' => $competitionStatus['targetDate'],
+                'showTimer' => $competitionStatus['showTimer']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in competition leaderboard: ' . $e->getMessage());
+            return back()->with('error', 'Unable to load competition data. Please try again.');
+        }
     }
 
 }

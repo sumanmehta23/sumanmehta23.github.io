@@ -82,7 +82,8 @@
                                                     </td>
                                                     <td class="f-w-400 f-16">{{ $acc->competition_month }}</td>
                                                     <td class="f-w-400 f-16">{{ $acc->account_nick_name }}</td>
-                                                    <td class="f-w-400 f-16 rank-cell" data-id="{{ $acc->id }}">Loading...</td>
+                                                    {{-- {{ dump($acc->code) }} --}}
+                                                    <td class="f-w-400 f-16">{{ isset($acc->code) ? $acc->rank : 'Competition Not Started' }}</td>
                                                     <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
                                                     <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
                                                     <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
@@ -101,6 +102,14 @@
                                                                 </a>
                                                                 <a href="{{ route('trade-withdrawal') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                                                     <span class="">Withdraw <i class="ti ti-database-import"></i></span>
+                                                                </a>
+                                                                <a href="{{ route('competition.leaderboard', [
+                                                                                'month' => $acc->competition_month,
+                                                                                'year' => $acc->competition_year
+                                                                            ])
+                                                                         }}"
+                                                                        class="btn btn-sm btn-outline-secondary d-grid">
+                                                                    <span class="">View Leaderboard <i class="ti ti-database-import"></i></span>
                                                                 </a>
                                                             </div>
                                                         @elseif ($acc->code && $acc->code == 'Rejected')

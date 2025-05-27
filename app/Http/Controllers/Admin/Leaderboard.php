@@ -20,6 +20,7 @@ use App\MT5\MTProtocolConsts;
 use App\Models\TradeWithdrawals;
 use App\Services\CompetitionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;

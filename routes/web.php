@@ -241,6 +241,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
     Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
+    Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])
+            ->name('competition.leaderboard');
 
     Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
