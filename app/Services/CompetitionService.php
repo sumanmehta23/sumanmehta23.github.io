@@ -32,7 +32,6 @@ class CompetitionService
                 $q->where('ac_name', 'Competition');
             })
             ->get();
-
         return [
             'participants' => $accounts->count(),
             'total_volume' => $accounts->sum('lots_completed'),

@@ -10,8 +10,8 @@
                     </div>
                 @endif
                 <div>
-                    <h6 class="mb-1 text-muted">{{ $title }}</h6>
-                    <h3 class="mb-0">{{ $value }}</h3>
+                    <h6 class="mb-1 p-2 text-muted">{{ $title }}</h6>
+                    <h3 class="mb-0 pt-2">{{ $value }}</h3>
                 </div>
             </div>
         </div>
