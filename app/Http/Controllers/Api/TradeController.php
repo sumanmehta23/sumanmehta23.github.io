@@ -11,13 +11,13 @@ use App\Http\Resources\TradeResource;
 
 /**
  * Trades API Controller for Cellexpert Integration
- * 
+ *
  * Provides endpoints for retrieving trade/position data with the following fields:
- * 
+ *
  * REQUIRED FIELDS:
  * - position_volume: The monetary position amount (Volume) - e.g., $100,000 USD
  * - position_close_date: The position finalization date (after outcome is concluded)
- * 
+ *
  * OPTIONAL FIELDS:
  * - symbol: The symbol for the traded asset (enables per-symbol payouts)
  * - position_lot_volume: The LOT Volume (enables per-LOT commission models)
@@ -28,7 +28,7 @@ use App\Http\Resources\TradeResource;
  * - position_trading_group: Associated trading group (common in MT4/MT5)
  * - position_status: Outcome for user (Won, Lost, Cancelled, etc.)
  * - position_type: Description of the position
- * 
+ *
  * AVAILABLE FILTERS:
  * - position_close_date_from/to: Filter by close date range (mandatory support)
  * - user_id: Query individual users regardless of timestamps
@@ -67,14 +67,31 @@ class TradeController extends Controller
         $closeDateTo = $request->input('position_close_date_to');
 
         if (!empty($closeDateFrom) && !empty($closeDateTo)) {
-            $query->whereBetween('close_time', [
-                Carbon::parse($closeDateFrom)->startOfDay(),
-                Carbon::parse($closeDateTo)->endOfDay()
-            ]);
+            // Parse from date - use specified time or start of day
+            $fromDate = Carbon::parse($closeDateFrom);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateFrom)) {
+                $fromDate->startOfDay();
+            }
+
+            // Parse to date - use specified time or end of day
+            $toDate = Carbon::parse($closeDateTo);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateTo)) {
+                $toDate->endOfDay();
+            }
+
+            $query->whereBetween('close_time', [$fromDate, $toDate]);
         } elseif (!empty($closeDateFrom)) {
-            $query->where('close_time', '>=', Carbon::parse($closeDateFrom)->startOfDay());
+            $fromDate = Carbon::parse($closeDateFrom);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateFrom)) {
+                $fromDate->startOfDay();
+            }
+            $query->where('close_time', '>=', $fromDate);
         } elseif (!empty($closeDateTo)) {
-            $query->where('close_time', '<=', Carbon::parse($closeDateTo)->endOfDay());
+            $toDate = Carbon::parse($closeDateTo);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateTo)) {
+                $toDate->endOfDay();
+            }
+            $query->where('close_time', '<=', $toDate);
         }
 
         // Filter by user ID (optional) - allows querying individual users
@@ -120,12 +137,12 @@ class TradeController extends Controller
             return response()->json([
                 'data' => TradeResource::collection($trades->items()),
                 'meta' => [
-                    'current_page' => $trades->currentPage(),
                     'from' => $trades->firstItem(),
-                    'last_page' => $trades->lastPage(),
-                    'per_page' => $trades->perPage(),
                     'to' => $trades->lastItem(),
                     'total' => $trades->total(),
+                    'current_page' => $trades->currentPage(),
+                    'last_page' => $trades->lastPage(),
+                    'per_page' => $trades->perPage(),
                 ],
             ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
         } catch (\Exception $e) {
