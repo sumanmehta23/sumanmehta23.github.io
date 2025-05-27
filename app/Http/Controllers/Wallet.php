@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Models\Promocode;
 use App\Models\PaymentLog;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
@@ -1083,7 +1084,7 @@ class Wallet extends Controller
 
                 if($promocode){
                     $ticket = NULL;
-                    $promo = PromoCode::where('code', $promocode)->first();
+                    $promo = Promocode::where('code', $promocode)->first();
                     $bonus_amount = ($promo->promo_percentage/100) * $amount;
                     if($promo){
                         if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
