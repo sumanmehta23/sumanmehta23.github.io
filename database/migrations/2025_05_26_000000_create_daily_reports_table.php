@@ -15,13 +15,6 @@ return new class extends Migration
             $table->decimal('balance', 15, 2);
             $table->date('report_date');
             $table->timestamps();
-
-            $table->foreign('account_code')
-                  ->references('code')
-                  ->on('accounts')
-                  ->onDelete('cascade');
-
-            $table->index(['account_code', 'report_date']);
         });
     }
 
