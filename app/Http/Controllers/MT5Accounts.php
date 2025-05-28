@@ -194,6 +194,7 @@ class MT5Accounts extends Controller
                 $query->where('mt5_group_type', 'demo');
             })
             ->where('is_client_group', 1)
+            ->where('ac_name', '!=','Competition')
             ->orderBy('display_priority', 'desc')
             ->get();
         return view('create-demo-account', compact('user', 'results'));
