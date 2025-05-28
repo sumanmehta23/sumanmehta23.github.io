@@ -54,10 +54,10 @@ class SyncTrades extends Command
         Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->chunk(1000, function ($accounts) {
-                Log::info("Processing chunk of " . count($accounts) . " accounts");
+                // Log::info("Processing chunk of " . count($accounts) . " accounts");
                 foreach ($accounts as $account) {
                     // Log::info("Dispatching sync job for account: {$account->code}");
-                    SyncTradesJob::dispatch($account)->onQueue('sync-trades');
+                    SyncTradesJob::dispatch($account)->onQueue('syncaccountstrades');
                 }
         });
 
