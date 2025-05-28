@@ -14,9 +14,16 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class SyncTrades implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
+    protected $mt5Service;
+    protected $api;
+    protected  $account;
     protected $accountId;
+    protected $newTrades = false;
+    protected $referral_code;
+    protected $ib_user_id;
+    protected $ib_acc_plans = [];
+
 
     public function __construct($accountId)
     {
