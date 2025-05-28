@@ -16,12 +16,14 @@ return new class extends Migration
             $table->date('report_date');
             $table->timestamps();
 
+            $table->index(['account_code', 'report_date']);
+        });
+
+        Schema::table('daily_reports', function (Blueprint $table) {
             $table->foreign('account_code')
                   ->references('code')
                   ->on('accounts')
                   ->onDelete('cascade');
-
-            $table->index(['account_code', 'report_date']);
         });
     }
 
