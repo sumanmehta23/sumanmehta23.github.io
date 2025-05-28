@@ -15,16 +15,8 @@ return new class extends Migration
             $table->decimal('balance', 15, 2);
             $table->date('report_date');
             $table->timestamps();
-
-            $table->index(['account_code', 'report_date']);
         });
 
-        Schema::table('daily_reports', function (Blueprint $table) {
-            $table->foreign('account_code')
-                  ->references('code')
-                  ->on('accounts')
-                  ->onDelete('cascade');
-        });
     }
 
     public function down()
