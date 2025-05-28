@@ -51,7 +51,7 @@ class SyncTrades extends Command
             ->whereNull('deleted_at')
             ->chunk(1000, function ($accounts) {
                 foreach ($accounts as $account) {
-                    SyncTradesJob::dispatch($account->id)->onQueue('sync-trades');
+                    SyncTradesJob::dispatch($account)->onQueue('sync-trades');
                 }
         });
         // Account::whereNotNull('code')
