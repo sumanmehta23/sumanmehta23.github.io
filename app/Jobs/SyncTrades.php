@@ -16,29 +16,27 @@ class SyncTrades implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $accountId;
+    protected $account;
 
-    public function __construct($accountId)
+    public function __construct($account)
     {
-        $this->accountId = $accountId;
+        $this->account = $account;
     }
 
     public function handle(MT5Service $mt5Service)
     {
-        Log::info("Starting SyncTrades job for account ID: {$this->accountId}");
+        // Log::info("Starting SyncTrades job for account ID: {$this->account}");
 
         $mt5Service->connect();
         $api = $mt5Service->getApi();
-
         $settings = settings();
-        $account = Account::find($this->accountId);
+        $account = ($this->account);
         if (!$account || !$account->code) {
-            Log::error("Account not found or no code available for account ID: {$this->accountId}");
+            Log::error("Account not found or no code available for account ID: {$this->account->code}");
             return;
         }
 
         $login = $account->code;
-        Log::info("Processing trades for MT5 login: {$login}");
 
         $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $api->Connect(
@@ -54,27 +52,25 @@ class SyncTrades implements ShouldQueue
         $total = 0;
         $orders = [];
 
-        Log::info("Fetching trade history from {$from} to {$to}");
 
         $error_code = $api->HistoryGetTotal($login, $from, $to, $total);
         if ($error_code != MTRetCode::MT_RET_OK) {
             Log::error("MT5 HistoryGetTotal error for login {$login}: " . MTRetCode::GetError($error_code));
             return;
         }
-        Log::info("Total trades found: {$total}");
+        // Log::info("Total trades found: {$total}");
 
         $error_code = $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
         if ($error_code != MTRetCode::MT_RET_OK) {
             Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
             return;
         }
-        Log::info("Successfully fetched {$total} trades for login {$login}");
+        // Log::info("Successfully fetched {$total} trades for login {$login}");
 
         $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
-        Log::info("Number of unique positions found: " . count($ordersByPosition));
 
         foreach ($ordersByPosition as $positionId => $positionOrders) {
-            Log::info("Processing position ID: {$positionId} with " . $positionOrders->count() . " orders");
+            // Log::info("Processing position ID: {$positionId} with " . $positionOrders->count() . " orders");
             $positionOrders = $positionOrders->sortBy('TimeDone');
 
             if ($positionOrders->count() < 2) {
@@ -102,7 +98,7 @@ class SyncTrades implements ShouldQueue
                             'code' => $account->code,
                         ]
                     );
-                    Log::info("Stored open trade for position {$positionId}, order {$order->Order}");
+                    // Log::info("Stored open trade for position {$positionId}, order {$order->Order}");
                 } catch (\Exception $e) {
                     Log::error("Error storing open trade for position {$positionId}: " . $e->getMessage());
                 }
@@ -134,13 +130,13 @@ class SyncTrades implements ShouldQueue
                             'code' => $account->code,
                         ]
                     );
-                    Log::info("Stored closed trade for position {$positionId}, orders {$openOrder->Order}/{$closeOrder->Order}");
+                    // Log::info("Stored closed trade for position {$positionId}, orders {$openOrder->Order}/{$closeOrder->Order}");
                 } catch (\Exception $e) {
                     Log::error("Error storing closed trade for position {$positionId}: " . $e->getMessage());
                 }
             }
         }
 
-        Log::info("Completed SyncTrades job for account ID: {$this->accountId}");
+        Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
     }
 }
