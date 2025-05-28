@@ -11,20 +11,12 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Bus\Batchable;
 
 class SyncTrades implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
-    protected $mt5Service;
-    protected $api;
-    protected  $account;
-    protected $accountId;
-    protected $newTrades = false;
-    protected $referral_code;
-    protected $ib_user_id;
-    protected $ib_acc_plans = [];
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $accountId;
 
     public function __construct($accountId)
     {
