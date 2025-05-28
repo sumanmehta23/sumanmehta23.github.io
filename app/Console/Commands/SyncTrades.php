@@ -45,18 +45,18 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        Log::info('Starting sync trades process');
+        // Log::info('Starting sync trades process');
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->count();
-        Log::info("Found {$totalAccounts} accounts to process");
+        // Log::info("Found {$totalAccounts} accounts to process");
 
         Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->chunk(1000, function ($accounts) {
                 Log::info("Processing chunk of " . count($accounts) . " accounts");
                 foreach ($accounts as $account) {
-                    Log::info("Dispatching sync job for account: {$account->code}");
+                    // Log::info("Dispatching sync job for account: {$account->code}");
                     SyncTradesJob::dispatch($account)->onQueue('sync-trades');
                 }
         });
