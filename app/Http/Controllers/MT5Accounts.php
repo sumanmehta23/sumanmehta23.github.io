@@ -40,6 +40,7 @@ class MT5Accounts extends Controller
         $email = auth()->user()->email;
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)
+            ->where('competition_month',NULL)
             ->where('demo', false)
             ->orderBy('id', 'desc')
             ->get();
@@ -177,6 +178,7 @@ class MT5Accounts extends Controller
             $query->where('mt5_group_type', 'live')
                 ->orWhere('mt5_group_type', 'real');
         })->where('is_client_group', 1)
+            ->where('ac_name', '!=','Competition')
             ->orderBy('display_priority', 'DESC')
             ->with('mt5Group:mt5_group_id,mt5_group_type')
             ->get();
@@ -241,7 +243,6 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
-
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -282,6 +283,62 @@ class MT5Accounts extends Controller
         $ibdata = '';
         if ($ib) {
             $ibdata = Ib1::where('referral_code',$ib)->first();
+        }
+
+        if($group->ac_name == 'Competition'){
+            $settings = settings();
+            activity()->causedBy($user->id)
+                ->withProperties(
+                    [
+                        'ip' => $request->ip(),
+                        'email' => $user->email,
+                        'type' => 'Live',
+                        'code' => 'Pending',
+                        'leverage' => $validatedData['leverage'],
+                        'ib' => $ib,
+                        'remark' => 'Competition purchase'
+                    ])
+            ->event('create')
+            ->log('Create Live Account');
+            $useraccount = Account::create([
+                'user_id' => $user->id,
+                'name' => $user->fullname??$user->email,
+                'demo'=> false,
+                'email' => $user->email,
+                'account_nick_name' =>  $nick_name,
+                'account_type_id' => $account_type_id,
+                'leverage' => $validatedData['leverage'],
+                'currency' => 'USD',
+                'ib1' => $user->ib1?? "",
+                'account_request_status' => '0',
+                'competition_month' => date('F', strtotime('+1 month')),
+
+            ]);
+            if($useraccount){
+
+                $from = $settings['email_from_address'];
+                $emailSubject = 'Competition Requested';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<div>Thank you for choosing LQH Markets. Your request for a '.date('F', strtotime('+1 month')).' month will be approved  on 1st of next month.</div>
+
+                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+                    <p>Best Regards.</p>
+                <p>LQH Markets Team</p>';
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Competition Request Pending",
+                    "subtitle_right" => "",
+                ];
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                return redirect()->back()->with('success', 'Competition Request Received Your request has been submitted.');
+            } else {
+                return redirect()->back()->with('error', 'Account not created');
+            }
         }
 
         if ($userAcc && count($userAcc) < 2) {
@@ -444,7 +501,6 @@ class MT5Accounts extends Controller
     }
     public function activateAccount(Request $request)
     {
-
         $settings = settings();
         if($request->accountType == 0)
         {
@@ -890,11 +946,10 @@ class MT5Accounts extends Controller
         }
 
         $userAcc = Account::where('user_id', $user->id)->where('demo',1)->get();
-        // dd(count($userAcc));
+        // dd(($userAcc));
 
         if($userAcc)
         {
-
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;

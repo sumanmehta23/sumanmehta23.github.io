@@ -26,6 +26,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
     Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
     Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
+
+    // Competition routes
+    Route::get('/competition/trader-data/{account}', [\App\Http\Controllers\Api\CompetitionController::class, 'getTraderData']);
+    Route::get('/competition/current', [\App\Http\Controllers\Api\CompetitionController::class, 'getCurrentCompetition']);
 });
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Trade extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory,HasUuids;
 
     protected $table = 'trades';
 

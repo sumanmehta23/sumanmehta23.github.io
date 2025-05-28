@@ -5,7 +5,6 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\KycUpdate;
 use App\Models\Permission;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
@@ -15,13 +14,16 @@ use App\Http\Controllers\Home;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
 use App\Models\TradeWithdrawals;
+use Laravel\Telescope\Telescope;
 use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Admin\Login;
+use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -39,7 +41,9 @@ use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\MT5Controller;
 use App\Http\Controllers\Admin\AjaxController;
+use function PHPUnit\Framework\throwException;
 use App\Http\Controllers\Admin\StaffManagement;
+use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SumsubController;
@@ -206,7 +210,6 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::middleware(['auth'])->group(function () {
-
     Route::get('/two_factor_auth', [LoginController::class, 'two_factor_auth'])->name('two_factor_auth');
     Route::post('/verify-2fa', [LoginController::class, 'verify_two_factor_auth'])->name('verify-2fa');
 
@@ -243,7 +246,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/client_verify', [ClientTaskController::class, 'client_verify'])->name('task.client_verify');
 
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
+    
+    Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
+    Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
+    Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
+    Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
+    Route::get('/competition/trader/{accountNo}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
 
+    Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
     Route::get('/support', [Tickets::class, 'index'])->name('supports');
     Route::post('/support', [Tickets::class, 'createTicket'])->name('support');
@@ -364,6 +374,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
     Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
+    
+    Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
+    Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
+    Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
+
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -378,6 +393,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/competitions/leaderboard', [Leaderboard::class, 'leaderboard'])
+            ->name('competitions.leaderboard');
+        Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
+        Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
+        Route::get('/competition/trader-data/{accountNo}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
+
+        Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
         Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
         Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');

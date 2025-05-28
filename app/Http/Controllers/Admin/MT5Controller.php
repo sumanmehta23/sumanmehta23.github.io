@@ -781,7 +781,7 @@ class MT5Controller extends Controller
         }
 
         if($account->demo == false){
-            AccountHelper::updateLiveAndDemoAccounts($account->code);
+            AccountHelper::updateLiveAndDemoAccounts($account->id);
             $type = "live";
         }else{
             $type = "demo";
