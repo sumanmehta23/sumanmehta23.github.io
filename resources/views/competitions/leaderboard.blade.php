@@ -258,11 +258,11 @@
                                     <table class="table table-hover mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Time</th>
-                                                <th>Type</th>
+                                                <th>Position Id</th>
+                                                <th>Open Time</th>
+                                                <th>Close Time</th>
                                                 <th>Symbol</th>
                                                 <th>Volume</th>
-                                                <th>Price</th>
                                                 <th class="text-end">Profit</th>
                                             </tr>
                                         </thead>
@@ -690,11 +690,11 @@
                 const profitIcon = trade.profit >= 0 ? 'trending-up' : 'trending-down';
 
                 row.innerHTML = `
-                    <td>${new Date(trade.time).toLocaleString()}</td>
-                    <td>${trade.type}</td>
+                    <td>${trade.position}</td>
+                    <td>${new Date(trade.open_time).toLocaleString()}</td>
+                    <td>${new Date(trade.close_time).toLocaleString()}</td>
                     <td>${trade.symbol}</td>
                     <td>${trade.volume}</td>
-                    <td>${trade.price}</td>
                     <td class="text-end ${profitClass}">
                         <i class="fe fe-${profitIcon} me-1"></i>
                         $${parseFloat(trade.profit).toFixed(2)}

@@ -378,15 +378,16 @@ class CompetitionController extends Controller
 
         // Get trades data
         $trades = $account->trades->map(function($trade) {
+
             return [
-                'time' => $trade->created_at,
-                'type' => $trade->type,
+                'position' => $trade->position_id,
+                'open_time' => $trade->open_time,
+                'close_time' => $trade->close_time,
                 'symbol' => $trade->symbol,
                 'volume' => $trade->volume,
-                'price' => $trade->open_price,
                 'profit' => $trade->profit
             ];
-        })->sortByDesc('time')->values()->all();
+        })->sortByDesc('open_time')->values()->all();
 
         return response()->json([
             'chart_data' => [

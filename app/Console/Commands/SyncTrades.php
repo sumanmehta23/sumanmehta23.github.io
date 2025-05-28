@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Jobs\SyncTrades as SyncTradesJob;
 use App\Services\MT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
@@ -44,107 +45,118 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        Account::whereNotNull('code')
-            ->where('deleted_at',NULL)
-            ->chunk(500, function ($accounts) {
-                $settings = settings();
-
+         Account::whereNotNull('code')
+            // ->whereNotNull('competition_month')
+            // ->whereNotNull('competition_year')
+            ->whereNull('deleted_at')
+            ->chunk(1000, function ($accounts) {
                 foreach ($accounts as $account) {
-                    $login = $account->code; // Assuming `login` column exists
-                    // Log::info('sync accounts '.json_encode(($account)));
-                    // Connect to MT5 server
-                    $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                    $this->api->Connect(
-                        $settings['mt5_server_ip'],
-                        $settings['mt5_server_port'],
-                        300,
-                        $settings['mt5_server_web_login'],
-                        $settings['mt5_server_web_password']
-                    );
-
-                    $from = 'March 01, 2016';
-                    $to = 'March 31, 2080';
-                    $total = 0;
-                    $orders = [];
-
-                    $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
-
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        Log::error("MT5 HistoryGetTotal error for login {$login}: " . MTRetCode::GetError($error_code));
-                        continue;
-                    }
-
-                    $error_code = $this->api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
-
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
-                        continue;
-                    }
-                    // Process orders and save to trades table
-                    $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
-
-                    // Log::info('sync orders '.json_encode(($orders)));
-
-                    foreach ($ordersByPosition as $positionId => $positionOrders) {
-                        // Sort orders by TimeDone to identify open and close trades
-                        $positionOrders = $positionOrders->sortBy('TimeDone');
-
-                        if ($positionOrders->count() < 2) {
-                            // Single order means trade is still open
-                            $order = $positionOrders->first();
-                            Trade::updateOrCreate(
-                                [
-                                    'account_id' => $account->id,
-                                    'position_id' => $positionId,
-                                    'order_id' => $order->Order
-                                ],
-                                [
-                                    'symbol' => $order->Symbol,
-                                    'type' => $order->Type,
-                                    'volume' => $order->VolumeInitial,
-                                    'volume_ext' => $order->VolumeInitialExt,
-                                    'open_price' => $order->PriceCurrent,
-                                    'close_price' => '',
-                                    'sl' => $order->PriceSL,
-                                    'tp' => $order->PriceTP,
-                                    'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
-                                    'state' => $order->State,
-                                    'comment' => $order->Comment,
-                                    'status' => 'open',
-                                    'code' => $account->code,
-                                ]
-                            );
-                        } else {
-                            // First order is open, last order is close
-                            $openOrder = $positionOrders->first();
-                            $closeOrder = $positionOrders->last();
-
-                            Trade::updateOrCreate(
-                                [
-                                    'account_id' => $account->id,
-                                    'position_id' => $positionId,
-                                    'order_id' => $openOrder->Order
-                                ],
-                                [
-                                    'symbol' => $openOrder->Symbol,
-                                    'type' => $openOrder->Type,
-                                    'volume' => $openOrder->VolumeInitial,
-                                    'volume_ext' => $openOrder->VolumeInitialExt,
-                                    'open_price' => $openOrder->PriceCurrent,
-                                    'close_price' => $closeOrder->PriceCurrent,
-                                    'sl' => $openOrder->PriceSL,
-                                    'tp' => $openOrder->PriceTP,
-                                    'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
-                                    'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
-                                    'state' => $closeOrder->State,
-                                    'comment' => $openOrder->Comment,
-                                    'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt/100000000) * $openOrder->ContractSize, // You may need to calculate this based on your business logic
-                                    'status' => 'closed'
-                                ]
-                            );
-                        }
-                    }
+                    SyncTradesJob::dispatch($account->id)->onQueue('sync-trades');
                 }
-            });
+        });
+        // Account::whereNotNull('code')
+        //     // ->whereNotNull('competition_month')
+        //     // ->whereNotNull('competition_year')
+        //     ->where('deleted_at',NULL)
+        //     ->chunk(2000, function ($accounts) {
+        //         $settings = settings();
+
+        //         foreach ($accounts as $account) {
+        //             $login = $account->code; // Assuming `login` column exists
+        //             // Log::info('sync accounts '.json_encode(($account)));
+        //             // Connect to MT5 server
+        //             $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        //             $this->api->Connect(
+        //                 $settings['mt5_server_ip'],
+        //                 $settings['mt5_server_port'],
+        //                 300,
+        //                 $settings['mt5_server_web_login'],
+        //                 $settings['mt5_server_web_password']
+        //             );
+
+        //             $from = 'March 01, 2016';
+        //             $to = 'March 31, 2080';
+        //             $total = 0;
+        //             $orders = [];
+
+        //             $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
+
+        //             if ($error_code != MTRetCode::MT_RET_OK) {
+        //                 Log::error("MT5 HistoryGetTotal error for login {$login}: " . MTRetCode::GetError($error_code));
+        //                 continue;
+        //             }
+
+        //             $error_code = $this->api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
+
+        //             if ($error_code != MTRetCode::MT_RET_OK) {
+        //                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
+        //                 continue;
+        //             }
+        //             // Process orders and save to trades table
+        //             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+
+        //             // Log::info('sync orders '.json_encode(($orders)));
+
+        //             foreach ($ordersByPosition as $positionId => $positionOrders) {
+        //                 // Sort orders by TimeDone to identify open and close trades
+        //                 $positionOrders = $positionOrders->sortBy('TimeDone');
+
+        //                 if ($positionOrders->count() < 2) {
+        //                     // Single order means trade is still open
+        //                     $order = $positionOrders->first();
+        //                     Trade::updateOrCreate(
+        //                         [
+        //                             'account_id' => $account->id,
+        //                             'position_id' => $positionId,
+        //                             'order_id' => $order->Order
+        //                         ],
+        //                         [
+        //                             'symbol' => $order->Symbol,
+        //                             'type' => $order->Type,
+        //                             'volume' => $order->VolumeInitial,
+        //                             'volume_ext' => $order->VolumeInitialExt,
+        //                             'open_price' => $order->PriceCurrent,
+        //                             'close_price' => '',
+        //                             'sl' => $order->PriceSL,
+        //                             'tp' => $order->PriceTP,
+        //                             'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
+        //                             'state' => $order->State,
+        //                             'comment' => $order->Comment,
+        //                             'status' => 'open',
+        //                             'code' => $account->code,
+        //                         ]
+        //                     );
+        //                 } else {
+        //                     // First order is open, last order is close
+        //                     $openOrder = $positionOrders->first();
+        //                     $closeOrder = $positionOrders->last();
+
+        //                     Trade::updateOrCreate(
+        //                         [
+        //                             'account_id' => $account->id,
+        //                             'position_id' => $positionId,
+        //                             'order_id' => $openOrder->Order
+        //                         ],
+        //                         [
+        //                             'symbol' => $openOrder->Symbol,
+        //                             'type' => $openOrder->Type,
+        //                             'volume' => $openOrder->VolumeInitial,
+        //                             'volume_ext' => $openOrder->VolumeInitialExt,
+        //                             'open_price' => $openOrder->PriceCurrent,
+        //                             'close_price' => $closeOrder->PriceCurrent,
+        //                             'sl' => $openOrder->PriceSL,
+        //                             'tp' => $openOrder->PriceTP,
+        //                             'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
+        //                             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
+        //                             'state' => $closeOrder->State,
+        //                             'comment' => $openOrder->Comment,
+        //                             'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt/100000000) * $openOrder->ContractSize, // You may need to calculate this based on your business logic
+        //                             'status' => 'closed'
+        //                         ]
+        //                     );
+        //                 }
+        //             }
+        //         }
+        //     });
     }
 }
