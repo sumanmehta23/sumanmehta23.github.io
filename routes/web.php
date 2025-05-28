@@ -57,8 +57,6 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\ClientTaskController;
-use function PHPUnit\Framework\throwException;
-use Laravel\Telescope\Telescope;
 
 Route::get('/telescope-test', function () {
     Log::info('🛠 Telescope test route hit.');
@@ -246,7 +244,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/client_verify', [ClientTaskController::class, 'client_verify'])->name('task.client_verify');
 
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
-    
+
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
     Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
@@ -374,7 +372,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
     Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
-    
+
     Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
     Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
     Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
