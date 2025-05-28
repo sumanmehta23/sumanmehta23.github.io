@@ -112,16 +112,16 @@
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <x-competition.stats-card
-                            title="Prize Pool"
-                            value="Challange Account"
-                            icon="bar-chart-2"
+                            title="Total Participants"
+                            :value="$stats['participants']"
+                            icon="users"
                         />
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <x-competition.stats-card
-                            title="Total Participants"
-                            :value="$stats['participants']"
-                            icon="users"
+                            title="Prize Pool"
+                            value="Challange Account"
+                            icon="bar-chart-2"
                         />
                     </div>
                     <div class="col-sm-6 col-xl-3">
@@ -620,7 +620,15 @@
                 const testAccountNo = accountNo;  // Replace with a real account number from your database
                 console.log('Using test account:', testAccountNo);
 
-                const response = await fetch(`/admin/competition/trader-data/${testAccountNo}`);
+                const isAdmin = @json(isset(auth()->user()->role));
+
+                // Use the appropriate endpoint based on user role
+                const endpoint = isAdmin
+                    ? `/admin/competition/trader-data/${testAccountNo}`
+                    : `/competition/trader/${testAccountNo}`;
+
+                const response = await fetch(endpoint);
+
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();

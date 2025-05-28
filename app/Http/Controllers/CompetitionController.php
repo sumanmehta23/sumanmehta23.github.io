@@ -333,4 +333,68 @@ class CompetitionController extends Controller
         }
     }
 
+    public function getTraderData($accountNo)
+    {
+        $account = Account::with(['trades', 'dailyReports' => function($query) {
+            $query->where('report_date', '>=', now()->subDays(30))
+                  ->orderBy('report_date');
+        }])->where('code', $accountNo)->firstOrFail();
+
+        // Get daily reports data
+        $labels = [];
+        $equity = [];
+
+
+        // Get the last 31 days of data (30 days + current day)
+
+        $dailyData = $account->dailyReports->keyBy(function ($item) {
+                        return $item->report_date->format('Y-m-d');
+                    });
+
+
+        // Fill in any missing dates with the last known equity value
+        $lastEquity = $account->equity ?? '0.00';
+        $daysInCurrentMonth = now()->daysInMonth;
+
+        $today = now();
+        $startOfMonth = $today->copy()->startOfMonth();
+        $endOfMonth = $today; // Up to today
+        $currentDate = $startOfMonth->copy();
+
+        while ($currentDate <= $endOfMonth) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $dayLabel = $currentDate->format('M d');
+            $labels[] = $dayLabel;
+
+            if ($dailyData->has($dateKey)) {
+                $lastEquity = $dailyData[$dateKey]->equity;
+            } else {
+                $lastEquity = '0.00';
+            }
+
+            $equity[] = round($lastEquity, 2);
+            $currentDate->addDay();
+        }
+
+        // Get trades data
+        $trades = $account->trades->map(function($trade) {
+            return [
+                'time' => $trade->created_at,
+                'type' => $trade->type,
+                'symbol' => $trade->symbol,
+                'volume' => $trade->volume,
+                'price' => $trade->open_price,
+                'profit' => $trade->profit
+            ];
+        })->sortByDesc('time')->values()->all();
+
+        return response()->json([
+            'chart_data' => [
+                'labels' => $labels,
+                'equity' => $equity
+            ],
+            'trades' => $trades
+        ]);
+    }
+
 }
