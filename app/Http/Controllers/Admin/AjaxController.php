@@ -2323,6 +2323,7 @@ class AjaxController extends Controller
     {
 
         $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])
+                ->distinct()
                 ->where('trade_withdrawal.status', 0)
                 ->where('trade_withdrawal.email_verified', 1)
                 ->where('trade_withdrawal.withdraw_type', 'Trade Withdrawal');
