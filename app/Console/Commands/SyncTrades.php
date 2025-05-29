@@ -10,6 +10,9 @@ use App\Services\MT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Bus\Batch;
+use Throwable;
 
 class SyncTrades extends Command
 {
@@ -38,21 +41,42 @@ class SyncTrades extends Command
      *
      * @var string
      */
-    protected $description = 'Sync MT5 trade history for demo competition accounts';
+    protected $description = 'Sync MT5 trade history for accounts';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-         Account::whereNotNull('code')
-            // ->whereNotNull('competition_month')
-            // ->whereNotNull('competition_year')
+        $batchSize = 500; // Process accounts per batch
+
+        Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->chunk(1000, function ($accounts) {
+            ->chunk(100, function ($accounts) use ($batchSize) {
+                $jobs = [];
                 foreach ($accounts as $account) {
-                    SyncTradesJob::dispatch($account)->onQueue('sync-trades');
+                    $jobs[] = new SyncTradesJob($account);
                 }
-        });
+
+                // Create batches of jobs each
+                $jobBatches = array_chunk($jobs, $batchSize);
+
+                foreach ($jobBatches as $batch) {
+                    Bus::batch($batch)
+                        ->allowFailures()
+                        ->onConnection('redis')
+                        ->onQueue('sync-trades')
+                        ->then(function (Batch $batch) {
+                            // Log::info("Batch {$batch->id} completed successfully");
+                        })
+                        ->catch(function (Batch $batch, Throwable $e) {
+                            // Log::error("Batch {$batch->id} failed: " . $e->getMessage());
+                        })
+                        ->finally(function (Batch $batch) {
+                            // Log::info("Batch {$batch->id} finished processing");
+                        })
+                        ->dispatch();
+                }
+            });
     }
 }
