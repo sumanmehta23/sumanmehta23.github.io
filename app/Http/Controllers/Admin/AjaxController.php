@@ -2975,8 +2975,10 @@ class AjaxController extends Controller
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' :
+                            ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                            ($row->status == 3 ? '<span class="badge bg-outline-warning">Rejected by User</span>' :
+                            '<span class="badge bg-outline-primary">Pending</span>'))
             ];
         }
         return ['data' => $data];
