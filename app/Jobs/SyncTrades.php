@@ -25,14 +25,14 @@ class SyncTrades implements ShouldQueue
 
     public function handle(MT5Service $mt5Service)
     {
-        Log::info("Starting SyncTrades job for account ID: {$this->account->code}");
+        // Log::info("Starting SyncTrades job for account ID: {$this->account->code}");
 
         $mt5Service->connect();
         $api = $mt5Service->getApi();
         $settings = settings();
         $account = ($this->account);
         if (!$account || !$account->code) {
-            Log::error("Account not found or no code available for account ID: {$this->account->code}");
+            Log::error("Account not found");
             return;
         }
 
