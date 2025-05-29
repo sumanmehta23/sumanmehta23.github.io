@@ -224,10 +224,10 @@ return [
             'queue' => ['sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 20,
+            'maxProcesses' => 50,
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512,
+            'memory' => 3000,
             'tries' => 1,
             'timeout' => 600,
             'nice' => 0,
@@ -253,6 +253,9 @@ return [
             ],
             'supervisor-3' => [
                 'maxProcesses' => 20,
+            ],
+            'supervisor-4' => [
+                'maxProcesses' => 50,
             ]
         ],
     ],

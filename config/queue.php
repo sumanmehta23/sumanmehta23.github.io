@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Queue Connection Name
@@ -29,7 +28,6 @@ return [
     */
 
     'connections' => [
-
         'sync' => [
             'driver' => 'sync',
         ],
@@ -71,6 +69,15 @@ return [
             'after_commit' => false,
         ],
 
+        'sync-trades' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => 'sync-trades',
+            'retry_after' => 300,
+            'block_for' => null,
+            'after_commit' => false,
+            'timeout' => 300,
+        ],
     ],
 
     /*
@@ -105,5 +112,4 @@ return [
         'database' => env('DB_CONNECTION', 'mysql'),
         'table' => 'failed_jobs',
     ],
-
 ];
