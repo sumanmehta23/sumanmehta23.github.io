@@ -219,6 +219,19 @@ return [
             'timeout' => 600,
             'nice' => 0,
         ],
+        'supervisor-4' => [
+            'connection' => 'redis',
+            'queue' => ['sync-trades'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 20,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 512,
+            'tries' => 1,
+            'timeout' => 600,
+            'nice' => 0,
+        ],
 
     ],
 

@@ -57,7 +57,7 @@ class SyncTrades extends Command
                 // Log::info("Processing chunk of " . count($accounts) . " accounts");
                 foreach ($accounts as $account) {
                     // Log::info("Dispatching sync job for account: {$account->code}");
-                    SyncTradesJob::dispatch($account)->onQueue('syncaccountstrades');
+                    SyncTradesJob::dispatch($account)->onQueue('sync-trades');
                 }
         });
 
