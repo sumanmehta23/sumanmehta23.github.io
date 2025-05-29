@@ -2977,7 +2977,7 @@ class AjaxController extends Controller
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' :
                             ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                            ($row->status == 3 ? '<span class="badge bg-outline-warning">Rejected by User</span>' :
+                            ($row->status == 3 ? '<span class="badge bg-outline-warning">Cancelled by User</span>' :
                             '<span class="badge bg-outline-primary">Pending</span>'))
             ];
         }
