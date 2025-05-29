@@ -32,7 +32,7 @@ class SyncTrades implements ShouldQueue
         $settings = settings();
         $account = ($this->account);
         if (!$account || !$account->code) {
-            Log::error("Account not found or no code available for account ID: {$this->account->code}");
+            Log::error("Account not found");
             return;
         }
 
