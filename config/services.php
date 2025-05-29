@@ -66,5 +66,8 @@ return [
     ],
     'klaviyo' => [
         'list_ids' => json_decode(env('KLAVIYO_LIST_IDS', '[]'), true),
+    ],
+    '1forge' => [
+        'api_key' => env('FORGE_API_KEY', ''),
     ]
 ];
