@@ -448,7 +448,6 @@ class MT5Accounts extends Controller
         $settings = settings();
         if($request->accountType == 0)
         {
-            dd($request->all());
             $validatedData = $request->validate([
                 'options' => 'required|string',
                 'leverage' => 'required|string',
