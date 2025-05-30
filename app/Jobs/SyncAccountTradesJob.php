@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Trade;
 use Exception;
 use App\Models\Ib1;
 use App\MT5\MTWebAPI;
@@ -33,6 +34,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
+    protected $batchSize = 1000;
     /**
      * Create a new job instance.
      */
@@ -173,6 +175,7 @@ class SyncAccountTradesJob implements ShouldQueue
                         Log::error('Error inserting commission: ' . $e->getMessage());
                     }
                 }
+                $this->processTradeBatch($orders,$this->account);
             }
 
             $offset += count($orders);
@@ -195,5 +198,97 @@ class SyncAccountTradesJob implements ShouldQueue
             \Log::error("SyncAccountTradesJob failed: " . $e->getMessage());
             throw $e; // Ensure the job registers as failed
         }
+    }
+    private function processTradeBatch(array $orders,$account)
+    {
+        $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+        $tradesToUpsert = [];
+
+        foreach ($ordersByPosition as $positionId => $positionOrders) {
+            $positionOrders = $positionOrders->sortBy('TimeDone');
+
+            if ($positionOrders->count() < 2) {
+                $order = $positionOrders->first();
+                $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+            } else {
+                $openOrder = $positionOrders->first();
+                $closeOrder = $positionOrders->last();
+                $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+            }
+
+            if (count($tradesToUpsert) >= $this->batchSize) {
+                $this->processBatch($tradesToUpsert);
+                $tradesToUpsert = [];
+            }
+        }
+
+        if (!empty($tradesToUpsert)) {
+            $this->processBatch($tradesToUpsert);
+        }
+    }
+
+    protected function prepareOpenTrade($account, $positionId, $order)
+    {
+        return [
+            'account_id' => $account->id,
+            'close_price' => null,
+            'close_time' => null,
+            'code' => $account->code,
+            'comment' => $order->Comment ?? '',
+            'created_at' => now(),
+            'open_price' => $order->PriceCurrent,
+            'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
+            'order_id' => $order->Order,
+            'position_id' => $positionId,
+            'profit' => 0,
+            'sl' => $order->PriceSL,
+            'state' => $order->State,
+            'status' => 'open',
+            'symbol' => $order->Symbol,
+            'tp' => $order->PriceTP,
+            'type' => $order->Type,
+            'updated_at' => now(),
+            'volume' => $order->VolumeInitial,
+            'volume_ext' => $order->VolumeInitialExt,
+        ];
+    }
+
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder)
+    {
+        return [
+            'account_id' => $account->id,
+            'position_id' => $positionId,
+            'order_id' => $openOrder->Order,
+            'symbol' => $openOrder->Symbol,
+            'type' => $openOrder->Type,
+            'volume' => $openOrder->VolumeInitial,
+            'volume_ext' => $openOrder->VolumeInitialExt,
+            'open_price' => $openOrder->PriceCurrent,
+            'close_price' => $closeOrder->PriceCurrent,
+            'sl' => $openOrder->PriceSL,
+            'tp' => $openOrder->PriceTP,
+            'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
+            'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
+            'state' => $closeOrder->State,
+            'comment' => $openOrder->Comment,
+            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 10000000) * $openOrder->ContractSize,
+            'status' => 'closed',
+            'code' => $account->code,
+            'updated_at' => now(),
+            'created_at' => now(),
+        ];
+    }
+    protected function processBatch(array $trades)
+    {
+        try {
+            // Use bulk upsert instead of individual updates
+            $uniqueKeys = ['account_id', 'position_id', 'order_id'];
+            Trade::upsert($trades, $uniqueKeys);
+        } catch (\Exception $e) {
+            Log::error("Error processing trade batch: " . $e->getMessage());
+            throw $e;
+        }
+
+        Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
     }
 }
