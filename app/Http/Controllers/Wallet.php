@@ -865,7 +865,7 @@ class Wallet extends Controller
                 'remarks' => $success_url,
             ]);
             $amount += (4 / 100) * $amount;
-            $url = config("services.payissa.checkouturl") . '/process-payment.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&provider=wert&email=" . $user->email . "&currency=" . $currency;
+            $url = config("services.payissa.checkouturl") . '/pay.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&email=" . $user->email . "&currency=" . $currency;
 
             return ['invoice_url' => $url];
         }
@@ -1082,16 +1082,16 @@ class Wallet extends Controller
                     $query->where('status', 1);
                 }])->first();
 
-                if($promocode){
+                if ($promocode) {
                     $ticket = NULL;
                     $promo = Promocode::where('code', $promocode)->first();
-                    if($amount >= 1000){
-                        $bonus_amount = ($promo->promo_percentage/100) * 1000;
-                    }else{
-                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if ($amount >= 1000) {
+                        $bonus_amount = ($promo->promo_percentage / 100) * 1000;
+                    } else {
+                        $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                     }
 
-                    if($promo){
+                    if ($promo) {
                         if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                             return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                         } else {
