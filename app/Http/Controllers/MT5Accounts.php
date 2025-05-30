@@ -758,7 +758,6 @@ class MT5Accounts extends Controller
                 return ["status" => false, "message" => $error];
             } else {
                 Log::info('MT5 account deleted successfully'.json_encode($login).' with server response ');
-                return redirect()->back()->with('success', 'MT5 account deleted successfully.');
             }
 
             if ($account) {
