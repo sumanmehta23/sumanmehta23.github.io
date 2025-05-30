@@ -59,7 +59,43 @@
         </div>
     </div>
 
+<script>
+    @if(session()->has('warning'))
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: "{{ session('warning') }}",
+            confirmButtonText: 'OK'
+        });
+    @endif
 
+    @if(session()->has('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: "{{ session('success') }}",
+            confirmButtonText: 'OK'
+        });
+    @endif
+
+    @if(session()->has('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "{{ session('error') }}",
+            confirmButtonText: 'OK'
+        });
+    @endif
+
+    @if(session()->has('message'))
+        Swal.fire({
+            icon: 'info',
+            title: 'Information',
+            text: "{{ session('message') }}",
+            confirmButtonText: 'OK'
+        });
+    @endif
+</script>
 
 @endsection()
 @section("scripts")
