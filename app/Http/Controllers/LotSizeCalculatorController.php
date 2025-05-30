@@ -88,46 +88,99 @@ class LotSizeCalculatorController extends Controller
 
     function getLotSize($symbol, $accountSize, $riskPercent, $stopLossPips)
     {
-        $rateToUse = 1;
         $pairData = PriceSnapshot::where('Symbol', $symbol)->first();
+        if (!$pairData || $stopLossPips <= 0 || $accountSize <= 0 || $riskPercent <= 0) {
+            return 0;
+        }
 
-        if (!$pairData || $stopLossPips <= 0 || $accountSize <= 0) return 0;
+        // Validate that we have valid price data
+        if (!$pairData->Price || $pairData->Price <= 0) {
+            // return 0;
+        }
 
-        // Determine pip size
+        // Extract base and quote currencies
+        $baseCurrency = $pairData->component1;  // e.g., GBP for GBPCAD
+        $quoteCurrency = $pairData->component2; // e.g., CAD for GBPCAD
+        $price = $pairData->Price;
+
+        // Determine pip size and contract size
         if ($symbol === 'XAUUSD') {
             $pipSize = 0.01;
             $contractSize = 100; // 1 lot = 100 ounces
         } elseif (substr($symbol, -3) === 'JPY') {
-            $pipSize = 0.01;
+            $pipSize = 0.01; // JPY pairs have 2 decimal places
             $contractSize = 100000;
         } else {
-            $pipSize = 0.0001;
+            $pipSize = 0.0001; // Standard pairs have 4 decimal places
             $contractSize = 100000;
         }
 
-        // Determine conversion rate
-        if ($pairData->component2 === "USD") {
-            $rateToUse = 1;
-        } elseif ($pairData->component1 === "USD" && $pairData->Price > 0) {
-            $rateToUse = 1 / $pairData->Price;
-        } else {
-            $apiKey = config('services.1forge.api_key');
-            $url = "https://api.1forge.com/convert?from={$pairData->component1}&to=USD&quantity=1&api_key=$apiKey";
-            $res = json_decode(file_get_contents($url));
-            if (isset($res->value) && is_numeric($res->value) && $pairData->Price > 0) {
-                $rateToUse = $res->value / $pairData->Price;
+        // Calculate pip value in quote currency
+        $pipValueInQuoteCurrency = $pipSize * $contractSize;
+
+        // Convert pip value to account currency (USD)
+        $pipValueInUSD = $this->convertToUSD($pipValueInQuoteCurrency, $quoteCurrency, $pairData);
+        if ($pipValueInUSD <= 0) {
+            return 0;
+        }
+
+        // Calculate risk amount
+        $riskAmount = $accountSize * ($riskPercent / 100);
+
+        // Calculate lot size
+        if ($stopLossPips <= 0 || $pipValueInUSD <= 0) {
+            return 0;
+        }
+
+        $lotSize = $riskAmount / ($stopLossPips * $pipValueInUSD);
+
+        return number_format($lotSize, 2);
+    }
+
+    private function convertToUSD($amount, $currency, $pairData)
+    {
+        if ($currency === 'USD') {
+            return $amount;
+        }
+
+        // Try to find direct USD pair
+        $usdPair = PriceSnapshot::where(function ($query) use ($currency) {
+            $query->where('component1', $currency)->where('component2', 'USD')
+                ->orWhere('component1', 'USD')->where('component2', $currency);
+        })->first();
+
+        if ($usdPair && $usdPair->Price > 0) {
+            if ($usdPair->component2 === 'USD') {
+                // e.g., CADUSD
+                return $amount * $usdPair->Price;
+            } else {
+                // e.g., USDCAD
+                return $amount / $usdPair->Price;
             }
         }
 
-        // Calculate pip value
-        $pipValue = $pipSize * $contractSize * $rateToUse;
+        // Fallback to API
+        $apiKey = config('services.1forge.api_key');
+        if (!$apiKey) {
+            \Log::warning("No API key found for currency conversion", ['currency' => $currency]);
+            return 0;
+        }
 
-        // Calculate risk
-        $riskAmount = $accountSize * ($riskPercent / 100);
+        $url = "https://api.1forge.com/convert?from={$currency}&to=USD&quantity={$amount}&api_key={$apiKey}";
+        $response = @file_get_contents($url);
 
-        // Final lot size
-        $lotSize = $riskAmount / ($stopLossPips * $pipValue);
+        if ($response) {
+            $data = json_decode($response);
+            if (isset($data->value) && is_numeric($data->value) && $data->value > 0) {
+                return $data->value;
+            }
+        }
 
-        return number_format($lotSize, 2);
+        \Log::warning("Failed to convert currency to USD", [
+            'currency' => $currency,
+            'amount' => $amount,
+            'response' => $response
+        ]);
+        return 0;
     }
 }
