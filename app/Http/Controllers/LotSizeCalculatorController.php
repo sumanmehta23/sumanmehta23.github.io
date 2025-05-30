@@ -93,32 +93,41 @@ class LotSizeCalculatorController extends Controller
             return 0;
         }
 
-        // Validate that we have valid price data
-        if (!$pairData->Price || $pairData->Price <= 0) {
-            // return 0;
-        }
-
-        // Extract base and quote currencies
-        $baseCurrency = $pairData->component1;  // e.g., GBP for GBPCAD
-        $quoteCurrency = $pairData->component2; // e.g., CAD for GBPCAD
+        $baseCurrency = $pairData->component1;
+        $quoteCurrency = $pairData->component2;
         $price = $pairData->Price;
 
         // Determine pip size and contract size
-        if ($symbol === 'XAUUSD') {
+        $metals = ['XAUUSD', 'XAUEUR', 'XAUGBP', 'XAUAUD', 'XAUCHF', 'XAUJPY', 'XAGUSD', 'XAGEUR', 'XAGAUD', 'XPTUSD', 'XPDUSD'];
+        if (in_array($symbol, $metals)) {
+            switch ($symbol) {
+                case 'XAGUSD':
+                case 'XAGEUR':
+                case 'XAGAUD':
+                    $pipSize = 0.01;
+                    $contractSize = 5000; // 1 lot = 5000 oz of silver
+                    break;
+                case 'XPTUSD':
+                case 'XPDUSD':
+                    $pipSize = 0.01;
+                    $contractSize = 100; // 1 lot = 100 oz platinum/palladium
+                    break;
+                default:
+                    $pipSize = 0.01;
+                    $contractSize = 100; // 1 lot = 100 oz gold
+            }
+        } elseif (str_ends_with($symbol, 'JPY')) {
             $pipSize = 0.01;
-            $contractSize = 100; // 1 lot = 100 ounces
-        } elseif (substr($symbol, -3) === 'JPY') {
-            $pipSize = 0.01; // JPY pairs have 2 decimal places
             $contractSize = 100000;
         } else {
-            $pipSize = 0.0001; // Standard pairs have 4 decimal places
+            $pipSize = 0.0001;
             $contractSize = 100000;
         }
 
         // Calculate pip value in quote currency
         $pipValueInQuoteCurrency = $pipSize * $contractSize;
 
-        // Convert pip value to account currency (USD)
+        // Convert pip value to USD
         $pipValueInUSD = $this->convertToUSD($pipValueInQuoteCurrency, $quoteCurrency, $pairData);
         if ($pipValueInUSD <= 0) {
             return 0;
@@ -128,10 +137,6 @@ class LotSizeCalculatorController extends Controller
         $riskAmount = $accountSize * ($riskPercent / 100);
 
         // Calculate lot size
-        if ($stopLossPips <= 0 || $pipValueInUSD <= 0) {
-            return 0;
-        }
-
         $lotSize = $riskAmount / ($stopLossPips * $pipValueInUSD);
 
         return number_format($lotSize, 2);
