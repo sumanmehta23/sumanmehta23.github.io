@@ -803,50 +803,52 @@ class MT5Accounts extends Controller
             $login = $account->code;
 
             if($account->balance > 0) {
-                $balance = abs((float)$account->balance) * -1;
-                $comment = 'Withdraw';
-                $ticket = NULL;
-                $errorCode = $this->api->TradeBalance($login, $typed = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Something went wrong',
-                        'error' => $error,
-                    ], 400);
-                } else {
-                    try {
-                        TradeWithdrawals::create([
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'account_id' => $account->id,
-                            'withdrawal_amount' => $account->balance ,
-                            'withdraw_type' => 'Wallet Withdrawal',
-                            // 'withdraw_to' => $to_account_id,
-                            'wallet_qr' => '',
-                            'Status' => 1
-                        ]);
-                        TotalBalance::create([
-                            'account_id' => $account->id,
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'deposit_amount' => $account->balance ,
-                        ]);
-                        WalletDeposit::create([
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'deposit_amount' => $account->balance ,
-                            'deposit_type' => 'Internal Transfer',
-                            'status' => 1,
-                        ]);
-                        // RateLimiter::clear($key);
-                    } catch (\Exception $e) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Something Went Wrong !!! Please Try Again'
-                        ], 400);
-                    }
-                }
+                // return ["status" => false, "message" => 'Account has balance, please transfer amount to another account.'];
+                return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
+                // $balance = abs((float)$account->balance) * -1;
+                // $comment = 'Withdraw';
+                // $ticket = NULL;
+                // $errorCode = $this->api->TradeBalance($login, $typed = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
+                // if ($errorCode != MTRetCode::MT_RET_OK) {
+                //     $error = MTRetCode::GetError($errorCode);
+                //     return response()->json([
+                //         'success' => false,
+                //         'message' => 'Something went wrong',
+                //         'error' => $error,
+                //     ], 400);
+                // } else {
+                //     try {
+                //         TradeWithdrawals::create([
+                //             'email' => $account->user->email,
+                //             'user_id' => $account->user->id,
+                //             'account_id' => $account->id,
+                //             'withdrawal_amount' => $account->balance ,
+                //             'withdraw_type' => 'Wallet Withdrawal',
+                //             // 'withdraw_to' => $to_account_id,
+                //             'wallet_qr' => '',
+                //             'Status' => 1
+                //         ]);
+                //         TotalBalance::create([
+                //             'account_id' => $account->id,
+                //             'email' => $account->user->email,
+                //             'user_id' => $account->user->id,
+                //             'deposit_amount' => $account->balance ,
+                //         ]);
+                //         WalletDeposit::create([
+                //             'email' => $account->user->email,
+                //             'user_id' => $account->user->id,
+                //             'deposit_amount' => $account->balance ,
+                //             'deposit_type' => 'Internal Transfer',
+                //             'status' => 1,
+                //         ]);
+                //         // RateLimiter::clear($key);
+                //     } catch (\Exception $e) {
+                //         return response()->json([
+                //             'success' => false,
+                //             'message' => 'Something Went Wrong !!! Please Try Again'
+                //         ], 400);
+                //     }
+                // }
             }
 
 
