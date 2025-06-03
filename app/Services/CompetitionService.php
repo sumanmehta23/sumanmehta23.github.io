@@ -92,6 +92,7 @@ class CompetitionService
         return Account::with('user', 'accountType', 'trades')
             ->where('competition_month', $month)
             ->where('competition_year', $year)
+            ->where('code', '!=', null)
             ->where('demo', true)
             ->orderByDesc('equity')
             ->get()
