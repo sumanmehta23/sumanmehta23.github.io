@@ -607,22 +607,7 @@ class AjaxController extends Controller
 
                     return $html;
                 })
-                ->editColumn('user_status', function ($row) {
-                    return ($row->status == 1) ?
-                        "Verified" :
-                        "Not Verified";
-                })
-                ->editColumn('email_status', function ($row) {
-                    return $row->email_confirmed ?
-                        "Verified" :
-                        "Not Verified";
-                })
-                ->editColumn('kyc_status', function ($row) {
-                    return $row->kyc_verify ?
-                        "Verified" :
-                        "Not Verified";
-                })
-                ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email','user_status','email_status','kyc_status'])
+                ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email'])
                 ->make(true);
         }
 
