@@ -116,7 +116,7 @@ class Leaderboard extends Controller
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
                 $response = $this->CreateCompetition($new_user, $user_server, 'Live');
-dd($request->all());
+
                 if ($response['status']) {
                     $account = Account::where('id', $request->account_id)->first();
                     activity()->causedBy($user)
@@ -218,6 +218,7 @@ dd($request->all());
                 return ["status" => false, "message" => $error];
             }
         }
+        dd('dasdas');
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
