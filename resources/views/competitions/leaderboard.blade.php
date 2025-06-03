@@ -127,7 +127,7 @@
                     <div class="col-sm-6 col-xl-3">
                         <x-competition.stats-card
                             title="Top performer"
-                            :value="$stats['top_performer']->name"
+                            :value="$stats['top_performer']->name ?? 'N/A'"
                             icon="dollar-sign"
                         />
                     </div>
