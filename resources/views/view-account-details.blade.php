@@ -393,7 +393,7 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    @if (($account->competition_month != NULL))
+                                    @if (($account->competition_month == NULL))
                                         <div class="mt-3 row">
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-deposit') }}"
