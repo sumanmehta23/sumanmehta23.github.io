@@ -420,9 +420,6 @@
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>IB Name/ Email</th>
-                                            <th>Client User Status</th>
-                                            <th>Client Email Status</th>
-                                            <th>Client Kyc Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
