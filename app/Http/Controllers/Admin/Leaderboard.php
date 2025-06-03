@@ -218,7 +218,7 @@ class Leaderboard extends Controller
                 return ["status" => false, "message" => $error];
             }
         }
-        dd('dasdas');
+
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
