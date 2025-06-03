@@ -188,7 +188,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            @if ($type != 'demo')
+                                                            @if ($type != 'demo' && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
@@ -392,43 +392,45 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
-                                    <div class="mt-3 row">
-                                        <div class="col-sm-6">
-                                            <a href="{{ url('/trade-deposit') }}"
-                                                class="card bg-primary available-balance-card">
-                                                <div class="p-3 card-body">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <div>
-                                                            <h4 class="mb-0 text-white">Deposit</h4>
-                                                            <p class="mb-0 text-white text-opacity-75">Fund your account
-                                                            </p>
-                                                        </div>
-                                                        <div class="avtar">
-                                                            <i class="ph-duotone ph-credit-card f-24"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <a href="{{ url('/trade-withdrawal') }}"
-                                                class="card bg-secondary available-balance-card">
-                                                <div class="p-3 card-body">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <div>
-                                                            <h4 class="mb-0 text-white">Withdraw</h4>
-                                                            <p class="mb-0 text-white text-opacity-75">Transfer your funds</p>
-                                                        </div>
-                                                        <div class="avtar">
-                                                            <i class="ph-duotone ph-bank f-24"></i>
+                                @if ($account->competition_month == NULL)
+                                    <div class="col-sm-6">
+                                        <div class="mt-3 row">
+                                            <div class="col-sm-6">
+                                                <a href="{{ url('/trade-deposit') }}"
+                                                    class="card bg-primary available-balance-card">
+                                                    <div class="p-3 card-body">
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <div>
+                                                                <h4 class="mb-0 text-white">Deposit</h4>
+                                                                <p class="mb-0 text-white text-opacity-75">Fund your account
+                                                                </p>
+                                                            </div>
+                                                            <div class="avtar">
+                                                                <i class="ph-duotone ph-credit-card f-24"></i>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </a>
+                                                </a>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <a href="{{ url('/trade-withdrawal') }}"
+                                                    class="card bg-secondary available-balance-card">
+                                                    <div class="p-3 card-body">
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <div>
+                                                                <h4 class="mb-0 text-white">Withdraw</h4>
+                                                                <p class="mb-0 text-white text-opacity-75">Transfer your funds</p>
+                                                            </div>
+                                                            <div class="avtar">
+                                                                <i class="ph-duotone ph-bank f-24"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
