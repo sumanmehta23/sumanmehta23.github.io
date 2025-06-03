@@ -188,7 +188,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            @if (($type != 'demo') && ($account->competition_month != NULL))
+                                                            @if (($type != 'demo') && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
