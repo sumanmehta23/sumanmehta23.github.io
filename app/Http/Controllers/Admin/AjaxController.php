@@ -607,8 +607,22 @@ class AjaxController extends Controller
 
                     return $html;
                 })
-
-                ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email'])
+                ->editColumn('user_status', function ($row) {
+                    return ($row->status == 1) ?
+                        "Verified" :
+                        "Not Verified";
+                })
+                ->editColumn('email_status', function ($row) {
+                    return $row->email_confirmed ?
+                        "Verified" :
+                        "Not Verified";
+                })
+                ->editColumn('kyc_status', function ($row) {
+                    return $row->kyc_verify ?
+                        "Verified" :
+                        "Not Verified";
+                })
+                ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email','user_status','email_status','kyc_status'])
                 ->make(true);
         }
 
@@ -3751,7 +3765,7 @@ class AjaxController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At']);
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At', 'Client User Status','Client Email Status','Client KYC Status']);
 
             // Fetch client data
             User::chunk(500, function ($clients) use ($handle) {
@@ -3763,6 +3777,9 @@ class AjaxController extends Controller
                         $client->number,
                         $client->country,
                         $client->created_at,
+                        $client->status == 1 ? 'Active' : 'Inactive',
+                        $client->email_confirmed == 1 ? 'Verified' : 'Not Verified',
+                        $client->kyc_verify == 1 ? 'Verified' : 'Not Verified',
                     ]);
                 }
             });
