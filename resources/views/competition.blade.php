@@ -97,12 +97,12 @@
                                                                             </svg></span>
                                                                     </a>
                                                                 </button>
-                                                                <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
+                                                                {{-- <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                                                     <span class="">Deposit <i class="ti ti-database-import"></i></span>
                                                                 </a>
                                                                 <a href="{{ route('trade-withdrawal') }}" class="btn btn-sm btn-outline-secondary d-grid">
                                                                     <span class="">Withdraw <i class="ti ti-database-import"></i></span>
-                                                                </a>
+                                                                </a> --}}
                                                                 <a href="{{ route('competition.leaderboard', [
                                                                                 'month' => $acc->competition_month,
                                                                                 'year' => $acc->competition_year
