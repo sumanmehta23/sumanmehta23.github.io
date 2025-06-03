@@ -27,6 +27,7 @@ class CompetitionService
         $accounts = Account::with(['user', 'accountType'])
             ->where('competition_month', $month)
             ->where('competition_year', $year)
+            ->where('code', '!=', null)
             ->where('demo', true)
             ->whereHas('accountType', function($q) {
                 $q->where('ac_name', 'Competition');
