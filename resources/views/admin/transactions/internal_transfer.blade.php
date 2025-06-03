@@ -20,6 +20,15 @@
                     <!-- Add other status options as needed -->
                   </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="typeFilter">Filter by Transfer Type:</label>
+                    <select id="typeFilter" class="form-select" name="type">
+                      <option value="">All</option>
+                      <option value="CRM">CRM</option>
+                      <option value="Internal Transfer">Internal Transfer</option>
+                      <!-- Add other status options as needed -->
+                    </select>
+                  </div>
               </div>
             <div class="row">
                 <div class="col-xl-12">
@@ -85,10 +94,13 @@
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
+                                                <th>Email</th>
                                                 <th>Amount</th>
                                                 <th>Transfer From</th>
                                                 <th>Transfer To</th>
+                                                <th>Date</th>
                                                 <th>Status</th>
+                                                <th>Created At</th>
                                                 <!-- <th>Actions</th> -->
                                             </tr>
                                         </thead>
@@ -117,12 +129,22 @@
                         extend: 'excel',
                         text: 'Export to Excel',
                         exportOptions: {
-                            columns: [0,1,2,3,4] // Updated column indices to match your use case
+                            columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
+                        }
+                    },
+                    {
+                        text: 'Export All',
+                        action: function () {
+                            window.location.href = "/admin/export-all-internal-transfer";
                         }
                     }
                 ],
 
             order: [[3, "desc"]],
+            lengthMenu: [
+                [10, 25, 50, 100, 500, 1000], // DataTable options
+                [10, 25, 50, 100, 500, 1000] // User-facing labels
+                ],
             processing: true,
             serverSide: true,
             searching: true,
@@ -131,6 +153,7 @@
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
+                        d.type = $('select[name=type]').val();
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
@@ -138,16 +161,21 @@
                 }
             },
             columns: [
+              { data: 'name', name: 'name' },
               { data: 'email', name: 'email' },
               { data: 'amount', name: 'amount' },
               { data: 'transfer_from', name: 'transfer_from' },
               { data: 'transfer_to', name: 'transfer_to' },
+              { data: 'date', name: 'date' },
               { data: 'status', name: 'status' },
+              { data: 'created_at', name: 'created_at', visible:false },
               // { data: 'action', name: 'action', orderable: false, searchable: false },
             ]
           });
           $('#statusFilter').on('change', function () {
-
+            tableInternalTransfer.ajax.reload();
+          });
+          $('#typeFilter').on('change', function () {
             tableInternalTransfer.ajax.reload();
           });
         });

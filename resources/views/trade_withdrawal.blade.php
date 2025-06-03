@@ -245,7 +245,7 @@
                                                             <div class="col-lg-8">
                                                                 <div class="mb-3 input-group">
                                                                     <span class="input-group-text">$</span>
-                                                                    <input type="number" min="10" id="withdrawAmount"
+                                                                    <input type="number" min="10" step="0.01" id="withdrawAmount"
                                                                         class="form-control" name="withdraw_amount"
                                                                         aria-label="Amount (to the nearest dollar)"
                                                                         @if(count($client_banks) > 0) required @endif>

@@ -25,6 +25,7 @@
                                 <select class="form-select" required name="reason">
                                     <option value="" selected disabled>Select Reason</option>
                                     <option value="HFT">HFT</option>
+                                    <option value="Latency Arbitrage">Latency Arbitrage</option>
                                     <option value="Manually">Restrict (With no email sent)</option>
                                 </select>
                             </div>

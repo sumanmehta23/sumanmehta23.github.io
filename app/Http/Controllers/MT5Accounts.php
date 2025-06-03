@@ -27,7 +27,7 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    public function __construct(MT5Service $mt5Service, MailService $mailService,MTWebAPI $api)
     {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
@@ -790,6 +790,7 @@ class MT5Accounts extends Controller
         $account = Account::with('user')->where('id', $request->id)->first();
 
         $settings = settings();
+
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
             $settings['mt5_server_ip'],
@@ -799,59 +800,16 @@ class MT5Accounts extends Controller
             $settings['mt5_server_web_password']
         );
 
+
         try {
+
             $login = $account->code;
 
             if($account->balance > 0) {
-                $balance = abs((float)$account->balance) * -1;
-                $comment = 'Withdraw';
-                $ticket = NULL;
-                $errorCode = $this->api->TradeBalance($login, $typed = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Something went wrong',
-                        'error' => $error,
-                    ], 400);
-                } else {
-                    try {
-                        TradeWithdrawals::create([
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'account_id' => $account->id,
-                            'withdrawal_amount' => $account->balance ,
-                            'withdraw_type' => 'Wallet Withdrawal',
-                            // 'withdraw_to' => $to_account_id,
-                            'wallet_qr' => '',
-                            'Status' => 1
-                        ]);
-                        TotalBalance::create([
-                            'account_id' => $account->id,
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'deposit_amount' => $account->balance ,
-                        ]);
-                        WalletDeposit::create([
-                            'email' => $account->user->email,
-                            'user_id' => $account->user->id,
-                            'deposit_amount' => $account->balance ,
-                            'deposit_type' => 'Internal Transfer',
-                            'status' => 1,
-                        ]);
-                        // RateLimiter::clear($key);
-                    } catch (\Exception $e) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Something Went Wrong !!! Please Try Again'
-                        ], 400);
-                    }
-                }
+                return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
+
             }
-
-
             if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
-
                 $error = MTRetCode::GetError($error_code);
                 Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($login));
                 return ["status" => false, "message" => $error];
