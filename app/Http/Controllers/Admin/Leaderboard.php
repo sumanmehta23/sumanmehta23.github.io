@@ -72,7 +72,7 @@ class Leaderboard extends Controller
 
     public function activateCompetition(Request $request)
     {
-
+        dd($request->all());
         $settings = settings();
         if($request->accountType == 1)
         {
