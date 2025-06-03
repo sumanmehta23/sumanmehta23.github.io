@@ -18,7 +18,7 @@
                                      </div>
                                  </div>
                                  <div>
-                                     <h5 class="mb-1 fw-bold">CryptoChill Gateway</h5>
+                                     <h5 class="mb-1 fw-bold">CryptoChill</h5>
                                      <p class="text-muted mb-0 small">Accept cryptocurrency payments with secure
                                          blockchain processing</p>
                                  </div>
@@ -54,7 +54,7 @@
                                      </div>
                                  </div>
                                  <div>
-                                     <h5 class="mb-1 fw-bold">Credit Card Gateway</h5>
+                                     <h5 class="mb-1 fw-bold">Credit Card</h5>
                                      <p class="text-muted mb-0 small">Process Visa, Mastercard, and other major credit
                                          card payments</p>
                                  </div>
