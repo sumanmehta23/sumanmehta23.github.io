@@ -72,7 +72,7 @@ class Leaderboard extends Controller
 
     public function activateCompetition(Request $request)
     {
-        dd($request->all());
+
         $settings = settings();
         if($request->accountType == 1)
         {
@@ -116,7 +116,7 @@ class Leaderboard extends Controller
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
                 $response = $this->CreateCompetition($new_user, $user_server, 'Live');
-
+dd($request->all());
                 if ($response['status']) {
                     $account = Account::where('id', $request->account_id)->first();
                     activity()->causedBy($user)
