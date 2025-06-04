@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Bus\Batch;
 use Throwable;
+use App\Models\User;
 
 class SyncTrades extends Command
 {
@@ -55,27 +56,33 @@ class SyncTrades extends Command
             ->chunk(100, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
-                    $jobs[] = new SyncTradesJob($account);
+                    // Check if user exists for this account
+                    if ($account->user_id && User::where('id', $account->user_id)->exists()) {
+                        $jobs[] = new SyncTradesJob($account);
+                    }
                 }
 
-                // Create batches of jobs each
-                $jobBatches = array_chunk($jobs, $batchSize);
+                // Only proceed if there are valid jobs
+                if (!empty($jobs)) {
+                    // Create batches of jobs each
+                    $jobBatches = array_chunk($jobs, $batchSize);
 
-                foreach ($jobBatches as $batch) {
-                    Bus::batch($batch)
-                        ->allowFailures()
-                        ->onConnection('redis')
-                        ->onQueue('sync-trades')
-                        ->then(function (Batch $batch) {
-                            // Log::info("Batch {$batch->id} completed successfully");
-                        })
-                        ->catch(function (Batch $batch, Throwable $e) {
-                            // Log::error("Batch {$batch->id} failed: " . $e->getMessage());
-                        })
-                        ->finally(function (Batch $batch) {
-                            // Log::info("Batch {$batch->id} finished processing");
-                        })
-                        ->dispatch();
+                    foreach ($jobBatches as $batch) {
+                        Bus::batch($batch)
+                            ->allowFailures()
+                            ->onConnection('redis')
+                            ->onQueue('sync-trades')
+                            ->then(function (Batch $batch) {
+                                // Log::info("Batch {$batch->id} completed successfully");
+                            })
+                            ->catch(function (Batch $batch, Throwable $e) {
+                                // Log::error("Batch {$batch->id} failed: " . $e->getMessage());
+                            })
+                            ->finally(function (Batch $batch) {
+                                // Log::info("Batch {$batch->id} finished processing");
+                            })
+                            ->dispatch();
+                    }
                 }
             });
     }
