@@ -49,11 +49,11 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        $batchSize = 500; // Process accounts per batch
+        $batchSize = 100; // Process accounts per batch
 
         Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->chunk(500, function ($accounts) use ($batchSize) {
+            ->chunk(100, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
                     // Check if user exists for this account
