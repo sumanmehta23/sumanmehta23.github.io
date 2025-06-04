@@ -53,7 +53,7 @@ class SyncTrades extends Command
 
         Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->chunk(100, function ($accounts) use ($batchSize) {
+            ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
                     // Check if user exists for this account
