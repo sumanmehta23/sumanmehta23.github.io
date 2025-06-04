@@ -409,7 +409,6 @@
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-
                                             <th>Joined On</th>
                                             <th>Name/Email</th>
                                             <th>Phone</th>

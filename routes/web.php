@@ -371,12 +371,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
-    Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
-
     Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
     Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
     Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
+    Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -481,6 +480,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
+
+        Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])
+            ->name('payment-gateways.update')
+            ->middleware('check.permissions:setting:update');
+
         Route::prefix('/logs')->group(function () {
             Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
         });

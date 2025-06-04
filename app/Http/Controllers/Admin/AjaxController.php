@@ -614,7 +614,6 @@ class AjaxController extends Controller
 
                     return $html;
                 })
-
                 ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email'])
                 ->make(true);
         }
@@ -2331,6 +2330,7 @@ class AjaxController extends Controller
     {
 
         $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])
+                ->distinct()
                 ->where('trade_withdrawal.status', 0)
                 ->where('trade_withdrawal.email_verified', 1)
                 ->where('trade_withdrawal.withdraw_type', 'Trade Withdrawal');
@@ -2982,8 +2982,10 @@ class AjaxController extends Controller
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' :
+                            ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                            ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
+                            '<span class="badge bg-outline-primary">Pending</span>'))
             ];
         }
         return ['data' => $data];
@@ -3756,7 +3758,7 @@ class AjaxController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At']);
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At', 'Client User Status','Client Email Status','Client KYC Status']);
 
             // Fetch client data
             User::chunk(500, function ($clients) use ($handle) {
@@ -3768,6 +3770,9 @@ class AjaxController extends Controller
                         $client->number,
                         $client->country,
                         $client->created_at,
+                        $client->status == 1 ? 'Active' : 'Inactive',
+                        $client->email_confirmed == 1 ? 'Verified' : 'Not Verified',
+                        $client->kyc_verify == 1 ? 'Verified' : 'Not Verified',
                     ]);
                 }
             });

@@ -188,7 +188,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            @if (($type != 'demo') && ($account->competition_month == NULL))
+                                                            @if ($type != 'demo' && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
@@ -392,8 +392,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
-                                    @if (($account->competition_month == NULL))
+                                @if ($account->competition_month == NULL)
+                                    <div class="col-sm-6">
                                         <div class="mt-3 row">
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-deposit') }}"
@@ -429,8 +429,8 @@
                                                 </a>
                                             </div>
                                         </div>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
