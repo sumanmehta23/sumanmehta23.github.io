@@ -20,7 +20,7 @@ class SyncTrades implements ShouldQueue
     protected $account;
     protected $maxRetries = 3;
     protected $retryDelay = 1; // reduced from 2 to 1 second
-    protected $batchSize = 1000;
+    protected $batchSize = 500;
 
     public function __construct($account)
     {
@@ -29,6 +29,7 @@ class SyncTrades implements ShouldQueue
 
     public function handle(MT5Service $mt5Service)
     {
+         Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
         $mt5Service->connect();
         $api = $mt5Service->getApi();
         $settings = settings();

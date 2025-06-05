@@ -53,7 +53,9 @@ class SyncTrades extends Command
 
         Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->chunk(100, function ($accounts) use ($batchSize) {
+            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_year')
+            ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
                     // Check if user exists for this account
@@ -73,13 +75,13 @@ class SyncTrades extends Command
                             ->onConnection('redis')
                             ->onQueue('sync-trades')
                             ->then(function (Batch $batch) {
-                                // Log::info("Batch {$batch->id} completed successfully");
+                                Log::info("Batch {$batch->id} completed successfully");
                             })
                             ->catch(function (Batch $batch, Throwable $e) {
-                                // Log::error("Batch {$batch->id} failed: " . $e->getMessage());
+                                Log::error("Batch {$batch->id} failed: " . $e->getMessage());
                             })
                             ->finally(function (Batch $batch) {
-                                // Log::info("Batch {$batch->id} finished processing");
+                                Log::info("Batch {$batch->id} finished processing");
                             })
                             ->dispatch();
                     }
