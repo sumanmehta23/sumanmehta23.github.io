@@ -31,31 +31,44 @@ class SyncTrades implements ShouldQueue
     {
         // Log::info("Starting SyncTrades job for account ID: {$this->account->code}");
 
-        $mt5Service->connect();
-        $api = $mt5Service->getApi();
         $settings = settings();
         $account = ($this->account);
 
+        // Initialize connection
+        $api = $mt5Service->getApi();
         $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
 
+        // Verify and establish connection
+        if (!$api->IsConnected()) {
+            $error_code = $api->Connect(
+                $settings['mt5_server_ip'],
+                $settings['mt5_server_port'],
+                300,
+                $settings['mt5_server_web_login'],
+                $settings['mt5_server_web_password']
+            );
+
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("MT5 connection failed for account {$account->code}: " . MTRetCode::GetError($error_code));
+                return;
+            }
+        }
 
         try {
-
             if (!$account || !$account->code) {
                 Log::error("Account not found");
                 return;
             }
 
-            $login = $account->code;
-            $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+            // Verify account exists on MT5 server
+            $mt5_user = null;
+            $error_code = $api->UserGet($account->code, $mt5_user);
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                return;
+            }
 
+            $login = $account->code;
             $from = 'March 01, 2016';
             $to = 'March 31, 2080';
             $total = 0;
