@@ -52,6 +52,8 @@ class SyncTrades extends Command
         $batchSize = 100; // Process accounts per batch
 
         Account::whereNotNull('code')
+            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_year')
             ->whereNull('deleted_at')
             ->chunk(100, function ($accounts) use ($batchSize) {
                 $jobs = [];
