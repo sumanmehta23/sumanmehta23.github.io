@@ -336,12 +336,20 @@ class Leaderboard extends Controller
      * @param string $accountNo
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getTraderData($accountNo)
+    public function getTraderData($accountNo, $month, $year)
     {
-        $account = Account::with(['trades', 'dailyReports' => function($query) {
-            $query->where('report_date', '>=', now()->subDays(30))
-                  ->orderBy('report_date');
-        }])->where('code', $accountNo)->firstOrFail();
+
+        $startDate = \Carbon\Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $account = Account::with([
+            'trades',
+            'dailyReports' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('report_date', [$startDate, $endDate])
+                    ->orderBy('report_date');
+            }
+        ])->where('code', $accountNo)->firstOrFail();
+
 
         // Get daily reports data
         $labels = [];
@@ -354,7 +362,7 @@ class Leaderboard extends Controller
                         return $item->report_date->format('Y-m-d');
                     });
 
-
+                    // dd($dailyData);
         // Fill in any missing dates with the last known equity value
         $lastEquity = $account->equity ?? '0.00';
         $daysInCurrentMonth = now()->daysInMonth;
