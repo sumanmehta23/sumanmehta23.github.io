@@ -367,9 +367,16 @@ class Leaderboard extends Controller
         $lastEquity = $account->equity ?? '0.00';
         $daysInCurrentMonth = now()->daysInMonth;
 
-        $today = now();
+        if($month == now()->format('F') && $year == now()->year){
+            $today = now();
+            $monthEnd = $today;
+        }else{
+            $today = $startDate;
+            $monthEnd = $endDate;
+        }
+
         $startOfMonth = $today->copy()->startOfMonth();
-        $endOfMonth = $today; // Up to today
+        $endOfMonth = $monthEnd; // Up to today
         $currentDate = $startOfMonth->copy();
 
         while ($currentDate <= $endOfMonth) {
