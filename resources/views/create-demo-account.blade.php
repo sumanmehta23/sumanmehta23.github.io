@@ -99,15 +99,16 @@
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
                                         </div>
+
                                         <div class="mt-3 row">
                                             <div class="col-3">  Deposit Amount for Demo Account </div>
                                             <div class="col-9">
-                                              <div class="mb-3 input-group"><span class="input-group-text">$</span><input type="number" min="1" max="100000" step="1" name="demo_deposit" required class="form-control" aria-label="Amount (to the nearest dollar)"><span class="input-group-text" required>.00</span><!----></div>
+                                              <div class="mb-3 input-group"><span class="input-group-text">$</span><input type="number" min="1" max="100000" step="1" name="demo_deposit" id="demo_deposit" required class="form-control" aria-label="Amount (to the nearest dollar)"><span class="input-group-text" required>.00</span><!----></div>
                                               @error('demo_deposit')
                                                     <div class="alert alert-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                          </div>
+                                        </div>
                                         <div class="mt-3 row is_account">
                                             <div class="col-3"></div>
                                             <div class="col-9">
@@ -176,6 +177,17 @@
         $(".acc-types").change(function() {
             var inquiry_status = $(".acc-types:checked").data("inquiry");
             var inquiry = $(".acc-types:checked").data("group");
+            var demoDepositInput = $("#demo_deposit");
+
+            // Reset deposit input state
+            demoDepositInput.prop('readonly', false);
+
+            // Check if selected account is Competition Account
+            if (inquiry == 'June 8-14 Trading Competition Account') {
+                demoDepositInput.val(10000);
+                demoDepositInput.prop('readonly', true);
+            }
+
             if (inquiry_status == 0) {
                 $(".is_account").removeClass("d-none");
                 $(".is_inquiry").addClass("d-none");
