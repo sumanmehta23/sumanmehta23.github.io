@@ -622,17 +622,21 @@
 
                 const isAdmin = @json(isset(auth()->user()->role));
 
+                // Get selected month and year from period selector
+                const selectedMonth = document.querySelector('select[name="month"]').value;
+                const selectedYear = document.querySelector('select[name="year"]').value;
+
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
-                    ? `/admin/competition/trader-data/${testAccountNo}`
-                    : `/competition/trader/${testAccountNo}`;
+                    ? `/admin/competition/trader-data/${testAccountNo}/${selectedMonth}/${selectedYear}`
+                    : `/competition/trader/?account${testAccountNo}?month=${selectedMonth}&year=${selectedYear}`;
 
                 const response = await fetch(endpoint);
 
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-
+                // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;
                 chart.data.datasets[0].data = data.chart_data.equity;
