@@ -32,6 +32,7 @@
                     <th>Email</th>
                     <th>Date</th>
                     <th>Time</th>
+                    <th>Phone Number</th>
                     <!-- <th>Action</th>   -->
                   </tr>
                 </thead>
@@ -155,7 +156,13 @@
                     text: 'Export to Excel',
                     filename: 'IB_Users_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
-                        columns: [6,7,0,1,2,3,4,8,9] // Updated column indices to match your use case
+                        columns: [7,8,11,3,4,5,9,10] // Updated column indices to match your use case
+                    }
+                },
+                {
+                    text: 'Export All',
+                    action: function () {
+                        window.location.href = "/admin/export-all-ib-users";
                     }
                 }
             ],
@@ -181,21 +188,7 @@
         {
           data: 'name',
           name: 'name',
-        //   render: function(data,row,row_data){
-        //     var small = "";
-        //     if(row_data.grp != null) {small = '<small>'+row_data.grp+'</small>';}
-        //     var return_data = "<a href='/admin/client_details/" + row_data.enc + "'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>" + row_data.name + "</span></div><div class='lh-1'><span class='fs-11 text-muted'>" + row_data.email + "</span></div>"+small+"</div></div></a>";
-        //     return return_data;
-        //   }
         },
-        // {
-        //   data: 'country',
-        //   name: 'country'
-        // },
-        // {
-        //   data: 'number',
-        //   name: 'number'
-        // },
         {
           data: 'total_deposit',
           name: 'total_deposit'
@@ -207,32 +200,16 @@
         {
           data: 'status',
           name: 'status',
-        //   render: function(data) {
-        //     if (data == 1) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-success'>Active IB</button>";
-        //     } else if (data == 2) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>Rejected</button>";
-        //     } else if (data == 0) {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-info'>IB Requested</button>";
-        //     } else {
-        //       return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>Not Requested</button>";
-        //     }
-        //   }
         },
         {
           data: 'date',
           name: 'date',
-        //   render: function(data) {
-        //     var dd = data.split(" ");
-        //     var rend_date = dd[0]+"<br><small>"+dd[1]+"</small>";
-        //     return rend_date;
-        //   }
         },
         { data: 'fullname', name: 'fullname', visible: false },
         { data: 'fullemail', name: 'fullemail', visible: false},
         { data: 'created_date', name: 'created_date', visible: false},
         { data: 'created_time', name: 'created_time', visible: false},
-        // { data: 'action', name: 'action', orderable: false, searchable: false },
+        { data: 'phone_number', name: 'phone_number', visible: false},
       ]
     });
   });
