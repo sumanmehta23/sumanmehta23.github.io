@@ -183,7 +183,7 @@
             demoDepositInput.prop('readonly', false);
 
             // Check if selected account is Competition Account
-            if (inquiry == 'June 8-14 Trading Competition Account') {
+            if (inquiry == 'June 8-14 Trading Competition Account' || inquiry == 'June 15-21 Trading Competition Account') {
                 demoDepositInput.val(10000);
                 demoDepositInput.prop('readonly', true);
             }
