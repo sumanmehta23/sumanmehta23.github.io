@@ -224,68 +224,6 @@
                                                             </div>
                                                         </form>
                                                     </div>
-                                                    <div class="CreditCardPayissa trade-deposit-details" style="display:none">
-                                                        <form method="post" id="CreditCardPayissaForm">
-                                                            @csrf
-                                                            <input type="hidden" name="email"
-                                                                value="{{ session('clogin') }}" min="10"
-                                                                required class="form-control fill">
-                                                            <input class="user_code" type="hidden"
-                                                                name="user[code]" value=""
-                                                                class="form-control fill" readonly required>
-                                                            {{-- <input type="hidden" name="selected_account_code" id="selected_account_code" value=""> --}}
-                                                            <div class="row">
-                                                                <div class="mt-2 col-12">
-                                                                    <input type="hidden" name="deposit_type"
-                                                                        class="tradedeposittype"
-                                                                        value="CreditCardPayissa">
-
-                                                                    <div class="form-group row">
-                                                                        <label
-                                                                            class="col-lg-4 col-form-label">ENTER
-                                                                            PROMOCODE:
-                                                                            <small
-                                                                                class="text-muted d-block">Please
-                                                                                enter promocode</small>
-                                                                        </label>
-                                                                        <div class="col-lg-8">
-                                                                            <div class="mb-3 input-group">
-
-                                                                                <input name="promocode"
-                                                                                    id="promocode"
-                                                                                    type="text"
-                                                                                    class="form-control fill"
-                                                                                    placeholder="Promocode"
-                                                                                    aria-label="promocode">
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group row">
-                                                                        <label
-                                                                            class="col-lg-4 col-form-label">ENTER
-                                                                            AMOUNT:
-                                                                            <small
-                                                                                class="text-muted d-block">Please
-                                                                                enter the amount to be deposited </small>
-                                                                        </label>
-                                                                        <div class="col-lg-8">
-                                                                            <div class="mb-3 input-group">
-                                                                                <span
-                                                                                    class="input-group-text">USD</span>
-                                                                                <input placeholder="Minimum $10"
-                                                                                    name="deposit"
-                                                                                    id="deposit_amount_cc"
-                                                                                    type="number" min="10"
-                                                                                    title="Minimum $10"
-                                                                                    class="form-control fill ccdeposit_amount"
-                                                                                    aria-label="Amount" required>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </form>
-                                                        </div>
                                                     @endif
                                                     @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
                                                         <div class="CreditCardPayissa trade-deposit-details" style="display:none">
