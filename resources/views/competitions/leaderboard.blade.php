@@ -552,7 +552,7 @@
                     data: [],
                     borderColor: '#5E35B1',
                     backgroundColor: 'rgba(94, 53, 177, 0.1)',
-                    tension: 0.1,
+                    tension: 0.2,
                     fill: true
                 }]
             },
@@ -636,7 +636,7 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                // console.log(data);
+                console.log(data);
                 // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;
