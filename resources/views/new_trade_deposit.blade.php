@@ -203,14 +203,19 @@
                                                                                 </label>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="row">
-                                                                            <div class="col-lg-4"></div>
-                                                                            <div class="col-lg-8 pb-4">
-                                                                                <div class="form-check">
-                                                                                    <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  required>
-                                                                                    <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                                        Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
-                                                                                    </label>
+                                                                        <div class="">
+                                                                            <div class="row">
+                                                                                <div class="col-lg-4"></div>
+                                                                                <div class="col-lg-8">
+                                                                                    <div class="row g-1">
+                                                                                        <input type="button"
+                                                                                            id="paynow"
+                                                                                            data-amount="10"
+                                                                                            data-currency="USD"
+                                                                                            data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
+                                                                                            class="btn btn-primary cryptochill-button col-12"
+                                                                                            value="Deposit To Trading Account">
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
