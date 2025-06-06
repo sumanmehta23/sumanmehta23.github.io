@@ -21,20 +21,6 @@
                         </div>
                     </div>
                     <div class="tab-content">
-                        <div>
-                            {{-- <?php if (isset($error)) {?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                                <strong>
-                                    <?php echo $error; ?>
-                                </strong>
-                            </div>
-                            <script>
-                                $(".alert").alert();
-                            </script>
-                            <?php } ?> --}}
                             @if ($errors->any())
                                 <div class="alert alert-danger">
                                     <ul>
@@ -45,8 +31,8 @@
                                 </div>
                             @endif
                             <div class="row">
-                                <div class="col-12">
-                                    <div class="row">
+                                {{-- <div class="col-12"> --}}
+                                    {{-- <div class="row"> --}}
                                         <div class="col-xl-8">
                                             <div class="card">
                                                 <div class="card-body border-bottom">
@@ -376,10 +362,9 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    {{-- </div> --}}
+                                {{-- </div> --}}
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
