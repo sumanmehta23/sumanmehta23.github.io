@@ -205,8 +205,8 @@ class SyncTrades implements ShouldQueue
     protected function processBatch(array $trades)
     {
         try {
-            // Use bulk upsert instead of individual updates
-            $uniqueKeys = ['account_id', 'position_id', 'order_id'];
+            // Use only position_id as unique key to prevent duplicate trades
+            $uniqueKeys = ['position_id'];
             Trade::upsert($trades, $uniqueKeys);
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
