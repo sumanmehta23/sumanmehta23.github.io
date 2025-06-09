@@ -108,18 +108,29 @@ class SyncTrades implements ShouldQueue
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // If trade exists and is closed (has close_time), skip it
+                // If trade exists and is closed, skip it completely
                 if ($existingTrade && $existingTrade->close_time !== null) {
                     continue;
                 }
 
-                if ($positionOrders->count() < 2) {
+                // If trade has multiple orders (meaning it's closed)
+                if ($positionOrders->count() >= 2) {
+                    // Only update existing trades, don't create new ones
+                    if ($existingTrade) {
+                        $openOrder = $positionOrders->first();
+                        $closeOrder = $positionOrders->last();
+                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                    }
+                    continue;
+                }
+
+                // For open trades (single order)
+                if ($positionOrders->count() == 1) {
                     $order = $positionOrders->first();
-                    $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
-                } else {
-                    $openOrder = $positionOrders->first();
-                    $closeOrder = $positionOrders->last();
-                    $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                    // Only create new open trade if it doesn't exist yet
+                    if (!$existingTrade) {
+                        $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+                    }
                 }
 
                 if (count($tradesToUpsert) >= $this->batchSize) {
