@@ -127,6 +127,9 @@ class SyncTrades implements ShouldQueue
                 //     $tradesToUpsert = [];
                 // }
 
+                Log::warning("position order {$positionOrders->count()} ");
+                Log::warning("existing trade {$existingTrade} ");
+
                 if ($positionOrders->count() < 2) {
                     // OPEN TRADE: Insert if does not exist
                     if (!$existingTrade) {
