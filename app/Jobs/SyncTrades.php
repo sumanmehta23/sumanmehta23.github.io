@@ -31,10 +31,10 @@ class SyncTrades implements ShouldQueue
     {
         Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
-        // Get existing position IDs from trades table
-        $existingPositionIds = Trade::where('account_id', $this->account->id)
-            ->pluck('position_id')
-            ->toArray();
+        // Get existing trades to check their status
+        $existingTrades = Trade::where('account_id', $this->account->id)
+            ->get()
+            ->keyBy('position_id');
 
         $mt5Service->connect();
         $api = $mt5Service->getApi();
@@ -105,12 +105,13 @@ class SyncTrades implements ShouldQueue
             $tradesToUpsert = [];
 
             foreach ($ordersByPosition as $positionId => $positionOrders) {
-                // Skip if position_id already exists in trades table
-                if (in_array($positionId, $existingPositionIds)) {
+                $positionOrders = $positionOrders->sortBy('TimeDone');
+                $existingTrade = $existingTrades->get($positionId);
+
+                // If trade exists and is closed (has close_time), skip it
+                if ($existingTrade && $existingTrade->close_time !== null) {
                     continue;
                 }
-
-                $positionOrders = $positionOrders->sortBy('TimeDone');
 
                 if ($positionOrders->count() < 2) {
                     $order = $positionOrders->first();
