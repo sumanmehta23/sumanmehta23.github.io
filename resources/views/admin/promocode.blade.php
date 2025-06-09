@@ -87,6 +87,14 @@
                                 </div>
                                 <div class="mb-3 row">
                                     <div class="m-auto col-lg-4">
+                                        <label class="form-label">Max Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
                                         <label class="form-label">Status</label>
                                     </div>
                                     <div class="col-lg-8">
@@ -135,6 +143,14 @@
                                     </div>
                                     <div class="col-lg-8">
                                         <input type="number" class="form-control" name="promo_percentage" min="0" max="100" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Max Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
