@@ -55,8 +55,6 @@ class SyncTrades extends Command
             ->whereNotNull('competition_month')
             ->whereNotNull('competition_year')
             ->whereNull('deleted_at')
-            ->whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
