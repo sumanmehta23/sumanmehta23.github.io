@@ -1066,6 +1066,12 @@ class Wallet extends Controller
                 }
             } elseif ($deposit_to === "Account") {
 
+                // Check for duplicate transaction
+                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                if ($existingDeposit) {
+                    return response()->json(['status' => 'true']);
+                }
+
                 $settings = settings();
                 $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
                 $this->api->Connect(
@@ -1110,11 +1116,7 @@ class Wallet extends Controller
                     }
                 }
 
-                // Check for duplicate transaction
-                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
-                if ($existingDeposit) {
-                    return response()->json(['status' => 'true']);
-                }
+
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
                 $callback_code = json_encode($payload['transaction']["status"]);
