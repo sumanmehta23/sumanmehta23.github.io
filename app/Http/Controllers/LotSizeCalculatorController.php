@@ -27,6 +27,7 @@ class LotSizeCalculatorController extends Controller
             ], 422);
         }
 
+        
         $sym = request('sym');
         $accSize = request('accSize');
         $rr = request('rr');
