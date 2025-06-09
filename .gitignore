@@ -24,3 +24,6 @@ rr
 frankenphp
 frankenphp-worker.php
 package-lock.json
+
+# Ignore local scripts
+local-scripts/
