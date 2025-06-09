@@ -29,7 +29,13 @@ class SyncTrades implements ShouldQueue
 
     public function handle(MT5Service $mt5Service)
     {
-         Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
+        Log::info("Started SyncTrades job for account ID: {$this->account->code}");
+
+        // Get existing position IDs from trades table
+        $existingPositionIds = Trade::where('account_id', $this->account->id)
+            ->pluck('position_id')
+            ->toArray();
+
         $mt5Service->connect();
         $api = $mt5Service->getApi();
         $settings = settings();
@@ -99,6 +105,11 @@ class SyncTrades implements ShouldQueue
             $tradesToUpsert = [];
 
             foreach ($ordersByPosition as $positionId => $positionOrders) {
+                // Skip if position_id already exists in trades table
+                if (in_array($positionId, $existingPositionIds)) {
+                    continue;
+                }
+
                 $positionOrders = $positionOrders->sortBy('TimeDone');
 
                 if ($positionOrders->count() < 2) {
