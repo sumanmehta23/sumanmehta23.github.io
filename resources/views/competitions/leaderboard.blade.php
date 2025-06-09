@@ -629,7 +629,7 @@
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
                     ? `/admin/competition/trader-data/${testAccountNo}/${selectedMonth}/${selectedYear}`
-                    : `/competition/trader/?account${testAccountNo}?month=${selectedMonth}&year=${selectedYear}`;
+                    : `/competition/trader/${testAccountNo}/${selectedMonth}/${selectedYear}`;
 
                 const response = await fetch(endpoint);
 
