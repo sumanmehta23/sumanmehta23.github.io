@@ -249,7 +249,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
-    Route::get('/competition/trader/{accountNo}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
+    Route::get('/competition/trader/{accountNo}/{month}/{year}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
 
     Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 

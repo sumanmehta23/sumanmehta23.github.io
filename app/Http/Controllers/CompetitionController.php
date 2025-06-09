@@ -333,12 +333,18 @@ class CompetitionController extends Controller
         }
     }
 
-    public function getTraderData($accountNo)
+    public function getTraderData($accountNo, $month, $year)
     {
-        $account = Account::with(['trades', 'dailyReports' => function($query) {
-            $query->where('report_date', '>=', now()->subDays(30))
-                  ->orderBy('report_date');
-        }])->where('code', $accountNo)->firstOrFail();
+        $startDate = \Carbon\Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $account = Account::with([
+            'trades',
+            'dailyReports' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('report_date', [$startDate, $endDate])
+                    ->orderBy('report_date');
+            }
+        ])->where('code', $accountNo)->firstOrFail();
 
         // Get daily reports data
         $labels = [];
@@ -356,9 +362,16 @@ class CompetitionController extends Controller
         $lastEquity = $account->equity ?? '0.00';
         $daysInCurrentMonth = now()->daysInMonth;
 
-        $today = now();
+        if($month == now()->format('F') && $year == now()->year){
+            $today = now();
+            $monthEnd = $today;
+        }else{
+            $today = $startDate;
+            $monthEnd = $endDate;
+        }
+
         $startOfMonth = $today->copy()->startOfMonth();
-        $endOfMonth = $today; // Up to today
+        $endOfMonth = $monthEnd; // Up to today
         $currentDate = $startOfMonth->copy();
 
         while ($currentDate <= $endOfMonth) {
@@ -378,7 +391,6 @@ class CompetitionController extends Controller
 
         // Get trades data
         $trades = $account->trades->map(function($trade) {
-
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,
