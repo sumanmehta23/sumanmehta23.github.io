@@ -8,6 +8,7 @@ use App\Http\Controllers\LotSizeCalculatorController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TradeController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\WithdrawalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
     Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
     Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/withdrawal', [WithdrawalController::class, 'index']);
 
     // Competition routes
     Route::get('/competition/trader-data/{account}', [\App\Http\Controllers\Api\CompetitionController::class, 'getTraderData']);
