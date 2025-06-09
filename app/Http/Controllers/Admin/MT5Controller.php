@@ -122,6 +122,7 @@ class MT5Controller extends Controller
         $validator = Validator::make($request->all(), [
             'promo_code' => 'required|string|unique:promocodes,code,' . $id,
             'promo_percentage' => 'required|numeric|min:0|max:100',
+            'max_deposit' => 'required',
             'promo_status' => 'required|in:active,inactive', // adjust values as needed
         ]);
 
@@ -152,6 +153,7 @@ class MT5Controller extends Controller
                 Rule::unique('promocode', 'code')->whereNull('deleted_at'),
             ],
             'promo_percentage' => 'required|numeric|min:1|max:100',
+            'max_deposit' => 'required',
             'promo_status'     => 'required|boolean',
         ]);
 
