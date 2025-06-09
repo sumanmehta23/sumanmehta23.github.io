@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
 use App\MT5\MTWebAPI;
@@ -335,7 +336,7 @@ class CompetitionController extends Controller
 
     public function getTraderData($accountNo, $month, $year)
     {
-        $startDate = \Carbon\Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
+        $startDate = Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
         $account = Account::with([
