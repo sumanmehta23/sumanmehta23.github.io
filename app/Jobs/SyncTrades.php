@@ -108,18 +108,42 @@ class SyncTrades implements ShouldQueue
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // If trade exists and is closed (has close_time), skip it
-                if ($existingTrade && $existingTrade->close_time !== null) {
-                    continue;
-                }
+                // // If trade exists and is closed (has close_time), skip it
+                // if ($existingTrade && $existingTrade->close_time !== null) {
+                //     continue;
+                // }
+
+                // if ($positionOrders->count() < 2) {
+                //     $order = $positionOrders->first();
+                //     $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+                // } else {
+                //     $openOrder = $positionOrders->first();
+                //     $closeOrder = $positionOrders->last();
+                //     $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                // }
+
+                // if (count($tradesToUpsert) >= $this->batchSize) {
+                //     $this->processBatch($tradesToUpsert);
+                //     $tradesToUpsert = [];
+                // }
 
                 if ($positionOrders->count() < 2) {
-                    $order = $positionOrders->first();
-                    $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+                    // OPEN TRADE: Insert if does not exist
+                    if (!$existingTrade) {
+                        $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
+                    }
                 } else {
-                    $openOrder = $positionOrders->first();
-                    $closeOrder = $positionOrders->last();
-                    $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                    // CLOSED TRADE: Update existing trade only
+                    if ($existingTrade) {
+                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
+                        // Set ID to perform update on the correct row
+                        $closedTradeData['id'] = $existingTrade->id;
+                        $tradesToUpsert[] = $closedTradeData;
+                    } else {
+                        // No open trade exists; you can choose to skip or insert fresh closed trade.
+                        // To strictly follow your requirement, we will SKIP it:
+                        Log::warning("Closed trade found for position_id {$positionId} but no matching open trade exists in DB. Skipping.");
+                    }
                 }
 
                 if (count($tradesToUpsert) >= $this->batchSize) {
@@ -216,15 +240,25 @@ class SyncTrades implements ShouldQueue
 
     protected function processBatch(array $trades)
     {
+        // try {
+        //     // Use only position_id as unique key to prevent duplicate trades
+        //     $uniqueKeys = ['position_id'];
+        //     Trade::upsert($trades, $uniqueKeys);
+        // } catch (\Exception $e) {
+        //     Log::error("Error processing trade batch: " . $e->getMessage());
+        //     throw $e;
+        // }
+
+        // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
+
         try {
-            // Use only position_id as unique key to prevent duplicate trades
-            $uniqueKeys = ['position_id'];
-            Trade::upsert($trades, $uniqueKeys);
+            // Use 'id' as the unique key for upsert to update specific rows
+            Trade::upsert($trades, ['id']);
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
             throw $e;
         }
 
-        Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
+        Log::info("Processed trade batch for account ID: {$this->account->code}");
     }
 }
