@@ -102,6 +102,7 @@ class MT5Controller extends Controller
                 'percentage' => $promocode->promo_percentage,
                 'status' => $promocode->status,
                 'id' => $promocode->id,
+                'max_deposit' => $promocode->max_deposit,
             ]
         ]);
     }
@@ -110,19 +111,19 @@ class MT5Controller extends Controller
     {
         $id = $request->id;
         $promocode = Promocode::find($id);
-
+        // dd($promocode);
         if (!$promocode) {
             return response()->json([
                 'success' => false,
                 'message' => 'Promocode not found.'
             ]);
         }
-
         // Validate input
         $validator = Validator::make($request->all(), [
-            'promo_code' => 'required|string|unique:promocodes,code,' . $id,
+            'promo_code' => 'required|string|unique:promocode,code,' . $id,
             'promo_percentage' => 'required|numeric|min:0|max:100',
-            'promo_status' => 'required|in:active,inactive', // adjust values as needed
+            'max_deposit' => 'required',
+            'promo_status' => 'required|boolean', // Updated to accept boolean value
         ]);
 
         if ($validator->fails()) {
@@ -135,7 +136,8 @@ class MT5Controller extends Controller
 
         $promocode->code = $request->promo_code;
         $promocode->promo_percentage = $request->promo_percentage;
-        $promocode->status = $request->promo_status;
+        $promocode->status = (bool)$request->promo_status;
+        $promocode->max_deposit = $request->max_deposit;
         $promocode->save();
         return response()->json([
             'success' => true,
@@ -152,6 +154,7 @@ class MT5Controller extends Controller
                 Rule::unique('promocode', 'code')->whereNull('deleted_at'),
             ],
             'promo_percentage' => 'required|numeric|min:1|max:100',
+            'max_deposit' => 'required',
             'promo_status'     => 'required|boolean',
         ]);
 
@@ -160,6 +163,7 @@ class MT5Controller extends Controller
                 'code'             => $request->promo_code,
                 'promo_percentage' => $request->promo_percentage,
                 'status'           => $request->promo_status,
+                'max_deposit'      => $request->max_deposit,
             ]);
 
             return response()->json([
