@@ -144,8 +144,6 @@ class SyncTrades implements ShouldQueue
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                     } else {
-                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
-                        $this->processBatch($tradesToUpsert);
                         // No open trade exists; you can choose to skip or insert fresh closed trade.
                         // To strictly follow your requirement, we will SKIP it:
                         Log::warning("Closed trade found for position_id {$positionId} but no matching open trade exists in DB. Skipping.");
