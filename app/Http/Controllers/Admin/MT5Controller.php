@@ -103,6 +103,7 @@ class MT5Controller extends Controller
                 'percentage' => $promocode->promo_percentage,
                 'status' => $promocode->status,
                 'id' => $promocode->id,
+                'max_deposit' => $promocode->max_deposit,
             ]
         ]);
     }

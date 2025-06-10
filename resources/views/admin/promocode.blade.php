@@ -364,6 +364,7 @@
                 if (response.success) {
                     $('#editPromocodeForm input[name="promo_code"]').val(response.data.code);
                     $('#editPromocodeForm input[name="promo_percentage"]').val(response.data.percentage);
+                    $('#editPromocodeForm input[name="max_deposit"]').val(response.data.max_deposit);
                     $('#editPromocodeForm select[name="promo_status"]').val(response.data.status);
                     $('#editPromocodeForm input[name="id"]').val(response.data.id);
                     editPromoModal.show();
