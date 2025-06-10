@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('promocodes', function (Blueprint $table) {
+        Schema::table('promocode', function (Blueprint $table) {
             $table->dropColumn('max_deposit');
         });
     }

@@ -17,13 +17,14 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
+use Illuminate\Validation\Rule;
 use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 
 class MT5Controller extends Controller
 {
@@ -117,7 +118,6 @@ class MT5Controller extends Controller
                 'message' => 'Promocode not found.'
             ]);
         }
-
         // Validate input
         $validator = Validator::make($request->all(), [
             'promo_code' => 'required|string|unique:promocodes,code,' . $id,
