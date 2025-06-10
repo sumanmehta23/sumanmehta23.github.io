@@ -20,7 +20,7 @@ class SyncTrades implements ShouldQueue
     protected $account;
     protected $maxRetries = 3;
     protected $retryDelay = 1; // reduced from 2 to 1 second
-    protected $batchSize = 500;
+    protected $batchSize = 1;
 
     public function __construct($account)
     {
@@ -137,16 +137,15 @@ class SyncTrades implements ShouldQueue
                         $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                     }
                 } else {
-                    // CLOSED TRADE: Update existing trade only
+                    // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
                         // Set ID to perform update on the correct row
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                     } else {
-                        // No open trade exists; you can choose to skip or insert fresh closed trade.
-                        // To strictly follow your requirement, we will SKIP it:
-                        Log::warning("Closed trade found for position_id {$positionId} but no matching open trade exists in DB. Skipping.");
+                        // No open trade exists but we have a closed trade - insert it
+                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
                     }
                 }
 
@@ -244,20 +243,15 @@ class SyncTrades implements ShouldQueue
 
     protected function processBatch(array $trades)
     {
-        // try {
-        //     // Use only position_id as unique key to prevent duplicate trades
-        //     $uniqueKeys = ['position_id'];
-        //     Trade::upsert($trades, $uniqueKeys);
-        // } catch (\Exception $e) {
-        //     Log::error("Error processing trade batch: " . $e->getMessage());
-        //     throw $e;
-        // }
-
-        // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
-
         try {
-            // Use 'id' as the unique key for upsert to update specific rows
-            Trade::upsert($trades, ['id']);
+            // Use both position_id and id for upsert
+            // This ensures new trades are inserted by position_id
+            // and existing trades are updated by id
+            Trade::upsert(
+                $trades,
+                ['position_id'], // unique identifier
+                ['id', 'close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // columns to update
+            );
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
             throw $e;
