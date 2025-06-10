@@ -126,6 +126,7 @@ class SyncTrades implements ShouldQueue
                 //     $this->processBatch($tradesToUpsert);
                 //     $tradesToUpsert = [];
                 // }
+                dd($positionOrders);
 
                 Log::warning("position order {$positionOrders->count()} ");
                 Log::warning("existing trade {$existingTrade} ");
