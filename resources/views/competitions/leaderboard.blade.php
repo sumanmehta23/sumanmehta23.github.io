@@ -697,7 +697,7 @@
                 row.innerHTML = `
                     <td>${trade.position}</td>
                     <td>${new Date(trade.open_time).toLocaleString()}</td>
-                    <td>${new Date(trade.close_time).toLocaleString()}</td>
+                    <td>${trade.close_time ? new Date(trade.close_time).toLocaleString() : 'null'}</td>
                     <td>${trade.symbol}</td>
                     <td>${trade.volume}</td>
                     <td class="text-end ${profitClass}">
