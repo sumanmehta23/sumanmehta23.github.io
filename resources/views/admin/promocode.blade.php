@@ -43,6 +43,8 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Promo Code</th>
+                                        <th>Percentage</th>
+                                        <th>Max Deposit</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th>Actions</th>
@@ -83,6 +85,14 @@
                                     </div>
                                     <div class="col-lg-8">
                                         <input type="number" class="form-control" name="promo_percentage" min="0" max="100" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Max Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
@@ -139,6 +149,14 @@
                                 </div>
                                 <div class="mb-3 row">
                                     <div class="m-auto col-lg-4">
+                                        <label class="form-label">Max Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
                                         <label class="form-label">Status</label>
                                     </div>
                                     <div class="col-lg-8">
@@ -180,7 +198,7 @@
                     extend: 'excel',
                     text: 'Export to Excel',
                     exportOptions: {
-                        columns: [0, 1, 3] // Fixed index to match table
+                        columns: [0,1,2,3,4,5] // Fixed index to match table
                     }
                 }
             ],
@@ -207,6 +225,8 @@
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'code', name: 'code' },
+                { data: 'percentage', name: 'percentage' },
+                { data: 'max_deposit', name: 'max_deposit' },
                 { data: 'status', name: 'status' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action' }
@@ -344,6 +364,7 @@
                 if (response.success) {
                     $('#editPromocodeForm input[name="promo_code"]').val(response.data.code);
                     $('#editPromocodeForm input[name="promo_percentage"]').val(response.data.percentage);
+                    $('#editPromocodeForm input[name="max_deposit"]').val(response.data.max_deposit);
                     $('#editPromocodeForm select[name="promo_status"]').val(response.data.status);
                     $('#editPromocodeForm input[name="id"]').val(response.data.id);
                     editPromoModal.show();
