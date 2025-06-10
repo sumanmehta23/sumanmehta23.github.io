@@ -210,20 +210,21 @@ class SyncTrades implements ShouldQueue
             'tp' => $order->PriceTP,
             'type' => $order->Type,
             'updated_at' => now(),
-            'volume' => $order->VolumeInitial,
+            'volume' => $order->VolumeInitial/1000,
             'volume_ext' => $order->VolumeInitialExt,
         ];
     }
 
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder)
     {
+        Log::info("profit rate of account: {$closeOrder}");
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
             'type' => $openOrder->Type,
-            'volume' => $openOrder->VolumeInitial,
+            'volume' => $openOrder->VolumeInitial/1000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
             'close_price' => $closeOrder->PriceCurrent,
