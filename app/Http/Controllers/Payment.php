@@ -143,8 +143,8 @@ class Payment extends Controller
                 if(isset($paymentLog->promocode)){
                     $ticket2 = NULL;
                     $promo = PromoCode::where('code', $paymentLog->promocode)->first();
-                    if($amount >= 1000){
-                        $bonus_amount = ($promo->promo_percentage/100) * 1000;
+                    if($amount >= $promo->max_deposit){
+                        $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
                     }else{
                         $bonus_amount = ($promo->promo_percentage/100) * $amount;
                     }
