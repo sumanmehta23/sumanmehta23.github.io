@@ -399,7 +399,7 @@ class Leaderboard extends Controller
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,
-                'close_time' => $trade->close_time,
+                'close_time' => $trade->close_time ?? null,
                 'symbol' => $trade->symbol,
                 'volume' => $trade->volume,
                 'profit' => $trade->profit
