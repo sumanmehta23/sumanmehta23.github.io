@@ -4270,11 +4270,12 @@ class AjaxController extends Controller
                 ->addColumn('code', function($row){
                     return $row->code ;
                 })
-                ->addColumn('promo_percentage', function($row){
+                ->addColumn('percentage', function($row){
                     return $row->promo_percentage ;
                 })
-
-
+                ->addColumn('max_deposit', function($row){
+                    return $row->max_deposit ;
+                })
                 ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
                     return "<div class='form-check form-switch'>
@@ -4309,7 +4310,7 @@ class AjaxController extends Controller
                             ";
                     return $html;
                 })
-                ->rawColumns(['id', 'code', 'promo_percentage', 'status', 'created_at','action'])
+                ->rawColumns(['id', 'code', 'percentage','max_deposit','status', 'created_at','action'])
                 ->make(true);
         }
 

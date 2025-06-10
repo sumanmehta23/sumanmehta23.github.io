@@ -43,6 +43,8 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Promo Code</th>
+                                        <th>Percentage</th>
+                                        <th>Max Deposit</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th>Actions</th>
@@ -196,7 +198,7 @@
                     extend: 'excel',
                     text: 'Export to Excel',
                     exportOptions: {
-                        columns: [0, 1, 3] // Fixed index to match table
+                        columns: [0,1,2,3,4,5] // Fixed index to match table
                     }
                 }
             ],
@@ -223,6 +225,8 @@
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'code', name: 'code' },
+                { data: 'percentage', name: 'percentage' },
+                { data: 'max_deposit', name: 'max_deposit' },
                 { data: 'status', name: 'status' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action' }
