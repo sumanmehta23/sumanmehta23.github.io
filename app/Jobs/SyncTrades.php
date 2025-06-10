@@ -127,6 +127,7 @@ class SyncTrades implements ShouldQueue
                 //     $tradesToUpsert = [];
                 // }
 
+                Log::warning("position orders {$positionOrders} ");
                 Log::warning("position order {$positionOrders->count()} ");
                 Log::warning("existing trade {$existingTrade} ");
 
@@ -220,7 +221,6 @@ class SyncTrades implements ShouldQueue
 
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder)
     {
-        Log::info("profit rate of account: {$closeOrder}");
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
