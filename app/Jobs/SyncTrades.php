@@ -100,7 +100,7 @@ class SyncTrades implements ShouldQueue
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
                 return;
             }
-            
+
             // // Debug the orders array with more detail
             // Log::info('Total orders: ' . count($orders));
             // Log::info('Orders structure: ' . print_r($orders, true));
@@ -243,7 +243,7 @@ class SyncTrades implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 10000000) * $openOrder->ContractSize,
+            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
