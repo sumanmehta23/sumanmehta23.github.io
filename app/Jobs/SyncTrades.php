@@ -146,7 +146,7 @@ class SyncTrades implements ShouldQueue
                         $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                     }
                 } else {
-                     Log::warning("position orders {$positionOrders} ");
+                    //  Log::warning("position orders {$positionOrders} ");
                     // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
@@ -166,6 +166,7 @@ class SyncTrades implements ShouldQueue
             }
 
             if (!empty($tradesToUpsert)) {
+                Log::warning("position orders {$positionOrders} ");
                 $this->processBatch($tradesToUpsert);
             }
 
