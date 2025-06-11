@@ -100,6 +100,15 @@ class SyncTrades implements ShouldQueue
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
                 return;
             }
+            
+            // // Debug the orders array with more detail
+            // Log::info('Total orders: ' . count($orders));
+            // Log::info('Orders structure: ' . print_r($orders, true));
+
+            // // If you need to inspect a specific order
+            // if (!empty($orders)) {
+            //     Log::info('First order details: ' . print_r($orders[0], true));
+            // }
 
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
             $tradesToUpsert = [];
@@ -127,9 +136,9 @@ class SyncTrades implements ShouldQueue
                 //     $tradesToUpsert = [];
                 // }
 
-                Log::warning("position orders {$positionOrders} ");
-                Log::warning("position order {$positionOrders->count()} ");
-                Log::warning("existing trade {$existingTrade} ");
+                // Log::warning("position orders {$positionOrders} ");
+                // Log::warning("position order {$positionOrders->count()} ");
+                // Log::warning("existing trade {$existingTrade} ");
 
                 if ($positionOrders->count() < 2) {
                     // OPEN TRADE: Insert if does not exist
@@ -137,6 +146,7 @@ class SyncTrades implements ShouldQueue
                         $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                     }
                 } else {
+                     Log::warning("position orders {$positionOrders} ");
                     // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
