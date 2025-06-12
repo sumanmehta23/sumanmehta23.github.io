@@ -117,28 +117,25 @@ class SyncTrades implements ShouldQueue
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // // If trade exists and is closed (has close_time), skip it
-                // if ($existingTrade && $existingTrade->close_time !== null) {
-                //     continue;
-                // }
+                // Get total number of deals first
+                $totalDeals = 0;
+                $error_code = $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
+                    continue;
+                }
 
-                // if ($positionOrders->count() < 2) {
-                //     $order = $positionOrders->first();
-                //     $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
-                // } else {
-                //     $openOrder = $positionOrders->first();
-                //     $closeOrder = $positionOrders->last();
-                //     $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
-                // }
+                // Get the deals
+                $deals = [];
+                $error_code = $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
+                    continue;
+                }
 
-                // if (count($tradesToUpsert) >= $this->batchSize) {
-                //     $this->processBatch($tradesToUpsert);
-                //     $tradesToUpsert = [];
-                // }
+                $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
 
-                // Log::warning("position orders {$positionOrders} ");
-                // Log::warning("position order {$positionOrders->count()} ");
-                // Log::warning("existing trade {$existingTrade} ");
+                $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
                 if ($positionOrders->count() < 2) {
                     // OPEN TRADE: Insert if does not exist
@@ -146,16 +143,15 @@ class SyncTrades implements ShouldQueue
                         $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                     }
                 } else {
-                    //  Log::warning("position orders {$positionOrders} ");
                     // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
-                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
+                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(),$rateProfit);
                         // Set ID to perform update on the correct row
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                     } else {
                         // No open trade exists but we have a closed trade - insert it
-                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last());
+                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(),$rateProfit);
                     }
                 }
 
@@ -164,9 +160,7 @@ class SyncTrades implements ShouldQueue
                     $tradesToUpsert = [];
                 }
             }
-
             if (!empty($tradesToUpsert)) {
-                Log::warning("position orders {$positionOrders} ");
                 $this->processBatch($tradesToUpsert);
             }
 
@@ -226,8 +220,9 @@ class SyncTrades implements ShouldQueue
         ];
     }
 
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder)
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder,$rateProfit)
     {
+        // log::info("Preparing closed trade for position ID: {$rateProfit}");
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
@@ -244,7 +239,7 @@ class SyncTrades implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize,
+            'profit' => (($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
