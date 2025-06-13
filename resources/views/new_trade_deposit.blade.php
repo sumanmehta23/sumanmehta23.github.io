@@ -137,7 +137,7 @@
                                                     <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                     @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
                                                         <div class="CryptoChill trade-deposit-details">
-                                                            <form method="post">
+                                                        <form method="post">
                                                                 @csrf
                                                                 <input type="hidden" name="user[email]"
                                                                     value="{{ session('clogin') }}" min="10"
@@ -160,16 +160,27 @@
                                                                                 enter promocode</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            <div class="mb-3 input-group">
-
+                                                                            {{-- <div class="mb-3 input-group">
                                                                                 <input name="promocode"
                                                                                     id="promocode"
                                                                                     type="text"
                                                                                     class="form-control fill"
                                                                                     placeholder="Promocode"
                                                                                     aria-label="promocode">
+                                                                            </div> --}}
+
+                                                                            <div class="mb-3 input-group">
+                                                                                <input name="promocode"
+                                                                                    id="promocode"
+                                                                                    type="text"
+                                                                                    class="form-control fill"
+                                                                                    placeholder="Promocode"
+                                                                                    aria-label="promocode">
+                                                                                <button type="button" id="verifyPromocodeBtn" class="btn btn-primary">Verify</button>
                                                                             </div>
+                                                                            <small id="promocodeStatus" class="text-muted"></small>
                                                                         </div>
+
                                                                     </div>
                                                                     <div class="form-group row">
                                                                         <label
@@ -417,6 +428,36 @@
                 // Now you have the promocode value
                 console.log('Promocode:', promocode);
             });
+
+            $('#verifyPromocodeBtn').click(function() {
+            const promocode = $('#promocode').val().trim();
+            const statusElement = $('#promocodeStatus');
+            statusElement.text('Checking...').removeClass('text-success text-danger');
+
+            if (promocode === '') {
+                statusElement.text('Please enter a promocode.').addClass('text-danger');
+                return;
+            }
+            console.log('Verifying promocode:', promocode);
+            $.ajax({
+                url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    promocode: promocode
+                },
+                success: function(response) {
+                    if (response.valid) {
+                        statusElement.text(response.message).addClass('text-success');
+                    } else {
+                        statusElement.text(response.message).addClass('text-danger');
+                    }
+                },
+                error: function(xhr) {
+                    statusElement.text('Error verifying promocode.').addClass('text-danger');
+                }
+            });
+        });
         });
     </script>
 @endsection

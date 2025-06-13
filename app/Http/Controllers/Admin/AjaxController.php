@@ -4449,4 +4449,23 @@ class AjaxController extends Controller
         return (new CompetitionExport($filters))->download('competitions_' . date('Y-m-d') . '.xlsx');
     }
 
+    public function verify_promocode(Request $request)
+    {
+        $code = $request->input('promocode');
+
+        $promocode = Promocode::where('code', $code)->first();
+        if ($promocode) {
+            return response()->json([
+                'valid' => true,
+                'message' => 'Promocode is valid. You get ' . $promocode->promo_percentage . '% discount till max deposit of'. $promocode->max_deposit .' !',
+            ]);
+        } else {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Invalid promocode. Please try again.',
+            ]);
+        }
+    }
+
+
 }
