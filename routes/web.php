@@ -295,6 +295,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/account_withdrawal_verify', [TradeWithdrawal::class, 'account_withdrawal_verify'])->name('account_withdrawal_verify');
     Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
+
+    Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
