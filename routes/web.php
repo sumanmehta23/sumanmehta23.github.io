@@ -324,8 +324,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
     Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
+    Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
     Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
     Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
+    Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
 
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
@@ -352,6 +354,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
+    Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -449,6 +452,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
+
+        Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])
+            ->name('payment-gateways.update')
+            ->middleware('check.permissions:setting:update');
+
         Route::prefix('/logs')->group(function () {
             Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
         });
@@ -476,6 +484,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/ib_settings", [IBController::class, 'ib_settings'])->name('ib.settings')->middleware('check.permissions:ib:manageSettings');
         Route::get("/ibCommission", [IBController::class, 'ibCommission']);
         Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
+        Route::get('/export-all-ib-users', [IBController::class, 'exportAllIbUsers'])->name('export.all_ib_users');
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
         Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
 

@@ -608,7 +608,6 @@ class AjaxController extends Controller
 
                     return $html;
                 })
-
                 ->rawColumns(['created_at', 'user_country', 'user_email', 'ib', 'user_ib_status', 'rm', 'user_status', 'user_email_confirmed', 'action', 'ib_name', 'ib_email'])
                 ->make(true);
         }
@@ -1455,7 +1454,6 @@ class AjaxController extends Controller
         // Fetch data
         // $query->orderByDesc('id')->get();
 
-
         if ($request->ajax()) {
             return DataTables::of($query)
 
@@ -1593,69 +1591,80 @@ class AjaxController extends Controller
 
     public function getInternalTransfer2(Request $request)
     {
-        $query = TradeDeposit::with(['user', 'account']);
-        $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
-        // Add conditions based on session and GET parameters
-        if (!isset($_GET['id'])) {
-            // if (session('userData')['userRole'] == "Relationship Manager") {
-            //     $rmId = session('alogin');
-            //     $query->whereHas('user.relationshipManager', function ($q) use ($rmId) {
-            //         $q->where('rm_id', $rmId);
-            //     });
-            // }
-            if ($role === "Relationship Manager") {
-                $query->whereHas('user.employee', function ($q) use ($alogin) {
-                    $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
-                });
-            }
-        } else {
-            $query->where('deposit_type', 'Internal Transfer');;
+        $query = TradeDeposit::select('trade_deposits.*')
+            ->with(['user', 'account']) // Eager load user and account relationships
+            ->whereIn('trade_deposits.deposit_type', ['Internal Transfer','CRM']);
+
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+
+        // Filter for Relationship Manager if 'id' is not present in query string
+        if (!isset($_GET['id']) && $role === "Relationship Manager" && $alogin) {
+            $query->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin);
+            });
         }
 
+        // Filter by status if provided
         if (isset($request->status)) {
-            $query->where('status', $request->status);
+            $query->where('trade_deposits.status', $request->status);
         }
 
-        // Fetch data
-        // $query->orderByDesc('id')->get();
+        if (isset($request->type)) {
+            $query->where('trade_deposits.deposit_type', $request->type);
+        }
+
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->addColumn('name', function ($row) {
+                    return $row->user->fullname ?? '-';
+                })
                 ->addColumn('email', function ($row) {
-                    return $row->email;
+                    return $row->user->email ?? '-';
                 })
                 ->addColumn('amount', function ($row) {
                     return $row->deposit_amount;
                 })
                 ->addColumn('transfer_from', function ($row) {
-                    if ($row->deposit_from) {
-                        $acc = Account::where('id', $row->deposit_from)->first();
+
+                    $acc = null;
+                    if (is_numeric($row->deposit_from)) {
+
+                        $acc = Account::find($row->deposit_from);
                     }
+
                     if ($row->deposit_from == 'IB Commission' || $row->deposit_type == 'IB Withdraw') {
                         $transfer_from = 'IB Wallet';
-                    } else {
+                    }elseif($row->deposit_type == 'CRM' && $row->deposit_from == NULL){
                         $transfer_from = $row->deposit_type;
+                    } else {
+                        $acc = Account::find($row->deposit_from);
+                        $transfer_from = $acc;
                     }
-                    return ($row->deposit_from && $acc) ? $acc->code : $transfer_from;
+                    return ($acc) ? $acc->code : $transfer_from;
                 })
                 ->addColumn('transfer_to', function ($row) {
-                    return $row->code;
+                    return $row->account->code ?? '-';
                 })
                 ->addColumn('status', function ($row) {
-                    if ($row->status == 1) {
-                        return "<div class='badge bg-outline-success'>Approved</div>";
-                    } elseif ($row->status == 2) {
-                        return "<div class='badge bg-outline-danger'>Rejected</div>";
-                    } else {
-                        return "<div class='badge bg-outline-primary'>Pending</div>";
-                    }
+                    return match ($row->status) {
+                        1 => "<div class='badge bg-outline-success'>Approved</div>",
+                        2 => "<div class='badge bg-outline-danger'>Rejected</div>",
+                        default => "<div class='badge bg-outline-primary'>Pending</div>",
+                    };
                 })
-                ->rawColumns(['email', 'amount', 'transfer_from', 'transfer_to', 'status'])
+                ->addColumn('date', function ($row) {
+                    $created = Carbon::parse($row->created_at)->addHours(3);
+                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
+                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
+                })
+                ->rawColumns(['name', 'email', 'amount', 'transfer_from', 'transfer_to', 'date', 'status'])
                 ->make(true);
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
     }
+
 
 
     // public function getWalletDeposit()
@@ -2314,6 +2323,7 @@ class AjaxController extends Controller
     {
 
         $query = TradeWithdrawals::with(['user', 'withdrawTo', 'account','clientWallet'])
+                ->distinct()
                 ->where('trade_withdrawal.status', 0)
                 ->where('trade_withdrawal.email_verified', 1)
                 ->where('trade_withdrawal.withdraw_type', 'Trade Withdrawal');
@@ -2965,8 +2975,10 @@ class AjaxController extends Controller
                 'payment_method' => $row->withdraw_type,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' :
+                            ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' :
+                            ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
+                            '<span class="badge bg-outline-primary">Pending</span>'))
             ];
         }
         return ['data' => $data];
@@ -2989,7 +3001,7 @@ class AjaxController extends Controller
                 $deposit_from = $row->deposit_type;
             }
             $data[] = [
-                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
+                'created_on' => Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d H:i:s'),
                 'from' => ($row->deposit_from && $row->accountDepositFrom) ? $row->accountDepositFrom->code : $deposit_from,
                 'to' => $row->code,
                 'amount' => '$' . $row->deposit_amount,
@@ -3119,6 +3131,9 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function ($row) {
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->addColumn('phone_number', function ($row) {
+                    return $row->user->number;
                 })
 
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status', 'date'])
@@ -3739,7 +3754,7 @@ class AjaxController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At']);
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Phone', 'Country', 'Created At', 'Client User Status','Client Email Status','Client KYC Status']);
 
             // Fetch client data
             User::chunk(500, function ($clients) use ($handle) {
@@ -3751,9 +3766,100 @@ class AjaxController extends Controller
                         $client->number,
                         $client->country,
                         $client->created_at,
+                        $client->status == 1 ? 'Active' : 'Inactive',
+                        $client->email_confirmed == 1 ? 'Verified' : 'Not Verified',
+                        $client->kyc_verify == 1 ? 'Verified' : 'Not Verified',
                     ]);
                 }
             });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
+    }
+
+
+    public function exportAllTradingDeposit(Request $request)
+    {
+        $fileName = 'Trading_Deposit_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Name', 'Email', 'Account No', 'Deposit Amount', 'Deposit Type', 'Deposit From', 'Deposited Date', 'Status']);
+
+            // Fetch client data
+            TradeDeposit::select(
+                            'trade_deposits.*'
+                        )->with(['user', 'account'])
+                        ->chunk(500, function ($tradeDeposits) use ($handle) {
+                            foreach ($tradeDeposits as $tradeDeposit) {
+                                fputcsv($handle, [
+                                    $tradeDeposit->user->fullname,
+                                    $tradeDeposit->user->email,
+                                    $tradeDeposit->code,
+                                    $tradeDeposit->deposit_amount,
+                                    $tradeDeposit->deposit_type,
+                                    $tradeDeposit->deposit_from,
+                                    $tradeDeposit->created_at,
+                                    $tradeDeposit->status,
+                                ]);
+                            }
+                        });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
+    }
+
+    public function exportAllInternalTransfer(Request $request)
+    {
+        $fileName = 'Internal_Transfer_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Name', 'Email', 'Amount', 'Transfer From', 'Transfer To', 'Status', 'Created At']);
+
+            // Fetch client data
+            TradeDeposit::with(['user', 'account'])
+                        ->whereIn('trade_deposits.deposit_type', ['Internal Transfer','CRM'])
+                        ->chunk(500, function ($tradeDeposits) use ($handle) {
+                            foreach ($tradeDeposits as $tradeDeposit) {
+                                if ($tradeDeposit->deposit_from) {
+                                    $acc = Account::where('id', $tradeDeposit->deposit_from)->first();
+                                }
+                                if ($tradeDeposit->deposit_from == 'IB Commission' || $tradeDeposit->deposit_type == 'IB Withdraw') {
+                                    $transfer_from = 'IB Wallet';
+                                }
+                                elseif($tradeDeposit->deposit_type == 'CRM' && $tradeDeposit->deposit_from == NULL){
+                                    $transfer_from = $tradeDeposit->deposit_type;
+                                } else {
+                                    $transfer_from = $tradeDeposit->deposit_type;
+                                }
+                                $transferfrom =  ($tradeDeposit->deposit_from && $acc) ? $acc->code : $transfer_from;
+                                $created = Carbon::parse($tradeDeposit->created_at)->addHours(3);
+                                fputcsv($handle, [
+                                    $tradeDeposit->user->fullname,
+                                    $tradeDeposit->user->email,
+                                    $tradeDeposit->deposit_amount,
+                                    $transferfrom,
+                                    $tradeDeposit->account->code ?? 'N/A',
+                                    $tradeDeposit->status,
+                                    $created,
+                                ]);
+                            }
+                        });
 
             fclose($handle);
         });

@@ -14,6 +14,7 @@ use App\Models\TradeDeposit;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;

@@ -131,6 +131,8 @@
                                         <option value="Reject Wallet Withdraw" {{ request('log_type') == 'Reject Wallet Withdraw' ? 'selected' : '' }}>Reject Wallet Withdraw</option>
                                         <option value="Approve Wallet Withdraw" {{ request('log_type') == 'Approve Wallet Withdraw' ? 'selected' : '' }}>Approve Wallet Withdraw</option>
                                         <option value="Manually Approved Wallet Withdraw" {{ request('log_type') == 'Manually Approved Wallet Withdraw' ? 'selected' : '' }}>Manually Approved Wallet Withdraw</option>
+                                         <option value="Approve Account Withdraw" {{ request('log_type') == 'Approve Account Withdraw' ? 'selected' : '' }}>Approve Trade Withdraw</option>
+                                         <option value="Trade Withdraw" {{ request('log_type') == 'Trade Withdraw' ? 'selected' : '' }}>Trade Withdraw</option>
                                         <option value="Wallet Withdraw Cancel By Client" {{ request('log_type') == 'Wallet Withdraw Cancel By Client' ? 'selected' : '' }}>Wallet Withdraw Cancel By Client</option>
                                         <option value="Account Withdraw" {{ request('log_type') == 'Account Withdraw' ? 'selected' : '' }}>Account Withdraw</option>
                                         <option value="Account Deposit" {{ request('log_type') == 'Account Deposit' ? 'selected' : '' }}>Account Deposit</option>
@@ -175,6 +177,7 @@
                             <div class="activity-log justify-content-center">
 
                                 @foreach($logs as $index => $log)
+
                                     @php
                                         $user_id = $log->causer_id;
 
@@ -281,6 +284,26 @@
                                                 }
                                                 break;
 
+                                            case 'Trade Withdraw':
+                                                $withdrawal_amount = $log->properties['withdraw_amount'];
+                                                // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                                                $properties = json_decode($log->properties, true);
+                                                $transaction_id = $properties['wallet_withdraw_id'];
+
+                                                $logDescription = "<div class=''>
+                                                                    <span>User {$userLink} withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id} approved.</span>
+                                                                </div>";
+                                                break;
+                                            case 'Approve Account Withdraw':
+                                                $withdrawal_amount = $log->properties['approved_amount'];
+                                                // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                                                $properties = json_decode($log->properties, true);
+                                                $transaction_id = $properties['transaction_id'];
+
+                                                $logDescription = "<div class=''>
+                                                                    <span>User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
+                                                                </div>";
+                                                break;
                                             case 'Wallet Withdraw':
                                                 $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
                                                 $transaction_id_link = "<a href='/admin/wallet_withdrawal_details/?id={$log->properties['wallet_withdraw_id']}&email={$log->properties['email']}&deposit={$log->properties['withdraw_amount']}' style='color: #007bff;'>{$log->properties['wallet_withdraw_id']}</a>";
@@ -627,46 +650,53 @@
         toggleFields(); // Initial call to set the correct fields visible
 
 
-        document.getElementById('exportLogs').addEventListener('click', function() {
+        // document.getElementById('exportLogs').addEventListener('click', function() {
 
-        let csvContent = "data:text/csv;charset=utf-8,Time,IP,User ,Description\n";
-
-
-        // Gather log data from the DOM
-
-        const logs = document.querySelectorAll('.activity-item'); // Adjust the selector based on your HTML structure
+        //     let csvContent = "data:text/csv;charset=utf-8,Time,IP,User ,Description\n";
 
 
-        logs.forEach(item => {
+        //     // Gather log data from the DOM
 
-            const time = item.querySelector('.log-time div').innerText; // Adjust based on your HTML structure
-
-            const ip = item.querySelector('.log-ip div').innerText; // Adjust based on your HTML structure
-
-            const user = item.querySelector('.log-description').innerText; // Adjust based on your HTML structure
-
-            const description = item.querySelector('.log-card').innerText.replace(/,/g, ''); // Adjust based on your HTML structure
+        //     const logs = document.querySelectorAll('.activity-item'); // Adjust the selector based on your HTML structure
 
 
-            const row = `${time},${ip},${user},${description}\n`;
+        //     logs.forEach(item => {
 
-            csvContent += row;
+        //         const time = item.querySelector('.log-time div').innerText; // Adjust based on your HTML structure
 
+        //         const ip = item.querySelector('.log-ip div').innerText; // Adjust based on your HTML structure
+
+        //         const user = item.querySelector('.log-description').innerText; // Adjust based on your HTML structure
+
+        //         const description = item.querySelector('.log-card').innerText.replace(/,/g, ''); // Adjust based on your HTML structure
+
+
+        //         const row = `${time},${ip},${user},${description}\n`;
+
+        //         csvContent += row;
+
+        //     });
+
+
+        //     const encodedUri = encodeURI(csvContent);
+
+        //     const link = document.createElement("a");
+
+        //     link.setAttribute("href", encodedUri);
+
+        //     link.setAttribute("download", "activity_logs.csv");
+
+        //     document.body.appendChild(link);
+
+        //     link.click();
+
+        // });
+
+        document.getElementById('exportLogs').addEventListener('click', function () {
+            const params = new URLSearchParams(window.location.search);
+            const exportUrl = `/admin/logs/export?${params.toString()}`;
+            window.location.href = exportUrl;
         });
 
-
-        const encodedUri = encodeURI(csvContent);
-
-        const link = document.createElement("a");
-
-        link.setAttribute("href", encodedUri);
-
-        link.setAttribute("download", "activity_logs.csv");
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        });
     });
 </script>

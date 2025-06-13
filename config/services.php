@@ -43,7 +43,7 @@ return [
     ],
     'payissa' => [
         'url' => env('PAYISSA_URL', 'https://api.payissa.com'),
-        'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://checkout.payissa.com'),
+        'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://multi.payissa.com/'),
         'address' => env('PAYISSA_WALLET_ADDRESS'),
         'valid_coins' => json_decode(env('PAYISSA_VALID_COINS', '[]'), true),
     ],
@@ -66,5 +66,8 @@ return [
     ],
     'klaviyo' => [
         'list_ids' => json_decode(env('KLAVIYO_LIST_IDS', '[]'), true),
+    ],
+    '1forge' => [
+        'api_key' => env('FORGE_API_KEY', ''),
     ]
 ];

@@ -148,6 +148,7 @@ class TradeWithdrawal extends Controller
             $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
+            $ticket1 = NULL;
             $login = $account->code;
             $email = $account->email;
             activity()->causedBy($user_id)
@@ -176,13 +177,29 @@ class TradeWithdrawal extends Controller
 //                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
 //                }
                 //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
-                $accountProfit=$account_balance-$total_deposit_amount;
+                $accountProfit = $account_balance - $total_deposit_amount;
+
+
                 if($amount > $accountProfit ){
-                    $multiplier=$amount-$accountProfit;
+                    if($accountProfit < 0){
+                        $multiplier = $amount;
+                    }else{
+                        $multiplier = $amount - $accountProfit;
+                    }
+
                     if ($multiplier > 250) {
                         $multiplier = 250;
                     }
                     $bonusamount = -abs(-9 * $multiplier);
+
+                    // if($account->code==817752){
+                    //     dump($account_balance);
+                    //     dump($total_deposit_amount);
+                    //     dump($accountProfit);
+                    //     dump($multiplier);
+                    //     dump($bonusamount);
+                    // }
+
                     if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                     } else {
@@ -204,9 +221,9 @@ class TradeWithdrawal extends Controller
 
             }
 
-            $errorCode = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket, $margin_check = true);
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
+            $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+            if ($errorCode1 != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode1);
                 return response()->json([
                     'success' => false,
                     'message' => 'Something went wrong',

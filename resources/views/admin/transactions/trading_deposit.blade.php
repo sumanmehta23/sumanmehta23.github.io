@@ -211,11 +211,17 @@
                         exportOptions: {
                             columns: [0,11,2,3,4,5,7,9,10] // Updated column indices to match your use case
                         }
+                    },
+                    {
+                        text: 'Export All',
+                        action: function () {
+                            window.location.href = "/admin/export-all-trading-deposit";
+                        }
                     }
                 ],
             lengthMenu: [
-                [10, 25, 50, 100, -1], // DataTable options
-                [10, 25, 50, 100, "All"] // User-facing labels
+                [10, 25, 50, 100, 500, 1000], // DataTable options
+                [10, 25, 50, 100, 500, 1000] // User-facing labels
                 ],
             pageLength: 10,
             processing: true,
