@@ -21,20 +21,6 @@
                         </div>
                     </div>
                     <div class="tab-content">
-                        <div>
-                            {{-- <?php if (isset($error)) {?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                                <strong>
-                                    <?php echo $error; ?>
-                                </strong>
-                            </div>
-                            <script>
-                                $(".alert").alert();
-                            </script>
-                            <?php } ?> --}}
                             @if ($errors->any())
                                 <div class="alert alert-danger">
                                     <ul>
@@ -45,8 +31,8 @@
                                 </div>
                             @endif
                             <div class="row">
-                                <div class="col-12">
-                                    <div class="row">
+                                {{-- <div class="col-12"> --}}
+                                    {{-- <div class="row"> --}}
                                         <div class="col-xl-8">
                                             <div class="card">
                                                 <div class="card-body border-bottom">
@@ -121,8 +107,7 @@
                                                         @endif
                                                         @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
                                                          <div class="col-6 col-lg-6 col-xl-6">
-                                                            <div
-                                                                class="border rounded address-check trade-deposit-type">
+                                                            <div class="border rounded address-check trade-deposit-type">
                                                                 <div class="form-check">
                                                                     <input type="radio" name="deposit_type"
                                                                         checked
@@ -152,7 +137,7 @@
                                                     <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
                                                     @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
                                                         <div class="CryptoChill trade-deposit-details">
-                                                            <form method="post">
+                                                        <form method="post">
                                                                 @csrf
                                                                 <input type="hidden" name="user[email]"
                                                                     value="{{ session('clogin') }}" min="10"
@@ -176,15 +161,17 @@
                                                                         </label>
                                                                         <div class="col-lg-8">
                                                                             <div class="mb-3 input-group">
-
                                                                                 <input name="promocode"
                                                                                     id="promocode"
                                                                                     type="text"
                                                                                     class="form-control fill"
                                                                                     placeholder="Promocode"
                                                                                     aria-label="promocode">
+                                                                                <button type="button" id="verifyPromocodeBtn" class="btn btn-primary">Verify</button>
                                                                             </div>
+                                                                            <small id="promocodeStatus" class="text-muted"></small>
                                                                         </div>
+
                                                                     </div>
                                                                     <div class="form-group row">
                                                                         <label
@@ -218,14 +205,19 @@
                                                                                 </label>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="row">
-                                                                            <div class="col-lg-4"></div>
-                                                                            <div class="col-lg-8 pb-4">
-                                                                                <div class="form-check">
-                                                                                    <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  required>
-                                                                                    <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                                        Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
-                                                                                    </label>
+                                                                        <div class="">
+                                                                            <div class="row">
+                                                                                <div class="col-lg-4"></div>
+                                                                                <div class="col-lg-8">
+                                                                                    <div class="row g-1">
+                                                                                        <input type="button"
+                                                                                            id="paynow"
+                                                                                            data-amount="10"
+                                                                                            data-currency="USD"
+                                                                                            data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
+                                                                                            class="btn btn-primary cryptochill-button col-12"
+                                                                                            value="Deposit To Trading Account">
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -234,68 +226,6 @@
                                                             </div>
                                                         </form>
                                                     </div>
-                                                    <div class="CreditCardPayissa trade-deposit-details" style="display:none">
-                                                        <form method="post" id="CreditCardPayissaForm">
-                                                            @csrf
-                                                            <input type="hidden" name="email"
-                                                                value="{{ session('clogin') }}" min="10"
-                                                                required class="form-control fill">
-                                                            <input class="user_code" type="hidden"
-                                                                name="user[code]" value=""
-                                                                class="form-control fill" readonly required>
-                                                            {{-- <input type="hidden" name="selected_account_code" id="selected_account_code" value=""> --}}
-                                                            <div class="row">
-                                                                <div class="mt-2 col-12">
-                                                                    <input type="hidden" name="deposit_type"
-                                                                        class="tradedeposittype"
-                                                                        value="CreditCardPayissa">
-
-                                                                    <div class="form-group row">
-                                                                        <label
-                                                                            class="col-lg-4 col-form-label">ENTER
-                                                                            PROMOCODE:
-                                                                            <small
-                                                                                class="text-muted d-block">Please
-                                                                                enter promocode</small>
-                                                                        </label>
-                                                                        <div class="col-lg-8">
-                                                                            <div class="mb-3 input-group">
-
-                                                                                <input name="promocode"
-                                                                                    id="promocode"
-                                                                                    type="text"
-                                                                                    class="form-control fill"
-                                                                                    placeholder="Promocode"
-                                                                                    aria-label="promocode">
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group row">
-                                                                        <label
-                                                                            class="col-lg-4 col-form-label">ENTER
-                                                                            AMOUNT:
-                                                                            <small
-                                                                                class="text-muted d-block">Please
-                                                                                enter the amount to be deposited </small>
-                                                                        </label>
-                                                                        <div class="col-lg-8">
-                                                                            <div class="mb-3 input-group">
-                                                                                <span
-                                                                                    class="input-group-text">USD</span>
-                                                                                <input placeholder="Minimum $10"
-                                                                                    name="deposit"
-                                                                                    id="deposit_amount_cc"
-                                                                                    type="number" min="10"
-                                                                                    title="Minimum $10"
-                                                                                    class="form-control fill ccdeposit_amount"
-                                                                                    aria-label="Amount" required>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </form>
-                                                        </div>
                                                     @endif
                                                     @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
                                                         <div class="CreditCardPayissa trade-deposit-details" style="display:none">
@@ -313,6 +243,28 @@
                                                                         <input type="hidden" name="deposit_type"
                                                                             class="tradedeposittype"
                                                                             value="CreditCardPayissa">
+
+                                                                        <div class="form-group row">
+                                                                            <label
+                                                                                class="col-lg-4 col-form-label">ENTER
+                                                                                PROMOCODE:
+                                                                                <small
+                                                                                    class="text-muted d-block">Please
+                                                                                    enter promocode</small>
+                                                                            </label>
+                                                                            <div class="col-lg-8">
+                                                                                <div class="mb-3 input-group">
+                                                                                    <input name="cc_promocode"
+                                                                                        id="cc_promocode"
+                                                                                        type="text"
+                                                                                        class="form-control fill"
+                                                                                        placeholder="Promocode"
+                                                                                        aria-label="promocode">
+                                                                                    <button type="button" id="verifyCcPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                                </div>
+                                                                                <small id="cc_promocodeStatus" class="text-muted"></small>
+                                                                            </div>
+                                                                        </div>
 
                                                                         <div class="form-group row">
                                                                             <label
@@ -453,10 +405,9 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    {{-- </div> --}}
+                                {{-- </div> --}}
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -489,6 +440,64 @@
                 var promocode = $('#promocode').val();
                 // Now you have the promocode value
                 console.log('Promocode:', promocode);
+            });
+
+            $('#verifyPromocodeBtn').click(function() {
+                const promocode = $('#promocode').val().trim();
+                const statusElement = $('#promocodeStatus');
+                statusElement.text('Checking...').removeClass('text-success text-danger');
+
+                if (promocode === '') {
+                    statusElement.text('Please enter a promocode.').addClass('text-danger');
+                    return;
+                }
+                $.ajax({
+                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        promocode: promocode
+                    },
+                    success: function(response) {
+                        if (response.valid) {
+                            statusElement.text(response.message).addClass('text-success');
+                        } else {
+                            statusElement.text(response.message).addClass('text-danger');
+                        }
+                    },
+                    error: function(xhr) {
+                        statusElement.text('Error verifying promocode.').addClass('text-danger');
+                    }
+                });
+            });
+
+            $('#verifyCcPromocodeBtn').click(function() {
+                const promocode = $('#cc_promocode').val().trim();
+                const statusElement = $('#cc_promocodeStatus');
+                statusElement.text('Checking...').removeClass('text-success text-danger');
+
+                if (promocode === '') {
+                    statusElement.text('Please enter a promocode.').addClass('text-danger');
+                    return;
+                }
+                $.ajax({
+                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        promocode: promocode
+                    },
+                    success: function(response) {
+                        if (response.valid) {
+                            statusElement.text(response.message).addClass('text-success');
+                        } else {
+                            statusElement.text(response.message).addClass('text-danger');
+                        }
+                    },
+                    error: function(xhr) {
+                        statusElement.text('Error verifying promocode.').addClass('text-danger');
+                    }
+                });
             });
         });
     </script>
