@@ -18,7 +18,8 @@ class PaymentLog extends Model
         'initiated_by',
         'user_id',
         'payment_res',
-        'account_id'
+        'account_id',
+        'promocode'
     ];
     protected $guarded = [];
     public function user(){

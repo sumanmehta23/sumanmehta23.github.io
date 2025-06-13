@@ -339,7 +339,7 @@ class TradeDepositController extends Controller
             ]
         );
         $user = auth()->user();
-        $promocode = $request->promocode ?? '';
+        $promocode = $request->cc_promocode ?? '';
         try {
             $trading_deposited1 = $request->input('deposit');
             $deposit_type = $request->input('deposit_type');
