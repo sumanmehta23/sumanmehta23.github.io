@@ -160,15 +160,6 @@
                                                                                 enter promocode</small>
                                                                         </label>
                                                                         <div class="col-lg-8">
-                                                                            {{-- <div class="mb-3 input-group">
-                                                                                <input name="promocode"
-                                                                                    id="promocode"
-                                                                                    type="text"
-                                                                                    class="form-control fill"
-                                                                                    placeholder="Promocode"
-                                                                                    aria-label="promocode">
-                                                                            </div> --}}
-
                                                                             <div class="mb-3 input-group">
                                                                                 <input name="promocode"
                                                                                     id="promocode"
@@ -252,6 +243,28 @@
                                                                         <input type="hidden" name="deposit_type"
                                                                             class="tradedeposittype"
                                                                             value="CreditCardPayissa">
+
+                                                                        <div class="form-group row">
+                                                                            <label
+                                                                                class="col-lg-4 col-form-label">ENTER
+                                                                                PROMOCODE:
+                                                                                <small
+                                                                                    class="text-muted d-block">Please
+                                                                                    enter promocode</small>
+                                                                            </label>
+                                                                            <div class="col-lg-8">
+                                                                                <div class="mb-3 input-group">
+                                                                                    <input name="cc_promocode"
+                                                                                        id="cc_promocode"
+                                                                                        type="text"
+                                                                                        class="form-control fill"
+                                                                                        placeholder="Promocode"
+                                                                                        aria-label="promocode">
+                                                                                    <button type="button" id="verifyCcPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                                </div>
+                                                                                <small id="cc_promocodeStatus" class="text-muted"></small>
+                                                                            </div>
+                                                                        </div>
 
                                                                         <div class="form-group row">
                                                                             <label
@@ -430,34 +443,62 @@
             });
 
             $('#verifyPromocodeBtn').click(function() {
-            const promocode = $('#promocode').val().trim();
-            const statusElement = $('#promocodeStatus');
-            statusElement.text('Checking...').removeClass('text-success text-danger');
+                const promocode = $('#promocode').val().trim();
+                const statusElement = $('#promocodeStatus');
+                statusElement.text('Checking...').removeClass('text-success text-danger');
 
-            if (promocode === '') {
-                statusElement.text('Please enter a promocode.').addClass('text-danger');
-                return;
-            }
-            console.log('Verifying promocode:', promocode);
-            $.ajax({
-                url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
-                method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    promocode: promocode
-                },
-                success: function(response) {
-                    if (response.valid) {
-                        statusElement.text(response.message).addClass('text-success');
-                    } else {
-                        statusElement.text(response.message).addClass('text-danger');
-                    }
-                },
-                error: function(xhr) {
-                    statusElement.text('Error verifying promocode.').addClass('text-danger');
+                if (promocode === '') {
+                    statusElement.text('Please enter a promocode.').addClass('text-danger');
+                    return;
                 }
+                $.ajax({
+                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        promocode: promocode
+                    },
+                    success: function(response) {
+                        if (response.valid) {
+                            statusElement.text(response.message).addClass('text-success');
+                        } else {
+                            statusElement.text(response.message).addClass('text-danger');
+                        }
+                    },
+                    error: function(xhr) {
+                        statusElement.text('Error verifying promocode.').addClass('text-danger');
+                    }
+                });
             });
-        });
+
+            $('#verifyCcPromocodeBtn').click(function() {
+                const promocode = $('#cc_promocode').val().trim();
+                const statusElement = $('#cc_promocodeStatus');
+                statusElement.text('Checking...').removeClass('text-success text-danger');
+
+                if (promocode === '') {
+                    statusElement.text('Please enter a promocode.').addClass('text-danger');
+                    return;
+                }
+                $.ajax({
+                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        promocode: promocode
+                    },
+                    success: function(response) {
+                        if (response.valid) {
+                            statusElement.text(response.message).addClass('text-success');
+                        } else {
+                            statusElement.text(response.message).addClass('text-danger');
+                        }
+                    },
+                    error: function(xhr) {
+                        statusElement.text('Error verifying promocode.').addClass('text-danger');
+                    }
+                });
+            });
         });
     </script>
 @endsection
