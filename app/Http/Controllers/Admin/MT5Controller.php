@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class MT5Controller extends Controller
 {
