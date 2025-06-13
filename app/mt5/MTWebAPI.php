@@ -806,4 +806,35 @@ class MTWebAPI
     {
     MTLogger::setWriteDebug($is_write);
     }
+
+
+    /**
+     * Send a trade request to the MT5 server
+     *
+     * @param string $account_code MT5 account identifier
+     * @param array $trade_request Trade request parameters
+     * @param array &$trade_result Output array for trade result
+     * @return int Error code (0 for success)
+     */
+
+
+    public function TradeRequest($trade_request, &$trade_result)
+    {
+        $mt_trade = new MTTradeProtocol($this->m_connect);
+
+
+        // Perform the trade request
+        $result = $mt_trade->Trade($trade_request, $trade_result);
+
+        // Normalize retcode if present
+        if (isset($trade_result['retcode'])) {
+            $trade_result['retcode'] = (int) $trade_result['retcode'];
+        } else {
+            $trade_result['retcode'] = $result;
+        }
+
+        return $result;
+    }
+
+
   }

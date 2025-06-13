@@ -1,6 +1,6 @@
 <?php
 namespace App\MT5;
-
+use Illuminate\Support\Facades\Log;
 class MTTradeProtocol
   {
   private $m_connect; // connection to MT5 server
@@ -93,6 +93,46 @@ class MTTradeProtocol
     //---
     return MTRetCode::MT_RET_OK;
     }
+
+    public function Trade($trade_request, &$trade_answer)
+    {
+        $command = MTProtocolConsts::WEB_CMD_TRADE_REQUEST;
+        $answer = null;
+
+        // Encode the trade request
+        $body = $trade_request;
+
+        // Send the trade request
+        $result = $this->m_connect->Send($command, $body);
+        Log::info("result: {$result}");
+        if ($result != MTRetCode::MT_RET_OK) {
+            Log::error("Failed to send trade request. Error: " . MTRetCode::GetError($result));
+            return $result;
+        }
+        Log::info("TradeRequest sent successfully.");
+
+        // Read the response
+        $result = $this->m_connect->ReadAnswer($command, $answer);
+        if ($result != MTRetCode::MT_RET_OK) {
+            Log::error("Failed to read trade response. Error: " . MTRetCode::GetError($result));
+            return $result;
+        }
+        Log::info("TradeRequest response read successfully.");
+
+        // Decode the answer body
+        if (!isset($answer->Answer)) {
+            Log::error("Invalid trade response. 'Answer' field missing.");
+            return MTRetCode::MT_RET_ERR_DATA;
+        }
+
+        $trade_answer = MTJson::Decode($answer->Answer);
+        Log::info("TradeRequest answer decoded: " . json_encode($trade_answer));
+
+        Log::info("TradeRequest completed successfully.");
+        return MTRetCode::MT_RET_OK;
+    }
+
+
   }
 
 /**

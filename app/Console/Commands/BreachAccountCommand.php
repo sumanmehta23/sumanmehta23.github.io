@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
-use App\MT5\MTEnOrderAction;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnUsersRights;
@@ -36,7 +35,10 @@ class BreachAccountCommand extends Command
         $api = $this->api;
         $settings = settings();
 
+        Log::info('Starting breach account command');
+
         if (!$api->IsConnected()) {
+            Log::info('MT5 API not connected. Attempting to connect...');
             $error_code = $api->Connect(
                 $settings['mt5_server_ip'],
                 $settings['mt5_server_port'],
@@ -49,6 +51,8 @@ class BreachAccountCommand extends Command
                 Log::error("Failed to connect to MT5 server: " . MTRetCode::GetError($error_code));
                 return;
             }
+
+            Log::info('Connected to MT5 API successfully.');
         }
 
         try {
@@ -71,16 +75,72 @@ class BreachAccountCommand extends Command
                 })
                 ->get();
 
+            Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
+
             foreach ($expiredAccounts as $account) {
                 DB::beginTransaction();
 
                 try {
+                    Log::info("Processing account {$account->code}");
+
                     // Get MT5 user
                     $mt5_user = null;
                     $error_code = $api->UserGet($account->code, $mt5_user);
                     if ($error_code != MTRetCode::MT_RET_OK || !$mt5_user) {
                         Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                        DB::rollBack();
                         continue;
+                    }
+
+                    Log::info("MT5 user {$account->code} retrieved successfully.");
+
+                    // Get and close open positions
+                    if (($error_code = $this->api->PositionGetTotal($account->code, $total)) != MTRetCode::MT_RET_OK) {
+                        Log::error("Failed to get total positions for account {$account->code}: " . MTRetCode::GetError($error_code));
+                        DB::rollBack();
+                        continue;
+                    }
+
+                    $offset = 0;
+                    $positions = [];
+                    if (($error_code = $this->api->PositionGetPage($account->code, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
+                        Log::error("Failed to fetch positions for account {$account->code}: " . MTRetCode::GetError($error_code));
+                        DB::rollBack();
+                        continue;
+                    }
+
+                    Log::info("Found {$total} open positions for account {$account->code}");
+
+                    foreach ($positions as $position) {
+                        // dd($position);
+                        // Determine opposite order type for closing:
+                        // BUY positions need SELL to close and vice versa
+                        $oppositeType = $position->Action === 0 ? 1 : 0; // 0=BUY, 1=SELL (Confirm with your MT5 API)
+
+                        $trade_request = [
+                            'LOGIN'     => (int) $account->code,
+                            'ACTION'    => 1, // Close order
+                            'POSITION'  => $position->Position, // Position ticket to close
+                            'SYMBOL'    => $position->Symbol,   // Symbol of the position
+                            'VOLUME'    => $position->Volume,   // Volume to close
+                            'TYPE'      => $oppositeType,       // SELL if BUY, BUY if SELL
+                            'COMMENT'   => 'Competition Ended', // Custom comment
+                        ];
+
+                        $trade_result = [];
+                        $error_code = $this->api->TradeRequest($trade_request, $trade_result);
+
+                        if ($error_code != MTRetCode::MT_RET_OK) {
+                            Log::error("TradeRequest API error for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($error_code));
+                            continue;
+                        }
+
+                        if ($trade_result['retcode'] != MTRetCode::MT_RET_OK) {
+                            Log::error("Trade execution failed for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($trade_result['retcode']));
+                            continue;
+                        }
+
+                        Log::info("Position {$position->Position} closed successfully for account {$account->code}");
                     }
 
                     // Disable trading rights
@@ -90,41 +150,11 @@ class BreachAccountCommand extends Command
 
                     if ($error_code != MTRetCode::MT_RET_OK) {
                         Log::error("Failed to update MT5 user rights for account {$account->code}: " . MTRetCode::GetError($error_code));
+                        DB::rollBack();
                         continue;
                     }
 
-                    // Close all open positions
-                    if (($error_code = $this->api->PositionGetTotal($account->code, $total)) != MTRetCode::MT_RET_OK) {
-                        session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code));
-                    }
-                    $offset = 0;
-                    $positions = [];
-                    if (($error_code = $this->api->PositionGetPage($account->code, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
-                        session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code));
-                    }
-
-                    if ($error_code == MTRetCode::MT_RET_OK && $positions) {
-                        foreach ($positions as $position) {
-                            // Close position by creating opposite order
-                            $closeOrder = [
-                                'Login'     => $account->code,
-                                'Symbol'    => $position->Symbol,
-                                'Action'    => MTEnOrderAction::ORDER_EXECUTE,
-                                'Volume'    => $position->Volume,
-                                'Type'      => $position->Type == \MTEnOrderType::ORDER_BUY ? \MTEnOrderType::ORDER_SELL : \MTEnOrderType::ORDER_BUY,
-                                'Position'  => $position->Position,
-                            ];
-
-                            $result = null;
-                            $error_code = $api->TradeTransaction($closeOrder, $result);
-
-                            if ($error_code != MTRetCode::MT_RET_OK) {
-                                Log::error("Failed to close position {$position->Position} for account {$account->code}: " . MTRetCode::GetError($error_code));
-                            } else {
-                                Log::info("Closed position {$position->Position} for account {$account->code}");
-                            }
-                        }
-                    }
+                    Log::info("Trading disabled for MT5 account {$account->code}");
 
                     // Update database record
                     $account->update([
@@ -134,6 +164,8 @@ class BreachAccountCommand extends Command
                         'balance' => 0
                     ]);
 
+                    Log::info("Account {$account->code} updated in database as breached.");
+
                     // Send notification email
                     $this->mailService->sendBreachNotification($account->user, [
                         'account_number' => $account->code,
@@ -142,28 +174,22 @@ class BreachAccountCommand extends Command
                         'competition_year' => $account->competition_year
                     ]);
 
-                    Log::info('Competition account breached', [
-                        'account_id' => $account->id,
-                        'user_id' => $account->user_id,
-                        'mt5_code' => $account->code,
-                        'competition_month' => $account->competition_month,
-                        'competition_year' => $account->competition_year
-                    ]);
+                    Log::info("Breach notification email sent to user {$account->user_id} for account {$account->code}");
 
                     DB::commit();
-                    $this->info("Successfully breached account {$account->code}");
+                    Log::info("Successfully breached account {$account->code}");
 
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    Log::error("Failed to breach account {$account->code}: " . $e->getMessage());
+                    Log::error("Exception while breaching account {$account->code}: {$e->getMessage()}");
                     continue;
                 }
             }
 
-            $this->info("Competition account breach process completed");
+            Log::info("Competition account breach process completed.");
 
         } catch (\Exception $e) {
-            Log::error('Error in breaching competition accounts: ' . $e->getMessage());
+            Log::error('Fatal error in breaching competition accounts: ' . $e->getMessage());
             $this->error('Failed to breach competition accounts: ' . $e->getMessage());
         }
     }

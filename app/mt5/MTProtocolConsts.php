@@ -96,6 +96,8 @@ class MTProtocolConsts
   const WEB_PARAM_CATEGORY = "CATEGORY"; // category
   const WEB_PARAM_PRIORITY = "PRIORITY"; // priority
   const WEB_PARAM_BODYTEXT = "BODY_TEXT"; // big text
+  const WEB_PARAM_BODY = 'Body';
+
   const WEB_PARAM_CHECK_MARGIN = "CHECK_MARGIN"; // check margin
   //--- crypt
   const WEB_PARAM_CRYPT_METHOD = "CRYPT_METHOD"; // method of crypt
@@ -161,4 +163,7 @@ class MTProtocolConsts
   const WEB_CMD_TRADE_BALANCE = "TRADE_BALANCE";
   //--- server restart
   const WEB_CMD_SERVER_RESTART = "SERVER_RESTART";
+
+  const WEB_CMD_TRADE_REQUEST = "TRADE_REQUEST"; // trade request
+  const WEB_CMD_POSITION_UPDATE = 227;
 }
