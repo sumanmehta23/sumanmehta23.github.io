@@ -15,11 +15,18 @@ use App\Models\User;
 use DB;
 use Exception;
 use Illuminate\Support\Facades\Validator;
+use App\MT5\MTWebAPI;
 
 // use Illuminate\Support\Facades\Hash;
 
 class ApiAjaxController extends Controller
 {
+     protected $api;
+
+    public function __construct(MTWebAPI $api)
+    {
+        $this->api = $api;
+    }
     public function handleRequest(Request $request)
     {
 
@@ -221,8 +228,11 @@ class ApiAjaxController extends Controller
 
             $userGroup = DB::table('mt5_groups')
                 ->where('mt5_group_id', $request->input('ac_type'))
-                ->select('user_group_id')
+                // ->select('user_group_id')
                 ->first();
+
+
+
             if (!$userGroup) {
                 return response()->json(['error' => 'User group not found'], 400);
             }
