@@ -441,9 +441,6 @@ class Transaction extends Controller
             }else{
                 $client_wallet='';
             }
-            // if($details->email == 'yunusasani407@gmail.com'){
-            //     dd($details);
-            // }
 
             return view('admin.trading_withdrawal_details', compact('details','client_wallet'));
         }

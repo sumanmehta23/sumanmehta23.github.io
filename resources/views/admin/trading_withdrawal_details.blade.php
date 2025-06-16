@@ -10,6 +10,11 @@
                 </ol>
             </div>
         </div>
+        @php
+            if($details->email == 'yunusasani407@gmail.com'){
+                dd($details);
+            }
+        @endphp
         @if (isset($details) && !empty($details))
             <div class="row">
                 <div class="col-10 mx-auto">
