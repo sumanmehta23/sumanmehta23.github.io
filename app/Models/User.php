@@ -402,7 +402,7 @@ class User extends Authenticatable
     public function getTotalBonusAttribute()
     {
         return $this->accounts->sum(function ($account) {
-            return $account->BonusTransaction->sum('bonus_amount');
+            return $account->BonusTransaction ? $account->BonusTransaction->sum('bonus_amount'):'';
         });
     }
 }
