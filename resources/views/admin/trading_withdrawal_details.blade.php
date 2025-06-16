@@ -25,17 +25,17 @@
                                             <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $details->user_id) }}'
                                                 style="width:50px">
                                         </div>
-                                        @php
+                                        {{-- @php
                                             if($details->email == 'yunusasani407@gmail.com'){
                                                 dd($details->user);
                                             }
-                                        @endphp
+                                        @endphp --}}
 
                                         <div class="user-wrap">
                                             <h4 class="fw-normal d-flex align-items-center">
                                                 {{ $details->user->fullname }}
                                                 <span class="badge bg-success text-white ms-2">
-                                                    Wallet balance: ${{ number_format($details->user->wallet_balance, 2) }}
+                                                    Wallet balance: ${{ number_format($details->user->wallet_balance?$details->user->wallet_balance:'', 2) }}
                                                 </span>
                                                 @if($details->user->total_bonus)
                                                     <span class="badge bg-success text-white ms-2">
