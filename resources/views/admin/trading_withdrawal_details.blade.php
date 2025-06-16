@@ -12,6 +12,11 @@
         </div>
 
         @if (isset($details) && !empty($details))
+        @php
+                                    if($details->email == 'yunusasani407@gmail.com'){
+                                        dd($details);
+                                    }
+                                @endphp
             <div class="row">
                 <div class="col-10 mx-auto">
                     <div class="card custom-card">
@@ -41,11 +46,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                @php
-                                    if($details->email == 'yunusasani407@gmail.com'){
-                                        dd($details);
-                                    }
-                                @endphp
+
                                 <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
