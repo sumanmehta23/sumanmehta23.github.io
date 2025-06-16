@@ -27,8 +27,7 @@
                                         </div>
                                         @php
                                             if($details->email == 'yunusasani407@gmail.com'){
-                                                dump($details->user->wallet_balance);
-                                                dd($details->user->total_bonus);
+                                                dd($details->user->TotalBonus);
                                             }
                                         @endphp
 
