@@ -25,6 +25,11 @@
                                             <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $details->user_id) }}'
                                                 style="width:50px">
                                         </div>
+                                        @php
+                                            if($details->email == 'yunusasani407@gmail.com'){
+                                                dd($details->user);
+                                            }
+                                        @endphp
 
                                         <div class="user-wrap">
                                             <h4 class="fw-normal d-flex align-items-center">
@@ -38,11 +43,7 @@
                                                     </span>
                                                 @endif
                                             </h4>
-                                            @php
-                                                if($details->email == 'yunusasani407@gmail.com'){
-                                                    dd($details);
-                                                }
-                                            @endphp
+
 
                                             <h6 class="mb-3 text-muted fw-normal cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')">{{ $details->email }}</h6>
                                         </div>
