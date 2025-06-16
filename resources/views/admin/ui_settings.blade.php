@@ -184,7 +184,10 @@
             </div>
           <div class="col-lg-4 col-sm-12">
                  @include('admin.payment_gateways_setting')
-            </div>
+          </div>
+          <div class="col-lg-4 col-sm-12">
+                 @include('admin.toggle_group_code')
+          </div>
         </div>
     </div>
 @endSection

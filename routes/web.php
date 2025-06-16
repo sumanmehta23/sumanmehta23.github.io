@@ -456,6 +456,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             ->name('payment-gateways.update')
             ->middleware('check.permissions:setting:update');
 
+        Route::post('/toggle_group_code/update', [SettingsController::class, 'toggleGroupCode'])
+            ->name('toggle_group_code.update')
+            ->middleware('check.permissions:setting:update');
+
         Route::prefix('/logs')->group(function () {
             Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
         });

@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('telescope:prune')->daily();
         $schedule->command('app:sync-account-trades')->everyTwoHours();
         $schedule->command('app:update-price-snapshots')->hourly();
+        $schedule->command('app:alter-group-codes')->hourly();
     }
 
     /**

@@ -691,21 +691,25 @@ class SettingsController extends Controller
             'Content-Disposition' => "attachment; filename={$filename}",
         ]);
     }
-    
+
     public function updatePaymentGateways(Request $request)
-{
-    $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
+    {
+        $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
 
-    foreach ($gateways as $gateway) {
-        $value = $request->has($gateway) ? '1' : '0';
+        foreach ($gateways as $gateway) {
+            $value = $request->has($gateway) ? '1' : '0';
 
-         Setting::updateOrCreate(
-                ['name' => $gateway],
-                ['value' => $value, 'updated_at' => now()]
-            );
+            Setting::updateOrCreate(
+                    ['name' => $gateway],
+                    ['value' => $value, 'updated_at' => now()]
+                );
+        }
+
+        return redirect()->back()->with('success', 'Payment gateway settings updated!');
     }
 
-    return redirect()->back()->with('success', 'Payment gateway settings updated!');
-}
+    public function toggleGroupCode(Request $request){
+
+    }
 
 }
