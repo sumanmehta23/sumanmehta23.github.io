@@ -713,7 +713,7 @@ class SettingsController extends Controller
     {
         $groupCode = $request->input('group_code');
 
-        if (!in_array($groupCode, ['a_book', 'b_book'])) {
+        if (!in_array($groupCode, ['A-Book', 'B-Book'])) {
             return redirect()->back()->with('error', 'Invalid group code selected.');
         }
 

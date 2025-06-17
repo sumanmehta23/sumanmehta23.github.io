@@ -56,11 +56,11 @@
         if (isEnabled) {
             statusBadge.textContent = 'B-Book';
             statusBadge.className = 'badge bg-success';
-            groupCodeInput.value = 'b_book';
+            groupCodeInput.value = 'B-Book';
         } else {
             statusBadge.textContent = 'A-Book';
             statusBadge.className = 'badge bg-secondary';
-            groupCodeInput.value = 'a_book';
+            groupCodeInput.value = 'A-Book';
         }
     }
 
