@@ -55,7 +55,11 @@
                                                 <div class="card-body">
                                                     <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
                                                     <div class="row g-1">
+
                                                         @foreach ($liveaccount_details as $liveaccount)
+                                                            @if ($liveaccount->email == 'startobe2234@gmail.com')
+                                                                {{ dd($liveaccount) }}
+                                                            @endif
                                                             <div class="col-md-3 col-lg-4 col-xl-4">
                                                                 <div class="border rounded address-check">
                                                                     <div class="form-check paycard">
