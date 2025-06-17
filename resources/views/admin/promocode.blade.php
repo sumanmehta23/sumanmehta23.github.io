@@ -92,7 +92,7 @@
                                         <label class="form-label">Max Deposit</label>
                                     </div>
                                     <div class="col-lg-8">
-                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01">
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
@@ -152,7 +152,7 @@
                                         <label class="form-label">Max Deposit</label>
                                     </div>
                                     <div class="col-lg-8">
-                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01" required>
+                                        <input type="number" class="form-control" name="max_deposit" min="0" max="1000000000000" step="0.01">
                                     </div>
                                 </div>
                                 <div class="mb-3 row">

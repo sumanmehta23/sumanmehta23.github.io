@@ -123,7 +123,7 @@ class MT5Controller extends Controller
         $validator = Validator::make($request->all(), [
             'promo_code' => 'required|string|unique:promocode,code,' . $id,
             'promo_percentage' => 'required|numeric|min:0|max:100',
-            'max_deposit' => 'required',
+            // 'max_deposit' => 'required',
             'promo_status' => 'required|boolean', // Updated to accept boolean value
         ]);
 
@@ -138,7 +138,7 @@ class MT5Controller extends Controller
         $promocode->code = $request->promo_code;
         $promocode->promo_percentage = $request->promo_percentage;
         $promocode->status = (bool)$request->promo_status;
-        $promocode->max_deposit = $request->max_deposit;
+        $promocode->max_deposit = $request->max_deposit ?? '';
         $promocode->save();
         return response()->json([
             'success' => true,
@@ -155,7 +155,7 @@ class MT5Controller extends Controller
                 Rule::unique('promocode', 'code')->whereNull('deleted_at'),
             ],
             'promo_percentage' => 'required|numeric|min:1|max:100',
-            'max_deposit' => 'required',
+            // 'max_deposit' => 'required',
             'promo_status'     => 'required|boolean',
         ]);
 
@@ -164,7 +164,7 @@ class MT5Controller extends Controller
                 'code'             => $request->promo_code,
                 'promo_percentage' => $request->promo_percentage,
                 'status'           => $request->promo_status,
-                'max_deposit'      => $request->max_deposit,
+                'max_deposit'      => $request->max_deposit ?? '',
             ]);
 
             return response()->json([
