@@ -12,6 +12,7 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Response;
@@ -708,8 +709,19 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Payment gateway settings updated!');
     }
 
-    public function toggleGroupCode(Request $request){
+    public function toggleGroupCode(Request $request)
+    {
+        $groupCode = $request->input('group_code');
 
+        if (!in_array($groupCode, ['a_book', 'b_book'])) {
+            return redirect()->back()->with('error', 'Invalid group code selected.');
+        }
+
+        // ✅ Pass as option with -- syntax
+        Artisan::call("app:alter-group-codes --group_code={$groupCode}");
+
+        return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
     }
+
 
 }

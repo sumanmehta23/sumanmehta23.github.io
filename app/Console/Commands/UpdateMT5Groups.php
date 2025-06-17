@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Log;
 
 class UpdateMT5Groups extends Command
 {
-    protected $signature = 'app:alter-group-codes';
+    // protected $signature = 'app:alter-group-codes';
+    protected $signature = 'app:alter-group-codes {--group_code=}';
+
     protected $description = 'Toggle MT5 Group codes from A-Book To B-Book';
 
     protected $api;
@@ -34,13 +36,14 @@ class UpdateMT5Groups extends Command
 
     public function handle()
     {
+        $selectedGroupCode = $this->option('group_code');
         $batchSize = 50;
         $total = Account::with('accountType')
                 ->whereHas('accountType', function ($query) {
                     $query->where('ac_group', 'like', '%Book%');
                 })
                 ->count();
-
+        dd($selectedGroupCode);
         $this->info("Total accounts to process: {$total}");
 
         Log::info("Starting batch update of MT5 groups for {$total} accounts...");
@@ -74,7 +77,7 @@ class UpdateMT5Groups extends Command
 
                         if ($account->accountType && $groupCode) {
 
-                            if (str_contains($groupCode, 'B-Book')) {
+                            if (str_contains($selectedGroupCode, 'B-Book')) {
                                 $groupCode = str_replace('B-Book', 'A-Book', $groupCode);
                                 $groupCode = preg_replace('/-B($|\\\)/', '-A$1', $groupCode);
                             } elseif (str_contains($groupCode, 'A-Book')) {

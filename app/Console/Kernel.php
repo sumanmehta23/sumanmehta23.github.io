@@ -16,7 +16,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('telescope:prune')->daily();
         $schedule->command('app:sync-account-trades')->everyTwoHours();
         $schedule->command('app:update-price-snapshots')->hourly();
-        $schedule->command('app:alter-group-codes')->hourly();
+        // $schedule->command('app:alter-group-codes --group_code=a_book')->hourlyAt(0);
+        // $schedule->command('app:alter-group-codes --group_code=b_book')->hourlyAt(30);
     }
 
     /**
