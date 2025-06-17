@@ -12,6 +12,7 @@ use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Response;
@@ -690,21 +691,36 @@ class SettingsController extends Controller
             'Content-Disposition' => "attachment; filename={$filename}",
         ]);
     }
-    
+
     public function updatePaymentGateways(Request $request)
-{
-    $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
+    {
+        $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
 
-    foreach ($gateways as $gateway) {
-        $value = $request->has($gateway) ? '1' : '0';
+        foreach ($gateways as $gateway) {
+            $value = $request->has($gateway) ? '1' : '0';
 
-         Setting::updateOrCreate(
-                ['name' => $gateway],
-                ['value' => $value, 'updated_at' => now()]
-            );
+            Setting::updateOrCreate(
+                    ['name' => $gateway],
+                    ['value' => $value, 'updated_at' => now()]
+                );
+        }
+
+        return redirect()->back()->with('success', 'Payment gateway settings updated!');
     }
 
-    return redirect()->back()->with('success', 'Payment gateway settings updated!');
-}
+    public function toggleGroupCode(Request $request)
+    {
+        $groupCode = $request->input('group_code');
+
+        if (!in_array($groupCode, ['A-Book', 'B-Book'])) {
+            return redirect()->back()->with('error', 'Invalid group code selected.');
+        }
+
+        // ✅ Pass as option with -- syntax
+        Artisan::call("app:alter-group-codes --group_code={$groupCode}");
+
+        return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
+    }
+
 
 }

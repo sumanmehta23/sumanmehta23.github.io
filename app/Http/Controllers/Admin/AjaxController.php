@@ -3139,6 +3139,9 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
+                ->addColumn('phone_number', function ($row) {
+                    return $row->user->number;
+                })
 
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status', 'date'])
 

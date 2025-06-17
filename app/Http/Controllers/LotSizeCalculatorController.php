@@ -27,6 +27,7 @@ class LotSizeCalculatorController extends Controller
             ], 422);
         }
 
+        
         $sym = request('sym');
         $accSize = request('accSize');
         $rr = request('rr');
@@ -153,7 +154,6 @@ class LotSizeCalculatorController extends Controller
             $query->where('component1', $currency)->where('component2', 'USD')
                 ->orWhere('component1', 'USD')->where('component2', $currency);
         })->first();
-
         if ($usdPair && $usdPair->Price > 0) {
             if ($usdPair->component2 === 'USD') {
                 // e.g., CADUSD
@@ -173,7 +173,6 @@ class LotSizeCalculatorController extends Controller
 
         $url = "https://api.1forge.com/convert?from={$currency}&to=USD&quantity={$amount}&api_key={$apiKey}";
         $response = @file_get_contents($url);
-
         if ($response) {
             $data = json_decode($response);
             if (isset($data->value) && is_numeric($data->value) && $data->value > 0) {

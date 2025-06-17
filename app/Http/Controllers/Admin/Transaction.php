@@ -441,6 +441,7 @@ class Transaction extends Controller
             }else{
                 $client_wallet='';
             }
+
             return view('admin.trading_withdrawal_details', compact('details','client_wallet'));
         }
     }

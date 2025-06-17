@@ -53,7 +53,7 @@ class UserResource extends JsonResource
 
         return [
             'user_id' => $this->id, // Mandatory
-            // 'user_additional_id' => $this->email, // Optional, using email as additional ID
+            'user_additional_id' => $this->email, // Optional, using email as additional ID
             'cxd' => $request->query('cxd'), // Mandatory, getting from the query string
             'aff_id' => $this->ib1, // Optional
             'status' => $this->status, // Optional

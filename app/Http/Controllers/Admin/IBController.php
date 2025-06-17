@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use Exception;
+use Carbon\Carbon;
+use App\Models\Ib1;
 use App\Models\IbCategory;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
@@ -10,6 +12,9 @@ use App\Models\IbPlanDetails;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\IbUsersExport;
 
 class IBController extends Controller
 {
@@ -340,5 +345,10 @@ class IBController extends Controller
             'planId' => $planId,
             'accType' => $accType,
         ]);
+    }
+
+    public function exportAllIbUsers(Request $request)
+    {
+        return Excel::download(new IbUsersExport, 'IB_List_' . date('Y-m-d') . '.xlsx');
     }
 }
