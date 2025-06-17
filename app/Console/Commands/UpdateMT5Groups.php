@@ -109,7 +109,7 @@ class UpdateMT5Groups extends Command
                             $accountType = AccountType::where('ac_group', $newGroup)->first();
 
                             if ($accountType) {
-                                DB::table('accounts')->where('id', $account->id)->update([
+                                Account::where('id', $account->id)->update([
                                     'mt5groupcode' => $newGroup,
                                     'account_type_id' => $accountType->id
                                 ]);
