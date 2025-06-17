@@ -466,10 +466,11 @@ if ($getUser) {
                                                             <label for="">Group</label>
                                                             <select class="form-control acc-types" name="account_type"
                                                                 required id="account_type">
+
                                                                 <?php foreach ($account_types as $grp) { ?>
-                                                                <option value="<?= $grp->id ?>"
-                                                                    <?= $getUser->account_type_id == $grp->id ? 'selected' : '' ?>>
-                                                                    <strong><?= $grp->ac_name . '</strong> [ ' . $grp->ac_group . ' ]' ?>
+                                                                <option value="{{ $grp->id }}"
+                                                                    {{ $grp->id == $getUser->account_type_id ? 'selected' : '' }}>
+                                                                    <strong>{{ $grp->ac_name }}</strong> [ {{ $grp->ac_group }} ]
                                                                 </option>
                                                                 <?php } ?>
                                                             </select>
