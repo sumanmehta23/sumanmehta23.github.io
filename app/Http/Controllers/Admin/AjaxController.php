@@ -3947,7 +3947,7 @@ class AjaxController extends Controller
 
     public function getRequestedCompetitionList(Request $request)
     {
-        dump( session('userData'));
+        // dump( session('userData'));
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $userGroups = explode(',', session('user_groups'));
