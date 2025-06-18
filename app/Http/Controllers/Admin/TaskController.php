@@ -86,15 +86,16 @@ class TaskController extends Controller
 
     public function uploadScreenshot(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
-            'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'screenshot' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048'
+        ], [
+            'screenshot.mimes' => 'Upload failed: Only JPG, PNG, and WEBP formats are supported.'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => $validator->errors()->first('screenshot') ?? 'Validation failed',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -102,7 +103,7 @@ class TaskController extends Controller
         $task = Task::findOrFail($request->task_id);
 
         $path = $request->file('screenshot')->store('screenshots', 'public');
-        // dd($request->task_id);
+
         $clientTask = ClientTask::where('user_id', auth()->id())
             ->where('task_id', $task->id)
             ->first();
