@@ -133,7 +133,7 @@
                                             <div class="col-3"></div>
                                             <div class="col-9">
                                                 <div class="d-grid gap-2 mt-2">
-                                                    <button class="btn btn-lg btn-primary" value="Live Account Creation"
+                                                    <button class="btn btn-lg btn-primary" value="Competition Creation"
                                                         name="a[register]" type="submit"><i class="ti ti-plus me-2"></i>
                                                         Create Account</button>
                                                 </div>
@@ -145,7 +145,7 @@
                                                 <div class="d-grid gap-2 w-100 mt-2">
                                                     <a href="#" class="w-100 contactus-btn">
                                                         <button class="btn btn-lg w-100 btn-primary"
-                                                            value="Live Account Creation" type="button"><i
+                                                            value="Competition Creation" type="button"><i
                                                                 class="ti ti-headset me-2"></i> Contact Us</button>
                                                     </a>
                                                 </div>

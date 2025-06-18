@@ -124,6 +124,7 @@ class CompetitionController extends Controller
 
     public function createCompetition(Request $request)
     {
+
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 1)) {
@@ -149,26 +150,31 @@ class CompetitionController extends Controller
         $referral=$user->referral;
         $ib=$user->ib1;
         $account_type_id = $validatedData['options'];
+
         //wealthytrades
-        if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
-            $groupCode = str_replace("DF","SNSI",$group->ac_group);
-            $group = AccountType::where('ac_group', $groupCode)->first();
+        // if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
+        //     dd('$referral');
+        //     $groupCode = str_replace("DF","SNSI",$group->ac_group);
+        //     $group = AccountType::where('ac_group', $groupCode)->first();
 
-            if($group){
-                $_POST["options"] =$group->id;
-                $account_type_id = $group->id;
-            }
-        }elseif((strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
-            $groupCode = str_replace("DF","ALEX",$group->ac_group);
-            $group = AccountType::where('ac_group', $groupCode)->first();
-            if($group){
-                $_POST["options"] =$group->id;
-                $account_type_id = $group->id;
-            }
+        //     if($group){
+        //         $_POST["options"] =$group->id;
+        //         $account_type_id = $group->id;
+        //     }
+        // }elseif((strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
+        //     dd('gfsd');
+        //     $groupCode = str_replace("DF","ALEX",$group->ac_group);
+        //     $group = AccountType::where('ac_group', $groupCode)->first();
+        //     if($group){
+        //         $_POST["options"] =$group->id;
+        //         $account_type_id = $group->id;
+        //     }
 
-        }else{
-            $groupCode = $group->ac_group;
-        }
+        // }else{
+        //     $groupCode = $group->ac_group;
+        // }
+
+
 
         $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
@@ -181,6 +187,8 @@ class CompetitionController extends Controller
             ->where('competition_year',$currentYear)
             ->where('demo', true)
             ->first();
+
+
 
         if ($existingCompetition) {
             return redirect()->back()->with('error', 'Competition already purchased for next month.');
