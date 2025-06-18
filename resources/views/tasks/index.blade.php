@@ -203,7 +203,7 @@
                                         @endphp
                                         <div class="d-flex flex-column align-items-end ms-auto tasks">
                                             <h5 class="m-4 {{ $statusClass[$clientTask->status] ?? 'text-muted' }}">
-                                                {{ $statusText[$clientTask->status] ?? 'Unknown' }}
+                                                {{ ($statusText[$clientTask->status] == 'Approved' ? $clientTask->remark : $statusText[$clientTask->status] )?? 'Unknown' }}
                                             </h5>
                                         </div>
                                     @endif

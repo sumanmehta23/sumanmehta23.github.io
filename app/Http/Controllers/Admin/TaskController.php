@@ -144,9 +144,17 @@ class TaskController extends Controller
         // Update the task status
         $task = ClientTask::with('task')->findOrFail($taskId);
 
-        $account = Account::where('user_id', $clientId)->whereHas('accountType', function ($query) {
-            $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
-        })->first();
+        // $account = Account::where('user_id', $clientId)->whereHas('accountType', function ($query) {
+        //     $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
+        // })->first();
+        $accounts = Account::where('user_id', $clientId)
+                            ->whereHas('accountType', function ($query) {
+                                $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
+                            })
+                            ->get();
+        if ($accounts->isEmpty()) {
+            return redirect()->back()->with('error', 'No valid accounts found for this user.');
+        }
 
         $settings = settings();
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -172,21 +180,65 @@ class TaskController extends Controller
         // Now $task is the updated model instance
         // dd($task);
         if($task->status==1){
-            if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $task->task->points, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-            } else {
-                $deposit_details = BonusTransaction::create([
-                    'email' => $account->email,
-                    'user_id' => $clientId,
-                    'account_id' => $account->id,
-                    'code' => $account->code,
-                    'bonus_amount' => $task->task->points,
-                    'bonus_type' => $comment,
-                    'status' => 1,
-                    'admin_remark' => $comment,
-                    'bonus_currency' => 'USD'
-                ]);
+            // if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $task->task->points, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+            //     return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+            // } else {
+
+            //     $task->account = $account->code;
+            //     $task->remark = 'Approved: $'. $task->task->points . 'credited to '.$account->code.'.';
+            //     $task->save();
+
+            //     $deposit_details = BonusTransaction::create([
+            //         'email' => $account->email,
+            //         'user_id' => $clientId,
+            //         'account_id' => $account->id,
+            //         'code' => $account->code,
+            //         'bonus_amount' => $task->task->points,
+            //         'bonus_type' => $comment,
+            //         'status' => 1,
+            //         'admin_remark' => $comment,
+            //         'bonus_currency' => 'USD'
+            //     ]);
+            // }
+            foreach ($accounts as $acc) {
+                $ticket = null;
+                $errorCode = $this->api->TradeBalance(
+                    $acc->code,
+                    MTEnDealAction::DEAL_BONUS,
+                    $task->task->points,
+                    $comment,
+                    $ticket,
+                    true
+                );
+
+                if ($errorCode === MTRetCode::MT_RET_OK) {
+                    // Successful trade bonus on this account
+                    $task->account = $acc->code;
+                    $task->remark = 'Approved: $' . $task->task->points . ' credited to ' . $acc->code . '.';
+                    $task->save();
+
+                    BonusTransaction::create([
+                        'email'           => $acc->email,
+                        'user_id'         => $clientId,
+                        'account_id'      => $acc->id,
+                        'code'            => $acc->code,
+                        'bonus_amount'    => $task->task->points,
+                        'bonus_type'      => $comment,
+                        'status'          => 1,
+                        'admin_remark'    => $comment,
+                        'bonus_currency'  => 'USD',
+                    ]);
+
+                    $success = true;
+                    break; // Stop after successful transaction
+                } else {
+                    $errorMessage = MTRetCode::GetError($errorCode);
+                    // Continue trying with next account
+                }
             }
+        }
+        if (! $success) {
+            return redirect()->back()->with('error', 'Failed to apply bonus to any account. Last error: ' . $errorMessage);
         }
         // Optional: Add a success flash message
         return redirect()->back()->with('success', 'Task status updated successfully.');
