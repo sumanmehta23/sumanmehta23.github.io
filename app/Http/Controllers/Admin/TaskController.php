@@ -144,8 +144,6 @@ class TaskController extends Controller
         // Update the task status
         $task = ClientTask::with('task')->findOrFail($taskId);
 
-
-
         $account = Account::where('user_id', $clientId)->whereHas('accountType', function ($query) {
             $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
         })->first();
@@ -164,6 +162,11 @@ class TaskController extends Controller
         // Update its status
 
         $task->status = $status;
+        if($status == 2){
+           $task->image_path = '';
+           $task->client_verification = 0;
+        }
+
         $task->save();
 
         // Now $task is the updated model instance
