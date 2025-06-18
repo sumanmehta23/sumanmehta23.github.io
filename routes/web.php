@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Admin\Login;
-use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\MT5Accounts;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -37,10 +36,14 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\InternalTransfer;
 use EonVisualMedia\LaravelKlaviyo\Klaviyo;
+use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\IBController;
+use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\MT5Controller;
 use App\Http\Controllers\Admin\AjaxController;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\ClientTaskController;
 use function PHPUnit\Framework\throwException;
 use App\Http\Controllers\Admin\StaffManagement;
 use App\Http\Controllers\CompetitionController;
@@ -55,8 +58,6 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
-use App\Http\Controllers\Admin\TaskController;
-use App\Http\Controllers\ClientTaskController;
 
 Route::get('/telescope-test', function () {
     Log::info('🛠 Telescope test route hit.');
@@ -392,6 +393,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+
+        Route::resource('groups', ProductsController::class);
+
         Route::get('/competitions/leaderboard', [Leaderboard::class, 'leaderboard'])
             ->name('competitions.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');

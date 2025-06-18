@@ -839,42 +839,42 @@
             });
         });
 
-        $("#groupMgmtCreation,#groupUpdateForm").submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: "/admin/api/ajax",
-                type: "POST",
-                data: $(this).serialize(),
-                beforeSend: function() {
-                    swal.fire({
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        allowEscapeKey: false,
-                        allowOutsideClick: false,
-                        didOpen: function() {
-                            swal.enableLoading();
-                        }
-                    });
-                },
-                success: function(data) {
+        // $("#groupMgmtCreation,#groupUpdateForm").submit(function(e) {
+        //     e.preventDefault();
+        //     $.ajax({
+        //         url: "/admin/api/ajax",
+        //         type: "POST",
+        //         data: $(this).serialize(),
+        //         beforeSend: function() {
+        //             swal.fire({
+        //                 showConfirmButton: false,
+        //                 showCancelButton: false,
+        //                 allowEscapeKey: false,
+        //                 allowOutsideClick: false,
+        //                 didOpen: function() {
+        //                     swal.enableLoading();
+        //                 }
+        //             });
+        //         },
+        //         success: function(data) {
 
-                    if (data == "true" || data.trim() == "true") {
-                        swal.fire({
-                            icon: "success",
-                            title: "Group Successfully Updated"
-                        }).then((val) => {
-                            location.reload();
-                        });
-                    } else {
-                        swal.fire({
-                            icon: "error",
-                            title: "Error:",
-                            text: data
-                        })
-                    }
-                }
-            });
-        });
+        //             if (data == "true" || data.trim() == "true") {
+        //                 swal.fire({
+        //                     icon: "success",
+        //                     title: "Group Successfully Updated"
+        //                 }).then((val) => {
+        //                     location.reload();
+        //                 });
+        //             } else {
+        //                 swal.fire({
+        //                     icon: "error",
+        //                     title: "Error:",
+        //                     text: data
+        //                 })
+        //             }
+        //         }
+        //     });
+        // });
 
         $(".addGrpCat").click(function(e) {
             e.preventDefault();
@@ -931,6 +931,49 @@
 
         $("[name='ac_name'],[name='ac_type'],[name='ac_category'],[name='ac_book_type']").change(function() {
             group_namer();
+        });
+
+
+        $("#groupMgmtCreation,#groupUpdateForm").submit(function(e) {
+
+            var id = $(this).find("[name='id']").val();
+            let url = id ? `{{ route('admin.groups.update', '') }}/${id}` :
+                `{{ route('admin.groups.store') }}`;
+            let method = id ? "PUT" : "POST";
+            e.preventDefault();
+            $.ajax({
+                url: url,
+                type: method,
+                data: $(this).serialize(),
+                beforeSend: function() {
+                    swal.fire({
+                        showConfirmButton: false,
+                        showCancelButton: false,
+                        allowEscapeKey: false,
+                        allowOutsideClick: false,
+                        didOpen: function() {
+                            swal.enableLoading();
+                        }
+                    });
+                },
+                success: function(data) {
+
+                    if (data == "true" || data.trim() == "true") {
+                        swal.fire({
+                            icon: "success",
+                            title: "Group Successfully Updated"
+                        }).then((val) => {
+                            location.reload();
+                        });
+                    } else {
+                        swal.fire({
+                            icon: "error",
+                            title: "Error:",
+                            text: data
+                        })
+                    }
+                }
+            });
         });
     </script>
 @endsection
