@@ -10,7 +10,9 @@
                 </ol>
             </div>
         </div>
+
         @if (isset($details) && !empty($details))
+
             <div class="row">
                 <div class="col-10 mx-auto">
                     <div class="card custom-card">
@@ -23,11 +25,12 @@
                                             <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $details->user_id) }}'
                                                 style="width:50px">
                                         </div>
+
                                         <div class="user-wrap">
                                             <h4 class="fw-normal d-flex align-items-center">
                                                 {{ $details->user->fullname }}
                                                 <span class="badge bg-success text-white ms-2">
-                                                    Wallet balance: ${{ number_format($details->user->wallet_balance, 2) }}
+                                                    Wallet balance: ${{ number_format($details->user->wallet_balance?$details->user->wallet_balance:0, 2) }}
                                                 </span>
                                                 @if($details->user->total_bonus)
                                                     <span class="badge bg-success text-white ms-2">
@@ -40,6 +43,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">

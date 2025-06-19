@@ -60,14 +60,21 @@ class Account extends Model
     }
 
     public function getTotalBonusDepositAttribute()
-{
-    // Sum all bonus amounts where 'admin_remark' is NOT 'Credit' and NOT '10x Trader Leverage'
-    $bonusDeposit = $this->BonusTransaction->filter(function ($transaction) {
-        return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage');
-    })->sum('bonus_amount');
+    {
+        // Sum all bonus amounts where 'admin_remark' is NOT 'Credit' and NOT '10x Trader Leverage'
+        $bonusDeposit = $this->BonusTransaction
+            ? $this->BonusTransaction
+                ->filter(function ($transaction) {
+                    return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage');
+                })
+                ->sum(function ($transaction) {
+                    return (float) $transaction->bonus_amount; // Cast to float to avoid string issues
+                })
+            : 0;
 
-    return $bonusDeposit;
-}
+        return $bonusDeposit;
+    }
+
 
 
 }
