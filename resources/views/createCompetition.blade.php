@@ -38,6 +38,7 @@
                                             </div>
                                             <div class="col-9">
                                                 <div class="row">
+                                                    {{-- {{ dd($results) }} --}}
                                                     @foreach ($results as $i => $acc)
                                                         {{-- {{ dd($acc); }} --}}
                                                         <div class="col-lg-6 col-xl-4 mb-2">

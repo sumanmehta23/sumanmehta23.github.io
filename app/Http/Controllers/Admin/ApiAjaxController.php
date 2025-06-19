@@ -290,38 +290,38 @@ class ApiAjaxController extends Controller
         }
     }
 
-    private function updateGroup($request)
-    {
-        try {
-            $accountType = AccountType::where(DB::raw("(ac_index)"), $request->ac_index)->first();
-            if ($accountType) {
-                $accountType->ac_name = $request->ac_name;
-                $accountType->ac_min_deposit = $request->ac_min_deposit;
-                $accountType->ac_max_leverage = $request->ac_max_leverage;
-                $accountType->ac_swap = $request->ac_swap;
-                $accountType->is_client_group = $request->is_client_group;
-                $accountType->status = $request->status;
-                $accountType->ib_enabled = $request->ib_enabled;
-                $accountType->inquiry_status = $request->inquiry_status;
-                $accountType->display_priority = $request->display_priority ?? 0;
-                $accountType->save();
+    // private function updateGroup($request)
+    // {
+    //     try {
+    //         $accountType = AccountType::where(DB::raw("(ac_index)"), $request->ac_index)->first();
+    //         if ($accountType) {
+    //             $accountType->ac_name = $request->ac_name;
+    //             $accountType->ac_min_deposit = $request->ac_min_deposit;
+    //             $accountType->ac_max_leverage = $request->ac_max_leverage;
+    //             $accountType->ac_swap = $request->ac_swap;
+    //             $accountType->is_client_group = $request->is_client_group;
+    //             $accountType->status = $request->status;
+    //             $accountType->ib_enabled = $request->ib_enabled;
+    //             $accountType->inquiry_status = $request->inquiry_status;
+    //             $accountType->display_priority = $request->display_priority ?? 0;
+    //             $accountType->save();
 
-                Leverage::where('account_type_id', $accountType->ac_index)->delete();
+    //             Leverage::where('account_type_id', $accountType->ac_index)->delete();
 
-                foreach (explode(",", $request->ac_max_leverage) as $lev) {
-                    Leverage::create([
-                        'account_type_id' => $accountType->id,
-                        'account_leverage' => $lev
-                    ]);
-                }
+    //             foreach (explode(",", $request->ac_max_leverage) as $lev) {
+    //                 Leverage::create([
+    //                     'account_type_id' => $accountType->id,
+    //                     'account_leverage' => $lev
+    //                 ]);
+    //             }
 
-                return response()->json('true');
-            }
-            return response()->json(["status" => 'false', "message" => "Group is not Exist"]);
-        } catch (Exception $e) {
-            return response()->json(["status" => 'false', "message" => $e->getMessage()]);
-        }
-    }
+    //             return response()->json('true');
+    //         }
+    //         return response()->json(["status" => 'false', "message" => "Group is not Exist"]);
+    //     } catch (Exception $e) {
+    //         return response()->json(["status" => 'false', "message" => $e->getMessage()]);
+    //     }
+    // }
 
     private function updateIbPlanData($request)
     {

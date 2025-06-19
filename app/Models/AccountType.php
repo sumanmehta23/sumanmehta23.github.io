@@ -10,6 +10,7 @@ class AccountType extends Model
 {
     use HasFactory,HasUuids;
     protected $table = 'account_types';
+     protected $guarded = [];
 
     protected $primaryKey = "id";
     public function mt5Group()

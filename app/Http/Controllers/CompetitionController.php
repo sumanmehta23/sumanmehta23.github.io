@@ -115,7 +115,7 @@ class CompetitionController extends Controller
                 $query->where('mt5_group_type', 'demo');
             })
             ->where('is_client_group', 1)
-            ->where('ac_name', 'Competition')
+            ->where('ac_name','like', '%Competition%')
             ->orderBy('display_priority', 'desc')
             ->get();
 

@@ -937,6 +937,7 @@
         $("#groupMgmtCreation,#groupUpdateForm").submit(function(e) {
 
             var id = $(this).find("[name='id']").val();
+            console.log(id);
             let url = id ? `{{ route('admin.groups.update', '') }}/${id}` :
                 `{{ route('admin.groups.store') }}`;
             let method = id ? "PUT" : "POST";
