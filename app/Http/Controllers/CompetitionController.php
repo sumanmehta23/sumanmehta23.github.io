@@ -151,31 +151,6 @@ class CompetitionController extends Controller
         $ib=$user->ib1;
         $account_type_id = $validatedData['options'];
 
-        //wealthytrades
-        // if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
-        //     dd('$referral');
-        //     $groupCode = str_replace("DF","SNSI",$group->ac_group);
-        //     $group = AccountType::where('ac_group', $groupCode)->first();
-
-        //     if($group){
-        //         $_POST["options"] =$group->id;
-        //         $account_type_id = $group->id;
-        //     }
-        // }elseif((strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
-        //     dd('gfsd');
-        //     $groupCode = str_replace("DF","ALEX",$group->ac_group);
-        //     $group = AccountType::where('ac_group', $groupCode)->first();
-        //     if($group){
-        //         $_POST["options"] =$group->id;
-        //         $account_type_id = $group->id;
-        //     }
-
-        // }else{
-        //     $groupCode = $group->ac_group;
-        // }
-
-
-
         $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
         $nextMonth = date('F', strtotime('+1 month'));
@@ -188,13 +163,12 @@ class CompetitionController extends Controller
             ->where('demo', true)
             ->first();
 
-
-
         if ($existingCompetition) {
             return redirect()->back()->with('error', 'Competition already purchased for next month.');
         }
 
-        if($group->ac_name == 'Competition'){
+        if (stripos($group->ac_name, 'competition') !== false) {
+            // dd($group);
             $settings = settings();
             activity()->causedBy($user->id)
                 ->withProperties(
