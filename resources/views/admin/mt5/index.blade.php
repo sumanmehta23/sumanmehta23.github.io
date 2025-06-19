@@ -12,6 +12,17 @@
     </style>
 @endsection
 @section('content')
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                title: '{{ session('success') }}',
+                icon: 'success'
+            }).then(() => {
+                // Optionally, you can reload the page after showing the alert
+                location.reload();
+            });
+        </script>
+    @endif
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -379,7 +390,7 @@
         aria-labelledby="groupMgmtLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form action="#" id="groupMgmtCreation" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
+                <form action="{{ route('admin.groups.store') }}" id="groupMgmtCreation" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
                     @csrf
                     <input type="hidden" name="ac_index" id="group_id" value="">
                     <input type="hidden" name="groupCreation" value="true">
@@ -934,47 +945,50 @@
         });
 
 
-        $("#groupMgmtCreation,#groupUpdateForm").submit(function(e) {
 
-            var id = $(this).find("[name='id']").val();
-            console.log(id);
-            let url = id ? `{{ route('admin.groups.update', '') }}/${id}` :
-                `{{ route('admin.groups.store') }}`;
-            let method = id ? "PUT" : "POST";
+       $("#groupCreation, #groupUpdateForm").submit(function(e) {
             e.preventDefault();
+
+            var form = $(this);
+            var id = form.find("[name='ac_index']").val();
+            var url = id ? `/admin/groups/${id}` : `/admin/groups`;
+            var method = id ? "POST" : "POST"; // still POST; Laravel expects _method=PUT for updates
+
             $.ajax({
                 url: url,
                 type: method,
-                data: $(this).serialize(),
+                data: form.serialize() + (id ? '&_method=PUT' : ''),
+                dataType: 'json',
                 beforeSend: function() {
-                    swal.fire({
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        allowEscapeKey: false,
-                        allowOutsideClick: false,
-                        didOpen: function() {
-                            swal.enableLoading();
-                        }
-                    });
+                    Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 },
-                success: function(data) {
-
-                    if (data == "true" || data.trim() == "true") {
-                        swal.fire({
-                            icon: "success",
-                            title: "Group Successfully Updated"
-                        }).then((val) => {
-                            location.reload();
-                        });
+                success: function(res) {
+                    console.log(res);
+                    console.log('abhay');
+                    if (res === true || res.success === true) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: id ? 'Group Updated Successfully' : 'Group Created Successfully'
+                        }).then(() => location.reload());
                     } else {
-                        swal.fire({
-                            icon: "error",
-                            title: "Error:",
-                            text: data
-                        })
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: res.message || 'Something went wrong.'
+                        });
                     }
+                },
+                error: function(xhr) {
+                    console.log(xhr);
+                    console.log('abhay');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.error || 'Something went wrong.'
+                    });
                 }
             });
         });
+
     </script>
 @endsection
