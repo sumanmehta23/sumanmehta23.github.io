@@ -152,6 +152,7 @@ class Leaderboard extends Controller
                         ]);
                         $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                         if ($errorCode != MTRetCode::MT_RET_OK) {
+                            // dd('sadasdsa');
                             $error = MTRetCode::GetError($errorCode);
                             Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
                             $this->sendMail($new_user, 'Live');
@@ -203,6 +204,7 @@ class Leaderboard extends Controller
 
     function CreateCompetition($user, &$user_server, $type)
     {
+
         $settings = settings();
         if (!$this->api->IsConnected()) {
             $errorCode = $this->api->Connect(
@@ -220,7 +222,12 @@ class Leaderboard extends Controller
         }
 
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
+            // dump($user);
+            // dump($user_server);
+            // dump($error_code);
+
             $error = MTRetCode::GetError($error_code);
+            // dd($error);
             Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
             return ["status" => false, "message" => $error];
         } else {

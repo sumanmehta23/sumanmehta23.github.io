@@ -314,29 +314,29 @@
                         columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
                     }
                 },
-                {
-                    text: 'Bulk Approve',
-                    className: 'btn-bulk-action', // Optional: Add a custom class for styling
-                    action: function (e, dt, node, config) {
-                        // Get selected rows
-                        const selectedRows = [];
-                        $('.row-checkbox:checked').each(function () {
-                            selectedRows.push($(this).data('id')); // Collect all selected row IDs
-                        });
+                // {
+                //     text: 'Bulk Approve',
+                //     className: 'btn-bulk-action', // Optional: Add a custom class for styling
+                //     action: function (e, dt, node, config) {
+                //         // Get selected rows
+                //         const selectedRows = [];
+                //         $('.row-checkbox:checked').each(function () {
+                //             selectedRows.push($(this).data('id')); // Collect all selected row IDs
+                //         });
 
-                        if (selectedRows.length === 0) {
-                        alert('No rows selected!');
-                        return;
-                        }
+                //         if (selectedRows.length === 0) {
+                //         alert('No rows selected!');
+                //         return;
+                //         }
 
-                        // Populate the hidden input with selected IDs
-                        $('#BulkAccountRequestForm #client_id').val(selectedRows.join(',')); // Join IDs as a comma-separated string
+                //         // Populate the hidden input with selected IDs
+                //         $('#BulkAccountRequestForm #client_id').val(selectedRows.join(',')); // Join IDs as a comma-separated string
 
-                        // Open the modal
-                        const modal = new bootstrap.Modal(document.getElementById('bulkAccountUpdatemodal'));
-                        modal.show();
-                    }
-                }
+                //         // Open the modal
+                //         const modal = new bootstrap.Modal(document.getElementById('bulkAccountUpdatemodal'));
+                //         modal.show();
+                //     }
+                // }
             ]
         });
 
