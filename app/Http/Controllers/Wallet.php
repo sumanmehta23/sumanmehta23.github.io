@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Models\Promocode;
 use App\Models\PaymentLog;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
@@ -1013,6 +1014,7 @@ class Wallet extends Controller
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
             $customerAccountID = $passedData['clientAccountID'];
+            $promocode = $passedData['promocode'];
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
@@ -1064,6 +1066,12 @@ class Wallet extends Controller
                 }
             } elseif ($deposit_to === "Account") {
 
+                // Check for duplicate transaction
+                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                if ($existingDeposit) {
+                    return response()->json(['status' => 'true']);
+                }
+
                 $settings = settings();
                 $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
                 $this->api->Connect(
@@ -1074,15 +1082,41 @@ class Wallet extends Controller
                     $settings['mt5_server_web_password']
                 );
 
+
+
                 $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
                     $query->where('status', 1);
                 }])->first();
 
-                // Check for duplicate transaction
-                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
-                if ($existingDeposit) {
-                    return response()->json(['status' => 'true']);
+                if($promocode){
+                    $ticket = NULL;
+                    $promo = Promocode::where('code', $promocode)->first();
+                    if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
+                        $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
+                    }else{
+                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    }
+                    if($promo){
+                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        } else {
+                            BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $customerID,
+                                'account_id' => $customerAccountID,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonus_amount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Bonus',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                            ]);
+                        }
+                    }
                 }
+
+
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
                 $callback_code = json_encode($payload['transaction']["status"]);

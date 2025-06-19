@@ -10,16 +10,18 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
+use App\Models\Promocode;
 use App\Models\Permission;
+use App\Models\RestrictIps;
 use App\Models\EmployeeList;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +29,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Models\RestrictIps;
 
 class AjaxController extends Controller
 {
@@ -3939,5 +3940,100 @@ class AjaxController extends Controller
 
         return response()->json(['message' => 'Invalid request'], 400);
 
+    }
+
+    public function getPromocodes(Request $request)
+    {
+        $promocodes = Promocode::where('deleted_at', NULL);
+
+        if ($request->ajax()) {
+            return DataTables::of($promocodes)
+                ->filter(function ($promocodes) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+                        $promocodes->where(function($q) use ($searchValue) {
+                            $q->where('id', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('promo_percentage', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('status', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                        });
+                    }
+                })
+                ->addColumn('id', function($row){
+                    return $row->id;
+                })
+                ->addColumn('code', function($row){
+                    return $row->code ;
+                })
+                ->addColumn('percentage', function($row){
+                    return $row->promo_percentage ;
+                })
+                ->addColumn('max_deposit', function($row){
+                    return $row->max_deposit ;
+                })
+                ->addColumn('status', function($row){
+                    $checked = $row->status == 1 ? 'checked' : '';
+                    return "<div class='form-check form-switch'>
+                                <input class='form-check-input statusToggle' type='checkbox' data-id='{$row->id}' {$checked}>
+                            </div>";
+                })
+
+                ->addColumn('created_at', function($row){
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('action', function($row){
+                    $html = "";
+                    $html .= "
+                                <span class='editPromocode' data-id='{$row->id}'>
+                                    <span class='badge text-secondary' data-bs-toggle='tooltip' title='Edit Promocode'>
+                                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' /><path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' /><path d='M16 5l3 3' /></svg>
+                                    </span>
+                                </span>
+
+                                <a class='deleteAcc pointer deletePromocode' data-bs-toggle='tooltip' data-id='{$row->id}'>
+                                    <span class='badge text-danger'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-trash'>
+                                            <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                            <path d='M4 7l16 0' />
+                                            <path d='M10 11l0 6' />
+                                            <path d='M14 11l0 6' />
+                                            <path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' />
+                                            <path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' />
+                                        </svg>
+                                    </span>
+                                </a>
+                            ";
+                    return $html;
+                })
+                ->rawColumns(['id', 'code', 'percentage','max_deposit','status', 'created_at','action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function verify_promocode(Request $request)
+    {
+        $code = $request->input('promocode');
+
+        $promocode = Promocode::where('code', $code)->first();
+        if ($promocode) {
+            $message = 'Promo code is valid. You’ll get a ' . $promocode->promo_percentage . '% discount on your deposit.';
+
+            if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
+                $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
+            }
+
+            return response()->json([
+                'valid' => true,
+                'message' => $message,
+            ]);
+        } else {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Invalid promocode. Please try again.',
+            ]);
+        }
     }
 }

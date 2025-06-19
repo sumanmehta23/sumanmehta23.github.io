@@ -295,6 +295,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/account_withdrawal_verify', [TradeWithdrawal::class, 'account_withdrawal_verify'])->name('account_withdrawal_verify');
     Route::get('/internal-transfer', [InternalTransfer::class, 'index'])->name('internal-transfer');
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
+
+    Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
@@ -332,6 +334,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
     Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
+    Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
     //
     Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
     Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
@@ -492,6 +495,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
+
+        Route::get("/promocode", [MT5Controller::class, 'promocode']);
+
+        Route::post('/get_promocode/{id}', [MT5Controller::class, 'get_promocode'])->name('get_promocode');
+        Route::post('/edit/promocode', [MT5Controller::class, 'edit_promocode'])->name('edit_promocode');
+
+        Route::post("/create/promocode", [MT5Controller::class, 'createPromoCode']);
+        Route::post("/update_promocode_status", [MT5Controller::class, 'update_promocode_status']);
+        Route::post("/delete_promocode", [MT5Controller::class, 'delete_promocode']);
 
         Route::get("/view_account_details/{accountId}", [MT5Controller::class, 'view'])->where('account', '.*')->name('admin-view-account-details');
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
