@@ -7,6 +7,7 @@ use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Models\Promocode;
 use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
@@ -143,7 +144,7 @@ class Payment extends Controller
 
                 if(isset($paymentLog->promocode)){
                     $ticket2 = NULL;
-                    $promo = PromoCode::where('code', $paymentLog->promocode)->first();
+                    $promo = Promocode::where('code', $paymentLog->promocode)->first();
                     if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
                         $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
                     }else{
