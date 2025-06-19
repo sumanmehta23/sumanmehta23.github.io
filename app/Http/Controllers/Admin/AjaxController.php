@@ -4009,7 +4009,7 @@ class AjaxController extends Controller
                                             alt='user-image' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span class='text-truncate w-100'>" .
-                        ($row->code ? $row->code : 'Pending') .
+                        ($row->code ? $row->code : 'Pending '.$row->competition_month. ' Competition') .
                         "</span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span

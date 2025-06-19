@@ -124,15 +124,14 @@ class CompetitionController extends Controller
 
     public function createCompetition(Request $request)
     {
-
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $retryAfter = RateLimiter::availableIn($key);
-            return redirect()->back()
-            ->with('error', "Please wait {$retryAfter} seconds before trying again.");
-        }
-        RateLimiter::hit($key, 10);
+        // if (RateLimiter::tooManyAttempts($key, 1)) {
+        //     $retryAfter = RateLimiter::availableIn($key);
+        //     return redirect()->back()
+        //         ->with('error', "Please wait {$retryAfter} seconds before trying again.");
+        // }
+        // RateLimiter::hit($key, 10);
 
         $settings = settings();
         $validatedData = $request->validate([
@@ -147,84 +146,96 @@ class CompetitionController extends Controller
 
         $email = $user->email;
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-        $referral=$user->referral;
-        $ib=$user->ib1;
+
         $account_type_id = $validatedData['options'];
 
-        $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
+        // Extract month name from ac_name
+        $monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
 
-        $nextMonth = date('F', strtotime('+1 month'));
+        $foundMonth = null;
+
+        foreach ($monthNames as $month) {
+            if (stripos($group->ac_name, $month) !== false) {
+                $foundMonth = $month;
+                break;
+            }
+        }
+
+        // If month not found in ac_name, return error
+        if (!$foundMonth) {
+            return redirect()->back()->with('error', 'Selected competition product does not contain a valid month in its name.');
+        }
+
+        $competitionMonth = $foundMonth;
         $currentYear = date('Y');
-        $nextYear = date('Y') + 1;
+        $nextYear = $currentYear + 1;
 
         $existingCompetition = Account::where('user_id', $user->id)
-            ->where('competition_month', $nextMonth)
-            ->where('competition_year',$currentYear)
+            ->where('competition_month', $competitionMonth)
+            ->where('competition_year', $currentYear)
             ->where('demo', true)
             ->first();
 
         if ($existingCompetition) {
-            return redirect()->back()->with('error', 'Competition already purchased for next month.');
+            return redirect()->back()->with('error', 'Competition already purchased for ' . $competitionMonth . '.');
         }
 
         if (stripos($group->ac_name, 'competition') !== false) {
-            // dd($group);
-            $settings = settings();
             activity()->causedBy($user->id)
-                ->withProperties(
-                    [
-                        'ip' => $request->ip(),
-                        'email' => $user->email,
-                        'type' => 'Live',
-                        'code' => 'Pending',
-                        'leverage' => $validatedData['leverage'],
-                        'ib' => $ib,
-                        'remark' => 'Competition purchase'
-                    ])
-            ->event('create')
-            ->log('Create Live Account');
-            if($nextMonth == 'January'){
-                $year = $nextYear;
-            }else{
-                $year = $currentYear;
-            }
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'email' => $user->email,
+                    'type' => 'Competition',
+                    'code' => 'Pending',
+                    'leverage' => $validatedData['leverage'],
+                    'remark' => 'Competition purchase'
+                ])
+                ->event('create')
+                ->log('Create Live Account');
+
+            $year = ($competitionMonth == 'January') ? $nextYear : $currentYear;
+
             $useraccount = Account::create([
                 'user_id' => $user->id,
-                'name' => $user->fullname??$user->email,
-                'demo'=> true,
+                'name' => $user->fullname ?? $user->email,
+                'demo' => true,
                 'email' => $user->email,
-                'account_nick_name' =>  $nick_name,
+                'account_nick_name' => $nick_name,
                 'account_type_id' => $account_type_id,
                 'leverage' => $validatedData['leverage'],
                 'currency' => 'USD',
-                'ib1' => $user->ib1?? "",
+                'ib1' => $user->ib1 ?? "",
                 'account_request_status' => '0',
-                'competition_month' => $nextMonth,
+                'competition_month' => $competitionMonth,
                 'competition_year' => $year,
                 'balance' => $demo_deposit,
-
             ]);
-            if($useraccount){
+
+            if ($useraccount) {
                 $from = $settings['email_from_address'];
                 $emailSubject = 'Competition Requested';
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers = "MIME-Version: 1.0\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $content =
-                    '<div>Thank you for choosing LQH Markets. Your request for a '.date('F', strtotime('+1 month')).' month will be approved  on 1st of next month.</div>
 
-                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
-                    <p>Best Regards.</p>
-                <p>LQH Markets Team</p>';
+                $content = "<div>Thank you for choosing LQH Markets. Your request for {$competitionMonth} will be approved on 1st of {$competitionMonth}.</div>
+                            <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+                            <p>Best Regards.</p><p>LQH Markets Team</p>";
+
                 $templateVars = [
                     'name' => $user->fullname,
                     'email' => $settings['email_from_address'],
-                    "content" => $content,
-                    "title_right" => "Competition Request Pending",
-                    "subtitle_right" => "",
+                    'content' => $content,
+                    'title_right' => "Competition Request Pending",
+                    'subtitle_right' => "",
                 ];
+
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->back()->with('success', 'Competition Request Received Your request has been submitted.');
+
+                return redirect()->back()->with('success', 'Competition Request Received. Your request has been submitted.');
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
