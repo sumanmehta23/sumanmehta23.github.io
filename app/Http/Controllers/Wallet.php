@@ -975,7 +975,7 @@ class Wallet extends Controller
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
-        dd($payload);
+
         Log::channel("cryptochillcallback")->info(json_encode($payload));
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
