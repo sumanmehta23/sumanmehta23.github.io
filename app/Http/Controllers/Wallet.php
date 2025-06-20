@@ -1111,6 +1111,7 @@ class Wallet extends Controller
                                 'admin_remark' => 'Promo Bonus',
                                 'bonus_currency' => 'USD',
                                 'transaction_id' => $transactionId,
+                                'promocode_id' => $promo->id
                             ]);
                         }
                     }
