@@ -142,7 +142,7 @@ class Payment extends Controller
                     }
                 }
 
-                if(isset($paymentLog->promocode)){
+                if(isset($paymentLog->promocode) && $paymentLog->promocode !=''){
                     $ticket2 = NULL;
                     $promo = Promocode::where('code', $paymentLog->promocode)->first();
                     if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
