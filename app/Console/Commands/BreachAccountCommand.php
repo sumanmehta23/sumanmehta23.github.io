@@ -67,7 +67,8 @@ class BreachAccountCommand extends Command
             $expiredAccounts = Account::where('demo', true)
                 ->whereNotNull('competition_month')
                 ->whereNotNull('competition_year')
-                ->where('code', '!=', null)
+                // ->where('code', '!=', null)
+                ->where('code', 574399)
                 ->where('account_request_status', 1)
                 ->where(function ($query) use ($currentMonth, $currentYear) {
                     $query->where(function ($q) use ($currentMonth, $currentYear) {

@@ -15,13 +15,21 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune')->daily();
         // $schedule->command('app:sync-account-trades')->everyTwoHours();
-        $schedule->command('app:activate-competition-accounts')->monthlyOn(1, '00:00');
+
+        // $schedule->command('app:activate-competition-accounts')->monthlyOn(1, '00:00');
         $schedule->command('app:sync-trades')->everyFiveMinutes();
-        $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
-        $schedule->command('app:sync-accounts')->everyFiveMinutes();
-        $schedule->command('sync:daily-reports')->dailyAt('12:00');
-        $schedule->command('app:sync-account-trades')->everyTwoHours();
-        $schedule->command('app:update-price-snapshots')->hourly();
+
+        // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
+
+        $schedule->command('app:breach-account')->everyFiveMinutes();
+
+
+        // $schedule->command('app:sync-accounts')->everyFiveMinutes();
+        // $schedule->command('sync:daily-reports')->dailyAt('12:00');
+        // $schedule->command('app:sync-account-trades')->everyTwoHours();
+        // $schedule->command('app:update-price-snapshots')->hourly();
+
+
         // $schedule->command('app:alter-group-codes --group_code=a_book')->hourlyAt(0);
         // $schedule->command('app:alter-group-codes --group_code=b_book')->hourlyAt(30);
     }
