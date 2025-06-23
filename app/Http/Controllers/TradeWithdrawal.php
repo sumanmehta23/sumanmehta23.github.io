@@ -225,10 +225,11 @@ class TradeWithdrawal extends Controller
 
             if($account->BonusTransaction){
                 if($user_email == 'info@jalelabou.com'){
-                    $filtered = $account->BonusTransaction->filter(function ($item) {
-                        return !is_null($item->promocode_id);
-                    });
-                    dump($filtered);
+                    $totalPromoBonus = $account->BonusTransaction
+                                ->filter(fn($item) => !is_null($item->promocode_id))
+                                ->sum('bonus_amount');
+
+                    dump($totalPromoBonus);
                     dd($account->BonusTransaction);
                 }
             }
