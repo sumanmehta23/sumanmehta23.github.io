@@ -295,10 +295,11 @@
                                                         <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
                                                         Reject
                                                         </button>
-                                                        {{-- <div class="form-check d-inline-block me-2">
-                                                            <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)">
+                                                        {{-- {{ dd($details) }} --}}
+                                                        <div class="form-check d-inline-block me-2">
+                                                            <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ (int)$details->withdrawal_amount }}','{{ (int)$details->transaction_fee }}',1)">
                                                             <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
-                                                        </div> --}}
+                                                        </div>
                                                     @endif
                                                 </div>
 
@@ -462,7 +463,7 @@
           });
         }
 
-        function handleCheckboxClick(checkbox, id, data, email, amount, status) {
+        function handleCheckboxClick(checkbox, id, data, email, amount, fee, status) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
             const parsedData = JSON.parse(sanitizedData);
             const withdraw_id = JSON.parse(id);
@@ -478,6 +479,7 @@
                     @csrf
                     <input type="hidden" name="email" value="${email}">
                     <input type="hidden" name="amount" value="${amount}">
+                    <input type="hidden" name="fee" value="${fee}">
                     <input type="hidden" name="status" value="${status}">
                     <input type="hidden" name="transaction" value="Manually">
                     <input type="hidden" name="approved_by" value="${parsedData.username}">
