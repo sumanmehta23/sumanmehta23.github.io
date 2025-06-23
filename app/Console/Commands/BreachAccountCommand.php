@@ -68,7 +68,7 @@ class BreachAccountCommand extends Command
                 ->whereNotNull('competition_month')
                 ->whereNotNull('competition_year')
                 // ->where('code', '!=', null)
-                ->where('code', 574399)
+                ->where('code', 322152)
                 ->where('account_request_status', 1)
                 ->where(function ($query) use ($currentMonth, $currentYear) {
                     $query->where(function ($q) use ($currentMonth, $currentYear) {
