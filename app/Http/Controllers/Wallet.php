@@ -1090,30 +1090,32 @@ class Wallet extends Controller
                 }])->first();
 
                 if($promocode){
-                    $ticket = NULL;
                     $promo = Promocode::where('code', $promocode)->first();
-                    if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
-                        $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
-                    }else{
-                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
-                    }
                     if($promo){
-                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                        } else {
-                            BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $customerID,
-                                'account_id' => $customerAccountID,
-                                'code' => $account->code,
-                                'bonus_amount' => $bonus_amount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Bonus',
-                                'bonus_currency' => 'USD',
-                                'transaction_id' => $transactionId,
-                                'promocode_id' => $promo->id
-                            ]);
+                        $ticket = NULL;
+                        if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
+                            $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
+                        }else{
+                            $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                        }
+                        if($promo){
+                            if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                            } else {
+                                BonusTransaction::create([
+                                    'email' => $email,
+                                    'user_id' => $customerID,
+                                    'account_id' => $customerAccountID,
+                                    'code' => $account->code,
+                                    'bonus_amount' => $bonus_amount,
+                                    'bonus_type' => 'Bonus In',
+                                    'status' => 1,
+                                    'admin_remark' => 'Promo Bonus',
+                                    'bonus_currency' => 'USD',
+                                    'transaction_id' => $transactionId,
+                                    'promocode_id' => $promo->id
+                                ]);
+                            }
                         }
                     }
                 }
