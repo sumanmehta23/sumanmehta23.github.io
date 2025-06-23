@@ -120,9 +120,7 @@ class TradeWithdrawal extends Controller
             ->where('user_id', $user_id)
             ->firstOrFail();
 
-        if($user_email=='info@jalelabou.com'){
-            dd($account);
-        }
+
 
         $total_bonus = BonusTransaction::where('account_id', $request->account_id)
             ->where(function ($query) {
@@ -175,11 +173,11 @@ class TradeWithdrawal extends Controller
                 $total_deposit_amount = $account->tradeDeposits->sum('deposit_amount');
                 $account_balance = $account->balance;
 
-//                if ($account_balance >= $total_deposit_amount) {
-//                    $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
-//                } elseif ($account_balance < $total_deposit_amount) {
-//                    $multiple_value = $total_deposit_amount - $account_balance - ($balance);
-//                }
+                // if ($account_balance >= $total_deposit_amount) {
+                //     $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
+                // } elseif ($account_balance < $total_deposit_amount) {
+                //     $multiple_value = $total_deposit_amount - $account_balance - ($balance);
+                // }
                 //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
                 $accountProfit = $account_balance - $total_deposit_amount;
 
@@ -223,6 +221,16 @@ class TradeWithdrawal extends Controller
 
                 }
 
+            }
+
+            if($account->BonusTransaction){
+                if($user_email == 'info@jalelabou.com'){
+                    $filtered = $account->BonusTransaction->filter(function ($item) {
+                        return !is_null($item->promocode_id);
+                    });
+                    dump($filtered);
+                    dd($account->BonusTransaction);
+                }
             }
 
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
