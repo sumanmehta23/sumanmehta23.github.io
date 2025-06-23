@@ -31,7 +31,7 @@ include "mt5_server.php";
 include "MT5CryptAes256.php";
 include "MTJson.php";
 include "MTRetCode.php";
-
+include "MTDealerConnect.php";
 /**
  * Main web api class
  */
