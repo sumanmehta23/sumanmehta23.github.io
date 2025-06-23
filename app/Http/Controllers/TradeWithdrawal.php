@@ -120,9 +120,9 @@ class TradeWithdrawal extends Controller
             ->where('user_id', $user_id)
             ->firstOrFail();
 
-        // if($user_email=='info@jalelabou.com'){
-        //     dd($account);
-        // }
+        if($user_email=='info@jalelabou.com'){
+            dd($account);
+        }
 
         $total_bonus = BonusTransaction::where('account_id', $request->account_id)
             ->where(function ($query) {
