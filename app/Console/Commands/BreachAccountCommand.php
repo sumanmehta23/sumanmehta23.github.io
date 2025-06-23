@@ -17,6 +17,7 @@ class BreachAccountCommand extends Command
     protected $mailService;
     protected $mt5Service;
     protected $api;
+    protected $dealerapi;
 
     protected $signature = 'app:breach-account';
     protected $description = 'Handles expired competition accounts from previous months';
@@ -28,6 +29,8 @@ class BreachAccountCommand extends Command
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
+        $this->mt5Service->dealerConnect();
+        $this->dealerapi = $this->mt5Service->dealerConnect();
     }
 
     public function handle()
@@ -56,6 +59,7 @@ class BreachAccountCommand extends Command
         }
 
         try {
+
             $currentDate = Carbon::now();
             $currentMonth = $currentDate->format('F');
             $currentYear = $currentDate->year;
@@ -68,7 +72,7 @@ class BreachAccountCommand extends Command
                 ->where(function ($query) use ($currentMonth, $currentYear) {
                     $query->where(function ($q) use ($currentMonth, $currentYear) {
                         $q->where('competition_year', $currentYear)
-                          ->where('competition_month', '!=', $currentMonth);
+                            ->where('competition_month', '!=', $currentMonth);
                     })->orWhere(function ($q) use ($currentYear) {
                         $q->where('competition_year', '<', $currentYear);
                     });
@@ -117,18 +121,9 @@ class BreachAccountCommand extends Command
                         // BUY positions need SELL to close and vice versa
                         $oppositeType = $position->Action === 0 ? 1 : 0; // 0=BUY, 1=SELL (Confirm with your MT5 API)
 
-                        $trade_request = [
-                            'LOGIN'     => (int) $account->code,
-                            'ACTION'    => 1, // Close order
-                            'POSITION'  => $position->Position, // Position ticket to close
-                            'SYMBOL'    => $position->Symbol,   // Symbol of the position
-                            'VOLUME'    => $position->Volume,   // Volume to close
-                            'TYPE'      => $oppositeType,       // SELL if BUY, BUY if SELL
-                            'COMMENT'   => 'Competition Ended', // Custom comment
-                        ];
 
                         $trade_result = [];
-                        $error_code = $this->api->TradeRequest($trade_request, $trade_result);
+                        $error_code = $this->api->TradeCloseRequest($position, $trade_result, $this->dealerapi);
 
                         if ($error_code != MTRetCode::MT_RET_OK) {
                             Log::error("TradeRequest API error for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($error_code));
@@ -178,7 +173,6 @@ class BreachAccountCommand extends Command
 
                     DB::commit();
                     Log::info("Successfully breached account {$account->code}");
-
                 } catch (\Exception $e) {
                     DB::rollBack();
                     Log::error("Exception while breaching account {$account->code}: {$e->getMessage()}");
@@ -187,9 +181,10 @@ class BreachAccountCommand extends Command
             }
 
             Log::info("Competition account breach process completed.");
-
         } catch (\Exception $e) {
-            Log::error('Fatal error in breaching competition accounts: ' . $e->getMessage());
+            //log full error stack trace
+            Log::error('Fatal error in breaching competition accounts: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
             $this->error('Failed to breach competition accounts: ' . $e->getMessage());
         }
     }

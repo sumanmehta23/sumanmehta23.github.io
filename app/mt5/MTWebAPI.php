@@ -1,4 +1,5 @@
 <?php
+
 namespace App\MT5;
 
 //--- web api version
@@ -35,7 +36,7 @@ include "MTRetCode.php";
  * Main web api class
  */
 class MTWebAPI
-  {
+{
   /**
    * connection to MetaTrader5 server
    * @var MTConnect
@@ -47,11 +48,11 @@ class MTWebAPI
   private $m_is_crypt = true;
 
   public function __construct($agent = 'WebAPI', $file_path = '/tmp/', $is_crypt = true)
-    {
+  {
     $this->m_agent    = $agent;
     $this->m_is_crypt = $is_crypt;
     MTLogger::Init($agent, true, $file_path);
-    }
+  }
 
   /**
    * @param string $ip       - ip address server
@@ -63,44 +64,51 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function Connect($ip, $port, $timeout, $login, $password)
-    {
+  {
     //--- create connection class
     $this->m_connect = new MTConnect($ip, $port, $timeout, $this->m_is_crypt);
     //--- create connection
-    if(($error_code = $this->m_connect->Connect()) != MTRetCode::MT_RET_OK) return $error_code;
+    if (($error_code = $this->m_connect->Connect()) != MTRetCode::MT_RET_OK) return $error_code;
     //--- authorization to MetaTrader 5 server
     $auth = new MTAuthProtocol($this->m_connect, $this->m_agent);
     //---
     $crypt_rand = '';
-    if(($error_code = $auth->Auth($login, $password, $this->m_is_crypt, $crypt_rand)) != MTRetCode::MT_RET_OK)
-      {
+    if (($error_code = $auth->Auth($login, $password, $this->m_is_crypt, $crypt_rand)) != MTRetCode::MT_RET_OK) {
       //--- disconnect
       $this->Disconnect();
       return $error_code;
-      }
+    }
     //--- if need crypt
-    if($this->m_is_crypt) $this->m_connect->SetCryptRand($crypt_rand, $password);
+    if ($this->m_is_crypt) $this->m_connect->SetCryptRand($crypt_rand, $password);
     //---
     return MTRetCode::MT_RET_OK;
+  }
+  public function DealerConnect($ip, $port, $timeout, $login, $password)
+  {
+    $request = new MTDealerConnect();
+    if ($request->Init($ip . ':' . $port) && $request->Auth($login, $password, 2025, "WebManager")) {
+      return  $request;
+    } else {
+      return MTRetCode::MT_RET_ERR;
     }
-
+  }
   /**
    * Check connection
    * @return bool
    */
   public function IsConnected()
-    {
+  {
     return $this->m_connect != null;
-    }
+  }
 
   /**
    * Disconnect from MetaTrader 5 server
    * @return void
    */
   public function Disconnect()
-    {
-    if($this->m_connect) $this->m_connect->Disconnect();
-    }
+  {
+    if ($this->m_connect) $this->m_connect->Disconnect();
+  }
 
   /**
    * Get current time from server
@@ -110,20 +118,20 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function TimeGet(&$time)
-    {
+  {
     $mt_time = new MTTimeProtocol($this->m_connect);
     return $mt_time->TimeGet($time);
-    }
+  }
 
   /**
    * Get current time from server
    * @return int - time in unix format
    */
   public function TimeServer()
-    {
+  {
     $mt_time = new MTTimeProtocol($this->m_connect);
     return $mt_time->TimeServer();
-    }
+  }
 
   /**
    * Get common information
@@ -133,10 +141,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function CommonGet(&$common)
-    {
+  {
     $mt_common = new MTCommonProtocol($this->m_connect);
     return $mt_common->CommonGet($common);
-    }
+  }
 
   /**
    * Get count of groups
@@ -146,10 +154,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function GroupTotal(&$total)
-    {
+  {
     $mt_group = new MTGroupProtocol($this->m_connect);
     return $mt_group->GroupTotal($total);
-    }
+  }
 
   /**
    * Get next group
@@ -160,10 +168,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function GroupNext($pos, &$group_next)
-    {
+  {
     $mt_group = new MTGroupProtocol($this->m_connect);
     return $mt_group->GroupNext($pos, $group_next);
-    }
+  }
 
   /**
    * Get group by name
@@ -174,10 +182,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function GroupGet($name, &$group)
-    {
+  {
     $mt_group = new MTGroupProtocol($this->m_connect);
     return $mt_group->GroupGet($name, $group);
-    }
+  }
 
   /**
    * Add or update group
@@ -188,10 +196,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function GroupAdd($group, &$new_group)
-    {
+  {
     $mt_group = new MTGroupProtocol($this->m_connect);
     return $mt_group->GroupAdd($group, $new_group);
-    }
+  }
 
   /**
    * Delete group by name
@@ -201,10 +209,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function GroupDelete($name)
-    {
+  {
     $mt_group = new MTGroupProtocol($this->m_connect);
     return $mt_group->GroupDelete($name);
-    }
+  }
 
   /**
    * Get count symbols
@@ -214,10 +222,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolTotal(&$total)
-    {
+  {
     $symbol = new MTSymbolProtocol($this->m_connect);
     return $symbol->SymbolTotal($total);
-    }
+  }
 
   /**
    * Get next symbol
@@ -228,10 +236,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolNext($pos, &$symbol_next)
-    {
+  {
     $mt_symbol = new MTSymbolProtocol($this->m_connect);
     return $mt_symbol->SymbolNext($pos, $symbol_next);
-    }
+  }
 
   /**
    * Get symbol
@@ -242,10 +250,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolGet($name, &$symbol)
-    {
+  {
     $mt_symbol = new MTSymbolProtocol($this->m_connect);
     return $mt_symbol->SymbolGet($name, $symbol);
-    }
+  }
 
   /**
    * Get config symbol
@@ -257,10 +265,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolGetGroup($name, $group, &$symbol)
-    {
+  {
     $mt_symbol = new MTSymbolProtocol($this->m_connect);
     return $mt_symbol->SymbolGetGroup($name, $group, $symbol);
-    }
+  }
 
   /**
    * Symbol add and update
@@ -271,10 +279,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolAdd($symbol, &$new_symbol)
-    {
+  {
     $mt_symbol = new MTSymbolProtocol($this->m_connect);
     return $mt_symbol->SymbolAdd($symbol, $new_symbol);
-    }
+  }
 
   /**
    * Symbol delete
@@ -284,10 +292,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function SymbolDelete($name)
-    {
+  {
     $mt_symbol = new MTSymbolProtocol($this->m_connect);
     return $mt_symbol->SymbolDelete($name);
-    }
+  }
 
   /**
    * Add user to server
@@ -298,10 +306,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserAdd($user, &$new_user)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->Add($user, $new_user);
-    }
+  }
 
   /**
    * Update user to server
@@ -312,10 +320,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserUpdate($user, &$new_user)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->Update($user, $new_user);
-    }
+  }
 
   /**
    * User delete from server
@@ -325,10 +333,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserDelete($login)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->Delete($login);
-    }
+  }
 
   /**
    * Get user
@@ -339,10 +347,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserGet($login, &$user)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->Get($login, $user);
-    }
+  }
 
   /**
    * Check login and password
@@ -353,12 +361,12 @@ class MTWebAPI
    *
    * @return MTRetCode
    */
-    public function UserPasswordCheck($login, $password, $type = MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)
-    {
+  public function UserPasswordCheck($login, $password, $type = MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->PasswordCheck($login, $password, $type);
-    }
-    /**
+  }
+  /**
    * User change password
    *
    * @param int    $login
@@ -368,10 +376,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserPasswordChange($login, $new_password, $type = MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->PasswordChange($login, $new_password, $type);
-    }
+  }
 
   /**
    * User deposit change
@@ -384,10 +392,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserDepositChange($login, $new_deposit, $comment, $type)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->DepositChange($login, $new_deposit, $comment, $type);
-    }
+  }
 
   /**
    * Get account information
@@ -398,10 +406,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserAccountGet($login, &$account)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->AccountGet($login, $account);
-    }
+  }
 
   /**
    * Get list users login
@@ -412,10 +420,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function UserLogins($group, &$logins)
-    {
+  {
     $mt_user = new MTUserProtocol($this->m_connect);
     return $mt_user->UserLogins($group, $logins);
-    }
+  }
 
   /**
    * Get order
@@ -426,10 +434,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function OrderGet($ticket, &$order)
-    {
+  {
     $mt_order = new MTOrderProtocol($this->m_connect);
     return $mt_order->OrderGet($ticket, $order);
-    }
+  }
 
   /**
    * Get all user orders
@@ -440,10 +448,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function OrderGetTotal($login, &$total)
-    {
+  {
     $mt_order = new MTOrderProtocol($this->m_connect);
     return $mt_order->OrderGetTotal($login, $total);
-    }
+  }
 
   /**
    * Get orders by page
@@ -456,10 +464,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function OrderGetPage($login, $offset, $total, &$orders)
-    {
+  {
     $mt_order = new MTOrderProtocol($this->m_connect);
     return $mt_order->OrderGetPage($login, $offset, $total, $orders);
-    }
+  }
 
   /**
    * Get position
@@ -471,10 +479,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function PositionGet($login, $symbol, &$position)
-    {
+  {
     $mt_position = new MTPositionProtocol($this->m_connect);
     return $mt_position->PositionGet($login, $symbol, $position);
-    }
+  }
 
   /**
    * Get all user positions
@@ -485,10 +493,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function PositionGetTotal($login, &$total)
-    {
+  {
     $mt_position = new MTPositionProtocol($this->m_connect);
     return $mt_position->PositionGetTotal($login, $total);
-    }
+  }
 
   /**
    * Get positions by page
@@ -501,10 +509,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function PositionGetPage($login, $offset, $total, &$positions)
-    {
+  {
     $mt_position = new MTPositionProtocol($this->m_connect);
     return $mt_position->PositionGetPage($login, $offset, $total, $positions);
-    }
+  }
 
   /**
    * Get deal
@@ -515,10 +523,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function DealGet($ticket, &$deal)
-    {
+  {
     $mt_deal = new MTDealProtocol($this->m_connect);
     return $mt_deal->DealGet($ticket, $deal);
-    }
+  }
 
   /**
    * Get count deals
@@ -531,10 +539,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function DealGetTotal($login, $from, $to, &$total)
-    {
+  {
     $mt_deal = new MTDealProtocol($this->m_connect);
     return $mt_deal->DealGetTotal($login, $from, $to, $total);
-    }
+  }
 
   /**
    * Get orders by page
@@ -549,10 +557,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function DealGetPage($login, $from, $to, $offset, $total, &$deals)
-    {
+  {
     $mt_deal = new MTDealProtocol($this->m_connect);
     return $mt_deal->DealGetPage($login, $from, $to, $offset, $total, $deals);
-    }
+  }
 
   /**
    * Get history
@@ -563,10 +571,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function HistoryGet($ticket, &$history)
-    {
+  {
     $mt_deal = new MTHistoryProtocol($this->m_connect);
     return $mt_deal->HistoryGet($ticket, $history);
-    }
+  }
 
   /**
    * Get count deals
@@ -579,10 +587,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function HistoryGetTotal($login, $from, $to, &$total)
-    {
+  {
     $mt_deal = new MTHistoryProtocol($this->m_connect);
     return $mt_deal->HistoryGetTotal($login, $from, $to, $total);
-    }
+  }
 
   /**
    * Get orders by page
@@ -597,10 +605,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function HistoryGetPage($login, $from, $to, $offset, $total, &$orders)
-    {
+  {
     $mt_deal = new MTHistoryProtocol($this->m_connect);
     return $mt_deal->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
-    }
+  }
 
   /**
    * Get last tickets
@@ -611,10 +619,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function TickLast($symbol, &$ticks)
-    {
+  {
     $mt_tick = new MTTickProtocol($this->m_connect);
     return $mt_tick->TickLast($symbol, $ticks);
-    }
+  }
 
   /**
    * Get last tickets by symbol and group
@@ -626,10 +634,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function TickLastGroup($symbol, $group, &$ticks)
-    {
+  {
     $mt_tick = new MTTickProtocol($this->m_connect);
     return $mt_tick->TickLastGroup($symbol, $group, $ticks);
-    }
+  }
 
   /**
    * Get last tickets
@@ -640,10 +648,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function TickStat($symbol, &$tick_stat)
-    {
+  {
     $mt_tick = new MTTickProtocol($this->m_connect);
     return $mt_tick->TickStat($symbol, $tick_stat);
-    }
+  }
 
   /**
    * Send mail to user
@@ -655,10 +663,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function MailSend($to, $subject, $text)
-    {
+  {
     $mt_mail = new MTMailProtocol($this->m_connect);
     return $mt_mail->MailSend($to, $subject, $text);
-    }
+  }
 
   /**
    * Send news to users
@@ -672,10 +680,10 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function NewsSend($subject, $category, $language, $priority, $text)
-    {
+  {
     $mt_news = new MTNewsProtocol($this->m_connect);
     return $mt_news->NewsSend($subject, $category, $language, $priority, $text);
-    }
+  }
 
   /**
    * Trade balance
@@ -689,21 +697,21 @@ class MTWebAPI
    *
    * @return MTRetCode
    */
-  public function TradeBalance($login, $type, $balance, $comment, &$ticket=null,$margin_check=true)
-    {
+  public function TradeBalance($login, $type, $balance, $comment, &$ticket = null, $margin_check = true)
+  {
     $mt_trade = new MTTradeProtocol($this->m_connect);
-    return $mt_trade->TradeBalance($login, $type, $balance, $comment, $ticket,$margin_check);
-    }
+    return $mt_trade->TradeBalance($login, $type, $balance, $comment, $ticket, $margin_check);
+  }
 
   /**
    * Send ping to server
    * @return MTRetCode
    */
   public function Ping()
-    {
+  {
     $mt_ping = new MTPingProtocol($this->m_connect);
     return $mt_ping->PingSend();
-    }
+  }
 
   /**
    * Send custom command to MT server
@@ -717,47 +725,47 @@ class MTWebAPI
    * @return MTRetCode
    */
   public function CustomSend($command, $params, $body, &$answer, &$answer_body)
-    {
+  {
     $mt_custom = new MTCustomProtocol($this->m_connect);
     return $mt_custom->CustomSend($command, $params, $body, $answer, $answer_body);
-    }
+  }
 
   /**
    * Restart server wich connect
    * @return MTRetCode
    */
   public function ServerRestart()
-    {
+  {
     $mt_server = new MTServer($this->m_connect);
     return $mt_server->Restart();
-    }
+  }
 
   /**
    * Create class user
    * @return MTUser
    */
   public function UserCreate()
-    {
+  {
     return MTUser::CreateDefault();
-    }
+  }
 
   /**
    * Create class group
    * @return MTConGroup
    */
   public function GroupCreate()
-    {
+  {
     return MTConGroup::CreateDefault();
-    }
+  }
 
   /**
    * Create class symbol
    * @return MTConSymbol
    */
   public function SymbolCreate()
-    {
+  {
     return MTConSymbol::CreateDefault();
-    }
+  }
 
   /**
    * Set flag write logs
@@ -767,9 +775,9 @@ class MTWebAPI
    * @return void
    */
   public function SetLoggerIsWrite($is_write)
-    {
+  {
     MTLogger::setIsWriteLog($is_write);
-    }
+  }
 
   /**
    * Set path to write logs
@@ -779,9 +787,9 @@ class MTWebAPI
    * @return void
    */
   public function SetLoggerFilePath($file_path)
-    {
+  {
     MTLogger::setFilePath($file_path);
-    }
+  }
 
   /**
    * Set prefix for log files
@@ -791,9 +799,9 @@ class MTWebAPI
    * @return void
    */
   public function SetLoggerFilePrefix($prefix)
-    {
+  {
     MTLogger::setFilePrefix($prefix);
-    }
+  }
 
   /**
    * Set or unset flag write MTLoggerType::DEBUG logs
@@ -803,38 +811,67 @@ class MTWebAPI
    * @return void
    */
   public function SetLoggerWriteDebug($is_write)
-    {
+  {
     MTLogger::setWriteDebug($is_write);
-    }
-
-
-    /**
-     * Send a trade request to the MT5 server
-     *
-     * @param string $account_code MT5 account identifier
-     * @param array $trade_request Trade request parameters
-     * @param array &$trade_result Output array for trade result
-     * @return int Error code (0 for success)
-     */
-
-
-    public function TradeRequest($trade_request, &$trade_result)
-    {
-        $mt_trade = new MTTradeProtocol($this->m_connect);
-
-
-        // Perform the trade request
-        $result = $mt_trade->Trade($trade_request, $trade_result);
-
-        // Normalize retcode if present
-        if (isset($trade_result['retcode'])) {
-            $trade_result['retcode'] = (int) $trade_result['retcode'];
-        } else {
-            $trade_result['retcode'] = $result;
-        }
-
-        return $result;
-    }
-
-
   }
+
+
+  /**
+   * Send a trade request to the MT5 server
+   *
+   * @param string $account_code MT5 account identifier
+   * @param array $trade_request Trade request parameters
+   * @param array &$trade_result Output array for trade result
+   * @return int Error code (0 for success)
+   */
+
+
+  public function TradeRequest($trade_request, &$trade_result)
+  {
+    $mt_trade = new MTTradeProtocol($this->m_connect);
+
+
+    // Perform the trade request
+    $result = $mt_trade->Trade($trade_request, $trade_result);
+
+    // Normalize retcode if present
+    if (isset($trade_result['retcode'])) {
+      $trade_result['retcode'] = (int) $trade_result['retcode'];
+    } else {
+      $trade_result['retcode'] = $result;
+    }
+
+    return $result;
+  }
+
+  public function TradeCloseRequest($trade, &$trade_result, $request)
+  {
+    $mt_trade = new MTTradeProtocol($this->m_connect);
+    $position_id = $trade->Position;
+    $symbol = $trade->Symbol;
+    $volume = $trade->Volume;
+    $trade->Action = (int)!$trade->Action;
+    $type = (int)$trade->Action;
+
+    $data = [
+      "Action" => "200",
+      "Login" =>  $trade->Login,
+      "Symbol" => $symbol,
+      "Volume" => $volume,
+      "PriceOrder" => $trade->PriceCurrent,
+      "Price" => $trade->PriceCurrent,
+      "Comment" => "Closing position via API",
+      "TypeTime" => "GTC",
+      "Type" => (string)$type,
+      "TypeFill" => 1,
+      "Position" => $position_id,
+    ];
+    $result = $request->Post('/api/dealer/send_request', json_encode($data));
+    if ($result != false)
+      echo $result;
+
+
+
+    return $result;
+  }
+}
