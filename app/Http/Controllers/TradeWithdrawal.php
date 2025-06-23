@@ -223,16 +223,38 @@ class TradeWithdrawal extends Controller
 
             }
 
-            if($account->BonusTransaction){
-                if($user_email == 'info@jalelabou.com'){
-                    $totalPromoBonus = $account->BonusTransaction
-                                ->filter(fn($item) => !is_null($item->promocode_id))
-                                ->sum('bonus_amount');
+            // if($user_email == 'info@jalelabou.com'){
+            //     if($account->BonusTransaction){
+            //         $totalPromoBonus = $account->BonusTransaction
+            //                     ->filter(fn($item) => !is_null($item->promocode_id))
+            //                     ->sum('bonus_amount');
+            //         $promocode = $account->BonusTransaction
+            //                     ->filter(fn($item) => !is_null($item->promocode_id))
+            //                     ->sum('bonus_amount');
+            //         if($totalPromoBonus >= 5){
+            //             $deductable_promobonus = $amount -
 
-                    dump($totalPromoBonus);
-                    dd($account->BonusTransaction);
-                }
-            }
+            //             dump($totalPromoBonus);
+            //             dd($account->BonusTransaction);
+            //             if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+            //                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+            //             } else {
+            //                 $deposit_details = BonusTransaction::create([
+            //                     'email' => $account->email,
+            //                     'user_id' => $user_id,
+            //                     'account_id' => $account->id,
+            //                     'code' => $account->code,
+            //                     'bonus_amount' => $bonusamount,
+            //                     'bonus_type' => 'Bonus Out',
+            //                     'status' => 1,
+            //                     'admin_remark' => '10x Trader Leverage',
+            //                     'bonus_currency' => 'USD',
+            //                     // 'created_by' => session('alogin')
+            //                 ]);
+            //             }
+            //         }
+            //     }
+            // }
 
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
             if ($errorCode1 != MTRetCode::MT_RET_OK) {

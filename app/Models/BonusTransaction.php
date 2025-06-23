@@ -30,7 +30,7 @@ class BonusTransaction extends Model
 
     public $timestamps=false;
     protected $guarded = [];
-   
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -44,5 +44,10 @@ class BonusTransaction extends Model
     public function demoaccount()
     {
         return $this->belongsTo(Account::class)->where('demo',true);
+    }
+
+    public function promocode()
+    {
+        return $this->belongsTo(Promocode::class);
     }
 }
