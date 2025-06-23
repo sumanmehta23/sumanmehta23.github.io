@@ -46,8 +46,8 @@ class BonusTransaction extends Model
         return $this->belongsTo(Account::class)->where('demo',true);
     }
 
-    public function promocode()
-    {
-        return $this->belongsTo(Promocode::class);
-    }
+    // public function promocode()
+    // {
+    //     return $this->belongsTo(Promocode::class);
+    // }
 }
