@@ -18,8 +18,8 @@
                 <div class="card custom-card position-sticky" style="top: 80px;">
                     <div class="card-header">
                         <div class="d-flex justify-content-between w-100">
-                            <h4 class="mt-auto mb-auto page-title">Groups</h4>
-                            <button type="button" class="btn btn-primary addGrp">Add New Group</button>
+                            <h4 class="mt-auto mb-auto page-title">Competitions Products</h4>
+                            <button type="button" class="btn btn-primary addGrp">Add New Competition</button>
                         </div>
                     </div>
                     <div class="card-body">
