@@ -135,16 +135,11 @@ class TradeWithdrawal extends Controller
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');
 
-
-
         // Get the account balance
 
         // Check for sufficient balance
         if ((float) ($amount) > ((float) $account->balance - (float) $total_bonus)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Insufficient balance',
-            ], 400);
+            return redirect()->back()->with('error', 'Insufficient balance');
         }
 //        if ($withdraw_type == "Trade Withdrawal") {
             $balance = abs((float)$amount) * -1;
