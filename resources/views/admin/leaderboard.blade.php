@@ -92,7 +92,6 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="table-responsive"
                             <div class="table-responsive">
                                 <table id="competitionDatatable" class="table competitionDatatable table-bordered text-nowrap w-100">
                                     <thead>

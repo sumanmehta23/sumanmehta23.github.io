@@ -30,7 +30,7 @@ class CompetitionService
             ->where('code', '!=', null)
             ->where('demo', true)
             ->whereHas('accountType', function($q) {
-                $q->where('ac_name', 'Competition');
+                $q->where('ac_name','like' ,'%Competition%');
             })
             ->get();
         return [

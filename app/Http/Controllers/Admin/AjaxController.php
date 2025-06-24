@@ -4111,7 +4111,7 @@ class AjaxController extends Controller
             ->whereNotNull('competition_month')
             ->whereNotNull('competition_year')
             ->whereHas('accountType', function ($query) {
-                $query->where('ac_name', 'Competition');
+                $query->where('ac_name','like', '%Competition%');
             })
             ->with(['user', 'accountType']);
 
@@ -4230,7 +4230,7 @@ class AjaxController extends Controller
                 })
                 ->addColumn('month_year', function ($row) {
                     $monthYear = $row->competition_month . '/' . $row->competition_year;
-                    $url = route('admin.competitions.leaderboard', [
+                    $url = route('admin.competition.leaderboard', [
                         'month' => $row->competition_month,
                         'year' => $row->competition_year
                     ]);

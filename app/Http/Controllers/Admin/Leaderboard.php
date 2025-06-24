@@ -52,6 +52,11 @@ class Leaderboard extends Controller
         $stats = $this->competitionService->getCurrentStats($month, $year);
         $rankings = $this->competitionService->getRankings($month, $year);
 
+        // dump($month);
+        // dump($year);
+        // dump($stats);
+        // dd($rankings);
+
         return view('admin.leaderboard', [
             'stats' => $stats,
             'rankings' => $rankings,
