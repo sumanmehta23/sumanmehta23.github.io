@@ -199,11 +199,11 @@
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required="">
+                                <input type="date" class="form-control" id="start_date" name="competition_start_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" required="">
+                                <input type="date" class="form-control" id="end_date" name="competition_end_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_swap" class="form-label">Swap</label>
@@ -280,16 +280,17 @@
             });
 
             // Open Update Modal
-            $(document).on('click', '.grp-action', function() {
-                var data = dTtable.row($(this).closest('tr')).data();
-                // Fill form fields with data
-                $('#groupUpdateForm input:not([type="hidden"]), #groupUpdateForm select').each(function() {
-                    var name = $(this).attr('name');
-                    $(this).val(data[name] || '').trigger('change');
-                });
-                $('#groupUpdateForm [name="ac_index"]').val($(this).data('id'));
-                grpUpdateModal.show();
-            });
+            // $(document).on('click', '.grp-action', function() {
+            //     var data = dTtable.row($(this).closest('tr')).data();
+            //     console.log(data);
+            //     // Fill form fields with data
+            //     $('#groupUpdateForm input:not([type="hidden"]), #groupUpdateForm select').each(function() {
+            //         var name = $(this).attr('name');
+            //         $(this).val(data[name] || '').trigger('change');
+            //     });
+            //     $('#groupUpdateForm [name="ac_index"]').val($(this).data('id'));
+            //     grpUpdateModal.show();
+            // });
         });
 
         function dTSelection() {
@@ -297,9 +298,10 @@
             $('#tableMT5Groups tbody tr').off();
             $('#tableMT5Groups tbody tr').on('click', '.grp-action', function() {
                 var data = dTtable.row($(this).closest("tr")).data();
+                console.log(data);
                 $("#groupUpdateForm input:not([type='hidden']),#groupUpdateForm select").each(function() {
                     var name = $(this).attr("name");
-                    console.log(name, " ==> ", data[name]);
+                    //console.log(name, " ==> ", data[name]);
                     $(this).val(data[name]).trigger("change");
                 })
                 $("#groupUpdateForm [name='ac_index']").val($(this).data("id"));

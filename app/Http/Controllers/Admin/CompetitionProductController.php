@@ -106,8 +106,8 @@ class CompetitionProductController extends Controller
                 'status' => ['required'],
                 'ib_enabled' => ['required'],
                 'display_priority' => ['required'],
-                'start_date' => ['required', 'date'],
-                'end_date' => ['required', 'date'],
+                'competition_start_date' => ['required', 'date'],
+                'competition_end_date' => ['required', 'date'],
             ]);
 
             $acc_type = AccountType::where('ac_index', $request->ac_index)->first();
@@ -123,8 +123,8 @@ class CompetitionProductController extends Controller
                 'inquiry_status' => $validatedData['inquiry_status'],
                 'status' => $validatedData['status'],
                 'display_priority' => $validatedData['display_priority'],
-                'competition_start_date' => $validatedData['start_date'],
-                'competition_end_date' => $validatedData['end_date'],
+                'competition_start_date' => $validatedData['competition_start_date'],
+                'competition_end_date' => $validatedData['competition_end_date'],
             ]);
 
             // Delete existing leverage records for this account type
