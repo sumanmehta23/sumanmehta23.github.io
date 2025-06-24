@@ -11,4 +11,9 @@ class MT5GroupCategory extends Model
 {
     use HasFactory, HasUuids;
     protected $table = 'mt5_group_categories';
+
+    public function accountTypes()
+    {
+        return $this->hasMany(AccountType::class, 'ac_category', 'mt5_grp_cat_id');
+    }
 }

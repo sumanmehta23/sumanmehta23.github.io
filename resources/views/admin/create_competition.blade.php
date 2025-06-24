@@ -14,147 +14,250 @@
             </div>
             <!-- PAGE-HEADER END -->
 
-
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card custom-card">
-                        <div class="card-header d-none">
-                            <div class="card-title">
+            <div class="col-xl-12">
+                    <div class="card custom-card position-sticky" style="top: 80px;">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between w-100">
+                                <h4 class="mt-auto mb-auto page-title">Groups</h4>
+                                <button type="button" class="btn btn-primary addGrp">Add New Group</button>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
-                                    <thead>
-                                        <tr>
-                                            <th><input type="checkbox" id="select-all"></th>
-                                            <td>Client</td>
-                                            <td>Trade ID</td>
-                                            <td>Leverage</td>
-                                            <td>Balance</td>
-                                            <td>Registered Date</td>
-                                            <td>Name</td>
-                                            <td>Email</td>
-                                            <td>Account Code</td>
-                                            <td>Account Group</td>
-                                            <td>Date</td>
-                                            <td>Time</td>
-                                            <td>Status</td>
-                                        </tr>
-                                    </thead>
+                                <table id="tableMT5Groups" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <tbody>
-
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="accountUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="accountUpdatemodalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Group Creation Modal -->
+    <div class="modal fade" id="groupMgmt" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="groupMgmtLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form action="/admin/competition/activate_competition" id="AccountRequestForm"  method="POST">
-                     @csrf
-                     <input type="hidden" name="client_id" id="client_id" value="">
-                     <input type="hidden" name="options" id="account_type_id" value="">
-                     <input type="hidden" name="leverage" id="leverage" value="">
-                     <input type="hidden" name="account_id" id="account_id" value="">
-                     <input type="hidden" name="accountType" id="accountType" value="">
-                     <input type="hidden" name="demo_deposit" id="demo_deposit" value="">
+                <form action="{{ route('admin.groups.store') }}" id="groupMgmtCreation" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
+                    @csrf
+                    <input type="hidden" name="ac_index" id="group_id" value="">
+                    <input type="hidden" name="groupCreation" value="true">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="accountUpdatemodalLabel">Client Competition Request Management</h5>
+                        <h5 class="modal-title" id="groupMgmtLabel">Group Creation Form</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="mb-0 modal-body custom-card card">
-                        <div class="d-flex align-items-center card-header w-100">
-                        <div class="me-2">
-                            <span class="avatar avatar-rounded">
-                            <img src="/admin_assets/assets/images/users/user.png" alt="img">
-                            </span>
-                        </div>
-                        <div class="">
-                            <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
-                            {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
-                        </div>
+                        <div class="row">
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="ac_type" class="form-label">Group Type</label>
+                                <select class="form-control" id="ac_type" name="ac_type" required="">
+                                    <option value="" selected disabled></option>
+                                    <?php foreach ($mt5_groups as $gp) { ?>
+                                    <option value="<?= $gp->mt5_group_id ?>" data-gname="<?= $gp->mt5_group_name ?>"
+                                        <?php if ($gp->mt5_group_type == 'live') { ?> data-name="<?= $gp->mt5_group_name ?>" <?php } else { ?>
+                                        data-name="demo\<?= $gp->mt5_group_name ?>" <?php } ?>>
+                                        <?= $gp->mt5_group_name ?> -
+                                        <?= ucfirst($gp->mt5_group_type) ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="group_name" class="form-label">Display Name</label>
+                                <input type="text" class="form-control" name="ac_name" required=""
+                                    id="group_name">
+                            </div>
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="ac_type" class="form-label">Group Category</label>
+                                <select class="form-control" id="ac_type" name="ac_category" required="">
+                                    <option selected="" default="" disabled=""></option>
+                                    <?php $i = 1;
+                foreach ($results as $res) { ?>
+                                    <option value="<?= $res->mt5_grp_cat_id ?>"
+                                        <?= $res->is_active == 0 ? 'disabled' : '' ?>>
+                                        <?= $res->mt5_grp_cat_name ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="ac_book_type" class="form-label">Group Book Type</label>
+                                <select class="form-control" id="ac_book_type" name="ac_book_type" required="">
+                                    <option selected="" default="" disabled=""></option>
+                                    <?php $i = 1;
+                foreach ($grp_books as $res) { ?>
+                                    <option value="<?= $res->mt5_grp_cat_id ?>"
+                                        <?= $res->is_active == 0 ? 'disabled' : '' ?>>
+                                        <?= $res->mt5_grp_cat_name ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
 
-                        </div>
-                        <div class="card-body">
-                        <div class="mb-3 row">
-                            <div class="m-auto col-lg-4">
-                            <label class="form-label">Client Competition Status</label>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="group_name" class="form-label">Group Name</label>
+                                <input type="text" class="form-control" name="ac_group" required=""
+                                    readonly="" id="group_name">
                             </div>
-                            <div class="col-lg-8">
-                            <select class="form-select" required name="request_status" aria-label="Default select example">
-                                <option selected>--Status--</option>
-                                <option value="1">Approve</option>
-                                {{-- <option value="0">Pending</option> --}}
-                                <option value="2">Rejected</option>
-                            </select>
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="ac_min_deposit" class="form-label">Minimum Deposit</label>
+                                <input type="number" class="form-control" id="ac_min_deposit" name="ac_min_deposit"
+                                    required="">
                             </div>
-                        </div>
+                            <div class="mb-3 form-group col-lg-3">
+                                <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
+                                <input type="text" class="form-control" id="ac_max_leverage" name="ac_max_leverage"
+                                    required="">
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="group_spread" class="form-label">Spread</label>
+                                <input type="number" class="form-control" id="group_spread" name="ac_spread"
+                                    step="0.1" required="">
+                            </div>
+
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ac_swap" class="form-label">Swap</label>
+                                <select class="form-control" id="ac_swap" name="ac_swap" required="">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="is_client_group" class="form-label">Client Group</label>
+                                <select class="form-control" id="is_client_group" name="is_client_group" required="">
+                                    <option value="1">Shown</option>
+                                    <option value="0">Hidden</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="inquiry_status" class="form-label">Inquiry Status</label>
+                                <select class="form-control" id="inquiry_status" name="inquiry_status" required="">
+                                    <option value="0">Account Creation</option>
+                                    <option value="1">Enquiry</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-control" id="status" name="status" required="">
+                                    <option value="1">Active</option>
+                                    <option value="0">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="ib_enabled" class="form-label">IB Enabled</label>
+                                <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="display_priority" class="form-label">Display Priority</label>
+                                <input type="number" class="form-control" id="display_priority" name="display_priority"
+                                    step="1" required="">
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" name="accountRequest" value="update" class="btn btn-primary">Update</button>
+                        <button type="submit" name="groupCreation" value="create"
+                            class="btn btn-primary ps-">Create</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="bulkAccountUpdatemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="bulkAccountUpdatemodalLabel" aria-hidden="true">
+    <!-- Group Update Modal -->
+    <div class="modal fade" id="groupUpdate" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="groupMgmtLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="/admin/clientAccounts/bulk_activate_account" id="BulkAccountRequestForm"  method="POST">
-                     @csrf
-                     <input type="hidden" name="client_id" id="client_id" value="">
-                     {{-- <input type="hidden" name="options" id="account_type_id" value="">
-                     <input type="hidden" name="leverage" id="leverage" value=""> --}}
-                     {{-- <input type="hidden" name="account_id" id="account_id" value=""> --}}
-                     {{-- <input type="hidden" name="accountType" id="accountType" value=""> --}}
-                     {{-- <input type="hidden" name="demo_deposit" id="demo_deposit" value=""> --}}
+                <form action="#" id="groupUpdateForm" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
+                    @csrf
+                    <input type="hidden" name="ac_index" id="group_id" value="">
+                    <input type="hidden" name="groupUpdation" value="true">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="bulkAccountUpdatemodalLabel">Client Account Request Management</h5>
+                        <h5 class="modal-title" id="groupUpdateLabel">Group Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="mb-0 modal-body custom-card card">
-                        <div class="d-flex align-items-center card-header w-100">
-                        <div class="me-2">
-                            <span class="avatar avatar-rounded">
-                            <img src="/admin_assets/assets/images/users/user.png" alt="img">
-                            </span>
-                        </div>
-                        <div class="">
-                            <div class="fs-15 fw-medium text-capitalize" id="clientName"></div>
-                            {{-- <p class="mb-0 text-muted fs-11" id="clientEmail"></p> --}}
-                        </div>
-
-                        </div>
-                        <div class="card-body">
-                        <div class="mb-3 row">
-                            <div class="m-auto col-lg-4">
-                            <label class="form-label">Client Account Status</label>
+                        <div class="row">
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="group_name" class="form-label">Display Name</label>
+                                <input type="text" class="form-control" name="ac_name" required=""
+                                    id="group_name">
                             </div>
-                            <div class="col-lg-8">
-                            <select class="form-select" required name="request_status" aria-label="Default select example">
-                                <option selected>--Status--</option>
-                                <option value="1">Approve</option>
-                                {{-- <option value="0">Pending</option> --}}
-                                <option value="2">Rejected</option>
-                            </select>
+                            <div class="mb-3 form-group col-lg-6">
+                                <label for="group_name" class="form-label">Group Name</label>
+                                <input type="text" class="form-control" name="ac_group" readonly required=""
+                                    id="group_name">
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ac_min_deposit" class="form-label">Minimum Deposit</label>
+                                <input type="number" class="form-control" id="ac_min_deposit" name="ac_min_deposit"
+                                    required="">
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
+                                <input type="input" class="form-control" id="ac_max_leverage" name="ac_max_leverage"
+                                    required="">
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ac_swap" class="form-label">Swap</label>
+                                <select class="form-control" id="ac_swap" name="ac_swap" required="">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="is_client_group" class="form-label">Client Group</label>
+                                <select class="form-control" id="is_client_group" name="is_client_group" required="">
+                                    <option value="1">Shown</option>
+                                    <option value="0">Hidden</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="inquiry_status" class="form-label">Inquiry Status</label>
+                                <select class="form-control" id="inquiry_status" name="inquiry_status" required="">
+                                    <option value="0">Account Creation</option>
+                                    <option value="1">Enquiry</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-control" id="status" name="status" required="">
+                                    <option value="1">Active</option>
+                                    <option value="0">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ib_enabled" class="form-label">IB Enabled</label>
+                                <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="ib_enabled" class="form-label">IB Enabled</label>
+                                <select class="form-control" id="ib_enabled" name="ib_enabled" required="">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
+                                <label for="display_priority" class="form-label">Display Priority</label>
+                                <input type="number" class="form-control" id="display_priority" name="display_priority"
+                                    step="1" required="">
                             </div>
                         </div>
-                        </div>
+                        <!-- <button type="submit" name="groupCreation" value="create" class="btn btn-success">Submit</button> -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" name="accountRequest" value="update" class="btn btn-primary">Update</button>
+                        <button type="submit" name="groupCreation" value="create"
+                            class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>
@@ -166,180 +269,178 @@
 <!-- End::app-content -->
 <script>
     $(document).ready(function() {
-        window.myModal = new bootstrap.Modal(document.getElementById('accountUpdatemodal'));
-    });
-    // console.log(bootstrap.Modal);
+        // Initialize Bootstrap modals
+        window.grpModal = new bootstrap.Modal(document.getElementById('groupMgmt'));
+        window.grpUpdateModal = new bootstrap.Modal(document.getElementById('groupUpdate'));
 
-    // $("#ibModal").modal();
+        // Open Create Modal
+        $(document).on('click', '.addGrp', function() {
+            $('#group_id').val('');
+            // Reset form fields if needed
+            $('#groupMgmtCreation')[0].reset();
+            grpModal.show();
+        });
+
+        // Open Update Modal
+        $(document).on('click', '.grp-action', function() {
+            var data = dTtable.row($(this).closest('tr')).data();
+            // Fill form fields with data
+            $('#groupUpdateForm input:not([type="hidden"]), #groupUpdateForm select').each(function() {
+                var name = $(this).attr('name');
+                $(this).val(data[name] || '').trigger('change');
+            });
+            $('#groupUpdateForm [name="ac_index"]').val($(this).data('id'));
+            grpUpdateModal.show();
+        });
+    });
+
     function dTSelection() {
         // alert("Init");
-        $('.ajaxDataTable tbody tr').off();
-        $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
+        $('#tableMT5Groups tbody tr').off();
+        $('#tableMT5Groups tbody tr').on('click', '.grp-action', function() {
             var data = dTtable.row($(this).closest("tr")).data();
-            console.log(data.id);
-            $("#AccountRequestForm input,#AccountRequestForm select").not("input[name='_token']").val("").trigger("change");
-            $("#clientName,#clientEmail").html("");
-            $("#account_id").val(data.id);
-            $("#clientName").html(data.fullname || "");
-            $("#clientEmail").html(data.email || "");
-            $("#client_id").val(data.user_id);
-            $("#leverage").val(data.leverage);
-            $("#accountType").val(data.demo);
-            $("#account_type_id").val(data.account_type_id);
-            $("#demo_deposit").val(data.balance);
-            $("[name='request_status']").val(data.request_status).trigger("change");
-            myModal.show();
-
+            $("#groupUpdateForm input:not([type='hidden']),#groupUpdateForm select").each(function() {
+                var name = $(this).attr("name");
+                console.log(name, " ==> ", data[name]);
+                $(this).val(data[name]).trigger("change");
+            })
+            $("#groupUpdateForm [name='ac_index']").val($(this).data("id"));
+            grpUpdateModal.show();
         });
     }
 
-    $(document).ready(function() {
-
-    // "Select All" functionality
-    $('#select-all').on('click', function () {
-        const isChecked = $(this).is(':checked');
-        $('.row-checkbox').prop('checked', isChecked); // Toggle all checkboxes
-
-        if (isChecked) {
-            // Add all rows to selectedRows
-            selectedRows = dTtable.rows().data().toArray();
-        } else {
-            selectedRows = []; // Clear selection
+    function getInitials(input) {
+        if (input) {
+            const words = input.trim().split(/\s+/); // Split input by spaces
+            if (words.length === 1) {
+                return words[0].slice(0, 3).toUpperCase(); // If it's a single word, return the first two letters
+            } else {
+                return words.map(word => word[0].toUpperCase()).join(
+                    ''); // Otherwise, return the first letter of each word
+            }
         }
-    });
+        return input;
+    }
 
-    window.dTtable = $('#ajaxDatatable').on("draw.dt", dTSelection).DataTable({
-    // var dTtable = $('#ajaxDatatable').DataTable({
-            processing: true,
-            serverSide: true,
-            searching: true,
-            ajax: {
-                url: '/admin/getRequestedCompetitionList',
-                type: 'GET',
-                data: {}, // Ensure this is populated dynamically if needed.
-                dataSrc: function(json) {
-                    return json.data;
+    function group_namer() {
+        // var dn = $("[name='ac_name']").val();
+        var dn = ($("[name='ac_type'] option:selected").data("gname")) ? $("[name='ac_type'] option:selected").data(
+            "gname").trim() : "";
+        var type = ($("[name='ac_type'] option:selected").data("name")) ? $("[name='ac_type'] option:selected").data(
+            "name").trim() : "";
+        var category = ($("[name='ac_category'] option:selected").text().toUpperCase()) ? $(
+            "[name='ac_category'] option:selected").text().toUpperCase().trim() : "";
+        var book = ($("[name='ac_book_type'] option:selected").text().toUpperCase()) ? $(
+            "[name='ac_book_type'] option:selected").text().toUpperCase().trim() : "";
+        dn = getInitials(dn);
+        var gn = type + "\\" + dn + "-" + category + "-" + book + "-USD"
+        // console.log("GGN", gn);
+        $("#groupMgmtCreation [name='ac_group']").val(gn);
+    }
+
+
+    window.dTtable = $('#tableMT5Groups').on("draw.dt", dTSelection).DataTable({
+        // order: [[0, "desc"]],
+        "ajax": {
+            "url": "/admin/ajax",
+            "type": "GET",
+            data: {
+                action: 'getCompetitionGroups',
+                type: '<?= $activeType ?>',
+                group: '<?= $activeGroup ?>'
+            },
+        },
+        order: [],
+        columns: [{
+                data: 'ac_name',
+                title: 'DP Name'
+            },
+            {
+                data: 'display_priority',
+                title: 'Order Pri.'
+            },
+            {
+                data: 'ac_group',
+                title: 'Group'
+            },
+            {
+                data: 'ac_min_deposit',
+                title: 'Min.Deposit'
+            },
+            {
+                data: 'ac_spread',
+                title: 'Spread'
+            },
+            {
+                data: 'acc_status',
+                title: 'Status'
+            },
+            {
+                data: 'is_client_group',
+                title: 'Client Shown',
+                render: function(data) {
+                    if (data == 1) {
+                        return '<span class="badge bg-outline-success">Shown</span>';
+                    } else {
+                        return '<span class="badge bg-outline-danger">Hidden</span>';
+                    }
                 }
             },
-            columns: [
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, row) {
-                    return `<input type="checkbox" class="row-checkbox" data-id="${row.id}">`;
-                    }
-                },
-                {
-                    data: 'email',
-                    name: 'email'
-                },
-                {
-                    data: 'code',
-                    name: 'code'
-                },
-                {
-                    data: 'leverage',
-                    name: 'leverage'
-                },
-                {
-                    data: 'balance',
-                    name: 'balance',
-                    orderable: false
-                },
-                {
-                    data: 'created_at',
-                    name: 'created_at',
-                    orderable: false
-                },
-                {
-                    data: 'fullname',
-                    name: 'fullname',
-                    visible: false,
+            {
+                data: 'enc_id',
+                title: 'Action',
+                render: function(data) {
+                    var btn =
+                        '<button class="btn btn-primary grp-action" data-id="'+data+'"><i class="fa fa-ellipsis-h"></i></button>';
+                    return btn;
+                }
+            }
+        ]
+    });
 
-                },
-                {
-                    data: 'fullemail',
-                    name: 'fullemail',
-                    visible: false,
 
-                },
-                {
-                    data: 'account_code',
-                    name: 'account_code',
-                    visible: false,
+    $("#groupCreation, #groupUpdateForm").submit(function(e) {
+        e.preventDefault();
 
-                },
-                {
-                    data: 'account_group',
-                    name: 'account_group',
-                    visible: false,
+        var form = $(this);
+        var id = form.find("[name='ac_index']").val();
+        var url = id ? `/admin/groups/${id}` : `/admin/groups`;
+        var method = id ? "POST" : "POST"; // still POST; Laravel expects _method=PUT for updates
 
-                },
-                {
-                    data: 'created_date',
-                    name: 'created_date',
-                    visible: false,
-
-                },
-                {
-                    data: 'created_time',
-                    name: 'created_time',
-                    visible: false,
-
-                },
-                {
-                    data: 'account_request_status',
-                    name: 'account_request_status',
-                },
-
-            ],
-            rowCallback: function(row, data) {
-                // Optional customization for rows
+        $.ajax({
+            url: url,
+            type: method,
+            data: form.serialize() + (id ? '&_method=PUT' : ''),
+            dataType: 'json',
+            beforeSend: function() {
+                Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             },
-            drawCallback: function(settings) {
-                // Optional customization for draw events
+            success: function(res) {
+                console.log(res);
+                console.log('abhay');
+                if (res === true || res.success === true) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: id ? 'Group Updated Successfully' : 'Group Created Successfully'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Something went wrong.'
+                    });
+                }
             },
-            order: [[0, "desc"]],
-            lengthChange: true,
-            pageLength: 10,
-            // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
-            dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Requested_Accounts_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: {
-                        columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
-                    }
-                },
-                // {
-                //     text: 'Bulk Approve',
-                //     className: 'btn-bulk-action', // Optional: Add a custom class for styling
-                //     action: function (e, dt, node, config) {
-                //         // Get selected rows
-                //         const selectedRows = [];
-                //         $('.row-checkbox:checked').each(function () {
-                //             selectedRows.push($(this).data('id')); // Collect all selected row IDs
-                //         });
-
-                //         if (selectedRows.length === 0) {
-                //         alert('No rows selected!');
-                //         return;
-                //         }
-
-                //         // Populate the hidden input with selected IDs
-                //         $('#BulkAccountRequestForm #client_id').val(selectedRows.join(',')); // Join IDs as a comma-separated string
-
-                //         // Open the modal
-                //         const modal = new bootstrap.Modal(document.getElementById('bulkAccountUpdatemodal'));
-                //         modal.show();
-                //     }
-                // }
-            ]
+            error: function(xhr) {
+                console.log(xhr);
+                console.log('abhay');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: xhr.responseJSON?.error || 'Something went wrong.'
+                });
+            }
         });
-
     });
 
 

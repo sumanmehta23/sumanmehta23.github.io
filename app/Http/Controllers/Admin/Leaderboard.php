@@ -65,9 +65,26 @@ class Leaderboard extends Controller
         ]);
     }
 
-    public function create_competition()
+    public function create_competition(Request $request)
     {
-        return view('admin.create_competition');
+        $activeType = $request->query('activeType');
+        $activeGroup = $request->query('activeGroup');
+
+        // Retrieve MT5 group categories of type 'type' with account type counts using Eloquent
+        $results = \App\Models\MT5GroupCategory::withCount(['accountTypes as count' => function ($query) {
+            $query->whereNotNull('ac_index');
+        }])
+        ->where('mt5_grp_cat_type', 'type')
+        ->orderBy('mt5_grp_cat_id')
+        ->get();
+
+        $mt5_groups = \App\Models\Mt5Group::all();
+
+        $grp_books = \App\Models\MT5GroupCategory::where('mt5_grp_cat_type', 'book')
+            ->orderBy('mt5_grp_cat_id')
+            ->get();
+
+        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup'));
     }
     public function requested_competition()
     {

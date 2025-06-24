@@ -106,6 +106,9 @@ class AjaxController extends Controller
                     case 'getMT5Groups':
                         $result = $this->getMT5Groups($type);
                         break;
+                    case 'getCompetitionGroups':
+                        $result = $this->getCompetitionGroups($type);
+                        break;
                     case 'getIbGroups':
                         $result = $this->getIbGroups($type);
                         break;
@@ -2746,6 +2749,28 @@ class AjaxController extends Controller
             $sql = "SELECT * from account_types order by display_priority desc";
         } else {
             $sql = "SELECT * from account_types where (ac_category) = '$type' order by display_priority asc";
+        }
+        $query = DB::select($sql);
+        $results = $query;
+        $data = [];
+        foreach ($results as $row) {
+            $dat = $row;
+            $dat->enc_id = ($row->ac_index);
+            $dat->ib_status = $row->ib_enabled == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
+            $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
+            $data[] = $dat;
+        }
+        return ['data' => $data];
+    }
+
+    public function getCompetitionGroups($type = NULL)
+    {
+
+        header('Content-Type: application/json');
+        if ($type == NULL) {
+            $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by display_priority desc";
+        } else {
+            $sql = "SELECT * from account_types where (ac_category) = '$type' AND (ac_name) like '%Competition%' order by display_priority asc";
         }
         $query = DB::select($sql);
         $results = $query;
