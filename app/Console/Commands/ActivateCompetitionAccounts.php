@@ -60,11 +60,13 @@ class ActivateCompetitionAccounts extends Command
      */
     public function handle()
     {
-        Account::where('demo', 1)
+        Account::with('accountType')
+            ->where('demo', 1)
             ->whereNotNull('competition_month')
             ->whereNotNull('competition_year')
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {
+                dd($accounts);
                 foreach ($accounts as $account) {
                     $settings = settings();
                     $user = User::where('id', $account->user_id)->first();
