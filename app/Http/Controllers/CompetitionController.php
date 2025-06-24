@@ -145,8 +145,10 @@ class CompetitionController extends Controller
         $nick_name = $request->nick_name;
 
         $email = $user->email;
-        $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-
+        $group = AccountType::where('id', $validatedData['options'])->where('status',1)->first();
+        if (!$group) {
+            return redirect()->back()->with('error', 'Competition is not active.');
+        }
         $account_type_id = $validatedData['options'];
 
         // Extract month name from ac_name

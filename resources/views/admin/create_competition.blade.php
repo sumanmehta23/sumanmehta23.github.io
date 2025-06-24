@@ -277,7 +277,7 @@
         $(document).on('click', '.addGrp', function() {
             $('#group_id').val('');
             // Reset form fields if needed
-            $('#groupMgmtCreation')[0].reset();
+            // $('#groupMgmtCreation')[0].reset();
             grpModal.show();
         });
 
@@ -337,6 +337,10 @@
         // console.log("GGN", gn);
         $("#groupMgmtCreation [name='ac_group']").val(gn);
     }
+
+    $("[name='ac_name'],[name='ac_type'],[name='ac_category'],[name='ac_book_type']").change(function() {
+            group_namer();
+        });
 
 
     window.dTtable = $('#tableMT5Groups').on("draw.dt", dTSelection).DataTable({
