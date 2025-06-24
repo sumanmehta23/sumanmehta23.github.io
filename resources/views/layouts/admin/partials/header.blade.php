@@ -531,6 +531,13 @@
                                         <ul class="slide-menu child1">
                                         </ul>
                                     </li>
+                                    <li class="slide menu-item-sub ">
+                                        <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                            <span class="side-menu__label">Create Competition</span>
+                                        </a>
+                                        <ul class="slide-menu child1">
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
 

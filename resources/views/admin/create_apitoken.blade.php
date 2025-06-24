@@ -12,11 +12,10 @@
                         <div class="card-body">
                             <form action="{{ route('admin.apitoken.store') }}" method="POST">
                                 @csrf
-                                <div
-                                    class="form-group my-2
-                                @error('name')
-                                    has-error
-                                @enderror">
+                                <div class="form-group my-2
+                                    @error('name')
+                                        has-error
+                                    @enderror">
                                     <label for="name">Name</label>
                                     <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}">
                                     @error('name')

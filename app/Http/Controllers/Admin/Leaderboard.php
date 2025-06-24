@@ -65,6 +65,10 @@ class Leaderboard extends Controller
         ]);
     }
 
+    public function create_competition()
+    {
+        return view('admin.create_competition');
+    }
     public function requested_competition()
     {
         return view('admin.requested_competition');
