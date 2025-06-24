@@ -18,7 +18,7 @@
                 <div class="card custom-card position-sticky" style="top: 80px;">
                     <div class="card-header">
                         <div class="d-flex justify-content-between w-100">
-                            <h4 class="mt-auto mb-auto page-title">Competitions Products</h4>
+                            <h4 class="mt-auto mb-auto page-title">Competitions</h4>
                             <button type="button" class="btn btn-primary addGrp">Add New Competition</button>
                         </div>
                     </div>
@@ -44,7 +44,7 @@
                     <input type="hidden" name="ac_index" id="group_id" value="">
                     <input type="hidden" name="groupCreation" value="true">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="groupMgmtLabel">Group Creation Form</h5>
+                        <h5 class="modal-title" id="groupMgmtLabel">Competition Creation Form</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="mb-0 modal-body custom-card card">
@@ -62,7 +62,7 @@
                                 </select>
                             </div>
                             <div class="mb-3 form-group col-lg-3">
-                                <label for="group_name" class="form-label">Display Name</label>
+                                <label for="group_name" class="form-label">Competition Name</label>
                                 <input type="text" class="form-control" name="ac_name" required="" id="group_name">
                             </div>
                             <div class="mb-3 form-group col-lg-3">
