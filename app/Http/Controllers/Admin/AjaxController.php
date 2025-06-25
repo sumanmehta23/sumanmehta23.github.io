@@ -3983,7 +3983,8 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = Account::select('accounts.*')
             ->where('account_request_status', 0)
-            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->where('demo',1)
             ->with(['user', 'accountType']);
 

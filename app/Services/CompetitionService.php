@@ -25,8 +25,8 @@ class CompetitionService
         $year = $year ?? now()->year;
 
         $accounts = Account::with(['user', 'accountType'])
-            ->where('competition_month', $month)
-            ->where('competition_year', $year)
+            ->where('competition_start_date', $month)
+            ->where('competition_end_date', $year)
             ->where('code', '!=', null)
             ->where('demo', true)
             ->whereHas('accountType', function($q) {
@@ -42,7 +42,6 @@ class CompetitionService
             'month' => $month,
             'year' => $year
         ];
-        // });
     }
 
     /**

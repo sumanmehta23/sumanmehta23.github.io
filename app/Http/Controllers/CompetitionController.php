@@ -48,14 +48,16 @@ class CompetitionController extends Controller
         $email = auth()->user()->email;
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)
-            ->whereNotNull('competition_month')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->where('demo', true)
             ->orderBy('id', 'desc')
             ->get();
 
         // Get all competition account IDs
-        $accountIds = Account::whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
+        $accountIds = Account::with('accountType')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->where('demo', true)
             ->pluck('id')
             ->toArray();
@@ -65,24 +67,25 @@ class CompetitionController extends Controller
             ->get()
             ->map(function ($account) {
                 return [
-                    'month' => $account->competition_year . '-' . str_pad(date('m', strtotime($account->competition_month)), 2, '0', STR_PAD_LEFT),
+                    'competition_start_date' => $account->competition_start_date,
+                    'competition_end_date' => $account->competition_end_date,
                     'account_id' => $account->id,
                     'total_amount' => $account->balance ?? 0
                 ];
             });
-            // dd($accounts);
-        // Group by month
-        $grouped = $accounts->groupBy('month');
 
-        // Assign ranks within each month
+        // Group by competition date range
+        $grouped = $accounts->groupBy(function ($item) {
+            return $item['competition_start_date'] . '|' . $item['competition_end_date'];
+        });
+
+        // Assign ranks within each date range
         $ranks = [];
-        foreach ($grouped as $month => $monthAccounts) {
-            // Sort accounts by balance in descending order
-            $sortedAccounts = $monthAccounts->sortByDesc('total_amount')->values();
-
+        foreach ($grouped as $dateRange => $accountsInRange) {
+            $sortedAccounts = $accountsInRange->sortByDesc('total_amount')->values();
             $rank = 1;
             foreach ($sortedAccounts as $accountData) {
-                $ranks[$month][$accountData['account_id']] = [
+                $ranks[$dateRange][$accountData['account_id']] = [
                     'rank' => $rank++,
                     'total' => $accountData['total_amount']
                 ];
@@ -91,10 +94,10 @@ class CompetitionController extends Controller
 
         // Add rank information to each result
         $results = $results->map(function ($account) use ($ranks) {
-            $month = $account->competition_year . '-' . str_pad(date('m', strtotime($account->competition_month)), 2, '0', STR_PAD_LEFT);
-            if (isset($ranks[$month][$account->id])) {
-                $account->rank = $ranks[$month][$account->id]['rank'];
-                $account->total_participants = count($ranks[$month]);
+            $dateRange = $account->competition_start_date . '|' . $account->competition_end_date;
+            if (isset($ranks[$dateRange][$account->id])) {
+                $account->rank = $ranks[$dateRange][$account->id]['rank'];
+                $account->total_participants = count($ranks[$dateRange]);
             } else {
                 $account->rank = null;
                 $account->total_participants = 0;
@@ -270,6 +273,7 @@ class CompetitionController extends Controller
 
     public function leaderboard(Request $request)
     {
+
         // Get month and year from request or use current
         $month = $request->query('month', now()->format('F'));
         $year = $request->query('year', now()->year);

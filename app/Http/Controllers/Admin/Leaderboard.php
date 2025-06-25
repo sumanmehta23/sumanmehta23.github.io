@@ -46,8 +46,20 @@ class Leaderboard extends Controller
 
     public function competiton_dashboard(Request $request)
     {
+
         $month = $request->query('month', now()->format('F'));
         $year = $request->query('year', now()->year);
+
+        $accounts = Account::with(['user', 'accountType'])
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
+            ->where('code', '!=', null)
+            ->where('demo', true)
+            ->where('status', 'active')
+            ->whereHas('accountType', function($q) {
+                $q->where('ac_name','like' ,'%Competition%');
+            })
+            ->get();
 
         $stats = $this->competitionService->getCurrentStats($month, $year);
         $rankings = $this->competitionService->getRankings($month, $year);
@@ -142,7 +154,7 @@ class Leaderboard extends Controller
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
-                $response = $this->CreateCompetition($new_user, $user_server, 'Live');
+                $response = $this->CreateCompetition($new_user, $user_server, 'Demo');
 
                 if ($response['status']) {
                     $account = Account::where('id', $request->account_id)->first();
@@ -231,9 +243,6 @@ class Leaderboard extends Controller
 
     function CreateCompetition($user, &$user_server, $type)
     {
-        dump('sssad');
-            dump($user_server);
-            dd($type);
         $settings = settings();
         if (!$this->api->IsConnected()) {
             $errorCode = $this->api->Connect(

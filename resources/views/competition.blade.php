@@ -40,7 +40,8 @@
                                         <thead>
                                             <tr>
                                                 <th></th>
-                                                <th>Competition Month</th>
+                                                <th>Competition start date</th>
+                                                <th>Competition end date</th>
                                                 <th>Nick Name</th>
                                                 <th>Rank</th>
                                                 <th>Leverage</th>
@@ -80,7 +81,8 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class="f-w-400 f-16">{{ $acc->competition_month }}</td>
+                                                    <td class="f-w-400 f-16">{{ $acc->competition_start_date }}</td>
+                                                    <td class="f-w-400 f-16">{{ $acc->competition_end_date }}</td>
                                                     <td class="f-w-400 f-16">{{ $acc->account_nick_name }}</td>
                                                     {{-- {{ dump($acc->code) }} --}}
                                                     <td class="f-w-400 f-16">{{ isset($acc->code) ? $acc->rank : 'Competition Not Started' }}</td>
@@ -104,8 +106,8 @@
                                                                     <span class="">Withdraw <i class="ti ti-database-import"></i></span>
                                                                 </a> --}}
                                                                 <a href="{{ route('competition.leaderboard', [
-                                                                                'month' => $acc->competition_month,
-                                                                                'year' => $acc->competition_year
+                                                                                'start_date' => $acc->competition_start_date,
+                                                                                'end_date' => $acc->competition_end_date
                                                                             ])
                                                                          }}"
                                                                         class="btn btn-sm btn-outline-secondary d-grid">
@@ -118,7 +120,7 @@
                                                             </div>
                                                         @else
                                                             <div class="d-flex align-items-center">
-                                                                <span class="text-warning">Your competition will be active on first of next month.</span>
+                                                                <span class="text-warning">Your competition will be active on {{ $acc->competition_start_date }}.</span>
                                                             </div>
                                                         @endif
                                                     </td>
