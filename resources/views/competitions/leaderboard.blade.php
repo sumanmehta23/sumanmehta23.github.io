@@ -19,7 +19,12 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="page-header-title px-4">
-                            <h4 class="mb-2 fw-bold">{{ $competition_start_date }} {{ $competition_end_date }} Competition</h4>
+                            <h3 class="mb-2 fw-bold">Competition</h3>
+                            <h4 class="mb-2 fw-bold">
+                                {{ \Carbon\Carbon::parse($competition_start_date)->format('d-m-Y') }} to
+                                {{ \Carbon\Carbon::parse($competition_end_date)->format('d-m-Y') }}
+                            </h4>
+
                             <ul class="breadcrumb bg-transparent mb-0 p-0">
                                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="">Dashboard</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Competition Leaderboard</li>
