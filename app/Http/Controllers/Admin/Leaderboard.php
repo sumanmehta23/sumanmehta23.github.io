@@ -173,22 +173,7 @@ class Leaderboard extends Controller
                     ->log('Create Demo Account');
                      if($account)
                     {
-                        $account->update([
-                            'user_id' => $user->id,
-                            'name' => $new_user->Name,
-                            'demo'=> true,
-                            'email' => $new_user->Email,
-                            // 'name' => $new_user->Name,
-                            'code' => $new_user->Login,
-                            'account_type_id' => $validatedData['options'],
-                            'leverage' => $new_user->Leverage,
-                            'currency' => $new_user->Currency,
-                            'trader_password' => $new_user->MainPassword,
-                            'invester_password' => $new_user->InvestPassword,
-                            'phone_password' => $new_user->PhonePassword,
-                            'balance' => $validatedData['demo_deposit'],
-                            'account_request_status' => 1,
-                        ]);
+
                         $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                         if ($errorCode != MTRetCode::MT_RET_OK) {
                             // dd('sadasdsa');
@@ -197,6 +182,25 @@ class Leaderboard extends Controller
                             $this->sendMail($new_user, 'Live');
                             return redirect()->back()->with('success', $error);
                         } else {
+
+                            $account->update([
+                                'user_id' => $user->id,
+                                'name' => $new_user->Name,
+                                'demo'=> true,
+                                'email' => $new_user->Email,
+                                'competition_status' => 'Active',
+                                // 'name' => $new_user->Name,
+                                'code' => $new_user->Login,
+                                'account_type_id' => $validatedData['options'],
+                                'leverage' => $new_user->Leverage,
+                                'currency' => $new_user->Currency,
+                                'trader_password' => $new_user->MainPassword,
+                                'invester_password' => $new_user->InvestPassword,
+                                'phone_password' => $new_user->PhonePassword,
+                                'balance' => $validatedData['demo_deposit'],
+                                'account_request_status' => 1,
+                            ]);
+
                             $data = [
                                 'user_id' => $user->id,
                                 'account_id'=>$account->id,
