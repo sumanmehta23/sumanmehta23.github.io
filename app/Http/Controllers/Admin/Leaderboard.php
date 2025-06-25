@@ -396,11 +396,11 @@ class Leaderboard extends Controller
      * @param string $accountNo
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getTraderData($accountNo, $month, $year)
+    public function getTraderData($accountNo, $start, $end)
     {
-
-        $startDate = \Carbon\Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // Ensure start and end are Carbon instances
+        $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+        $endDate = \Carbon\Carbon::parse($end)->endOfDay();
 
         $account = Account::with([
             'trades',
@@ -410,36 +410,19 @@ class Leaderboard extends Controller
             }
         ])->where('code', $accountNo)->firstOrFail();
 
-
         // Get daily reports data
         $labels = [];
         $equity = [];
 
-
-        // Get the last 31 days of data (30 days + current day)
-
         $dailyData = $account->dailyReports->keyBy(function ($item) {
-                        return $item->report_date->format('Y-m-d');
-                    });
+            return $item->report_date->format('Y-m-d');
+        });
 
-                    // dd($dailyData);
         // Fill in any missing dates with the last known equity value
         $lastEquity = $account->equity ?? '0.00';
-        $daysInCurrentMonth = now()->daysInMonth;
+        $currentDate = $startDate->copy();
 
-        if($month == now()->format('F') && $year == now()->year){
-            $today = now();
-            $monthEnd = $today;
-        }else{
-            $today = $startDate;
-            $monthEnd = $endDate;
-        }
-
-        $startOfMonth = $today->copy()->startOfMonth();
-        $endOfMonth = $monthEnd; // Up to today
-        $currentDate = $startOfMonth->copy();
-
-        while ($currentDate <= $endOfMonth) {
+        while ($currentDate <= $endDate) {
             $dateKey = $currentDate->format('Y-m-d');
             $dayLabel = $currentDate->format('M d');
             $labels[] = $dayLabel;

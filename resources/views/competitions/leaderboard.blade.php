@@ -624,13 +624,14 @@
                 const isAdmin = @json(isset(auth()->user()->role));
 
                 // Get selected month and year from period selector
-                const selectedMonth = document.querySelector('select[name="month"]').value;
-                const selectedYear = document.querySelector('select[name="year"]').value;
+                const selectedPeriod = document.querySelector('select[name="competition_period"]').value;
+                const [startDate, endDate] = selectedPeriod.split('|');
+
 
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
-                    ? `/admin/competition/trader-data/${testAccountNo}/${selectedMonth}/${selectedYear}`
-                    : `/competition/trader/${testAccountNo}/${selectedMonth}/${selectedYear}`;
+                    ? `/admin/competition/trader-data/${testAccountNo}/${startDate}/${endDate}`
+                    : `/competition/trader/${testAccountNo}/${startDate}/${endDate}`;
 
                 const response = await fetch(endpoint);
 
