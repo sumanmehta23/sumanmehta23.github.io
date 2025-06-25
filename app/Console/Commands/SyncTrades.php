@@ -2,18 +2,19 @@
 
 namespace App\Console\Commands;
 
+use Throwable;
+use App\Models\User;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Jobs\SyncTrades as SyncTradesJob;
+use Illuminate\Bus\Batch;
 use App\Services\MT5Service;
 use App\Services\MailService;
+use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Bus\Batch;
-use Throwable;
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\SyncTrades as SyncTradesJob;
 
 class SyncTrades extends Command
 {
@@ -49,16 +50,19 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        $batchSize = 100; // Process accounts per batch
+        $batchSize = 1; // Process accounts per batch
 
         Account::whereNotNull('code')
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             ->where('competition_status', 'active')
             ->whereNull('deleted_at')
+            ->whereDate('competition_start_date', '<=', Carbon::today())
+            ->whereDate('competition_end_date', '>=', Carbon::today())
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
+                    // dd($accounts);
                     // Check if user exists for this account
                     if ($account->user_id && User::where('id', $account->user_id)->exists()) {
                         $jobs[] = new SyncTradesJob($account);
@@ -71,6 +75,7 @@ class SyncTrades extends Command
                     $jobBatches = array_chunk($jobs, $batchSize);
 
                     foreach ($jobBatches as $batch) {
+
                         Bus::batch($batch)
                             ->allowFailures()
                             ->onConnection('redis')

@@ -40,7 +40,6 @@ class SyncTrades implements ShouldQueue
         $api = $mt5Service->getApi();
         $settings = settings();
         $account = ($this->account);
-
         // Initialize connection
         $api = $mt5Service->getApi();
         $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
