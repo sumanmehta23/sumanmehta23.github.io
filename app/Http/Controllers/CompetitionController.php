@@ -238,8 +238,9 @@ class CompetitionController extends Controller
 
         // Get accounts with their competition details
         $accounts = Account::whereIn('id', $ids)
-            ->whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
+            ->where('competition_status', 'active')
             ->where('demo', true)
             ->get()
             ->map(function ($account) {

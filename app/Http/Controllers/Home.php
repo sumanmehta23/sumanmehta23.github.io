@@ -100,7 +100,9 @@ class Home extends Controller
     {
         $liveaccount_details = auth()->user()->liveAccounts()
             ->with('accountType')
-            ->whereNull('competition_month')
+            ->whereNull('competition_status')
+            ->whereNull('competition_start_date')
+            ->whereNull('competition_end_date')
             ->orderBy('id', 'desc')
             ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id']);
 

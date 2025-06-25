@@ -63,7 +63,7 @@ class ActivateCompetitionAccounts extends Command
         Account::with('accountType')
             ->where('demo', 1)
             ->whereNotNull('competition_start_date')
-            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {
         dd('$accounts');
