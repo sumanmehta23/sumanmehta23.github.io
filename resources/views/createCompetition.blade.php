@@ -37,6 +37,7 @@
                                             <div class="col-9">
                                                 <div class="row">
                                                     @foreach ($results as $i => $acc)
+                                                    {{-- {{ dd($acc) }} --}}
                                                         <div class="col-lg-6 col-xl-4 mb-2">
                                                             <div class="auth-option">
                                                                 <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" {{ $i == 0 ? 'checked' : '' }} name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}">
@@ -53,6 +54,10 @@
                                                                                 {{ strtoupper($acc->ac_name) }}
                                                                             </span>
                                                                             <hr>
+                                                                            <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">{{ \Carbon\Carbon::parse($acc->competition_start_date)->format('d-m-Y') }}</span></strong>
+                                                                                Start Date </span>
+                                                                            <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">{{ \Carbon\Carbon::parse($acc->competition_end_date)->format('d-m-Y') }}</span></strong>
+                                                                            End Date </span>
                                                                             <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">$100k</span></strong>
                                                                                 Deposit Amount </span>
                                                                             <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">${{ strtoupper($acc->ac_spread) }}</span></strong>

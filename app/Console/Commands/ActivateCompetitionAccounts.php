@@ -66,8 +66,12 @@ class ActivateCompetitionAccounts extends Command
             ->whereNotNull('competition_year')
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {
-                dd($accounts);
+
                 foreach ($accounts as $account) {
+
+                    if($account->accountType->competition_start_date > now()){
+                         dd($accounts);
+                    }
                     $settings = settings();
                     $user = User::where('id', $account->user_id)->first();
                     Log::info('Competition counts '.json_encode(count($accounts)));
