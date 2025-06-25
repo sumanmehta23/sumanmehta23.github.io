@@ -66,8 +66,8 @@ class BreachAccountCommand extends Command
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
-                // ->whereDate('competition_start_date', '<=', $currentDate)
-                ->whereDate('competition_end_date', '<=', $currentDate)
+                ->whereDate('competition_start_date', '<=', $currentDate)
+                // ->whereDate('competition_end_date', '<=', $currentDate)
                 ->whereNotNull('code')
                 // ->where('code', 322152)
                 ->where('account_request_status', 1)
@@ -149,21 +149,13 @@ class BreachAccountCommand extends Command
 
                     // Update database record
                     $account->update([
-                        'breached' => true,
-                        'breached_at' => now(),
-                        'status' => 'breached',
-                        'balance' => 0
+                        'competition_status' => 'inactive',
                     ]);
 
                     Log::info("Account {$account->code} updated in database as breached.");
 
                     // Send notification email
-                    $this->mailService->sendBreachNotification($account->user, [
-                        'account_number' => $account->code,
-                        'breach_date' => now()->format('Y-m-d H:i:s'),
-                        'competition_month' => $account->competition_month,
-                        'competition_year' => $account->competition_year
-                    ]);
+
 
                     Log::info("Breach notification email sent to user {$account->user_id} for account {$account->code}");
 

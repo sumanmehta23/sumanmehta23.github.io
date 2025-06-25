@@ -5,12 +5,13 @@ namespace App\Console\Commands;
 use App\Models\Account;
 use App\Models\DailyReport;
 use App\Services\MT5Service;
+use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class SyncDailyReports extends Command
 {
-    protected $signature = 'sync:daily-reports';
+    protected $signature = 'app:sync-daily-reports';
     protected $description = 'Sync daily equity and balance reports from MT5';
 
     protected $mt5Service;
@@ -29,9 +30,19 @@ class SyncDailyReports extends Command
             $this->mt5Service->connect();
             $api = $this->mt5Service->getApi();
 
-            Account::whereNotNull('code')->whereNull('deleted_at')->where('demo',1)->whereNotNull('competition_month')->chunk(200, function ($accounts) use ($api) {
-
+            Account::whereNotNull('code')
+                    ->whereNull('deleted_at')
+                    ->whereNotNull('competition_start_date')
+                    ->whereNotNull('competition_end_date')
+                    ->where('competition_status', 'active')
+                    ->whereDate('competition_start_date', '<=', Carbon::now())
+                    ->whereDate('competition_end_date', '>=', Carbon::now())
+                    ->where('demo',1)
+                    ->chunk(200, function ($accounts) use ($api) {
+                    // dd($accounts);
                 foreach ($accounts as $account) {
+                     Log::info("Account {$account} Daily report sync started.");
+
                     try {
                         // Get account info from MT5
                         $user_info = null;
