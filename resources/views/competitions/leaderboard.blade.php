@@ -19,7 +19,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="page-header-title px-4">
-                            <h4 class="mb-2 fw-bold">{{ $currentMonth }} {{ $currentYear }} Competition</h4>
+                            <h4 class="mb-2 fw-bold">{{ $competition_start_date }} {{ $competition_end_date }} Competition</h4>
                             <ul class="breadcrumb bg-transparent mb-0 p-0">
                                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="">Dashboard</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Competition Leaderboard</li>
@@ -30,19 +30,14 @@
                         <!-- Competition Period Selector -->
                         <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
                             <div class="form-group mb-0">
-                                <select name="month" class="form-select form-select-sm">
-                                    @foreach($months as $m)
-                                        <option value="{{ $m }}" {{ $m === $currentMonth ? 'selected' : '' }}>
-                                            {{ $m }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group mb-0">
-                                <select name="year" class="form-select form-select-sm">
-                                    @foreach($years as $y)
-                                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>
-                                            {{ $y }}
+                                <select name="competition_period" class="form-select form-select-sm">
+                                    @foreach($availableCompetitions as $start => $competitions)
+                                        @php
+                                            $end = $competitions->first()->competition_end_date;
+                                            $selected = ($competition_start_date == $start && $competition_end_date == $end) ? 'selected' : '';
+                                        @endphp
+                                        <option value="{{ $start }}|{{ $end }}" {{ $selected }}>
+                                            {{ \Carbon\Carbon::parse($start)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($end)->format('M d, Y') }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -596,9 +591,10 @@
         // Handle period selection
         document.getElementById('periodSelector').addEventListener('submit', function(e) {
             e.preventDefault();
-            const month = this.month.value;
-            const year = this.year.value;
-            window.location.href = `?month=${month}&year=${year}`;
+            const period = this.competition_period.value.split('|');
+            const start = period[0];
+            const end = period[1];
+            window.location.href = `?start_date=${start}&end_date=${end}`;
         });
 
         // Handle trader selection

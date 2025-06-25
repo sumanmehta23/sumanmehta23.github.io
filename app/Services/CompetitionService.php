@@ -122,11 +122,14 @@ class CompetitionService
         // $requestedDate = Carbon::createFromDate($year, date('m', strtotime($month)), 1);
         $now = Carbon::now();
 
-        // Competition starts on 1st of the month
+        if (!$startDate instanceof Carbon) {
+            $startDate = Carbon::parse($startDate);
+        }
+        if (!$endDate instanceof Carbon) {
+            $endDate = Carbon::parse($endDate);
+        }
+
         $competitionStart = $startDate;
-        // Registration ends on last day of previous month
-        // $registrationEnd = $startDate->subDay();
-        // Competition ends on last day of the month
         $competitionEnd = $endDate;
 
         if ($now->lt($competitionStart)) {

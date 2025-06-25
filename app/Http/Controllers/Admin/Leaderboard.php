@@ -348,36 +348,37 @@ class Leaderboard extends Controller
 
     public function leaderboard(Request $request)
     {
-        // Get month and year from request or use current
-        $month = $request->query('month', now()->format('F'));
-        $year = $request->query('year', now()->year);
+        // dd($request->all());
+        $startDate = $request['start_date'] ?? now()->startOfMonth();
+        $endDate = $request['end_date'] ?? now()->endOfMonth();
 
         try {
             // Get competition data from service
-            $stats = $this->competitionService->getCurrentStats($month, $year);
-            $rankings = $this->competitionService->getRankings($month, $year);
-            $competitionStatus = $this->competitionService->getCompetitionStatus($month, $year);
+            $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
+            $rankings = $this->competitionService->getRankings($startDate, $endDate);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($startDate, $endDate);
+
             // Get available competitions for filtering
-            $availableCompetitions = Account::select('competition_month', 'competition_year')
+            $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
                 ->where('demo', true)
-                ->whereNotNull('competition_month')
-                ->whereNotNull('competition_year')
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
                 ->distinct()
-                ->orderBy('competition_year', 'desc')
-                ->orderBy('competition_month', 'desc')
+                ->orderBy('competition_start_date', 'desc')
+                ->orderBy('competition_end_date', 'desc')
                 ->get()
-                ->groupBy('competition_year');
+                ->groupBy('competition_start_date');
 
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
-                'currentMonth' => $month,
-                'currentYear' => $year,
-                'months' => [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                ],
-                'years' => range(now()->year - 1, now()->year + 1),
+                'competition_start_date' => $startDate,
+                'competition_end_date' => $endDate,
+                // 'months' => [
+                //     'January', 'February', 'March', 'April', 'May', 'June',
+                //     'July', 'August', 'September', 'October', 'November', 'December'
+                // ],
+                // 'years' => range(now()->year - 1, now()->year + 1),
                 'availableCompetitions' => $availableCompetitions,
                 'competitionStatus' => $competitionStatus['status'],
                 'targetDate' => $competitionStatus['targetDate'],
