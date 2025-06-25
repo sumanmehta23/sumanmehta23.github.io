@@ -46,8 +46,11 @@ class SyncAccounts extends Command
     public function handle()
     {
         Account::where('demo', 1)
-            ->whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
+            ->where('competition_status', 'active')
+            ->whereDate('competition_start_date', '<=', Carbon::today())
+            ->whereDate('competition_end_date', '>=', Carbon::today())
             ->whereNotNull('code')
             ->chunk(100, function ($accounts) {
                 $settings = settings();
