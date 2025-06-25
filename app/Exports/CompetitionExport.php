@@ -23,11 +23,12 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
     public function query()
     {
         $query = Account::query()
-            ->whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->where('demo', 1)
+            ->where('competition_status', 'active')
             ->whereHas('accountType', function ($query) {
-                $query->where('ac_name', 'Competition');
+                $query->where('ac_name','like' ,'%Competition%');
             })
             ->with(['user', 'accountType']);
 
@@ -43,12 +44,12 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
             });
         }
 
-        if (!empty($this->filters['month'])) {
-            $query->where('competition_month', $this->filters['month']);
+        if (!empty($this->filters['start_date'])) {
+            $query->where('competition_start_date', $this->filters['start_date']);
         }
 
-        if (!empty($this->filters['year'])) {
-            $query->where('competition_year', $this->filters['year']);
+        if (!empty($this->filters['end_date'])) {
+            $query->where('competition_end_date', $this->filters['end_date']);
         }
 
         if (isset($this->filters['status'])) {
@@ -68,7 +69,8 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
                 $this->formatStatus($account->account_request_status),
                 $account->user->fullname ?? 'N/A',
                 $account->user->email ?? 'N/A',
-                $this->formatMonthYear($account->competition_month, (int)$account->competition_year),
+                // $this->formatDate($account->competition_start_date, (int)$account->competition_end_date),
+                $this->formatDateRange($account->competition_start_date, $account->competition_end_date),
                 $this->formatCurrency($account->initial_balance ?? 100000),
                 $this->formatCurrency($account->balance),
                 $this->formatCurrency($account->equity),
@@ -88,7 +90,7 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
             'Status',
             'Name',
             'Email',
-            'Month/Year',
+            'Start Date/End Date',
             'Initial Balance',
             'Balance',
             'Equity',
@@ -117,7 +119,7 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
     }
 
     private function formatMonthYear(?string $month, ?int $year): string
-    {   
+    {
         if (!$month || !$year) {
             return 'N/A';
         }
@@ -130,5 +132,18 @@ class CompetitionExport implements FromQuery, WithMapping, WithHeadings, WithCol
             return 'N/A';
         }
         return number_format($value, 2);
+    }
+
+    private function formatDateRange($startDate, $endDate): string
+    {
+        if (!$startDate || !$endDate) {
+            return 'N/A';
+        }
+
+        try {
+            return \Carbon\Carbon::parse($startDate)->format('d-m-Y') . ' / ' . \Carbon\Carbon::parse($endDate)->format('d-m-Y');
+        } catch (\Exception $e) {
+            return 'Invalid Date';
+        }
     }
 }

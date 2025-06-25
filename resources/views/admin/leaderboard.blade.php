@@ -59,30 +59,15 @@
                                         <input type="text" id="searchInput" class="form-control" placeholder="Search name, email, account...">
                                     </div>
                                 </div>
-                                <div class="col-sm-6 col-md-4">
-                                    <select id="monthFilter" class="form-select">
-                                        <option value="">Filter by Month</option>
-                                        <option value="January">January</option>
-                                        <option value="February">February</option>
-                                        <option value="March">March</option>
-                                        <option value="April">April</option>
-                                        <option value="May">May</option>
-                                        <option value="June">June</option>
-                                        <option value="July">July</option>
-                                        <option value="August">August</option>
-                                        <option value="September">September</option>
-                                        <option value="October">October</option>
-                                        <option value="November">November</option>
-                                        <option value="December">December</option>
-                                    </select>
-                                </div>
-                                <div class="col-sm-6 col-md-4">
-                                    <select id="yearFilter" class="form-select">
-                                        <option value="">Filter by Year</option>
-                                        @for($i = 2023; $i <= date('Y')+1; $i++)
-                                            <option value="{{ $i }}">{{ $i }}</option>
-                                        @endfor
-                                    </select>
+                                <div class="col-sm-6 col-md-8">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent">
+                                            <i class="fe fe-calendar"></i>
+                                        </span>
+                                        <input type="date" id="startDateFilter" class="form-control" placeholder="Start Date">
+                                        <span class="input-group-text">to</span>
+                                        <input type="date" id="endDateFilter" class="form-control" placeholder="End Date">
+                                    </div>
                                 </div>
                                 <div class="col-sm-6 col-md-4">
                                     <select id="statusFilter" class="form-select">
@@ -99,7 +84,7 @@
                                             <th>Account</th>
                                             <th>Status</th>
                                             <th>Name/Email</th>
-                                            <th>Month/Year</th>
+                                            <th>Start Date/End Date</th>
                                             <th>Inital Balance</th>
                                             <th>Balance</th>
                                             <th>Equity</th>
@@ -133,8 +118,8 @@
                     type: 'GET',
                     data: function(d) {
                         d.search = $('#searchInput').val();
-                        d.month = $('#monthFilter').val();
-                        d.year = $('#yearFilter').val();
+                        d.start_date = $('#startDateFilter').val();
+                        d.end_date = $('#endDateFilter').val();
                         d.status = $('#statusFilter').val();
                     },
                     dataSrc: function(json) {
@@ -155,8 +140,8 @@
                         name: 'email',
                     },
                     {
-                        data: 'month_year',
-                        name: 'month_year',
+                        data: 'start_end',
+                        name: 'start_end',
                     },
                     {
                         data: 'initial_balance',
@@ -199,7 +184,7 @@
                 dTtable.ajax.reload();
             });
 
-            $('#monthFilter, #yearFilter, #statusFilter').on('change', function(){
+            $('#startDateFilter, #endDateFilter, #statusFilter').on('change', function(){
                 dTtable.ajax.reload();
             });
 
@@ -215,7 +200,7 @@
                     'Status': row.account_status === 1 ? 'Approved' : 'Pending',
                     'Name': row.fullname || '',
                     'Email': row.fullemail || '',
-                    'Month/Year': row.competition_month+' / '+row.competition_year,
+                    'Start Date/End Date': row.competition_start_date+' / '+row.competition_end_date,
                     'Initial Balance': parseFloat(row.initial_balance || 0).toFixed(2),
                     'Balance': parseFloat(row.balance || 0).toFixed(2),
                     'Equity': parseFloat(row.equity || 0).toFixed(2),

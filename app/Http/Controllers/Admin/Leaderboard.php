@@ -47,22 +47,32 @@ class Leaderboard extends Controller
     public function competiton_dashboard(Request $request)
     {
 
-        $month = $request->query('month', now()->format('F'));
-        $year = $request->query('year', now()->year);
+        // $month = $request->query('month', now()->format('F'));
+        // $year = $request->query('year', now()->year);
 
         $accounts = Account::with(['user', 'accountType'])
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             ->where('code', '!=', null)
             ->where('demo', true)
-            ->where('status', 'active')
+            ->where('competition_status', 'active')
             ->whereHas('accountType', function($q) {
                 $q->where('ac_name','like' ,'%Competition%');
             })
             ->get();
 
-        $stats = $this->competitionService->getCurrentStats($month, $year);
-        $rankings = $this->competitionService->getRankings($month, $year);
+            //  dump($accounts);
+
+        $firstAccount = $accounts->first();
+        $startDate = $firstAccount && $firstAccount->accountType
+            ? $firstAccount->accountType->competition_start_date
+            : null;
+        $endDate = $firstAccount && $firstAccount->accountType
+            ? $firstAccount->accountType->competition_end_date
+            : null;
+
+        $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
+        $rankings = $this->competitionService->getRankings($startDate, $endDate);
 
         // dump($month);
         // dump($year);
@@ -72,8 +82,8 @@ class Leaderboard extends Controller
         return view('admin.leaderboard', [
             'stats' => $stats,
             'rankings' => $rankings,
-            'currentMonth' => $month,
-            'currentYear' => $year,
+            'competition_start_date' => $startDate,
+            'competition_end_date' => $endDate,
             'months' => [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'

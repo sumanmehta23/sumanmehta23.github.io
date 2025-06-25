@@ -19,16 +19,17 @@ class CompetitionService
      * @param int|null $year The year (defaults to current year)
      * @return array
      */
-    public function getCurrentStats($month = null, $year = null)
+    public function getCurrentStats($startDate = null, $endDate = null)
     {
-        $month = $month ?? now()->format('F');
-        $year = $year ?? now()->year;
+        $startDate = $startDate ?? now()->format('F');
+        $endDate = $endDate ?? now()->year;
 
         $accounts = Account::with(['user', 'accountType'])
-            ->where('competition_start_date', $month)
-            ->where('competition_end_date', $year)
+            ->where('competition_start_date', $startDate)
+            ->where('competition_end_date', $endDate)
             ->where('code', '!=', null)
             ->where('demo', true)
+            ->where('competition_status', 'active')
             ->whereHas('accountType', function($q) {
                 $q->where('ac_name','like' ,'%Competition%');
             })
@@ -39,8 +40,8 @@ class CompetitionService
             'avg_equity' => $accounts->avg('equity'),
             'top_performers' => $accounts->sortByDesc('equity')->take(10),
             'top_performer' => $accounts->sortByDesc('equity')->first(),
-            'month' => $month,
-            'year' => $year
+            'competition_start_date' => $startDate,
+            'competition_end_date' => $endDate
         ];
     }
 
@@ -85,13 +86,14 @@ class CompetitionService
     /**
      * Get competition rankings for a specific month/year
      */
-    public function getRankings($month, $year)
+    public function getRankings($startDate, $endDate)
     {
         // dd($year);
         // dd($month);
         return Account::with('user', 'accountType', 'trades')
-            ->where('competition_month', $month)
-            ->where('competition_year', $year)
+            ->where('competition_start_date', $startDate)
+            ->where('competition_end_date', $endDate)
+            ->where('competition_status', 'active')
             ->where('code', '!=', null)
             ->where('demo', true)
             ->orderByDesc('equity')
@@ -114,17 +116,18 @@ class CompetitionService
     /**
      * Get competition status and timing information
      */
-    public function getCompetitionStatus($month, $year)
+    public function getCompetitionStatus($startDate, $endDate)
     {
-        $requestedDate = Carbon::createFromDate($year, date('m', strtotime($month)), 1);
+
+        // $requestedDate = Carbon::createFromDate($year, date('m', strtotime($month)), 1);
         $now = Carbon::now();
 
         // Competition starts on 1st of the month
-        $competitionStart = $requestedDate->copy()->startOfMonth();
+        $competitionStart = $startDate;
         // Registration ends on last day of previous month
-        $registrationEnd = $competitionStart->copy()->subDay();
+        // $registrationEnd = $startDate->subDay();
         // Competition ends on last day of the month
-        $competitionEnd = $requestedDate->copy()->endOfMonth();
+        $competitionEnd = $endDate;
 
         if ($now->lt($competitionStart)) {
             // Upcoming competition

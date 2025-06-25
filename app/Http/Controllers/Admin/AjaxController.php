@@ -4105,12 +4105,13 @@ class AjaxController extends Controller
 
     public function getCompetitionsData(Request $request)
     {
+
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
 
         $rmCondition = Account::select('accounts.*')
-            ->whereNotNull('competition_month')
-            ->whereNotNull('competition_year')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
             ->whereHas('accountType', function ($query) {
                 $query->where('ac_name','like', '%Competition%');
             })
@@ -4118,25 +4119,36 @@ class AjaxController extends Controller
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $rmCondition->where(function($query) use ($search) {
+            $start_date = $request->start_date;
+            $end_date = $request->end_date;
+
+            $rmCondition->where(function($query) use ($search,$end_date, $start_date) {
                 $query->whereHas('user', function($q) use ($search) {
                     $q->where('email', 'like', "%{$search}%")
                         ->orWhere('fullname', 'like', "%{$search}%");
                 })
-                ->orWhere('competition_month', 'like', "%{$search}%")
-                ->orWhere('competition_year', 'like', "%{$search}%")
+                ->orWhere('competition_start_date', 'like', "%{$start_date}%")
+                ->orWhere('competition_end_date', 'like', "%{$end_date}%")
                 ->orWhere('balance', 'like', "%{$search}%")
                 ->orWhere('equity', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
-        if ($request->has('month') && !empty($request->month)) {
-            $rmCondition->where('competition_month', $request->month);
+        // if ($request->has('competition_start_date') && !empty($request->competition_start_date)) {
+        //     $rmCondition->where('competition_start_date', $request->competition_start_date);
+        // }
+
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $rmCondition->whereDate('competition_start_date', '>=', $request->start_date);
         }
 
-        if ($request->has('year') && !empty($request->year)) {
-            $rmCondition->where('competition_year', $request->year);
+        // if ($request->has('competition_end_date') && !empty($request->competition_end_date)) {
+        //     $rmCondition->where('competition_end_date', $request->competition_end_date);
+        // }
+
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $rmCondition->whereDate('competition_end_date', '<=', $request->end_date);
         }
 
         if ($request->has('status') && $request->status !== null) {
@@ -4229,11 +4241,11 @@ class AjaxController extends Controller
                         return "<span class='text-warning'>Pending</span>";
                     }
                 })
-                ->addColumn('month_year', function ($row) {
-                    $monthYear = $row->competition_month . '/' . $row->competition_year;
+                ->addColumn('start_end', function ($row) {
+                    $monthYear = $row->competition_start_date . '/' . $row->competition_end_date;
                     $url = route('admin.competition.leaderboard', [
-                        'month' => $row->competition_month,
-                        'year' => $row->competition_year
+                        'start_date' => $row->competition_start_date,
+                        'end_date' => $row->competition_end_date
                     ]);
 
                     return '
@@ -4268,7 +4280,7 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function ($row) {
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'initial_balance', 'profit', 'month_year', 'account_status'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_request_status', 'initial_balance', 'profit', 'start_end', 'account_status'])
                 ->make(true);
         }
 
