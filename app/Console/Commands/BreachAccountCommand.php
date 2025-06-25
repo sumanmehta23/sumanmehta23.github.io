@@ -65,8 +65,11 @@ class BreachAccountCommand extends Command
             $currentYear = $currentDate->year;
 
             $expiredAccounts = Account::where('demo', true)
-                ->whereNotNull('competition_month')
-                ->whereNotNull('competition_year')
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+                ->where('competition_status', 'active')
+                ->whereDate('competition_start_date', '<=', Carbon::today())
+                ->whereDate('competition_end_date', '>=', Carbon::today())
                 // ->where('code', '!=', null)
                 ->where('code', 322152)
                 ->where('account_request_status', 1)

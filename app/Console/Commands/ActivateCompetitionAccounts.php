@@ -16,6 +16,7 @@ use App\Services\MT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Services\MailService;
+use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Support\Facades\DB;
@@ -60,13 +61,16 @@ class ActivateCompetitionAccounts extends Command
      */
     public function handle()
     {
+    // dd('$accounts');
         Account::with('accountType')
             ->where('demo', 1)
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
+            // ->whereNull('competition_status')
+            ->whereDate('competition_start_date', '<=', Carbon::today())
+            ->whereDate('competition_end_date', '>=', Carbon::today())
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {
-        dd('$accounts');
                 foreach ($accounts as $account) {
 
                     if($account->accountType->competition_start_date <= now()){

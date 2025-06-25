@@ -172,7 +172,7 @@ class CompetitionController extends Controller
         // dd($existingCompetition);
 
         if ($existingCompetition) {
-            return redirect()->back()->with('error', 'Competition already purchased for ' . $competitionMonth . '.');
+            return redirect()->back()->with('error', 'Competition already purchased for time period ' . $existingCompetition->competition_start_date. ' to '.  $existingCompetition->competition_end_date. '.');
         }
 
         if (stripos($group->ac_name, 'competition') !== false) {
