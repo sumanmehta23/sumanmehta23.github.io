@@ -61,28 +61,18 @@ class BreachAccountCommand extends Command
         try {
 
             $currentDate = Carbon::now();
-            $currentMonth = $currentDate->format('F');
-            $currentYear = $currentDate->year;
 
             $expiredAccounts = Account::where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
-                ->whereDate('competition_start_date', '<=', Carbon::today())
-                ->whereDate('competition_end_date', '>=', Carbon::today())
-                // ->where('code', '!=', null)
-                ->where('code', 322152)
+                // ->whereDate('competition_start_date', '<=', $currentDate)
+                ->whereDate('competition_end_date', '<=', $currentDate)
+                ->whereNotNull('code')
+                // ->where('code', 322152)
                 ->where('account_request_status', 1)
-                ->where(function ($query) use ($currentMonth, $currentYear) {
-                    $query->where(function ($q) use ($currentMonth, $currentYear) {
-                        $q->where('competition_year', $currentYear)
-                            ->where('competition_month', '!=', $currentMonth);
-                    })->orWhere(function ($q) use ($currentYear) {
-                        $q->where('competition_year', '<', $currentYear);
-                    });
-                })
                 ->get();
-
+            // dd($expiredAccounts);
             Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
 
             foreach ($expiredAccounts as $account) {
@@ -119,27 +109,29 @@ class BreachAccountCommand extends Command
 
                     Log::info("Found {$total} open positions for account {$account->code}");
 
-                    foreach ($positions as $position) {
-                        // dd($position);
-                        // Determine opposite order type for closing:
-                        // BUY positions need SELL to close and vice versa
-                        $oppositeType = $position->Action === 0 ? 1 : 0; // 0=BUY, 1=SELL (Confirm with your MT5 API)
+                    if($positions){
+                        foreach ($positions as $position) {
+                            // dd($positions);
+                            // Determine opposite order type for closing:
+                            // BUY positions need SELL to close and vice versa
+                            $oppositeType = $position->Action === 0 ? 1 : 0; // 0=BUY, 1=SELL (Confirm with your MT5 API)
 
 
-                        $trade_result = [];
-                        $error_code = $this->api->TradeCloseRequest($position, $trade_result, $this->dealerapi);
+                            $trade_result = [];
+                            $error_code = $this->api->TradeCloseRequest($position, $trade_result, $this->dealerapi);
 
-                        if ($error_code != MTRetCode::MT_RET_OK) {
-                            Log::error("TradeRequest API error for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($error_code));
-                            continue;
+                            if ($error_code != MTRetCode::MT_RET_OK) {
+                                Log::error("TradeRequest API error for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($error_code));
+                                continue;
+                            }
+
+                            if ($trade_result['retcode'] != MTRetCode::MT_RET_OK) {
+                                Log::error("Trade execution failed for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($trade_result['retcode']));
+                                continue;
+                            }
+
+                            Log::info("Position {$position->Position} closed successfully for account {$account->code}");
                         }
-
-                        if ($trade_result['retcode'] != MTRetCode::MT_RET_OK) {
-                            Log::error("Trade execution failed for account {$account->code}, position {$position->Position}: " . MTRetCode::GetError($trade_result['retcode']));
-                            continue;
-                        }
-
-                        Log::info("Position {$position->Position} closed successfully for account {$account->code}");
                     }
 
                     // Disable trading rights
