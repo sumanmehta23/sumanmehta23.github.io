@@ -1089,6 +1089,47 @@ class Wallet extends Controller
                     $query->where('status', 1);
                 }])->first();
 
+                // Prepare callback data and insert it into the database
+                $callback_data = json_encode($payload);
+                $callback_code = json_encode($payload['transaction']["status"]);
+
+                try {
+                    DB::beginTransaction();
+
+                    TradeDeposit::create([
+                        'user_id' => $customerID,
+                        'account_id' => $customerAccountID,
+                        'email' => $email,
+                        'code' => $account->code,
+                        'deposit_amount' => $amount,
+                        'deposit_type' => $deposit_type,
+                        'deposit_from' => $deposit_type,
+                        'status' => 1,
+                        'deposit_currency' => 'USD',
+                        'transaction_id' => $transactionId,
+                        'deposted_date' => now(),
+                        'callback_data' => $callback_data,
+                        'callback_code' => $callback_code,
+                    ]);
+
+                    // Update total balance
+                    TotalBalance::create(
+                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                    );
+
+                    DB::commit();
+                    $user = User::where('id', $customerID)->first();
+                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                    Cache::forget("user:{$customerID}:wallet_balance");
+                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                    // return response()->json(['status' => 'true']);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                }
+
                 if($promocode){
                     $promo = Promocode::where('code', $promocode)->first();
                     if($promo){
@@ -1119,11 +1160,6 @@ class Wallet extends Controller
                         }
                     }
                 }
-
-
-                // Prepare callback data and insert it into the database
-                $callback_data = json_encode($payload);
-                $callback_code = json_encode($payload['transaction']["status"]);
 
                 $comment = 'Deposit';
                 $ticket1 = NULL;
@@ -1166,44 +1202,10 @@ class Wallet extends Controller
                         'message' => 'Something went wrong',
                         'error' => $error,
                     ], 400);
-                } else {
-                    try {
-                        DB::beginTransaction();
-
-                        TradeDeposit::create([
-                            'user_id' => $customerID,
-                            'account_id' => $customerAccountID,
-                            'email' => $email,
-                            'code' => $account->code,
-                            'deposit_amount' => $amount,
-                            'deposit_type' => $deposit_type,
-                            'deposit_from' => $deposit_type,
-                            'status' => 1,
-                            'deposit_currency' => 'USD',
-                            'transaction_id' => $transactionId,
-                            'deposted_date' => now(),
-                            'callback_data' => $callback_data,
-                            'callback_code' => $callback_code,
-                        ]);
-
-                        // Update total balance
-                        TotalBalance::create(
-                            ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
-                        );
-
-                        DB::commit();
-                        $user = User::where('id', $customerID)->first();
-                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                        Cache::forget("user:{$customerID}:wallet_balance");
-                        Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
-
-                        return response()->json(['status' => 'true']);
-                    } catch (Exception $e) {
-                        DB::rollBack();
-                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
-                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
-                    }
+                }else{
+                    return response()->json(['status' => 'true']);
                 }
+
             } else {
                 // If depositTo is not "wallet", handle other cases
                 if (!isset($passedData['accountID'])) {
