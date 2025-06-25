@@ -279,7 +279,7 @@ $("#crypto_deposit_amount, #cryptoWarningCheckbox").on('change keypress keydown 
 
 // Function to setup CryptoChill with current values
 function setupCryptoChillWithValues() {
-    let clientAccountId = $('.select-liveaccount').val();
+    let clientAccountId = $('.select-liveaccount:checked').val();
 
     if (!clientAccountId) {
         alert("Please select a live account before proceeding.");
