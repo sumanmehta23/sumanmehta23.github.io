@@ -124,6 +124,7 @@ class CompetitionController extends Controller
 
     public function createCompetition(Request $request)
     {
+
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
         // if (RateLimiter::tooManyAttempts($key, 1)) {
@@ -149,37 +150,23 @@ class CompetitionController extends Controller
         if (!$group) {
             return redirect()->back()->with('error', 'Competition is not active.');
         }
+
         $account_type_id = $validatedData['options'];
+        $start_date = $group->competition_start_date;
+        $end_date = $group->competition_end_date;
 
-        // Extract month name from ac_name
-        $monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
 
-        $foundMonth = null;
-
-        foreach ($monthNames as $month) {
-            if (stripos($group->ac_name, $month) !== false) {
-                $foundMonth = $month;
-                break;
-            }
-        }
-
-        // If month not found in ac_name, return error
-        if (!$foundMonth) {
-            return redirect()->back()->with('error', 'Selected competition product does not contain a valid month in its name.');
-        }
-
-        $competitionMonth = $foundMonth;
-        $currentYear = date('Y');
-        $nextYear = $currentYear + 1;
-
-        $existingCompetition = Account::where('user_id', $user->id)
-            ->where('competition_month', $competitionMonth)
-            ->where('competition_year', $currentYear)
+        $existingCompetition = Account::with('accountType')
+            ->where('user_id', $user->id)
             ->where('demo', true)
+            ->whereHas('accountType', function ($query) use ($start_date, $end_date) {
+                $query->where('competition_start_date', '>=',$start_date)
+                    ->where('competition_end_date','<=', $end_date)
+                    ->where('ac_name', 'like', '%Competition%');
+            })
             ->first();
+
+        // dd($existingCompetition);
 
         if ($existingCompetition) {
             return redirect()->back()->with('error', 'Competition already purchased for ' . $competitionMonth . '.');
@@ -198,8 +185,6 @@ class CompetitionController extends Controller
                 ->event('create')
                 ->log('Create Live Account');
 
-            $year = ($competitionMonth == 'January') ? $nextYear : $currentYear;
-
             $useraccount = Account::create([
                 'user_id' => $user->id,
                 'name' => $user->fullname ?? $user->email,
@@ -211,8 +196,8 @@ class CompetitionController extends Controller
                 'currency' => 'USD',
                 'ib1' => $user->ib1 ?? "",
                 'account_request_status' => '0',
-                'competition_month' => $competitionMonth,
-                'competition_year' => $year,
+                'competition_start_date' => $start_date,
+                'competition_end_date' => $end_date,
                 'balance' => $demo_deposit,
             ]);
 
@@ -223,7 +208,7 @@ class CompetitionController extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                $content = "<div>Thank you for choosing LQH Markets. Your request for {$competitionMonth} will be approved on 1st of {$competitionMonth}.</div>
+                $content = "<div>Thank you for choosing LQH Markets. Your competition will starts from {$start_date} and end on {$end_date}.</div>
                             <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
                             <p>Best Regards.</p><p>LQH Markets Team</p>";
 

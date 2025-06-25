@@ -120,6 +120,7 @@ class Leaderboard extends Controller
             if($ib){
                 $ibdata = Ib1::where('referral_code',$ib)->first();
             }
+
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
                 $new_user->MainPassword = $this->generatePassword();
@@ -230,7 +231,9 @@ class Leaderboard extends Controller
 
     function CreateCompetition($user, &$user_server, $type)
     {
-
+        dump('sssad');
+            dump($user_server);
+            dd($type);
         $settings = settings();
         if (!$this->api->IsConnected()) {
             $errorCode = $this->api->Connect(
