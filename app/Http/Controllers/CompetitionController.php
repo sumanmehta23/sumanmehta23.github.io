@@ -274,40 +274,36 @@ class CompetitionController extends Controller
 
     public function leaderboard(Request $request)
     {
-
         // Get month and year from request or use current
-        $month = $request->query('month', now()->format('F'));
-        $year = $request->query('year', now()->year);
+        $startDate = $request['start_date'] ?? now()->startOfMonth();
+        $endDate = $request['end_date'] ?? now()->endOfMonth();
 
         try {
             // Get competition data from service
-            $stats = $this->competitionService->getCurrentStats($month, $year);
-            $rankings = $this->competitionService->getRankings($month, $year);
-            $competitionStatus = $this->competitionService->getCompetitionStatus($month, $year);
+            $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
+            $rankings = $this->competitionService->getRankings($startDate, $endDate);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($startDate, $endDate);
             // Get available competitions for filtering
-            $availableCompetitions = Account::select('competition_month', 'competition_year')
+            $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
                 ->where('demo', true)
-                ->whereNotNull('competition_month')
-                ->whereNotNull('competition_year')
-                ->distinct()
-                ->orderBy('competition_year', 'desc')
-                ->orderBy('competition_month', 'desc')
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+
+                ->orderBy('competition_start_date', 'desc')
+                ->orderBy('competition_end_date', 'desc')
                 ->get()
-                ->groupBy('competition_year');
-            // dump($stats);
-            // dump($rankings);
-            // dump($competitionStatus);
-            // dd($availableCompetitions);
+                ->groupBy('competition_start_date');
+
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
-                'currentMonth' => $month,
-                'currentYear' => $year,
-                'months' => [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                ],
-                'years' => range(now()->year - 1, now()->year + 1),
+                'competition_start_date' => $startDate,
+                'competition_end_date' => $endDate,
+                // 'months' => [
+                //     'January', 'February', 'March', 'April', 'May', 'June',
+                //     'July', 'August', 'September', 'October', 'November', 'December'
+                // ],
+                // 'years' => range(now()->year - 1, now()->year + 1),
                 'availableCompetitions' => $availableCompetitions,
                 'competitionStatus' => $competitionStatus['status'],
                 'targetDate' => $competitionStatus['targetDate'],
@@ -319,10 +315,11 @@ class CompetitionController extends Controller
         }
     }
 
-    public function getTraderData($accountNo, $month, $year)
+    public function getTraderData($accountNo, $start, $end)
     {
-        $startDate = Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // Ensure start and end are Carbon instances
+        $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+        $endDate = \Carbon\Carbon::parse($end)->endOfDay();
 
         $account = Account::with([
             'trades',
@@ -336,31 +333,15 @@ class CompetitionController extends Controller
         $labels = [];
         $equity = [];
 
-
-        // Get the last 31 days of data (30 days + current day)
-
         $dailyData = $account->dailyReports->keyBy(function ($item) {
-                        return $item->report_date->format('Y-m-d');
-                    });
-
+            return $item->report_date->format('Y-m-d');
+        });
 
         // Fill in any missing dates with the last known equity value
         $lastEquity = $account->equity ?? '0.00';
-        $daysInCurrentMonth = now()->daysInMonth;
+        $currentDate = $startDate->copy();
 
-        if($month == now()->format('F') && $year == now()->year){
-            $today = now();
-            $monthEnd = $today;
-        }else{
-            $today = $startDate;
-            $monthEnd = $endDate;
-        }
-
-        $startOfMonth = $today->copy()->startOfMonth();
-        $endOfMonth = $monthEnd; // Up to today
-        $currentDate = $startOfMonth->copy();
-
-        while ($currentDate <= $endOfMonth) {
+        while ($currentDate <= $endDate) {
             $dateKey = $currentDate->format('Y-m-d');
             $dayLabel = $currentDate->format('M d');
             $labels[] = $dayLabel;
