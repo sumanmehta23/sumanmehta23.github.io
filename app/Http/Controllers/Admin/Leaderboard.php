@@ -216,6 +216,7 @@ class Leaderboard extends Controller
 
                             DemoDeposit::create($data);
                         }
+                        $this->sendMail($new_user, 'Demo');
                         return redirect()->back()->with('success', $response['message']);
                     }else{
                         return redirect()->back()->with('error', 'No account found to update.');
