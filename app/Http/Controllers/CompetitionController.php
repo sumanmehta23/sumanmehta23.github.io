@@ -165,9 +165,10 @@ class CompetitionController extends Controller
         $existingCompetition = Account::with('accountType')
             ->where('user_id', $user->id)
             ->where('demo', true)
-            ->whereHas('accountType', function ($query) use ($start_date, $end_date) {
+            ->whereHas('accountType', function ($query) use ($start_date, $end_date,$account_type_id) {
                 $query->where('competition_start_date', '>=',$start_date)
                     ->where('competition_end_date','<=', $end_date)
+                    ->where('id', $account_type_id)
                     ->where('ac_name', 'like', '%Competition%');
             })
             ->first();
