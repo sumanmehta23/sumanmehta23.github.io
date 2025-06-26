@@ -357,7 +357,7 @@
             order: [],
             columns: [{
                     data: 'ac_name',
-                    title: 'DP Name'
+                    title: 'Name'
                 },
                 {
                     data: 'display_priority',
@@ -370,6 +370,10 @@
                 {
                     data: 'competition_end_date',
                     title: 'End Date',
+                },
+                {
+                    data: 'total_participants',
+                    title: 'Participants',
                 },
                 {
                     data: 'ac_group',
