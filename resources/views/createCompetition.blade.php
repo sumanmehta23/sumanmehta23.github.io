@@ -91,7 +91,7 @@
                                             <div class="col-3"> Deposit Amount for Demo Account </div>
                                             <div class="col-9">
                                                 <div class="mb-3 input-group"><span class="input-group-text">$</span>
-                                                    <input type="number" min="1" max="100000" step="1" name="demo_deposit" value="100000" readonly class="form-control">
+                                                    <input type="number" min="1" max="100000" step="1" name="demo_deposit" value="{{ $acc->ac_min_deposit }}" readonly class="form-control">
                                                     <span class="input-group-text" required>.00</span><!---->
                                                 </div>
                                                 @error('demo_deposit')
