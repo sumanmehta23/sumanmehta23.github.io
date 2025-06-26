@@ -61,7 +61,7 @@ class Leaderboard extends Controller
             })
             ->get();
 
-            //  dump($accounts);
+             dump($accounts);
 
         $firstAccount = $accounts->first();
         $startDate = $firstAccount && $firstAccount->accountType
@@ -70,7 +70,8 @@ class Leaderboard extends Controller
         $endDate = $firstAccount && $firstAccount->accountType
             ? $firstAccount->accountType->competition_end_date
             : null;
-
+            dump($startDate);
+            dump($endDate);
         $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
         $rankings = $this->competitionService->getRankings($startDate, $endDate);
 
