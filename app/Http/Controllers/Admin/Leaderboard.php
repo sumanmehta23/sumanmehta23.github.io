@@ -357,7 +357,6 @@ class Leaderboard extends Controller
                 ->where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
-                ->distinct()
                 ->orderBy('competition_start_date', 'desc')
                 ->orderBy('competition_end_date', 'desc')
                 ->get()
