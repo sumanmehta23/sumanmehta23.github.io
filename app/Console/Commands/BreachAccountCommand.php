@@ -60,7 +60,7 @@ class BreachAccountCommand extends Command
 
         try {
 
-            $currentDate = Carbon::now();
+            $currentDate = Carbon::today()->setTime(23, 55);
 
             $expiredAccounts = Account::where('demo', true)
                 ->whereNotNull('competition_start_date')
