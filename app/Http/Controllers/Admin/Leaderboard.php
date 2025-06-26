@@ -65,21 +65,13 @@ class Leaderboard extends Controller
             //  dump($accounts);
 
         $firstAccount = $accounts->first();
-        $startDate = $firstAccount && $firstAccount->accountType
-            ? $firstAccount->accountType->competition_start_date
-            : Carbon::now();
-        $endDate = $firstAccount && $firstAccount->accountType
-            ? $firstAccount->accountType->competition_end_date
-            : Carbon::now();
-            // dump($startDate);
-            // dump($endDate);
+
+        $startDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_start_date : Carbon::now();
+        $endDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_end_date : Carbon::now();
+
         $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
         $rankings = $this->competitionService->getRankings($startDate, $endDate);
 
-        // dump($month);
-        // dump($year);
-        // dump($stats);
-        // dd($rankings);
 
         return view('admin.leaderboard', [
             'stats' => $stats,
