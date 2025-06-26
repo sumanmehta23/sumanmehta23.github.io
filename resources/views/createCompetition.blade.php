@@ -60,7 +60,7 @@
                                                                                 Start Date </span>
                                                                             <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">{{ \Carbon\Carbon::parse($acc->competition_end_date)->format('d-m-Y') }}</span></strong>
                                                                             End Date </span>
-                                                                            <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">$100k</span></strong>
+                                                                            <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">{{ formatToK($acc->ac_min_deposit) }}</span></strong>
                                                                                 Deposit Amount </span>
                                                                             <span class="h6 d-block mt-3 f-w-300 f-14"><strong class="float-end"><span class="f-w-400 f-16">${{ strtoupper($acc->ac_spread) }}</span></strong>
                                                                                 Spread </span>

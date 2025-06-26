@@ -112,3 +112,5 @@ function rolePermissions($userRole)
 
     return $rolePermissionsList;
 }
+
+require_once __DIR__.'/formatToK.php';
