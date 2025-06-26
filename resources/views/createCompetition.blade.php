@@ -91,7 +91,7 @@
                                             <div class="col-3"> Deposit Amount for Demo Account </div>
                                             <div class="col-9">
                                                 <div class="mb-3 input-group"><span class="input-group-text">$</span>
-                                                    <input type="number" min="1" max="100000" step="1" name="demo_deposit" value="{{ $acc->ac_min_deposit }}" readonly class="form-control">
+                                                    <input type="number" min="1" max="100000" step="1" name="demo_deposit" id="demo_deposit" value="{{ $results[0]->ac_min_deposit }}" readonly class="form-control">
                                                     <span class="input-group-text" required>.00</span><!---->
                                                 </div>
                                                 @error('demo_deposit')
@@ -194,5 +194,24 @@
             }
         });
         $(".acc-types").trigger("change");
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all radio buttons for account selection
+            const radios = document.querySelectorAll('.acc-types');
+            const depositInput = document.getElementById('demo_deposit');
+            // Map account id to min deposit
+            const accMinDeposits = {
+                @foreach ($results as $acc)
+                    '{{ $acc->id }}': '{{ $acc->ac_min_deposit }}',
+                @endforeach
+            };
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        depositInput.value = accMinDeposits[this.value];
+                    }
+                });
+            });
+        });
     </script>
 @endsection
