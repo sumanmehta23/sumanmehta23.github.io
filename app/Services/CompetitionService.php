@@ -21,6 +21,8 @@ class CompetitionService
      */
     public function getCurrentStats($startDate = null, $endDate = null)
     {
+        dump($startDate);
+        dd($endDate);
         $startDate = $startDate ?? now()->format('F');
         $endDate = $endDate ?? now()->year;
 
