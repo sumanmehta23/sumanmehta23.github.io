@@ -518,6 +518,13 @@
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
                                     data-popper-placement="bottom">
                                     <li class="slide menu-item-sub ">
+                                        <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                            <span class="side-menu__label">Competition List</span>
+                                        </a>
+                                        <ul class="slide-menu child1">
+                                        </ul>
+                                    </li>
+                                    <li class="slide menu-item-sub ">
                                         <a href="{{ route('admin.competition.dashboard') }}" class="side-menu__item">
                                             <span class="side-menu__label">Accounts list</span>
                                         </a>
@@ -527,13 +534,6 @@
                                     <li class="slide menu-item-sub ">
                                         <a href="{{ route('admin.competition.requested') }}" class="side-menu__item">
                                             <span class="side-menu__label">Requested Accounts</span>
-                                        </a>
-                                        <ul class="slide-menu child1">
-                                        </ul>
-                                    </li>
-                                    <li class="slide menu-item-sub ">
-                                        <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
-                                            <span class="side-menu__label">Competition List</span>
                                         </a>
                                         <ul class="slide-menu child1">
                                         </ul>
