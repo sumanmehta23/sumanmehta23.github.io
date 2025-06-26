@@ -975,6 +975,7 @@ class Wallet extends Controller
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
+
         Log::channel("cryptochillcallback")->info(json_encode($payload));
         // Get signature and callback_id fields from provided data
         $signature = $payload['signature'] ?? null;
@@ -1014,7 +1015,7 @@ class Wallet extends Controller
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
             $customerAccountID = $passedData['clientAccountID'];
-            $promocode = $passedData['promocode'];
+            $promocode = $passedData['promocode'] ?? '';
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
@@ -1088,39 +1089,77 @@ class Wallet extends Controller
                     $query->where('status', 1);
                 }])->first();
 
-                if ($promocode) {
-                    $ticket = NULL;
-                    $promo = Promocode::where('code', $promocode)->first();
-                    if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
-                        $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
-                    }else{
-                        $bonus_amount = ($promo->promo_percentage/100) * $amount;
-                    }
-
-                    if ($promo) {
-                        if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                        } else {
-                            BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $customerID,
-                                'account_id' => $customerAccountID,
-                                'code' => $account->code,
-                                'bonus_amount' => $bonus_amount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Bonus',
-                                'bonus_currency' => 'USD',
-                                'transaction_id' => $transactionId,
-                            ]);
-                        }
-                    }
-                }
-
-
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
                 $callback_code = json_encode($payload['transaction']["status"]);
+
+                try {
+                    DB::beginTransaction();
+
+                    TradeDeposit::create([
+                        'user_id' => $customerID,
+                        'account_id' => $customerAccountID,
+                        'email' => $email,
+                        'code' => $account->code,
+                        'deposit_amount' => $amount,
+                        'deposit_type' => $deposit_type,
+                        'deposit_from' => $deposit_type,
+                        'status' => 1,
+                        'deposit_currency' => 'USD',
+                        'transaction_id' => $transactionId,
+                        'deposted_date' => now(),
+                        'callback_data' => $callback_data,
+                        'callback_code' => $callback_code,
+                    ]);
+
+                    // Update total balance
+                    TotalBalance::create(
+                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                    );
+
+                    DB::commit();
+                    $user = User::where('id', $customerID)->first();
+                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                    Cache::forget("user:{$customerID}:wallet_balance");
+                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                    // return response()->json(['status' => 'true']);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                }
+
+                if($promocode && $promocode != ''){
+                    $promo = Promocode::where('code', $promocode)->first();
+                    if($promo){
+                        $ticket = NULL;
+                        if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
+                            $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
+                        }else{
+                            $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                        }
+                        if($promo){
+                            if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                            } else {
+                                BonusTransaction::create([
+                                    'email' => $email,
+                                    'user_id' => $customerID,
+                                    'account_id' => $customerAccountID,
+                                    'code' => $account->code,
+                                    'bonus_amount' => $bonus_amount,
+                                    'bonus_type' => 'Bonus In',
+                                    'status' => 1,
+                                    'admin_remark' => 'Promo Bonus',
+                                    'bonus_currency' => 'USD',
+                                    'transaction_id' => $transactionId,
+                                    'promocode_id' => $promo->id
+                                ]);
+                            }
+                        }
+                    }
+                }
 
                 $comment = 'Deposit';
                 $ticket1 = NULL;
@@ -1163,44 +1202,10 @@ class Wallet extends Controller
                         'message' => 'Something went wrong',
                         'error' => $error,
                     ], 400);
-                } else {
-                    try {
-                        DB::beginTransaction();
-
-                        TradeDeposit::create([
-                            'user_id' => $customerID,
-                            'account_id' => $customerAccountID,
-                            'email' => $email,
-                            'code' => $account->code,
-                            'deposit_amount' => $amount,
-                            'deposit_type' => $deposit_type,
-                            'deposit_from' => $deposit_type,
-                            'status' => 1,
-                            'deposit_currency' => 'USD',
-                            'transaction_id' => $transactionId,
-                            'deposted_date' => now(),
-                            'callback_data' => $callback_data,
-                            'callback_code' => $callback_code,
-                        ]);
-
-                        // Update total balance
-                        TotalBalance::create(
-                            ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
-                        );
-
-                        DB::commit();
-                        $user = User::where('id', $customerID)->first();
-                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                        Cache::forget("user:{$customerID}:wallet_balance");
-                        Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
-
-                        return response()->json(['status' => 'true']);
-                    } catch (Exception $e) {
-                        DB::rollBack();
-                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
-                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
-                    }
+                }else{
+                    return response()->json(['status' => 'true']);
                 }
+
             } else {
                 // If depositTo is not "wallet", handle other cases
                 if (!isset($passedData['accountID'])) {

@@ -47,6 +47,12 @@
 </div>
 <!-- End::app-content -->
 
+@if(session('session_expired'))
+    <script>
+        alert('Session expired. Please log in again.');
+    </script>
+@endif
+
 <!-- Modal -->
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">

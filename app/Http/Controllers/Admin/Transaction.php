@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\RelationshipManager;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\TradeWithdrawal;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -462,10 +463,10 @@ class Transaction extends Controller
         $email = $validatedData['email'];
         $depositAmount = $validatedData['amount'];
         $did = $request->transaction_id;
-        $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
+        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
             $transaction->admin_remark = $rejection_reason;
-            $transaction->Status =$status;
+            $transaction->status =$status;
             $transaction->transaction_id = $did;
             $transaction->approved_by = $approved_by;
             $transaction->approved_date =$approved_date;
@@ -494,7 +495,7 @@ class Transaction extends Controller
             ->log('Manually Approved Wallet Withdraw');
 
 
-            $deposit_details = WalletWithdraw::with('user')
+            $deposit_details = TradeWithdrawals::with('user')
                     ->whereRaw('id = ?', [$did])
                     ->first();
             $from = $settings['email_from_address'];
