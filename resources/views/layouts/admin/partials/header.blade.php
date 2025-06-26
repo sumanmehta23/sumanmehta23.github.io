@@ -519,7 +519,7 @@
                                     data-popper-placement="bottom">
                                     <li class="slide menu-item-sub ">
                                         <a href="{{ route('admin.competition.dashboard') }}" class="side-menu__item">
-                                            <span class="side-menu__label">List</span>
+                                            <span class="side-menu__label">Accounts list</span>
                                         </a>
                                         <ul class="slide-menu child1">
                                         </ul>
@@ -533,7 +533,7 @@
                                     </li>
                                     <li class="slide menu-item-sub ">
                                         <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
-                                            <span class="side-menu__label">Create Competition</span>
+                                            <span class="side-menu__label">Competition List</span>
                                         </a>
                                         <ul class="slide-menu child1">
                                         </ul>
