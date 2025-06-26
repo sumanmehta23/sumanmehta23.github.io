@@ -61,17 +61,17 @@ class Leaderboard extends Controller
             })
             ->get();
 
-             dump($accounts);
+            //  dump($accounts);
 
         $firstAccount = $accounts->first();
         $startDate = $firstAccount && $firstAccount->accountType
             ? $firstAccount->accountType->competition_start_date
-            : null;
+            : Carbon::now();
         $endDate = $firstAccount && $firstAccount->accountType
             ? $firstAccount->accountType->competition_end_date
-            : null;
-            dump($startDate);
-            dump($endDate);
+            : Carbon::now();
+            // dump($startDate);
+            // dump($endDate);
         $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
         $rankings = $this->competitionService->getRankings($startDate, $endDate);
 
