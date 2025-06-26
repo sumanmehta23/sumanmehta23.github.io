@@ -1015,7 +1015,7 @@ class Wallet extends Controller
             $email = $passedData['customerEmail'];
             $customerID = $passedData['customerID'];
             $customerAccountID = $passedData['clientAccountID'];
-            $promocode = $passedData['promocode'];
+            $promocode = $passedData['promocode'] ?? '';
             $transactionId = $payload['transaction']['id'];
             $deposit_type = "CryptoChill";
 
@@ -1130,7 +1130,7 @@ class Wallet extends Controller
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
 
-                if($promocode){
+                if($promocode && $promocode != ''){
                     $promo = Promocode::where('code', $promocode)->first();
                     if($promo){
                         $ticket = NULL;
