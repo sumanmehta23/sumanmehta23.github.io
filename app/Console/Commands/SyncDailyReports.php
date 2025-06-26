@@ -34,9 +34,9 @@ class SyncDailyReports extends Command
                     ->whereNull('deleted_at')
                     ->whereNotNull('competition_start_date')
                     ->whereNotNull('competition_end_date')
-                    ->where('competition_status', 'active')
-                    ->whereDate('competition_start_date', '<=', Carbon::now())
-                    ->whereDate('competition_end_date', '>=', Carbon::now())
+                    // ->where('competition_status', 'active')
+                    // ->whereDate('competition_start_date', '<=', Carbon::now())
+                    // ->whereDate('competition_end_date', '>=', Carbon::now())
                     ->where('demo',1)
                     ->chunk(200, function ($accounts) use ($api) {
                     // dd($accounts);
