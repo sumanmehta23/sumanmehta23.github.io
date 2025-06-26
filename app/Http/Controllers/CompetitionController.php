@@ -158,6 +158,9 @@ class CompetitionController extends Controller
         $start_date = $group->competition_start_date;
         $end_date = $group->competition_end_date;
 
+        if($end_date < now()) {
+            return redirect()->back()->with('error', 'Competition is over, try another.');
+        }
 
         $existingCompetition = Account::with('accountType')
             ->where('user_id', $user->id)
