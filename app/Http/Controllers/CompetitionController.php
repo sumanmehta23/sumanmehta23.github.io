@@ -206,6 +206,7 @@ class CompetitionController extends Controller
                 'competition_start_date' => $start_date,
                 'competition_end_date' => $end_date,
                 'balance' => $demo_deposit,
+                'competition_product_id' => $group->id,
             ]);
 
             if ($useraccount) {
