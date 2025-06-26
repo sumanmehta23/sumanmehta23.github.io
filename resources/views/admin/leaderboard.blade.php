@@ -77,7 +77,7 @@
                                     </select>
                                 </div>
                             </div>
-                            {{ dd('dasdsa') }}
+                            {{-- {{ dd('dasdsa') }} --}}
                             <div class="table-responsive">
                                 <table id="competitionDatatable" class="table competitionDatatable table-bordered text-nowrap w-100">
                                     <thead>
