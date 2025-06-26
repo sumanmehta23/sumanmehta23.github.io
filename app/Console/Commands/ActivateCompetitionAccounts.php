@@ -144,6 +144,7 @@ class ActivateCompetitionAccounts extends Command
                                 'phone_password' => $new_user->PhonePassword,
                                 'balance' => $account->balance,
                                 'account_request_status' => 1,
+                                'competition_status' => 'Active',
                             ]);
                             $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $account->balance, 'Deposit', $ticket, $margin_check = true);
                             if ($errorCode != MTRetCode::MT_RET_OK) {
