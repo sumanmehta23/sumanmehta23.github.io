@@ -376,6 +376,10 @@
                     title: 'Participants',
                 },
                 {
+                    data: 'leaderboard',
+                    title: 'View Leaderboard',
+                },
+                {
                     data: 'ac_group',
                     title: 'Group'
                 },

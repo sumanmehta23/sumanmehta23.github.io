@@ -2766,7 +2766,7 @@ class AjaxController extends Controller
     public function getCompetitionGroups($type = NULL)
     {
 
-        // header('Content-Type: application/json');
+        header('Content-Type: application/json');
         if ($type == NULL) {
             $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by display_priority desc";
         } else {
@@ -2777,7 +2777,17 @@ class AjaxController extends Controller
         $data = [];
         foreach ($results as $row) {
             $dat = $row;
+            $url = route('admin.competition.leaderboard', [
+                        'start_date' => $row->competition_start_date,
+                        'end_date' => $row->competition_end_date
+                    ]);
             $total_participants = Account::where('competition_product_id',$row->id)->count();
+            $dat->leaderboard = '<a href="' . $url . '"
+                                class="btn btn-sm btn-outline-primary mt-1"
+                                style="font-size: 0.75rem; padding: 2px 6px;"
+                                target="_blank">
+                                View Leaderboard
+                                </a>';
             $dat->total_participants = $total_participants;
             $dat->enc_id = ($row->ac_index);
             $dat->ib_status = $row->ib_enabled == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
