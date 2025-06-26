@@ -31,7 +31,7 @@ class CompetitionService
             ->where('competition_end_date', $endDate)
             ->where('code', '!=', null)
             ->where('demo', true)
-            ->where('competition_status', 'active')
+            // ->where('competition_status', 'active')
             ->whereHas('accountType', function($q) {
                 $q->where('ac_name','like' ,'%Competition%');
             })
@@ -95,7 +95,7 @@ class CompetitionService
         return Account::with('user', 'accountType', 'trades')
             ->where('competition_start_date', $startDate)
             ->where('competition_end_date', $endDate)
-            ->where('competition_status', 'active')
+            // ->where('competition_status', 'active')
             ->where('code', '!=', null)
             ->where('demo', true)
             ->orderByDesc('equity')

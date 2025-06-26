@@ -361,7 +361,7 @@ class Leaderboard extends Controller
                 ->orderBy('competition_end_date', 'desc')
                 ->get()
                 ->groupBy('competition_start_date');
-
+            // dd($availableCompetitions);
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,

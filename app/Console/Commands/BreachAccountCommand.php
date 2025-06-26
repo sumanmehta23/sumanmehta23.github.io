@@ -72,7 +72,7 @@ class BreachAccountCommand extends Command
                 // ->where('code', 322152)
                 ->where('account_request_status', 1)
                 ->get();
-            // dd($expiredAccounts);
+
             Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
 
             foreach ($expiredAccounts as $account) {
