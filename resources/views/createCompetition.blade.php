@@ -42,8 +42,8 @@
                                                             <div class="auth-option">
                                                                 <input type="hidden" name="start_date" value="{{ $acc->competition_start_date }}">
                                                                 <input type="hidden" name="end_date" value="{{ $acc->competition_end_date }}">
-                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" {{ $i == 0 ? 'checked' : '' }} name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}">
-                                                                <label class="auth-megaoption" for="option{{ $acc->ac_index }}" style="height: 230px !important;">
+                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date)->lt(now())) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if(\Carbon\Carbon::parse($acc->competition_start_date)->lt(now())) disabled @endif>
+                                                                <label class="auth-megaoption @if(\Carbon\Carbon::parse($acc->competition_start_date)->lt(now())) opacity-50 @endif" for="option{{ $acc->ac_index }}" style="height: 230px !important;">
                                                                     <div class="d-block m-4" style="width: 80%;"
                                                                         @php
                                                                             echo strtoupper($acc->ac_name) == 'PRO' ? 'style="width: 80% !important;"' : '';
