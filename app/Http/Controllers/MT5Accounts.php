@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ib1;
 use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
@@ -9,19 +10,20 @@ use App\Models\Account;
 use App\Models\Leverage;
 use App\Models\AccountType;
 use App\Models\DemoDeposit;
+use App\Models\ToggleGroup;
 use App\MT5\MTEnDealAction;
+use App\Models\TotalBalance;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
-use App\MT5\MTProtocolConsts;
-use App\Http\Controllers\Controller;
-use App\Models\Ib1;
-use App\Services\MailService as MailService;
-use Illuminate\Support\Facades\Log;
-use App\Models\TradeWithdrawals;
-use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
+use App\MT5\MTProtocolConsts;
+use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Services\MailService as MailService;
+
 class MT5Accounts extends Controller
 {
     protected $api;
@@ -261,7 +263,8 @@ class MT5Accounts extends Controller
         $referral=$user->referral;
         $ib=$user->ib1;
         $account_type_id = $validatedData['options'];
-        dd($group);
+        // dd('ssss');
+
         //wealthytrades
         if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
             $groupCode = str_replace("DF","SNSI",$group->ac_group);
@@ -283,7 +286,27 @@ class MT5Accounts extends Controller
             $groupCode = $group->ac_group;
         }
 
-         $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
+        $toggleGroup = ToggleGroup::get()->first();
+
+        if($toggleGroup->a_book == 1){
+            if(str_contains($groupCode, 'B-Book')){
+                $groupCode = str_replace('B-Book', 'A-Book', $groupCode);
+                $groupCode = preg_replace('/-B($|\\\)/', '-A$1', $groupCode);
+            }
+        }elseif($toggleGroup->b_book == 1){
+            if(str_contains($groupCode, 'A-Book')){
+                $groupCode = str_replace('A-Book', 'B-Book', $groupCode);
+                $groupCode = preg_replace('/-A($|\\\)/', '-B$1', $groupCode);
+            }
+        }
+
+        $group = AccountType::where('ac_group', $groupCode)->first();
+
+        if (!$group) {
+            return redirect()->back()->with('error', 'Invalid account type selected. With group code: ' . $groupCode);
+        }
+
+        $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
 
         $ibdata = '';
         if ($ib) {

@@ -33,7 +33,8 @@ class UpdateMT5Groups extends Command
     public function handle()
     {
         $selectedGroupCode = $this->option('group_code');
-
+        // dump('abhay');
+        // dd($selectedGroupCode);
         if (!$selectedGroupCode || !in_array($selectedGroupCode, ['A-Book', 'B-Book'])) {
             $this->error("Invalid or missing --group_code option. Use --group_code=A-Book or --group_code=B-Book");
             return 1;

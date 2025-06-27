@@ -29,8 +29,8 @@ class Kernel extends ConsoleKernel
         // $schedule->command('app:update-price-snapshots')->hourly();
 
 
-        // $schedule->command('app:alter-group-codes --group_code=a_book')->hourlyAt(0);
-        // $schedule->command('app:alter-group-codes --group_code=b_book')->hourlyAt(30);
+        $schedule->command('app:alter-group-codes --group_code=a_book');
+        $schedule->command('app:alter-group-codes --group_code=b_book');
     }
 
     /**

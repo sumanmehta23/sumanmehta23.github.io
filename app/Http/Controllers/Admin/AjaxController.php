@@ -637,7 +637,8 @@ class AjaxController extends Controller
         $rmCondition = Account::select('accounts.*')
             // ->select('accounts.*')
             ->where('account_request_status', 0)
-            ->where('competition_month', null)
+            ->whereNull('competition_start_date')
+            ->whereNull('competition_end_date')
             ->with(['user', 'accountType']);
 
         if ($role !== "Super Admin") {
@@ -4047,7 +4048,7 @@ class AjaxController extends Controller
                                             alt='user-image' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span class='text-truncate w-100'>" .
-                        ($row->code ? $row->code : 'Pending '.$row->competition_month. ' Competition') .
+                        ($row->code ? $row->code : 'Pending '.$row->accountType->ac_name) .
                         "</span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
