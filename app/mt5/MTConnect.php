@@ -147,7 +147,7 @@ class MTConnect
    */
   public function Send($command, $data, $first_request = false)
     {
-        Log::debug("Starting Send()", ['command' => $command, 'first_request' => $first_request]);
+        // Log::debug("Starting Send()", ['command' => $command, 'first_request' => $first_request]);
 
         if (!$this->m_connect) {
             Log::error("Connection closed.");
@@ -156,12 +156,12 @@ class MTConnect
 
         //--- number packet
         $this->m_client_command++;
-        Log::debug("Client command incremented.", ['m_client_command' => $this->m_client_command]);
+        // Log::debug("Client command incremented.", ['m_client_command' => $this->m_client_command]);
 
         //--- packet max, than first
         if ($this->m_client_command > self::MAX_CLIENT_COMMAND) {
             $this->m_client_command = 1;
-            Log::debug("Client command reset to 1.");
+            // Log::debug("Client command reset to 1.");
         }
 
         $q = $command;
@@ -172,33 +172,33 @@ class MTConnect
             foreach ($data as $param => $value) {
                 if ($param == MTProtocolConsts::WEB_PARAM_BODYTEXT) {
                     $body_request = $value;
-                    Log::debug("Body request found.");
+                    // Log::debug("Body request found.");
                 } else {
                     $q .= $param . '=' . MTUtils::Quotes($value) . '|';
-                    Log::debug("Appending parameter.", ['param' => $param, 'value' => $value]);
+                    // Log::debug("Appending parameter.", ['param' => $param, 'value' => $value]);
                 }
             }
             $q .= "\r\n";
             if (!empty($body_request)) {
                 $q .= $body_request;
-                Log::debug("Appending body request.");
+                // Log::debug("Appending body request.");
             }
         } else {
             $q .= "|\r\n";
-            Log::debug("No data provided, added empty query.");
+            // Log::debug("No data provided, added empty query.");
         }
 
-        Log::debug("Final query before encoding.", ['query' => $q]);
+        // Log::debug("Final query before encoding.", ['query' => $q]);
 
         $query_body = mb_convert_encoding($q, "utf-16le", "utf-8");
-        Log::debug("Query encoded to UTF-16LE.");
+        // Log::debug("Query encoded to UTF-16LE.");
 
         if ($command != MTProtocolConsts::WEB_CMD_AUTH_START && $command != MTProtocolConsts::WEB_CMD_AUTH_ANSWER && $this->is_crypt) {
             $query_body = $this->CryptPacket($query_body, strlen($query_body), $len_query);
-            Log::debug("Query encrypted.", ['length' => $len_query]);
+            // Log::debug("Query encrypted.", ['length' => $len_query]);
         } else {
             $len_query = strlen($query_body);
-            Log::debug("Query not encrypted.", ['length' => $len_query]);
+            // Log::debug("Query not encrypted.", ['length' => $len_query]);
         }
 
         if ($first_request) {
@@ -210,18 +210,18 @@ class MTConnect
         $query = $header . '0' . $query_body;
         $query_len = strlen($header) + 1 + $len_query;
 
-        Log::debug("Prepared final query.", ['length' => $query_len]);
+        // Log::debug("Prepared final query.", ['length' => $query_len]);
 
         // Log query content in hex to avoid issues with binary data
-        Log::debug("Sending query (hex): " . bin2hex($query));
+        // Log::debug("Sending query (hex): " . bin2hex($query));
 
         $send_data = socket_write($this->m_connect, $query, $query_len);
         if (!$send_data) {
-            Log::error("Send failed.", ['error' => $this->GetSocketError()]);
+            // Log::error("Send failed.", ['error' => $this->GetSocketError()]);
             return false;
         }
 
-        Log::debug("Send successful.", ['bytes_written' => $send_data]);
+        // Log::debug("Send successful.", ['bytes_written' => $send_data]);
 
         return true;
     }

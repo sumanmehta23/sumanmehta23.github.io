@@ -303,6 +303,32 @@ class Users extends Controller
                     //   ]);
                     // Check review result
                     if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
+
+                        $apiUrl = '/resources/applicants/' . $payload['applicantId'] . '/one'; // URI of the request
+                        $requestBody = ''; // Add your request body if needed, empty for this example
+
+                        // Create the valueToSign string
+                        $valueToSign = $timestamp . $requestMethod . $apiUrl;
+
+                        if (!empty($requestBody)) {
+                            $valueToSign .= $requestBody;
+                        }
+
+                        // Compute HMAC SHA256 signature
+                        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
+
+                        // Convert binary signature to hexadecimal
+                        $signatureHex = bin2hex($signature);
+                        $response = Http::withHeaders([
+                            'X-App-Token' => config('services.sumsub.api_token'),
+                            'X-App-Access-Sig' => $signatureHex,
+                            'X-App-Access-Ts' => $timestamp,
+                        ])->get('https://api.sumsub.com' . $apiUrl);
+                        if ($response->status() != 200) {
+                            return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
+                        }
+                        $payload = $response->json();
+                        Log::info('Sumsub user payload', ['payload' => $payload]);
                         // Find the user in the database
                         $user = User::where('email', $email)->first();
 
