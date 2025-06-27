@@ -58,7 +58,7 @@ class UpdateMT5Groups extends Command
             ->whereHas('accountType', function ($query) {
                 $query->where('ac_group', 'like', '%Book%');
             })
-            ->where('code',945423)
+            ->where('code',594782)
             ->orderBy('id')
             ->chunk($batchSize, function ($accounts) use ($api, $selectedGroupCode, &$changedAccounts) {
 
@@ -66,7 +66,7 @@ class UpdateMT5Groups extends Command
                     // dd($accounts);
                     $code = $account->code;
 
-                    if($code == 945423){
+                    // if($code == 594782){
                         $trade_user = null;
                         if (($error_code = $api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
                             Log::warning("Failed to fetch MT5 user", [
@@ -125,7 +125,7 @@ class UpdateMT5Groups extends Command
                                 Log::warning("AccountType not found for group: {$newGroup}");
                             }
                         }
-                    }
+                    // }
                 }
             });
 
