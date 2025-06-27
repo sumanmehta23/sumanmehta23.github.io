@@ -64,6 +64,32 @@ class Leaderboard extends Controller
             })
             ->get();
 
+        $settings = settings();
+
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+
+        foreach ($accounts as $account) {
+            $apiResponse = $this->api->UserAccountGet($account->code, $accountData);
+            if ($apiResponse === MTRetCode::MT_RET_OK) {
+                $account->update([
+                        'balance' => $accountData->Balance,
+                        'credit' => $accountData->Credit,
+                        'margin_free' => $accountData->MarginFree,
+                        'margin_level' => $accountData->MarginLevel,
+                        'equity' => $accountData->Equity,
+                    ]);
+            } else {
+                // Logger::error
+            }
+        }
+
             //  dump($accounts);
 
         // $firstAccount = $accounts->first();
@@ -400,7 +426,6 @@ class Leaderboard extends Controller
                 } else {
                     // Logger::error
                 }
-                AccountHelper::updateLiveAndDemoAccounts($account->code);
             }
 
             return view('competitions.leaderboard', [
