@@ -398,8 +398,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::resource('groups', ProductsController::class);
         Route::resource('competitions', CompetitionProductController::class);
 
-        Route::get('/competition/leaderboard', [Leaderboard::class, 'leaderboard'])
-            ->name('competition.leaderboard');
+        Route::get('/competition/leaderboard', [Leaderboard::class, 'leaderboard'])->name('competition.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');

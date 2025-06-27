@@ -54,7 +54,7 @@ class Leaderboard extends Controller
         $accounts = Account::with(['user', 'accountType'])
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
-            // ->whereNotNull('competition_product_id')
+            ->whereNotNull('competition_product_id')
             ->where('code', '!=', null)
             ->where('demo', true)
             ->where('competition_status', 'active')
@@ -65,25 +65,25 @@ class Leaderboard extends Controller
 
             //  dump($accounts);
 
-        $firstAccount = $accounts->first();
+        // $firstAccount = $accounts->first();
         // dd($firstAccount);
         // $startDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_start_date : Carbon::now();
         // $endDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_end_date : Carbon::now();
 
-        $stats = $this->competitionService->getCurrentStats($firstAccount->accountType);
-        $rankings = $this->competitionService->getRankings($firstAccount->accountType);
+        // $stats = $this->competitionService->getCurrentStats($firstAccount->accountType);
+        // $rankings = $this->competitionService->getRankings($firstAccount->accountType);
 
 
         return view('admin.leaderboard', [
-            'stats' => $stats,
-            'rankings' => $rankings,
-            'competition_start_date' => $firstAccount->accountType->competition_start_date,
-            'competition_end_date' => $firstAccount->accountType->competition_end_date,
-            'months' => [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ],
-            'years' => range(now()->year - 1, now()->year + 1)
+            // 'stats' => $stats,
+            // 'rankings' => $rankings,
+            // 'competition_start_date' => $firstAccount->accountType->competition_start_date,
+            // 'competition_end_date' => $firstAccount->accountType->competition_end_date,
+            // 'months' => [
+            //     'January', 'February', 'March', 'April', 'May', 'June',
+            //     'July', 'August', 'September', 'October', 'November', 'December'
+            // ],
+            // 'years' => range(now()->year - 1, now()->year + 1)
         ]);
     }
 
