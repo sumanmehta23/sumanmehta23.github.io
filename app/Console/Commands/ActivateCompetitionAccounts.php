@@ -150,7 +150,7 @@ class ActivateCompetitionAccounts extends Command
                             if ($errorCode != MTRetCode::MT_RET_OK) {
                                 $error = MTRetCode::GetError($errorCode);
                                 Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
-                                return redirect()->back()->with('success', $error);
+                                // return redirect()->back()->with('success', $error);
                             } else {
                                 $data = [
                                     'user_id' => $user->id,
@@ -164,12 +164,12 @@ class ActivateCompetitionAccounts extends Command
                                 DemoDeposit::create($data);
                             }
                             $this->sendMail($new_user, 'Demo');
-                            return redirect()->back()->with('success', $response['message']);
+                            // return redirect()->back()->with('success', $response['message']);
                         }else{
-                            return redirect()->back()->with('error', 'No account found to update.');
+                            // return redirect()->back()->with('error', 'No account found to update.');
                         }
                     } else {
-                        return redirect()->back()->with('error', $response['message']);
+                        // return redirect()->back()->with('error', $response['message']);
                     }
                 }
             });
@@ -188,16 +188,16 @@ class ActivateCompetitionAccounts extends Command
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
                 Log::error('MT5 live account connection error : ' . $error.' for user '.json_encode($user));
-                return ["status" => false, "message" => $error];
+                // return ["status" => false, "message" => $error];
             }
         }
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('Competition create error : ' . $error.' for user '.json_encode($user));
-            return ["status" => false, "message" => $error];
+            // return ["status" => false, "message" => $error];
         } else {
             Log::info('Competition created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
-            return ["status" => true, "message" => $type . " Competition Created Successfully"];
+            // return ["status" => true, "message" => $type . " Competition Created Successfully"];
         }
     }
 
