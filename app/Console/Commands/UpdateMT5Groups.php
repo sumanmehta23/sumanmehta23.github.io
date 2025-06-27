@@ -58,7 +58,7 @@ class UpdateMT5Groups extends Command
             ->whereHas('accountType', function ($query) {
                 $query->where('ac_group', 'like', '%Book%');
             })
-            ->where('code',594782)
+            // ->where('code',594782)
             ->orderBy('id')
             ->chunk($batchSize, function ($accounts) use ($api, $selectedGroupCode, &$changedAccounts) {
 
