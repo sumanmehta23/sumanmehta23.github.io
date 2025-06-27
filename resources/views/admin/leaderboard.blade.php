@@ -51,14 +51,14 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3 mb-4">
-                                <div class="col-12">
+                                {{-- <div class="col-12">
                                     <div class="input-group">
                                         <span class="input-group-text bg-transparent">
                                             <i class="fe fe-search"></i>
                                         </span>
                                         <input type="text" id="searchInput" class="form-control" placeholder="Search name, email, account...">
                                     </div>
-                                </div>
+                                </div> --}}
                                 <div class="col-sm-6 col-md-8">
                                     <div class="input-group">
                                         <span class="input-group-text bg-transparent">
