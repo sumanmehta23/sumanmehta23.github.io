@@ -378,7 +378,7 @@ class Leaderboard extends Controller
                                 ->get();
 
             foreach ($accounts as $account) {
-                AccountHelper::updateLiveAndDemoAccounts($account->id);
+                AccountHelper::updateLiveAndDemoAccounts($account->code);
             }
 
             return view('competitions.leaderboard', [
