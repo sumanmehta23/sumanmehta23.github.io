@@ -244,7 +244,7 @@
         let form = document.getElementById("password-confirm-form");
 
         form.addEventListener("submit", function (event) {
-            console.log('abhay');
+            // console.log('abhay');
             event.preventDefault();
             twoFA().confirmPassword();
         });

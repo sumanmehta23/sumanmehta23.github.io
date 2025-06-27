@@ -279,6 +279,7 @@ class CompetitionController extends Controller
 
     public function leaderboard(Request $request)
     {
+
         // Get month and year from request or use current
         // $startDate = $request['start_date'] ?? now()->startOfMonth();
         // $endDate = $request['end_date'] ?? now()->endOfMonth();
@@ -291,19 +292,22 @@ class CompetitionController extends Controller
 
         try {
             // Get competition data from service
-            $stats = $this->competitionService->getCurrentStats($competition->competition_start_date, $competition->competition_end_date);
-            $rankings = $this->competitionService->getRankings($competition->competition_start_date, $competition->competition_end_date);
-            $competitionStatus = $this->competitionService->getCompetitionStatus($competition->competition_start_date, $competition->competition_end_date);
+            $stats = $this->competitionService->getCurrentStats($competition);
+            $rankings = $this->competitionService->getRankings($competition);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
             // Get available competitions for filtering
-            $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
-                ->where('demo', true)
-                ->whereNotNull('competition_start_date')
-                ->whereNotNull('competition_end_date')
-
-                ->orderBy('competition_start_date', 'desc')
-                ->orderBy('competition_end_date', 'desc')
-                ->get()
-                ->groupBy('competition_start_date');
+             $availableCompetitions = Account::with('accountType')
+                                    ->whereHas('accountType', function ($query) {
+                                        $query->whereColumn('id', 'accounts.competition_product_id');
+                                    })
+                                    // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
+                                    ->where('demo', true)
+                                    ->whereNotNull('competition_start_date')
+                                    ->whereNotNull('competition_end_date')
+                                    ->whereNotNull('competition_product_id')
+                                    ->orderBy('competition_start_date', 'desc')
+                                    ->get()
+                                    ->groupBy('competition_product_id');
 
             return view('competitions.leaderboard', [
                 'stats' => $stats,

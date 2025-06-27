@@ -153,12 +153,12 @@
     </div>
     <script>
         $(document).ready(function() {
-            console.log('abhay');
+            // console.log('abhay');
             const accountIds = [];
             $('.rank-cell').each(function() {
                 accountIds.push($(this).data('id'));
             });
-            console.log('abhay');
+            // console.log('abhay');
             $.ajax({
                 url: '{{ route('get-account-rank') }}',
                 type: 'GET',

@@ -964,7 +964,7 @@
                 },
                 success: function(res) {
                     console.log(res);
-                    console.log('abhay');
+                    // console.log('abhay');
                     if (res === true || res.success === true) {
                         Swal.fire({
                             icon: 'success',
@@ -980,7 +980,7 @@
                 },
                 error: function(xhr) {
                     console.log(xhr);
-                    console.log('abhay');
+                    // console.log('abhay');
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
