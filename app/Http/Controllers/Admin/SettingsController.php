@@ -728,12 +728,14 @@ class SettingsController extends Controller
                 $toggle->b_book = 1;
             }
             $toggle->save();
+            Artisan::call("app:alter-group-codes --group_code={$groupCode}");
         } else {
             if ($groupCode === 'A-Book') {
                 ToggleGroup::create(['a_book' => 1, 'b_book' => 0]);
             } else {
                 ToggleGroup::create(['a_book' => 0, 'b_book' => 1]);
             }
+            Artisan::call("app:alter-group-codes --group_code={$groupCode}");
         }
         return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
     }
