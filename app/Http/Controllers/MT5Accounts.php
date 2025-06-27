@@ -246,6 +246,7 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',

@@ -28,14 +28,14 @@
 
                             <div class="form-check pt-4 mb-2">
                                 <input class="form-check-input" type="radio" name="groupToggle" id="aBook" value="A-Book"
-                                    {{ isset($settings['enable_group']) && $settings['enable_group'] != '1' ? 'checked' : '' }}
+                                    {{ isset($toggle) && $toggle->a_book == 1 ? 'checked' : '' }}
                                     onchange="updateStatus(this.value)">
                                 <label class="form-check-label" for="aBook">A-Book</label>
                             </div>
 
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="groupToggle" id="bBook" value="B-Book"
-                                    {{ isset($settings['enable_group']) && $settings['enable_group'] == '1' ? 'checked' : '' }}
+                                    {{ isset($toggle) && $toggle->b_book == 1 ? 'checked' : '' }}
                                     onchange="updateStatus(this.value)">
                                 <label class="form-check-label" for="bBook">B-Book</label>
                             </div>
@@ -47,7 +47,6 @@
             <hr class="my-4">
             <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="fas fa-save me-2"></i>
                     Save Settings
                 </button>
             </div>

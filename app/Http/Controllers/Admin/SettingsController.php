@@ -7,6 +7,7 @@ use App\MT5\MTWebAPI;
 use App\Models\Account;
 use App\Models\Setting;
 use App\Models\RestrictIps;
+use App\Models\ToggleGroup;
 use App\Models\EmployeeList;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
@@ -38,7 +39,8 @@ class SettingsController extends Controller
     {
         $enabled = 0;
         $showingRecoveryCodes = '';
-        return view("admin.ui_settings", compact('enabled','showingRecoveryCodes'));
+        $toggle = ToggleGroup::first();
+        return view("admin.ui_settings", compact('enabled','showingRecoveryCodes', 'toggle'));
     }
 
     public function logs(Request $request)
@@ -716,9 +718,23 @@ class SettingsController extends Controller
             return redirect()->back()->with('error', 'Invalid group code selected.');
         }
 
-        // ✅ Pass as option with -- syntax
-        Artisan::call("app:alter-group-codes --group_code={$groupCode}");
-
+        $toggle = ToggleGroup::first();
+        if ($toggle) {
+            if ($groupCode === 'A-Book') {
+                $toggle->a_book = 1;
+                $toggle->b_book = 0;
+            } else {
+                $toggle->a_book = 0;
+                $toggle->b_book = 1;
+            }
+            $toggle->save();
+        } else {
+            if ($groupCode === 'A-Book') {
+                ToggleGroup::create(['a_book' => 1, 'b_book' => 0]);
+            } else {
+                ToggleGroup::create(['a_book' => 0, 'b_book' => 1]);
+            }
+        }
         return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
     }
 
