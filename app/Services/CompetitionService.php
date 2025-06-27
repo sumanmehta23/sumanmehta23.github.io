@@ -19,22 +19,18 @@ class CompetitionService
      * @param int|null $year The year (defaults to current year)
      * @return array
      */
-    public function getCurrentStats($startDate = null, $endDate = null)
+    public function getCurrentStats($competition)
     {
         // dump($startDate);
-        // dd($endDate);
-        $startDate = $startDate ?? now()->format('F');
-        $endDate = $endDate ?? now()->year;
+        $startDate = $competition->competition_start_date ?? now()->format('F');
+        $endDate = $competition->competition_end_date ?? now()->year;
 
         $accounts = Account::with(['user', 'accountType'])
             ->where('competition_start_date', $startDate)
             ->where('competition_end_date', $endDate)
             ->where('code', '!=', null)
             ->where('demo', true)
-            // ->where('competition_status', 'active')
-            ->whereHas('accountType', function($q) {
-                $q->where('ac_name','like' ,'%Competition%');
-            })
+            ->where('competition_product_id', $competition->id)
             ->get();
         return [
             'participants' => $accounts->count(),
@@ -88,16 +84,19 @@ class CompetitionService
     /**
      * Get competition rankings for a specific month/year
      */
-    public function getRankings($startDate, $endDate)
+    public function getRankings($competition)
     {
         // dd($year);
-        // dd($month);
+        $startDate = $competition->competition_start_date ?? now()->format('F');
+        $endDate = $competition->competition_end_date ?? now()->year;
+        // dd($competition->id);
         return Account::with('user', 'accountType', 'trades')
             ->where('competition_start_date', $startDate)
             ->where('competition_end_date', $endDate)
             // ->where('competition_status', 'active')
             ->where('code', '!=', null)
             ->where('demo', true)
+            ->where('competition_product_id', $competition->id)
             ->orderByDesc('equity')
             ->get()
             ->map(function($account, $index) {
@@ -118,9 +117,10 @@ class CompetitionService
     /**
      * Get competition status and timing information
      */
-    public function getCompetitionStatus($startDate, $endDate)
+    public function getCompetitionStatus($competition)
     {
-
+        $startDate = $competition->competition_start_date ?? now()->format('F');
+        $endDate = $competition->competition_end_date ?? now()->year;
         // $requestedDate = Carbon::createFromDate($year, date('m', strtotime($month)), 1);
         $now = Carbon::now();
 

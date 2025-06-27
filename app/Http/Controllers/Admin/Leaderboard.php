@@ -54,6 +54,7 @@ class Leaderboard extends Controller
         $accounts = Account::with(['user', 'accountType'])
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
+            // ->whereNotNull('competition_product_id')
             ->where('code', '!=', null)
             ->where('demo', true)
             ->where('competition_status', 'active')
@@ -65,19 +66,19 @@ class Leaderboard extends Controller
             //  dump($accounts);
 
         $firstAccount = $accounts->first();
+        // dd($firstAccount);
+        // $startDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_start_date : Carbon::now();
+        // $endDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_end_date : Carbon::now();
 
-        $startDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_start_date : Carbon::now();
-        $endDate = $firstAccount && $firstAccount->accountType ? $firstAccount->accountType->competition_end_date : Carbon::now();
-
-        $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
-        $rankings = $this->competitionService->getRankings($startDate, $endDate);
+        $stats = $this->competitionService->getCurrentStats($firstAccount->accountType);
+        $rankings = $this->competitionService->getRankings($firstAccount->accountType);
 
 
         return view('admin.leaderboard', [
             'stats' => $stats,
             'rankings' => $rankings,
-            'competition_start_date' => $startDate,
-            'competition_end_date' => $endDate,
+            'competition_start_date' => $firstAccount->accountType->competition_start_date,
+            'competition_end_date' => $firstAccount->accountType->competition_end_date,
             'months' => [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
@@ -350,9 +351,9 @@ class Leaderboard extends Controller
         }
         try {
             // Get competition data from service
-            $stats = $this->competitionService->getCurrentStats($competition->competition_start_date, $competition->competition_end_date);
-            $rankings = $this->competitionService->getRankings($competition->competition_start_date, $competition->competition_end_date);
-            $competitionStatus = $this->competitionService->getCompetitionStatus($competition->competition_start_date, $competition->competition_end_date);
+            $stats = $this->competitionService->getCurrentStats($competition);
+            $rankings = $this->competitionService->getRankings($competition);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
 
             $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
                 ->where('demo', true)
