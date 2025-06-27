@@ -35,14 +35,13 @@
                         <!-- Competition Period Selector -->
                         <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
                             <div class="form-group mb-0">
-                                <select name="competition_period" class="form-select form-select-sm">
-                                    @foreach($availableCompetitions as $start => $competitions)
+                                <select name="competition_id" class="form-select form-select-sm">
+                                    @foreach($availableCompetitions as $competitionId => $accounts)
                                         @php
-                                            $end = $competitions->first()->competition_end_date;
-                                            $selected = ($competition_start_date == $start && $competition_end_date == $end) ? 'selected' : '';
+                                            $selected = ($accounts->first()->competition_product_id == $competitionId) ? 'selected' : '';
                                         @endphp
-                                        <option value="{{ $start }}|{{ $end }}" {{ $selected }}>
-                                            {{ \Carbon\Carbon::parse($start)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($end)->format('M d, Y') }}
+                                        <option value="{{ $competitionId }}" {{ $selected }}>
+                                            {{ $accounts->first()->accountType->ac_name }}
                                         </option>
                                     @endforeach
                                 </select>

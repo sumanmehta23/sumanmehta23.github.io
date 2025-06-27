@@ -355,14 +355,19 @@ class Leaderboard extends Controller
             $rankings = $this->competitionService->getRankings($competition);
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
 
-            $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
-                ->where('demo', true)
-                ->whereNotNull('competition_start_date')
-                ->whereNotNull('competition_end_date')
-                ->orderBy('competition_start_date', 'desc')
-                ->orderBy('competition_end_date', 'desc')
-                ->get()
-                ->groupBy('competition_start_date');
+            $availableCompetitions = Account::with('accountType')
+                                    ->whereHas('accountType', function ($query) {
+                                        $query->whereColumn('id', 'accounts.competition_product_id');
+                                    })
+                                    // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
+                                    ->where('demo', true)
+                                    ->whereNotNull('competition_start_date')
+                                    ->whereNotNull('competition_end_date')
+                                    ->whereNotNull('competition_product_id')
+                                    ->orderBy('competition_start_date', 'desc')
+                                    ->get()
+                                    ->groupBy('competition_product_id');
+
             // dd($availableCompetitions);
             return view('competitions.leaderboard', [
                 'stats' => $stats,
