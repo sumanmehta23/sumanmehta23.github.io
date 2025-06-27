@@ -260,6 +260,7 @@ class MT5Accounts extends Controller
         $referral=$user->referral;
         $ib=$user->ib1;
         $account_type_id = $validatedData['options'];
+        dd($group);
         //wealthytrades
         if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
             $groupCode = str_replace("DF","SNSI",$group->ac_group);
