@@ -161,6 +161,9 @@ class CompetitionController extends Controller
         if($end_date < now()) {
             return redirect()->back()->with('error', 'Competition is over, try another.');
         }
+        if($start_date < now()) {
+            return redirect()->back()->with('error', 'Competition registration is over, try another competition.');
+        }
 
         $existingCompetition = Account::with('accountType')
             ->where('user_id', $user->id)
