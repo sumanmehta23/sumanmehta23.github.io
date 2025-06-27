@@ -4243,6 +4243,7 @@ class AjaxController extends Controller
                     if($row->account_request_status == 0){
                         return '<span>N/A</span>';
                     }
+                    dump($row);
                     $profit = $row->balance - $row->accountType->ac_min_deposit;
                     return '<span class="' . ($profit >= 0 ? 'text-success' : 'text-danger') . '">' . number_format($profit, 2) . '</span>';
                 })
