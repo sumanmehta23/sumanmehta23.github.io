@@ -2778,8 +2778,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $dat = $row;
             $url = route('admin.competition.leaderboard', [
-                        'start_date' => $row->competition_start_date,
-                        'end_date' => $row->competition_end_date
+                        'competition_id' => $row->id,
                     ]);
             $total_participants = Account::where('competition_product_id',$row->id)->count();
             $dat->leaderboard = '<a href="' . $url . '"
@@ -4257,8 +4256,7 @@ class AjaxController extends Controller
                 ->addColumn('start_end', function ($row) {
                     $monthYear = $row->competition_start_date . '/' . $row->competition_end_date;
                     $url = route('admin.competition.leaderboard', [
-                        'start_date' => $row->competition_start_date,
-                        'end_date' => $row->competition_end_date
+                        'competition_id' => $row->accountType->id,
                     ]);
 
                     return '

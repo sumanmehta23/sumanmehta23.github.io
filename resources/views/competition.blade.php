@@ -106,8 +106,7 @@
                                                                     <span class="">Withdraw <i class="ti ti-database-import"></i></span>
                                                                 </a> --}}
                                                                 <a href="{{ route('competition.leaderboard', [
-                                                                                'start_date' => $acc->competition_start_date,
-                                                                                'end_date' => $acc->competition_end_date
+                                                                                'competition_id' => $acc->accountType->id,
                                                                             ])
                                                                          }}"
                                                                         class="btn btn-sm btn-outline-secondary d-grid">

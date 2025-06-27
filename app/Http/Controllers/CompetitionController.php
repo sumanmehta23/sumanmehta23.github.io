@@ -280,14 +280,20 @@ class CompetitionController extends Controller
     public function leaderboard(Request $request)
     {
         // Get month and year from request or use current
-        $startDate = $request['start_date'] ?? now()->startOfMonth();
-        $endDate = $request['end_date'] ?? now()->endOfMonth();
+        // $startDate = $request['start_date'] ?? now()->startOfMonth();
+        // $endDate = $request['end_date'] ?? now()->endOfMonth();
+
+        $competition_id = $request['competition_id'] ?? null;
+        $competition = AccountType::where('id', $competition_id)->first();
+        if (!$competition) {
+            return redirect()->back()->with('error', 'Competition not found.');
+        }
 
         try {
             // Get competition data from service
-            $stats = $this->competitionService->getCurrentStats($startDate, $endDate);
-            $rankings = $this->competitionService->getRankings($startDate, $endDate);
-            $competitionStatus = $this->competitionService->getCompetitionStatus($startDate, $endDate);
+            $stats = $this->competitionService->getCurrentStats($competition->competition_start_date, $competition->competition_end_date);
+            $rankings = $this->competitionService->getRankings($competition->competition_start_date, $competition->competition_end_date);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($competition->competition_start_date, $competition->competition_end_date);
             // Get available competitions for filtering
             $availableCompetitions = Account::select('competition_start_date', 'competition_end_date')
                 ->where('demo', true)
@@ -302,8 +308,8 @@ class CompetitionController extends Controller
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
-                'competition_start_date' => $startDate,
-                'competition_end_date' => $endDate,
+                'competition_start_date' => $competition->competition_start_date,
+                'competition_end_date' => $competition->competition_end_date,
                 // 'months' => [
                 //     'January', 'February', 'March', 'April', 'May', 'June',
                 //     'July', 'August', 'September', 'October', 'November', 'December'
@@ -312,7 +318,8 @@ class CompetitionController extends Controller
                 'availableCompetitions' => $availableCompetitions,
                 'competitionStatus' => $competitionStatus['status'],
                 'targetDate' => $competitionStatus['targetDate'],
-                'showTimer' => $competitionStatus['showTimer']
+                'showTimer' => $competitionStatus['showTimer'],
+                'competition' => $competition,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in competition leaderboard: ' . $e->getMessage());
