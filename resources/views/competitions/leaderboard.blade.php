@@ -367,7 +367,7 @@
         }
 
         .trader-text {
-            color: #6c757d !important; /* text-muted color */
+            color: #000 !important; /* black color */
         }
 
         .trader-select.active .trader-text {
