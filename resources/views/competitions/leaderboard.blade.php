@@ -31,6 +31,27 @@
                             </ul>
                         </div>
                     </div>
+                    {{-- <div class="col-md-6 text-md-end">
+                        <!-- Competition Period Selector -->
+                        <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
+                            <div class="form-group mb-0">
+                                <select name="competition_period" class="form-select form-select-sm">
+                                    @foreach($availableCompetitions as $start => $competitions)
+                                        @php
+                                            $end = $competitions->first()->competition_end_date;
+                                            $selected = ($competition_start_date == $start && $competition_end_date == $end) ? 'selected' : '';
+                                        @endphp
+                                        <option value="{{ $start }}|{{ $end }}" {{ $selected }}>
+                                            {{ \Carbon\Carbon::parse($start)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($end)->format('M d, Y') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fe fe-refresh-cw"></i> Update
+                            </button>
+                        </form>
+                    </div> --}}
                     <div class="col-md-6 text-md-end">
                         <!-- Competition Period Selector -->
                         <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
@@ -40,7 +61,7 @@
                                         @php
                                             $selected = ($accounts->first()->competition_product_id == $competitionId) ? 'selected' : '';
                                         @endphp
-                                        <option value="{{ $competitionId }}" {{ $selected }}>
+                                        <option value="{{ $accounts->first()->accountType }}" {{ $selected }}>
                                             {{ $accounts->first()->accountType->ac_name }}
                                         </option>
                                     @endforeach
@@ -595,10 +616,12 @@
         // Handle period selection
         document.getElementById('periodSelector').addEventListener('submit', function(e) {
             e.preventDefault();
-            const period = this.competition_period.value.split('|');
-            const start = period[0];
-            const end = period[1];
-            window.location.href = `?start_date=${start}&end_date=${end}`;
+            // console.log('Period selector submitted');
+            const competition = JSON.parse(this.competition_id.value);
+            // console.log(competition);
+            // const start = period[0];
+            // const end = period[1];
+            window.location.href = `?competition_id=${competition.id}`;
         });
 
         // Handle trader selection
@@ -618,13 +641,15 @@
             try {
                 // Using a static test account number for development
                 const testAccountNo = accountNo;  // Replace with a real account number from your database
-                console.log('Using test account:', testAccountNo);
+                // console.log('Using test account:', testAccountNo);
 
                 const isAdmin = @json(isset(auth()->user()->role));
 
                 // Get selected month and year from period selector
-                const selectedPeriod = document.querySelector('select[name="competition_period"]').value;
-                const [startDate, endDate] = selectedPeriod.split('|');
+                const competition = JSON.parse(document.querySelector('select[name="competition_id"]').value);
+
+                const startDate = competition.competition_start_date;
+                const endDate = competition.competition_end_date;
 
 
                 // Use the appropriate endpoint based on user role
@@ -632,12 +657,14 @@
                     ? `/admin/competition/trader-data/${testAccountNo}/${startDate}/${endDate}`
                     : `/competition/trader/${testAccountNo}/${startDate}/${endDate}`;
 
+                    // console.log('Using test account:', endpoint);
+
                 const response = await fetch(endpoint);
 
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                console.log(data);
+                // console.log(data);
                 // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;
