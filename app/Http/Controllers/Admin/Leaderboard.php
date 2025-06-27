@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
 use App\MT5\MTProtocolConsts;
+use App\Helpers\AccountHelper;
 use Illuminate\Support\Carbon;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
@@ -368,7 +369,18 @@ class Leaderboard extends Controller
                                     ->get()
                                     ->groupBy('competition_product_id');
 
+
             // dd($availableCompetitions);
+            $accounts = Account::where('demo', true)
+                                ->whereNotNull('competition_start_date')
+                                ->whereNotNull('competition_end_date')
+                                ->whereNotNull('competition_product_id')
+                                ->get();
+
+            foreach ($accounts as $account) {
+                AccountHelper::updateLiveAndDemoAccounts($account->id);
+            }
+
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
