@@ -181,26 +181,14 @@
                                                         </small>
                                                     </div>
                                                     <div class="d-flex align-items-center justify-content-between">
-                                                        <div class="d-flex align-items-center">
-                                                            <small class="trader-text me-3">
-                                                                <i class="fe fe-hash me-1"></i>
-                                                                {{ $rank['account_code'] }}
-                                                            </small>
-                                                            <small class="trader-text me-3">
-                                                                <i class="fe fe-bar-chart-2 me-1"></i>
-                                                                {{ number_format($rank['volume'], 2) }} Lots
-                                                            </small>
-                                                        </div>
-                                                        <div class="d-flex align-items-center">
-                                                            <small class="trader-text me-3">
-                                                                <i class="fe fe-activity me-1"></i>
-                                                                {{ $rank['total_trades'] }} Trades
-                                                            </small>
-                                                            <small class="{{ $rank['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
-                                                                <i class="fe fe-trending-{{ $rank['total_profit'] >= 0 ? 'up' : 'down' }} me-1"></i>
-                                                                ${{ number_format($rank['total_profit'], 2) }}
-                                                            </small>
-                                                        </div>
+                                                        <small class="trader-text me-3">
+                                                            <i class="fe fe-activity me-1"></i>
+                                                            {{ $rank['total_trades'] }} Trades
+                                                        </small>
+                                                        <small class="{{ $rank['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                                            <i class="fe fe-trending-{{ $rank['total_profit'] >= 0 ? 'up' : 'down' }} me-1"></i>
+                                                            ${{ number_format($rank['total_profit'], 2) }}
+                                                        </small>
                                                     </div>
                                                 </div>
                                                 <div class="flex-shrink-0 ms-2">
