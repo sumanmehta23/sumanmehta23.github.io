@@ -53,15 +53,16 @@ class SyncDailyReports extends Command
                             Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
                             continue;
                         }
-                        Log::info("Account info: " . print_r($user_info, true));
-                        if ($user_info) {
+
+                            Log::info("Account info2: " . print_r($user_info->Balance, true));
                             DailyReport::create([
                                 'account_code' => $account->code,
-                                'equity' => $user_info->Balance + ($user_info->Profit ?? 0),
-                                'balance' => $user_info->Balance,
-                                'report_date' => now()->format('Y-m-d')
+                                'equity'       => $user_info->Balance + ($user_info->Profit ?? 0),
+                                'balance'      => $user_info->Balance,
+                                'report_date'  => now()->format('Y-m-d'),
+                                'created_at'   => now(),
+                                'updated_at'   => now(),
                             ]);
-                        }
                     } catch (\Exception $e) {
                         Log::error("Error syncing daily report for account {$account->code}: " . $e->getMessage());
                         continue;
