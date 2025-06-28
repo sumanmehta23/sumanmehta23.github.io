@@ -25,7 +25,7 @@ class SyncDailyReports extends Command
     public function handle()
     {
         $this->info('Starting daily reports sync...');
-
+        Log::info("Starting daily reports sync....");
         try {
             $this->mt5Service->connect();
             $api = $this->mt5Service->getApi();
