@@ -59,7 +59,7 @@
                                 <select name="competition_id" class="form-select form-select-sm">
                                     @foreach($availableCompetitions as $competitionId => $accounts)
                                         @php
-                                            $selected = ($accounts->first()->competition_product_id == $competitionId) ? 'selected' : '';
+                                            $selected = ($accounts->first()->competition_product_id == $competition->id) ? 'selected' : '';
                                         @endphp
                                         <option value="{{ $accounts->first()->accountType }}" {{ $selected }}>
                                             {{ $accounts->first()->accountType->ac_name }}
@@ -651,6 +651,7 @@
                 const startDate = competition.competition_start_date;
                 const endDate = competition.competition_end_date;
 
+                console.log(competition);
 
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin

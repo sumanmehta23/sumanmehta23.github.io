@@ -396,7 +396,7 @@ class Leaderboard extends Controller
                                     ->groupBy('competition_product_id');
 
 
-            // dd($availableCompetitions);
+            // dd($competition);
             $settings = settings();
 
             $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -453,18 +453,15 @@ class Leaderboard extends Controller
      */
     public function getTraderData($accountNo, $start, $end)
     {
-        // Ensure start and end are Carbon instances
-        $startDate = Carbon::parse($start)->startOfDay();
-        $endDate = Carbon::parse($end)->endOfDay();
 
-        $account = Account::with([
-                                'trades',
-                                'dailyReports' => function ($query) use ($startDate, $endDate) {
-                                    $query->whereDate('report_date', '>=', $startDate)
-                                        ->whereDate('report_date', '<=', $endDate)
-                                        ->orderBy('report_date');
-                                }
-                            ])->where('code', $accountNo)->firstOrFail();
+        // Ensure start and end are Carbon instances
+        $startDate = Carbon::parse($start);
+
+        $endDate = Carbon::parse($end);
+
+        $account = Account::with('trades','dailyReports')
+                    ->where('code', $accountNo)
+                    ->first();
 
         // Get daily reports data
         $labels = [];
@@ -476,15 +473,18 @@ class Leaderboard extends Controller
 
         // Fill in any missing dates with the last known equity value
         $lastEquity = $account->equity ?? '0.00';
-        $currentDate = $startDate->copy();
+        $currentDate = $startDate;
 
         while ($currentDate <= $endDate) {
+
+
             $dateKey = $currentDate->format('Y-m-d');
             $dayLabel = $currentDate->format('M d');
             $labels[] = $dayLabel;
 
             if ($dailyData->has($dateKey)) {
-                $lastEquity = $dailyData[$dateKey]->equity;
+
+                $lastEquity = $dailyData[$dateKey]['equity'];
             } else {
                 $lastEquity = '0.00';
             }
