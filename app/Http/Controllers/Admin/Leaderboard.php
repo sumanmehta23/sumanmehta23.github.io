@@ -458,12 +458,13 @@ class Leaderboard extends Controller
         $endDate = Carbon::parse($end)->endOfDay();
 
         $account = Account::with([
-            'trades',
-            'dailyReports' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('report_date', [$startDate, $endDate])
-                    ->orderBy('report_date');
-            }
-        ])->where('code', $accountNo)->firstOrFail();
+                                'trades',
+                                'dailyReports' => function ($query) use ($startDate, $endDate) {
+                                    $query->whereDate('report_date', '>=', $startDate)
+                                        ->whereDate('report_date', '<=', $endDate)
+                                        ->orderBy('report_date');
+                                }
+                            ])->where('code', $accountNo)->firstOrFail();
 
         // Get daily reports data
         $labels = [];
