@@ -454,8 +454,8 @@ class Leaderboard extends Controller
     public function getTraderData($accountNo, $start, $end)
     {
         // Ensure start and end are Carbon instances
-        $startDate = \Carbon\Carbon::parse($start)->startOfDay();
-        $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+        $startDate = Carbon::parse($start)->startOfDay();
+        $endDate = Carbon::parse($end)->endOfDay();
 
         $account = Account::with([
             'trades',
