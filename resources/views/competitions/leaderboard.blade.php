@@ -21,8 +21,8 @@
                         <div class="page-header-title px-4">
                             <h3 class="mb-2 fw-bold">{{ $competition->ac_name }}</h3>
                             <h4 class="mb-2 fw-bold">
-                                {{ \Carbon\Carbon::parse($competition_start_date)->format('d-m-Y') }} to
-                                {{ \Carbon\Carbon::parse($competition_end_date)->format('d-m-Y') }}
+                                {{ $competition->competition_start_date }} to
+                                {{ $competition->competition_end_date }}
                             </h4>
 
                             <ul class="breadcrumb bg-transparent mb-0 p-0">
@@ -31,27 +31,6 @@
                             </ul>
                         </div>
                     </div>
-                    {{-- <div class="col-md-6 text-md-end">
-                        <!-- Competition Period Selector -->
-                        <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
-                            <div class="form-group mb-0">
-                                <select name="competition_period" class="form-select form-select-sm">
-                                    @foreach($availableCompetitions as $start => $competitions)
-                                        @php
-                                            $end = $competitions->first()->competition_end_date;
-                                            $selected = ($competition_start_date == $start && $competition_end_date == $end) ? 'selected' : '';
-                                        @endphp
-                                        <option value="{{ $start }}|{{ $end }}" {{ $selected }}>
-                                            {{ \Carbon\Carbon::parse($start)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($end)->format('M d, Y') }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fe fe-refresh-cw"></i> Update
-                            </button>
-                        </form>
-                    </div> --}}
                     <div class="col-md-6 text-md-end">
                         <!-- Competition Period Selector -->
                         <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
