@@ -8,6 +8,7 @@ use App\Services\MT5Service;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\MT5\MTRetCode;
 
 class SyncDailyReports extends Command
 {
