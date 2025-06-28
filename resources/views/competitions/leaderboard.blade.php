@@ -570,7 +570,7 @@
                             color: 'rgba(0, 0, 0, 0.05)'
                         },
                         ticks: {
-                            maxTicksLimit: 5 // <-- Add this line to limit Y axis intervals
+                            maxTicksLimit: 6 // <-- Add this line to limit Y axis intervals
                         }
 
                     },
