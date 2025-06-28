@@ -6,13 +6,14 @@ use App\Models\User;
 use App\Models\KycLog;
 use App\Models\KycUpdate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
 
 class KycController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * 
+     *
      */
     // {
     //     "applicantId": "67c71370f61f6b0356406d19",
@@ -58,6 +59,9 @@ class KycController extends Controller
             return response()->json(['status' => 'false', 'message' => 'Invalid Request']);
         }
         $payload = json_decode($return, true);
+
+        Log::info("message from sumsub", $payload);
+
         // info($return);
         $type = $payload['type'];
         $email = $payload['externalUserId'];
