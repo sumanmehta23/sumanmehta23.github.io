@@ -53,7 +53,7 @@ class SyncDailyReports extends Command
                             Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
                             continue;
                         }
-                        Log::info("Account {$user_info} Daily report sync started.");
+                        Log::info("Account info: " . print_r($user_info, true));
                         if ($user_info) {
                             DailyReport::create([
                                 'account_code' => $account->code,
