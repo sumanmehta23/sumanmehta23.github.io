@@ -20,6 +20,7 @@ class SyncDailyReports extends Command
     {
         parent::__construct();
         $this->mt5Service = $mt5Service;
+        $this->api = $this->mt5Service->getApi();
     }
 
     public function handle()
@@ -28,7 +29,7 @@ class SyncDailyReports extends Command
         Log::info("Starting daily reports sync....");
         try {
             $this->mt5Service->connect();
-            $api = $this->mt5Service->getApi();
+            $api = $this->api;
 
             Account::whereNotNull('code')
                     ->whereNull('deleted_at')
@@ -47,7 +48,7 @@ class SyncDailyReports extends Command
                         // Get account info from MT5
                         $user_info = null;
                         $api->UserGet($account->code, $user_info);
-
+                        Log::info("Account {$user_info} Daily report sync started.");
                         if ($user_info) {
                             DailyReport::create([
                                 'account_code' => $account->code,
