@@ -47,7 +47,11 @@ class SyncDailyReports extends Command
                     try {
                         // Get account info from MT5
                         $user_info = null;
-                        $api->UserGet($account->code, $user_info);
+                        $error_code = $api->UserGet($account->code, $user_info);
+                        if ($error_code != MTRetCode::MT_RET_OK || !$user_info) {
+                            Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                            continue;
+                        }
                         Log::info("Account {$user_info} Daily report sync started.");
                         if ($user_info) {
                             DailyReport::create([
