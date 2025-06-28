@@ -760,10 +760,13 @@
         // Competition Timer
         if (@json($showTimer)) {
 
-            const targetDate = new Date(@json($targetDate)).getTime();
+            // Parse target date as UTC to ensure consistency with backend
+            const targetDateString = @json($targetDate);
+            const targetDate = new Date(targetDateString + '+00:00').getTime(); // Force UTC interpretation
 
             function updateTimer() {
-                const now = new Date().getTime();
+                // Get current UTC time
+                const now = Date.now(); // This is already in UTC (milliseconds since epoch)
                 const distance = targetDate - now;
 
                 // If timer has expired, reload the page to update status

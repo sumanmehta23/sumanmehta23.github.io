@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Account;
 use App\Models\TradeDeposit;
+// use Illuminate\Support\Carbon;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -86,10 +87,9 @@ class CompetitionService
      */
     public function getRankings($competition)
     {
-        // dd($year);
         $startDate = $competition->competition_start_date ?? now()->format('F');
         $endDate = $competition->competition_end_date ?? now()->year;
-        // dd($competition->id);
+
         return Account::with('user', 'accountType', 'trades')
             ->where('competition_start_date', $startDate)
             ->where('competition_end_date', $endDate)
@@ -121,14 +121,13 @@ class CompetitionService
     {
         $startDate = $competition->competition_start_date ?? now()->format('F');
         $endDate = $competition->competition_end_date ?? now()->year;
-        // $requestedDate = Carbon::createFromDate($year, date('m', strtotime($month)), 1);
-        $now = Carbon::now();
+        $now = Carbon::now('UTC'); // Use UTC for consistency
 
         if (!$startDate instanceof Carbon) {
-            $startDate = Carbon::parse($startDate);
+            $startDate = Carbon::parse($startDate, 'UTC');
         }
         if (!$endDate instanceof Carbon) {
-            $endDate = Carbon::parse($endDate);
+            $endDate = Carbon::parse($endDate, 'UTC');
         }
 
         $competitionStart = $startDate;
@@ -138,14 +137,14 @@ class CompetitionService
             // Upcoming competition
             return [
                 'status' => 'Competition Starts In',
-                'targetDate' => $competitionStart->format('Y-m-d H:i:s'),
+                'targetDate' => $competitionStart->utc()->format('Y-m-d H:i:s'),
                 'showTimer' => true
             ];
         } elseif ($now->lte($competitionEnd)) {
             // Current month competition
             return [
                 'status' => 'Competition Ends In',
-                'targetDate' => $competitionEnd->format('Y-m-d H:i:s'),
+                'targetDate' => $competitionEnd->utc()->format('Y-m-d H:i:s'),
                 'showTimer' => true
             ];
         } else {
