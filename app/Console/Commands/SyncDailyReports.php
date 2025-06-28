@@ -54,7 +54,7 @@ class SyncDailyReports extends Command
                             continue;
                         }
 
-                            Log::info("Account info2: " . print_r($user_info->Balance, true));
+                        if ($user_info) {
                             DailyReport::create([
                                 'account_code' => $account->code,
                                 'equity'       => $user_info->Balance + ($user_info->Profit ?? 0),
@@ -63,6 +63,7 @@ class SyncDailyReports extends Command
                                 'created_at'   => now(),
                                 'updated_at'   => now(),
                             ]);
+                        }
                     } catch (\Exception $e) {
                         Log::error("Error syncing daily report for account {$account->code}: " . $e->getMessage());
                         continue;
