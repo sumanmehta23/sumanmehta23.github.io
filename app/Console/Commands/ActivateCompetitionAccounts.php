@@ -67,7 +67,7 @@ class ActivateCompetitionAccounts extends Command
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             ->whereNull('competition_status')
-            ->whereDate('competition_start_date', '<=', Carbon::today())
+            ->whereDate('competition_start_date', '<=', Carbon::now())
             // ->whereDate('competition_end_date', '>=', Carbon::today())
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {

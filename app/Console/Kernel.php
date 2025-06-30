@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune')->daily();
 
-        $schedule->command('app:activate-competition-accounts')->daily();
+        $schedule->command('app:activate-competition-accounts')->everyFiveSeconds();
         $schedule->command('app:sync-trades')->everyFiveMinutes();
 
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
@@ -29,8 +29,8 @@ class Kernel extends ConsoleKernel
         // $schedule->command('app:update-price-snapshots')->hourly();
 
 
-        $schedule->command('app:alter-group-codes --group_code=a_book');
-        $schedule->command('app:alter-group-codes --group_code=b_book');
+        // $schedule->command('app:alter-group-codes --group_code=a_book');
+        // $schedule->command('app:alter-group-codes --group_code=b_book');
     }
 
     /**

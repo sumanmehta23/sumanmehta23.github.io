@@ -23,7 +23,6 @@ class CompetitionProductController extends Controller
 
     public function store(Request $request)
     {
-
         try {
             $validatedData = $request->validate([
                 'groupCreation' => ['required'],
@@ -138,7 +137,6 @@ class CompetitionProductController extends Controller
                     'account_leverage' => $leverage,
                 ]);
             }
-
 
             return response()->json([
                 'success' => true,
