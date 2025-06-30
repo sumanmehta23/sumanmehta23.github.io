@@ -20,7 +20,7 @@ class Kernel extends ConsoleKernel
 
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
 
-        $schedule->command('app:breach-account')->everyFiveMinutes();
+        $schedule->command('app:breach-account')->everyFiveSeconds();
 
 
         $schedule->command('app:sync-accounts')->everyFiveMinutes();

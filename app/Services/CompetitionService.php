@@ -140,7 +140,7 @@ class CompetitionService
                 'targetDate' => $competitionStart->utc()->format('Y-m-d H:i:s'),
                 'showTimer' => true
             ];
-        } elseif ($now->lte($competitionEnd)) {
+        } elseif ($now->lt($competitionEnd)) { // changed from lte to lt
             // Current month competition
             return [
                 'status' => 'Competition Ends In',

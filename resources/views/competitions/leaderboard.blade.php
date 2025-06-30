@@ -755,6 +755,7 @@
 
                 // If timer has expired, reload the page to update status
                 if (distance < 0) {
+                    clearInterval(timerInterval); // Prevent reload loop
                     location.reload();
                     return;
                 }
@@ -774,7 +775,7 @@
 
             // Update timer immediately and then every second
             updateTimer();
-            setInterval(updateTimer, 1000);
+            const timerInterval = setInterval(updateTimer, 1000);
         }
         // Load initial data for the first trader
         document.querySelector('.trader-select')?.click();

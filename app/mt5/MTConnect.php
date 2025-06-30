@@ -213,7 +213,7 @@ class MTConnect
         // Log::debug("Prepared final query.", ['length' => $query_len]);
 
         // Log query content in hex to avoid issues with binary data
-        Log::debug("Sending query (hex): " . bin2hex($query));
+        // Log::debug("Sending query (hex): " . bin2hex($querdy));
 
         $send_data = socket_write($this->m_connect, $query, $query_len);
         if (!$send_data) {
@@ -221,7 +221,7 @@ class MTConnect
             return false;
         }
 
-        Log::debug("Send successful.", ['bytes_written' => $send_data]);
+        // Log::debug("Send successful.", ['bytes_written' => $send_data]);
 
         return true;
     }
