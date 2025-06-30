@@ -72,8 +72,10 @@ class ActivateCompetitionAccounts extends Command
             ->where('code',NULL)
             ->chunk(100, function ($accounts) {
                 // dd($accounts);
-                foreach ($accounts as $account) {
 
+                foreach ($accounts as $account) {
+                    Log::info('Competition start time: '.$account->competition_start_date);
+                    Log::info('Current time: '.Carbon::now());
                     if($account->accountType->competition_start_date <= now()){
                         //  dd($accounts);
                     }
