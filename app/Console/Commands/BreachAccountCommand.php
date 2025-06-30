@@ -60,14 +60,14 @@ class BreachAccountCommand extends Command
 
         try {
 
-            $currentDate = Carbon::today();
+            $currentTime = Carbon::now();
 
             $expiredAccounts = Account::where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
                 // ->whereDate('competition_start_date', '<=', $currentDate)
-                ->where('competition_end_date', '<=', $currentDate)
+                ->where('competition_end_date', '<=', $currentTime)
                 ->whereNotNull('code')
                 // ->where('code', 322152)
                 ->where('account_request_status', 1)
@@ -76,6 +76,10 @@ class BreachAccountCommand extends Command
             Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
 
             foreach ($expiredAccounts as $account) {
+
+                Log::info('Competition end time: '.$account->competition_end_date);
+                Log::info('Current time: '.$currentTime);
+
                 DB::beginTransaction();
 
                 try {
