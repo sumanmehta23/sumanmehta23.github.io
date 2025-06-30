@@ -15,15 +15,15 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune')->daily();
 
-        $schedule->command('app:activate-competition-accounts')->everyFiveSeconds();
-        $schedule->command('app:sync-trades')->everyFiveSeconds();
+        $schedule->command('app:activate-competition-accounts')->everyMinute();
+        $schedule->command('app:sync-trades')->everyMinute();
 
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
 
-        $schedule->command('app:breach-account')->everyFiveSeconds();
+        $schedule->command('app:breach-account')->everyMinute();
 
 
-        $schedule->command('app:sync-accounts')->everyFiveSeconds();
+        $schedule->command('app:sync-accounts')->everyFiveMinutes();
         $schedule->command('app:sync-daily-reports')->daily();
         // $schedule->command('app:sync-account-trades')->everyTwoHours();
         // $schedule->command('app:update-price-snapshots')->hourly();
