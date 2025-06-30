@@ -92,7 +92,7 @@ class MTWebAPI
     if ($request->Init($ip . ':' . $port) && $request->Auth($login, $password, 2025, "WebManager")) {
       return  $request;
     } else {
-      return MTRetCode::MT_RET_ERR;
+      return MTRetCode::MT_RET_ERROR;
     }
   }
   /**
