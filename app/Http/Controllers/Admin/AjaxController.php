@@ -4255,7 +4255,7 @@ class AjaxController extends Controller
                     }
                 })
                 ->addColumn('start_end', function ($row) {
-                    $monthYear = $row->competition_start_date . '/' . $row->competition_end_date;
+                    $monthYear = Carbon::parse($row->competition_start_date)->format('Y-m-d') . '/' . Carbon::parse($row->competition_end_date)->format('Y-m-d');
                     $url = route('admin.competition.leaderboard', [
                         'competition_id' => $row->accountType->id,
                     ]);
