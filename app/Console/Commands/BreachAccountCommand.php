@@ -67,7 +67,7 @@ class BreachAccountCommand extends Command
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
                 // ->whereDate('competition_start_date', '<=', $currentDate)
-                ->whereDate('competition_end_date', '<=', $currentDate)
+                ->where('competition_end_date', '<=', $currentDate)
                 ->whereNotNull('code')
                 // ->where('code', 322152)
                 ->where('account_request_status', 1)
