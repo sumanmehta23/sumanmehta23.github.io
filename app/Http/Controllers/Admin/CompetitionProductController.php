@@ -134,7 +134,7 @@ class CompetitionProductController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Competition already started. You cannot change the start date.'
+                    'message' => 'Competition already started. You cannot change date.'
                 ], 400);
             }
 
@@ -144,7 +144,7 @@ class CompetitionProductController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Competition already ended. You cannot change the end date.'
+                    'message' => 'Competition already ended. You cannot change date.'
                 ], 400);
             }
 
