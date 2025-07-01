@@ -111,7 +111,9 @@ class CompetitionProductController extends Controller
 
             $acc_type = AccountType::where('ac_index', $request->ac_index)->first();
 
-            $acc_type->update([
+            $now = Carbon::now();
+
+            $updateData = [
                 'ac_name' => $validatedData['ac_name'],
                 'ac_min_deposit' => $validatedData['ac_min_deposit'],
                 'ac_max_leverage' => $validatedData['ac_max_leverage'],
@@ -122,9 +124,27 @@ class CompetitionProductController extends Controller
                 'inquiry_status' => $validatedData['inquiry_status'],
                 'status' => $validatedData['status'],
                 'display_priority' => $validatedData['display_priority'],
-                'competition_start_date' => $validatedData['competition_start_date'],
-                'competition_end_date' => $validatedData['competition_end_date'],
-            ]);
+            ];
+
+            // Update competition_start_date only if old date is in the past
+            if (Carbon::parse($acc_type->competition_start_date)->lessThan($now)) {
+                $updateData['competition_start_date'] = $validatedData['competition_start_date'];
+            }else {
+                return response()->json([
+                    'error' => 'Competition already started. You cannot change the start date.'
+                ], 400);
+            }
+
+            // Update competition_end_date only if old date is in the future
+            if (Carbon::parse($acc_type->competition_end_date)->greaterThan($now)) {
+                $updateData['competition_end_date'] = $validatedData['competition_end_date'];
+            }else{
+                return response()->json([
+                    'error' => 'Competition already ended. You cannot change the end date.'
+                ], 400);
+            }
+
+            $acc_type->update($updateData);
 
             // Delete existing leverage records for this account type
             Leverage::where('account_type_id', $acc_type->id)->delete();
