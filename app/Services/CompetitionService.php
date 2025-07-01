@@ -89,7 +89,7 @@ class CompetitionService
     {
         $startDate = $competition->competition_start_date ?? now()->format('F');
         $endDate = $competition->competition_end_date ?? now()->year;
-        dd($startDate, $endDate);
+
 
         return Account::with('user', 'accountType', 'trades')
             ->where('competition_start_date', $startDate)
