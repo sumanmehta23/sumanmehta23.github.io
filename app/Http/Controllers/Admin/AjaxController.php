@@ -2777,6 +2777,7 @@ class AjaxController extends Controller
         $results = $query;
         $data = [];
         foreach ($results as $row) {
+            // dd($row);
             $dat = $row;
             $url = route('admin.competition.leaderboard', [
                         'competition_id' => $row->id,
@@ -4139,12 +4140,15 @@ class AjaxController extends Controller
                 $query->whereHas('user', function($q) use ($search) {
                     $q->where('email', 'like', "%{$search}%")
                         ->orWhere('fullname', 'like', "%{$search}%");
-                })
-                ->orWhere('competition_start_date', 'like', "%{$start_date}%")
-                ->orWhere('competition_end_date', 'like', "%{$end_date}%")
-                ->orWhere('balance', 'like', "%{$search}%")
-                ->orWhere('equity', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%");
+                });
+                $query->whereHas('accountType', function ($r) use ($start_date, $end_date) {
+                    $r->where('competition_start_date', 'like', "%{$start_date}%")
+                    ->orWhere('competition_end_date', 'like', "%{$end_date}%");
+                });
+
+                $query->orWhere('balance', 'like', "%{$search}%")
+                  ->orWhere('equity', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -4255,7 +4259,7 @@ class AjaxController extends Controller
                     }
                 })
                 ->addColumn('start_end', function ($row) {
-                    $monthYear = Carbon::parse($row->competition_start_date)->format('Y-m-d') . '/' . Carbon::parse($row->competition_end_date)->format('Y-m-d');
+                    $monthYear = Carbon::parse($row->accountType->competition_start_date)->format('Y-m-d') . '/' . Carbon::parse($row->accountType->competition_end_date)->format('Y-m-d');
                     $url = route('admin.competition.leaderboard', [
                         'competition_id' => $row->accountType->id,
                     ]);

@@ -413,7 +413,9 @@
                         var btn =
                             '<button class="btn btn-primary grp-action" data-id="' + data + '"><i class="fa fa-ellipsis-h"></i></button>';
                         return btn;
-                    }
+                    },
+                    orderable: false,
+                    searchable: false
                 }
             ]
         });
