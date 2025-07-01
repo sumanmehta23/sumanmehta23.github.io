@@ -131,15 +131,21 @@ class CompetitionProductController extends Controller
             // Update competition_start_date only if old date is in the past
             if ($acc_type->competition_start_date >= $now) {
                 $updateData['competition_start_date'] = $validatedData['competition_start_date'];
-            }else {
-                return redirect()->back()->with('error', 'Competition already started. You cannot change the start date.');
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Competition already started. You cannot change the start date.'
+                ], 400);
             }
 
             // Update competition_end_date only if old date is in the future
             if ($acc_type->competition_end_date >= $now && $acc_type->competition_start_date <= $now) {
                 $updateData['competition_end_date'] = $validatedData['competition_end_date'];
-            }else{
-                return redirect()->back()->with('error', 'Competition already ended. You cannot change the end date.');
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Competition already ended. You cannot change the end date.'
+                ], 400);
             }
 
             $acc_type->update($updateData);

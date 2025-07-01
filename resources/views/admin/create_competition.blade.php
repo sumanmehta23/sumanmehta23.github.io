@@ -1,5 +1,25 @@
 @extends('layouts.admin.admin')
 @section('content')
+@if (session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('success') }}'
+        }).then(() => {
+            window.location.href = '{{ route('demoAccounts') }}';
+        });
+    </script>
+@endif
+@if (session('error'))
+    <script>
+        Swal.fire({
+            icon: 'warning',
+            title: "Something Went Wrong !!!!",
+            text: '{{ session('error') }}',
+        });
+    </script>
+@endif
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -262,6 +282,7 @@
             </div>
         </div>
     </div>
+
 @endsection()
 @section('scripts')
     <!-- End::app-content -->
@@ -459,11 +480,12 @@
                 },
                 error: function(xhr) {
                     console.log(xhr);
+                    console.log(xhr.responseText);
                     // console.log('abhay');
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: xhr.responseJSON?.error || 'Something went wrong.'
+                        text: xhr.responseJSON?.message || 'Something went wrong.'
                     });
                 }
             });
