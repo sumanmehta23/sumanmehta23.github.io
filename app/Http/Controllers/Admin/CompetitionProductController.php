@@ -127,15 +127,16 @@ class CompetitionProductController extends Controller
                 'display_priority' => $validatedData['display_priority'],
             ];
 
+
             // Update competition_start_date only if old date is in the past
-            if ($acc_type->competition_start_date <= Carbon::now()) {
+            if ($acc_type->competition_start_date >= $now) {
                 $updateData['competition_start_date'] = $validatedData['competition_start_date'];
             }else {
                 return redirect()->back()->with('error', 'Competition already started. You cannot change the start date.');
             }
 
             // Update competition_end_date only if old date is in the future
-            if ($acc_type->competition_end_date >= Carbon::now()) {
+            if ($acc_type->competition_end_date >= $now && $acc_type->competition_start_date <= $now) {
                 $updateData['competition_end_date'] = $validatedData['competition_end_date'];
             }else{
                 return redirect()->back()->with('error', 'Competition already ended. You cannot change the end date.');
