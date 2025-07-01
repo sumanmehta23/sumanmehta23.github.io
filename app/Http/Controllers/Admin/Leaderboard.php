@@ -379,6 +379,7 @@ class Leaderboard extends Controller
         try {
             // Get competition data from service
             $stats = $this->competitionService->getCurrentStats($competition);
+
             $rankings = $this->competitionService->getRankings($competition);
 
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);

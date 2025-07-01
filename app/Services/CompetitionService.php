@@ -27,8 +27,8 @@ class CompetitionService
         $endDate = $competition->competition_end_date ?? now()->year;
 
         $accounts = Account::with(['user', 'accountType'])
-            ->where('competition_start_date', $startDate)
-            ->where('competition_end_date', $endDate)
+            // ->where('competition_start_date', $startDate)
+            // ->where('competition_end_date', $endDate)
             ->where('code', '!=', null)
             ->where('demo', true)
             ->where('competition_product_id', $competition->id)
