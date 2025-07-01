@@ -130,18 +130,14 @@ class CompetitionProductController extends Controller
             if (Carbon::parse($acc_type->competition_start_date)->lessThan($now)) {
                 $updateData['competition_start_date'] = $validatedData['competition_start_date'];
             }else {
-                return response()->json([
-                    'error' => 'Competition already started. You cannot change the start date.'
-                ], 400);
+                return redirect()->back()->with('error', 'Competition already started. You cannot change the start date.');
             }
 
             // Update competition_end_date only if old date is in the future
             if (Carbon::parse($acc_type->competition_end_date)->greaterThan($now)) {
                 $updateData['competition_end_date'] = $validatedData['competition_end_date'];
             }else{
-                return response()->json([
-                    'error' => 'Competition already ended. You cannot change the end date.'
-                ], 400);
+                return redirect()->back()->with('error', 'Competition already ended. You cannot change the end date.');
             }
 
             $acc_type->update($updateData);
