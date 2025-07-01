@@ -325,6 +325,17 @@
                     //console.log(name, " ==> ", data[name]);
                     $(this).val(data[name]).trigger("change");
                 })
+
+                const now = new Date();
+                const startDate = new Date(data['competition_start_date']);
+                const endDate = new Date(data['competition_end_date']);
+
+                if (startDate <= now && endDate >= now) {
+                    $("#groupUpdateForm #start_date").prop("readonly", true);
+                } else {
+                    $("#groupUpdateForm #start_date").prop("readonly", false);
+                }
+
                 $("#groupUpdateForm [name='ac_index']").val($(this).data("id"));
                 grpUpdateModal.show();
             });
