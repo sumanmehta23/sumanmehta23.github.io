@@ -380,7 +380,7 @@ class Leaderboard extends Controller
             // Get competition data from service
             $stats = $this->competitionService->getCurrentStats($competition);
             $rankings = $this->competitionService->getRankings($competition);
-            dd($rankings);
+
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
 
             $availableCompetitions = Account::with('accountType')

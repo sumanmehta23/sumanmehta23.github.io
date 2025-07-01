@@ -92,8 +92,8 @@ class CompetitionService
 
 
         return Account::with('user', 'accountType', 'trades')
-            ->where('competition_start_date', $startDate)
-            ->where('competition_end_date', $endDate)
+            // ->where('competition_start_date', $startDate)
+            // ->where('competition_end_date', $endDate)
             // ->where('competition_status', 'active')
             ->where('code', '!=', null)
             ->where('demo', true)
