@@ -52,13 +52,17 @@ class SyncTrades extends Command
     {
         $batchSize = 1; // Process accounts per batch
 
-        Account::whereNotNull('code')
+        Account::with('accountType')->whereNotNull('code')
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             ->where('competition_status', 'active')
             ->whereNull('deleted_at')
-            ->whereDate('competition_start_date', '<=', Carbon::today())
-            ->whereDate('competition_end_date', '>=', Carbon::today())
+            // ->whereDate('competition_start_date', '<=', Carbon::today())
+            // ->whereDate('competition_end_date', '>=', Carbon::today())
+            ->whereHas('accountType', function ($query){
+                $query->where('competition_start_date', '<=', Carbon::now());
+                $query->where('competition_end_date', '>=', Carbon::now());
+            })
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {

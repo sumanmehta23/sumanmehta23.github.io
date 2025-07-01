@@ -62,12 +62,15 @@ class BreachAccountCommand extends Command
 
             $currentTime = Carbon::now();
 
-            $expiredAccounts = Account::where('demo', true)
+            $expiredAccounts = Account::with('accountType')->where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
                 // ->whereDate('competition_start_date', '<=', $currentDate)
-                ->where('competition_end_date', '<=', $currentTime)
+                // ->where('competition_end_date', '<=', $currentTime)
+                ->whereHas('accountType', function ($query) use ($currentTime){
+                    $query->where('competition_end_date', '<=', $currentTime);
+                })
                 ->whereNotNull('code')
                 // ->where('code', 322152)
                 ->where('account_request_status', 1)
