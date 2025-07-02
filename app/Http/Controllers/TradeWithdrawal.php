@@ -128,6 +128,15 @@ class TradeWithdrawal extends Controller
             })
             ->where('admin_remark', 'NOT LIKE', '%Credit%')
             ->where('admin_remark', 'NOT LIKE', '%10x Trader Leverage%')
+            ->where('admin_remark', 'NOT LIKE', '%Promo Bonus%')
+            ->sum('bonus_amount');
+
+        $total_promo_bonus = BonusTransaction::where('account_id', $request->account_id)
+            ->where(function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                    ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->where('admin_remark', 'LIKE', '%Promo Bonus%')
             ->sum('bonus_amount');
 
         $withdraw_type = $request->input('withdraw_type');
@@ -217,6 +226,7 @@ class TradeWithdrawal extends Controller
 
             }
 
+
             // if($user_email == 'info@jalelabou.com'){
             //     if($account->BonusTransaction){
             //         $totalPromoBonus = $account->BonusTransaction
@@ -266,6 +276,34 @@ class TradeWithdrawal extends Controller
                 } else {
                     $withdrawal_fee = 5;
                     $withdrawal_amount = $amount - $withdrawal_fee;
+                }
+
+                if($total_promo_bonus){
+                    if (($error_code2 = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
+                        session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code2));
+                    }
+                    if($mt5account->Balance > 0){
+                        if($mt5account->Balance < $total_promo_bonus){
+                            $promo_deduction = ($total_promo_bonus-$mt5account->Balance);
+                            if($promo_deduction){
+                                if (($error_code3 = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
+                                } else {
+                                    BonusTransaction::create([
+                                        'email' => $account->email,
+                                        'user_id' => $user_id,
+                                        'account_id' => $account->id,
+                                        'code' => $login,
+                                        'bonus_amount' => $promo_deduction,
+                                        'bonus_type' => 'Bonus Out',
+                                        'status' => 1,
+                                        'admin_remark' => 'Promo Deduction',
+                                        'bonus_currency' => 'USD',
+                                    ]);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 try {
