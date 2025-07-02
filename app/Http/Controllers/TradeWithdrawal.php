@@ -77,7 +77,6 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
-
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
