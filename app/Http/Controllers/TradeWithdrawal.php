@@ -284,7 +284,7 @@ class TradeWithdrawal extends Controller
                     }
                     if($mt5account->Balance > 0){
                         if($mt5account->Balance < $total_promo_bonus){
-                            $promo_deduction = ($total_promo_bonus-$mt5account->Balance);
+                            $promo_deduction = $total_promo_bonus-$mt5account->Balance;
                             if($promo_deduction){
                                 if (($error_code3 = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
                                     return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
