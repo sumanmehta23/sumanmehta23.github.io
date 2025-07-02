@@ -16,20 +16,21 @@
               </div>
               <div class="col-md-6 col-lg-6">
                 <h5 class="mb-4">Become an Introducing Broker with us</h5>
-                <p>Join our Introducing Broker (IB) program and unlock the potential to grow your business and increase your revenue. As a valued partner, you’ll gain access to our world-class trading technology, dedicated support, and competitive compensation structures.</p>
-                <h6>Benefits of Being an Introducing Broker:</h6>
+                <p>Join our IB program and start earning by connecting traders to our platform. Get access to advanced trading tools, dedicated support, and a clear commission structure built to grow with you.</p>
+                <h6>Why Partner with Us as an IB:</h6>
                 <ul>
-                  <li><strong>Attractive Rebates:</strong> Earn competitive rebates and commissions on the trading activity of clients you introduce.</li>
-                  <li><strong>Marketing Support:</strong> Access a wide range of marketing materials and tools designed to help you attract and retain clients.</li>
-                  <li><strong>Dedicated Manager:</strong> Receive personal support from a dedicated account manager who understands your business.</li>
-                  <li><strong>Transparent Reporting:</strong> Use our robust reporting tools to track your success and optimize your strategies.</li>
+                  <li><strong>$5/lot Commissions:</strong> Start with our default plan — earn $5 per traded lot on all referred client activity.</li>
+                  <li><strong>VIP Tiers:</strong> Unlock exclusive commission upgrades as your network grows.</li>
+                  <li><strong>Marketing Tools:</strong> Get banners, content, and ready-made materials to help you attract and retain clients.</li>
+                  <li><strong>1-on-1 Support: </strong> Work closely with a dedicated account manager who’s here to support your growth.</li>
+                  <li><strong>Real-Time Tracking: </strong>Monitor performance and payouts through our easy-to-use reporting system.</li>
                 </ul>
-                <h6>How to Become an Introducing Broker?</h6>
+                <h6>How to Get Started:</h6>
                 <p>Starting as an Introducing Broker with us is simple. Follow these steps: </p>
                 <ol>
-                  <li>Place a request</li>
+                  <li>Submit a quick request to join.</li>
                   <li>Receive confirmation and your unique IB link.</li>
-                  <li>Start promoting us and earn as your referrals trade!</li>
+                  <li>Promote and earn as your clients trade — no deposit required to start.</li>
                 </ol>
 
                 @if (is_null($ib_result))
