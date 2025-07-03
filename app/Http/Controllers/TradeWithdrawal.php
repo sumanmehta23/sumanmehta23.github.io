@@ -227,39 +227,6 @@ class TradeWithdrawal extends Controller
             }
 
 
-            // if($user_email == 'info@jalelabou.com'){
-            //     if($account->BonusTransaction){
-            //         $totalPromoBonus = $account->BonusTransaction
-            //                     ->filter(fn($item) => !is_null($item->promocode_id))
-            //                     ->sum('bonus_amount');
-            //         $promocode = $account->BonusTransaction
-            //                     ->filter(fn($item) => !is_null($item->promocode_id))
-            //                     ->sum('bonus_amount');
-            //         if($totalPromoBonus >= 5){
-            //             $deductable_promobonus = $amount -
-
-            //             dump($totalPromoBonus);
-            //             dd($account->BonusTransaction);
-            //             if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-            //                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-            //             } else {
-            //                 $deposit_details = BonusTransaction::create([
-            //                     'email' => $account->email,
-            //                     'user_id' => $user_id,
-            //                     'account_id' => $account->id,
-            //                     'code' => $account->code,
-            //                     'bonus_amount' => $bonusamount,
-            //                     'bonus_type' => 'Bonus Out',
-            //                     'status' => 1,
-            //                     'admin_remark' => '10x Trader Leverage',
-            //                     'bonus_currency' => 'USD',
-            //                     // 'created_by' => session('alogin')
-            //                 ]);
-            //             }
-            //         }
-            //     }
-            // }
-
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
             if ($errorCode1 != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode1);
@@ -278,33 +245,33 @@ class TradeWithdrawal extends Controller
                     $withdrawal_amount = $amount - $withdrawal_fee;
                 }
 
-                if($total_promo_bonus){
-                    if (($error_code2 = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
-                        session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code2));
-                    }
-                    if($mt5account->Balance > 0){
-                        if($mt5account->Balance < $total_promo_bonus){
-                            $promo_deduction = ($total_promo_bonus-$mt5account->Balance);
-                            if($promo_deduction){
-                                if (($error_code3 = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
-                                } else {
-                                    BonusTransaction::create([
-                                        'email' => $account->email,
-                                        'user_id' => $user_id,
-                                        'account_id' => $account->id,
-                                        'code' => $login,
-                                        'bonus_amount' => $promo_deduction,
-                                        'bonus_type' => 'Bonus Out',
-                                        'status' => 1,
-                                        'admin_remark' => 'Promo Deduction',
-                                        'bonus_currency' => 'USD',
-                                    ]);
-                                }
-                            }
-                        }
-                    }
-                }
+                // if($total_promo_bonus){
+                //     if (($error_code2 = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
+                //         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code2));
+                //     }
+                //     if($mt5account->Balance > 0){
+                //         if($mt5account->Balance < $total_promo_bonus){
+                //             $promo_deduction = ($total_promo_bonus-$mt5account->Balance);
+                //             if($promo_deduction){
+                //                 if (($error_code3 = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                //                     return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
+                //                 } else {
+                //                     BonusTransaction::create([
+                //                         'email' => $account->email,
+                //                         'user_id' => $user_id,
+                //                         'account_id' => $account->id,
+                //                         'code' => $login,
+                //                         'bonus_amount' => $promo_deduction,
+                //                         'bonus_type' => 'Bonus Out',
+                //                         'status' => 1,
+                //                         'admin_remark' => 'Promo Deduction',
+                //                         'bonus_currency' => 'USD',
+                //                     ]);
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
 
                 try {
                     $TradeWithdrawal = TradeWithdrawals::create([
