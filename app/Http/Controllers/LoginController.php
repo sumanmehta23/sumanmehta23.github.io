@@ -282,7 +282,7 @@ class LoginController extends Controller
             // User::where('email', $email)->update(['emailToken' => $code]);
             User::where('email', $email)->update([
                 'emailToken' => $code,
-                'email_token_time' => now(), // Set the current timestamp
+                'email_token_time' => Carbon::now(), // Set the current timestamp
             ]);
             $settings = settings();
             $from = $settings['email_from_address'];
@@ -298,11 +298,11 @@ class LoginController extends Controller
             $templateVars = [
                 'name' => $user['fullname'],
                 'site_link' => $settings['copyright_site_name_text'] . "/reset-password?id=$id&code=$code",
-                'after_btn_text'=>"<p>If you did not request a password reset, please disregard this email, and no further action is required.</p>
-                                   <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
-                                   <p>Best regards,<br>
+                'after_btn_text'=>"<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>
+                                   <div>If you have any questions or need assistance, feel free to reach out to our support team.</div>
+                                   <div>Best regards,<br>
                                    The Liquidity House Team
-                                   <p>",
+                                   </div>",
                 'btn_text' => "Reset Password",
                 'email' => $settings['email_from_address'],
                 "content" => $content,
