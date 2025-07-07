@@ -778,9 +778,7 @@ class MT5Controller extends Controller
     {
 
         $account = Account::where('id',$id)->where('demo',0)->with(['accountType','user','BonusTransaction'])->first();
-        if($account->email == 'louis@lqhmarkets.com'){
-            dd($account);
-        }
+        
         if($account){
             $code = $account->code;
         }else{
