@@ -341,7 +341,7 @@
                                             case 'Account Withdraw':
                                                 $withdrawal_amount = $log->properties['withdraw_amount'];
                                                 $logDescription = "<div class=''>
-                                                                    <span style=''>User {$userLink} send withdraw  \${$withdrawal_amount} from account {$account}.</span>
+                                                                    <span style=''>User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.</span>
                                                                 </div>";
                                                 break;
                                             case 'Account Deposit':

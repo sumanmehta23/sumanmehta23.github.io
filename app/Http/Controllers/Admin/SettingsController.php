@@ -498,7 +498,7 @@ class SettingsController extends Controller
                     break;
                 case 'Account Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'];
-                    $logDescription = "User {$userLink} send withdraw  \${$withdrawal_amount} from account {$account}.";
+                    $logDescription = "User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.";
                     break;
                 case 'Account Deposit':
                     $withdrawal_amount = $log->properties['deposit_amount'];
