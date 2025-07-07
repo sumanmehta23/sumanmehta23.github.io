@@ -19,7 +19,7 @@ class AccountHelper
         if ($userId == "") {
             $userId = auth()->user()->id;
         }
-        dd($userId);
+        // dd($userId);
 
         $settings = settings();
 
