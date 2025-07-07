@@ -469,7 +469,7 @@ class SettingsController extends Controller
                     $properties = json_decode($log->properties, true);
                     $transaction_id = $properties['transaction_id'];
 
-                    $logDescription = "User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
+                    $logDescription = "User {$userLink} approve withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
                     break;
                 case 'Wallet Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
@@ -500,7 +500,7 @@ class SettingsController extends Controller
                     break;
                 case 'Account Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'];
-                    $logDescription = "User {$userLink} withdraw  \${$withdrawal_amount} from account {$account}.";
+                    $logDescription = "User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.";
                     break;
                 case 'Account Deposit':
                     $withdrawal_amount = $log->properties['deposit_amount'];

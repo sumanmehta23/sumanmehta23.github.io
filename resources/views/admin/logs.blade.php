@@ -291,7 +291,7 @@
                                                 $transaction_id = $properties['wallet_withdraw_id'];
 
                                                 $logDescription = "<div class=''>
-                                                                    <span>User {$userLink} withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id} approved.</span>
+                                                                    <span>User {$userLink} confirm withdraw of \${$withdrawal_amount} from account having transaction ID {$transaction_id}.</span>
                                                                 </div>";
                                                 break;
                                             case 'Approve Account Withdraw':
@@ -301,7 +301,7 @@
                                                 $transaction_id = $properties['transaction_id'];
 
                                                 $logDescription = "<div class=''>
-                                                                    <span>User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
+                                                                    <span>User {$userLink} approve withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}</span>
                                                                 </div>";
                                                 break;
                                             case 'Wallet Withdraw':
@@ -341,7 +341,7 @@
                                             case 'Account Withdraw':
                                                 $withdrawal_amount = $log->properties['withdraw_amount'];
                                                 $logDescription = "<div class=''>
-                                                                    <span style=''>User {$userLink} withdraw  \${$withdrawal_amount} from account {$account}.</span>
+                                                                    <span style=''>User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.</span>
                                                                 </div>";
                                                 break;
                                             case 'Account Deposit':
