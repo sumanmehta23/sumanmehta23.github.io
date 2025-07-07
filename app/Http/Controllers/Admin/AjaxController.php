@@ -1265,7 +1265,7 @@ class AjaxController extends Controller
 
     public function getTradingDeposit2(Request $request)
     {
-        // dd($request->length);
+        // dd($_GET);
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(

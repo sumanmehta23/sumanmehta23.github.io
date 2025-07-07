@@ -791,8 +791,7 @@ class MT5Controller extends Controller
         }else{
             $type = "demo";
         }
-
-        $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
+        $account = Account::where('id',$id)->where('demo',0)->with(['accountType','user','BonusTransaction'])->first();
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
