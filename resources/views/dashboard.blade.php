@@ -6,7 +6,7 @@
                 @include('trading-view')
             </div>
             <div class="row">
-                <div class="col-md-6 col-lg-3">
+                {{-- <div class="col-md-6 col-lg-3">
                     <div class="bg-gray-800 card dropbox-card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
@@ -25,8 +25,8 @@
 
                         </div>
                     </div>
-                </div>
-            <div class="col-md-6 col-lg-3">
+                </div> --}}
+            <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-3 d-flex align-items-center justify-content-between">
@@ -44,7 +44,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-3 d-flex align-items-center justify-content-between">
@@ -63,7 +63,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-3 d-flex align-items-center justify-content-between">
