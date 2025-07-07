@@ -46,6 +46,7 @@ return [
         'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://multi.payissa.com/'),
         'address' => env('PAYISSA_WALLET_ADDRESS'),
         'valid_coins' => json_decode(env('PAYISSA_VALID_COINS', '[]'), true),
+        'invalid_transaction_notification_email' => env('PAYISSA_INVALID_TRANSACTION_NOTIFICATION_EMAIL', '')
     ],
     'brevo' => [
         'url' => env('BREVO_URL', 'https://api.brevo.com/v3/'),

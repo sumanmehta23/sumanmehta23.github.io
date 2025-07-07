@@ -86,7 +86,8 @@ class Payment extends Controller
                         "subtitle_right" => "Alert",
                         "btn_text" => "Go To Dashboard",
                     ];
-                    $this->mailService->sendEmail($settings['admin_email'], $emailSubject, $headers, '', $templateVars);
+                    $invalidTransactionEmailAddress = config('services.payissa.invalid_transaction_notification_email');
+                    $this->mailService->sendEmail($invalidTransactionEmailAddress, $emailSubject, $headers, '', $templateVars);
                     Log::channel("creditcardpayissa")->info('Invalid coin payment detected: ' . json_encode($responsedata));
                     // Update payment log
                     $paymentLog->update([
@@ -113,7 +114,7 @@ class Payment extends Controller
 
                 $account = Account::where('id', $paymentLog->account_id)->first();
 
-                $ticket1=NULL;
+                $ticket1 = NULL;
                 if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
                     $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
                     if (!$existingTransaction) {
@@ -142,16 +143,16 @@ class Payment extends Controller
                     }
                 }
 
-                if(isset($paymentLog->promocode) && $paymentLog->promocode !=''){
+                if (isset($paymentLog->promocode) && $paymentLog->promocode != '') {
                     $ticket2 = NULL;
                     $promo = Promocode::where('code', $paymentLog->promocode)->first();
-                    if($promo){
-                        if(isset($promo->max_deposit) && $amount >= $promo->max_deposit){
-                            $bonus_amount = ($promo->promo_percentage/100) * $promo->max_deposit;
-                        }else{
-                            $bonus_amount = ($promo->promo_percentage/100) * $amount;
+                    if ($promo) {
+                        if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                            $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                        } else {
+                            $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                         }
-                        if($promo){
+                        if ($promo) {
                             if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
                             } else {
