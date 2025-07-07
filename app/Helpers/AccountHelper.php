@@ -19,7 +19,7 @@ class AccountHelper
         if ($userId == "") {
             $userId = auth()->user()->id;
         }
-        // dd($userId);
+
 
         $settings = settings();
 
@@ -36,7 +36,7 @@ class AccountHelper
         }else{
             $liveAccounts = auth()->user()->liveAccounts;
         }
-
+        dd($liveAccounts);
 
         if($liveAccounts){
             foreach ($liveAccounts as $account) {
