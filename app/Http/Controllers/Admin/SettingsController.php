@@ -467,7 +467,7 @@ class SettingsController extends Controller
                     $properties = json_decode($log->properties, true);
                     $transaction_id = $properties['transaction_id'];
 
-                    $logDescription = "User {$userLink} send withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
+                    $logDescription = "User {$userLink} approve withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
                     break;
                 case 'Wallet Withdraw':
                     $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
@@ -691,7 +691,7 @@ class SettingsController extends Controller
             'Content-Disposition' => "attachment; filename={$filename}",
         ]);
     }
-    
+
     public function updatePaymentGateways(Request $request)
 {
     $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
