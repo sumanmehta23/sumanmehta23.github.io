@@ -19,6 +19,7 @@ class AccountHelper
         if ($userId == "") {
             $userId = auth()->user()->id;
         }
+        dd($userId);
 
         $settings = settings();
 
@@ -35,8 +36,8 @@ class AccountHelper
         }else{
             $liveAccounts = auth()->user()->liveAccounts;
         }
-   
-        
+
+
         if($liveAccounts){
             foreach ($liveAccounts as $account) {
                 $apiResponse = $api->UserAccountGet($account->code, $accountData);
@@ -59,7 +60,7 @@ class AccountHelper
             $demoAccounts = auth()->user()->demoAccounts;
         }
         // Update Demo Accounts
-       
+
         foreach ($demoAccounts as $account) {
             $apiResponse = $api->UserAccountGet($account->code, $accountData);
 
