@@ -777,7 +777,7 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
+        $account = Account::where('id',$id)->where('demo',0)->with(['accountType','user','BonusTransaction'])->first();
 
         if($account){
             $code = $account->code;
