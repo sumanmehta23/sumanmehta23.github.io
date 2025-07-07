@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Services\MT5Service;
 use App\Services\MailService;
 use App\Helpers\AccountHelper;
+use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

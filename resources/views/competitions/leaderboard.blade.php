@@ -21,8 +21,8 @@
                         <div class="page-header-title px-4">
                             <h3 class="mb-2 fw-bold">{{ $competition->ac_name }}</h3>
                             <h4 class="mb-2 fw-bold">
-                                {{ \Carbon\Carbon::parse($competition_start_date)->format('d-m-Y') }} to
-                                {{ \Carbon\Carbon::parse($competition_end_date)->format('d-m-Y') }}
+                                {{ $competition->competition_start_date }} to
+                                {{ $competition->competition_end_date }}
                             </h4>
 
                             <ul class="breadcrumb bg-transparent mb-0 p-0">
@@ -31,27 +31,6 @@
                             </ul>
                         </div>
                     </div>
-                    {{-- <div class="col-md-6 text-md-end">
-                        <!-- Competition Period Selector -->
-                        <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
-                            <div class="form-group mb-0">
-                                <select name="competition_period" class="form-select form-select-sm">
-                                    @foreach($availableCompetitions as $start => $competitions)
-                                        @php
-                                            $end = $competitions->first()->competition_end_date;
-                                            $selected = ($competition_start_date == $start && $competition_end_date == $end) ? 'selected' : '';
-                                        @endphp
-                                        <option value="{{ $start }}|{{ $end }}" {{ $selected }}>
-                                            {{ \Carbon\Carbon::parse($start)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($end)->format('M d, Y') }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fe fe-refresh-cw"></i> Update
-                            </button>
-                        </form>
-                    </div> --}}
                     <div class="col-md-6 text-md-end">
                         <!-- Competition Period Selector -->
                         <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
@@ -59,7 +38,7 @@
                                 <select name="competition_id" class="form-select form-select-sm">
                                     @foreach($availableCompetitions as $competitionId => $accounts)
                                         @php
-                                            $selected = ($accounts->first()->competition_product_id == $competitionId) ? 'selected' : '';
+                                            $selected = ($accounts->first()->competition_product_id == $competition->id) ? 'selected' : '';
                                         @endphp
                                         <option value="{{ $accounts->first()->accountType }}" {{ $selected }}>
                                             {{ $accounts->first()->accountType->ac_name }}
@@ -589,7 +568,11 @@
                         beginAtZero: false,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            maxTicksLimit: 6 // <-- Add this line to limit Y axis intervals
                         }
+
                     },
                     x: {
                         grid: {
@@ -651,6 +634,7 @@
                 const startDate = competition.competition_start_date;
                 const endDate = competition.competition_end_date;
 
+                console.log(competition);
 
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
@@ -760,14 +744,18 @@
         // Competition Timer
         if (@json($showTimer)) {
 
-            const targetDate = new Date(@json($targetDate)).getTime();
+            // Parse target date as UTC to ensure consistency with backend
+            const targetDateString = @json($targetDate);
+            const targetDate = new Date(targetDateString + '+00:00').getTime(); // Force UTC interpretation
 
             function updateTimer() {
-                const now = new Date().getTime();
+                // Get current UTC time
+                const now = Date.now(); // This is already in UTC (milliseconds since epoch)
                 const distance = targetDate - now;
 
                 // If timer has expired, reload the page to update status
                 if (distance < 0) {
+                    clearInterval(timerInterval); // Prevent reload loop
                     location.reload();
                     return;
                 }
@@ -787,7 +775,7 @@
 
             // Update timer immediately and then every second
             updateTimer();
-            setInterval(updateTimer, 1000);
+            const timerInterval = setInterval(updateTimer, 1000);
         }
         // Load initial data for the first trader
         document.querySelector('.trader-select')?.click();

@@ -8,6 +8,7 @@ use App\Services\MT5Service;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\MT5\MTRetCode;
 
 class SyncDailyReports extends Command
 {
@@ -20,15 +21,16 @@ class SyncDailyReports extends Command
     {
         parent::__construct();
         $this->mt5Service = $mt5Service;
+        $this->api = $this->mt5Service->getApi();
     }
 
     public function handle()
     {
         $this->info('Starting daily reports sync...');
-
+        Log::info("Starting daily reports sync....");
         try {
             $this->mt5Service->connect();
-            $api = $this->mt5Service->getApi();
+            $api = $this->api;
 
             Account::whereNotNull('code')
                     ->whereNull('deleted_at')
@@ -46,14 +48,20 @@ class SyncDailyReports extends Command
                     try {
                         // Get account info from MT5
                         $user_info = null;
-                        $api->UserGet($account->code, $user_info);
+                        $error_code = $api->UserGet($account->code, $user_info);
+                        if ($error_code != MTRetCode::MT_RET_OK || !$user_info) {
+                            Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                            continue;
+                        }
 
                         if ($user_info) {
                             DailyReport::create([
                                 'account_code' => $account->code,
-                                'equity' => $user_info->Balance + ($user_info->Profit ?? 0),
-                                'balance' => $user_info->Balance,
-                                'report_date' => now()->format('Y-m-d')
+                                'equity'       => $user_info->Balance + ($user_info->Profit ?? 0),
+                                'balance'      => $user_info->Balance,
+                                'report_date'  => now()->format('Y-m-d'),
+                                'created_at'   => now(),
+                                'updated_at'   => now(),
                             ]);
                         }
                     } catch (\Exception $e) {

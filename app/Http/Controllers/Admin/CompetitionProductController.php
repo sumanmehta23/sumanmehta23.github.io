@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\PlatformGroup;
 use App\Models\MT5GroupCategory;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 
 class CompetitionProductController extends Controller
 {
@@ -23,7 +24,6 @@ class CompetitionProductController extends Controller
 
     public function store(Request $request)
     {
-
         try {
             $validatedData = $request->validate([
                 'groupCreation' => ['required'],
@@ -112,7 +112,9 @@ class CompetitionProductController extends Controller
 
             $acc_type = AccountType::where('ac_index', $request->ac_index)->first();
 
-            $acc_type->update([
+            $now = Carbon::now();
+
+            $updateData = [
                 'ac_name' => $validatedData['ac_name'],
                 'ac_min_deposit' => $validatedData['ac_min_deposit'],
                 'ac_max_leverage' => $validatedData['ac_max_leverage'],
@@ -123,9 +125,24 @@ class CompetitionProductController extends Controller
                 'inquiry_status' => $validatedData['inquiry_status'],
                 'status' => $validatedData['status'],
                 'display_priority' => $validatedData['display_priority'],
-                'competition_start_date' => $validatedData['competition_start_date'],
-                'competition_end_date' => $validatedData['competition_end_date'],
-            ]);
+            ];
+
+
+            // Update competition_start_date only if old date is in the past
+            if ($acc_type->competition_start_date >= $now  && $acc_type->competition_start_date >= $now) {
+                $updateData['competition_start_date'] = $validatedData['competition_start_date'];
+                $updateData['competition_end_date'] = $validatedData['competition_end_date'];
+            } else if ($acc_type->competition_start_date <= $now && $acc_type->competition_end_date >= $now) {
+                $updateData['competition_start_date'] = $acc_type->competition_start_date;
+                $updateData['competition_end_date'] = $validatedData['competition_end_date'];
+            }elseif($acc_type->competition_end_date <= $now && $acc_type->competition_start_date <= $now) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Competition already ended. You cannot change date.'
+                ], 400);
+            }
+
+            $acc_type->update($updateData);
 
             // Delete existing leverage records for this account type
             Leverage::where('account_type_id', $acc_type->id)->delete();
@@ -138,7 +155,6 @@ class CompetitionProductController extends Controller
                     'account_leverage' => $leverage,
                 ]);
             }
-
 
             return response()->json([
                 'success' => true,

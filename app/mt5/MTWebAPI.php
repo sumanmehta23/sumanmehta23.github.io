@@ -2,6 +2,8 @@
 
 namespace App\MT5;
 
+use Illuminate\Support\Facades\Log;
+
 //--- web api version
 define("WebAPIVersion", 2361);
 //--- web api date
@@ -86,10 +88,11 @@ class MTWebAPI
   public function DealerConnect($ip, $port, $timeout, $login, $password)
   {
     $request = new MTDealerConnect();
+    Log::debug("Account.".$login);
     if ($request->Init($ip . ':' . $port) && $request->Auth($login, $password, 2025, "WebManager")) {
       return  $request;
     } else {
-      return MTRetCode::MT_RET_ERR;
+      return MTRetCode::MT_RET_ERROR;
     }
   }
   /**

@@ -1,5 +1,25 @@
 @extends('layouts.admin.admin')
 @section('content')
+@if (session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('success') }}'
+        }).then(() => {
+            window.location.href = '{{ route('demoAccounts') }}';
+        });
+    </script>
+@endif
+@if (session('error'))
+    <script>
+        Swal.fire({
+            icon: 'warning',
+            title: "Something Went Wrong !!!!",
+            text: '{{ session('error') }}',
+        });
+    </script>
+@endif
     <!-- Start::app-content -->
     <div class="main-content app-content">
         <div class="container-fluid">
@@ -37,7 +57,7 @@
 
     <!-- Group Creation Modal -->
     <div class="modal fade" id="groupMgmt" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="groupMgmtLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.competitions.store') }}" id="groupMgmtCreation" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
                     @csrf
@@ -104,13 +124,13 @@
                                 <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
                                 <input type="text" class="form-control" id="ac_max_leverage" name="ac_max_leverage" required="">
                             </div>
-                            <div class="mb-3 form-group col-lg-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required="">
+                                <input type="datetime-local" class="form-control" id="start_date" name="start_date" required="">
                             </div>
-                            <div class="mb-3 form-group col-lg-3">
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" required="">
+                                <input type="datetime-local" class="form-control" id="end_date" name="end_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="group_spread" class="form-label">Spread</label>
@@ -169,7 +189,7 @@
 
     <!-- Group Update Modal -->
     <div class="modal fade" id="groupUpdate" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="groupMgmtLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <form action="#" id="groupUpdateForm" class="form-steps" method="post" enctype="multipart/form-data" autocomplete="off">
                     @csrf
@@ -199,11 +219,11 @@
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="competition_start_date" required="">
+                                <input type="datetime-local" class="form-control" id="start_date" name="competition_start_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="competition_end_date" required="">
+                                <input type="datetime-local" class="form-control" id="end_date" name="competition_end_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="ac_swap" class="form-label">Swap</label>
@@ -262,6 +282,7 @@
             </div>
         </div>
     </div>
+
 @endsection()
 @section('scripts')
     <!-- End::app-content -->
@@ -304,6 +325,17 @@
                     //console.log(name, " ==> ", data[name]);
                     $(this).val(data[name]).trigger("change");
                 })
+
+                const now = new Date();
+                const startDate = new Date(data['competition_start_date']);
+                const endDate = new Date(data['competition_end_date']);
+
+                if (startDate <= now && endDate >= now) {
+                    $("#groupUpdateForm #start_date").prop("readonly", true);
+                } else {
+                    $("#groupUpdateForm #start_date").prop("readonly", false);
+                }
+
                 $("#groupUpdateForm [name='ac_index']").val($(this).data("id"));
                 grpUpdateModal.show();
             });
@@ -413,7 +445,9 @@
                         var btn =
                             '<button class="btn btn-primary grp-action" data-id="' + data + '"><i class="fa fa-ellipsis-h"></i></button>';
                         return btn;
-                    }
+                    },
+                    orderable: false,
+                    searchable: false
                 }
             ]
         });
@@ -457,11 +491,12 @@
                 },
                 error: function(xhr) {
                     console.log(xhr);
+                    console.log(xhr.responseText);
                     // console.log('abhay');
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: xhr.responseJSON?.error || 'Something went wrong.'
+                        text: xhr.responseJSON?.message || 'Something went wrong.'
                     });
                 }
             });

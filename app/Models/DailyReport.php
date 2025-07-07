@@ -6,12 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DailyReport extends Model
 {
-    protected $fillable = [
-        'account_code',
-        'equity',
-        'balance',
-        'report_date'
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'report_date' => 'date',

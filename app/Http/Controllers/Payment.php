@@ -86,8 +86,9 @@ class Payment extends Controller
                         "subtitle_right" => "Alert",
                         "btn_text" => "Go To Dashboard",
                     ];
-                    $invalidTransactionEmailAddress = config('services.payissa.invalid_transaction_notification_email');
-                    $this->mailService->sendEmail($invalidTransactionEmailAddress, $emailSubject, $headers, '', $templateVars);
+
+                    $admin_email = config('services.payissa.payment_issue_email');
+                    $this->mailService->sendEmail($admin_email, $emailSubject, $headers, '', $templateVars);
                     Log::channel("creditcardpayissa")->info('Invalid coin payment detected: ' . json_encode($responsedata));
                     // Update payment log
                     $paymentLog->update([
