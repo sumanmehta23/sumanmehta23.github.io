@@ -32,10 +32,8 @@ class AccountHelper
             $settings['mt5_server_web_password']
         );
         if(Auth::guard('admin')->check() && $userId != ""){
-            dd('sss');
             $liveAccounts = Account::where('user_id', $userId)->where('demo', false)->get();
         }else{
-            dd('aaaa');
             $liveAccounts = auth()->user()->liveAccounts;
         }
 
