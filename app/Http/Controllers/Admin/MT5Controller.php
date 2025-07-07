@@ -778,7 +778,7 @@ class MT5Controller extends Controller
     {
 
         $account = Account::where('id',$id)->where('demo',0)->with(['accountType','user','BonusTransaction'])->first();
-        
+
         if($account){
             $code = $account->code;
         }else{
@@ -786,7 +786,7 @@ class MT5Controller extends Controller
         }
 
         if($account->demo == false){
-            AccountHelper::updateLiveAndDemoAccounts($account->code);
+            AccountHelper::updateLiveAndDemoAccounts($account->id);
             $type = "live";
         }else{
             $type = "demo";
