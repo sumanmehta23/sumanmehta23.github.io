@@ -416,6 +416,10 @@
                     title: 'Participants',
                 },
                 {
+                    data: 'prize',
+                    title: 'Prize',
+                },
+                {
                     data: 'leaderboard',
                     title: 'View Leaderboard',
                 },
