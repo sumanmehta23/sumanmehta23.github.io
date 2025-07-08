@@ -182,7 +182,8 @@ class MT5Accounts extends Controller
             $query->where('mt5_group_type', 'live')
                 ->orWhere('mt5_group_type', 'real');
         })->where('is_client_group', 1)
-            ->where('ac_name', '!=','Competition')
+            ->where('competition_start_date', '!=',NULL)
+            ->where('competition_end_date', '!=',NULL)
             ->orderBy('display_priority', 'DESC')
             ->with('mt5Group:mt5_group_id,mt5_group_type')
             ->get();
@@ -198,7 +199,8 @@ class MT5Accounts extends Controller
                 $query->where('mt5_group_type', 'demo');
             })
             ->where('is_client_group', 1)
-            ->where('ac_name', '!=','Competition')
+            ->where('competition_start_date',NULL)
+            ->where('competition_end_date',NULL)
             ->orderBy('display_priority', 'desc')
             ->get();
         return view('create-demo-account', compact('user', 'results'));
