@@ -66,7 +66,7 @@
 
                 <!-- Stats Cards Row -->
                 <div class="row mb-4">
-                      <div class="col-sm-6 col-xl-3">
+                      <div class="col-sm-6 col-xl-4">
                         <div class="card overflow-hidden">
                             <div class="card-body p-0">
                                 <div class="bg-primary px-3 pt-3 pb-2 rounded-top {{ !isset(auth()->user()->role) ? 'pt-4' : '' }}">
@@ -109,21 +109,29 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-xl-3">
+                    <div class="col-sm-6 col-xl-2">
                         <x-competition.stats-card
                             title="Total Participants"
                             :value="$stats['participants']"
                             icon="users"
                         />
                     </div>
-                    <div class="col-sm-6 col-xl-3">
+                    <div class="col-sm-6 col-xl-2" id="your-rank-container">
+                        <x-competition.stats-card
+                            title="Your Rank"
+                            :value="'--'"
+                            icon="users"
+                            id="your-rank-card"
+                        />
+                    </div>
+                    <div class="col-sm-6 col-xl-2">
                         <x-competition.stats-card
                             title="Prize Pool"
                             value="Challange Account"
                             icon="bar-chart-2"
                         />
                     </div>
-                    <div class="col-sm-6 col-xl-3">
+                    <div class="col-sm-6 col-xl-2">
                         <x-competition.stats-card
                             title="Top performer"
                             :value="$stats['top_performer']->name ?? 'N/A'"
@@ -147,7 +155,7 @@
                                 <div class="list-group list-group-flush">
                                     @forelse($rankings as $rank)
                                         <a href="#" class="list-group-item list-group-item-action trader-select py-3"
-                                           data-account="{{ $rank['account_code'] }}">
+                                           data-account="{{ $rank['account_code'] }}" data-rank="{{ $rank['rank'] }}">
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
@@ -615,6 +623,12 @@
                 item.classList.add('active');
 
                 const accountNo = item.dataset.account;
+                const rankValue = item.dataset.rank;
+                // Update "Your Rank" card value
+                const rankCard = document.querySelector('#your-rank-container .card-body h3');
+                if (rankCard && rankValue) {
+                    rankCard.textContent = `${rankValue}`;
+                }
                 // console.log(item);
                 await updateTraderData(accountNo);
             });
