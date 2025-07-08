@@ -250,6 +250,9 @@ class TradeWithdrawal extends Controller
 
             }
 
+            if($email == 'abhay@lqhmarkets.com'){
+                dd($balance);
+            }
 
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
             if ($errorCode1 != MTRetCode::MT_RET_OK) {
