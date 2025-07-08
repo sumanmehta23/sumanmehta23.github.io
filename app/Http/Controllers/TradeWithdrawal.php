@@ -82,7 +82,7 @@ class TradeWithdrawal extends Controller
 
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
-            return redirect()->back()->withErrors([
+            return redirect()->back()->with([
                 'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
             ]);
         }
