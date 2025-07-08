@@ -116,8 +116,6 @@ class TradeWithdrawal extends Controller
             ->where('user_id', $user_id)
             ->firstOrFail();
 
-
-
         $bonus = BonusTransaction::where('account_id', $request->account_id)
                                     ->where(function ($query) {
                                         $query->where('bonus_type', 'Bonus In')
@@ -268,10 +266,6 @@ class TradeWithdrawal extends Controller
                 } else {
                     $withdrawal_fee = 5;
                     $withdrawal_amount = $amount - $withdrawal_fee;
-                }
-                if($email == 'abhay@lqhmarkets.com'){
-                    dump($balance);
-                    dump($promo_left);
                 }
 
                 if ($promo_left) {
