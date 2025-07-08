@@ -43,6 +43,7 @@ class CompetitionProductController extends Controller
                 'display_priority' => ['required'],
                 'start_date' => ['required', 'date'],
                 'end_date' => ['required', 'date'],
+                'prize_pool' => ['required'],
             ]);
 
 
@@ -68,6 +69,7 @@ class CompetitionProductController extends Controller
                 'display_priority' => $validatedData['display_priority'],
                 'competition_start_date' => $validatedData['start_date'],
                 'competition_end_date' => $validatedData['end_date'],
+                'prize' => $validatedData['prize_pool'],
             ]);
 
             $leverages = array_map('intval', explode(',', $validatedData['ac_max_leverage']));
@@ -108,6 +110,7 @@ class CompetitionProductController extends Controller
                 'display_priority' => ['required'],
                 'competition_start_date' => ['required', 'date'],
                 'competition_end_date' => ['required', 'date'],
+                'prize' => ['required'],
             ]);
 
             $acc_type = AccountType::where('ac_index', $request->ac_index)->first();
@@ -125,6 +128,7 @@ class CompetitionProductController extends Controller
                 'inquiry_status' => $validatedData['inquiry_status'],
                 'status' => $validatedData['status'],
                 'display_priority' => $validatedData['display_priority'],
+                'prize' => $validatedData['prize_pool'],
             ];
 
 
