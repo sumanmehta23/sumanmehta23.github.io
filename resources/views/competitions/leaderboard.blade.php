@@ -224,6 +224,14 @@
                                         </div>
                                     @endforelse
                                 </div>
+                                <div class="d-flex justify-content-between align-items-center px-3 py-2">
+                                    <button id="prevTraderPage" class="btn btn-sm btn-outline-secondary" disabled>
+                                        <i class="fe fe-chevron-left me-1"></i> Previous
+                                    </button>
+                                    <button id="nextTraderPage" class="btn btn-sm btn-outline-secondary">
+                                        Next <i class="fe fe-chevron-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -794,4 +802,46 @@
         // Load initial data for the first trader
         document.querySelector('.trader-select')?.click();
     </script>
+    <script>
+        let currentTraderPage = 1;
+        const tradersPerPage = 10;
+
+        function paginateTraders() {
+            const traders = document.querySelectorAll('.trader-select');
+            const totalPages = Math.ceil(traders.length / tradersPerPage);
+
+            // Show/Hide traders
+            traders.forEach((trader, index) => {
+                const start = (currentTraderPage - 1) * tradersPerPage;
+                const end = start + tradersPerPage;
+                trader.style.display = index >= start && index < end ? 'block' : 'none';
+            });
+
+            // Enable/disable pagination buttons
+            document.getElementById('prevTraderPage').disabled = currentTraderPage === 1;
+            document.getElementById('nextTraderPage').disabled = currentTraderPage === totalPages;
+        }
+
+        // Event listeners
+        document.getElementById('prevTraderPage').addEventListener('click', () => {
+            if (currentTraderPage > 1) {
+                currentTraderPage--;
+                paginateTraders();
+            }
+        });
+
+        document.getElementById('nextTraderPage').addEventListener('click', () => {
+            const traders = document.querySelectorAll('.trader-select');
+            const totalPages = Math.ceil(traders.length / tradersPerPage);
+
+            if (currentTraderPage < totalPages) {
+                currentTraderPage++;
+                paginateTraders();
+            }
+        });
+
+        // Run on page load
+        window.addEventListener('DOMContentLoaded', paginateTraders);
+    </script>
+
 @endsection
