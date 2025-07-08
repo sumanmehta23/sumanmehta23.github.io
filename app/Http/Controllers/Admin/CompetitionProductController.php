@@ -110,7 +110,7 @@ class CompetitionProductController extends Controller
                 'display_priority' => ['required'],
                 'competition_start_date' => ['required', 'date'],
                 'competition_end_date' => ['required', 'date'],
-                'prize' => ['required'],
+                'prize_pool' => ['required'],
             ]);
 
             $acc_type = AccountType::where('ac_index', $request->ac_index)->first();

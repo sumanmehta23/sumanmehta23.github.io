@@ -127,7 +127,7 @@
                     <div class="col-sm-6 col-xl-2">
                         <x-competition.stats-card
                             title="Prize Pool"
-                            value="Challange Account"
+                            value="{{ $competition->prize ?? 'null'}}"
                             icon="bar-chart-2"
                         />
                     </div>

@@ -244,6 +244,10 @@
                                 </select>
                             </div>
                             <div class="mb-3 form-group col-lg-4">
+                                <label for="prize_pool" class="form-label">Prize Pool</label>
+                                <input type="text" class="form-control" id="prize_pool" name="prize_pool" required="">
+                            </div>
+                            <div class="mb-3 form-group col-lg-4">
                                 <label for="inquiry_status" class="form-label">Inquiry Status</label>
                                 <select class="form-control" id="inquiry_status" name="inquiry_status" required="">
                                     <option value="0">Account Creation</option>
