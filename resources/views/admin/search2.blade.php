@@ -114,16 +114,6 @@
                                                         </div>
                                                     </div>"; ?>
                                             </td>
-
-                                            {{-- <td>
-                                                <div class="lh-1">
-                                                    {{-- <?= date('Y-m-d', strtotime($result->created_at)) ?> --}}
-                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
-                                                </div>
-                                                <div class="lh-2 text-muted">
-                                                    {{-- <?= date('H:i:s', strtotime($result->created_at)) ?></div> --}}
-                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
-                                            </td> --}}
                                         </tr>
                                         <?php }
                                     ?>
