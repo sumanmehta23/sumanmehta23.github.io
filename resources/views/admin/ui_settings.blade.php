@@ -129,7 +129,7 @@
                                 </div>
                                 <div class="mb-0">
                                     <label class="form-label">MT5 Server Web Password</label>
-                                    <input type="text" class="form-control" name="mt5_server_web_password"
+                                    <input type="password" class="form-control" name="mt5_server_web_password"
                                         value="{{ $settings['mt5_server_web_password'] }}" required>
                                 </div>
                             </div>
