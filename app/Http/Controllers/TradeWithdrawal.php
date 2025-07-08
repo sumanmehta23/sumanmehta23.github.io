@@ -80,14 +80,11 @@ class TradeWithdrawal extends Controller
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
-        // Check if the user has exceeded the rate limit
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => "Please wait {$retryAfter} seconds before trying again.",
-            ], 429); // HTTP 429 Too Many Requests
+            return redirect()->back()->with([
+                'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            ]);
         }
 
         // Increment the rate limiter
@@ -118,8 +115,6 @@ class TradeWithdrawal extends Controller
             ->where('id', $account_id)
             ->where('user_id', $user_id)
             ->firstOrFail();
-
-
 
         $bonus = BonusTransaction::where('account_id', $request->account_id)
                                     ->where(function ($query) {
@@ -252,6 +247,7 @@ class TradeWithdrawal extends Controller
                 }
 
             }
+
 
 
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);

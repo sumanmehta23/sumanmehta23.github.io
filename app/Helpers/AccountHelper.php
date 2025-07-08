@@ -21,6 +21,8 @@ class AccountHelper
         if ($userId == "") {
             $userId = auth()->user()->id;
         }
+
+
         $settings = settings();
 
         $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));

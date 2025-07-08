@@ -791,7 +791,6 @@ class MT5Controller extends Controller
         }else{
             $type = "demo";
         }
-
         $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
 
         if (!$account) {

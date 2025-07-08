@@ -9,6 +9,26 @@
             }
         }
     </style>
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}'
+            }).then(() => {
+                window.location.href = '{{ route('demoAccounts') }}';
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: "Something Went Wrong !!!!",
+                text: '{{ session('error') }}',
+            });
+        </script>
+    @endif
     <div class="pc-container">
         <div class="pc-content">
             <div class="pb-0 mb-0 page-header">
