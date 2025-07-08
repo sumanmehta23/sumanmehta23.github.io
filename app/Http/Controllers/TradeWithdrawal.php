@@ -80,14 +80,11 @@ class TradeWithdrawal extends Controller
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
-        // Check if the user has exceeded the rate limit
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => "Please wait {$retryAfter} seconds before trying again.",
-            ], 429); // HTTP 429 Too Many Requests
+            return redirect()->back()->withErrors([
+                'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            ]);
         }
 
         // Increment the rate limiter
