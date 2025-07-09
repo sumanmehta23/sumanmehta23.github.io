@@ -172,12 +172,8 @@ class TradeWithdrawal extends Controller
             return redirect()->back()->with('error', 'Insufficient balance');
         }
 //        if ($withdraw_type == "Trade Withdrawal") {
-            if((float) ($amount) > (float) $account->balance){
-                $balance = abs((float)$account->balance) * -1;
-                $promodeduct = (float) $amount - (float) $account->balance;
-            }else{
-                $balance = abs((float)$amount) * -1;
-            }
+
+            $balance = abs((float)$amount) * -1;
             $comment = 'Withdraw';
             $ticket = NULL;
             $ticket1 = NULL;
@@ -296,9 +292,6 @@ class TradeWithdrawal extends Controller
                                     $amount_to_deduct = ($account->balance - $amount) - $promo_left;
                                 }elseif($account->balance < $promo_left){
                                     $amount_to_deduct = -$amount;
-                                    if($promodeduct){
-                                        $amount_to_deduct = -$promodeduct;
-                                    }
                                 }
 
                                 if ($amount_to_deduct < 0) {
