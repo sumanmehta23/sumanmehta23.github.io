@@ -174,6 +174,7 @@ class TradeWithdrawal extends Controller
 //        if ($withdraw_type == "Trade Withdrawal") {
             if((float) ($amount) > (float) $account->balance){
                 $balance = abs((float)$account->balance) * -1;
+                $promodeduct = (float) $amount - (float) $account->balance;
             }else{
                 $balance = abs((float)$amount) * -1;
             }
@@ -295,10 +296,14 @@ class TradeWithdrawal extends Controller
                                     $amount_to_deduct = ($account->balance - $amount) - $promo_left;
                                 }elseif($account->balance < $promo_left){
                                     $amount_to_deduct = -$amount;
+                                    if($promodeduct){
+                                        $amount_to_deduct = -$promodeduct;
+                                    }
                                 }
 
                                 if ($amount_to_deduct < 0) {
                                     $threshold = -$amount_to_deduct;
+
 
                                     $promo_deduction = $threshold * ($promo_percentage_value / 100);
                                     if($mt5account->Balance <= 0){
