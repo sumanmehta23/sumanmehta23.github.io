@@ -76,7 +76,9 @@ class Payment extends Controller
                       <div><b>Coin: </b>' . $responsedata['coin'] . '</div>
                       <div><b>Transaction ID: </b>' . $transactionId . '</div>
                       <div><b>Deposited Date: </b>' . now() . '</div>
-                      <div><b>User Email: </b>' . $paymentLog->initiated_by . '</div>';
+                      <div><b>User Email: </b>' . $paymentLog->initiated_by . '</div>
+                      <div><b>Address In: </b>' . $address_in . '</div>
+                      <div><b>Payment Log: </b>' . $paymentLog . '</div>';
                     $templateVars = [
                         'name' => 'Admin',
                         'site_link' => $settings['copyright_site_name_text'],
