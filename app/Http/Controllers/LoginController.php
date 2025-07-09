@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Actions\SubscribeToKlaviyoList;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
+
 class LoginController extends Controller
 
 {
@@ -70,8 +72,8 @@ class LoginController extends Controller
     public function login(Request $request)
     {
 
-        $restriction = RestrictIps::where('ip',$request->ip())->where('email', $request->email)->first();
-        if($restriction){
+        $restriction = RestrictIps::where('ip', $request->ip())->where('email', $request->email)->first();
+        if ($restriction) {
             return redirect()->back()->with('error', 'You are blocked by admin.');
         }
         $key = 'login:' . (auth()->id() ?: $request->ip());
@@ -86,8 +88,9 @@ class LoginController extends Controller
                     'ip' => $request->ip(),
                     'email' => $request->input('email'),
                     'remark' => 'Too many requests'
-                ])
-            ->log('Authentication');
+                ]
+            )
+                ->log('Authentication');
             return redirect()->back()->with(
                 'error',
                 "Too many requests. Please wait {$formattedTime} before trying again."
@@ -100,65 +103,68 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if(($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')){
+        if (($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')) {
             return redirect()->back()->with('error', 'You are blocked by admin.');
         }
 
-         // Find the user by email
-         $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
+        // Find the user by email
+        $user = User::where('email', $request->input('email'))->where('email_confirmed', 1)->first();
 
-         // Check if user exists
-         if (!$user) {
+        // Check if user exists
+        if (!$user) {
             activity()->withProperties(
                 [
                     'ip' => $request->ip(),
                     'email' => $request->input('email'),
                     'remark' => 'Invalid email or unverified account'
-                ])
-            ->log('Authentication');
-             return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
-         }
+                ]
+            )
+                ->log('Authentication');
+            return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+        }
 
-         // Check if the password is in plain text (not hashed)
-         if (Hash::needsRehash($user->password)) {
+        // Check if the password is in plain text (not hashed)
+        if (Hash::needsRehash($user->password)) {
 
-             // If it's plain text, hash it and update the user's password
-             if ($user->password === $request->input('password')) {
-                 $user->password = Hash::make($request->input('password'));
-                 $user->save(); // Update the user's password in the database
-             } else {
+            // If it's plain text, hash it and update the user's password
+            if ($user->password === $request->input('password')) {
+                $user->password = Hash::make($request->input('password'));
+                $user->save(); // Update the user's password in the database
+            } else {
                 activity()->withProperties(
                     [
                         'ip' => $request->ip(),
                         'email' => $user->email,
                         'remark' => 'Incorrect password'
-                    ])
-                ->log('Authentication');
-                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
-             }
-         } else {
+                    ]
+                )
+                    ->log('Authentication');
+                return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
+            }
+        } else {
             // dump($user->password);
             // dump(Hash::make($request->input('password')));
             // dd(Hash::check($request->input('password'), $user->password));
-             // If password is hashed, verify it
-             if (!Hash::check($request->input('password'), $user->password)) {
+            // If password is hashed, verify it
+            if (!Hash::check($request->input('password'), $user->password)) {
                 activity()->withProperties(
                     [
                         'ip' => $request->ip(),
                         'email' => $user->email,
                         'remark' => 'Incorrect login details'
-                    ])
-                ->log('Authentication');
+                    ]
+                )
+                    ->log('Authentication');
                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
-             }
-         }
-         Auth::login($user);
-         $request->session()->regenerate();
-         // Set session variables
-         Session::put('clogin', $user->email);
-         Session::put('user', $user);
-         $this->recordLoginHistory($user, $request->ip());
-         Session::put('2fa:user_id', $user->id);
+            }
+        }
+        Auth::login($user);
+        $request->session()->regenerate();
+        // Set session variables
+        Session::put('clogin', $user->email);
+        Session::put('user', $user);
+        $this->recordLoginHistory($user, $request->ip());
+        Session::put('2fa:user_id', $user->id);
 
         activity()->causedBy($user->id)
             ->withProperties(
@@ -166,15 +172,15 @@ class LoginController extends Controller
                     'ip' => $request->ip(),
                     'email' => $user->email,
                     'remark' => 'Login'
-                ])
+                ]
+            )
             ->log('Authentication');
 
-        if($user->two_factor_secret  && $user->two_factor_confirmed_at){
+        if ($user->two_factor_secret  && $user->two_factor_confirmed_at) {
             return redirect()->route('two_factor_auth');
-        }else{
+        } else {
             return redirect()->intended('/dashboard')->with('success', 'Logged in successfully.');
         }
-
     }
 
     public function two_factor_auth()
@@ -214,7 +220,6 @@ class LoginController extends Controller
                     'two_factor_recovery_codes' => encrypt(json_encode(array_values($recoveryCodes))),
                 ])->save();
             }
-
         } else {
             $isValid = $twoFactorProvider->verify(
                 decrypt($user->two_factor_secret),
@@ -223,9 +228,11 @@ class LoginController extends Controller
         }
 
         if (!$isValid) {
-            return redirect()->back()->with('error', $mode === 'recovery'
-                ? 'Invalid Two Factor Recovery Code.'
-                : 'Invalid Two Factor Authentication Code.'
+            return redirect()->back()->with(
+                'error',
+                $mode === 'recovery'
+                    ? 'Invalid Two Factor Recovery Code.'
+                    : 'Invalid Two Factor Authentication Code.'
             );
         }
 
@@ -243,7 +250,8 @@ class LoginController extends Controller
                     'ip' => $request->ip(),
                     'email' => auth()->user()->email,
                     'remark' => 'Logout'
-                ])
+                ]
+            )
             ->log('Authentication');
         Auth::logout();
         $request->session()->invalidate();
@@ -278,7 +286,7 @@ class LoginController extends Controller
         $email = $request->input('txtemail');
         $user = User::where('email', $email)->first();
         if ($user) {
-            $code =Str::random(60);
+            $code = Str::random(60);
             // User::where('email', $email)->update(['emailToken' => $code]);
             User::where('email', $email)->update([
                 'emailToken' => $code,
@@ -298,7 +306,7 @@ class LoginController extends Controller
             $templateVars = [
                 'name' => $user['fullname'],
                 'site_link' => $settings['copyright_site_name_text'] . "/reset-password?id=$id&code=$code",
-                'after_btn_text'=>"<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>
+                'after_btn_text' => "<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>
                                    <div>If you have any questions or need assistance, feel free to reach out to our support team.</div>
                                    <div>Best regards,<br>
                                    The Liquidity House Team
@@ -378,7 +386,7 @@ class LoginController extends Controller
 
                     $errorString = '';
                     foreach ($filteredErrors as $error) {
-                        $errorString .= '• ' . $error ;
+                        $errorString .= '• ' . $error;
                     }
                     // dd($errorString);
                     $errorString = html_entity_decode($errorString);
@@ -396,7 +404,7 @@ class LoginController extends Controller
 
                 $this->sendPasswordResetSuccessEmail($user);
                 return redirect()->route('login')->with('status', 'Password has been reset successfully. You can now login.');
-            }else{
+            } else {
                 return view('auth.reset-password', ['user' => $user]); // Return view
             }
         } else {
@@ -431,14 +439,13 @@ class LoginController extends Controller
             "subtitle_right" => "Successful"
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-
     }
     public function register()
     {
         $countries = Country::all();
         return view('auth.register', compact('countries'));
     }
-    public function addUser(Request $request,SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    public function addUser(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         // dd($request->all());
         // Validate the request data
@@ -482,7 +489,7 @@ class LoginController extends Controller
 
         if ($request->has('refercode') || $request->has('referral')) {
             $refercode = $request->refercode;
-            if(empty($refercode)){
+            if (empty($refercode)) {
                 $refercode = $request->referral;
             }
             $referrals = [];
@@ -514,7 +521,7 @@ class LoginController extends Controller
                 $userData[$key] = $referralCode;
             }
         }
-        $userData['referral'] ='';
+        $userData['referral'] = '';
         // if($request->has('referral')){
         //     $result = Ib1::where(['referral_code'=> $request->referral,'status'=>1])->first();
         //     if ($result) {
@@ -524,17 +531,26 @@ class LoginController extends Controller
         $code = Str::random(60);
         $number = $request->country_code . $request->telephone;
 
-        $userData['email'] =$request->email;
-        $userData['fullname'] =$request->fullname;
-        $userData['password'] =Hash::make($request->password);
-        $userData['country_code'] =$request->country_code;
-        $userData['number'] =$number;
-        $userData['username'] =$request->email;
-        $userData['gender'] =$request->gender;
+        $userData['email'] = $request->email;
+        $userData['fullname'] = $request->fullname;
+        $userData['password'] = Hash::make($request->password);
+        $userData['country_code'] = $request->country_code;
+        $userData['number'] = $number;
+        $userData['username'] = $request->email;
+        $userData['gender'] = $request->gender;
 
-        $userData['emailToken'] =$code;
-        $userData['country'] =$request->country;
-        $userData['created_at'] =now();
+        $userData['emailToken'] = $code;
+        $userData['country'] = $request->country;
+        $userData['created_at'] = now();
+
+        // Check for affiliate reference code in cookie
+        if ($request->hasCookie('cxd')) {
+            $affiliateReferenceCode = $request->cookie('cxd');
+            // Validate the affiliate code format
+            if (preg_match('/^\d+_\d+$/', $affiliateReferenceCode)) {
+                $userData['cxd'] = $affiliateReferenceCode;
+            }
+        }
 
         $user = User::create($userData);
 
@@ -564,7 +580,7 @@ class LoginController extends Controller
             ];
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
             $list_id = @config('services.klaviyo.list_ids')['ACCOUNT_CREATED'];
-            if($list_id){
+            if ($list_id) {
                 $subscribeToKlaviyoList->handle($user, $list_id);
             }
             return redirect()->route('register')->with('status', 'We have sent an email to ' . $toEmail . '. Please click on the confirmation link in the email to activate your account and login.');

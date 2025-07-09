@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\PammController;
@@ -566,4 +568,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
         });
     });
+});
+// Test route for affiliate reference code functionality
+Route::get('/test-affiliate', function (Request $request) {
+    $output = [
+        'url_param_cxd' => $request->get('cxd'),
+        'cookie_cxd' => $request->cookie('cxd'),
+        'has_cookie' => $request->hasCookie('cxd'),
+        'all_cookies' => $request->cookies->all(),
+    ];
+
+    return response()->json($output);
 });
