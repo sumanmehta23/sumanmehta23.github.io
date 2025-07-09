@@ -20,7 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         // Initialize query
-        $query = User::query()->with('countryDetail:country_name,country_alpha')->select('id', 'email', 'country', 'ib1', 'status', 'created_at', 'updated_at');
+        $query = User::query()->with('countryDetail:country_name,country_alpha')->select('id', 'email', 'country', 'ib1', 'cxd', 'status', 'created_at', 'updated_at');
 
         // Apply filters only when there are actual values
         // Filter by registration date range
