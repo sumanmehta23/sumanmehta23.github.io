@@ -48,6 +48,7 @@
     <script src="/admin_assets/assets/js/sweetalert2.all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <?php
     $marginTopStyle = ''; // Default value
     if (app()->environment('local')) {
@@ -99,6 +100,11 @@
 </head>
 
 <body>
+    @if(session('session_expired'))
+        <script>
+            alert('Session expired. Please log in again.');
+        </script>
+    @endif
     @if (app()->environment('local'))
         <div
             style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
