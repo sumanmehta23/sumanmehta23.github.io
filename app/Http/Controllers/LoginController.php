@@ -542,6 +542,7 @@ class LoginController extends Controller
         $userData['emailToken'] = $code;
         $userData['country'] = $request->country;
         $userData['created_at'] = now();
+        $userData['updated_at'] = now();
 
         // Check for affiliate reference code in cookie
         if ($request->hasCookie('cxd')) {
