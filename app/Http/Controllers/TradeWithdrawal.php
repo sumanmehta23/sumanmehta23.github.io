@@ -302,7 +302,11 @@ class TradeWithdrawal extends Controller
                             }
 
                         }elseif($account->balance < $promo_left){
-                            $amount_to_deduct = -($amount - $account->balance);
+                            if($amount >= $account->balance){
+                                $amount_to_deduct = -$account->credit;
+                            }else{
+                                $amount_to_deduct = -($amount);
+                            }
                         }
                         Log::alert("amount_to_deduct ".$amount_to_deduct);
                         if ($amount_to_deduct < 0) {
