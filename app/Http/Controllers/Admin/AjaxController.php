@@ -2389,7 +2389,7 @@ class AjaxController extends Controller
 
 
                 ->addColumn('account_no', function ($row) {
-                    return $row->account->code;
+                    return $row->account ? $row->account->code : '';
                 })
                 ->addColumn('amount', function ($row) {
                     // dd($row);
