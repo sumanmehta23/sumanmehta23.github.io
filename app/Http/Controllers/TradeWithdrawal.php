@@ -249,8 +249,6 @@ class TradeWithdrawal extends Controller
 
             }
 
-
-
             $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
             if ($errorCode1 != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode1);
@@ -414,7 +412,7 @@ class TradeWithdrawal extends Controller
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                     // RateLimiter::clear($key);
                     // return response()->json(['success' => "Verification email sent successfully."]);
-                    return redirect()->back()->with('success', 'Verification email sent successfully.');
+                    return redirect()->route('trade-withdrawal')->with('success', 'Verification email sent successfully.');
                 } catch (\Exception $e) {
                     DB::rollBack();
                     echo "<pre>";
