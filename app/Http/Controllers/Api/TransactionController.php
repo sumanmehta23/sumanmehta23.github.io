@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\WalletDeposit;
 use App\Http\Resources\TransactionResource;
+use App\Models\TradeDeposit;
 
 class TransactionController extends Controller
 {
@@ -29,7 +30,7 @@ class TransactionController extends Controller
         ]);
 
         // Initialize query
-        $query = WalletDeposit::query();
+        $query = TradeDeposit::query();
 
         // Filter by transaction date range
         $dateFrom = $request->input('transaction_date_from');
