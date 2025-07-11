@@ -218,11 +218,7 @@ class CompetitionController extends Controller
                 $headers = "MIME-Version: 1.0\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-
-                $content = "<div>Thank you for choosing LQH Markets. Your competition will starts from {$start_date} and end on {$end_date}.</div>
-                            <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
-                            <p>Best Regards.</p><p>LQH Markets Team</p>";
-
+                $content = "";
                 $templateVars = [
                     'name' => $user->fullname,
                     'email' => $settings['email_from_address'],

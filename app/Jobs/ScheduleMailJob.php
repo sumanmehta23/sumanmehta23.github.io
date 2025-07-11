@@ -39,8 +39,18 @@ class ScheduleMailJob implements ShouldQueue
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
         try {
+            if(strpos($this->subject, 'Competition Registration') !== false){
+                $template = 'emails.emailVerification';
+            }else if(strpos($this->subject, 'Transaction Approved') !== false){
+                $template = 'emails.transactionApproved';
+            }elseif(strpos($this->subject, 'Fund Deposit') !== false){
+                $template = 'emails.fundsAdd';
+            }else{
+                $template = 'emails.template';
+            }
+
             if ($maildriver == 'brevo') {
-                $htmlContent = view('emails.template', $this->data)->render();
+                $htmlContent = view($template, $this->data)->render();
                 $payload = [
                     'sender' => [
                         'name' => $settings['sender_name'],
@@ -68,7 +78,7 @@ class ScheduleMailJob implements ShouldQueue
             } else {
 
 
-                Mail::send('emails.template', $this->data, function (Message $message) use ($settings) {
+                Mail::send($template, $this->data, function (Message $message) use ($settings) {
                     $message->from($settings['sender_email_address'], $settings['sender_name']);
                     $message->to($this->toEmail);
                     $message->subject($this->subject);
