@@ -268,6 +268,8 @@ class TradeWithdrawal extends Controller
                 $withdrawal_amount = $amount - $withdrawal_fee;
             }
 
+            $total_promo_deducted = 0;
+
             if ($promo_left) {
                 $promos = $account->BonusTransaction()
                     ->where('admin_remark', 'Promo Bonus')
@@ -339,6 +341,7 @@ class TradeWithdrawal extends Controller
 
                                     $promo->bonus_used += $promo_deduction;
                                     $promo->save();
+                                    $total_promo_deducted +=$promo_deduction;
 
                                     // Record the deduction
                                     BonusTransaction::create([
@@ -427,6 +430,7 @@ class TradeWithdrawal extends Controller
 
                                     $promo->bonus_used += $promo_deduction;
                                     $promo->save();
+                                    $total_promo_deducted +=$promo_deduction;
 
                                     // Record the deduction
                                     BonusTransaction::create([
@@ -479,6 +483,7 @@ class TradeWithdrawal extends Controller
                     'status' => 0,
                     'email_verified' => 0,
                     'client_wallet_id' => $clientWallet->id,
+                    'promo_deduction' => $total_promo_deducted
                 ]);
 
                 // TotalBalance::create([
