@@ -256,7 +256,9 @@ class TradeWithdrawal extends Controller
                 'error' => $error,
             ], 400);
         } else {
+
             DB::beginTransaction();
+
             if ($amount >= 100) {
                 $withdrawal_amount = $amount;
                 $withdrawal_fee = 0;
@@ -328,6 +330,16 @@ class TradeWithdrawal extends Controller
                             if ($promo_deduction > 0) {
                                 $deduction = abs((float)$promo_deduction) * -1;
                                 if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                                    $balance = abs((float)$balance) * -1;
+                                    $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+                                    if ($errorCode1 != MTRetCode::MT_RET_OK) {
+                                        $error = MTRetCode::GetError($errorCode1);
+                                        return response()->json([
+                                            'success' => false,
+                                            'message' => 'Something went wrong',
+                                            'error' => $error,
+                                        ], 400);
+                                    }
                                     return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
                                 }
 
