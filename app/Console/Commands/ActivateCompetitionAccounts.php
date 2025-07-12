@@ -156,21 +156,21 @@ class ActivateCompetitionAccounts extends Command
 
                             }
                             $from = $settings['email_from_address'];
-                            $emailSubject = 'Competition Registration';
+                            $emailSubject = 'Competition Activated';
                             $headers = "MIME-Version: 1.0\r\n";
                             $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                             $content = "
-                                        <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
+                                        <p>The wait is over — the LQH Markets Trading Competition is officially underway!</p>
                                         <p></p>
                                         <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
                                         <p></p>
-                                        <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
-                                        <p>Stay tuned — details on the competition start will follow shortly.</p>
+                                        <p>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                                        <p>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
                                         <p></p>
-                                        <p>If you have any questions or need support, our team is here to help.</p>
+                                        <p>We wish you the best of luck throughout the competition!</p>
                                         <p></p>
-                                        <p>Trade smart,</p>
+                                        <p>Trade confidently,</p>
                                         <p>The LQH Markets Team</p>
                                     ";
                             $templateVars = [

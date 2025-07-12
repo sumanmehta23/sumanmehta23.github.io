@@ -244,7 +244,31 @@ class Leaderboard extends Controller
 
                             DemoDeposit::create($data);
                         }
-                        $this->sendMail($new_user, 'Demo');
+                        $from = $settings['email_from_address'];
+                        $emailSubject = 'Competition Activated';
+                        $headers = "MIME-Version: 1.0\r\n";
+                        $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                        $content = "
+                                    <p>The wait is over — the LQH Markets Trading Competition is officially underway!</p>
+                                    <p></p>
+                                    <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                    <p></p>
+                                    <p>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                                    <p>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                                    <p></p>
+                                    <p>We wish you the best of luck throughout the competition!</p>
+                                    <p></p>
+                                    <p>Trade confidently,</p>
+                                    <p>The LQH Markets Team</p>
+                                ";
+                        $templateVars = [
+                            'name' => $user->fullname,
+                            'email' => $settings['email_from_address'],
+                            'content' => $content
+                        ];
+
+                        $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
                         return redirect()->back()->with('success', $response['message']);
                     }else{
                         return redirect()->back()->with('error', 'No account found to update.');

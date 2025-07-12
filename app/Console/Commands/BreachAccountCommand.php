@@ -62,7 +62,7 @@ class BreachAccountCommand extends Command
 
             $currentTime = Carbon::now();
 
-            $expiredAccounts = Account::with('accountType')->where('demo', true)
+            $expiredAccounts = Account::with('accountType','user')->where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
@@ -158,6 +158,30 @@ class BreachAccountCommand extends Command
                     $account->update([
                         'competition_status' => 'inactive',
                     ]);
+
+                    $from = $settings['email_from_address'];
+                    $emailSubject = 'Competition Ended';
+                    $headers = "MIME-Version: 1.0\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                    $content = "
+                                <p>The LQH Markets Trading Competition has officially come to a close.</p>
+                                <p></p>
+                                <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                <p></p>
+                                <p>We extend our thanks for your participation and dedication throughout the contest. Final results and winners will be announced soon, so keep an eye on your inbox and our website.</p>
+                                <p>We hope you enjoyed the experience and look forward to welcoming you in our future competitions.</p>
+                                <p></p>
+                                <p>Stay connected,</p>
+                                <p>The LQH Markets Team</p>
+                            ";
+                    $templateVars = [
+                        'name' => $account->user->fullname,
+                        'email' => $settings['email_from_address'],
+                        'content' => $content
+                    ];
+
+                    $this->mailService->sendEmail($account->Email, $emailSubject, $headers, '', $templateVars);
 
                     Log::info("Account {$account->code} updated in database as breached.");
 
