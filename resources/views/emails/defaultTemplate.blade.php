@@ -1,6 +1,3 @@
-<?php
-$settings = settings();
-?>
 <!DOCTYPE html>
 
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
@@ -95,6 +92,10 @@ $settings = settings();
                 max-height: none !important;
             }
 
+            .row-4 .column-1 .block-1.image_block .alignment div {
+                margin: 0 auto 0 0 !important;
+            }
+
             .row-4 .column-2 .block-1.heading_block td.pad {
                 padding: 30px 10px 20px !important;
             }
@@ -103,28 +104,24 @@ $settings = settings();
                 font-size: 23px !important;
             }
 
-            .row-4 .column-1 .block-1.image_block .alignment div {
-                margin: 0 auto 0 0 !important;
-            }
-
             .row-5 .column-1 .block-1.paragraph_block td.pad>div,
             .row-6 .column-1 .block-1.paragraph_block td.pad>div,
-            .row-6 .column-1 .block-2.paragraph_block td.pad>div {
+            .row-6 .column-1 .block-3.paragraph_block td.pad>div {
                 font-size: 13px !important;
             }
 
+            .row-6 .column-1 .block-1.paragraph_block td.pad {
+                padding: 0 25px 15px !important;
+            }
+
             .row-5 .column-1 .block-1.paragraph_block td.pad,
-            .row-6 .column-1 .block-2.paragraph_block td.pad {
+            .row-6 .column-1 .block-3.paragraph_block td.pad {
                 padding: 0 25px 25px !important;
             }
 
             .row-5 .column-1 .block-2.button_block span {
                 font-size: 10px !important;
                 line-height: 20px !important;
-            }
-
-            .row-6 .column-1 .block-1.paragraph_block td.pad {
-                padding: 0 25px 15px !important;
             }
         }
         @media (min-width: 621px) {
@@ -195,13 +192,32 @@ $settings = settings();
                                 <td>
                                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
                                         <tbody>
+                                            {{-- <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div class="fullWidth">
+                                                                        <img
+                                                                            alt=""
+                                                                            src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email.png' }}"
+                                                                            style="display:block;"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr> --}}
                                             <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/main2.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -265,19 +281,15 @@ $settings = settings();
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                        <tr>
-                                                            <td class="pad">
-                                                                <div align="center" class="alignment"><a href="{{ $site_link }}" style="color:#ffffff;text-decoration:none;" target="_blank"><!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"  href="https://my.lqhmarkets.com/login"  style="height:42px;width:179px;v-text-anchor:middle;" arcsize="72%" fillcolor="#00b98e">
-<v:stroke dashstyle="Solid" weight="0px" color="#00b98e"/>
-<w:anchorlock/>
-<v:textbox inset="0px,0px,0px,0px">
-<center dir="false" style="color:#ffffff;font-family:sans-serif;font-size:16px">
-<![endif]--><span class="button" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">{{ $btn_text ?? 'Verify' }}</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
+                                                    @if (isset($btn_text))
+                                                        <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                            <tr>
+                                                                <td class="pad">
+                                                                    <div align="center" class="alignment"><a href="{{ $site_link }}" style="color:#ffffff;text-decoration:none;" target="_blank"><span class="button" href="{{ $site_link }}" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">{{ $btn_text }} →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    @endif
                                                     <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
@@ -307,26 +319,47 @@ $settings = settings();
                                         <tbody>
                                             <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                    {{-- <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
+                                                            <td class="pad" style="padding-bottom:10px;padding-left:25px;padding-right:25px;padding-top:15px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Need Help?</strong></p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">If you did not request a password change, please disregard this email, and no further action is required.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Best regards</p>
+                                                                    <p style="margin: 0;">The LQH Markets Team</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table> --}}
+                                                    {{-- <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad">
+                                                                <div align="center" class="alignment">
+                                                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                                        <tr>
+                                                                            <td class="divider_inner" style="font-size: 1px; line-height: 1px; border-top: 1px solid #dddddd;"><span style="word-break: break-word;"> </span></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table> --}}
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
                                                                     <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/7. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.</p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;"><u><span style="word-break: break-word; color: #00b98e;"><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><u><span style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a></strong></span></u></p>
-                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #000000;">All official communication from <span style="word-break: break-word; color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the @LQHMarkets.com (hyperlink) domain.</span></p>
+                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><span style="word-break: break-word; color: #00b98e;"><u><strong>support@lqhmarkets.com</strong></u></span></a></strong></u></span></p>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;">
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 0px;">LQH Integrated LTD</p>
-                                                                    <p style="margin: 0; margin-bottom: 0px;">A2-704A, Al Hamra Industrial Zone-FZ</p>
-                                                                    <p style="margin: 0; margin-bottom: 0px;">RAKEZ Business Centre</p>
-                                                                    <p style="margin: 0;">Ras Al Khaimah, UAE</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Please be advised that all official communication from LQH Markets (LQH Integrated) is conducted exclusively through our official email addresses ending in @lqhmarkets.com.</p>
                                                                 </div>
                                                             </td>
                                                         </tr>

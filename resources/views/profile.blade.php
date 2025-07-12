@@ -803,7 +803,7 @@
 
         function resendWalletAddressDeleteConfirmationVerifyEmail(walletAddress, id) {
             console.log("Sending request...");
-
+            
             $.ajax({
                 url: "{{ route('resend.wallet.delete.confirmation') }}",
                 type: "POST",
