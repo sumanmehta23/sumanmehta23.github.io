@@ -58,8 +58,14 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.transactionApproved';
             }elseif(strpos($this->subject, 'Fund Deposit') !== false){
                 $template = 'emails.fundsAdd';
+            }elseif(strpos($this->subject, 'Live Account Details') !== false){
+                $template = 'emails.issueLiveAccount';
+            }elseif(strpos($this->subject, 'Password Reset') !== false){
+                $template = 'emails.resetPassword';
             }else{
-                $template = 'emails.template';
+
+                $template = 'emails.defaultTemplate';
+                // $template = 'emails.template';
             }
 
             if ($maildriver == 'brevo') {
