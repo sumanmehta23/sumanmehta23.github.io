@@ -130,12 +130,12 @@ class CompetitionController extends Controller
 
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
-        // if (RateLimiter::tooManyAttempts($key, 1)) {
-        //     $retryAfter = RateLimiter::availableIn($key);
-        //     return redirect()->back()
-        //         ->with('error', "Please wait {$retryAfter} seconds before trying again.");
-        // }
-        // RateLimiter::hit($key, 10);
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before trying again.");
+        }
+        RateLimiter::hit($key, 10);
 
         $settings = settings();
         $validatedData = $request->validate([
@@ -149,42 +149,6 @@ class CompetitionController extends Controller
         $nick_name = $request->nick_name;
 
         $email = $user->email;
-
-
-
-
-
-        $from = $settings['email_from_address'];
-        $emailSubject = 'Competition Registration';
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = "
-                    <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
-                    <p></p>
-                    <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
-                    <p>Stay tuned — details on the competition start will follow shortly.</p>
-                    <p></p>
-                    <p>If you have any questions or need support, our team is here to help.</p>
-                    <p></p>
-                    <p>Trade smart,</p>
-                    <p>The LQH Markets Team</p>
-                   ";
-        $templateVars = [
-            'name' => $user->fullname,
-            'email' => $settings['email_from_address'],
-            'content' => $content
-        ];
-
-        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-
-
-
-        dd('sssss');
-
-
-
-
 
         $group = AccountType::where('id', $validatedData['options'])->where('status',1)->first();
         if (!$group) {
@@ -250,21 +214,29 @@ class CompetitionController extends Controller
             ]);
 
             if ($useraccount) {
-                // $from = $settings['email_from_address'];
-                // $emailSubject = 'Competition Requested';
-                // $headers = "MIME-Version: 1.0\r\n";
-                // $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-                // $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                // $content = "";
-                // $templateVars = [
-                //     'name' => $user->fullname,
-                //     'email' => $settings['email_from_address'],
-                //     'content' => $content,
-                //     'title_right' => "Competition Request Pending",
-                //     'subtitle_right' => "",
-                // ];
+                $from = $settings['email_from_address'];
+                $emailSubject = 'Competition Registration';
+                $headers = "MIME-Version: 1.0\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content = "
+                            <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
+                            <hr>
+                            <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
+                            <p>Stay tuned — details on the competition start will follow shortly.</p>
+                            <p></p>
+                            <p>If you have any questions or need support, our team is here to help.</p>
+                            <p></p>
+                            <p>Trade smart,</p>
+                            <p>The LQH Markets Team</p>
+                        ";
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'email' => $settings['email_from_address'],
+                    'content' => $content
+                ];
 
-                // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
                 return redirect()->back()->with('success', 'Competition Request Received. Your request has been submitted.');
             } else {
