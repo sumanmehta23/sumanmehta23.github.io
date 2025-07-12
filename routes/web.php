@@ -184,6 +184,8 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
+Route::get('/manually-payment-response', [Payment::class, 'manuallyPaymentResponse'])->name('manuallyPaymentResponse');
+
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

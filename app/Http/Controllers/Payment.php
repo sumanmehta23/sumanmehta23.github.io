@@ -76,7 +76,9 @@ class Payment extends Controller
                       <div><b>Coin: </b>' . $responsedata['coin'] . '</div>
                       <div><b>Transaction ID: </b>' . $transactionId . '</div>
                       <div><b>Deposited Date: </b>' . now() . '</div>
-                      <div><b>User Email: </b>' . $paymentLog->initiated_by . '</div>';
+                      <div><b>User Email: </b>' . $paymentLog->initiated_by . '</div>
+                      <div><b>Address In: </b>' . $address_in . '</div>
+                      <div><b>Payment Log: </b>' . $paymentLog . '</div>';
                     $templateVars = [
                         'name' => 'Admin',
                         'site_link' => $settings['copyright_site_name_text'],
@@ -310,6 +312,57 @@ class Payment extends Controller
             }
         }
     }
+
+    public function manuallyPaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $account_id = $request->input('account_id');
+        $responsedata = $request->all();
+        $transactionId = $responsedata['txid_in'];
+        $email = $request->input('email');
+        $amount = $request->input('amount');
+        $deposit_date = $request->input('deposit_date');
+
+        $account = Account::where('id', $account_id)->first();
+
+        if ($account) {
+            $comment = 'CreditCardPayissa';
+
+            $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong',
+                    'error' => $error,
+                ], 400);
+            } else {
+                $tradeDeposit = TradeDeposit::create([
+                    'user_id' => $account->user_id,
+                    'account_id' => $account->id,
+                    'email' => $email,
+                    'code' => $account->code,
+                    'deposit_amount' => $amount,
+                    'deposit_type' => 'CreditCardPayissa',
+                    'deposit_from' => 'CreditCardPayissa',
+                    'status' => 1,
+                    'deposit_currency' => 'USD',
+                    'transaction_id' => $transactionId,
+                    'deposted_date' => $deposit_date,
+                    'callback_data' => 'Polygon Deposit',
+                    'callback_code' => "success",
+                ]);
+            }
+            if ($tradeDeposit) {
+                $this->sendSuccessEmail2($email, $amount, $tradeDeposit);
+                // $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
+                return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
+            } else {
+                return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
+            }
+        }
+    }
+
+
     protected function getKlaviyoListId($amount)
     {
         $lists = [
@@ -331,6 +384,37 @@ class Payment extends Controller
         if ($listId) {
             $subscribeToKlaviyoList->handle($user, $listId);
         }
+    }
+
+    public function sendSuccessEmail2($toEmail, $amount, $tradedeposit)
+    {
+        $tradedeposit->deposit_type == "CreditCardPayissa" ? "Credit Card" : '';
+        $user = User::where('id',$tradedeposit->user_id)->first();
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $transid = "WDID" . $tradedeposit->transaction_id;
+        $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content = '<div>We are pleased to inform you that your transaction has been successful.</div>
+          <div>The approved amount has been deposited into your wallet.</div>
+          <div><b>Transaction Details</b></div>
+          <div><b>Approved Amount: </b>$' . $tradedeposit->deposit_amount . '</div>
+          <div><b>Reference ID: </b>' . $tradedeposit->id . '</div>
+          <div><b>Transaction ID: </b>' . $transid . '</div>
+          <div><b>Deposited Date: </b>' . $tradedeposit->deposted_date . '</div>
+          <div><b>Payment Type: </b>' . $tradedeposit->deposit_type . '</div>';
+        $templateVars = [
+            'name' => $user->fullname,
+            'site_link' => $settings['copyright_site_name_text'],
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Transaction",
+            "subtitle_right" => "Successful",
+            "btn_text" => "Go To Dashboard",
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
 
     public function sendSuccessEmail($toEmail, $amount, $paymentLog, $lastInsertId)

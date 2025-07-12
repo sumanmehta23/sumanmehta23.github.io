@@ -1576,6 +1576,9 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
+                ->addColumn('withdrawal_amount', function ($row) {
+                    return $row->withdrawal_amount - ($row->promo_deduction ?? 0);
+                })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
                 })
@@ -1593,7 +1596,7 @@ class AjaxController extends Controller
                 ->addColumn('client_email', function ($row) {
                     return $row->user->email;
                 })
-                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time','client_email'])
+                ->rawColumns(['account_no','email', 'amount','transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action','withdrawal_amount','withdrawal_fee','total_withdrawal','total_withdrawal','created_date','created_time','client_email'])
                 ->make(true);
         }
 
@@ -2400,7 +2403,7 @@ class AjaxController extends Controller
 
 
                 ->addColumn('account_no', function ($row) {
-                    return $row->account->code;
+                    return $row->account ? $row->account->code : '';
                 })
                 ->addColumn('amount', function ($row) {
                     // dd($row);
@@ -2466,6 +2469,9 @@ class AjaxController extends Controller
                                 </div>
                             </a>";
                 })
+                ->addColumn('withdrawal_amount', function ($row) {
+                    return $row->withdrawal_amount - ($row->promo_deduction ?? 0);
+                })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
                 })
@@ -2483,7 +2489,7 @@ class AjaxController extends Controller
                 ->addColumn('client_email', function ($row) {
                     return $row->user->email;
                 })
-                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_fee','total_withdrawal','client_email'])
+                ->rawColumns(['account_no', 'amount', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'status', 'action','name','email','withdrawal_amount','withdrawal_fee','total_withdrawal','client_email'])
                 ->make(true);
         }
 

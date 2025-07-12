@@ -19,11 +19,14 @@
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
-                        <div class="card-header d-none">
-                            <div class="card-title">
-                                Listed Count : <?= count($accounts) ?>
+                        @if(!empty($accounts) && count($accounts) > 0)
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Listed Count : {{ count($accounts) }}
+                                </div>
                             </div>
-                        </div>
+                        @endif
+
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
@@ -111,16 +114,6 @@
                                                         </div>
                                                     </div>"; ?>
                                             </td>
-
-                                            {{-- <td>
-                                                <div class="lh-1">
-                                                    {{-- <?= date('Y-m-d', strtotime($result->created_at)) ?> --}}
-                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('Y-m-d') }}
-                                                </div>
-                                                <div class="lh-2 text-muted">
-                                                    {{-- <?= date('H:i:s', strtotime($result->created_at)) ?></div> --}}
-                                                    {{ Carbon\Carbon::parse($result->created_at)->addHours(3)->format('H:i:s') }}
-                                            </td> --}}
                                         </tr>
                                         <?php }
                                     ?>
