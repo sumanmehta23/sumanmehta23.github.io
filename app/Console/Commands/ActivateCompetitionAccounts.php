@@ -119,19 +119,6 @@ class ActivateCompetitionAccounts extends Command
 
                     if ($response['status']) {
                         $acc = Account::where('id', $account->id)->first();
-                        // activity()->causedBy($user)
-                        //     ->withProperties(
-                        //         [
-                        //             // 'ip' => $request->ip(),
-                        //             'email' => $user->email,
-                        //             'type' => 'Demo',
-                        //             'code' => $new_user->Login,
-                        //             'amount' => $account->balance,
-                        //             'leverage' => $new_user->Leverage,
-                        //             'remark' => 'Create Demo Account'
-                        //         ])
-                        // ->event('create')
-                        // ->log('Create Demo Account');
                         if($acc)
                         {
                             $acc->update([
@@ -166,8 +153,33 @@ class ActivateCompetitionAccounts extends Command
                                 ];
 
                                 DemoDeposit::create($data);
+
                             }
-                            $this->sendMail($new_user, 'Demo');
+                            $from = $settings['email_from_address'];
+                            $emailSubject = 'Competition Registration';
+                            $headers = "MIME-Version: 1.0\r\n";
+                            $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                            $content = "
+                                        <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
+                                        <p></p>
+                                        <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                        <p></p>
+                                        <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
+                                        <p>Stay tuned — details on the competition start will follow shortly.</p>
+                                        <p></p>
+                                        <p>If you have any questions or need support, our team is here to help.</p>
+                                        <p></p>
+                                        <p>Trade smart,</p>
+                                        <p>The LQH Markets Team</p>
+                                    ";
+                            $templateVars = [
+                                'name' => $user->fullname,
+                                'email' => $settings['email_from_address'],
+                                'content' => $content
+                            ];
+
+                            $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
                             // return redirect()->back()->with('success', $response['message']);
                         }else{
                             // return redirect()->back()->with('error', 'No account found to update.');
