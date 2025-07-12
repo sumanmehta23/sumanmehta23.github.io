@@ -150,18 +150,18 @@ class CompetitionController extends Controller
 
         $email = $user->email;
 
+
+
+
+
         $from = $settings['email_from_address'];
-        $emailSubject = 'Competition Requested';
+        $emailSubject = 'Competition Registration';
         $headers = "MIME-Version: 1.0\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = "";
         $templateVars = [
             'name' => $user->fullname,
             'email' => $settings['email_from_address'],
-            'content' => $content,
-            'title_right' => "Competition Request Pending",
-            'subtitle_right' => "",
         ];
 
         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
