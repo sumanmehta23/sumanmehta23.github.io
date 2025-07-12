@@ -29,6 +29,7 @@ class ScheduleMailJob implements ShouldQueue
         $this->toEmail = $toEmail;
         $this->subject = $subject;
         $this->apiKey = config('services.brevo.api_key');
+        dd($this);
     }
 
     /**
