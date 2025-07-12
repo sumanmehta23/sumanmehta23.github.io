@@ -22,7 +22,6 @@ class MailService
 
     public function sendEmail($toEmail, $subject, $headers,$templateFile,$data)
     {
-
         try {
             ScheduleMailJob::dispatch($data,$toEmail,$subject)->onQueue('emails');
             // $response = $this->client->post('smtp/email', [

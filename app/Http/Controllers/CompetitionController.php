@@ -149,6 +149,31 @@ class CompetitionController extends Controller
         $nick_name = $request->nick_name;
 
         $email = $user->email;
+
+        $from = $settings['email_from_address'];
+        $emailSubject = 'Competition Requested';
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content = "";
+        $templateVars = [
+            'name' => $user->fullname,
+            'email' => $settings['email_from_address'],
+            'content' => $content,
+            'title_right' => "Competition Request Pending",
+            'subtitle_right' => "",
+        ];
+
+        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+
+
+        dd('sssss');
+
+
+
+
+
         $group = AccountType::where('id', $validatedData['options'])->where('status',1)->first();
         if (!$group) {
             return redirect()->back()->with('error', 'Competition is not active.');
@@ -213,21 +238,21 @@ class CompetitionController extends Controller
             ]);
 
             if ($useraccount) {
-                $from = $settings['email_from_address'];
-                $emailSubject = 'Competition Requested';
-                $headers = "MIME-Version: 1.0\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $content = "";
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'email' => $settings['email_from_address'],
-                    'content' => $content,
-                    'title_right' => "Competition Request Pending",
-                    'subtitle_right' => "",
-                ];
+                // $from = $settings['email_from_address'];
+                // $emailSubject = 'Competition Requested';
+                // $headers = "MIME-Version: 1.0\r\n";
+                // $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                // $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                // $content = "";
+                // $templateVars = [
+                //     'name' => $user->fullname,
+                //     'email' => $settings['email_from_address'],
+                //     'content' => $content,
+                //     'title_right' => "Competition Request Pending",
+                //     'subtitle_right' => "",
+                // ];
 
-                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
                 return redirect()->back()->with('success', 'Competition Request Received. Your request has been submitted.');
             } else {
