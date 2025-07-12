@@ -44,6 +44,8 @@ class ScheduleMailJob implements ShouldQueue
 
             if(strpos($this->subject, 'Competition Registration') !== false){
                 $template = 'emails.competition_registration';
+            }else if(strpos($this->subject, 'Withdrawal Details Verification') !== false){
+                $template = 'emails.emailVerification';
             }else if(strpos($this->subject, 'Transaction Approved') !== false){
                 $template = 'emails.transactionApproved';
             }elseif(strpos($this->subject, 'Fund Deposit') !== false){
