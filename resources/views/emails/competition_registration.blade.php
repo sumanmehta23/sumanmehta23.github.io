@@ -2,12 +2,13 @@
 $settings = settings();
 ?>
 <!DOCTYPE html>
+
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
 
 <head>
     <title></title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" /><!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml><![endif]--><!--[if !mso]><!--><!--<![endif]-->
     <style>
         * {
             box-sizing: border-box;
@@ -16,7 +17,6 @@ $settings = settings();
         body {
             margin: 0;
             padding: 0;
-            background-color: #ffffff;
         }
 
         a[x-apple-data-detectors] {
@@ -30,7 +30,7 @@ $settings = settings();
         }
 
         p {
-            line-height: inherit;
+            line-height: inherit
         }
 
         .desktop_hide,
@@ -45,7 +45,8 @@ $settings = settings();
             display: none;
         }
 
-        sup, sub {
+        sup,
+        sub {
             font-size: 75%;
             line-height: 0;
         }
@@ -102,9 +103,13 @@ $settings = settings();
                 font-size: 23px !important;
             }
 
-            .row-5 .column-1 .block-1.paragraph_block td.pad > div,
-            .row-6 .column-1 .block-1.paragraph_block td.pad > div,
-            .row-6 .column-1 .block-2.paragraph_block td.pad > div {
+            .row-4 .column-1 .block-1.image_block .alignment div {
+                margin: 0 auto 0 0 !important;
+            }
+
+            .row-5 .column-1 .block-1.paragraph_block td.pad>div,
+            .row-6 .column-1 .block-1.paragraph_block td.pad>div,
+            .row-6 .column-1 .block-2.paragraph_block td.pad>div {
                 font-size: 13px !important;
             }
 
@@ -122,35 +127,215 @@ $settings = settings();
                 padding: 0 25px 15px !important;
             }
         }
-    </style>
+    </style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
 </head>
 
-<body style="margin:0; padding:0; background-color:#ffffff;">
-    <div style="max-width:650px; margin:0 auto; background-color:#ffffff;">
-        <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="width:100%; background-color:#ffffff;">
-            <tbody>
-                <tr>
-                    <td>
-                        <!-- All existing template content remains the same -->
-                        {!! $content !!}
-                        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+<body class="body" style="background-color: #ffffff; margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
+    <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+        <tbody>
+            <tr>
+                <td>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
+                        <tbody>
                             <tr>
-                                <td style="padding: 20px 25px; text-align: center;">
-                                    <hr style="border: none; border-top: 1px solid rgb(200, 200, 200); margin: 20px 0; max-width: 100%;">
-                                    <p style="font-family: Arial, sans-serif; font-size: 13px; color: #555;">
-                                        If you need any assistance, contact us at
-                                        <a href="mailto:support@lqhmarkets.com" style="color: #00b98e;">support@lqhmarkets.com</a><br>
-                                        LQH Integrated LTD, A2-704A, Al Hamra Industrial Zone-FZ<br>
-                                        RAKEZ Business Centre, Ras Al Khaimah, UAE
-                                    </p>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <div class="spacer_block block-1" style="height:10px;line-height:10px;font-size:1px;"> </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </td>
                             </tr>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-top:15px;width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div style="max-width: 300px;"><a href="https://www.lqhmarkets.com/" style="outline:none" tabindex="-1" target="_blank"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/lqh.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="300" /></a></div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/banner6.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="25%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="width:100%;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div style="max-width: 90px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/quotes_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="90" /></div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td class="column column-2" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="75%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="heading_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:25px;padding-right:10px;padding-top:25px;text-align:center;width:100%;">
+                                                                <h1 style="margin: 0; color: #00b98e; direction: ltr; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 42px;"><span class="tinyMce-placeholder" style="word-break: break-word;"><span style="word-break: break-word; color: #000000;">Dear</span> LQH Markets</span></h1>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-5" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0;">{!! $content !!}</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad">
+                                                                <div align="center" class="alignment">
+                                                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                                        <tr>
+                                                                            <td class="divider_inner" style="font-size: 1px; line-height: 1px; border-top: 1px solid #dddddd;"><span style="word-break: break-word;"> </span></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Need Help?</strong></p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;"><u><span style="word-break: break-word; color: #00b98e;"><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><u><span style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a></strong></span></u></p>
+                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #000000;">All official communication from <span style="word-break: break-word; color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the @LQHMarkets.com (hyperlink) domain.</span></p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 0px;">LQH Integrated LTD</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">A2-704A, Al Hamra Industrial Zone-FZ</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">RAKEZ Business Centre</p>
+                                                                    <p style="margin: 0;">Ras Al Khaimah, UAE</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-7" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <div class="spacer_block block-1" style="height:10px;line-height:10px;font-size:1px;"> </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table><!-- End -->
 </body>
 
 </html>
