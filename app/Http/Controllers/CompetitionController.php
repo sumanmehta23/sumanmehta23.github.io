@@ -221,7 +221,7 @@ class CompetitionController extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content = "
                             <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
-                            <hr>
+                            <hr style='border: none; border-top: 1px solidrgb(183, 182, 182); margin: 20px 0;'>
                             <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
                             <p>Stay tuned — details on the competition start will follow shortly.</p>
                             <p></p>
