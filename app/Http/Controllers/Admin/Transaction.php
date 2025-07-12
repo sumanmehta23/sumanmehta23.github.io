@@ -507,7 +507,7 @@ class Transaction extends Controller
             $content = '<div>We are pleased to inform you that your transaction has been successfully approved manually.</div>
                         <div>The approved amount has been withdrawn from your wallet.</div>
                         <div><b>Transaction Details</b></div>
-                        <div><b>Approved Amount: </b>$' . $deposit_details->withdraw_amount . '</div>
+                        <div><b>Approved Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
                         <div><b>Transaction ID: </b>' . $transid . '</div>
                         <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
                         <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
