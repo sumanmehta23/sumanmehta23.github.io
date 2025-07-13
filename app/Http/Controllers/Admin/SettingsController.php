@@ -40,7 +40,7 @@ class SettingsController extends Controller
         $enabled = 0;
         $showingRecoveryCodes = '';
         $toggle = ToggleGroup::first();
-        return view("admin.ui_settings", compact('enabled','showingRecoveryCodes', 'toggle'));
+        return view("admin.ui_settings", compact('enabled', 'showingRecoveryCodes', 'toggle'));
     }
 
     public function logs(Request $request)
@@ -197,8 +197,8 @@ class SettingsController extends Controller
     {
         // Fetch emails where status = 1 and email_confirmed = 1
         $emails = User::where('status', 1)
-                    ->where('email_confirmed', 1)
-                    ->pluck('email'); // Only fetch the 'email' column
+            ->where('email_confirmed', 1)
+            ->pluck('email'); // Only fetch the 'email' column
 
         return view("admin.email_broadcast", compact('emails'));
     }
@@ -216,10 +216,13 @@ class SettingsController extends Controller
         $emails = array_map('trim', $emails);
         $subject = $request->subject;
         $content = $request->message; // CKEditor provides HTML content
+        $content = str_replace("\n", "<br>", $content); // Convert newlines to <br> for HTML
 
         foreach ($emails as $email) {
             $user = User::where('email', $email)->first();
             if ($user) {
+                //Replace placeholder such as name with actual user name
+                $content = str_replace('{{name}}', $user->fullname, $content);
                 $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' ' . $subject;
 
@@ -274,36 +277,36 @@ class SettingsController extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
                 if ($reason === 'HFT' || $reason === 'Latency Arbitrage') {
-                    if($reason === 'HFT'){
+                    if ($reason === 'HFT') {
                         $reason_text = 'high-frequency trading (HFT)';
-                    }elseif($reason === 'Latency Arbitrage'){
+                    } elseif ($reason === 'Latency Arbitrage') {
                         $reason_text = 'Latency Arbitrage';
                     }
 
                     $type = 'Account Termination Notice - Violation of Trading Terms';
 
                     $content = '<p>
-                        This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of '.$reason_text.' algorithms on our live trading platform.
+                        This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of ' . $reason_text . ' algorithms on our live trading platform.
                     </p>' .
-                    '<p>
-                        Our monitoring systems have detected trading patterns consistent with automated '.$reason_text.' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                        '<p>
+                        Our monitoring systems have detected trading patterns consistent with automated ' . $reason_text . ' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
                     </p>' .
-                    '<p>
+                        '<p>
                         As a result of this violation:
                     </p>' .
-                    '<ul>
+                        '<ul>
                         <li>Your trading account has been permanently terminated</li>
                         <li>Any pending trades have been closed</li>
                         <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
                         <li>Your account details have been flagged in our system to prevent future registration</li>
                     </ul>' .
-                    '<p>
+                        '<p>
                         This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
                     </p>' .
-                    '<p>
+                        '<p>
                         For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
                     </p>' .
-                    '<p>
+                        '<p>
                         Regards,<br>
                         Compliance Team<br>
                         LQH Markets
@@ -318,13 +321,13 @@ class SettingsController extends Controller
                     ];
                     $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     $processedEmails[] = $email;
-                }elseif($reason === 'Manually'){
+                } elseif ($reason === 'Manually') {
                     return back()->with('success', 'IP and Email ban applied successfully.');
-                }else{
+                } else {
                     return back()->with('success', 'IP ban applied and email sent successfully.');
                 }
             }
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
@@ -341,13 +344,13 @@ class SettingsController extends Controller
         $deleted = RestrictIps::where('id', $request->id)->delete();
 
         if ($deleted) {
-            return back()->with('success', 'Ban on IP '.$request->ip.' deleted successfully.');
+            return back()->with('success', 'Ban on IP ' . $request->ip . ' deleted successfully.');
         } else {
             return back()->with('error', 'Failed to delete IP ban.');
         }
     }
 
-        public function export(Request $request)
+    public function export(Request $request)
     {
         $searchType = $request->input('search_type');
         $startDate = $request->input('start_date');
@@ -369,7 +372,7 @@ class SettingsController extends Controller
                 return $query->where(function ($subQuery) use ($search, $logType) {
                     if ($search && $logType) {
                         $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"])
-                                ->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
+                            ->whereRaw('JSON_CONTAINS(properties, ?)', [json_encode(['remark' => $logType])]);
                     } elseif ($search) {
                         $subQuery->whereRaw("JSON_UNQUOTE(properties) LIKE ?", ["%{$search}%"]);
                     } elseif ($logType) {
@@ -409,273 +412,273 @@ class SettingsController extends Controller
                     // 🔄 All your switch cases here
                     switch ($remark) {
                         case 'Wallet Deposits':
-                    $amount = $log->properties['payment_amount'];
-                    $method = $log->properties['payment_type'];
-                    $logDescription = "User {$userLink} deposited \${$amount} by using method {$method}.";
-                break;
+                            $amount = $log->properties['payment_amount'];
+                            $method = $log->properties['payment_type'];
+                            $logDescription = "User {$userLink} deposited \${$amount} by using method {$method}.";
+                            break;
 
-                case 'Login':
-                    $logDescription = "User {$userLink} Logged in";
-                    break;
+                        case 'Login':
+                            $logDescription = "User {$userLink} Logged in";
+                            break;
 
-                case 'Logout':
-                    $logDescription = "User {$userLink} Logged out.";
-                    break;
+                        case 'Logout':
+                            $logDescription = "User {$userLink} Logged out.";
+                            break;
 
-                case 'Incorrect login details':
-                    $logDescription = "User {$userLink} entered wrong login details.";
-                    break;
-                case 'Too many requests':
-                    $logDescription = "Too many login requests for User {$userLink}.";
-                    break;
-                case 'Invalid email or unverified account':
-                    $logDescription = "User {$userLink} entered wrong email details";
-                    break;
-                case 'Switch To User':
-                    $logDescription = "User {$userLink} switched to {$log->properties['client_email']}";
-                    break;
-                case 'Update Client Email':
-                    $logDescription = "User {$userLink} entered wrong email details";
-                    break;
+                        case 'Incorrect login details':
+                            $logDescription = "User {$userLink} entered wrong login details.";
+                            break;
+                        case 'Too many requests':
+                            $logDescription = "Too many login requests for User {$userLink}.";
+                            break;
+                        case 'Invalid email or unverified account':
+                            $logDescription = "User {$userLink} entered wrong email details";
+                            break;
+                        case 'Switch To User':
+                            $logDescription = "User {$userLink} switched to {$log->properties['client_email']}";
+                            break;
+                        case 'Update Client Email':
+                            $logDescription = "User {$userLink} entered wrong email details";
+                            break;
 
-                case 'Create Demo Account':
-                    $logDescription = "User {$userLink} created Demo account {$account} with amount {$log->properties['amount']} and leverage {$log->properties['leverage']}";
-                    break;
+                        case 'Create Demo Account':
+                            $logDescription = "User {$userLink} created Demo account {$account} with amount {$log->properties['amount']} and leverage {$log->properties['leverage']}";
+                            break;
 
-                case 'Create Live Account':
+                        case 'Create Live Account':
 
-                    if ($log->properties['code'] == 'Pending') {
-                        $logDescription = "User {$userLink} sent request for live account with leverage: {$log->properties['leverage']}";
-                    } else {
-                        $code = $log->properties['code'];
-                        $account_data = Account::withTrashed()->where('code', $code)->first();
-                        if(isset($account_data)){
+                            if ($log->properties['code'] == 'Pending') {
+                                $logDescription = "User {$userLink} sent request for live account with leverage: {$log->properties['leverage']}";
+                            } else {
+                                $code = $log->properties['code'];
+                                $account_data = Account::withTrashed()->where('code', $code)->first();
+                                if (isset($account_data)) {
+                                    $client = User::where('id', $account_data->user_id)->first();
+                                    $logDescription = "Live account {$account} issued to user {$client->email} by {$user->email} with leverage {$log->properties['leverage']}";
+                                }
+                            }
+                            break;
+                        case 'Trade Withdraw':
+                            $withdrawal_amount = $log->properties['withdraw_amount'];
+                            // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                            $properties = json_decode($log->properties, true);
+                            $transaction_id = $properties['wallet_withdraw_id'];
+
+                            $logDescription = "User {$userLink} approve withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
+                            break;
+                        case 'Approve Account Withdraw':
+                            $withdrawal_amount = $log->properties['approved_amount'];
+                            // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                            $properties = json_decode($log->properties, true);
+                            $transaction_id = $properties['transaction_id'];
+
+                            $logDescription = "User {$userLink} approve withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
+                            break;
+                        case 'Wallet Withdraw':
+                            $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
+                            // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
+                            $properties = json_decode($log->properties, true);
+                            $transaction_id = $properties['wallet_withdraw_id'];
+
+                            $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id}";
+                            break;
+                        case 'Reject Wallet Withdraw':
+                            $withdrawal_amount = $log->properties['approved_amount'];
+                            $transaction_id_link = "{$log->properties['transaction_id']}";
+                            $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
+                            break;
+                        case 'Approve Wallet Withdraw':
+                            $withdrawal_amount = $log->properties['approved_amount'];
+                            $transaction_id_link = "{$log->properties['transaction_id']}";
+                            $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
+                            break;
+                        case 'Manually Approved Wallet Withdraw':
+                            $withdrawal_amount = $log->properties['approved_amount'];
+                            $transaction_id_link = "{$log->properties['transaction_id']}";
+                            $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
+                            break;
+                        case 'Wallet Withdraw Cancel By Client':
+                            $withdrawal_amount = $log->properties['amount'];
+                            $logDescription = "{$log->properties['remark']} {$userLink} having amount  \${$withdrawal_amount}.";
+                            break;
+                        case 'Account Withdraw':
+                            $withdrawal_amount = $log->properties['withdraw_amount'];
+                            $logDescription = "User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.";
+                            break;
+                        case 'Account Deposit':
+                            $withdrawal_amount = $log->properties['deposit_amount'];
+                            $logDescription = "User {$userLink} deposit  \${$withdrawal_amount} to account {$account}.";
+                            break;
+                        case 'Internal Transfer':
+                            $transfer_amount = $log->properties['transfer_amount'];
+                            $logDescription = "User {$userLink} internal transfer  \${$transfer_amount} from account {$fromAccount_url} to {$toAccount_url}.";
+                            break;
+                        case 'Created New Wallet Address':
+                            $wallet_name = $log->properties['wallet_name'];
+                            $wallet_address = $log->properties['wallet_address'];
+                            $wallet_network = $log->properties['wallet_network'];
+                            $logDescription = "User ({$userLink}) created new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}). Address is not verified yet.";
+                            break;
+                        case 'Verified New Wallet Address':
+                            $wallet_name = $log->properties['wallet_name'];
+                            $wallet_address = $log->properties['wallet_address'];
+                            $wallet_network = $log->properties['wallet_network'];
+                            $logDescription = "User ({$userLink}) verified new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).";
+                            break;
+                        case 'Edit Wallet Details':
+                            $wallet_name = $log->properties['wallet_name'];
+                            $wallet_address = $log->properties['wallet_address'];
+                            $wallet_network = $log->properties['wallet_network'];
+                            $logDescription = "User ({$userLink}) updated to wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).";
+                            break;
+                        case 'Verify Wallet Deletion':
+                            $wallet_name = $log->properties['wallet_name'];
+                            $logDescription = "User ({$userLink}) send verification email to delete wallet ( {$wallet_name} ).";
+                            break;
+                        case 'Wallet Deleted':
+                            $wallet_name = $log->properties['wallet_name'];
+                            $logDescription = "User ({$userLink}) deleted wallet ( {$wallet_name} ).";
+                            break;
+                        case 'Update Client Password':
+                            $new_passowrd = $log->properties['new_passowrd'];
+                            $logDescription = "User ({$userLink}) updated password to ( {$new_passowrd} ).";
+                            break;
+                        case 'Commission Transfer':
+                            $deposit_amount = $log->properties['deposit_amount'];
+                            $code = $log->properties['code'];
+                            $logDescription = "User ({$userLink}) transfer comission of \${$deposit_amount} to {$account}.";
+                            break;
+                        case 'Update Referral':
+                            $new = $log->properties['new'];
+                            $old = $log->properties['old'];
+                            $logDescription = "User ({$userLink}) updated referral code from {$old} to {$new}.";
+                            break;
+                        case 'Update Client Status':
+                            $client_id = $log->properties['client_id'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} updated client {$client_url} status.";
+                            break;
+                        case 'Client Email Confirmation':
+                            $client_id = $log->properties['send_to'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} send Email Confirmation mail to {$client_url}.";
+                            break;
+                        case 'Update Client Details':
+                            $client_id = $log->properties['send_to'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} updated {$client_url} details.";
+                            break;
+                        case 'Delete Account':
+                            $client_id = $log->properties['client_id'];
+                            $code = $log->properties['code'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} deleted client {$client_url} account {$code} .";
+                            break;
+                        case 'CRM Deposit':
+                            $client_id = $log->properties['client_id'];
+                            $deposit_amount = $log->properties['deposit_amount'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} deposited \${$deposit_amount} to account {$account} of user {$client_url}.";
+                            break;
+                        case 'CRM Withdraw':
+                            $client_id = $log->properties['client_id'];
+                            $withdrawal_amount = $log->properties['withdrawal_amount'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} withdraw \${$withdrawal_amount} from account {$account} of user {$client_url}.";
+                            break;
+                        case 'CRM Credit Bonus':
+                            $client_id = $log->properties['client_id'];
+                            $bonus_amount = $log->properties['bonus_amount'];
+                            $bonus_type = $log->properties['bonus_type'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} {$bonus_type} \${$bonus_amount} to account {$account} of user {$client_url}.";
+                            break;
+                        case 'CRM Deposit Bonus':
+                            $client_id = $log->properties['client_id'];
+                            $bonus_amount = $log->properties['bonus_amount'];
+                            $bonus_type = $log->properties['bonus_type'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User  {$userLink} {$bonus_type} \${$bonus_amount} from account {$account} of user {$client_url}.";
+                            break;
+                        case 'CRM Update Investor Password':
+                            $code = $log->properties['code'];
+                            $account_data = Account::where('code', $code)->first();
                             $client = User::where('id', $account_data->user_id)->first();
-                            $logDescription = "Live account {$account} issued to user {$client->email} by {$user->email} with leverage {$log->properties['leverage']}";
-                        }
-                    }
-                    break;
-                case 'Trade Withdraw':
-                    $withdrawal_amount = $log->properties['withdraw_amount'];
-                    // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
-                    $properties = json_decode($log->properties, true);
-                    $transaction_id = $properties['wallet_withdraw_id'];
+                            $client_url = "{$client->email}";
+                            $logDescription = "User  {$userLink} updated account investor password of user {$client_url} having account {$account}.";
+                            break;
+                        case 'CRM Update Master Password':
+                            $code = $log->properties['code'];
+                            $account_data = Account::where('code', $code)->first();
+                            $client = User::where('id', $account_data->user_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User  {$userLink} updated account master password of user {$client_url} having account {$account}.";
+                            break;
+                        case 'CRM Update Group Leverage':
+                            $code = $log->properties['code'];
+                            $account_data = Account::where('code', $code)->first();
+                            $client = User::where('id', $account_data->user_id)->first();
+                            $client_url = "{$client->email}";
+                            $logDescription = "User {$userLink} updated Group/Leverage of user {$client_url} having account {$account}.";
+                            break;
+                        case 'IB Plan Create':
+                            $ib_cat_name = $log->properties['ib_cat_name'];
+                            $logDescription = "User {$userLink} created IB Plan {$ib_cat_name}.";
+                            break;
+                        case 'IB Plan Update':
+                            $ib_cat_name = $log->properties['ib_cat_name'];
+                            $logDescription = "User {$userLink} updated IB Plan {$ib_cat_name}.";
+                            break;
+                        case 'IB Commission Create':
+                            $ib_category_id = $log->properties['ib_category_id'];
+                            $ib_plan =  IbCategory::where('id', $ib_category_id)->first();
+                            $acc_type = $log->properties['acc_type'];
+                            $ib_group =  AccountType::where('id', $acc_type)->first();
+                            $logDescription = "User {$userLink} created IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.";
+                            break;
+                        case 'IB Commission Update':
+                            $ib_category_id = $log->properties['ib_category_id'];
+                            $ib_plan =  IbCategory::where('id', $ib_category_id)->first();
+                            $acc_type = $log->properties['acc_type'];
+                            $ib_group =  AccountType::where('id', $acc_type)->first();
+                            $logDescription = "User {$userLink} update IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.";
+                            break;
+                        case 'Create Role':
+                            $role_name = $log->properties['role_name'];
+                            $logDescription = "User {$userLink} created new role {$role_name}.";
+                            break;
+                        case 'Update Role':
+                            $role_name = $log->properties['role_name'];
+                            $logDescription = "User {$userLink} updated role {$role_name}.";
+                            break;
+                        case 'Ib Request':
+                            $ib_group = $log->properties['ib_group'];
+                            $ib_plan = IbPlanDetails::with('plan')->withTrashed()->where('id', $ib_group)->first();
+                            $ib_status = $log->properties['ib_status'];
+                            $client_id = $log->properties['client_id'];
+                            $client = User::where('id', $client_id)->first();
+                            $client_url = "{$client->email}";
+                            if ($ib_status == 1) {
+                                $logDescription = "User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name}.";
+                            } elseif ($ib_status == 0) {
+                                $logDescription = "User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to pending.";
+                            } elseif ($ib_status == 2) {
+                                $logDescription = "User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to rejected.";
+                            }
 
-                    $logDescription = "User {$userLink} approve withdraw request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
-                    break;
-                case 'Approve Account Withdraw':
-                    $withdrawal_amount = $log->properties['approved_amount'];
-                    // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
-                    $properties = json_decode($log->properties, true);
-                    $transaction_id = $properties['transaction_id'];
+                            break;
 
-                    $logDescription = "User {$userLink} approve withdrawal request of \${$withdrawal_amount} from account having transaction ID {$transaction_id}";
-                    break;
-                case 'Wallet Withdraw':
-                    $withdrawal_amount = $log->properties['withdraw_amount'] + $log->properties['withdraw_transaction_fee'];
-                    // $transaction_id_link = "$log->properties['wallet_withdraw_id']";
-                    $properties = json_decode($log->properties, true);
-                    $transaction_id = $properties['wallet_withdraw_id'];
-
-                    $logDescription = "User {$userLink} send request of \${$withdrawal_amount} using {$log->properties['remark']} with transaction ID {$transaction_id}";
-                    break;
-                case 'Reject Wallet Withdraw':
-                    $withdrawal_amount = $log->properties['approved_amount'];
-                    $transaction_id_link = "{$log->properties['transaction_id']}";
-                    $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
-                    break;
-                case 'Approve Wallet Withdraw':
-                    $withdrawal_amount = $log->properties['approved_amount'];
-                    $transaction_id_link = "{$log->properties['transaction_id']}";
-                    $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
-                    break;
-                case 'Manually Approved Wallet Withdraw':
-                    $withdrawal_amount = $log->properties['approved_amount'];
-                    $transaction_id_link = "{$log->properties['transaction_id']}";
-                    $logDescription = "User {$userLink} {$log->properties['remark']} of \${$withdrawal_amount}, having transaction ID {$transaction_id_link}";
-                    break;
-                case 'Wallet Withdraw Cancel By Client':
-                    $withdrawal_amount = $log->properties['amount'];
-                    $logDescription = "{$log->properties['remark']} {$userLink} having amount  \${$withdrawal_amount}.";
-                    break;
-                case 'Account Withdraw':
-                    $withdrawal_amount = $log->properties['withdraw_amount'];
-                    $logDescription = "User {$userLink} send withdraw request of \${$withdrawal_amount} from account {$account}.";
-                    break;
-                case 'Account Deposit':
-                    $withdrawal_amount = $log->properties['deposit_amount'];
-                    $logDescription = "User {$userLink} deposit  \${$withdrawal_amount} to account {$account}.";
-                    break;
-                case 'Internal Transfer':
-                    $transfer_amount = $log->properties['transfer_amount'];
-                    $logDescription = "User {$userLink} internal transfer  \${$transfer_amount} from account {$fromAccount_url} to {$toAccount_url}.";
-                    break;
-                case 'Created New Wallet Address':
-                    $wallet_name = $log->properties['wallet_name'];
-                    $wallet_address = $log->properties['wallet_address'];
-                    $wallet_network = $log->properties['wallet_network'];
-                    $logDescription = "User ({$userLink}) created new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}). Address is not verified yet.";
-                    break;
-                case 'Verified New Wallet Address':
-                    $wallet_name = $log->properties['wallet_name'];
-                    $wallet_address = $log->properties['wallet_address'];
-                    $wallet_network = $log->properties['wallet_network'];
-                    $logDescription = "User ({$userLink}) verified new wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).";
-                    break;
-                case 'Edit Wallet Details':
-                    $wallet_name = $log->properties['wallet_name'];
-                    $wallet_address = $log->properties['wallet_address'];
-                    $wallet_network = $log->properties['wallet_network'];
-                    $logDescription = "User ({$userLink}) updated to wallet ( {$wallet_name} ) having address ({$wallet_address}) on network ({$wallet_network}).";
-                    break;
-                case 'Verify Wallet Deletion':
-                    $wallet_name = $log->properties['wallet_name'];
-                    $logDescription = "User ({$userLink}) send verification email to delete wallet ( {$wallet_name} ).";
-                    break;
-                case 'Wallet Deleted':
-                    $wallet_name = $log->properties['wallet_name'];
-                    $logDescription = "User ({$userLink}) deleted wallet ( {$wallet_name} ).";
-                    break;
-                case 'Update Client Password':
-                    $new_passowrd = $log->properties['new_passowrd'];
-                    $logDescription = "User ({$userLink}) updated password to ( {$new_passowrd} ).";
-                    break;
-                case 'Commission Transfer':
-                    $deposit_amount = $log->properties['deposit_amount'];
-                    $code = $log->properties['code'];
-                    $logDescription = "User ({$userLink}) transfer comission of \${$deposit_amount} to {$account}.";
-                    break;
-                case 'Update Referral':
-                    $new = $log->properties['new'];
-                    $old = $log->properties['old'];
-                    $logDescription = "User ({$userLink}) updated referral code from {$old} to {$new}.";
-                    break;
-                case 'Update Client Status':
-                    $client_id = $log->properties['client_id'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} updated client {$client_url} status.";
-                    break;
-                case 'Client Email Confirmation':
-                    $client_id = $log->properties['send_to'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} send Email Confirmation mail to {$client_url}.";
-                    break;
-                case 'Update Client Details':
-                    $client_id = $log->properties['send_to'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} updated {$client_url} details.";
-                    break;
-                case 'Delete Account':
-                    $client_id = $log->properties['client_id'];
-                    $code = $log->properties['code'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} deleted client {$client_url} account {$code} .";
-                    break;
-                case 'CRM Deposit':
-                    $client_id = $log->properties['client_id'];
-                    $deposit_amount = $log->properties['deposit_amount'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} deposited \${$deposit_amount} to account {$account} of user {$client_url}.";
-                    break;
-                case 'CRM Withdraw':
-                    $client_id = $log->properties['client_id'];
-                    $withdrawal_amount = $log->properties['withdrawal_amount'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} withdraw \${$withdrawal_amount} from account {$account} of user {$client_url}.";
-                    break;
-                case 'CRM Credit Bonus':
-                    $client_id = $log->properties['client_id'];
-                    $bonus_amount = $log->properties['bonus_amount'];
-                    $bonus_type = $log->properties['bonus_type'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} {$bonus_type} \${$bonus_amount} to account {$account} of user {$client_url}.";
-                    break;
-                case 'CRM Deposit Bonus':
-                    $client_id = $log->properties['client_id'];
-                    $bonus_amount = $log->properties['bonus_amount'];
-                    $bonus_type = $log->properties['bonus_type'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User  {$userLink} {$bonus_type} \${$bonus_amount} from account {$account} of user {$client_url}.";
-                    break;
-                case 'CRM Update Investor Password':
-                    $code = $log->properties['code'];
-                    $account_data = Account::where('code', $code)->first();
-                    $client = User::where('id', $account_data->user_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User  {$userLink} updated account investor password of user {$client_url} having account {$account}.";
-                    break;
-                case 'CRM Update Master Password':
-                    $code = $log->properties['code'];
-                    $account_data = Account::where('code', $code)->first();
-                    $client = User::where('id', $account_data->user_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User  {$userLink} updated account master password of user {$client_url} having account {$account}.";
-                    break;
-                case 'CRM Update Group Leverage':
-                    $code = $log->properties['code'];
-                    $account_data = Account::where('code', $code)->first();
-                    $client = User::where('id', $account_data->user_id)->first();
-                    $client_url = "{$client->email}";
-                    $logDescription = "User {$userLink} updated Group/Leverage of user {$client_url} having account {$account}.";
-                    break;
-                case 'IB Plan Create':
-                    $ib_cat_name = $log->properties['ib_cat_name'];
-                    $logDescription = "User {$userLink} created IB Plan {$ib_cat_name}.";
-                    break;
-                case 'IB Plan Update':
-                    $ib_cat_name = $log->properties['ib_cat_name'];
-                    $logDescription = "User {$userLink} updated IB Plan {$ib_cat_name}.";
-                    break;
-                case 'IB Commission Create':
-                    $ib_category_id = $log->properties['ib_category_id'];
-                    $ib_plan =  IbCategory::where('id', $ib_category_id)->first();
-                    $acc_type = $log->properties['acc_type'];
-                    $ib_group =  AccountType::where('id', $acc_type)->first();
-                    $logDescription = "User {$userLink} created IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.";
-                    break;
-                case 'IB Commission Update':
-                    $ib_category_id = $log->properties['ib_category_id'];
-                    $ib_plan =  IbCategory::where('id', $ib_category_id)->first();
-                    $acc_type = $log->properties['acc_type'];
-                    $ib_group =  AccountType::where('id', $acc_type)->first();
-                    $logDescription = "User {$userLink} update IB commission with Group {$ib_group->ac_group} and Plan {$ib_plan->ib_cat_name}.";
-                    break;
-                case 'Create Role':
-                    $role_name = $log->properties['role_name'];
-                    $logDescription = "User {$userLink} created new role {$role_name}.";
-                    break;
-                case 'Update Role':
-                    $role_name = $log->properties['role_name'];
-                    $logDescription = "User {$userLink} updated role {$role_name}.";
-                    break;
-                case 'Ib Request':
-                    $ib_group = $log->properties['ib_group'];
-                    $ib_plan = IbPlanDetails::with('plan')->withTrashed()->where('id', $ib_group)->first();
-                    $ib_status = $log->properties['ib_status'];
-                    $client_id = $log->properties['client_id'];
-                    $client = User::where('id', $client_id)->first();
-                    $client_url = "{$client->email}";
-                    if ($ib_status==1) {
-                        $logDescription = "User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name}.";
-                    }elseif($ib_status==0){
-                        $logDescription = "User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to pending.";
-                    }elseif($ib_status==2){
-                        $logDescription = "User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to rejected.";
-                    }
-
-                    break;
-
-                default:
-                    $logDescription = "Activity recorded for {$userLink}.";
-                    break;
+                        default:
+                            $logDescription = "Activity recorded for {$userLink}.";
+                            break;
                     }
 
                     fputcsv($handle, [
@@ -702,9 +705,9 @@ class SettingsController extends Controller
             $value = $request->has($gateway) ? '1' : '0';
 
             Setting::updateOrCreate(
-                    ['name' => $gateway],
-                    ['value' => $value, 'updated_at' => now()]
-                );
+                ['name' => $gateway],
+                ['value' => $value, 'updated_at' => now()]
+            );
         }
 
         return redirect()->back()->with('success', 'Payment gateway settings updated!');
@@ -739,6 +742,4 @@ class SettingsController extends Controller
         }
         return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
     }
-
-
 }
