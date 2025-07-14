@@ -230,32 +230,25 @@
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
-                                <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                <td align="center">
+                                    <table border="0" cellpadding="0" cellspacing="0" class="row-content" role="presentation" style="background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto; text-align: center;" width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="25%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                        <tr>
-                                                            <td class="pad" style="width:100%;">
-                                                                <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 90px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/quotes_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="90" /></div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                                <td class="column column-2" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="75%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="heading_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                        <tr>
-                                                            <td class="pad" style="padding-bottom:25px;padding-right:10px;padding-top:25px;text-align:center;width:100%;">
-                                                                <h1 style="margin: 0; color: #00b98e; direction: ltr; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 42px;"><span class="tinyMce-placeholder" style="word-break: break-word;"><span style="word-break: break-word; color: #000000;">Dear</span>{!! $name !!}</span></h1>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
+                                                <td align="center" style="padding: 20px;">
+                                                    <!-- Image Block -->
+                                                    <div style="display: inline-block; vertical-align: middle; margin-right: 15px;">
+                                                        <img src="{{ $settings['copyright_site_name_text'] . '/assets/images/quotes_1.png' }}" alt="" width="90" style="display: block; border: 0; width: 90px; height: auto;" />
+                                                    </div>
+
+                                                    <!-- Text Block -->
+                                                    <div style="display: inline-block; vertical-align: middle; text-align: left;">
+                                                        <h1 style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
+                                                            <span style="color: #000000;">Dear</span> {!! $name !!}
+                                                        </h1>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -264,6 +257,7 @@
                             </tr>
                         </tbody>
                     </table>
+
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-5" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
