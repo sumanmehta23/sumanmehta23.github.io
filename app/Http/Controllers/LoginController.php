@@ -417,7 +417,7 @@ class LoginController extends Controller
         $settings = settings();
         $from = $settings['email_from_address'];
         $toEmail = $user->email;
-        $emailSubject = $settings['admin_title'] . ' - Client Portal Password Reset Success!';
+        $emailSubject = $settings['admin_title'] . ' - Password Successfully Reset!';
         $htmlContent = "";
         // Set content-type header for sending HTML email
         $headers = "MIME-Version: 1.0" . "\r\n";
