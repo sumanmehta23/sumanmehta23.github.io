@@ -407,6 +407,54 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                        <tbody>
+                                            <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/7. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.</p>
+                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><span style="word-break: break-word; color: #00b98e;"><u><strong>support@lqhmarkets.com</strong></u></span></a></strong></u></span></p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;">All official communication from <span style="color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 0px;">LQH Integrated LTD</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">A2-704A, Al Hamra Industrial Zone-FZ</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">RAKEZ Business Centre</p>
+                                                                    <p style="margin: 0;">Ras Al Khaimah, UAE</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-10" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
                         <tbody>
                             <tr>
