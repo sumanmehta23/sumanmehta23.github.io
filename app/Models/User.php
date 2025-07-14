@@ -376,7 +376,7 @@ class User extends Authenticatable
         $from = $settings['email_from_address'];
         $toEmail = $this->email;
         $uid = uniqid();
-        $emailSubject = $settings['admin_title'] . ' - Email Address Verfication';
+        $emailSubject = $settings['admin_title'] . ' - Email Address Verification';
         $htmlContent = "";
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
