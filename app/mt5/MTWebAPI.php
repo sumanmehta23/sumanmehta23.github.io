@@ -2,6 +2,7 @@
 namespace App\MT5;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 //--- web api version
 define("WebAPIVersion", 2361);
