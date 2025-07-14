@@ -374,6 +374,10 @@ class Leaderboard extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content = '
+                        <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
+                        <p>Here are your MT5 account details</p>
+                    ';
         $templateVars = [
             'name' => $new_user->Name,
             'type' => $type,
@@ -385,7 +389,8 @@ class Leaderboard extends Controller
             'email' => $settings['email_from_address'],
             "title_right" => "",
             "subtitle_right" => "Your " . $type . " Competition is Ready!",
-            "acc_type" => $new_user->type
+            "acc_type" => $new_user->type,
+            "content" => $content
         ];
 
         Log::alert("message ".$toEmail);
