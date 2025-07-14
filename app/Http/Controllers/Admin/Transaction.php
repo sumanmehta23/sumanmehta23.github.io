@@ -506,11 +506,8 @@ class Transaction extends Controller
             $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
             $content = '<div>We are pleased to inform you that your transaction has been successfully approved manually.</div>
                         <div>The approved amount has been withdrawn from your wallet.</div>
-                        <div><b>Transaction Details</b></div>
-                        <div><b>Approved Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
-                        <div><b>Transaction ID: </b>' . $transid . '</div>
-                        <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
-                        <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
+                        <div><b>Transaction Details</b></div>'
+                        ;
             $templateVars = [
                 'name' => $deposit_details->user->fullname,
                 'site_link' => $settings['copyright_site_name_text'],
@@ -519,7 +516,7 @@ class Transaction extends Controller
                 'title_right' => 'Transaction',
                 'subtitle_right' => 'Approved',
                 'btn_text' => 'Go To Dashboard',
-                'amount' => $deposit_details->withdraw_amount,
+                'amount' => $deposit_details->withdrawal_amount,
                 'id' => $deposit_details->id,
                 'date' => $deposit_details->withdraw_date,
                 'type' => $deposit_details->withdraw_type,
