@@ -305,8 +305,9 @@ $settings = settings();
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/7. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.</p>
-                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><span style="word-break: break-word; color: #00b98e;"><u><strong>support@lqhmarkets.com</strong></u></span></a></strong></u></span></p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.
+                                                                    <a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #00b98e;" target="_blank" title="support@lqhmarkets.com"><u><span style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a>
+                                                                    </p>
                                                                 </div>
                                                             </td>
                                                         </tr>
