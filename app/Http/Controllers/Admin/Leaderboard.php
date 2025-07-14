@@ -211,7 +211,7 @@ class Leaderboard extends Controller
                             // dd('sadasdsa');
                             $error = MTRetCode::GetError($errorCode);
                             Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
-                            $this->sendMail($new_user, 'Live');
+                            $this->sendMail($new_user, 'Demo');
                             return redirect()->back()->with('success', $error);
                         } else {
 
@@ -269,6 +269,7 @@ class Leaderboard extends Controller
                         ];
 
                         $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
+                        $this->sendMail($new_user, 'Demo');
                         return redirect()->back()->with('success', $response['message']);
                     }else{
                         return redirect()->back()->with('error', 'No account found to update.');

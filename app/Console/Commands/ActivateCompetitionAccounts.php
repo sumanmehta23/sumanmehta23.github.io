@@ -180,6 +180,7 @@ class ActivateCompetitionAccounts extends Command
                             ];
 
                             $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
+                            $this->sendMail($new_user, 'Demo');
                             // return redirect()->back()->with('success', $response['message']);
                         }else{
                             // return redirect()->back()->with('error', 'No account found to update.');
