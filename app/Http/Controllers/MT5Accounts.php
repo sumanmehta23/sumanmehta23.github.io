@@ -412,7 +412,7 @@ class MT5Accounts extends Controller
                 $content =
                     '<div>Thank you for choosing LQH Markets. Your request for a new trading account will be approved  within 24-48 hours.</div>
 
-                    <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
+                    <p>If you need any assistance, our support team is available 24/7 at <span style="color: #00b98e;">support@lqhmarkets.com</span></p>
                     <p>Best Regards.</p>
                 <p>LQH Markets Team</p>';
                 $templateVars = [
