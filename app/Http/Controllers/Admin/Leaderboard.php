@@ -391,6 +391,12 @@ class Leaderboard extends Controller
             "subtitle_right" => "Your " . $type . " Competition is Ready!",
             "acc_type" => $new_user->type
         ];
+
+        Log::alert("message ".$toEmail);
+        Log::alert("message ".$emailSubject);
+        Log::alert("message ".$headers);
+        Log::alert("message ".$templateVars);
+
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
     }
