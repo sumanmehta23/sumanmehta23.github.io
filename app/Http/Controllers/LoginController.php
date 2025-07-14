@@ -567,7 +567,9 @@ class LoginController extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $content =
                 '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                '<p></p>'.
                 '<p>You are receiving this email because you have registered for a Trading Account.</p>' .
+                '<p></p>'.
                 '<p>Click the link below to activate your Trading Account</p>';
 
             $templateVars = [
@@ -611,10 +613,13 @@ class LoginController extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
-                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</div>' .
-                    '<div><b>Here are your login credentials:</b></div>
-          <div><b>Username: </b>' . $user->email . '</div>';
+                    '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                    '<p></p>'.
+                    '<p>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</p>' .
+                    '<p></p>'.
+                    '<p><b>Here are your login credentials:</b></p>
+                     <p></p>
+                     <p><b>Username: </b>' . $user->email . '</p>';
                 $templateVars = [
                     'name' => $user->fullname,
                     'server_name' => $settings['mt5_company_name'],

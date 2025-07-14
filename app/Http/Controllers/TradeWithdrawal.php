@@ -510,9 +510,11 @@ class TradeWithdrawal extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
                 $content =
-                    '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</div>' .
-                    '<div>Click the link below to activate your Account Withdrawal</div>';
+                    '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                    '<p></p>'.
+                    '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</p>' .
+                    '<p></p>'.
+                    '<p>Click the link below to activate your Account Withdrawal</p>';
 
                 $templateVars = [
                     'name' => $user_fullname,

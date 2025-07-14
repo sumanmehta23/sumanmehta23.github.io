@@ -265,10 +265,13 @@ class Wallet extends Controller
             ->latest('created_at') // Specify the column to order by
             ->first();
         $content =
-            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-            '<div>You are receiving this email because you have added a new wallet address to your account.</div>' .
-            '<div>Wallet Address: ' . $request->wallet_address . ' </div>' .
-            '<div>Click the link below to activate your Wallet Address</div>';
+            '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p></p>'.
+            '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
+            '<p></p>'.
+            '<p>Wallet Address: ' . $request->wallet_address . ' </p>' .
+            '<p></p>'.
+            '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -311,10 +314,13 @@ class Wallet extends Controller
         $walletAddress = htmlspecialchars($request->wallet_address, ENT_QUOTES, 'UTF-8');
 
         $content = '
-            <div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>
-            <div>You are receiving this email because you have added a new wallet address to your account.</div>
-            <div>Wallet Address: ' . $walletAddress . '</div>
-            <div>Click the link below to activate your Wallet Address:</div>
+            <p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>
+            <p></p>
+            <p>You are receiving this email because you have added a new wallet address to your account.</p>
+            <p></p>
+            <p>Wallet Address: ' . $walletAddress . '</p>
+            <p></p>
+            <p>Click the link below to activate your Wallet Address:</p>
         ';
 
         $templateVars = [
@@ -1371,9 +1377,11 @@ class Wallet extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
         $content =
-            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-            '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</div>' .
-            '<div>Click the link below to activate your Wallet Withdrawal</div>';
+            '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p></p>'.
+            '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</p>' .
+            '<p></p>'.
+            '<p>Click the link below to activate your Wallet Withdrawal</p>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -1423,9 +1431,11 @@ class Wallet extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
             $content =
-                '<div><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></div><br>' .
-                '<div>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account ' . $tradeWithdrawal->code . '.</div><br>' .
-                '<div>Click the link below to activate your Account Withdrawal</div>';
+                '<p><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></p><br>' .
+                '<p></p>'.
+                '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account ' . $tradeWithdrawal->code . '.</p>' .
+                '<p></p>'.
+                '<p>Click the link below to activate your Account Withdrawal</p>';
 
             $templateVars = [
                 'name' => $toName,
