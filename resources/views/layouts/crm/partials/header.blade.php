@@ -343,7 +343,7 @@
                                     </a>
                                 </li> --}}
                             @endif
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="/tasks" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -352,7 +352,7 @@
                                     </span>
                                     <span class="pc-mtext">Tasks</span>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li class="pc-item">
                                 <a href="/liveAccounts" class="pc-link">
                                     <span class="pc-micon">
@@ -364,17 +364,19 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            <li class="pc-item">
-                                <a href="/competition" class="pc-link">
-                                    <span class="pc-micon">
-                                        <svg class="pc-icon">
-                                            <use xlink:href="#custom-shield"></use>
-                                        </svg>
-                                    </span>
-                                    <span class="pc-mtext">Competition</span>
-                                    <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
-                                </a>
-                            </li>
+                            @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false)
+                                <li class="pc-item">
+                                    <a href="/competition" class="pc-link">
+                                        <span class="pc-micon">
+                                            <svg class="pc-icon">
+                                                <use xlink:href="#custom-shield"></use>
+                                            </svg>
+                                        </span>
+                                        <span class="pc-mtext">Competition</span>
+                                        <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
+                                    </a>
+                                </li>
+                            @endif
                             <li class="pc-item">
                                 <a href="javascript:void(0);" class="pc-link" id="pamm-menu">
                                     <span class="pc-micon">

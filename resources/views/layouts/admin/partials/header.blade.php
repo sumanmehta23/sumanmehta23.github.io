@@ -471,7 +471,7 @@
                                 </ul>
                             </li>
                         @endcan
-                        <li class="slide__category menu-item-category">
+                        {{-- <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
 
@@ -486,67 +486,46 @@
                                 <i class="side-menu__icon fe fe-list"></i>
                                 <span class="side-menu__label">Client Tasks</span>
                             </a>
-                            </li>
+                        </li> --}}
 
                         @can('m_t5_group:viewAny')
-                            <li class="slide__category menu-item-category">
-                                <span class="category-name">MT5 COMPETITION</span>
-                            </li>
-
-                            {{-- <li class="slide has-sub menu-item-main ">
-                                <a href="#" class="side-menu__item">
-                                    <i class="side-menu__icon fe fe-help-circle"></i>
-                                    <span class="side-menu__label">Competition</span>
-                                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                                </a>
-                                <ul class="slide-menu child1"
-                                    style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 585px);"
-                                    data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-
-                                    <li class="slide menu-item-sub">
-                                        <a href="/admin/mt5_groups" class="side-menu__item ">
-                                            MT5 Groups
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </li> --}}
-
-
-
-                            <li class="slide has-sub menu-item-main ">
-                                <a href="#" class="side-menu__item">
-                                    <i class="side-menu__icon fe fe-user-plus"></i>
-                                    <span class="side-menu__label">Competition</span>
-                                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                                </a>
-                                <ul class="slide-menu child1"
-                                    style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
-                                    data-popper-placement="bottom">
-                                    <li class="slide menu-item-sub ">
-                                        <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
-                                            <span class="side-menu__label">Competition List</span>
-                                        </a>
-                                        <ul class="slide-menu child1">
-                                        </ul>
-                                    </li>
-                                    <li class="slide menu-item-sub ">
-                                        <a href="{{ route('admin.competition.dashboard') }}" class="side-menu__item">
-                                            <span class="side-menu__label">Accounts list</span>
-                                        </a>
-                                        <ul class="slide-menu child1">
-                                        </ul>
-                                    </li>
-                                    <li class="slide menu-item-sub ">
-                                        <a href="{{ route('admin.competition.requested') }}" class="side-menu__item">
-                                            <span class="side-menu__label">Requested Accounts</span>
-                                        </a>
-                                        <ul class="slide-menu child1">
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-
+                            @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false)
+                                <li class="slide__category menu-item-category">
+                                    <span class="category-name">MT5 COMPETITION</span>
+                                </li>
+                                <li class="slide has-sub menu-item-main ">
+                                    <a href="#" class="side-menu__item">
+                                        <i class="side-menu__icon fe fe-user-plus"></i>
+                                        <span class="side-menu__label">Competition</span>
+                                        <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                    </a>
+                                    <ul class="slide-menu child1"
+                                        style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
+                                        data-popper-placement="bottom">
+                                        <li class="slide menu-item-sub ">
+                                            <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                                <span class="side-menu__label">Competition List</span>
+                                            </a>
+                                            <ul class="slide-menu child1">
+                                            </ul>
+                                        </li>
+                                        <li class="slide menu-item-sub ">
+                                            <a href="{{ route('admin.competition.dashboard') }}" class="side-menu__item">
+                                                <span class="side-menu__label">Accounts list</span>
+                                            </a>
+                                            <ul class="slide-menu child1">
+                                            </ul>
+                                        </li>
+                                        <li class="slide menu-item-sub ">
+                                            <a href="{{ route('admin.competition.requested') }}" class="side-menu__item">
+                                                <span class="side-menu__label">Requested Accounts</span>
+                                            </a>
+                                            <ul class="slide-menu child1">
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            @endif
                         @endcan
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
