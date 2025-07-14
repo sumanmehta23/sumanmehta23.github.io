@@ -63,7 +63,6 @@ class ScheduleMailJob implements ShouldQueue
             }elseif(strpos($this->subject, 'Password Reset') !== false){
                 $template = 'emails.resetPassword';
             }else{
-
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
