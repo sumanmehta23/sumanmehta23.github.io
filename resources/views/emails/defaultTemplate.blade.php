@@ -359,7 +359,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;">Please be advised that all official communication from LQH Markets (LQH Integrated) is conducted exclusively through our official email addresses ending in <a href='https://my.lqhmarkets.com/' style="color: #00b98e; text-decoration: none;">@lqhmarkets.com</a>.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Please be advised that all official communication from LQH Markets (LQH Integrated) is conducted exclusively through our official email addresses ending in <a href='https://my.lqhmarkets.com/' style="color: #00b98e; text-decoration: none;"><strong>@lqhmarkets.com</strong></a>.</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
