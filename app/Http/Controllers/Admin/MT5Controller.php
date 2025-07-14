@@ -540,16 +540,21 @@ class MT5Controller extends Controller
                 $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
                 $emailSubject = settings()['admin_title'] . ' - Bonus Transaction';
                 if ($type == "in") {
-                    $content = '<div>We are pleased to inform your that Bonus have been successfully deposited into your account.</div>';
+                    $content = '<p>We are pleased to inform your that Bonus have been successfully deposited into your account.</p>';
                 } else {
-                    $content = '<div>This email to inform you, that Bonus credited out from your account.</div>';
+                    $content = '<p>This email to inform you, that Bonus credited out from your account.</p>';
                 }
 
-                $content .= '<div><b>Transaction Details</b></div>
-          <div><b>Amount: </b>$' . $deposit_details->bonus_amount . '</div>
-          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</div>';
+                $content .= '
+                                <p></p>
+                                <p></p>
+                                <p><b>Transaction Details</b></p>
+                                <p></p>
+                                <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
+                                <p><b>Account ID: </b>' . $deposit_details->code . '</p>
+                                <p><b>Transaction ID: </b>' . $transid . '</p>
+                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>'
+                            ;
 
                 $templateVars = [
                     'name' => $user->fullname,
@@ -643,16 +648,21 @@ class MT5Controller extends Controller
                 $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
                 $emailSubject = settings()['admin_title'] . ' - Bonus Transaction';
                 if ($type == "in") {
-                    $content = '<div>We are pleased to inform your that Bonus have been successfully deposited into your account.</div>';
+                    $content = '<p>We are pleased to inform your that Bonus have been successfully deposited into your account.</p>';
                 } else {
-                    $content = '<div>This email to inform you, that Bonus credited out from your account.</div>';
+                    $content = '<p>This email to inform you, that Bonus credited out from your account.</p>';
                 }
 
-                $content .= '<div><b>Transaction Details</b></div>
-          <div><b>Amount: </b>$' . $deposit_details->bonus_amount . '</div>
-          <div><b>Account ID: </b>' . $deposit_details->code . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</div>';
+                $content .= '
+                                <p></p>
+                                <p></p>
+                                <p><b>Transaction Details</b></p>
+                                <p></p>
+                                <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
+                                <p><b>Account ID: </b>' . $deposit_details->code . '</p>
+                                <p><b>Transaction ID: </b>' . $transid . '</p>
+                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>'
+                            ;
 
                 $templateVars = [
                     'name' => $user->fullname,
