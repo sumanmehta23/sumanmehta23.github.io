@@ -248,7 +248,7 @@
                                                         </tr>
                                                     </table>
                                                 </td>
-                                                <td class="column column-2" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="75%">
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: center; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="heading_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:25px;padding-right:10px;padding-top:25px;text-align:center;width:100%;">
