@@ -211,7 +211,6 @@ class Leaderboard extends Controller
                             // dd('sadasdsa');
                             $error = MTRetCode::GetError($errorCode);
                             Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
-                            $this->sendMail($new_user, 'Demo');
                             return redirect()->back()->with('success', $error);
                         } else {
 
@@ -322,10 +321,7 @@ class Leaderboard extends Controller
         }
 
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
-            // dump($user);
-            // dump($user_server);
-            // dump($error_code);
-
+            $this->sendMail($user, 'Demo');
             $error = MTRetCode::GetError($error_code);
             // dd($error);
             Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
