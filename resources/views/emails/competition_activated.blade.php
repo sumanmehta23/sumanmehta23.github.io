@@ -1,6 +1,3 @@
-<?php
-$settings = settings();
-?>
 <!DOCTYPE html>
 
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
@@ -95,6 +92,10 @@ $settings = settings();
                 max-height: none !important;
             }
 
+            .row-4 .column-1 .block-1.image_block .alignment div {
+                margin: 0 auto 0 0 !important;
+            }
+
             .row-4 .column-2 .block-1.heading_block td.pad {
                 padding: 30px 10px 20px !important;
             }
@@ -103,28 +104,24 @@ $settings = settings();
                 font-size: 23px !important;
             }
 
-            .row-4 .column-1 .block-1.image_block .alignment div {
-                margin: 0 auto 0 0 !important;
-            }
-
             .row-5 .column-1 .block-1.paragraph_block td.pad>div,
             .row-6 .column-1 .block-1.paragraph_block td.pad>div,
-            .row-6 .column-1 .block-2.paragraph_block td.pad>div {
+            .row-6 .column-1 .block-3.paragraph_block td.pad>div {
                 font-size: 13px !important;
             }
 
+            .row-6 .column-1 .block-1.paragraph_block td.pad {
+                padding: 0 25px 15px !important;
+            }
+
             .row-5 .column-1 .block-1.paragraph_block td.pad,
-            .row-6 .column-1 .block-2.paragraph_block td.pad {
+            .row-6 .column-1 .block-3.paragraph_block td.pad {
                 padding: 0 25px 25px !important;
             }
 
             .row-5 .column-1 .block-2.button_block span {
                 font-size: 10px !important;
                 line-height: 20px !important;
-            }
-
-            .row-6 .column-1 .block-1.paragraph_block td.pad {
-                padding: 0 25px 15px !important;
             }
         }
         @media (min-width: 621px) {
@@ -142,7 +139,7 @@ $settings = settings();
     </style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
 </head>
 
-<body class="body email-main-image" style="background-color: #ffffff; margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
+<body class="body email-main-image" style="background-color: #ffffff; margin: 0 auto; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
     <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
         <tbody>
             <tr>
@@ -265,7 +262,6 @@ $settings = settings();
                                                             </td>
                                                         </tr>
                                                     </table>
-
                                                     <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
@@ -302,7 +298,7 @@ $settings = settings();
                                                                     <p style="margin: 0; margin-bottom: 16px;"><strong>Need Help?</strong></p>
                                                                     <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.</p>
                                                                     <p style="margin: 0; margin-bottom: 16px;"><u><span style="word-break: break-word; color: #00b98e;"><strong><a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank" title="support@lqhmarkets.com"><u><span style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a></strong></span></u></p>
-                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #000000;">All official communication from <span style="word-break: break-word; color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a> domain.</span></p>
+                                                                    <p style="margin: 0;"><span style="word-break: break-word; color: #000000;">All official communication from <span style="word-break: break-word; color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.</span></p>
                                                                 </div>
                                                             </td>
                                                         </tr>

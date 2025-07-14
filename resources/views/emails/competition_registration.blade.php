@@ -262,15 +262,6 @@
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    @if (isset($btn_text))
-                                                        <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                            <tr>
-                                                                <td class="pad">
-                                                                    <div align="center" class="alignment"><a href="{{ $site_link }}" style="color:#ffffff;text-decoration:none;" target="_blank"><span class="button" href="{{ $site_link }}" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">{{ $btn_text }} →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    @endif
                                                     <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
