@@ -1,6 +1,8 @@
 <?php
 namespace App\MT5;
 
+use Illuminate\Support\Facades\Log;
+
 //--- web api version
 define("WebAPIVersion", 2361);
 //--- web api date
