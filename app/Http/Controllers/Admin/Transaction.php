@@ -835,7 +835,7 @@ class Transaction extends Controller
 
         if ($transaction) {
 
-            if($transaction->status == 2){
+            if($transaction->status == 2 || $transaction->status == 3){
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 
