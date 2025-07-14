@@ -395,7 +395,7 @@ class Leaderboard extends Controller
         Log::alert("message ".$toEmail);
         Log::alert("message ".$emailSubject);
         Log::alert("message ".$headers);
-        Log::alert("message ".$templateVars);
+        Log::alert("templateVars: " . json_encode($templateVars));
 
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
 
