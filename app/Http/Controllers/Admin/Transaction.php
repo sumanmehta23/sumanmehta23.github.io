@@ -504,9 +504,11 @@ class Transaction extends Controller
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
-            $content = '<div>We are pleased to inform you that your transaction has been successfully approved manually.</div>
-                        <div>The approved amount has been withdrawn from your wallet.</div>
-                        <div><b>Transaction Details</b></div>'
+            $content = '<p>We are pleased to inform you that your transaction has been successfully approved manually.</p>
+                        <p>The approved amount has been withdrawn from your wallet.</p>
+                        <p></p>
+                        <p></p>
+                        <p><b>Transaction Details</b></p>'
                         ;
             $templateVars = [
                 'name' => $deposit_details->user->fullname,
@@ -836,7 +838,7 @@ class Transaction extends Controller
 
         if ($transaction) {
 
-            if($transaction->status == 2){
+            if($transaction->status == 2 || $transaction->status == 3){
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 

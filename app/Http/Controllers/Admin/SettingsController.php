@@ -225,7 +225,8 @@ class SettingsController extends Controller
                 $content = str_replace('{{name}}', $user->fullname, $content);
                 $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' ' . $subject;
-
+                //replace name with actual client name in message body
+                $content = str_replace('{{name}}', $user->fullname, $content);
                 $templateVars = [
                     'name' => $user->fullname,
                     'email' => settings()['email_from_address'],
@@ -264,6 +265,7 @@ class SettingsController extends Controller
             foreach ($emails as $email) {
                 $settings = settings();
                 $user = User::where('email', $email)->firstOrFail();
+
 
                 // Create RestrictIps entries for all IPs for this email
                 foreach ($ips as $ip) {
@@ -327,6 +329,7 @@ class SettingsController extends Controller
                     return back()->with('success', 'IP ban applied and email sent successfully.');
                 }
             }
+            return back()->with('success', 'IP ban applied and email sent successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }

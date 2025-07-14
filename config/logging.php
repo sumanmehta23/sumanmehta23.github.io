@@ -140,7 +140,14 @@ return [
             'days' => 10000,
             'replace_placeholders' => true,
         ],
-        
+        'mt5_trade_balance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/trade_deposits/mt5_trade_balance.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 10000,
+            'replace_placeholders' => true,
+        ],
+
         'payouts' => [
             'driver' => 'daily',
             'path' => storage_path('logs/payouts/laravel.log'),

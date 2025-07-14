@@ -3,6 +3,7 @@
 namespace App\MT5;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 //--- web api version
 define("WebAPIVersion", 2361);
@@ -703,8 +704,23 @@ class MTWebAPI
   public function TradeBalance($login, $type, $balance, $comment, &$ticket = null, $margin_check = true)
   {
     $mt_trade = new MTTradeProtocol($this->m_connect);
-    return $mt_trade->TradeBalance($login, $type, $balance, $comment, $ticket, $margin_check);
-  }
+
+    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2); // [0] is this method, [1] is the caller
+    $callerFile = $backtrace[1]['file'] ?? 'unknown file';
+    $callerFunction = $backtrace[1]['function'] ?? 'unknown function';
+    Log::channel('mt5_trade_balance')->info('TradeBalance request', [
+            'authenticated_user' => Auth::user() ? Auth::user()->email : 'guest',
+            'login' => $login,
+            'type' => $type,
+            'balance' => $balance,
+            'comment' => $comment,
+            'ticket' => $ticket,
+            'margin_check' => $margin_check,
+            'called_from_file' => $callerFile,
+            'called_from_function' => $callerFunction,
+        ]);
+    return $mt_trade->TradeBalance($login, $type, $balance, $comment, $ticket,$margin_check);
+    }
 
   /**
    * Send ping to server
