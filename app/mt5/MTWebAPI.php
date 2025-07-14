@@ -692,6 +692,15 @@ class MTWebAPI
   public function TradeBalance($login, $type, $balance, $comment, &$ticket=null,$margin_check=true)
     {
     $mt_trade = new MTTradeProtocol($this->m_connect);
+    Log::channel('mt5_trade_balance')->info('TradeBalance request', [
+      'authenticated_user' => Auth::user() ? Auth::user()->email : 'guest',
+      'login' => $login,
+      'type' => $type,
+      'balance' => $balance,
+      'comment' => $comment,
+      'ticket' => $ticket,
+      'margin_check' => $margin_check
+    ]);
     return $mt_trade->TradeBalance($login, $type, $balance, $comment, $ticket,$margin_check);
     }
 
