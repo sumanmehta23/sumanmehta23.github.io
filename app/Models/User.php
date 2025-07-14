@@ -382,9 +382,9 @@ class User extends Authenticatable
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
-            '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-            '<div>You are receiving this email because you have registered for a Trading Account.</div>' .
-            '<div>Click the link below to activate your Trading Account</div>';
+            '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p>You are receiving this email because you have registered for a Trading Account.</p>' .
+            '<p>Click the link below to activate your Trading Account</p>';
         $code = $this->emailToken;
         $templateVars = [
             'name' => $this->fullname,
