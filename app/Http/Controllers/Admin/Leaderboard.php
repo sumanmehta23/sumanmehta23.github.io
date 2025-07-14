@@ -370,6 +370,7 @@ class Leaderboard extends Controller
 
     public function sendMail($new_user, $type)
     {
+        Log::alert("message");
         $settings = settings();
         $toEmail = $new_user->Email;
         $from = $settings['email_from_address'];
