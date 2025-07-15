@@ -417,14 +417,20 @@ class Payment extends Controller
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '<div>We are pleased to inform you that your transaction has been successful.</div>
-          <div>The approved amount has been deposited into your wallet.</div>
-          <div><b>Transaction Details</b></div>
-          <div><b>Approved Amount: </b>$' . $tradedeposit->deposit_amount . '</div>
-          <div><b>Reference ID: </b>' . $tradedeposit->id . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Deposited Date: </b>' . $tradedeposit->deposted_date . '</div>
-          <div><b>Payment Type: </b>' . $tradedeposit->deposit_type . '</div>';
+        $content = '
+                    <p>We are pleased to inform you that your transaction has been <b>successful</b>.</p>
+                    <p>The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.</p>
+
+                    <p><b>Transaction Details:</b></p>
+                    <ol>
+                        <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
+                        <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
+                        <li><b>Transaction ID:</b> ' . $transid . '</li>
+                        <li><b>Deposited Date:</b> ' . $tradedeposit->deposted_date . '</li>
+                        <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
+                    </ol>
+                ';
+
         $templateVars = [
             'name' => $user->fullname,
             'site_link' => $settings['copyright_site_name_text'],
