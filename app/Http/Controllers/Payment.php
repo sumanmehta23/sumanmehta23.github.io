@@ -324,7 +324,14 @@ class Payment extends Controller
 
         $account = Account::where('code', $code)->first();
 
-
+        $existingTransaction = TradeDeposit::where('transaction_id',$transactionId)->first();
+        if($existingTransaction){
+            return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction already exist',
+                    'error' => 'Transaction already exist',
+                ], 400);
+        }
 
         if ($account) {
             $comment = 'CreditCardPayissa';
