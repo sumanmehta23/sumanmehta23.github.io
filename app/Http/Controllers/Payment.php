@@ -412,7 +412,7 @@ class Payment extends Controller
         $user = User::where('id',$tradedeposit->user_id)->first();
         $settings = settings();
         $from = $settings['email_from_address'];
-        $transid = "WDID" . $tradedeposit->transaction_id;
+        $transid = $tradedeposit->id;
         $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
