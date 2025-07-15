@@ -418,11 +418,15 @@ class Payment extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content = '
-                        <p style="font-size: 16px;">We are pleased to inform you that your transaction has been <b>successful</b>.</p>
-                        <p style="font-size: 16px;">The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.</p>
+                        <p style="font-size: 16px; color: #000000;">
+                            We are pleased to inform you that your transaction has been <b>successful</b>.
+                        </p>
+                        <p style="font-size: 16px; color: #000000;">
+                            The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.
+                        </p>
 
-                        <p style="font-size: 16px;"><b>Transaction Details:</b></p>
-                        <ol style="font-size: 16px; padding-left: 20px;">
+                        <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
+                        <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
                             <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
                             <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
                             <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $transid . '</span></li>
@@ -430,6 +434,7 @@ class Payment extends Controller
                             <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
                         </ol>
                     ';
+
 
 
         $templateVars = [
