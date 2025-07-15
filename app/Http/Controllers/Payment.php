@@ -315,14 +315,14 @@ class Payment extends Controller
 
     public function manuallyPaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
-        $account_id = $request->input('account_id');
+        $code = $request->input('code');
         $responsedata = $request->all();
         $transactionId = $responsedata['txid_in'];
         $email = $request->input('email');
         $amount = $request->input('amount');
         $deposit_date = $request->input('deposit_date');
 
-        $account = Account::where('id', $account_id)->first();
+        $account = Account::where('code', $code)->first();
 
 
 
