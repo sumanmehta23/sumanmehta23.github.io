@@ -324,6 +324,8 @@ class Payment extends Controller
 
         $account = Account::where('id', $account_id)->first();
 
+
+
         if ($account) {
             $comment = 'CreditCardPayissa';
 
@@ -350,6 +352,24 @@ class Payment extends Controller
                     'deposted_date' => $deposit_date,
                     'callback_data' => 'Polygon Deposit',
                     'callback_code' => "success",
+                ]);
+
+                PaymentLog::create([
+                    'user_id' => $account->user_id,
+                    'account_id' => $account->id,
+                    'payment_id' => 0,
+                    'promocode' => null,
+                    'payment_amount' => $amount,
+                    'payment_type' => 'CreditCardPayissa',
+                    'payment_req' => 'Polygon Manually Pay',
+                    'payment_reference_id' => 'Wallet',
+                    'payment_url' => '',
+                    'payment_status' => 'success',
+                    'payment_res' => 'success',
+                    'initiated_by' => $email,
+                    'remarks' => 'https://my.lqhmarkets.com/payment-response?amount='.$amount.'&payment_id='.$transactionId.'&status=success',
+                    'created_at' => $deposit_date,
+                    'updated_at' => now()
                 ]);
             }
             if ($tradeDeposit) {
