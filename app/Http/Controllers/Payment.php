@@ -418,18 +418,19 @@ class Payment extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content = '
-                    <p>We are pleased to inform you that your transaction has been <b>successful</b>.</p>
-                    <p>The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.</p>
+                        <p style="font-size: 16px;">We are pleased to inform you that your transaction has been <b>successful</b>.</p>
+                        <p style="font-size: 16px;">The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.</p>
 
-                    <p><b>Transaction Details:</b></p>
-                    <ol>
-                        <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
-                        <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
-                        <li><b>Transaction ID:</b> ' . $transid . '</li>
-                        <li><b>Deposited Date:</b> ' . $tradedeposit->deposted_date . '</li>
-                        <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
-                    </ol>
-                ';
+                        <p style="font-size: 16px;"><b>Transaction Details:</b></p>
+                        <ol style="font-size: 16px; padding-left: 20px;">
+                            <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
+                            <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
+                            <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $transid . '</span></li>
+                            <li><b>Deposited Date:</b> ' . $tradedeposit->deposted_date . '</li>
+                            <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
+                        </ol>
+                    ';
+
 
         $templateVars = [
             'name' => $user->fullname,
