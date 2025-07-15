@@ -56,7 +56,7 @@ class UserResource extends JsonResource
             'user_additional_id' => $this->email, // Optional, using email as additional ID
             'cxd' => $this->cxd, // Mandatory, getting from the query string
             'aff_id' => $this->ib1, // Optional
-            'status' => $this->status, // Optional
+            'status' => $this->kyc_verify ? "active" : "inactive", // Optional
             'account_type' => $accountType, // Optional
             'registration_date' => $registrationDate, // Mandatory
             'last_modified_date' => $lastModifiedDate, // Mandatory
