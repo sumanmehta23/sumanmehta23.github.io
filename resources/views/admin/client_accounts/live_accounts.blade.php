@@ -256,6 +256,12 @@
                     exportOptions: {
                         columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
                     }
+                },
+                {
+                    text: 'Export All',
+                    action: function () {
+                        window.location.href = "/admin/export-all-live-accounts";
+                    }
                 }
             ]
         });

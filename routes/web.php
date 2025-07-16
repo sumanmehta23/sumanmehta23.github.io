@@ -342,6 +342,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
     Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
     Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
+    Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
 
     Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
     Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
