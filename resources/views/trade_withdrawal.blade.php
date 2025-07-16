@@ -81,6 +81,10 @@
                                                                     </span>
                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                         <span class="mb-0 h5 d-block f-w-500">
+                                                                            {{ if($liveaccount->code == 219733)
+                                                                            {
+                                                                                dd($liveaccount);
+                                                                            } }}
                                                                             ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
                                                                         </span>
                                                                         <span class="mb-0 text-muted f-10">Current
