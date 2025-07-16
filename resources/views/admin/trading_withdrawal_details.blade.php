@@ -196,7 +196,8 @@
                                                             <span class="fs-11 text-muted">WITHDRAWAL AMOUNT</span>
                                                         </div>
                                                         <div class="lh-1 mt-2">
-                                                            <span>${{ $details->withdrawal_amount - $details->promo_deduction }}</span>
+                                                            {{-- <span>${{ $details->withdrawal_amount - $details->promo_deduction }}</span> --}}
+                                                            <span>${{ $details->withdrawal_amount }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
