@@ -1579,7 +1579,8 @@ class AjaxController extends Controller
                             </a>";
                 })
                 ->addColumn('withdrawal_amount', function ($row) {
-                    return $row->withdrawal_amount - ($row->promo_deduction ?? 0);
+                    // return $row->withdrawal_amount - ($row->promo_deduction ?? 0);
+                    return $row->withdrawal_amount ?? 0;
                 })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
