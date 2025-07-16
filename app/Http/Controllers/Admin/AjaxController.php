@@ -3848,7 +3848,7 @@ class AjaxController extends Controller
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+            Account::with('user', 'accountType')->where('demo',0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 
