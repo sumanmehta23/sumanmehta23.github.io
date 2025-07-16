@@ -742,7 +742,7 @@ class Transaction extends Controller
                                         </ol>
                                     </p>
                                     <p>
-                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
+                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
                                     </p>
                                     <p>
                                         Thank you for your understanding.
@@ -1031,7 +1031,7 @@ class Transaction extends Controller
                                         </ol>
                                     </p>
                                     <p>
-                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a>
+                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
                                     </p>
                                     <p>
                                         Thank you for your understanding.

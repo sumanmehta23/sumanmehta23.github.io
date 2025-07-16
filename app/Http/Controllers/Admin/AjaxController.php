@@ -3834,6 +3834,44 @@ class AjaxController extends Controller
         return $response;
     }
 
+    public function exportAllLiveAccounts(Request $request)
+    {
+        $fileName = 'Live_Accounts_' . date('Y-m-d') . '.csv';
+
+        $response = new StreamedResponse(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance','Equity','Status', 'Date','Time']);
+
+            // Fetch client data
+            Account::with('user','accountType')->chunk(500, function ($accounts) use ($handle) {
+                foreach ($accounts as $account) {
+                    fputcsv($handle, [
+                        $account->id,
+                        $account->user->fullname,
+                        $account->email,
+                        $account->code,
+                        $account->accountType->ac_group,
+                        $account->leverage,
+                        $account->balance,
+                        $account->equity,
+                        $account->status,
+                        $account->created_at->format('Y-m-d'),
+                        $account->created_at->format('H:i:s'),
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        return $response;
+    }
+
 
     public function exportAllTradingDeposit(Request $request)
     {

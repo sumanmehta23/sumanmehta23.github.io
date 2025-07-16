@@ -621,7 +621,7 @@ class LoginController extends Controller
                     '<p></p>'.
                     '<p><b>Here are your login credentials:</b></p>
                      <p></p>
-                     <p><b>Username: </b>' . $user->email . '</p>';
+                     <p><b>Username: </b> <a href="mailto:' . $user->email . '" style="color: #00b98e; text-decoration: none;">' . $user->email . '</a></p>';
                 $templateVars = [
                     'name' => $user->fullname,
                     'server_name' => $settings['mt5_company_name'],

@@ -315,14 +315,23 @@ class Payment extends Controller
 
     public function manuallyPaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
-        $account_id = $request->input('account_id');
+        $code = $request->input('code');
         $responsedata = $request->all();
         $transactionId = $responsedata['txid_in'];
         $email = $request->input('email');
         $amount = $request->input('amount');
         $deposit_date = $request->input('deposit_date');
 
-        $account = Account::where('id', $account_id)->first();
+        $account = Account::where('code', $code)->first();
+
+        $existingTransaction = TradeDeposit::where('transaction_id',$transactionId)->first();
+        if($existingTransaction){
+            return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction already exist',
+                    'error' => 'Transaction already exist',
+                ], 400);
+        }
 
         if ($account) {
             $comment = 'CreditCardPayissa';
@@ -350,6 +359,24 @@ class Payment extends Controller
                     'deposted_date' => $deposit_date,
                     'callback_data' => 'Polygon Deposit',
                     'callback_code' => "success",
+                ]);
+
+                PaymentLog::create([
+                    'user_id' => $account->user_id,
+                    'account_id' => $account->id,
+                    'payment_id' => 0,
+                    'promocode' => null,
+                    'payment_amount' => $amount,
+                    'payment_type' => 'CreditCardPayissa',
+                    'payment_req' => 'Polygon Manually Pay',
+                    'payment_reference_id' => 'Wallet',
+                    'payment_url' => '',
+                    'payment_status' => 'success',
+                    'payment_res' => 'success',
+                    'initiated_by' => $email,
+                    'remarks' => 'https://my.lqhmarkets.com/payment-response?amount='.$amount.'&payment_id='.$transactionId.'&status=success',
+                    'created_at' => $deposit_date,
+                    'updated_at' => now()
                 ]);
             }
             if ($tradeDeposit) {
@@ -392,19 +419,31 @@ class Payment extends Controller
         $user = User::where('id',$tradedeposit->user_id)->first();
         $settings = settings();
         $from = $settings['email_from_address'];
-        $transid = "WDID" . $tradedeposit->transaction_id;
+        $transid = $tradedeposit->id;
         $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '<div>We are pleased to inform you that your transaction has been successful.</div>
-          <div>The approved amount has been deposited into your wallet.</div>
-          <div><b>Transaction Details</b></div>
-          <div><b>Approved Amount: </b>$' . $tradedeposit->deposit_amount . '</div>
-          <div><b>Reference ID: </b>' . $tradedeposit->id . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Deposited Date: </b>' . $tradedeposit->deposted_date . '</div>
-          <div><b>Payment Type: </b>' . $tradedeposit->deposit_type . '</div>';
+        $content = '
+                        <p style="font-size: 16px; color: #000000;">
+                            We are pleased to inform you that your transaction has been <b>successful</b>.
+                        </p>
+                        <p style="font-size: 16px; color: #000000;">
+                            The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.
+                        </p>
+
+                        <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
+                        <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
+                            <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
+                            <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
+                            <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $transid . '</span></li>
+                            <li><b>Deposited Date:</b> ' . $tradedeposit->deposted_date . '</li>
+                            <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
+                        </ol>
+                    ';
+
+
+
         $templateVars = [
             'name' => $user->fullname,
             'site_link' => $settings['copyright_site_name_text'],
