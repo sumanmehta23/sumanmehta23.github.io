@@ -27,6 +27,7 @@ use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -35,6 +36,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Response;
 
 class AjaxController extends Controller
 {
@@ -3838,38 +3840,44 @@ class AjaxController extends Controller
     {
         $fileName = 'Live_Accounts_' . date('Y-m-d') . '.csv';
 
-        $response = new StreamedResponse(function () {
+        return Response::streamDownload(function () {
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance','Equity','Status', 'Date','Time']);
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance', 'Equity', 'Status', 'Date', 'Time']);
 
-            // Fetch client data
-            Account::with('user','accountType')->chunk(500, function ($accounts) use ($handle) {
+            $chunkCount = 0;
+
+            Account::with('user', 'accountType')->where('demo',0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+                $chunkCount++;
+                Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
+
                 foreach ($accounts as $account) {
-                    fputcsv($handle, [
-                        $account->id,
-                        $account->user->fullname,
-                        $account->email,
-                        $account->code,
-                        $account->accountType->ac_group,
-                        $account->leverage,
-                        $account->balance,
-                        $account->equity,
-                        $account->status,
-                        $account->created_at->format('Y-m-d'),
-                        $account->created_at->format('H:i:s'),
-                    ]);
+                    try {
+                        fputcsv($handle, [
+                            $account->id,
+                            $account->user->fullname ?? '',
+                            $account->email,
+                            $account->code,
+                            $account->accountType->ac_group ?? '',
+                            $account->leverage,
+                            $account->balance,
+                            $account->equity,
+                            $account->status,
+                            $account->created_at->format('Y-m-d'),
+                            $account->created_at->format('H:i:s'),
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error writing account ID {$account->id}: " . $e->getMessage());
+                    }
                 }
             });
 
             fclose($handle);
-        });
-
-        $response->headers->set('Content-Type', 'text/csv');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-
-        return $response;
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
 
