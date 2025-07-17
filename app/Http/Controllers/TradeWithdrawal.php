@@ -308,6 +308,8 @@ class TradeWithdrawal extends Controller
 
                             if($amount >= $account->balance){
                                 $amount_to_deduct = -($amount-$account->balance);
+                            }else{
+                                $amount_to_deduct = -($amount);
                             }
                             Log::alert("amount_to_deduct ".$amount_to_deduct);
                             if ($amount_to_deduct < 0) {
