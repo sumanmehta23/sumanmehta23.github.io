@@ -121,7 +121,7 @@ class CompetitionController extends Controller
             ->where('ac_name','like', '%Competition%')
             ->orderBy('display_priority', 'desc')
             ->get();
-
+        dd($results);
         return view('createCompetition', compact('user', 'results'));
     }
 
