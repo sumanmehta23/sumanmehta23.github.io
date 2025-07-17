@@ -83,7 +83,7 @@ class CompetitionProductController extends Controller
                 ]);
             }
 
-            return redirect()->route('admin.competition.create')->with('success', 'Group Created Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'Group Created Successfully');
 
         } catch (\Exception $e) {
             return response()->json([
