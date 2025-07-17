@@ -8,6 +8,7 @@ use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
+use App\Models\Mt5Group;
 use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\MT5\MTEnDealAction;
@@ -19,6 +20,7 @@ use App\Models\WalletDeposit;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Carbon;
+use App\Models\MT5GroupCategory;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -127,9 +129,9 @@ class Leaderboard extends Controller
         ->orderBy('mt5_grp_cat_id')
         ->get();
 
-        $mt5_groups = \App\Models\Mt5Group::all();
+        $mt5_groups = Mt5Group::where('mt5_group_type','demo')->get();
 
-        $grp_books = \App\Models\MT5GroupCategory::where('mt5_grp_cat_type', 'book')
+        $grp_books = MT5GroupCategory::where('mt5_grp_cat_type', 'book')
             ->orderBy('mt5_grp_cat_id')
             ->get();
 

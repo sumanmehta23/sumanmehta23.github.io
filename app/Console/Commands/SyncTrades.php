@@ -60,8 +60,8 @@ class SyncTrades extends Command
             // ->whereDate('competition_start_date', '<=', Carbon::today())
             // ->whereDate('competition_end_date', '>=', Carbon::today())
             ->whereHas('accountType', function ($query){
-                $query->where('competition_start_date', '<=', Carbon::now());
-                $query->where('competition_end_date', '>=', Carbon::now());
+                $query->where('competition_start_date', '<=', Carbon::now('UTC'));
+                $query->where('competition_end_date', '>=', Carbon::now('UTC'));
             })
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
