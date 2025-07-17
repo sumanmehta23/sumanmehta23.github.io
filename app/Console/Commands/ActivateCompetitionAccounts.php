@@ -77,7 +77,7 @@ class ActivateCompetitionAccounts extends Command
 
                 foreach ($accounts as $account) {
                     Log::info('Competition start time: '.$account->competition_start_date);
-                    Log::info('Current time: '.Carbon::now());
+                    Log::info('Current time: '.Carbon::now('UTC'));
                     if($account->accountType->competition_start_date <= now()){
                         //  dd($accounts);
                     }
