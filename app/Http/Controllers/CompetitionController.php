@@ -220,7 +220,7 @@ class CompetitionController extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content = "
-                            <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets Trading Competition.</p>
+                            <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets ".$group->ac_name.".</p>
                             <p></p>
                             <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
                             <p></p>

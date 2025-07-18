@@ -164,7 +164,7 @@ class BreachAccountCommand extends Command
                     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                     $content = "
-                                <p>The LQH Markets Trading Competition has officially come to a close.</p>
+                                <p>The LQH Markets ".$account->accountType->ac_name." Competition has officially come to a close.</p>
                                 <p></p>
                                 <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
                                 <p></p>
