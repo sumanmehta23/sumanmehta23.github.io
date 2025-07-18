@@ -55,7 +55,7 @@ class SyncTrades extends Command
         Account::with('accountType')->whereNotNull('code')
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
-            ->where('competition_status', 'active')
+            ->where('competition_status', 'inactive')
             ->whereNull('deleted_at')
             // ->whereHas('accountType', function ($query){
             //     $query->where('competition_start_date', '<=', Carbon::now('UTC'));
