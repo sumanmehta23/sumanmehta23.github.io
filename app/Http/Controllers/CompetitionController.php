@@ -220,18 +220,16 @@ class CompetitionController extends Controller
                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content = "
-                            <p>We’re pleased to confirm your successful registration for the upcoming LQH Markets ".$group->ac_name.".</p>
-                            <p></p>
-                            <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
-                            <p></p>
-                            <p>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
-                            <p>Stay tuned — details on the competition start will follow shortly.</p>
-                            <p></p>
-                            <p>If you have any questions or need support, our team is here to help.</p>
-                            <p></p>
-                            <p>Trade smart,</p>
-                            <p>The LQH Markets Team</p>
-                        ";
+                                <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                                    <p style='color: #000000;'>We’re pleased to confirm your successful registration for the upcoming LQH Markets {$group->ac_name}.</p>
+                                    <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                    <p style='color: #000000;'>Get ready to showcase your trading skills, test your strategies, and compete for top rewards in a dynamic market environment.</p>
+                                    <p style='color: #000000;'>Stay tuned — details on the competition start will follow shortly.</p>
+                                    <p style='color: #000000;'>If you have any questions or need support, our team is here to help.</p>
+                                    <p style='color: #000000;'>Trade smart,</p>
+                                    <p style='color: #000000;'>The LQH Markets Team</p>
+                                </div>
+                            ";
                 $templateVars = [
                     'name' => $user->fullname,
                     'email' => $settings['email_from_address'],
