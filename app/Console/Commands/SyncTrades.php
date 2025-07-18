@@ -55,12 +55,12 @@ class SyncTrades extends Command
         Account::with('accountType')->whereNotNull('code')
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
-            ->where('competition_status', 'inactive')
+            ->where('competition_status', 'active')
             ->whereNull('deleted_at')
-            // ->whereHas('accountType', function ($query){
-            //     $query->where('competition_start_date', '<=', Carbon::now('UTC'));
-            //     $query->where('competition_end_date', '>=', Carbon::now('UTC'));
-            // })
+            ->whereHas('accountType', function ($query){
+                $query->where('competition_start_date', '<=', Carbon::now('UTC'));
+                $query->where('competition_end_date', '>=', Carbon::now('UTC'));
+            })
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
