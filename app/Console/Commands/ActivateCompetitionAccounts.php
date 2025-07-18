@@ -162,7 +162,7 @@ class ActivateCompetitionAccounts extends Command
                                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                                 $content = "
-                                            <p>The wait is over — the LQH Markets Trading Competition is officially underway!</p>
+                                            <p>The wait is over — the LQH Markets ".$account->accountType->ac_name." Competition is officially underway!</p>
                                             <p></p>
                                             <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
                                             <p></p>
@@ -182,12 +182,11 @@ class ActivateCompetitionAccounts extends Command
 
                                 $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
                                 $this->sendMail($new_user, 'Demo');
-                                // return redirect()->back()->with('success', $response['message']);
+                                $account->competition_email = 1;
+                                $account->save();
                             }else{
-                                // return redirect()->back()->with('error', 'No account found to update.');
                             }
                         } else {
-                            // return redirect()->back()->with('error', $response['message']);
                         }
                     }else{
 
