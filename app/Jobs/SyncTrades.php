@@ -244,7 +244,7 @@ class SyncTrades implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit,4),
+            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit, 2),
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
