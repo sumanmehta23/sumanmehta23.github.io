@@ -57,12 +57,10 @@ class SyncTrades extends Command
             ->whereNotNull('competition_end_date')
             ->where('competition_status', 'active')
             ->whereNull('deleted_at')
-            // ->whereDate('competition_start_date', '<=', Carbon::today())
-            // ->whereDate('competition_end_date', '>=', Carbon::today())
-            ->whereHas('accountType', function ($query){
-                $query->where('competition_start_date', '<=', Carbon::now('UTC'));
-                $query->where('competition_end_date', '>=', Carbon::now('UTC'));
-            })
+            // ->whereHas('accountType', function ($query){
+            //     $query->where('competition_start_date', '<=', Carbon::now('UTC'));
+            //     $query->where('competition_end_date', '>=', Carbon::now('UTC'));
+            // })
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
                 foreach ($accounts as $account) {
