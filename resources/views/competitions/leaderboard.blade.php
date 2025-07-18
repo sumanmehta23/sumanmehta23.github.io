@@ -124,7 +124,7 @@
                             id="your-rank-card"
                         />
                     </div> --}}
-                    <div class="col-sm-6 col-xl-2" >
+                    <div class="col-sm-6 col-xl-2" id="your-rank-container">
                         <x-competition.stats-card
                             title="Your Rank"
                             :value="collect($rankings)->firstWhere('user_id', auth()->id())['rank'] ?? '--'"
@@ -639,13 +639,7 @@
                 item.classList.add('active');
 
                 const accountNo = item.dataset.account;
-                const rankValue = item.dataset.rank;
-                // Update "Your Rank" card value
-                const rankCard = document.querySelector('#your-rank-container .card-body h3');
-                if (rankCard && rankValue) {
-                    rankCard.textContent = `${rankValue}`;
-                }
-                // console.log(item);
+                // Do NOT update "Your Rank" card here!
                 await updateTraderData(accountNo);
             });
         });
