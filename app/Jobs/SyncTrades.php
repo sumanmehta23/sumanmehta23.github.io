@@ -214,7 +214,7 @@ class SyncTrades implements ShouldQueue
             'tp' => $order->PriceTP,
             'type' => $order->Type,
             'updated_at' => now(),
-            'volume' => $order->VolumeInitial/100,
+            'volume' => $order->VolumeInitial/10000,
             'volume_ext' => $order->VolumeInitialExt,
         ];
     }
@@ -228,7 +228,7 @@ class SyncTrades implements ShouldQueue
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
             'type' => $openOrder->Type,
-            'volume' => $openOrder->VolumeInitial/100,
+            'volume' => $openOrder->VolumeInitial/10000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
             'close_price' => $closeOrder->PriceCurrent,
