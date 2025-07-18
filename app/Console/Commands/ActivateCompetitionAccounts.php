@@ -66,7 +66,7 @@ class ActivateCompetitionAccounts extends Command
             ->where('demo', 1)
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
-            ->whereNull('competition_status')
+            // ->whereNull('competition_status')
             ->whereHas('accountType', function ($query) {
                 $query->where('competition_start_date', '<=', Carbon::now('UTC'));
             })
