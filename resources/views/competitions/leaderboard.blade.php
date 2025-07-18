@@ -124,12 +124,12 @@
                             id="your-rank-card"
                         />
                     </div> --}}
-                    {{ dd(auth()->user()) }}
-                    {{ dd($rankings) }}
+                    {{-- {{ dd(auth()->user()->email) }}
+                    {{ dd($rankings) }} --}}
                     <div class="col-sm-6 col-xl-2" id="your-rank-container">
                         <x-competition.stats-card
                             title="Your Rank"
-                            :value="collect($rankings)->firstWhere('email', auth()->email())['rank'] ?? '--'"
+                            :value="collect($rankings)->firstWhere('email', auth()->user()->email)['rank'] ?? '--'"
                             icon="users"
                             id="your-rank-card"
                         />
