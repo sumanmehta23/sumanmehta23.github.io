@@ -164,16 +164,16 @@ class BreachAccountCommand extends Command
                     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                     $content = "
-                                <p>The LQH Markets ".$account->accountType->ac_name." Competition has officially come to a close.</p>
-                                <p></p>
-                                <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
-                                <p></p>
-                                <p>We extend our thanks for your participation and dedication throughout the contest. Final results and winners will be announced soon, so keep an eye on your inbox and our website.</p>
-                                <p>We hope you enjoyed the experience and look forward to welcoming you in our future competitions.</p>
-                                <p></p>
-                                <p>Stay connected,</p>
-                                <p>The LQH Markets Team</p>
-                            ";
+                                    <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                                        <p style='color: #000000;'>The LQH Markets {$account->accountType->ac_name} Competition has officially come to a close.</p>
+                                        <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                        <p style='color: #000000;'>We extend our thanks for your participation and dedication throughout the contest. Final results and winners will be announced soon, so keep an eye on your inbox and our website.</p>
+                                        <p style='color: #000000;'>We hope you enjoyed the experience and look forward to welcoming you in our future competitions.</p>
+                                        <p style='color: #000000;'>Stay connected,</p>
+                                        <p style='color: #000000;'>The LQH Markets Team</p>
+                                    </div>
+                                ";
+
                     $templateVars = [
                         'name' => $account->user->fullname,
                         'email' => $settings['email_from_address'],
