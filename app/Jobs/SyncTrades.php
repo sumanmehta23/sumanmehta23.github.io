@@ -222,8 +222,12 @@ class SyncTrades implements ShouldQueue
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder,$rateProfit)
     {
         log::info("account->code : {$account->code}");
-        log::info("Preparing closed trade for position ID: {$rateProfit}");
+        log::info("closeOrder->PriceCurrent : {$closeOrder->PriceCurrent}");
+        log::info("openOrder->PriceCurrent : {$openOrder->PriceCurrent}");
+        log::info("openOrder->VolumeInitialExt : {$openOrder->VolumeInitialExt}");
         log::info("openOrder->ContractSize : {$openOrder->ContractSize}");
+        log::info("rateProfit : {$rateProfit}");
+
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
