@@ -124,7 +124,7 @@
                             id="your-rank-card"
                         />
                     </div> --}}
-                    {{ dd(auth()) }}
+                    {{ dd(auth()->user()) }}
                     {{ dd($rankings) }}
                     <div class="col-sm-6 col-xl-2" id="your-rank-container">
                         <x-competition.stats-card
