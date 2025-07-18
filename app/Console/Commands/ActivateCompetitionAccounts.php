@@ -161,19 +161,18 @@ class ActivateCompetitionAccounts extends Command
                                 $headers = "MIME-Version: 1.0\r\n";
                                 $headers .= "Content-type:text/html;charset=UTF-8\r\n";
                                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                                $content = "
-                                            <p>The wait is over — the LQH Markets ".$account->accountType->ac_name." Competition is officially underway!</p>
-                                            <p></p>
-                                            <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
-                                            <p></p>
-                                            <p>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
-                                            <p>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
-                                            <p></p>
-                                            <p>We wish you the best of luck throughout the competition!</p>
-                                            <p></p>
-                                            <p>Trade confidently,</p>
-                                            <p>The LQH Markets Team</p>
-                                        ";
+                               $content = "
+                                                <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                                                    <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
+                                                    <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                                    <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                                                    <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                                                    <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
+                                                    <p style='color: #000000;'>Trade confidently,</p>
+                                                    <p style='color: #000000;'>The LQH Markets Team</p>
+                                                </div>
+                                            ";
+
                                 $templateVars = [
                                     'name' => $user->fullname,
                                     'email' => $settings['email_from_address'],
