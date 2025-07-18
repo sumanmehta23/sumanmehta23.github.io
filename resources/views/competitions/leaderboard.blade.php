@@ -124,7 +124,7 @@
                             id="your-rank-card"
                         />
                     </div> --}}
-                    <div class="col-sm-6 col-xl-2" id="your-rank-container">
+                    <div class="col-sm-6 col-xl-2" >
                         <x-competition.stats-card
                             title="Your Rank"
                             :value="collect($rankings)->firstWhere('user_id', auth()->id())['rank'] ?? '--'"
