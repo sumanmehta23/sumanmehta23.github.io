@@ -228,7 +228,7 @@ class SyncTrades implements ShouldQueue
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
             'type' => $openOrder->Type,
-            'volume' => $openOrder->VolumeInitial/1000,
+            'volume' => $openOrder->VolumeInitial/100,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
             'close_price' => $closeOrder->PriceCurrent,
