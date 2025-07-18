@@ -67,6 +67,7 @@ class ActivateCompetitionAccounts extends Command
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             // ->whereNull('competition_status')
+            ->where('competition_email',0)
             ->whereHas('accountType', function ($query) {
                 $query->where('competition_start_date', '<=', Carbon::now('UTC'));
             })
@@ -189,6 +190,7 @@ class ActivateCompetitionAccounts extends Command
                             // return redirect()->back()->with('error', $response['message']);
                         }
                     }else{
+
                         $settings = settings();
                         $user = User::where('id', $account->user_id)->first();
                         $type = 'Competition';
@@ -217,6 +219,8 @@ class ActivateCompetitionAccounts extends Command
                             "content" => $content
                         ];
                         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+                        $account->competition_email = 1;
+                        $account->save();
                     }
                 }
             });
