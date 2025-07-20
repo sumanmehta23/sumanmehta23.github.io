@@ -22,8 +22,9 @@ class IsAdmin
         }
         if (Auth::guard('admin')->check()) {
             Auth::setDefaultDriver('admin');
-        }else{
+        } else {
             Session::forget('alogin');
+            return redirect('/admin/login');
         }
 
         return $next($request);

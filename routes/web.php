@@ -313,15 +313,12 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
-    Route::get('/ajax', [AjaxController::class, 'index']);
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
 
 
-    Route::post('/ajax', [AjaxController::class, 'index']);
-    Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
-    Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
+
 
 
 
@@ -338,6 +335,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::post('/ajax', [AjaxController::class, 'index']);
+        Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
+        Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
         Route::get('/logout', [Login::class, 'logout'])->name('logout');
         Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 

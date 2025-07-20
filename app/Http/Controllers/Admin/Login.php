@@ -23,9 +23,10 @@ class Login extends Controller
     public function showLoginForm()
     {
         if (Auth::guard('admin')->check()) {
-            if(Auth::guard('admin')->user()->two_factor_secret){
+
+            if (Auth::guard('admin')->user()->two_factor_secret) {
                 return view('admin.verify_2fa');
-            }else{
+            } else {
                 return redirect()->route('admin.dashboard');
             }
         }
@@ -42,8 +43,8 @@ class Login extends Controller
             'password' => 'required',
         ]);
         $credentials = $request->only('username', 'password');
-        $remember=$request->remember;
-        if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password'],'status'=>1])) {
+        $remember = $request->remember;
+        if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password'], 'status' => 1])) {
             $request->session()->regenerate();
             // return redirect()->intended('dashboard');
         }
@@ -62,24 +63,24 @@ class Login extends Controller
             } else {
                 return redirect()->back()->with('error', 'Login Details are Invalid');
             }
-        }else {
+        } else {
             if (!Hash::check($request->input('password'), $user->password)) {
                 return redirect()->back()->with('error', 'Your login details are invalid.');
             }
         }
         if ($user->status == '1') {
             activity()
-            ->causedBy(auth()->guard('admin')->user())
-            ->withProperties([
-                'ip' => $request->ip(),
-                'email' => auth()->guard('admin')->user()->email,
-                'userRole' =>auth()->guard('admin')->user()->userRole,
-                'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
-                'username' =>auth()->guard('admin')->user()->username,
-                'admin_id' =>auth()->guard('admin')->user()->id,
-                'remark' => 'Login'
-            ])
-            ->log('Authentication');
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'userAccessLevel' => auth()->guard('admin')->user()->userAccessLevel,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'remark' => 'Login'
+                ])
+                ->log('Authentication');
             // $credentials = $request->only('email', 'password');
             // dd($credentials);
             if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
@@ -120,18 +121,17 @@ class Login extends Controller
             // Log user in
             if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
                 $this->logLoginHistory($user->email);
-                if($user->two_factor_secret  && $user->two_factor_confirmed_at){
+                if ($user->two_factor_secret  && $user->two_factor_confirmed_at) {
                     return redirect('admin/verify_2fa');
-                }else{
+                } else {
                     return redirect('admin/dashboard');
                 }
-
             }
             // if (in_array('/admin/dashboard', $current_permissions)) {
             //     $this->logLoginHistory($user->email);
-            if($user->two_factor_secret  && $user->two_factor_confirmed_at){
+            if ($user->two_factor_secret  && $user->two_factor_confirmed_at) {
                 return redirect('admin/verify_2fa');
-            }else{
+            } else {
                 return redirect('admin/dashboard');
             }
             // } else {
@@ -185,7 +185,6 @@ class Login extends Controller
                     'two_factor_recovery_codes' => encrypt(json_encode(array_values($recoveryCodes))),
                 ])->save();
             }
-
         } else {
             $isValid = $twoFactorProvider->verify(
                 decrypt($user->two_factor_secret),
@@ -194,9 +193,11 @@ class Login extends Controller
         }
 
         if (!$isValid) {
-            return redirect()->back()->with('error', $mode === 'recovery'
-                ? 'Invalid Two Factor Recovery Code.'
-                : 'Invalid Two Factor Authentication Code.'
+            return redirect()->back()->with(
+                'error',
+                $mode === 'recovery'
+                    ? 'Invalid Two Factor Recovery Code.'
+                    : 'Invalid Two Factor Authentication Code.'
             );
         }
 
@@ -221,17 +222,17 @@ class Login extends Controller
     public function logout(Request $request)
     {
         activity()
-        ->causedBy(auth()->guard('admin')->user())
-        ->withProperties([
-            'ip' => $request->ip(),
-            'email' => auth()->guard('admin')->user()->email,
-            'userRole' =>auth()->guard('admin')->user()->userRole,
-            'userAccessLevel' =>auth()->guard('admin')->user()->userAccessLevel,
-            'username' =>auth()->guard('admin')->user()->username,
-            'id' =>auth()->guard('admin')->user()->id,
-            'remark' => 'Logout'
-        ])
-        ->log('Authentication');
+            ->causedBy(auth()->guard('admin')->user())
+            ->withProperties([
+                'ip' => $request->ip(),
+                'email' => auth()->guard('admin')->user()->email,
+                'userRole' => auth()->guard('admin')->user()->userRole,
+                'userAccessLevel' => auth()->guard('admin')->user()->userAccessLevel,
+                'username' => auth()->guard('admin')->user()->username,
+                'id' => auth()->guard('admin')->user()->id,
+                'remark' => 'Logout'
+            ])
+            ->log('Authentication');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -241,5 +242,4 @@ class Login extends Controller
         unset($_SESSION['userData']);
         return redirect('/admin/login');
     }
-
 }
