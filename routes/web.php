@@ -62,28 +62,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\CompetitionProductController;
 
-Route::get('/telescope-test', function () {
-    Log::info('🛠 Telescope test route hit.');
 
-    Telescope::tag(function () {
-        return ['telescope-http-client-test'];
-    });
-
-    $response = Http::withHeaders([
-        'Accept' => 'application/json',
-    ])->get('https://jsonplaceholder.typicode.com/todos/1');
-
-    return response()->json([
-        'status' => 'done',
-        'data' => $response->json(),
-    ]);
-});
-//use Illuminate\Support\Facades\Http;
-Route::get("/ping", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
-    return throwException(
-        new \Exception("test")
-    );
-});
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
     $settings = settings();
@@ -214,6 +193,7 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
     Route::get('/two_factor_auth', [LoginController::class, 'two_factor_auth'])->name('two_factor_auth');
     Route::post('/verify-2fa', [LoginController::class, 'verify_two_factor_auth'])->name('verify-2fa');
 
@@ -319,7 +299,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
-Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -337,54 +317,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
-    Route::get('/getClientList', [AjaxController::class, 'getClientList']);
-    Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
-    Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
-    Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
-    Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
-    Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
 
-    Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
-    Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
-    Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
-    Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
-    Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
-    Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
-    Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
-
-    Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
-    Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
-
-    Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
-    Route::get('/getTasks', [AjaxController::class, 'getTasks']);
-    Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
-
-    //
-    Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
-    Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
-    Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
-
-    Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
-    Route::post('/bulkIbApprove', [AjaxController::class, 'bulkIbApprove']);
-    Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
-
-    Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
-
-    Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
-
-    Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
 
     Route::post('/ajax', [AjaxController::class, 'index']);
     Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
     Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
-    Route::get('/logout', [Login::class, 'logout'])->name('logout');
-    Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
-    Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
-    Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
-    Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
-    Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -399,7 +338,51 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/logout', [Login::class, 'logout'])->name('logout');
+        Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
+        Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
+        Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
+        Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
+
+        Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
+        Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
+        Route::get('/getClientList', [AjaxController::class, 'getClientList']);
+        Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
+        Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
+        Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
+
+        Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
+
+        Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
+        Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
+        Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
+        Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
+        Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
+        Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
+        Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
+
+        Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
+        Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
+
+        Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
+        Route::get('/getTasks', [AjaxController::class, 'getTasks']);
+        Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
+
+        //
+        Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
+        Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
+        Route::get('/getPendingTradingWithdrawal2', [AjaxController::class, 'getPendingTradingWithdrawal2']);
+
+        Route::get('/getPendingIbUsers2', [AjaxController::class, 'getPendingIbUsers2']);
+        Route::post('/bulkIbApprove', [AjaxController::class, 'bulkIbApprove']);
+        Route::get('/getIbUsers2', [AjaxController::class, 'getIbUsers2']);
+
+        Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
+
+        Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
+
+        Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
         Route::resource('groups', ProductsController::class);
         Route::resource('competitions', CompetitionProductController::class);
 
