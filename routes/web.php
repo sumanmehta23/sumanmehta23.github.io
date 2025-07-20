@@ -335,6 +335,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/ajax', [AjaxController::class, 'index']);
+
         Route::post('/ajax', [AjaxController::class, 'index']);
         Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
         Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
