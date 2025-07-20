@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EmployeeList;
 use App\Models\User;
 use App\Models\KycLog;
 use App\Models\Account;
 use App\Models\KycUpdate;
 use Illuminate\Support\Str;
 use App\Models\ClientWallet;
+use App\Models\EmployeeList;
 use Illuminate\Http\Request;
 use App\Services\MailService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -42,7 +43,7 @@ class Users extends Controller
         $token = $user->createToken('api_call')->plainTextToken;
 
         return response()->json([
-//            'user' => $user,
+            //            'user' => $user,
             'token' => $token
         ], 201);
     }
@@ -258,10 +259,11 @@ class Users extends Controller
             // $type='idCheck.onApplicantStatusChanged';
             // $payload=['reviewStatus'=>'completed','reviewResult'=>["reviewAnswer"=>"GREEN"]];
             if ($type == 'idCheck.onApplicantStatusChanged') {
+                $applicantId = $payload['applicantId'];
                 $timestamp = time();
                 $requestMethod = "GET";
                 $secretKey = config('services.sumsub.api_secret');
-                $apiUrl = '/resources/applicants/' . $payload['applicantId'] . '/status'; // URI of the request
+                $apiUrl = '/resources/applicants/' . $applicantId . '/status'; // URI of the request
                 $requestBody = ''; // Add your request body if needed, empty for this example
 
                 // Create the valueToSign string
@@ -304,7 +306,7 @@ class Users extends Controller
                     // Check review result
                     if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
 
-                        $apiUrl = '/resources/applicants/' . $payload['applicantId'] . '/one'; // URI of the request
+                        $apiUrl = '/resources/applicants/' . $applicantId . '/one'; // URI of the request
                         $requestBody = ''; // Add your request body if needed, empty for this example
 
                         // Create the valueToSign string
