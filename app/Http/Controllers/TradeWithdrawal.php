@@ -312,25 +312,27 @@ class TradeWithdrawal extends Controller
                     $mt5account->Balance = $mt5account->Balance - $amount;
                     $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
                     Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
-                    // if ($deductionThreshold > 0 && $deductionThreshold <= $promo_left) {
+                    // if ($mt5account->Balance < $promo_left) {
                     if ($mt5account->Balance < $totalBonusDepositValue) {
 
                         // Start deduction only when balance reaches promo_left
-                        // if ($account->balance >= $promo_left) {
+                        if ($promo_percentage_value < 100) {
+                            $amount_to_deduct = - ($amount);
+                        } elseif ($account->balance >= $promo_left) {
 
-                        //     if ($amount > $account->balance) {
-                        //         $amount_to_deduct = -$account->credit;
-                        //     } else {
-                        //         $amount_to_deduct = ($account->balance - $amount) - $promo_left;
-                        //     }
-                        // } elseif ($account->balance < $promo_left) {
-                        //     if ($amount >= $account->balance) {
-                        //         $amount_to_deduct = -$account->credit;
-                        //     } else {
-                        //         $amount_to_deduct = - ($amount);
-                        //     }
-                        // }
-                        $amount_to_deduct = - ($amount);
+                            if ($amount > $account->balance) {
+                                $amount_to_deduct = -$account->credit;
+                            } else {
+                                $amount_to_deduct = ($account->balance - $amount) - $promo_left;
+                            }
+                        } elseif ($account->balance < $promo_left) {
+                            if ($amount >= $account->balance) {
+                                $amount_to_deduct = -$account->credit;
+                            } else {
+                                $amount_to_deduct = - ($amount);
+                            }
+                        }
+                        // $amount_to_deduct = - ($amount);
                         Log::alert("amount_to_deduct " . $amount_to_deduct);
                         if ($amount_to_deduct < 0) {
                             $threshold = -$amount_to_deduct;
