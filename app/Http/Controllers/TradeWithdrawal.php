@@ -173,7 +173,7 @@ class TradeWithdrawal extends Controller
             ->where('bonus_transactions.account_id', $request->account_id)
             ->value('total');
         Log::alert("threshold " . $totalBonusDepositValue);
-        return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
+        // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
 
         // Check for sufficient balance
         if ((float) ($amount) > (((float) $account->balance))) {
@@ -261,9 +261,9 @@ class TradeWithdrawal extends Controller
         Log::alert("balance withdraw " . (float) ($balance));
         Log::alert("account " . ($login));
 
-        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-        // if (1 == 2) {
-        if ($errorCode1 != MTRetCode::MT_RET_OK) {
+        // $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+        if (1 == 2) {
+            // if ($errorCode1 != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode1);
             return response()->json([
                 'success' => false,
@@ -311,7 +311,7 @@ class TradeWithdrawal extends Controller
                     }
                     $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
                     Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
-
+                    $mt5account->Balance = $mt5account->Balance - $amount;
                     // if ($deductionThreshold > 0 && $deductionThreshold <= $promo_left) {
                     if ($mt5account->Balance < $totalBonusDepositValue) {
 
@@ -354,13 +354,13 @@ class TradeWithdrawal extends Controller
                                 $trade_user->Leverage = $account->leverage;
 
                                 $updated_user = "";
-                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                                }
+                                // if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                //     return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                // }
                             }
                             Log::alert("promo_percentage_value " . $promo_percentage_value);
                             Log::alert("promo_deduction " . $promo_deduction);
-
+                            die();
                             if ($promo_deduction > 0) {
                                 $deduction = abs((float)$promo_deduction) * -1;
                                 if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
