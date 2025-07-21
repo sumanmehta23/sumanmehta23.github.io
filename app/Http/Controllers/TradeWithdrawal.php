@@ -168,12 +168,12 @@ class TradeWithdrawal extends Controller
         Log::alert("account->credit " . (float) ($account->credit));
         Log::alert("total_bonus " . (float) ($total_bonus));
         Log::alert("sadasdsaaaaaa " . (float) ((float) ($amount) > (((float) $account->balance + (float) $account->credit) - (float) $total_bonus)));
-        $threshold = BonusTransaction::select(DB::raw('SUM(bonus_amount / (promocode.promo_percentage / 100)) as total'))
+        $totalBonusDepositValue = BonusTransaction::select(DB::raw('SUM(bonus_amount / (promocode.promo_percentage / 100)) as total'))
             ->leftJoin('promocode', 'bonus_transactions.promocode_id', '=', 'promocode.id')
             ->where('bonus_transactions.account_id', $request->account_id)
             ->value('total');
-        Log::alert("threshold " . $threshold);
-        return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
+        Log::alert("threshold " . $totalBonusDepositValue);
+        // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
 
         // Check for sufficient balance
         if ((float) ($amount) > (((float) $account->balance))) {
@@ -308,8 +308,12 @@ class TradeWithdrawal extends Controller
                         session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
                         break;
                     }
+                    $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
+                    Log::alert("deductionThreshold " . $deductionThreshold);
+                    die();
+                    if ($deductionThreshold > 0 && $deductionThreshold <= $promo_left) {
 
-                    if ($mt5account->Balance <= $promo_left) {
+                        die();
                         // Start deduction only when balance reaches promo_left
                         if ($account->balance >= $promo_left) {
 
