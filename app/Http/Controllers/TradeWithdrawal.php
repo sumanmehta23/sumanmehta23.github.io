@@ -190,18 +190,18 @@ class TradeWithdrawal extends Controller
         $ticket1 = NULL;
         $login = $account->code;
         $email = $account->email;
-        activity()->causedBy($user_id)
-            ->withProperties(
-                [
-                    'ip' => $request->ip(),
-                    'email' => $user_email,
-                    'code' => $login,
-                    'withdraw_amount' => $balance,
-                    'remark' => 'Account Withdraw'
-                ]
-            )
-            ->event('create')
-            ->log('Account Withdraw');
+        // activity()->causedBy($user_id)
+        //     ->withProperties(
+        //         [
+        //             'ip' => $request->ip(),
+        //             'email' => $user_email,
+        //             'code' => $login,
+        //             'withdraw_amount' => $balance,
+        //             'remark' => 'Account Withdraw'
+        //         ]
+        //     )
+        //     ->event('create')
+        //     ->log('Account Withdraw');
 
         $clientWalletId = $request->input('client_wallet_id');
         $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
@@ -261,8 +261,9 @@ class TradeWithdrawal extends Controller
         Log::alert("balance withdraw " . (float) ($balance));
         Log::alert("account " . ($login));
 
-        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-        if ($errorCode1 != MTRetCode::MT_RET_OK) {
+        // $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+        if (1 == 2) {
+            // if ($errorCode1 != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode1);
             return response()->json([
                 'success' => false,
