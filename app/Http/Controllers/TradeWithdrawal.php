@@ -318,15 +318,15 @@ class TradeWithdrawal extends Controller
                         // Start deduction only when balance reaches promo_left
                         if ($promo_percentage_value < 100) {
                             $amount_to_deduct = - ($amount);
-                        } elseif ($account->balance >= $promo_left) {
+                        } elseif ($mt5account->Balance >= $promo_left) {
 
-                            if ($amount > $account->balance) {
+                            if ($amount > $mt5account->Balance) {
                                 $amount_to_deduct = -$account->credit;
                             } else {
-                                $amount_to_deduct = ($account->balance - $amount) - $promo_left;
+                                $amount_to_deduct = ($mt5account->Balance - $amount) - $promo_left;
                             }
-                        } elseif ($account->balance < $promo_left) {
-                            if ($amount >= $account->balance) {
+                        } elseif ($mt5account->Balance < $promo_left) {
+                            if ($amount >= $mt5account->Balance) {
                                 $amount_to_deduct = -$account->credit;
                             } else {
                                 $amount_to_deduct = - ($amount);
