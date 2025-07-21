@@ -309,7 +309,7 @@ class TradeWithdrawal extends Controller
                         break;
                     }
                     $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
-                    Log::alert("deductionThreshold " . $deductionThreshold);
+                    Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
                     die();
                     if ($deductionThreshold > 0 && $deductionThreshold <= $promo_left) {
 
