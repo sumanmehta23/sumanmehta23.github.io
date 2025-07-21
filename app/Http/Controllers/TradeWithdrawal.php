@@ -295,88 +295,88 @@ class TradeWithdrawal extends Controller
                         break;
                     }
 
-                    if (($account->tradeDeposits->count() == 1) && (($mt5account->Balance + $amount) >= $account->tradeDeposits[0]->deposit_amount)) {
-                        Log::alert("after balance " . $mt5account->Balance);
-                        Log::alert("amount " . $amount);
-                        Log::alert("trade_deposit " . $account->tradeDeposits[0]->deposit_amount);
-                        // Start deduction only when balance reaches below promo_left
-                        if (($mt5account->Balance < $promo_left) && ($amount) > $promo_left) {
-                            Log::alert("rrrrrr");
+                    // if (($account->tradeDeposits->count() == 1) && (($mt5account->Balance + $amount) >= $account->tradeDeposits[0]->deposit_amount)) {
+                    //     Log::alert("after balance " . $mt5account->Balance);
+                    //     Log::alert("amount " . $amount);
+                    //     Log::alert("trade_deposit " . $account->tradeDeposits[0]->deposit_amount);
+                    //     // Start deduction only when balance reaches below promo_left
+                    //     if (($mt5account->Balance < $promo_left) && ($amount) > $promo_left) {
+                    //         Log::alert("rrrrrr");
 
-                            if ($amount >= $account->balance) {
-                                $amount_to_deduct = - ($amount - $account->balance);
-                            } else {
-                                $amount_to_deduct = - ($amount);
-                            }
-                            Log::alert("amount_to_deduct " . $amount_to_deduct);
-                            if ($amount_to_deduct < 0) {
-                                $threshold = -$amount_to_deduct;
-                                Log::alert("threshold " . $threshold);
-                                $promo_deduction = $threshold * ($promo_percentage_value / 100);
-                                // if($mt5account->Balance <= 0){
-                                //     $promo_deduction = $promo_left;
-                                // }
-                                Log::alert("promo_deduction " . $promo_deduction);
-                                // Ensure we do not deduct more than available in this promo bucket
-                                $max_deductible = $promo->bonus_amount - $promo->bonus_used;
-                                if ($promo_deduction > $max_deductible) {
-                                    $promo_deduction = $max_deductible;
-                                }
-                                Log::alert("promo_percentage_value " . $promo_percentage_value);
-                                Log::alert("promo_deduction " . $promo_deduction);
+                    //         if ($amount >= $account->balance) {
+                    //             $amount_to_deduct = - ($amount - $account->balance);
+                    //         } else {
+                    //             $amount_to_deduct = - ($amount);
+                    //         }
+                    //         Log::alert("amount_to_deduct " . $amount_to_deduct);
+                    //         if ($amount_to_deduct < 0) {
+                    //             $threshold = -$amount_to_deduct;
+                    //             Log::alert("threshold " . $threshold);
+                    //             $promo_deduction = $threshold * ($promo_percentage_value / 100);
+                    //             // if($mt5account->Balance <= 0){
+                    //             //     $promo_deduction = $promo_left;
+                    //             // }
+                    //             Log::alert("promo_deduction " . $promo_deduction);
+                    //             // Ensure we do not deduct more than available in this promo bucket
+                    //             $max_deductible = $promo->bonus_amount - $promo->bonus_used;
+                    //             if ($promo_deduction > $max_deductible) {
+                    //                 $promo_deduction = $max_deductible;
+                    //             }
+                    //             Log::alert("promo_percentage_value " . $promo_percentage_value);
+                    //             Log::alert("promo_deduction " . $promo_deduction);
 
-                                if ($promo_deduction > 0) {
-                                    $deduction = abs((float)$promo_deduction) * -1;
-                                    if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                                        $balance = abs((float)$balance) * -1;
-                                        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-                                        if ($errorCode1 != MTRetCode::MT_RET_OK) {
-                                            $error = MTRetCode::GetError($errorCode1);
-                                            return response()->json([
-                                                'success' => false,
-                                                'message' => 'Something went wrong',
-                                                'error' => $error,
-                                            ], 400);
-                                        }
-                                        return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
-                                    }
+                    //             if ($promo_deduction > 0) {
+                    //                 $deduction = abs((float)$promo_deduction) * -1;
+                    //                 if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                    //                     $balance = abs((float)$balance) * -1;
+                    //                     $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+                    //                     if ($errorCode1 != MTRetCode::MT_RET_OK) {
+                    //                         $error = MTRetCode::GetError($errorCode1);
+                    //                         return response()->json([
+                    //                             'success' => false,
+                    //                             'message' => 'Something went wrong',
+                    //                             'error' => $error,
+                    //                         ], 400);
+                    //                     }
+                    //                     return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
+                    //                 }
 
-                                    $promo->bonus_used += $promo_deduction;
-                                    $promo->save();
-                                    $total_promo_deducted += $promo_deduction;
+                    //                 $promo->bonus_used += $promo_deduction;
+                    //                 $promo->save();
+                    //                 $total_promo_deducted += $promo_deduction;
 
-                                    // Record the deduction
-                                    BonusTransaction::create([
-                                        'email' => $account->email,
-                                        'user_id' => $user_id,
-                                        'account_id' => $account->id,
-                                        'code' => $account->code,
-                                        'bonus_amount' => $deduction,
-                                        'bonus_type' => 'Bonus Out',
-                                        'status' => 1,
-                                        'admin_remark' => 'Promo Deduction',
-                                        'bonus_currency' => 'USD',
-                                    ]);
+                    //                 // Record the deduction
+                    //                 BonusTransaction::create([
+                    //                     'email' => $account->email,
+                    //                     'user_id' => $user_id,
+                    //                     'account_id' => $account->id,
+                    //                     'code' => $account->code,
+                    //                     'bonus_amount' => $deduction,
+                    //                     'bonus_type' => 'Bonus Out',
+                    //                     'status' => 1,
+                    //                     'admin_remark' => 'Promo Deduction',
+                    //                     'bonus_currency' => 'USD',
+                    //                 ]);
 
-                                    $promo_left -= $promo_deduction;
-                                    if ($promo_left <= 0) {
-                                        break; // All promo used up
-                                    } else {
-                                        $i++; // Move to next promo if more left
-                                    }
-                                } else {
-                                    // No deduction possible, go to next promo
-                                    $i++;
-                                }
-                            } else {
-                                // No deduction needed yet
-                                break;
-                            }
-                        } else {
-                            // No deduction needed
-                            break;
-                        }
-                    } else {
+                    //                 $promo_left -= $promo_deduction;
+                    //                 if ($promo_left <= 0) {
+                    //                     break; // All promo used up
+                    //                 } else {
+                    //                     $i++; // Move to next promo if more left
+                    //                 }
+                    //             } else {
+                    //                 // No deduction possible, go to next promo
+                    //                 $i++;
+                    //             }
+                    //         } else {
+                    //             // No deduction needed yet
+                    //             break;
+                    //         }
+                    //     } else {
+                    //         // No deduction needed
+                    //         break;
+                    //     }
+                    // } else {
                         if ($mt5account->Balance <= $promo_left) {
                             Log::alert("sdasdsadas");
                             // Start deduction only when balance reaches promo_left
@@ -462,7 +462,7 @@ class TradeWithdrawal extends Controller
                             // No deduction needed
                             break;
                         }
-                    }
+                    // }
                 }
             }
 
