@@ -319,7 +319,7 @@ class TradeWithdrawal extends Controller
                         if ($promo_percentage_value < 100) {
                             $amount_to_deduct = - ($amount);
                         }
-                        $amount_to_deduct = $amount - ($account->balance - $totalBonusDepositValue);
+                        $amount_to_deduct = ($account->balance - $totalBonusDepositValue) - $amount;
                         // if ($account->balance >= $promo_left) {
 
                         //     if ($amount > $account->balance) {
