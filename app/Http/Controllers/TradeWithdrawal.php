@@ -329,7 +329,7 @@ class TradeWithdrawal extends Controller
                                 Log::alert("promo_deduction " . $promo_deduction);
                                 // Ensure we do not deduct more than available in this promo bucket
                                 $max_deductible = $promo->bonus_amount - $promo->bonus_used;
-                                if ($promo_deduction > $max_deductible) {
+                                if ($mt5account->Balance == 0) {
                                     $promo_deduction = $max_deductible;
                                 }
                                 Log::alert("promo_percentage_value " . $promo_percentage_value);
