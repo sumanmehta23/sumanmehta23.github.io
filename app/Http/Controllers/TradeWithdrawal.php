@@ -309,27 +309,28 @@ class TradeWithdrawal extends Controller
                         session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
                         break;
                     }
+                    $mt5account->Balance = $mt5account->Balance - $amount;
                     $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
                     Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
-                    $mt5account->Balance = $mt5account->Balance - $amount;
                     // if ($deductionThreshold > 0 && $deductionThreshold <= $promo_left) {
                     if ($mt5account->Balance < $totalBonusDepositValue) {
 
                         // Start deduction only when balance reaches promo_left
-                        if ($account->balance >= $promo_left) {
+                        // if ($account->balance >= $promo_left) {
 
-                            if ($amount > $account->balance) {
-                                $amount_to_deduct = -$account->credit;
-                            } else {
-                                $amount_to_deduct = ($account->balance - $amount) - $promo_left;
-                            }
-                        } elseif ($account->balance < $promo_left) {
-                            if ($amount >= $account->balance) {
-                                $amount_to_deduct = -$account->credit;
-                            } else {
-                                $amount_to_deduct = - ($amount);
-                            }
-                        }
+                        //     if ($amount > $account->balance) {
+                        //         $amount_to_deduct = -$account->credit;
+                        //     } else {
+                        //         $amount_to_deduct = ($account->balance - $amount) - $promo_left;
+                        //     }
+                        // } elseif ($account->balance < $promo_left) {
+                        //     if ($amount >= $account->balance) {
+                        //         $amount_to_deduct = -$account->credit;
+                        //     } else {
+                        //         $amount_to_deduct = - ($amount);
+                        //     }
+                        // }
+                        $amount_to_deduct = - ($amount);
                         Log::alert("amount_to_deduct " . $amount_to_deduct);
                         if ($amount_to_deduct < 0) {
                             $threshold = -$amount_to_deduct;
