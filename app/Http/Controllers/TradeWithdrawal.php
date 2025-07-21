@@ -309,7 +309,7 @@ class TradeWithdrawal extends Controller
                         session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
                         break;
                     }
-                    $mt5account->Balance = $mt5account->Balance - $amount;
+                    // $mt5account->Balance = $mt5account->Balance - $amount;
                     $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
                     Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
                     // if ($mt5account->Balance < $promo_left) {
