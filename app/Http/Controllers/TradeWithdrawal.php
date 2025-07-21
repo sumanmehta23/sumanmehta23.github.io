@@ -331,6 +331,7 @@ class TradeWithdrawal extends Controller
 
                                     $promo_deduction = $max_deductible;
 
+                                    // Updating leverage
                                     $trade_user = NULL;
                                     $this->api->UserGet($account->code,$trade_user);
                                     if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {

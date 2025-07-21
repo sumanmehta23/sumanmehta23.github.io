@@ -173,6 +173,7 @@ class Payment extends Controller
                                     'promocode_id' => $promo->id
                                 ]);
 
+                                // Updating leverage
                                 $trade_user = NULL;
                                 $this->api->UserGet($account->code,$trade_user);
                                 if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
@@ -186,6 +187,7 @@ class Payment extends Controller
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
                                     return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
                                 }
+                                // Updating leverage
                             }
                         }
                     }

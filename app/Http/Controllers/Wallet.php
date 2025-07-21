@@ -1152,6 +1152,7 @@ class Wallet extends Controller
                                 return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
                             }
 
+                            // Updating leverage
                             $trade_user = NULL;
                             $this->api->UserGet($account->code,$trade_user);
                             if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
@@ -1165,6 +1166,7 @@ class Wallet extends Controller
                             if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
                             }
+                            // Updating leverage
 
                             BonusTransaction::create([
                                 'email' => $email,
