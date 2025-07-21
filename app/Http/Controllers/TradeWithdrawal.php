@@ -320,6 +320,7 @@ class TradeWithdrawal extends Controller
                             $amount_to_deduct = - ($amount);
                         }
                         $amount_to_deduct = ($account->balance - $totalBonusDepositValue) - $amount;
+                        //90-100-10
                         // if ($account->balance >= $promo_left) {
 
                         //     if ($amount > $account->balance) {
@@ -339,7 +340,7 @@ class TradeWithdrawal extends Controller
                         if ($amount_to_deduct < 0) {
                             $threshold = -$amount_to_deduct;
                             Log::alert("threshold " . $threshold);
-                            $promo_deduction = $threshold * ($promo_percentage_value / 100);
+                            $promo_deduction = ($threshold * ($promo_percentage_value / 100)) - $promo->bonus_used;
 
                             Log::alert("promo_deduction " . $promo_deduction);
                             // Ensure we do not deduct more than available in this promo bucket
