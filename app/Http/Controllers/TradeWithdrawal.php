@@ -190,18 +190,18 @@ class TradeWithdrawal extends Controller
         $ticket1 = NULL;
         $login = $account->code;
         $email = $account->email;
-        // activity()->causedBy($user_id)
-        //     ->withProperties(
-        //         [
-        //             'ip' => $request->ip(),
-        //             'email' => $user_email,
-        //             'code' => $login,
-        //             'withdraw_amount' => $balance,
-        //             'remark' => 'Account Withdraw'
-        //         ]
-        //     )
-        //     ->event('create')
-        //     ->log('Account Withdraw');
+        activity()->causedBy($user_id)
+            ->withProperties(
+                [
+                    'ip' => $request->ip(),
+                    'email' => $user_email,
+                    'code' => $login,
+                    'withdraw_amount' => $balance,
+                    'remark' => 'Account Withdraw'
+                ]
+            )
+            ->event('create')
+            ->log('Account Withdraw');
 
         $clientWalletId = $request->input('client_wallet_id');
         $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
@@ -261,9 +261,9 @@ class TradeWithdrawal extends Controller
         Log::alert("balance withdraw " . (float) ($balance));
         Log::alert("account " . ($login));
 
-        // $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-        if (1 == 2) {
-            // if ($errorCode1 != MTRetCode::MT_RET_OK) {
+        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+        // if (1 == 2) {
+        if ($errorCode1 != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode1);
             return response()->json([
                 'success' => false,
@@ -359,13 +359,13 @@ class TradeWithdrawal extends Controller
                                 $trade_user->Leverage = $account->leverage;
 
                                 $updated_user = "";
-                                // if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                //     return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                                // }
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
                             }
                             Log::alert("promo_percentage_value " . $promo_percentage_value);
                             Log::alert("promo_deduction " . $promo_deduction);
-                            die();
+                            // die();
                             if ($promo_deduction > 0) {
                                 $deduction = abs((float)$promo_deduction) * -1;
                                 if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
