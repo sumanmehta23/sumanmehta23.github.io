@@ -328,7 +328,23 @@ class TradeWithdrawal extends Controller
                                 // Ensure we do not deduct more than available in this promo bucket
                                 $max_deductible = $promo->bonus_amount - $promo->bonus_used;
                                 if ($mt5account->Balance == 0) {
+
                                     $promo_deduction = $max_deductible;
+
+                                    $trade_user = NULL;
+                                    $this->api->UserGet($account->code,$trade_user);
+                                    if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                        return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                    }
+
+                                    $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)),2);
+                                    $trade_user->Leverage = $account->leverage;
+
+                                    $updated_user = "";
+                                    if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                    }
+
                                 }
                                 Log::alert("promo_percentage_value " . $promo_percentage_value);
                                 Log::alert("promo_deduction " . $promo_deduction);
