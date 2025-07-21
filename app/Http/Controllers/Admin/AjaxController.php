@@ -311,7 +311,7 @@ class AjaxController extends Controller
                 ->event('update')
                 ->log('Switch To User');
             // Log in as the new user
-            Auth::login($client);
+            Auth::guard('web')->login($client);
             Session::put('admin', $admin);
             Session::put('user', $client);
             // dd('ssss');
