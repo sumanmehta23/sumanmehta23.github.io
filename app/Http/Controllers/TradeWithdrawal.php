@@ -173,7 +173,7 @@ class TradeWithdrawal extends Controller
             ->where('bonus_transactions.account_id', $request->account_id)
             ->value('total');
         Log::alert("threshold " . $totalBonusDepositValue);
-        // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
+        return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
 
         // Check for sufficient balance
         if ((float) ($amount) > (((float) $account->balance))) {
@@ -190,18 +190,18 @@ class TradeWithdrawal extends Controller
         $ticket1 = NULL;
         $login = $account->code;
         $email = $account->email;
-        activity()->causedBy($user_id)
-            ->withProperties(
-                [
-                    'ip' => $request->ip(),
-                    'email' => $user_email,
-                    'code' => $login,
-                    'withdraw_amount' => $balance,
-                    'remark' => 'Account Withdraw'
-                ]
-            )
-            ->event('create')
-            ->log('Account Withdraw');
+        // activity()->causedBy($user_id)
+        //     ->withProperties(
+        //         [
+        //             'ip' => $request->ip(),
+        //             'email' => $user_email,
+        //             'code' => $login,
+        //             'withdraw_amount' => $balance,
+        //             'remark' => 'Account Withdraw'
+        //         ]
+        //     )
+        //     ->event('create')
+        //     ->log('Account Withdraw');
 
         $clientWalletId = $request->input('client_wallet_id');
         $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
