@@ -1804,7 +1804,7 @@ class AjaxController extends Controller
                     return $time;
                 })
                 ->addColumn('exp_account', function ($row) {
-                    $code = $row->account->code;
+                    $code = $row->account->code ?? '';
                     return $code;
                 })
                 ->addColumn('exp_amount', function ($row) {
