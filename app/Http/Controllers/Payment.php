@@ -235,6 +235,8 @@ class Payment extends Controller
                             'deposted_date' => now(),
                             'callback_data' => json_encode($responsedata),
                             'callback_code' => "success",
+                            'promocode_percentage' => $promo->promo_percentage,
+                            'promocode_code' => $promo->code,
                         ]);
 
                         // Update total balance
