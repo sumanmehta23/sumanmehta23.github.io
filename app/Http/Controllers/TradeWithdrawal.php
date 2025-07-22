@@ -38,8 +38,9 @@ class TradeWithdrawal extends Controller
         $email = session('clogin');
         AccountHelper::updateLiveAndDemoAccounts($email, $api);
     }
-    public function index()
+    public function index(Request $request)
     {
+        $account_id = $request['account_id'];
         $email = auth()->user()->email;
         $user = auth()->user();
         AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
@@ -73,7 +74,7 @@ class TradeWithdrawal extends Controller
             ->where('wallet_delete_verification', 0)
             ->where('deleted_at', NULL)
             ->get();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks'));
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks','account_id'));
     }
     public function withdraw(Request $request)
     {
@@ -156,7 +157,7 @@ class TradeWithdrawal extends Controller
         $total_promo_bonus = $bonus->total_promo_bonus_amount;
         $total_promo_bonus_used = $bonus->total_promo_bonus_used;
         $promo_left = $total_promo_bonus - $total_promo_bonus_used;
-        //Calculate deposit/profit other then promo bonus 
+        //Calculate deposit/profit other then promo bonus
         $withdraw_type = $request->input('withdraw_type');
         $amount = $request->input('withdraw_amount');
         $to_account_id = $request->input('withdraw_to', '');

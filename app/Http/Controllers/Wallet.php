@@ -1181,6 +1181,9 @@ class Wallet extends Controller
                                 'transaction_id' => $transactionId,
                                 'promocode_id' => $promo->id
                             ]);
+                            $tradeDeposit->promocode_percentage = $promo->promo_percentage;
+                            $tradeDeposit->promocode_code = $promo->code;
+                            $tradeDeposit->save();
                         }
                     }
 
