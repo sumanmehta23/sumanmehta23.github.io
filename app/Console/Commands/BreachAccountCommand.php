@@ -38,7 +38,7 @@ class BreachAccountCommand extends Command
         $api = $this->api;
         $settings = settings();
 
-        Log::info('Starting breach account command');
+        // Log::info('Starting breach account command');
 
         if (!$api->IsConnected()) {
             Log::info('MT5 API not connected. Attempting to connect...');
@@ -62,30 +62,30 @@ class BreachAccountCommand extends Command
 
             $currentTime = Carbon::now('UTC');
 
-            $expiredAccounts = Account::with('accountType','user')->where('demo', true)
+            $expiredAccounts = Account::with('accountType', 'user')->where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
                 ->where('competition_status', 'active')
                 // ->whereDate('competition_start_date', '<=', $currentDate)
                 // ->where('competition_end_date', '<=', $currentTime)
-                ->whereHas('accountType', function ($query) use ($currentTime){
+                ->whereHas('accountType', function ($query) use ($currentTime) {
                     $query->where('competition_end_date', '<=', $currentTime);
                 })
                 ->whereNotNull('code')
                 ->where('account_request_status', 1)
                 ->get();
 
-            Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
+            // Log::info("Found " . $expiredAccounts->count() . " expired competition accounts to breach.");
 
             foreach ($expiredAccounts as $account) {
 
-                Log::info('Competition end time: '.$account->competition_end_date);
-                Log::info('Current time: '.$currentTime);
+                // Log::info('Competition end time: ' . $account->competition_end_date);
+                // Log::info('Current time: ' . $currentTime);
 
                 DB::beginTransaction();
 
                 try {
-                    Log::info("Processing account {$account->code}");
+                    // Log::info("Processing account {$account->code}");
 
                     // Get MT5 user
                     $mt5_user = null;
@@ -96,7 +96,7 @@ class BreachAccountCommand extends Command
                         continue;
                     }
 
-                    Log::info("MT5 user {$account->code} retrieved successfully.");
+                    // Log::info("MT5 user {$account->code} retrieved successfully.");
 
                     // Get and close open positions
                     if (($error_code = $this->api->PositionGetTotal($account->code, $total)) != MTRetCode::MT_RET_OK) {
@@ -113,9 +113,9 @@ class BreachAccountCommand extends Command
                         continue;
                     }
 
-                    Log::info("Found {$total} open positions for account {$account->code}");
+                    // Log::info("Found {$total} open positions for account {$account->code}");
 
-                    if($positions){
+                    if ($positions) {
                         foreach ($positions as $position) {
                             // dd($positions);
                             // Determine opposite order type for closing:
@@ -136,7 +136,7 @@ class BreachAccountCommand extends Command
                                 continue;
                             }
 
-                            Log::info("Position {$position->Position} closed successfully for account {$account->code}");
+                            // Log::info("Position {$position->Position} closed successfully for account {$account->code}");
                         }
                     }
 
@@ -151,7 +151,7 @@ class BreachAccountCommand extends Command
                         continue;
                     }
 
-                    Log::info("Trading disabled for MT5 account {$account->code}");
+                    // Log::info("Trading disabled for MT5 account {$account->code}");
 
                     // Update database record
                     $account->update([
@@ -182,15 +182,15 @@ class BreachAccountCommand extends Command
 
                     $this->mailService->sendEmail($account->user->email, $emailSubject, $headers, '', $templateVars);
 
-                    Log::info("Account {$account->code} updated in database as breached.");
+                    // Log::info("Account {$account->code} updated in database as breached.");
 
                     // Send notification email
 
 
-                    Log::info("Breach notification email sent to user {$account->user_id} for account {$account->code}");
+                    // Log::info("Breach notification email sent to user {$account->user_id} for account {$account->code}");
 
                     DB::commit();
-                    Log::info("Successfully breached account {$account->code}");
+                    // Log::info("Successfully breached account {$account->code}");
                 } catch (\Exception $e) {
                     DB::rollBack();
                     Log::error("Exception while breaching account {$account->code}: {$e->getMessage()}");
@@ -198,7 +198,7 @@ class BreachAccountCommand extends Command
                 }
             }
 
-            Log::info("Competition account breach process completed.");
+            // Log::info("Competition account breach process completed.");
         } catch (\Exception $e) {
             //log full error stack trace
             Log::error('Fatal error in breaching competition accounts: ' . $e->getMessage() . "\n" . $e->getTraceAsString());

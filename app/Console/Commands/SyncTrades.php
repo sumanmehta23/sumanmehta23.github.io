@@ -57,7 +57,7 @@ class SyncTrades extends Command
             ->whereNotNull('competition_end_date')
             ->where('competition_status', 'active')
             ->whereNull('deleted_at')
-            ->whereHas('accountType', function ($query){
+            ->whereHas('accountType', function ($query) {
                 $query->where('competition_start_date', '<=', Carbon::now('UTC'));
                 $query->where('competition_end_date', '>=', Carbon::now('UTC'));
             })
@@ -83,13 +83,13 @@ class SyncTrades extends Command
                             ->onConnection('redis')
                             ->onQueue('sync-trades')
                             ->then(function (Batch $batch) {
-                                Log::info("Batch {$batch->id} completed successfully");
+                                // Log::info("Batch {$batch->id} completed successfully");
                             })
                             ->catch(function (Batch $batch, Throwable $e) {
                                 Log::error("Batch {$batch->id} failed: " . $e->getMessage());
                             })
                             ->finally(function (Batch $batch) {
-                                Log::info("Batch {$batch->id} finished processing");
+                                // Log::info("Batch {$batch->id} finished processing");
                             })
                             ->dispatch();
                     }
