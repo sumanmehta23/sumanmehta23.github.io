@@ -1763,7 +1763,7 @@ class AjaxController extends Controller
                     return $row->ib_wallet ? 'Commission' : 'Transfer';
                 })
                 ->addColumn('account', function ($row) {
-                    $code = $row->account->code;
+                    $code = $row->account->code ?? '';
                     $email = $row->account->email;
                     return "
                                 <div class='row align-items-center'>
