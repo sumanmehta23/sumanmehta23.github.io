@@ -190,18 +190,18 @@ class TradeWithdrawal extends Controller
         $ticket1 = NULL;
         $login = $account->code;
         $email = $account->email;
-        activity()->causedBy($user_id)
-            ->withProperties(
-                [
-                    'ip' => $request->ip(),
-                    'email' => $user_email,
-                    'code' => $login,
-                    'withdraw_amount' => $balance,
-                    'remark' => 'Account Withdraw'
-                ]
-            )
-            ->event('create')
-            ->log('Account Withdraw');
+        // activity()->causedBy($user_id)
+        //     ->withProperties(
+        //         [
+        //             'ip' => $request->ip(),
+        //             'email' => $user_email,
+        //             'code' => $login,
+        //             'withdraw_amount' => $balance,
+        //             'remark' => 'Account Withdraw'
+        //         ]
+        //     )
+        //     ->event('create')
+        //     ->log('Account Withdraw');
 
         $clientWalletId = $request->input('client_wallet_id');
         $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
@@ -261,9 +261,9 @@ class TradeWithdrawal extends Controller
         Log::alert("balance withdraw " . (float) ($balance));
         Log::alert("account " . ($login));
 
-        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-        // if (1 == 2) {
-        if ($errorCode1 != MTRetCode::MT_RET_OK) {
+        // $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+        if (1 == 2) {
+            // if ($errorCode1 != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode1);
             return response()->json([
                 'success' => false,
@@ -283,17 +283,47 @@ class TradeWithdrawal extends Controller
             }
 
             $total_promo_deducted = 0;
-
+            $deductableAmount = 0; //Amount from withdrwal request which will be used to calculate promo deductions . So this must be sum of deposits without bonus +/- profit/loss on the account
             if ($promo_left) {
+                $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
+                Log::alert("tradedeposits " . $tradedeposits);
+                $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)->sum('withdrawal_amount');
+                Log::alert("tradewithdrawals " . $tradewithdrawals);
+                $depositswithoutpromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
+                Log::alert("depositswithoutpromo " . $depositswithoutpromo);
+                $depositswithpromo = $account->tradeDeposits->whereNotNull('promocode_code')->sum('deposit_amount');
+                Log::alert("depositswithpromo " . $depositswithpromo);
+                $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
+                Log::alert("PNL " . $pnl);
+                $amountForDeductions = $amount - $depositswithoutpromo - $pnl;
+                Log::alert("amountForDeductions " . $amountForDeductions);
+                die();
                 $promos = $account->BonusTransaction()
                     ->where('admin_remark', 'Promo Bonus')
                     ->with('promocode') // assuming 'promocode' is the relation name
+                    ->where('bonus_amount', '>', 'bonus_used')
                     ->get()
                     ->sortByDesc(function ($transaction) {
                         return optional($transaction->promocode)->promo_percentage;
                     });
 
                 $i = 0;
+                if (($error_code2 = $this->api->UserAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
+                    session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
+                    // break;
+                    die();
+                }
+                $mt5account->Balance = $mt5account->Balance - $amount;
+                $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue - $tradewithdrawals;
+                Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
+                echo $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
+                Log::alert("PNL " . $pnl);
+                die();
+
+                foreach ($promos as $promo) {
+                }
+
+
 
                 while ($promo_left > 0 && isset($promos[$i])) {
                     $promo = $promos[$i];
@@ -309,17 +339,26 @@ class TradeWithdrawal extends Controller
                         session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
                         break;
                     }
-                    // $mt5account->Balance = $mt5account->Balance - $amount;
-                    $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue;
+                    $mt5account->Balance = $mt5account->Balance - $amount;
+                    $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue - $tradewithdrawals;
                     Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
+                    $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
+                    Log::alert("PNL " . $pnl);
                     // if ($mt5account->Balance < $promo_left) {
                     if ($mt5account->Balance < $totalBonusDepositValue) {
 
                         // Start deduction only when balance reaches promo_left
-                        if ($promo_percentage_value < 100) {
-                            $amount_to_deduct = - ($amount);
-                        }
-                        $amount_to_deduct = ($account->balance - $totalBonusDepositValue) - $amount;
+                        // if ($promo_percentage_value < 100) {
+                        //     $amount_to_deduct = - ($amount);
+                        // }
+                        echo $account->balance . "=" . $totalBonusDepositValue . "<br>\n";
+                        // $amount_to_deduct=??;
+                        // if ($amount_to_deduct < $amount) {
+                        //     $amount_to_deduct = - ($amount);
+                        // }
+                        //Need to make 10
+                        echo $amount_to_deduct;
+                        die();
                         //90-100-10
                         // if ($account->balance >= $promo_left) {
 
@@ -366,7 +405,7 @@ class TradeWithdrawal extends Controller
                             }
                             Log::alert("promo_percentage_value " . $promo_percentage_value);
                             Log::alert("promo_deduction " . $promo_deduction);
-                            // die();
+                            die();
                             if ($promo_deduction > 0) {
                                 $deduction = abs((float)$promo_deduction) * -1;
                                 if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
@@ -401,7 +440,7 @@ class TradeWithdrawal extends Controller
                                 ]);
 
                                 $promo_left -= $promo_deduction;
-                                if ($promo_left <= 0) {
+                                if ($promo->bonus_used <= $promo->bonus_amount) {
                                     break; // All promo used up
                                 } else {
                                     $i++; // Move to next promo if more left
