@@ -29,7 +29,7 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MT5Service $mt5Service, MailService $mailService,MTWebAPI $api)
+    public function __construct(MT5Service $mt5Service, MailService $mailService, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
@@ -42,9 +42,9 @@ class MT5Accounts extends Controller
         $email = auth()->user()->email;
         $results = Account::with('accountType')
             ->where('user_id', auth()->user()->id)
-            ->where('competition_start_date',NULL)
-            ->where('competition_end_date',NULL)
-            ->where('competition_status',NULL)
+            ->where('competition_start_date', NULL)
+            ->where('competition_end_date', NULL)
+            ->where('competition_status', NULL)
             ->where('demo', false)
             ->orderBy('id', 'desc')
             ->get();
@@ -64,12 +64,12 @@ class MT5Accounts extends Controller
     {
 
         session()->remove('error');
-        $user= auth()->user();
-        if($user->id != $account->user_id){
+        $user = auth()->user();
+        if ($user->id != $account->user_id) {
             return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
         }
-        $code=$account->code;
-        $type=$account->demo ? 'Demo' : 'Live';
+        $code = $account->code;
+        $type = $account->demo ? 'Demo' : 'Live';
         // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
         $settings = settings();
         $results = [];
@@ -145,9 +145,9 @@ class MT5Accounts extends Controller
             if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
             }
-            $getUser =Account::with('accountType', 'BonusTransaction')
-            ->where('id', $account->id)
-            ->first();
+            $getUser = Account::with('accountType', 'BonusTransaction')
+                ->where('id', $account->id)
+                ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
             // Process orders
             // dd($orders);
@@ -156,15 +156,19 @@ class MT5Accounts extends Controller
                     $volume = $item->VolumeInitial * 0.00001;
                     $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
                     // Insert commission data into DB
-                    Ib1Commission::updateOrCreate(['order_id' => $item->Order,
-                        'code' => $item->Login,],
-                    [
-                        'user_id' => auth()->user()->id,
-                        'account_id' => $account->id,
+                    Ib1Commission::updateOrCreate(
+                        [
+                            'order_id' => $item->Order,
+                            'code' => $item->Login,
+                        ],
+                        [
+                            'user_id' => auth()->user()->id,
+                            'account_id' => $account->id,
 
-                        'volume' => $volume,
-                        'time_closed' => $time_closed
-                    ]);
+                            'volume' => $volume,
+                            'time_closed' => $time_closed
+                        ]
+                    );
                 }
             }
         } catch (\Exception $e) {
@@ -172,11 +176,10 @@ class MT5Accounts extends Controller
             session()->flash('error', 'Exception: ' . $e->getMessage());
         }
         return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
-
     }
     public function showLiveAccountForm()
     {
-        $user=auth()->user();
+        $user = auth()->user();
         $email  = $user->email;
         $results = AccountType::whereHas('mt5Group', function ($query) {
             $query->where('mt5_group_type', 'live')
@@ -191,7 +194,7 @@ class MT5Accounts extends Controller
     }
     public function showDemoAccountForm()
     {
-        $user=auth()->user();
+        $user = auth()->user();
         $email  = $user->email;
         // $user = User::where('email', $email)->first();
         $results = AccountType::with('mt5Group')
@@ -199,8 +202,8 @@ class MT5Accounts extends Controller
                 $query->where('mt5_group_type', 'demo');
             })
             ->where('is_client_group', 1)
-            ->where('competition_start_date',NULL)
-            ->where('competition_end_date',NULL)
+            ->where('competition_start_date', NULL)
+            ->where('competition_end_date', NULL)
             ->orderBy('display_priority', 'desc')
             ->get();
         return view('create-demo-account', compact('user', 'results'));
@@ -229,24 +232,22 @@ class MT5Accounts extends Controller
             return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
         }
 
-        if($total_positions == 0){
+        if ($total_positions == 0) {
             $trade_user->Leverage = $newLeverage;
 
             $error_code = $this->api->UserUpdate($trade_user, $updated_user);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
-                } else {
-                    Account::where('id', $login)->update([
-                        'leverage' => $newLeverage
-                    ]);
-                }
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+            } else {
+                Account::where('id', $login)->update([
+                    'leverage' => $newLeverage
+                ]);
+            }
 
             return redirect()->back()->with('success', 'Leverage updated successfully!');
-        }else{
+        } else {
             return redirect()->back()->with('warning', 'Trades need to be closed!');
         }
-
-
     }
     public function createLiveAccount(Request $request)
     {
@@ -262,41 +263,40 @@ class MT5Accounts extends Controller
 
         $email = $user->email;
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
-        $referral=$user->referral;
-        $ib=$user->ib1;
+        $referral = $user->referral;
+        $ib = $user->ib1;
         $account_type_id = $validatedData['options'];
         // dd('ssss');
 
         //wealthytrades
-        if(($referral=="wealthytrades" || $ib=="wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B'){
-            $groupCode = str_replace("DF","SNSI",$group->ac_group);
+        if (($referral == "wealthytrades" || $ib == "wealthytrades") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
+            $groupCode = str_replace("DF", "SNSI", $group->ac_group);
             $group = AccountType::where('ac_group', $groupCode)->first();
 
-            if($group){
-                $_POST["options"] =$group->id;
+            if ($group) {
+                $_POST["options"] = $group->id;
                 $account_type_id = $group->id;
             }
-        }elseif((strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
-            $groupCode = str_replace("DF","ALEX",$group->ac_group);
+        } elseif ((strtolower($referral) == "swingtradinglab" || strtolower($ib) == "swingtradinglab") && $group->ac_group != 'LM\B-Book\10x\DF-B') {
+            $groupCode = str_replace("DF", "ALEX", $group->ac_group);
             $group = AccountType::where('ac_group', $groupCode)->first();
-            if($group){
-                $_POST["options"] =$group->id;
+            if ($group) {
+                $_POST["options"] = $group->id;
                 $account_type_id = $group->id;
             }
-
-        }else{
+        } else {
             $groupCode = $group->ac_group;
         }
 
         $toggleGroup = ToggleGroup::get()->first();
 
-        if($toggleGroup->a_book == 1){
-            if(str_contains($groupCode, 'B-Book')){
+        if ($toggleGroup->a_book == 1) {
+            if (str_contains($groupCode, 'B-Book')) {
                 $groupCode = str_replace('B-Book', 'A-Book', $groupCode);
                 $groupCode = preg_replace('/-B($|\\\)/', '-A$1', $groupCode);
             }
-        }elseif($toggleGroup->b_book == 1){
-            if(str_contains($groupCode, 'A-Book')){
+        } elseif ($toggleGroup->b_book == 1) {
+            if (str_contains($groupCode, 'A-Book')) {
                 $groupCode = str_replace('A-Book', 'B-Book', $groupCode);
                 $groupCode = preg_replace('/-A($|\\\)/', '-B$1', $groupCode);
             }
@@ -308,11 +308,11 @@ class MT5Accounts extends Controller
             return redirect()->back()->with('error', 'Invalid account type selected. With group code: ' . $groupCode);
         }
 
-        $userAcc = Account::where('user_id', $user->id)->where('demo',0)->get();
+        $userAcc = Account::where('user_id', $user->id)->where('demo', 0)->get();
 
         $ibdata = '';
         if ($ib) {
-            $ibdata = Ib1::where('referral_code',$ib)->first();
+            $ibdata = Ib1::where('referral_code', $ib)->first();
         }
 
         if ($userAcc && count($userAcc) < 2) {
@@ -329,10 +329,10 @@ class MT5Accounts extends Controller
             $new_user->Phone = $user->number;
             $new_user->Currency = 'USD';
             $new_user->Company = $settings['mt5_company_name'];
-            $new_user->Name = $user->fullname??$user->email;
+            $new_user->Name = $user->fullname ?? $user->email;
             $new_user->Email = $user->email;
-            $new_user->LeadSource = $user->ib1?? "" ;
-            $new_user->Agent = $ibdata->indexId?? "" ;
+            $new_user->LeadSource = $user->ib1 ?? "";
+            $new_user->Agent = $ibdata->indexId ?? "";
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -349,13 +349,14 @@ class MT5Accounts extends Controller
                             'leverage' => $new_user->Leverage,
                             'ib' => $ib,
                             'remark' => 'Create Live Account'
-                        ])
-                ->event('create')
-                ->log('Create Live Account');
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Create Live Account');
                 Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
-                    'demo'=> false,
+                    'demo' => false,
                     'email' => $new_user->Email,
                     'account_nick_name' =>  $nick_name,
                     'code' => $new_user->Login,
@@ -374,7 +375,7 @@ class MT5Accounts extends Controller
             } else {
                 return redirect()->back()->with('error', $response['message']);
             }
-        }else {
+        } else {
             $settings = settings();
             activity()->causedBy($user->id)
                 ->withProperties(
@@ -386,23 +387,24 @@ class MT5Accounts extends Controller
                         'leverage' => $validatedData['leverage'],
                         'ib' => $ib,
                         'remark' => 'Create Live Account'
-                    ])
-            ->event('create')
-            ->log('Create Live Account');
+                    ]
+                )
+                ->event('create')
+                ->log('Create Live Account');
             $useraccount = Account::create([
                 'user_id' => $user->id,
-                'name' => $user->fullname??$user->email,
-                'demo'=> false,
+                'name' => $user->fullname ?? $user->email,
+                'demo' => false,
                 'email' => $user->email,
                 'account_nick_name' =>  $nick_name,
                 'account_type_id' => $account_type_id,
                 'leverage' => $validatedData['leverage'],
                 'currency' => 'USD',
-                'ib1' => $user->ib1?? "",
+                'ib1' => $user->ib1 ?? "",
                 'account_request_status' => '0',
 
             ]);
-            if($useraccount){
+            if ($useraccount) {
 
                 $from = $settings['email_from_address'];
                 $emailSubject = 'Trading Account Requested';
@@ -427,7 +429,6 @@ class MT5Accounts extends Controller
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
-
         }
 
         // $new_user = $this->api->UserCreate();
@@ -476,8 +477,7 @@ class MT5Accounts extends Controller
     public function activateAccount(Request $request)
     {
         $settings = settings();
-        if($request->accountType == 0)
-        {
+        if ($request->accountType == 0) {
             $validatedData = $request->validate([
                 'options' => 'required|string',
                 'leverage' => 'required|string',
@@ -488,34 +488,34 @@ class MT5Accounts extends Controller
 
             $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
-            $referral=$user->referral;
-            $ib=$user->ib1;
+            $referral = $user->referral;
+            $ib = $user->ib1;
             $account_type_id = $validatedData['options'];
 
             //wealthytrades
-            if($group->ac_group != 'LM\B-Book\10x\DF-B'){
-                if($referral=="wealthytrades" || $ib=="wealthytrades") {
-                    $groupCode = str_replace("DF","SNSI",$group->ac_group);
+            if ($group->ac_group != 'LM\B-Book\10x\DF-B') {
+                if ($referral == "wealthytrades" || $ib == "wealthytrades") {
+                    $groupCode = str_replace("DF", "SNSI", $group->ac_group);
                     $group = AccountType::where('ac_group', $groupCode)->first();
 
-                    if($group){
-                        $_POST["options"] =$group->id;
+                    if ($group) {
+                        $_POST["options"] = $group->id;
                         $account_type_id = $group->id;
                     }
-                }elseif(strtolower($referral)=="swingtradinglab" || strtolower($ib)=="swingtradinglab") {
-                    $groupCode = str_replace("DF","ALEX",$group->ac_group);
+                } elseif (strtolower($referral) == "swingtradinglab" || strtolower($ib) == "swingtradinglab") {
+                    $groupCode = str_replace("DF", "ALEX", $group->ac_group);
                     $group = AccountType::where('ac_group', $groupCode)->first();
-                    if($group){
-                        $_POST["options"] =$group->id;
+                    if ($group) {
+                        $_POST["options"] = $group->id;
                         $account_type_id = $group->id;
                     }
                 }
-            }else{
+            } else {
                 $groupCode = $group->ac_group;
             }
             $ibdata = '';
-            if($ib){
-                $ibdata = Ib1::where('referral_code',$ib)->first();
+            if ($ib) {
+                $ibdata = Ib1::where('referral_code', $ib)->first();
             }
             if ($request->request_status == 1) {
                 $new_user = $this->api->UserCreate();
@@ -531,10 +531,10 @@ class MT5Accounts extends Controller
                 $new_user->Phone = $user->number;
                 $new_user->Currency = 'USD';
                 $new_user->Company = $settings['mt5_company_name'];
-                $new_user->Name = $user->fullname??$user->email;
+                $new_user->Name = $user->fullname ?? $user->email;
                 $new_user->Email = $user->email;
-                $new_user->LeadSource = $user->ib1?? "" ;
-                $new_user->Agent = $ibdata->indexId?? "" ;
+                $new_user->LeadSource = $user->ib1 ?? "";
+                $new_user->Agent = $ibdata->indexId ?? "";
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
@@ -544,25 +544,25 @@ class MT5Accounts extends Controller
                     $account = Account::where('id', $request->account_id)->first();
 
                     activity()->causedBy(auth()->user()->id)
-                            ->withProperties(
-                                [
-                                    'ip' => $request->ip(),
-                                    'email' => auth()->user()->email,
-                                    'client_email' => $user->email,
-                                    'type' => 'Live',
-                                    'code' => $new_user->Login,
-                                    'leverage' => $new_user->Leverage,
-                                    'ib' => $ib,
-                                    'remark' => 'Create Live Account'
-                                ])
+                        ->withProperties(
+                            [
+                                'ip' => $request->ip(),
+                                'email' => auth()->user()->email,
+                                'client_email' => $user->email,
+                                'type' => 'Live',
+                                'code' => $new_user->Login,
+                                'leverage' => $new_user->Leverage,
+                                'ib' => $ib,
+                                'remark' => 'Create Live Account'
+                            ]
+                        )
                         ->event('create')
                         ->log('Create Live Account');
-                    if($account)
-                    {
+                    if ($account) {
                         $account->update([
                             'user_id' => $user->id,
                             'name' => $new_user->Name,
-                            'demo'=> false,
+                            'demo' => false,
                             'email' => $new_user->Email,
                             // 'name' => $new_user->Name,
                             'code' => $new_user->Login,
@@ -577,31 +577,30 @@ class MT5Accounts extends Controller
                         ]);
                         $this->sendMail($new_user, 'Live');
                         return redirect()->back()->with('success', $response['message']);
-                    }else{
+                    } else {
                         return redirect()->back()->with('error', 'No account found to update.');
                     }
                 } else {
                     return redirect()->back()->with('error', $response['message']);
                 }
-            }elseif($request->request_status == 2){
+            } elseif ($request->request_status == 2) {
                 $account = Account::where('id', $request->account_id)->first();
                 // dd($account);
-                if($account)
-                {
+                if ($account) {
                     $account->update([
                         'user_id' => $user->id,
-                        'name' => $user->fullname??$user->email,
-                        'demo'=> false,
+                        'name' => $user->fullname ?? $user->email,
+                        'demo' => false,
                         'email' => $user->email,
                         'account_type_id' => $account_type_id,
                         'leverage' => $validatedData['leverage'],
                         'currency' => 'USD',
-                        'ib1' => $user->ib1?? "",
+                        'ib1' => $user->ib1 ?? "",
                         'code' => 'Rejected',
                         'account_request_status' => 0,
                     ]);
                     return redirect()->back()->with('success', 'Account Rejected');
-                }else{
+                } else {
                     return redirect()->back()->with('error', 'No account found to update.');
                 }
             }
@@ -724,7 +723,6 @@ class MT5Accounts extends Controller
                 } else {
                     return redirect()->back()->with('error', $response['message']);
                 }
-
             } elseif ($request->request_status == 2) {
                 $account->update([
                     'user_id' => $user->id,
@@ -778,16 +776,15 @@ class MT5Accounts extends Controller
 
             $login = $account->code;
 
-            if($account->balance > 0) {
+            if ($account->balance > 0) {
                 return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
-
             }
             if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($error_code);
-                Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($login));
+                Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($login));
                 return ["status" => false, "message" => $error];
             } else {
-                Log::info('MT5 account deleted successfully'.json_encode($login).' with server response ');
+                Log::info('MT5 account deleted successfully' . json_encode($login) . ' with server response ');
             }
 
             if ($account) {
@@ -797,17 +794,17 @@ class MT5Accounts extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'client_id' => $account->user_id,
                         'account_id' => $account->id,
                         'code' => $account->code,
                         'account_email' => $account->email,
                         'remark' => 'Delete Account'
                     ])
-                ->event('delete')
-                ->log('Delete Account');
+                    ->event('delete')
+                    ->log('Delete Account');
                 // Refresh the model to include the `deleted_at` timestamp
                 $account->refresh();
 
@@ -868,20 +865,18 @@ class MT5Accounts extends Controller
 
         $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
-        if($group->ac_min_deposit){
+        if ($group->ac_min_deposit) {
             $validatedData = $request->validate([
                 'options' => 'required|string',
                 'leverage' => 'required|string',
-                'demo_deposit' => 'required|numeric|min:'.$group->ac_min_deposit,
+                'demo_deposit' => 'required|numeric|min:' . $group->ac_min_deposit,
             ]);
-
         }
 
-        $userAcc = Account::where('user_id', $user->id)->where('demo',1)->get();
+        $userAcc = Account::where('user_id', $user->id)->where('demo', 1)->get();
         // dd(($userAcc));
 
-        if($userAcc)
-        {
+        if ($userAcc) {
             $new_user = $this->api->UserCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
@@ -895,9 +890,9 @@ class MT5Accounts extends Controller
             $new_user->Phone = $user->number;
             $new_user->Currency = 'USD';
             $new_user->Company = $settings['mt5_company_name'];
-            $new_user->Name =  $user->fullname??$user->email;
+            $new_user->Name =  $user->fullname ?? $user->email;
             $new_user->Email = $user->email;
-            $new_user->LeadSource = $user->ib1 ?? "" ;
+            $new_user->LeadSource = $user->ib1 ?? "";
             $new_user->PhonePassword = $this->generatePassword();
             $new_user->InvestPassword = $this->generatePassword();
             $new_user->Login = $this->generateRandomNumber();
@@ -914,10 +909,11 @@ class MT5Accounts extends Controller
                             'amount' => $validatedData['demo_deposit'],
                             'leverage' => $new_user->Leverage,
                             'remark' => 'Create Demo Account'
-                        ])
-                ->event('create')
-                ->log('Create Demo Account');
-                $account=Account::create([
+                        ]
+                    )
+                    ->event('create')
+                    ->log('Create Demo Account');
+                $account = Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
                     'demo' => true,
@@ -935,12 +931,12 @@ class MT5Accounts extends Controller
                 $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
-                    Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+                    Log::error('MT5 demo account : ' . $error . ' for user ' . $user->id);
                     return redirect()->back()->with('success', $error);
                 } else {
                     $data = [
                         'user_id' => $user->id,
-                        'account_id'=>$account->id,
+                        'account_id' => $account->id,
                         'email' => $new_user->Email,
                         'code' => $new_user->Login,
                         'deposit_amount' => $validatedData['demo_deposit'],
@@ -1034,7 +1030,6 @@ class MT5Accounts extends Controller
             "content" => $content
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-
     }
     public function generatePassword($length = 9)
     {
@@ -1079,20 +1074,20 @@ class MT5Accounts extends Controller
             );
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account connection error : ' . $error.' for user '.json_encode($user));
+                Log::error('MT5 live account connection error : ' . $error . ' for user ' . json_encode($user));
                 return ["status" => false, "message" => $error];
             }
         }
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
-            Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
+            Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
-            Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
+            // Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
             return ["status" => true, "message" => $type . " Account Created Successfully"];
         }
     }
-    public function changeMt5Password(Request $request,Account $account)
+    public function changeMt5Password(Request $request, Account $account)
     {
         $request->validate([
             'account_id' => 'required',
@@ -1134,8 +1129,8 @@ class MT5Accounts extends Controller
         $user = auth()->user();
 
         $account = Account::where('user_id', $user->id)
-                        ->where('id', $request->account_id)
-                        ->first();
+            ->where('id', $request->account_id)
+            ->first();
 
         if (!$account) {
             return response()->json(['message' => 'Account not found or unauthorized'], 404);
@@ -1146,5 +1141,4 @@ class MT5Accounts extends Controller
 
         return response()->json(['message' => 'Nickname updated successfully!']);
     }
-
 }

@@ -61,8 +61,8 @@ class Leaderboard extends Controller
             ->where('code', '!=', null)
             ->where('demo', true)
             ->where('competition_status', 'active')
-            ->whereHas('accountType', function($q) {
-                $q->where('ac_name','like' ,'%Competition%');
+            ->whereHas('accountType', function ($q) {
+                $q->where('ac_name', 'like', '%Competition%');
             })
             ->get();
 
@@ -81,18 +81,18 @@ class Leaderboard extends Controller
             $apiResponse = $this->api->UserAccountGet($account->code, $accountData);
             if ($apiResponse === MTRetCode::MT_RET_OK) {
                 $account->update([
-                        'balance' => $accountData->Balance,
-                        'credit' => $accountData->Credit,
-                        'margin_free' => $accountData->MarginFree,
-                        'margin_level' => $accountData->MarginLevel,
-                        'equity' => $accountData->Equity,
-                    ]);
+                    'balance' => $accountData->Balance,
+                    'credit' => $accountData->Credit,
+                    'margin_free' => $accountData->MarginFree,
+                    'margin_level' => $accountData->MarginLevel,
+                    'equity' => $accountData->Equity,
+                ]);
             } else {
                 // Logger::error
             }
         }
 
-            //  dump($accounts);
+        //  dump($accounts);
 
         // $firstAccount = $accounts->first();
         // dd($firstAccount);
@@ -125,11 +125,11 @@ class Leaderboard extends Controller
         $results = \App\Models\MT5GroupCategory::withCount(['accountTypes as count' => function ($query) {
             $query->whereNotNull('ac_index');
         }])
-        ->where('mt5_grp_cat_type', 'type')
-        ->orderBy('mt5_grp_cat_id')
-        ->get();
+            ->where('mt5_grp_cat_type', 'type')
+            ->orderBy('mt5_grp_cat_id')
+            ->get();
 
-        $mt5_groups = Mt5Group::where('mt5_group_type','demo')->get();
+        $mt5_groups = Mt5Group::where('mt5_group_type', 'demo')->get();
 
         $grp_books = MT5GroupCategory::where('mt5_grp_cat_type', 'book')
             ->orderBy('mt5_grp_cat_id')
@@ -146,8 +146,7 @@ class Leaderboard extends Controller
     {
 
         $settings = settings();
-        if($request->accountType == 1)
-        {
+        if ($request->accountType == 1) {
             $validatedData = $request->validate([
                 'options' => 'required|string',
                 'leverage' => 'required|string',
@@ -158,13 +157,13 @@ class Leaderboard extends Controller
 
             $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
 
-            $referral=$user->referral;
-            $ib=$user->ib1;
+            $referral = $user->referral;
+            $ib = $user->ib1;
             $account_type_id = $validatedData['options'];
 
             $ibdata = '';
-            if($ib){
-                $ibdata = Ib1::where('referral_code',$ib)->first();
+            if ($ib) {
+                $ibdata = Ib1::where('referral_code', $ib)->first();
             }
 
             if ($request->request_status == 1) {
@@ -181,10 +180,10 @@ class Leaderboard extends Controller
                 $new_user->Phone = $user->number;
                 $new_user->Currency = 'USD';
                 $new_user->Company = $settings['mt5_company_name'];
-                $new_user->Name = $user->fullname??$user->email;
+                $new_user->Name = $user->fullname ?? $user->email;
                 $new_user->Email = $user->email;
-                $new_user->LeadSource = $user->ib1?? "" ;
-                $new_user->Agent = $ibdata->indexId?? "" ;
+                $new_user->LeadSource = $user->ib1 ?? "";
+                $new_user->Agent = $ibdata->indexId ?? "";
                 $new_user->PhonePassword = $this->generatePassword();
                 $new_user->InvestPassword = $this->generatePassword();
                 $new_user->Login = $this->generateRandomNumber();
@@ -202,24 +201,24 @@ class Leaderboard extends Controller
                                 'amount' => $validatedData['demo_deposit'],
                                 'leverage' => $new_user->Leverage,
                                 'remark' => 'Create Demo Account'
-                            ])
-                    ->event('create')
-                    ->log('Create Demo Account');
-                     if($account)
-                    {
+                            ]
+                        )
+                        ->event('create')
+                        ->log('Create Demo Account');
+                    if ($account) {
 
                         $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                         if ($errorCode != MTRetCode::MT_RET_OK) {
                             // dd('sadasdsa');
                             $error = MTRetCode::GetError($errorCode);
-                            Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+                            Log::error('MT5 demo account : ' . $error . ' for user ' . $user->id);
                             return redirect()->back()->with('success', $error);
                         } else {
 
                             $account->update([
                                 'user_id' => $user->id,
                                 'name' => $new_user->Name,
-                                'demo'=> true,
+                                'demo' => true,
                                 'email' => $new_user->Email,
                                 'competition_status' => 'Active',
                                 // 'name' => $new_user->Name,
@@ -236,7 +235,7 @@ class Leaderboard extends Controller
 
                             $data = [
                                 'user_id' => $user->id,
-                                'account_id'=>$account->id,
+                                'account_id' => $account->id,
                                 'email' => $new_user->Email,
                                 'code' => $new_user->Login,
                                 'deposit_amount' => $validatedData['demo_deposit'],
@@ -272,32 +271,30 @@ class Leaderboard extends Controller
                         // $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
                         // $this->sendMail($new_user, 'Demo');
                         return redirect()->back()->with('success', $response['message']);
-                    }else{
+                    } else {
                         return redirect()->back()->with('error', 'No account found to update.');
                     }
-
                 } else {
                     return redirect()->back()->with('error', $response['message']);
                 }
-            }elseif($request->request_status == 2){
+            } elseif ($request->request_status == 2) {
                 $account = Account::where('id', $request->account_id)->first();
                 // dd($account);
-                if($account)
-                {
+                if ($account) {
                     $account->update([
                         'user_id' => $user->id,
-                        'name' => $user->fullname??$user->email,
-                        'demo'=> true,
+                        'name' => $user->fullname ?? $user->email,
+                        'demo' => true,
                         'email' => $user->email,
                         'account_type_id' => $account_type_id,
                         'leverage' => $validatedData['leverage'],
                         'currency' => 'USD',
-                        'ib1' => $user->ib1?? "",
+                        'ib1' => $user->ib1 ?? "",
                         'code' => 'Rejected',
                         'account_request_status' => 0,
                     ]);
                     return redirect()->back()->with('success', 'Account Rejected');
-                }else{
+                } else {
                     return redirect()->back()->with('error', 'No account found to update.');
                 }
             }
@@ -317,7 +314,7 @@ class Leaderboard extends Controller
             );
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account connection error : ' . $error.' for user '.json_encode($user));
+                Log::error('MT5 live account connection error : ' . $error . ' for user ' . json_encode($user));
                 return ["status" => false, "message" => $error];
             }
         }
@@ -326,10 +323,10 @@ class Leaderboard extends Controller
             $this->sendMail($user, 'Demo');
             $error = MTRetCode::GetError($error_code);
             // dd($error);
-            Log::error('MT5 live account create error : ' . $error.' for user '.json_encode($user));
+            Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
-            Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
+            // Log::info('MT5 live account created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
             return ["status" => true, "message" => $type . " Account Created Successfully"];
         }
     }
@@ -395,13 +392,12 @@ class Leaderboard extends Controller
             "content" => $content
         ];
 
-        Log::alert("message ".$toEmail);
-        Log::alert("message ".$emailSubject);
-        Log::alert("message ".$headers);
+        Log::alert("message " . $toEmail);
+        Log::alert("message " . $emailSubject);
+        Log::alert("message " . $headers);
         Log::alert("templateVars: " . json_encode($templateVars));
 
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-
     }
 
     public function leaderboard(Request $request)
@@ -420,17 +416,17 @@ class Leaderboard extends Controller
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
 
             $availableCompetitions = Account::with('accountType')
-                                    ->whereHas('accountType', function ($query) {
-                                        $query->whereColumn('id', 'accounts.competition_product_id');
-                                    })
-                                    // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
-                                    ->where('demo', true)
-                                    ->whereNotNull('competition_start_date')
-                                    ->whereNotNull('competition_end_date')
-                                    ->whereNotNull('competition_product_id')
-                                    ->orderBy('competition_start_date', 'desc')
-                                    ->get()
-                                    ->groupBy('competition_product_id');
+                ->whereHas('accountType', function ($query) {
+                    $query->whereColumn('id', 'accounts.competition_product_id');
+                })
+                // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
+                ->where('demo', true)
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+                ->whereNotNull('competition_product_id')
+                ->orderBy('competition_start_date', 'desc')
+                ->get()
+                ->groupBy('competition_product_id');
 
 
             // dd($competition);
@@ -445,21 +441,21 @@ class Leaderboard extends Controller
                 $settings['mt5_server_web_password']
             );
             $accounts = Account::where('demo', true)
-                                ->whereNotNull('competition_start_date')
-                                ->whereNotNull('competition_end_date')
-                                ->whereNotNull('competition_product_id')
-                                ->get();
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+                ->whereNotNull('competition_product_id')
+                ->get();
 
             foreach ($accounts as $account) {
                 $apiResponse = $this->api->UserAccountGet($account->code, $accountData);
                 if ($apiResponse === MTRetCode::MT_RET_OK) {
                     $account->update([
-                            'balance' => $accountData->Balance,
-                            'credit' => $accountData->Credit,
-                            'margin_free' => $accountData->MarginFree,
-                            'margin_level' => $accountData->MarginLevel,
-                            'equity' => $accountData->Equity,
-                        ]);
+                        'balance' => $accountData->Balance,
+                        'credit' => $accountData->Credit,
+                        'margin_free' => $accountData->MarginFree,
+                        'margin_level' => $accountData->MarginLevel,
+                        'equity' => $accountData->Equity,
+                    ]);
                 } else {
                     // Logger::error
                 }
@@ -496,9 +492,9 @@ class Leaderboard extends Controller
 
         $endDate = Carbon::parse($end);
 
-        $account = Account::with('trades','dailyReports')
-                    ->where('code', $accountNo)
-                    ->first();
+        $account = Account::with('trades', 'dailyReports')
+            ->where('code', $accountNo)
+            ->first();
 
         // Get daily reports data
         $labels = [];
@@ -531,7 +527,7 @@ class Leaderboard extends Controller
         }
 
         // Get trades data
-        $trades = $account->trades->map(function($trade) {
+        $trades = $account->trades->map(function ($trade) {
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,
