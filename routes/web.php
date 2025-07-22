@@ -185,7 +185,7 @@ Route::get('register/ref', function () {
 Route::post('/register', [LoginController::class, 'addUser']);
 Route::get('/email_verify', [LoginController::class, 'verifyEmail']);
 
-Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
+
 
 Route::get('/reset-password', [LoginController::class, 'resetPassword']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
@@ -193,6 +193,9 @@ Route::get('/ib-ref', [Ib::class, 'ibReference'])->name('ib-ref');
 Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post');
 
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
+
     Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");
     Route::get('/two_factor_auth', [LoginController::class, 'two_factor_auth'])->name('two_factor_auth');
     Route::post('/verify-2fa', [LoginController::class, 'verify_two_factor_auth'])->name('verify-2fa');
