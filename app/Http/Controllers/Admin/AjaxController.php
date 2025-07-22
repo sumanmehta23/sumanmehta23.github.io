@@ -1764,7 +1764,7 @@ class AjaxController extends Controller
                 })
                 ->addColumn('account', function ($row) {
                     $code = $row->account->code ?? '';
-                    $email = $row->account->email;
+                    $email = $row->account->email ?? '';
                     return "
                                 <div class='row align-items-center'>
                                      <div class='col-auto pe-0'>
