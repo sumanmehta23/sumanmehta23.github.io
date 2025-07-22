@@ -1792,7 +1792,7 @@ class AjaxController extends Controller
                             </small>";
                 })
                 ->addColumn('email', function ($row) {
-                    $email = $row->account->email;
+                    $email = $row->account->email ?? '';
                     return $email;
                 })
                 ->addColumn('exp_date', function ($row) {
