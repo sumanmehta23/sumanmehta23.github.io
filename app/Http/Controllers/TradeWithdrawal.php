@@ -74,7 +74,7 @@ class TradeWithdrawal extends Controller
             ->where('wallet_delete_verification', 0)
             ->where('deleted_at', NULL)
             ->get();
-        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks','account_id'));
+        return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks', 'account_id'));
     }
     public function withdraw(Request $request)
     {
@@ -295,6 +295,7 @@ class TradeWithdrawal extends Controller
                 $depositswithpromo = $account->tradeDeposits->whereNotNull('promocode_code')->sum('deposit_amount');
                 Log::alert("depositswithpromo " . $depositswithpromo);
                 $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
+                // $pnl = $account->balance - $tradedeposits;
                 Log::alert("PNL " . $pnl);
                 $amountForDeductions = $amount - $depositswithoutpromo - $pnl;
                 Log::alert("amountForDeductions " . $amountForDeductions);
