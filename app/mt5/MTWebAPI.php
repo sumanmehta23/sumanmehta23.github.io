@@ -89,7 +89,7 @@ class MTWebAPI
   public function DealerConnect($ip, $port, $timeout, $login, $password)
   {
     $request = new MTDealerConnect();
-    Log::debug("Account.".$login);
+    // Log::debug("Account.".$login);
     if ($request->Init($ip . ':' . $port) && $request->Auth($login, $password, 2025, "WebManager")) {
       return  $request;
     } else {
