@@ -49,6 +49,7 @@ class SyncAccountTrades extends Command
                 // Fetch accounts in smaller batches
                 Account::select('id', 'code', 'user_id', 'account_type_id')
                     ->where('demo', false)
+                    ->where('code',458588)
                     ->where('account_request_status', 1)
                     ->whereHas('user', fn ($query) =>
                     $query->where(function ($q) use ($referral_code) {
