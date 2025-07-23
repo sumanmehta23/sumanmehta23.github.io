@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
