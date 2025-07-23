@@ -58,7 +58,7 @@ class SyncAccountTrades extends Command
                         }
                     })->where('status', 1)
                     )
-                    ->chunk(200, function ($accounts) use ($referral_code, $userId, $ib_acc_plans) {
+                    ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans) {
                         $jobs = [];
 
                         foreach ($accounts as $client) {
