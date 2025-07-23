@@ -34,7 +34,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
-    protected $batchSize = 1000;
+    protected $batchSize = 500;
     /**
      * Create a new job instance.
      */
