@@ -185,7 +185,7 @@ return [
             'queue' => ['default', 'emails'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 5,
+            'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 5),
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
