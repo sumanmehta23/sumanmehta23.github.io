@@ -5,10 +5,11 @@ namespace App\Console\Commands;
 use App\Models\Ib1;
 use App\Models\Account;
 use App\Models\IbPlanDetails;
-use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
+use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class SyncAccountTrades extends Command
 {

@@ -194,6 +194,7 @@ class DistributeIbCommissionJob implements ShouldQueue
 //    }
     protected function processTrades($trades, $i): void
     {
+
         $walletsToCreate = [];
         $existingWallets = IbWallet::where('user_id', $this->userId)
             ->whereIn('order_id', collect($trades)->pluck('order_id')->unique())
@@ -201,6 +202,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             ->flip();
 
         foreach ($trades as $ca) {
+            Log::alert("sync tradess".$ca->order_id);
             $user = $ca->user;
             $accountTypeId = $ca->account->account_type_id;
             $orderId = $ca->order_id;
