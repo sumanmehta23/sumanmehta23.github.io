@@ -62,6 +62,7 @@ class SyncAccountTrades extends Command
                         $jobs = [];
 
                         foreach ($accounts as $client) {
+                            Log::info('Accounts to sync commission : ' . $client->code);
                             $jobs[] = new SyncAccountTradesJob($client->id, $referral_code, $userId, $ib_acc_plans);
                         }
 
