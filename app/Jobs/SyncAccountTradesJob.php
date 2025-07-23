@@ -161,7 +161,7 @@ class SyncAccountTradesJob implements ShouldQueue
                             Ib1Commission::insert($ibcommissions);
                             $this->newTrades = true;
                         } catch (Exception $e) {
-                            Log::error('Error inserting commission: ' . $e->getMessage());
+                            Log::error('Error inserting commission = : ' . $e->getMessage());
                         }
                         $ibcommissions = [];
                     }
