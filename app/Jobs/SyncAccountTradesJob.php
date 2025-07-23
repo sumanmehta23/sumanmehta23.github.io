@@ -71,7 +71,7 @@ class SyncAccountTradesJob implements ShouldQueue
             Log::error('Account not found for id: ' . $this->accountId);
             return;
         }
-        // info('Syncing account trades for account: ' . $this->account->code);
+        Log::info('Syncing account trades for account: ' . $this->account->code);
         $login = $this->account->code;
         $from = 'September 01,2024';
         $to = 'March 31,2080';
@@ -161,7 +161,7 @@ class SyncAccountTradesJob implements ShouldQueue
                             Ib1Commission::insert($ibcommissions);
                             $this->newTrades = true;
                         } catch (Exception $e) {
-                            Log::error('Error inserting commission: ' . $e->getMessage());
+                            Log::error('Error inserting commission = : ' . $e->getMessage());
                         }
                         $ibcommissions = [];
                     }
@@ -176,6 +176,7 @@ class SyncAccountTradesJob implements ShouldQueue
                     }
                 }
                 $this->processTradeBatch($orders,$this->account);
+                Log::info('Batch processed');
             }
 
             $offset += count($orders);
@@ -190,6 +191,7 @@ class SyncAccountTradesJob implements ShouldQueue
             Log::error("Reached maximum attempts for account: $login. Skipping.");
         }
         if ($this->newTrades) {
+            Log::info('New Trades exists');
             // ($referral_code, $userId, $ib_acc_plans)
             // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
             DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);

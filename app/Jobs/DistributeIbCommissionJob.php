@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -194,6 +195,7 @@ class DistributeIbCommissionJob implements ShouldQueue
 //    }
     protected function processTrades($trades, $i): void
     {
+
         $walletsToCreate = [];
         $existingWallets = IbWallet::where('user_id', $this->userId)
             ->whereIn('order_id', collect($trades)->pluck('order_id')->unique())
@@ -201,6 +203,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             ->flip();
 
         foreach ($trades as $ca) {
+            Log::alert("sync tradess".$ca->order_id);
             $user = $ca->user;
             $accountTypeId = $ca->account->account_type_id;
             $orderId = $ca->order_id;
