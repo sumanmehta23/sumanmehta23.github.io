@@ -170,7 +170,7 @@
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
                                                     <div class="avatar avatar-sm">
-                                                        <span class="avatar-title rounded-circle text-dark">
+                                                        <span class="avatar-title rank_text rounded-circle text-dark">
                                                             {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
@@ -546,7 +546,7 @@
             }
 
 
-        .list-group-item.active .avatar-title {
+        .list-group-item.active .rank_text {
             color: white !important;
         }
 
