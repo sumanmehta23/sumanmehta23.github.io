@@ -171,15 +171,7 @@
                                                 <div class="flex-shrink-0 position-relative">
                                                     <div class="avatar avatar-sm {{ $rank['rank'] <= 3 ? 'rank-badge-'.$rank['rank'] : '' }}">
                                                         <span class="avatar-title rounded-circle {{ $rank['rank'] <= 3 ? 'bg-gradient-primary' : 'bg-gradient-dark' }} {{ $rank['rank'] > 3 ? 'text-dark' : '' }}">
-                                                            @if($rank['rank'] === 1)
-                                                                <i class="fe fe-star text-warning"></i>
-                                                            @elseif($rank['rank'] === 2)
-                                                                <i class="fe fe-star text-light"></i>
-                                                            @elseif($rank['rank'] === 3)
-                                                                <i class="fe fe-star text-orange"></i>
-                                                            @else
-                                                                {{ $rank['rank'] }}
-                                                            @endif
+                                                            {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
                                                 </div>
