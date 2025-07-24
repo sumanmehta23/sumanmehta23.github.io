@@ -169,17 +169,9 @@
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
-                                                    <div class="avatar avatar-sm {{ $rank['rank'] <= 3 ? 'rank-badge-'.$rank['rank'] : '' }}">
-                                                        <span class="avatar-title rounded-circle {{ $rank['rank'] <= 3 ? 'bg-gradient-primary' : 'bg-gradient-dark' }} {{ $rank['rank'] > 3 ? 'text-dark' : '' }}">
-                                                            @if($rank['rank'] === 1)
-                                                                <i class="fe fe-star text-warning"></i>
-                                                            @elseif($rank['rank'] === 2)
-                                                                <i class="fe fe-star text-light"></i>
-                                                            @elseif($rank['rank'] === 3)
-                                                                <i class="fe fe-star text-orange"></i>
-                                                            @else
-                                                                {{ $rank['rank'] }}
-                                                            @endif
+                                                    <div class="avatar avatar-sm">
+                                                        <span class="avatar-title rounded-circle rank_text">
+                                                            {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -550,8 +542,17 @@
         }
 
         .trader-select:hover h6.text-white {
-                color: rgb(107, 107, 107) !important;
-            }
+            color: rgb(107, 107, 107) !important;
+        }
+
+        .rank_text {
+            color: #000000 !important;
+            transition: color 0.2s ease;
+        }
+        .trader-select:hover .rank_text,
+        .trader-select.active .rank_text {
+            color: #ffffff !important;
+        }
 
         @media (max-width: 991.98px) {
             .list-group {
