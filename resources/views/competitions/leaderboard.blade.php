@@ -171,7 +171,8 @@
                                                 <div class="flex-shrink-0 position-relative">
                                                     <div class="avatar avatar-sm">
                                                         <span class="avatar-title rounded-circle rank_text">
-                                                            {{ $rank['rank'] }}
+                                                            {{-- {{ $rank['rank'] }} --}}
+                                                            {{ ordinal($rank['rank']) }}
                                                         </span>
                                                     </div>
                                                 </div>
