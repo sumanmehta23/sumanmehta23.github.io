@@ -545,15 +545,10 @@
                 color: rgb(107, 107, 107) !important;
             }
 
-
-        /* Default state */
-
         .rank_text {
-            color: #000000 !important; /* or #000000 if you prefer */
+            color: #000000 !important;
             transition: color 0.2s ease;
         }
-
-        /* When hovered or active */
         .trader-select:hover .rank_text,
         .trader-select.active .rank_text {
             color: #ffffff !important;
