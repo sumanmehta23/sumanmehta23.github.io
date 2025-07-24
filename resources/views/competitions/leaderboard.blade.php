@@ -545,6 +545,11 @@
                 color: rgb(107, 107, 107) !important;
             }
 
+
+        .list-group-item.active .avatar-title {
+            color: white !important;
+        }
+
         @media (max-width: 991.98px) {
             .list-group {
                 max-height: 400px;
