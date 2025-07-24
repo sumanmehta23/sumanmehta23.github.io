@@ -169,8 +169,8 @@
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
-                                                    <div class="avatar avatar-sm">
-                                                        <span class="avatar-title rounded-circle text-dark rank_text">
+                                                    <div class="">
+                                                        <span class="avatar-title rounded-circle rank_text">
                                                             {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
@@ -546,8 +546,17 @@
             }
 
 
-        .list-group-item.active .rank_text {
-            color: white !important;
+        /* Default state */
+
+        .rank_text {
+            color: #000000 !important; /* or #000000 if you prefer */
+            transition: color 0.2s ease;
+        }
+
+        /* When hovered or active */
+        .trader-select:hover .rank_text,
+        .trader-select.active .rank_text {
+            color: #ffffff !important;
         }
 
         @media (max-width: 991.98px) {
