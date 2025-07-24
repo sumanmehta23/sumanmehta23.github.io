@@ -114,11 +114,11 @@ class DistributeIbCommissionJob implements ShouldQueue
             }
         }
 
-        collect($this->processedtrades)->chunk(250)->each(function ($chunk) {
+        collect($this->processedtrades)->chunk(200)->each(function ($chunk) {
             Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 1]);
         });
 
-        collect($this->discardedIds)->chunk(250)->each(function ($chunk) {
+        collect($this->discardedIds)->chunk(200)->each(function ($chunk) {
             Ib1Commission::whereIn('expert_position_id', $chunk)->update(['status' => 10]);
         });
     }
@@ -203,7 +203,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             ->flip();
 
         foreach ($trades as $ca) {
-            Log::alert("sync tradess".$ca->order_id);
+            // Log::alert("sync tradess".$ca->order_id);
             $user = $ca->user;
             $accountTypeId = $ca->account->account_type_id;
             $orderId = $ca->order_id;

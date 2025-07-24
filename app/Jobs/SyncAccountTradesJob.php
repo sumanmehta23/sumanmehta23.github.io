@@ -34,7 +34,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
-    protected $batchSize = 1000;
+    protected $batchSize = 500;
     /**
      * Create a new job instance.
      */
@@ -71,7 +71,7 @@ class SyncAccountTradesJob implements ShouldQueue
             Log::error('Account not found for id: ' . $this->accountId);
             return;
         }
-        Log::info('Syncing account trades for account: ' . $this->account->code);
+        // Log::info('Syncing account trades for account: ' . $this->account->code);
         $login = $this->account->code;
         $from = 'September 01,2024';
         $to = 'March 31,2080';
