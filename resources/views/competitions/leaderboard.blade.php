@@ -158,12 +158,12 @@
                             <div class="card-header bg-gradient-dark">
                                 <h5 class="card-title mb-0 d-flex align-items-center">
                                     <i class="fe fe-award me-2"></i>
-                                    Top Performers
+                                    Top 10 Performers
                                 </h5>
                             </div>
                             <div class="card-body p-0">
                                 <div class="list-group list-group-flush">
-                                    @forelse($rankings as $rank)
+                                    @forelse($performers as $rank)
                                         <a href="#" class="list-group-item list-group-item-action trader-select py-3"
                                            data-account="{{ $rank['account_code'] }}" data-rank="{{ $rank['rank'] }}">
                                             <div class="d-flex align-items-center">
@@ -226,14 +226,14 @@
                                         </div>
                                     @endforelse
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center px-3 py-2">
+                                {{-- <div class="d-flex justify-content-between align-items-center px-3 py-2">
                                     <button id="prevTraderPage" class="btn btn-sm btn-outline-secondary" disabled>
                                         <i class="fe fe-chevron-left me-1"></i> Previous
                                     </button>
                                     <button id="nextTraderPage" class="btn btn-sm btn-outline-secondary">
                                         Next <i class="fe fe-chevron-right ms-1"></i>
                                     </button>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>

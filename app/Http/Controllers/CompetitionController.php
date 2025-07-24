@@ -302,6 +302,7 @@ class CompetitionController extends Controller
             // Get competition data from service
             $stats = $this->competitionService->getCurrentStats($competition);
             $rankings = $this->competitionService->getRankings($competition);
+            $performers = $this->competitionService->getPerformers($competition);
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
             // Get available competitions for filtering
              $availableCompetitions = Account::with('accountType')
@@ -320,6 +321,7 @@ class CompetitionController extends Controller
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
+                'performers' => $performers,
                 'competition_start_date' => $competition->competition_start_date,
                 'competition_end_date' => $competition->competition_end_date,
                 // 'months' => [

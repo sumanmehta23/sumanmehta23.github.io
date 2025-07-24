@@ -116,6 +116,37 @@ class CompetitionService
     }
 
     /**
+     * Get competition rankings for a specific month/year
+     */
+    public function getPerformers($competition)
+    {
+
+        $accounts = Account::with('user', 'accountType', 'trades')
+            ->where('code', '!=', null)
+            ->where('demo', true)
+            ->where('competition_product_id', $competition->id)
+            ->orderByDesc('equity')
+            ->paginate(10); // Adjust the number as needed (e.g., 10)
+
+        // Transform the paginated result
+        $accounts->getCollection()->transform(function ($account, $index) use ($accounts) {
+            return [
+                'rank' => ($accounts->currentPage() - 1) * $accounts->perPage() + $index + 1,
+                'name' => $account->user->fullname ?? $account->user->email,
+                'email' => $account->user->email,
+                'account_code' => $account->code,
+                'equity' => $account->equity,
+                'balance' => $account->balance,
+                'volume' => $account->lots_completed,
+                'total_trades' => $account->trades->count(),
+                'total_profit' => $account->balance - $account->initial_balance,
+            ];
+        });
+
+        return $accounts;
+    }
+
+    /**
      * Get competition status and timing information
      */
     public function getCompetitionStatus($competition)
