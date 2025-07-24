@@ -182,7 +182,7 @@
                                         aria-label="Default select example">
                                         <option value="" selected>--Group--</option>
                                         <?php foreach ($acc_groups as $gp) { ?>
-                                        <option value="{{ $gp->ib_plan_cat_id }}">{{ $gp->ib_cat_name }}</option>
+                                        <option value="{{ $gp->id }}">{{ $gp->plan->ib_cat_name }}</option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -889,10 +889,11 @@
                                                             <div class="d-flex justify-content-between">
                                                                 <div class="card-title">INTRODUCING BROKER</div>
                                                                 <div>
-                                                                    <?php if ($user->ib_status == 0): ?>
+                                                                    {{-- {{ dd($user->ib->status) }} --}}
+                                                                    <?php if ($user->ib->status == 0): ?>
                                                                     <span
                                                                         class="badge bg-outline-warning text-end">Pending</span>
-                                                                    <?php elseif ($user->ib_status == 1): ?>
+                                                                    <?php elseif ($user->ib->status == 1): ?>
                                                                     <span class="badge bg-outline-success text-end">Active
                                                                         IB</span>
                                                                     <?php else: ?>
@@ -906,8 +907,8 @@
                                                             <p class="card-text">A request on behalf of client for creating
                                                                 IB profile for this client.
                                                             </p>
-                                                            <?php if ($user->ib_status != 1): ?>
-                                                            <?php    if ($user->ib_status == '0'): ?>
+                                                            <?php if ($user->ib->status != 1): ?>
+                                                            <?php    if ($user->ib->status == '0'): ?>
                                                             <button type="button"
                                                                 class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
                                                                 data-bs-toggle="modal" data-bs-target="#ibModal">
@@ -920,7 +921,7 @@
                                                                 data-fullname="<?= $user->fullname ?>"
                                                                 data-email="<?= $user->email ?>"
                                                                 data-enc="<?= ($user->email) ?>"
-                                                                data-ib_status="<?= $user->ib_status ?>">
+                                                                data-ib_status="<?= $user->ib->status ?>">
                                                                 Request To become ib
                                                             </button>
                                                             <?php    endif; ?>

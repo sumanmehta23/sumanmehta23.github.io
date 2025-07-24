@@ -417,6 +417,8 @@ class Leaderboard extends Controller
 
             $rankings = $this->competitionService->getRankings($competition);
 
+            $performers = $this->competitionService->getPerformers($competition);
+
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
 
             $availableCompetitions = Account::with('accountType')
@@ -468,6 +470,7 @@ class Leaderboard extends Controller
             return view('competitions.leaderboard', [
                 'stats' => $stats,
                 'rankings' => $rankings,
+                'performers' => $performers,
                 'competition_start_date' => $competition->competition_start_date,
                 'competition_end_date' => $competition->competition_end_date,
                 'availableCompetitions' => $availableCompetitions,

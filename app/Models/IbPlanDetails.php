@@ -21,5 +21,4 @@ class IbPlanDetails extends Model
     {
         return $this->belongsTo(AccountType::class);
     }
-
 }
