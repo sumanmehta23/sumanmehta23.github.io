@@ -169,8 +169,8 @@
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
-                                                    <div class="avatar avatar-sm {{ $rank['rank'] <= 3 ? 'rank-badge-'.$rank['rank'] : '' }}">
-                                                        <span class="avatar-title rounded-circle {{ $rank['rank'] <= 3 ? 'bg-gradient-primary' : 'bg-gradient-dark' }} {{ $rank['rank'] > 3 ? 'text-dark' : '' }}">
+                                                    <div class="avatar avatar-sm">
+                                                        <span class="avatar-title rounded-circle text-dark">
                                                             {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
