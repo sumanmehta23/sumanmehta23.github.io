@@ -170,7 +170,7 @@
                                                 <!-- Rank Badge -->
                                                 <div class="flex-shrink-0 position-relative">
                                                     <div class="avatar avatar-sm">
-                                                        <span class="avatar-title rank_text rounded-circle text-dark">
+                                                        <span class="avatar-title rounded-circle text-dark rank_text">
                                                             {{ $rank['rank'] }}
                                                         </span>
                                                     </div>
