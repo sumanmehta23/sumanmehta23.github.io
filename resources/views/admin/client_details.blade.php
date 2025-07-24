@@ -890,16 +890,20 @@
                                                                 <div class="card-title">INTRODUCING BROKER</div>
                                                                 <div>
                                                                     {{-- {{ dd($user->ib->status) }} --}}
-                                                                    <?php if ($user->ib && $user->ib->status == 0): ?>
-                                                                    <span
-                                                                        class="badge bg-outline-warning text-end">Pending</span>
-                                                                    <?php elseif ($user->ib && $user->ib->status == 1): ?>
-                                                                    <span class="badge bg-outline-success text-end">Active
-                                                                        IB</span>
-                                                                    <?php else: ?>
-                                                                    <span class="badge bg-outline-info text-end">Not
-                                                                        Requested</span>
+                                                                    <?php if (isset($user->ib->status)): ?>
+                                                                        <?php if ($user->ib && $user->ib->status == 0): ?>
+                                                                        <span
+                                                                            class="badge bg-outline-warning text-end">Pending</span>
+                                                                        <?php elseif ($user->ib && $user->ib->status == 1): ?>
+                                                                        <span class="badge bg-outline-success text-end">Active
+                                                                            IB</span>
+                                                                        <?php else: ?>
+
+                                                                        <span class="badge bg-outline-info text-end">Not
+                                                                            Requested</span>
+                                                                        <?php endif; ?>
                                                                     <?php endif; ?>
+
                                                                 </div>
                                                             </div>
                                                         </div>
