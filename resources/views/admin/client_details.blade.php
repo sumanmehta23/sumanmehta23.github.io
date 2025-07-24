@@ -935,7 +935,7 @@
                                                                     <div class="mb-2 input-group">
                                                                         <input type="text"
                                                                             class="form-control" id="pc-clipboard-1"
-                                                                            value="https://<?= $_SERVER['HTTP_HOST'] ?>/register/ref?refercode=<?= base64_encode($user->email) ?>"
+                                                                            value="https://<?= $_SERVER['HTTP_HOST'] ?>/register/ref?refercode=<?= ($user->ib->referral_code) ?>"
                                                                             readonly>
                                                                         <button class="btn btn-lg btn-primary cb" id="ibClient"
                                                                             data-clipboard-target="#pc-clipboard-1">
