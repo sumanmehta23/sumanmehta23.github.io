@@ -428,7 +428,7 @@ class TradeWithdrawal extends Controller
                                 Log::alert(" $mt5account->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
                                 $leverage = round($mt5account->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))),2);
-                                $trade_user->Leverage = $leverage;
+                                $trade_user->Leverage = $mt5account->Leverage + $leverage;
 
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
