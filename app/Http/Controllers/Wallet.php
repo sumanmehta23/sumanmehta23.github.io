@@ -1137,6 +1137,55 @@ class Wallet extends Controller
                         'callback_code' => $callback_code,
                     ]);
 
+
+                    // Handle 10x leverage bonus
+                    if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                        if ($amount > 250) {
+                            $leverageBonus = 9 * 250;
+                        } else {
+                            $leverageBonus = 9 * $amount;
+                        }
+
+                        $ticket1 = NULL;
+                        $errorCode1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
+                        if ($errorCode1 !== MTRetCode::MT_RET_OK) {
+                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                            DB::rollBack();
+                            return response()->json(['error' => '10x leverage bonus failed: ' . MTRetCode::GetError($errorCode1)], 400);
+                        }
+
+                        BonusTransaction::create([
+                            'email' => $email,
+                            'user_id' => $customerID,
+                            'account_id' => $customerAccountID,
+                            'code' => $account->code,
+                            'bonus_amount' => $leverageBonus,
+                            'bonus_type' => 'Bonus In',
+                            'status' => 1,
+                            'admin_remark' => '10x Trader Leverage',
+                            'bonus_currency' => 'USD',
+                            'transaction_id' => $transactionId,
+                        ]);
+                    }
+
+                    // Main deposit to MT5
+                    $ticket2 = NULL;
+                    $comment = 'Deposit';
+                    $errorCode2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
+
+                    if ($errorCode2 != MTRetCode::MT_RET_OK) {
+                        DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'MT5 deposit failed',
+                            'error' => MTRetCode::GetError($errorCode2),
+                        ], 400);
+                    }
+
+                    // Update deposit status to success only after MT5 operations succeed
+                    $tradeDeposit->update(['status' => 1]);
+
                     // Handle promocode bonus BEFORE main deposit
                     $bonus_amount = 0;
                     if ($promocode && $promocode != '') {
@@ -1195,54 +1244,6 @@ class Wallet extends Controller
                             $tradeDeposit->save();
                         }
                     }
-
-                    // Handle 10x leverage bonus
-                    if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
-                        if ($amount > 250) {
-                            $leverageBonus = 9 * 250;
-                        } else {
-                            $leverageBonus = 9 * $amount;
-                        }
-
-                        $ticket1 = NULL;
-                        $errorCode1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
-                        if ($errorCode1 !== MTRetCode::MT_RET_OK) {
-                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                            DB::rollBack();
-                            return response()->json(['error' => '10x leverage bonus failed: ' . MTRetCode::GetError($errorCode1)], 400);
-                        }
-
-                        BonusTransaction::create([
-                            'email' => $email,
-                            'user_id' => $customerID,
-                            'account_id' => $customerAccountID,
-                            'code' => $account->code,
-                            'bonus_amount' => $leverageBonus,
-                            'bonus_type' => 'Bonus In',
-                            'status' => 1,
-                            'admin_remark' => '10x Trader Leverage',
-                            'bonus_currency' => 'USD',
-                            'transaction_id' => $transactionId,
-                        ]);
-                    }
-
-                    // Main deposit to MT5
-                    $ticket2 = NULL;
-                    $comment = 'Deposit';
-                    $errorCode2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
-
-                    if ($errorCode2 != MTRetCode::MT_RET_OK) {
-                        DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'MT5 deposit failed',
-                            'error' => MTRetCode::GetError($errorCode2),
-                        ], 400);
-                    }
-
-                    // Update deposit status to success only after MT5 operations succeed
-                    $tradeDeposit->update(['status' => 1]);
 
                     // Update total balance
                     TotalBalance::create([
