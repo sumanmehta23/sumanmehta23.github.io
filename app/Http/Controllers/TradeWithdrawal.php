@@ -417,21 +417,22 @@ class TradeWithdrawal extends Controller
                                 'bonus_currency' => 'USD',
                             ]);
 
-                            $trade_user = NULL;
-                            $this->api->UserGet($account->code, $trade_user);
-                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                            if($mt5account->Balance > 0){
+                                $trade_user = NULL;
+                                $this->api->UserGet($account->code, $trade_user);
+                                if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                }
+
+                                // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                $leverage = round($account->leverage * ((-$deduction / ($trade_user->Balance + $trade_user->Credit))),2);
+                                $trade_user->Leverage = $leverage;
+
+                                $updated_user = "";
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
                             }
-
-                            // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                            $leverage = round($account->leverage * ((-$deduction / ($trade_user->Balance + $trade_user->Credit))),2);
-                            $trade_user->Leverage = $leverage;
-
-                            $updated_user = "";
-                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                            }
-
                         }
                         if ($deductedamounts == $totaldeductableamount) {
                             break;
