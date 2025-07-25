@@ -1214,7 +1214,6 @@ class Wallet extends Controller
                             Log::alert("trade_user->Credit ".$trade_user->Credit);
                             Log::alert("account->leverage ".$account->leverage);
 
-                            Log::alert("trade_user->Credit ".$trade_user->Equity);
                             Log::alert("trade_user: " . json_encode($trade_user));
 
 
