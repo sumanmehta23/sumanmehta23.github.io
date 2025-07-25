@@ -1074,6 +1074,7 @@ class Wallet extends Controller
                 }
             } elseif ($deposit_to === "Account") {
                  Log::info('Account');
+                 Log::info('transactionId '.$transactionId);
 
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
