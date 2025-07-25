@@ -288,7 +288,10 @@ class TradeWithdrawal extends Controller
             if ($promo_left) {
                 $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
                 Log::alert("tradedeposits " . $tradedeposits);
-                $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)->sum('withdrawal_amount');
+                $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
+                                                            ->sum(function ($item) {
+                                                                return $item->withdrawal_amount + $item->transaction_fee;
+                                                            });
                 Log::alert("tradewithdrawals " . $tradewithdrawals);
                 $depositswithoutpromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
                 Log::alert("depositswithoutpromo " . $depositswithoutpromo);
