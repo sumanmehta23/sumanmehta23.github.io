@@ -1209,15 +1209,6 @@ class Wallet extends Controller
                             $trade_user = NULL;
                             $this->api->UserGet($account->code,$trade_user);
 
-                            Log::alert("account->code ".$account->code);
-                            Log::alert("trade_user->Balance ".$trade_user->Balance);
-                            Log::alert("trade_user->Credit ".$trade_user->Credit);
-                            Log::alert("account->leverage ".$account->leverage);
-                            Log::alert("bonus_amount ".$bonus_amount);
-
-                            Log::alert("trade_user: " . json_encode($trade_user));
-
-
                             if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }

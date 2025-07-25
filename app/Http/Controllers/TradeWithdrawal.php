@@ -373,7 +373,6 @@ class TradeWithdrawal extends Controller
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }
 
-                            $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
                             $trade_user->Leverage = $account->leverage;
 
                             $updated_user = "";
@@ -424,8 +423,9 @@ class TradeWithdrawal extends Controller
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }
 
-                            $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                            $trade_user->Leverage = $account->leverage;
+                            // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
+                            $leverage = round($account->leverage * ((-$deduction / ($trade_user->Balance + $trade_user->Credit))),2);
+                            $trade_user->Leverage = $leverage;
 
                             $updated_user = "";
                             if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
