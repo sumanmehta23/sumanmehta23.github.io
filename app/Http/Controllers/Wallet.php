@@ -1156,6 +1156,7 @@ class Wallet extends Controller
                             $trade_user = NULL;
                             $this->api->UserGet($account->code,$trade_user);
 
+                            Log::alert("account->code ".$account->code);
                             Log::alert("trade_user->Balance ".$trade_user->Balance);
                             Log::alert("trade_user->Credit ".$trade_user->Credit);
 
