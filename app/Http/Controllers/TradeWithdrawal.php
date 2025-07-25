@@ -425,11 +425,10 @@ class TradeWithdrawal extends Controller
                                 }
 
                                 // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                Log::alert("mt5account->Leverage : " . json_encode($mt5account));
-                                Log::alert(" $mt5account->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+                                Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
-                                $leverage = round($mt5account->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))),2);
-                                $trade_user->Leverage = $mt5account->Leverage + $leverage;
+                                $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))),2);
+                                $trade_user->Leverage = $trade_user->Leverage + $leverage;
 
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
