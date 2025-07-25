@@ -13,6 +13,8 @@ class TradeResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // check if $this->account->accountType->ac_group contains 'B-Book'
+        $isBBook = str_contains($this->account->accountType->ac_group, 'B-Book');
         return [
             'id' => $this->id,
             'user_id' => $this->account->user_id ?? null,
@@ -26,24 +28,25 @@ class TradeResource extends JsonResource
             'position_close_date' => $this->close_time, // Mandatory: The Position finalization date
             'position_open_date' => $this->open_time, // Optional: The position open time
             'position_base_currency' => $this->account->currency ?? null, // Optional: The transaction currency in 3 letter ISO format
-            'position_pl' => $this->profit, // Optional: The Profit or Loss derived from the position
+            //flip profit from nevgative to positive and positive to negative  if B-Book
+            'position_pl' => $isBBook ? -$this->profit : $this->profit, // Optional: The Profit or Loss derived from the position
             'position_trading_group' => $this->trading_group ?? null, // Optional: The associated trading group
             'position_status' => $this->status, // Optional: Indicating the outcome (Won, Lost, Cancelled)
             'position_type' => $this->type, // Optional: A description of the Position
 
-//            // Additional trade details
-//            'open_price' => $this->open_price,
-//            'close_price' => $this->close_price,
-//            'order_id' => $this->order_id,
-//            'position_id' => $this->position_id,
-//            'comment' => $this->comment,
-//            'sl' => $this->sl, // Stop Loss
-//            'tp' => $this->tp, // Take Profit
-//            'state' => $this->state,
+            //            // Additional trade details
+            //            'open_price' => $this->open_price,
+            //            'close_price' => $this->close_price,
+            //            'order_id' => $this->order_id,
+            //            'position_id' => $this->position_id,
+            //            'comment' => $this->comment,
+            //            'sl' => $this->sl, // Stop Loss
+            //            'tp' => $this->tp, // Take Profit
+            //            'state' => $this->state,
 
             // Timestamps
-//            'created_at' => $this->created_at,
-//            'updated_at' => $this->updated_at,
+            //            'created_at' => $this->created_at,
+            //            'updated_at' => $this->updated_at,
         ];
     }
 }
