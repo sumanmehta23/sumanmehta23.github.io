@@ -1213,6 +1213,9 @@ class Wallet extends Controller
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }
 
+                            Log::alert("$account->leverage * (($bonus_amount / ($trade_user->Balance + $trade_user->Credit)");
+
+
                             $leverage = round($account->leverage * (($bonus_amount / ($trade_user->Balance + $trade_user->Credit))),2);
                             $trade_user->Leverage = $leverage;
 
