@@ -425,6 +425,8 @@ class TradeWithdrawal extends Controller
                                 }
 
                                 // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                Log::alert(" $account->leverage * (-$deduction / ($trade_user->Balance + $trade_user->Credit)) ");
+
                                 $leverage = round($account->leverage * ((-$deduction / ($trade_user->Balance + $trade_user->Credit))),2);
                                 $trade_user->Leverage = $leverage;
 
