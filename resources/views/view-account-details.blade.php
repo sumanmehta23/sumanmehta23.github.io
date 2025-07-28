@@ -224,7 +224,7 @@
                                                     </div>
                                                 </div>
                                                 {{-- <h5 class="mb-0 f-w-400">${{ $account->Credit ?? '' }}</h5> --}}
-                                                <h5 class="mb-0 f-w-400">${{ $getUser ? ($getUser->bonusTransaction->sum('bonus_amount') ?? '') : 0 }}</h5>
+                                                <h5 class="mb-0 f-w-400">${{ $getUser ? (round($getUser->bonusTransaction->sum('bonus_amount'),2) ?? '') : 0 }}</h5>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
