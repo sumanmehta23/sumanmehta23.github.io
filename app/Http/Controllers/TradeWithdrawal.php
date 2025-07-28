@@ -431,9 +431,9 @@ class TradeWithdrawal extends Controller
                                 }
 
                                 // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                Log::alert(" $trade_user->Leverage * ((($promo->bonus_amount - $amount) / (($trade_user->Balance + $trade_user->Credit) - $amount))) ");
+                                Log::alert(" $trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ) ");
 
-                                $leverage = round($trade_user->Leverage * ((($promo->bonus_amount - $amount) / (($trade_user->Balance + $trade_user->Credit) - $amount))),2);
+                                $leverage = round($trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ),2);
                                 $trade_user->Leverage = $trade_user->Leverage + $leverage;
 
                                 $updated_user = "";
