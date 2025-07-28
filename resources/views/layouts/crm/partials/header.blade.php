@@ -364,7 +364,7 @@
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
-                            @if ((strpos(auth()->user()->email, 'lqhmarkets.com') !== false) || (strpos(auth()->user()->email, 'serverfront.com') !== false))
+                            @if ((strpos(auth()->user()->email, 'lqhmarkets.com') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                                 <li class="pc-item">
                                     <a href="/competition" class="pc-link">
                                         <span class="pc-micon">
