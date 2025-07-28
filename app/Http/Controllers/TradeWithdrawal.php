@@ -314,8 +314,10 @@ class TradeWithdrawal extends Controller
                         $query->whereRaw('CAST(bonus_amount AS DECIMAL(10,2)) > CAST(COALESCE(bonus_used, 0) AS DECIMAL(10,2))')
                             ->orWhereNull('bonus_used');
                     })
-
-                    ->get();
+                    ->get()
+                    ->sortByDesc(function ($transaction) {
+                        return optional($transaction->promocode)->promo_percentage;
+                    });
                 // ->sortByDesc(function ($transaction) {
                 //     return optional($transaction->promocode)->promo_percentage;
                 // });
