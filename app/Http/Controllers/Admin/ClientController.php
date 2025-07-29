@@ -6,8 +6,10 @@ use DB;
 use App\Models\Ib1;
 use App\Models\Role;
 use App\Models\User;
+use App\MT5\MTWebAPI;
 use App\Models\IbPlan;
 use App\Models\KycLog;
+use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\UserLog;
@@ -22,7 +24,9 @@ use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\Services\MT5Service;
 use Illuminate\Http\Request;
+use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
 use App\Services\MailService;
 use App\Models\WalletWithdraw;
@@ -34,9 +38,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use App\MT5\MTWebAPI;
-use App\Services\MT5Service;
-use App\MT5\MTRetCode;
 
 class ClientController extends Controller
 {
@@ -584,10 +585,12 @@ class ClientController extends Controller
         $id = request('userId');
         $user = User::with('ib')->findOrFail($id);  // Eager load 'ib' if necessary
         $countries = Country::all();
-        $acc_groups = IbPlan::with('category')
+        $acc_groups = IbPlanDetails::with('plan')
             ->where('status', 1)
-            ->groupBy('ib_plan_cat_id')
+            ->where('deleted_at',null)
+            ->groupBy('ib_category_id')
             ->get();
+
         $acc_types = AccountType::with('mt5Group')
             ->whereHas('mt5Group', fn($query) => $query->where('mt5_group_type', 'live'))
             ->get();

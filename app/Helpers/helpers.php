@@ -42,6 +42,20 @@ if (!function_exists('settings')) {
     }
 }
 
+if (!function_exists('ordinal')) {
+    function ordinal($number)
+    {
+        if (!is_numeric($number)) return $number;
+
+        $ends = ['th','st','nd','rd','th','th','th','th','th','th'];
+
+        if ((($number % 100) >= 11) && (($number % 100) <= 13))
+            return $number . 'th';
+
+        return $number . $ends[$number % 10];
+    }
+}
+
 function page_categories($roleId)
 {
     // Cache categories for 60 minutes, specific to the roleId
