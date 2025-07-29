@@ -301,10 +301,15 @@ class MT5Accounts extends Controller
                 $groupCode = preg_replace('/-A($|\\\)/', '-B$1', $groupCode);
             }
         }
+
+        $group = AccountType::where('ac_group', $groupCode)->first();
+
         if($email == 'juanpipkin@gmail.com' || $email == 'abhay@lqhmarkets.com'){
             $groupCode = 'LM/\B-Book/\PRO/\LeverageTest';
+            $group = AccountType::where('ac_group', $groupCode)->first();
+            dump($groupCode);
+            dd($group);
         }
-        $group = AccountType::where('ac_group', $groupCode)->first();
 
         if (!$group) {
             return redirect()->back()->with('error', 'Invalid account type selected. With group code: ' . $groupCode);
