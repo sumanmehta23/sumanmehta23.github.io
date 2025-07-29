@@ -304,7 +304,7 @@ class MT5Accounts extends Controller
 
         $group = AccountType::where('ac_group', $groupCode)->first();
 
-        if($email == 'juanpipkin@gmail.com' || $email == 'abhay@lqhmarkets.com'){
+        if($email == 'juanpipkin@gmail.com'){
             $groupCode = 'LM\B-Book\PRO\LeverageTest';
             $group = AccountType::where('ac_group', $groupCode)->first();
             $account_type_id = $group->id;
@@ -519,7 +519,7 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
-            if($user->email == 'juanpipkin@gmail.com' || $user->email == 'abhay@lqhmarkets.com'){
+            if($user->email == 'juanpipkin@gmail.com'){
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
                 $account_type_id = $group->id;
