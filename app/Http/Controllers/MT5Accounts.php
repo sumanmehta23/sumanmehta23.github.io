@@ -302,7 +302,7 @@ class MT5Accounts extends Controller
             }
         }
         if($email == 'juanpipkin@gmail.com' || $email == 'abhay@lqhmarkets.com'){
-            $groupCode = 'LM\B-Book\PRO\LeverageTest';
+            $groupCode = 'LM\\B-Book\\PRO\\LeverageTest';
         }
         $group = AccountType::where('ac_group', $groupCode)->first();
 
