@@ -184,23 +184,19 @@
                                                             ${{ number_format($rank['equity'], 2) }}
                                                         </span>
                                                     </div>
-                                                    <div class="d-flex align-items-center mb-1">
+                                                    {{-- <div class="d-flex align-items-center mb-1">
                                                         <small class="trader-text me-3">
                                                             <i class="fe fe-mail me-1"></i>
                                                             {{ $rank['email'] }}
                                                         </small>
-                                                    </div>
+                                                    </div> --}}
                                                     <div class="d-flex align-items-center justify-content-between">
-                                                        <div class="d-flex align-items-center">
+                                                        {{-- <div class="d-flex align-items-center">
                                                             <small class="trader-text me-3">
                                                                 <i class="fe fe-hash me-1"></i>
                                                                 {{ $rank['account_code'] }}
                                                             </small>
-                                                            {{-- <small class="trader-text me-3">
-                                                                <i class="fe fe-bar-chart-2 me-1"></i>
-                                                                {{ number_format($rank['volume'], 2) }} Lots
-                                                            </small> --}}
-                                                        </div>
+                                                        </div> --}}
                                                         <div class="d-flex align-items-center">
                                                             <small class="trader-text me-3">
                                                                 <i class="fe fe-activity me-1"></i>
