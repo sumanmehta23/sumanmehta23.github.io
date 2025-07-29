@@ -522,6 +522,7 @@ class MT5Accounts extends Controller
             if($user->email == 'juanpipkin@gmail.com' || $user->email == 'abhay@lqhmarkets.com'){
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
+                $account_type_id = $group->id;
             }
             $ibdata = '';
             if($ib){
