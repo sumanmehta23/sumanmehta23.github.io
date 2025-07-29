@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune')->daily();
 
-        $schedule->command('app:activate-competition-accounts')->everyMinute();
+        $schedule->command('app:activate-competition-accounts')->everySecond(10);
         $schedule->command('app:sync-trades')->everyMinute();
 
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
