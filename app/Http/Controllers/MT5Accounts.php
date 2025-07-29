@@ -187,6 +187,7 @@ class MT5Accounts extends Controller
             ->orderBy('display_priority', 'DESC')
             ->with('mt5Group:mt5_group_id,mt5_group_type')
             ->get();
+
         return view('create-live-account', compact('user', 'results'));
     }
     public function showDemoAccountForm()
@@ -250,7 +251,6 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
-
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -301,7 +301,9 @@ class MT5Accounts extends Controller
                 $groupCode = preg_replace('/-A($|\\\)/', '-B$1', $groupCode);
             }
         }
-
+        if($email == 'juanpipkin@gmail.com' || $email == 'abhay@lqhmarkets.com'){
+            $groupCode = 'LM\B-Book\PRO\LeverageTest';
+        }
         $group = AccountType::where('ac_group', $groupCode)->first();
 
         if (!$group) {
@@ -513,6 +515,10 @@ class MT5Accounts extends Controller
             }else{
                 $groupCode = $group->ac_group;
             }
+            if($user->email == 'juanpipkin@gmail.com' || $user->email == 'abhay@lqhmarkets.com'){
+                $groupCode = 'LM\B-Book\PRO\LeverageTest';
+                $group = AccountType::where('ac_group', $groupCode)->first();
+            }
             $ibdata = '';
             if($ib){
                 $ibdata = Ib1::where('referral_code',$ib)->first();
@@ -651,6 +657,11 @@ class MT5Accounts extends Controller
                         $account_type_id = $group->id;
                     }
                 }
+            }
+
+            if($user->email == 'juanpipkin@gmail.com' || $user->email == 'abhay@lqhmarkets.com'){
+                $groupCode = 'LM\B-Book\PRO\LeverageTest';
+                $group = AccountType::where('ac_group', $groupCode)->first();
             }
 
             $ibdata = '';
