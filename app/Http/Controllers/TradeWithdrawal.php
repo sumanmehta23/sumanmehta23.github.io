@@ -431,10 +431,16 @@ class TradeWithdrawal extends Controller
                                 }
 
                                 // $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                Log::alert(" $trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ) ");
+                                // Log::alert(" $trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ) ");
 
-                                $leverage = round($trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ),2);
-                                $trade_user->Leverage = $leverage;
+                                // $leverage = round($trade_user->Leverage * (($trade_user->Balance + $trade_user->Credit) / $tradedeposits ),2);
+
+                                Log::alert(" $trade_user->Leverage * (($tradedeposits - $amount) / (($tradedeposits - $amount) + $promo_deduction) ) ");
+
+                                $leverage = round($trade_user->Leverage * (($tradedeposits - $amount) / (($tradedeposits - $amount) + $promo_deduction) ),2);
+
+
+                                $trade_user->Leverage = $trade_user->Leverage - $leverage;
 
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {

@@ -1073,8 +1073,8 @@ class Wallet extends Controller
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
             } elseif ($deposit_to === "Account") {
-                 Log::info('Account');
-                 Log::info('transactionId '.$transactionId);
+                //  Log::info('Account');
+                //  Log::info('transactionId '.$transactionId);
 
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
@@ -1096,7 +1096,7 @@ class Wallet extends Controller
                     $query->where('status', 1);
                 }])->first();
 
-                Log::info('Account' . $account);
+                // Log::info('Account' . $account);
 
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
