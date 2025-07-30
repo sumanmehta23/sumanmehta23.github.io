@@ -156,31 +156,31 @@ class ActivateCompetitionAccounts extends Command
                                     DemoDeposit::create($data);
 
                                 }
-                                $from = $settings['email_from_address'];
-                                $emailSubject = 'Competition Activated';
-                                $headers = "MIME-Version: 1.0\r\n";
-                                $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-                                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                               $content = "
-                                                <div style='font-family: Montserrat, sans-serif; color: #000000;'>
-                                                    <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
-                                                    <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
-                                                    <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
-                                                    <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
-                                                    <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
-                                                    <p style='color: #000000;'>Trade confidently,</p>
-                                                    <p style='color: #000000;'>The LQH Markets Team</p>
-                                                </div>
-                                            ";
+                            //     $from = $settings['email_from_address'];
+                            //     $emailSubject = 'Competition Activated';
+                            //     $headers = "MIME-Version: 1.0\r\n";
+                            //     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                            //     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                            //    $content = "
+                            //                     <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                            //                         <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
+                            //                         <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                            //                         <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                            //                         <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                            //                         <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
+                            //                         <p style='color: #000000;'>Trade confidently,</p>
+                            //                         <p style='color: #000000;'>The LQH Markets Team</p>
+                            //                     </div>
+                            //                 ";
 
-                                $templateVars = [
-                                    'name' => $user->fullname,
-                                    'email' => $settings['email_from_address'],
-                                    'content' => $content
-                                ];
+                            //     $templateVars = [
+                            //         'name' => $user->fullname,
+                            //         'email' => $settings['email_from_address'],
+                            //         'content' => $content
+                            //     ];
 
-                                $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
-                                $this->sendMail($new_user, 'Demo');
+                                // $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
+                                $this->sendMail($new_user, 'Demo',$account);
                                 $account->competition_email = 1;
                                 $account->save();
                             }else{
@@ -194,14 +194,21 @@ class ActivateCompetitionAccounts extends Command
                         $type = 'Competition';
                         $toEmail = $user->email;
                         $from = $settings['email_from_address'];
-                        $emailSubject = $settings['admin_title'] . ' - ' . $type . ' Account Details';
+                        $emailSubject = $settings['admin_title'] . ' - ' .' Competition Account Details';
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $content = '
-                                        <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
-                                        <p>Here are your MT5 account details</p>
-                                    ';
+                        $content = "
+                                        <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                                            <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
+                                            <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                            <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                                            <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                                            <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
+                                            <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
+                                            <p>Here are your MT5 account details</p>
+                                        </div>
+                                    ";
                         $templateVars = [
                             'name' => $user->fullname,
                             'type' => $type,
@@ -283,19 +290,26 @@ class ActivateCompetitionAccounts extends Command
         return rand($min, $max);
     }
 
-    public function sendMail($new_user, $type)
+    public function sendMail($new_user, $type,$account)
     {
         $settings = settings();
         $toEmail = $new_user->Email;
         $from = $settings['email_from_address'];
-        $emailSubject = $settings['admin_title'] . ' - ' . $type . ' Account Details';
+        $emailSubject = $settings['admin_title'] . ' - ' . 'Competition Account Details';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '
+        $content = "
+                    <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                        <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
+                        <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                        <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                        <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                        <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
                         <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
                         <p>Here are your MT5 account details</p>
-                    ';
+                    </div>
+                    ";
         $templateVars = [
             'name' => $new_user->Name,
             'type' => $type,
