@@ -138,7 +138,7 @@
                             <div class="p-3 card-body">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
-                                        <h4 class="mb-0 text-white">Create Competition</h4>
+                                        <h4 class="mb-0 text-white">Join Competition</h4>
                                     </div>
                                     <div class="avtar">
                                         <i class="ti ti-folder-plus f-20"></i>

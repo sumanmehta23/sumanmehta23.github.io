@@ -65,9 +65,9 @@
                 @endif
 
                 <!-- Stats Cards Row -->
-                <div class="row mb-4">
-                      <div class="col-sm-6 col-xl-4">
-                        <div class="card overflow-hidden">
+                <div class="row">
+                    <div class="col-sm-6 col-xl-4">
+                        <div class="card w-100 overflow-hidden">
                             <div class="card-body p-0">
                                 <div class="bg-primary px-3 pt-3 pb-2 rounded-top {{ !isset(auth()->user()->role) ? 'pt-4' : '' }}">
                                     <div class="d-flex align-items-center">
@@ -109,44 +109,43 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-xl-2">
-                        <x-competition.stats-card
-                            title="Total Participants"
-                            :value="$stats['participants']"
-                            icon="users"
-                        />
-                    </div>
-                    {{-- <div class="col-sm-6 col-xl-2" id="your-rank-container">
-                        <x-competition.stats-card
-                            title="Your Rank"
-                            :value="'--'"
-                            icon="users"
-                            id="your-rank-card"
-                        />
-                    </div> --}}
-                    {{-- {{ dd(auth()->user()->email) }}
-                    {{ dd($rankings) }} --}}
-                    <div class="col-sm-6 col-xl-2" id="your-rank-container">
-                        <x-competition.stats-card
-                            title="Your Rank"
-                            :value="collect($rankings)->firstWhere('email', auth()->user()->email)['rank'] ?? '--'"
-                            icon="users"
-                            id="your-rank-card"
-                        />
-                    </div>
-                    <div class="col-sm-6 col-xl-2">
-                        <x-competition.stats-card
-                            title="Prize Pool"
-                            value="{{ $competition->prize ?? 'null'}}"
-                            icon="bar-chart-2"
-                        />
-                    </div>
-                    <div class="col-sm-6 col-xl-2">
-                        <x-competition.stats-card
-                            title="Top performer"
-                            :value="$stats['top_performer']->name ?? 'N/A'"
-                            icon="dollar-sign"
-                        />
+                    <div class="col-sm-6 col-xl-8">
+                        <div class="row">
+                            <div class="col-sm-6 col-xl-3">
+                                <x-competition.stats-card
+                                    class="w-100 h-100"
+                                    title="Total Participants"
+                                    :value="$stats['participants']"
+                                    icon="users"
+                                />
+                            </div>
+                            <div class="col-sm-6 col-xl-2" id="your-rank-container">
+                                <x-competition.stats-card
+                                    class="w-100 h-100"
+                                    title="Your Rank"
+                                    :value="collect($rankings)->firstWhere('email', auth()->user()->email)['rank'] ?? '--'"
+                                    icon="users"
+                                    id="your-rank-card"
+                                />
+                            </div>
+                            <div class="col-sm-6 col-xl-3">
+                                <x-competition.stats-card
+                                    class="w-100 h-100"
+                                    title="Prize Pool"
+                                    value="{{ $competition->prize ?? 'null'}}"
+                                    icon="bar-chart-2"
+                                />
+                            </div>
+                            <div class="col-sm-6 col-xl-4">
+                                <x-competition.stats-card
+                                    class="w-100 h-100"
+                                    title="Top performer"
+                                    :value="$stats['top_performer']->name ?? 'N/A'"
+                                    icon="dollar-sign"
+                                />
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -184,23 +183,19 @@
                                                             ${{ number_format($rank['equity'], 2) }}
                                                         </span>
                                                     </div>
-                                                    <div class="d-flex align-items-center mb-1">
+                                                    {{-- <div class="d-flex align-items-center mb-1">
                                                         <small class="trader-text me-3">
                                                             <i class="fe fe-mail me-1"></i>
                                                             {{ $rank['email'] }}
                                                         </small>
-                                                    </div>
+                                                    </div> --}}
                                                     <div class="d-flex align-items-center justify-content-between">
-                                                        <div class="d-flex align-items-center">
+                                                        {{-- <div class="d-flex align-items-center">
                                                             <small class="trader-text me-3">
                                                                 <i class="fe fe-hash me-1"></i>
                                                                 {{ $rank['account_code'] }}
                                                             </small>
-                                                            {{-- <small class="trader-text me-3">
-                                                                <i class="fe fe-bar-chart-2 me-1"></i>
-                                                                {{ number_format($rank['volume'], 2) }} Lots
-                                                            </small> --}}
-                                                        </div>
+                                                        </div> --}}
                                                         <div class="d-flex align-items-center">
                                                             <small class="trader-text me-3">
                                                                 <i class="fe fe-activity me-1"></i>
@@ -746,7 +741,7 @@
                 row.innerHTML = `
                     <td>${trade.position}</td>
                     <td>${new Date(trade.open_time).toLocaleString()}</td>
-                    <td>${trade.close_time ? new Date(trade.close_time).toLocaleString() : 'null'}</td>
+                    <td>${trade.close_time ? new Date(trade.close_time).toLocaleString() : 'N/A'}</td>
                     <td>${trade.symbol}</td>
                     <td>${trade.volume}</td>
                     <td class="text-end ${profitClass}">
