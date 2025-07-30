@@ -84,7 +84,7 @@
                                         <label class="form-label">Percentage</label>
                                     </div>
                                     <div class="col-lg-8">
-                                        <input type="number" class="form-control" name="promo_percentage" min="0" max="1000" step="0.01" required>
+                                        <input type="number" class="form-control" name="promo_percentage" min="0" step="0.01" required>
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
@@ -144,7 +144,7 @@
                                         <label class="form-label">Percentage</label>
                                     </div>
                                     <div class="col-lg-8">
-                                        <input type="number" class="form-control" name="promo_percentage" min="0" max="100" step="0.01" required>
+                                        <input type="number" class="form-control" name="promo_percentage" min="0" step="0.01" required>
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
