@@ -206,7 +206,6 @@ class ActivateCompetitionAccounts extends Command
                                             <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
                                             <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
                                             <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
-                                            <p>Here are your MT5 account details</p>
                                         </div>
                                     ";
                         $templateVars = [
@@ -307,7 +306,6 @@ class ActivateCompetitionAccounts extends Command
                         <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
                         <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
                         <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
-                        <p>Here are your MT5 account details</p>
                     </div>
                     ";
         $templateVars = [
