@@ -238,7 +238,7 @@ class CompetitionController extends Controller
 
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
-                return redirect()->back()->with('success', 'Competition Request Received. Your request has been submitted.');
+                return redirect()->back()->with('success', 'You have successfully enrolled in this competition. An email with your trading account details will be sent once the competition begins.');
             } else {
                 return redirect()->back()->with('error', 'Account not created');
             }
