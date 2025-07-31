@@ -430,35 +430,41 @@ class TradeWithdrawal extends Controller
                                     return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                 }
 
-                                // Calculate effective deposit amount (original deposits minus promo deductions)
-                                $effective_deposits = $tradedeposits - $total_promo_deducted;
-                                
-                                // Calculate withdrawal percentage relative to effective deposits
-                                $withdrawal_percentage = $effective_deposits > 0 ? $amount / $effective_deposits : 0;
-                                
-                                // Calculate leverage reduction proportional to withdrawal
-                                // This ensures the same proportional relationship as during deposit
-                                $leverage_reduction = round($trade_user->Leverage * $withdrawal_percentage, 2);
-                                
-                                // Ensure we don't reduce leverage below a minimum threshold (original account leverage)
-                                $minimum_leverage = $account->leverage ?? 100; // fallback to 100 if not set
-                                $new_leverage = max($minimum_leverage, $trade_user->Leverage - $leverage_reduction);
                                 
                                 Log::alert("Original Leverage: " . $trade_user->Leverage);
                                 Log::alert("Withdrawal Amount: " . $amount);
+
+                                // Calculate effective deposit amount (original deposits minus promo deductions)
+                                $effective_deposits = $tradedeposits - $total_promo_deducted;
+
                                 Log::alert("Trade Deposits: " . $tradedeposits);
                                 Log::alert("Total Promo Deducted: " . $total_promo_deducted);
                                 Log::alert("Effective Deposits: " . $effective_deposits);
+
+                                // Calculate withdrawal percentage relative to effective deposits
+                                $withdrawal_percentage = $effective_deposits > 0 ? $amount / $effective_deposits : 0;
+
                                 Log::alert("Withdrawal Percentage: " . ($withdrawal_percentage * 100) . "%");
+
+                                // Calculate leverage reduction proportional to withdrawal
+                                // This ensures the same proportional relationship as during deposit
+                                $leverage_reduction = round($trade_user->Leverage * $withdrawal_percentage, 2);
+
+                                // Ensure we don't reduce leverage below a minimum threshold (original account leverage)
+                                $minimum_leverage = $account->leverage ?? 100; // fallback to 100 if not set
+                                $new_leverage = max($minimum_leverage, $trade_user->Leverage - $leverage_reduction);
+
+
                                 Log::alert("Leverage Reduction: " . $leverage_reduction);
                                 Log::alert("New Leverage: " . $new_leverage);
-                                
+
                                 $trade_user->Leverage = $new_leverage;
 
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
                                     return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
                                 }
+
                             }
                         }
                         if ($deductedamounts == $totaldeductableamount) {
