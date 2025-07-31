@@ -343,7 +343,7 @@
                                     </a>
                                 </li> --}}
                             @endif
-                            {{-- <li class="pc-item">
+                            <li class="pc-item">
                                 <a href="/tasks" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -352,7 +352,7 @@
                                     </span>
                                     <span class="pc-mtext">Tasks</span>
                                 </a>
-                            </li> --}}
+                            </li>
                             <li class="pc-item">
                                 <a href="/liveAccounts" class="pc-link">
                                     <span class="pc-micon">
