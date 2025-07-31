@@ -471,7 +471,8 @@
                                 </ul>
                             </li>
                         @endcan
-                        {{-- <li class="slide__category menu-item-category">
+
+                        <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
 
@@ -486,7 +487,7 @@
                                 <i class="side-menu__icon fe fe-list"></i>
                                 <span class="side-menu__label">Client Tasks</span>
                             </a>
-                        </li> --}}
+                        </li>
 
                         @can('m_t5_group:viewAny')
                             @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false)
