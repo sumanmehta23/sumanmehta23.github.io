@@ -430,9 +430,9 @@ class TradeWithdrawal extends Controller
                                     return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                 }
 
-                                Log::alert(" $account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit + $trade_user->Balance)) ) ");
+                                Log::alert(" $account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ) ");
 
-                                $leverage = round($account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit + $trade_user->Balance)) ),2);
+                                $leverage = round($account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ),2);
 
                                 $trade_user->Leverage = $leverage;
 
