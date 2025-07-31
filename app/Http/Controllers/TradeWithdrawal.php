@@ -437,6 +437,11 @@ class TradeWithdrawal extends Controller
 
                                 $trade_user->Leverage = $leverage;
 
+                                $updated_user = "";
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
+
                             }
                         }
                         if ($deductedamounts == $totaldeductableamount) {
