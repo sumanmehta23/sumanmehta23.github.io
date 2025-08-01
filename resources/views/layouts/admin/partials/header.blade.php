@@ -50,10 +50,10 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <?php
-    $marginTopStyle = ''; // Default value
-    if (app()->environment('local')) {
-        $marginTopStyle = 'style="margin-top: 40px;"';
-    }
+$marginTopStyle = ''; // Default value
+if (app()->environment('local')) {
+    $marginTopStyle = 'style="margin-top: 40px;"';
+}
     ?>
 
     <style>
@@ -66,8 +66,11 @@
         }
 
         :root {
-            --primary-color: {{ $settings['sidebar_color'] }};
-            --primary-rgb: {{ hexToRGB($settings['sidebar_color']) }}
+            --primary-color:
+                {{ $settings['sidebar_color'] }}
+            ;
+            --primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
         }
 
         .auth-bg-cover {
@@ -259,9 +262,11 @@
                             <ul class="slide-menu child1">
                             </ul>
                         </li>
-                        @if (auth()->user()->can('account:viewLiveAccounts') ||
+                        @if (
+                                auth()->user()->can('account:viewLiveAccounts') ||
                                 auth()->user()->can('account:viewDemoAccounts') ||
-                                auth()->user()->can('client:viewAny'))
+                                auth()->user()->can('client:viewAny')
+                            )
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">CLIENT</span>
                             </li>
@@ -300,18 +305,20 @@
                                     @endcan
                                     @can('account:viewRequestedAccounts')
                                         <li class="slide menu-item-sub">
-                                            <a href="{{ route('admin.requestedAccounts') }}"
-                                                class="side-menu__item ">Requested Accounts</a>
+                                            <a href="{{ route('admin.requestedAccounts') }}" class="side-menu__item ">Requested
+                                                Accounts</a>
                                         </li>
                                     @endcan
                                 </ul>
                             </li>
                         @endif
-                        @if (auth()->user()->can('wallet_deposit:viewAny') ||
+                        @if (
+                                auth()->user()->can('wallet_deposit:viewAny') ||
                                 auth()->user()->can('wallet_withdrawal:viewAny') ||
                                 auth()->user()->can('trade_deposit:viewAny') ||
                                 auth()->user()->can('trade_withdrawals:viewAny') ||
-                                auth()->user()->can('internal_transfer:viewAny'))
+                                auth()->user()->can('internal_transfer:viewAny')
+                            )
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
                             </li>
@@ -472,7 +479,7 @@
                             </li>
                         @endcan
 
-                        <li class="slide__category menu-item-category">
+                        {{-- <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
 
@@ -487,7 +494,7 @@
                                 <i class="side-menu__icon fe fe-list"></i>
                                 <span class="side-menu__label">Client Tasks</span>
                             </a>
-                        </li>
+                        </li> --}}
 
                         @can('m_t5_group:viewAny')
                             @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false)
@@ -661,43 +668,44 @@
                         </li>
 
                         @foreach ($category->main_menus as $main)
-                            @php
-                                // Check if the current menu has submenus
-                                $sub_menus = $main->sub_menus;
-                                $requestUri = request()->getPathInfo();
-                                $open = $sub_menus->contains(function ($item) use ($requestUri) {
-                                    return $item->filename == $requestUri;
-                                }) ? 'open' : '';
-                            @endphp
-                            @if ((in_array($main->id, $rolePermissionsList) || $userRole == 'Super Admin') && $main->show_in_menu == 1)
-                                <li class="slide {{ ($sub_menus->count() > 0) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
-                                    <a href="{{ $main->filename }}" class="side-menu__item">
-                                        <i class="side-menu__icon {{ $main->icon }}"></i>
-                                        <span class="side-menu__label">{{ $main->pagename }}</span>
-                                        @if (!empty($sub_menus->count() > 0))
-                                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                                        @endif
+                        @php
+                        // Check if the current menu has submenus
+                        $sub_menus = $main->sub_menus;
+                        $requestUri = request()->getPathInfo();
+                        $open = $sub_menus->contains(function ($item) use ($requestUri) {
+                        return $item->filename == $requestUri;
+                        }) ? 'open' : '';
+                        @endphp
+                        @if ((in_array($main->id, $rolePermissionsList) || $userRole == 'Super Admin') &&
+                        $main->show_in_menu == 1)
+                        <li class="slide {{ ($sub_menus->count() > 0) ? 'has-sub' : '' }} menu-item-main {{ $open }}">
+                            <a href="{{ $main->filename }}" class="side-menu__item">
+                                <i class="side-menu__icon {{ $main->icon }}"></i>
+                                <span class="side-menu__label">{{ $main->pagename }}</span>
+                                @if (!empty($sub_menus->count() > 0))
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                @endif
+                            </a>
+                            <ul class="slide-menu child1">
+                                @foreach ($sub_menus as $sub)
+                                @php
+                                $active = ($requestUri == $sub->filename) ? 'active' : '';
+                                @endphp
+                                @if (in_array($sub->id, $rolePermissionsList) || $userRole == 'Super Admin')
+                                @if ($sub->pagename != 'Permissions List')
+                                <li class="slide menu-item-sub">
+                                    <a href="{{ $sub->filename }}" class="side-menu__item {{ $active }}">
+                                        {{ $sub->pagename }}
                                     </a>
-                                    <ul class="slide-menu child1">
-                                        @foreach ($sub_menus as $sub)
-                                            @php
-                                                $active = ($requestUri == $sub->filename) ? 'active' : '';
-                                            @endphp
-                                            @if (in_array($sub->id, $rolePermissionsList) || $userRole == 'Super Admin')
-                                                @if ($sub->pagename != 'Permissions List')
-                                                    <li class="slide menu-item-sub">
-                                                        <a href="{{ $sub->filename }}" class="side-menu__item {{ $active }}">
-                                                            {{ $sub->pagename }}
-                                                        </a>
-                                                    </li>
-                                                @endif
-                                            @endif
-                                        @endforeach
-                                    </ul>
                                 </li>
-                            @endif
+                                @endif
+                                @endif
+                                @endforeach
+                            </ul>
+                        </li>
+                        @endif
                         @endforeach
-                    @endforeach
+                        @endforeach
 
                     </ul> --}}
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"

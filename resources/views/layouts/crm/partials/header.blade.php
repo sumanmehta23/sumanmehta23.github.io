@@ -52,10 +52,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')
     <?php
-    $marginTopStyle = ''; // Default value
-    if (app()->environment('local') || config('services.sales.promotion')) {
-        $marginTopStyle = 'style="margin-top: 40px;"';
-    }
+$marginTopStyle = ''; // Default value
+if (app()->environment('local') || config('services.sales.promotion')) {
+    $marginTopStyle = 'style="margin-top: 40px;"';
+}
     ?>
 
     <style>
@@ -80,14 +80,28 @@
         :root,
         [data-pc-preset=preset-7],
         [data-pc-preset=preset-7] * {
-            --primary-color: {{ $settings['sidebar_color'] }};
-            --bs-btn-active-bg: {{ $settings['sidebar_color'] }};
-            --bs-primary: {{ $settings['sidebar_color'] }};
+            --primary-color:
+                {{ $settings['sidebar_color'] }}
+            ;
+            --bs-btn-active-bg:
+                {{ $settings['sidebar_color'] }}
+            ;
+            --bs-primary:
+                {{ $settings['sidebar_color'] }}
+            ;
             --bs-btn-bg: #fff !important;
-            --bs-btn-hover-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-link-color-rgb: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
-            --primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
+            --bs-btn-hover-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-link-color-rgb:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
+            --primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
         }
 
         :root [data-pc-theme="dark"],
@@ -125,7 +139,9 @@
         }
 
         [data-pc-preset=preset-7][data-pc-theme="dark"] .link-primary {
-            color: {{ $settings['sidebar_color'] }} !important;
+            color:
+                {{ $settings['sidebar_color'] }}
+                !important;
         }
 
         [data-pc-preset=preset-7][data-pc-theme="dark"] div:where(.swal2-container) button:where(.swal2-styled) {
@@ -240,8 +256,9 @@
 
 <body class="@if (!Auth::guest()) loggedin @endif" data-pc-preset="preset-7" data-pc-sidebar-caption="true"
     data-pc-direction="ltr" data-pc-theme_contrast="" <?php
-  if (!isset($_COOKIE["sitetheme"])) { ?> data-pc-theme="light" <?php } elseif ($_COOKIE["sitetheme"] == 'true') { ?>
-    data-pc-theme="light" <?php } else { ?> data-pc-theme="dark" <?php } ?>>
+if (!isset($_COOKIE["sitetheme"])) { ?>
+    data-pc-theme="light" <?php } elseif ($_COOKIE["sitetheme"] == 'true') { ?> data-pc-theme="light" <?php } else { ?>
+    data-pc-theme="dark" <?php } ?>>
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
@@ -250,11 +267,11 @@
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
                             @if (!isset($_COOKIE['sitetheme']))
-                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 1"
-                                    alt="logo" style="width: 70%;">
+                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 1" alt="logo"
+                                    style="width: 70%;">
                             @elseif ($_COOKIE['sitetheme'] == 'true')
-                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 2"
-                                    alt="logo" style="width: 70%;">
+                                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 2" alt="logo"
+                                    style="width: 70%;">
                             @else
                                 <img src="/{{ $settings['admin_sidebar_logo_dark'] }}" class="img-fluid logo-lg 3"
                                     alt="logo" style="width: 70%;">
@@ -343,7 +360,7 @@
                                     </a>
                                 </li> --}}
                             @endif
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="/tasks" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -352,7 +369,7 @@
                                     </span>
                                     <span class="pc-mtext">Tasks</span>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li class="pc-item">
                                 <a href="/liveAccounts" class="pc-link">
                                     <span class="pc-micon">
@@ -433,8 +450,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="staticBackdropLabel">Platform Downloads</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
@@ -475,10 +491,12 @@
             @endif
             @if (config('services.sales.promotion'))
                 {{-- <div class=" w-100 sales-banner-container">
-                <div class="banner-link" ><div class="lqh-sale-banner">
-                    <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
-                    </div></div>
-            </div> --}}
+                    <div class="banner-link">
+                        <div class="lqh-sale-banner">
+                            <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
+                        </div>
+                    </div>
+                </div> --}}
             @endif
 
             <header class="pc-header" <?php echo app()->environment('local') ? $marginTopStyle : ''; ?>>
@@ -497,8 +515,8 @@
                             </li>
                             {{-- <li class="dropdown pc-h-item">
                                 <a class="m-0 pc-head-link dropdown-toggle arrow-none trig-drp-search"
-                                    data-bs-toggle="dropdown" href="/dashboard" role="button"
-                                    aria-haspopup="false" aria-expanded="false">
+                                    data-bs-toggle="dropdown" href="/dashboard" role="button" aria-haspopup="false"
+                                    aria-expanded="false">
                                     <svg class="pc-icon">
                                         <use xlink:href="#custom-search-normal-1"></use>
                                     </svg>
@@ -591,10 +609,12 @@
                                 </div>
                             </li>
                             <li class="dropdown pc-h-item header-user/profile">
-                                <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
-                                    href="/dashboard" role="button" aria-haspopup="false"
-                                    data-bs-auto-close="outside" aria-expanded="false">
-                                    {{-- <img src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}" alt="user-image" class="user-avtar"> --}}
+                                <a class=" dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="/dashboard"
+                                    role="button" aria-haspopup="false" data-bs-auto-close="outside"
+                                    aria-expanded="false">
+                                    {{-- <img
+                                        src="{{ Storage::url('profile_images/' . (isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}"
+                                        alt="user-image" class="user-avtar"> --}}
 
                                     <img src="{{ $profile_image_url }}" alt="user-image" class="user-avtar"
                                         style="object-fit: cover">
@@ -608,8 +628,9 @@
                                             style="max-height: calc(-225px + 100vh);">
                                             <div class="mb-1 d-flex">
                                                 <div class="flex-shrink-0">
-                                                    {{-- <img src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}" alt="user-image"
-                                                        class="user-avtar wid-35"> --}}
+                                                    {{-- <img
+                                                        src="{{ Storage::url('profile_images/' .(isset($user) ? $user->profile_image_url : auth()->user()->profile_image_url)) }}"
+                                                        alt="user-image" class="user-avtar wid-35"> --}}
                                                     <img src="{{ $profile_image_url }}" alt="user-image"
                                                         class="user-avtar wid-35" style="object-fit: cover">
                                                 </div>
@@ -653,8 +674,7 @@
                 aria-labelledby="announcementLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="announcementLabel">What's new announcement?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 {{-- <div class="offcanvas-body">
                     <p class="text-span">Today</p>
@@ -691,8 +711,7 @@
                     aria-labelledby="announcementLabel">
                     <div class="offcanvas-header">
                         <h5 class="offcanvas-title" id="announcementLabel">What's new announcement?</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
-                            aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                     </div>
                     {{-- <div class="offcanvas-body">
                         <p class="text-span">Today</p>
@@ -730,7 +749,7 @@
         </div>
     </div>
     <script>
-        document.getElementById('pamm-menu').addEventListener('click', function(event) {
+        document.getElementById('pamm-menu').addEventListener('click', function (event) {
             event.preventDefault();
             var parentMenuItem = this.parentElement;
             parentMenuItem.classList.toggle('active');
