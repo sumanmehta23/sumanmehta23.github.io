@@ -1,9 +1,5 @@
 
-use Illuminate\Support\Facades\DB;
-use function activity;
 <?php
-use Illuminate\Support\Facades\DB;
-
 namespace App\Http\Controllers;
 
 use App\MT5\MTWebAPI;
@@ -19,6 +15,8 @@ use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TradeWithdrawal;
+use Illuminate\Support\Facades\DB;
+
 use App\Services\MailService as MailService;
 
 
