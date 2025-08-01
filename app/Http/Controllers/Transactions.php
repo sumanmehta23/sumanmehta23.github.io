@@ -15,8 +15,10 @@ use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TradeWithdrawal;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 use App\Services\MailService as MailService;
 
@@ -35,14 +37,14 @@ class Transactions extends Controller
     public function index()
     {
 
-        $email = $email = auth()->user()->email;
+        $email = Auth::user()->email;
 
-        $deposit_history1 = WalletDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history1 = WalletDeposit::where('user_id',  Auth::user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
-        $deposit_history2 = TradeDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history2 = TradeDeposit::where('user_id',  Auth::user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
@@ -79,7 +81,7 @@ class Transactions extends Controller
         // dd($internal_transfer);
         // $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','withdraw_to','account_id')
-        //     ->where('user_id', auth()->user()->id)
+            //     ->where('user_id', Auth::user()->id)
         //     ->get()
         //     ->map(function ($withdrawal) {
         //         // if($withdrawal->withdraw_to){
@@ -102,7 +104,7 @@ class Transactions extends Controller
         // // Fetch filtered data from TradeDeposit with deposit_amount
         // $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','code','deposit_from')
-        //     ->where('user_id', auth()->user()->id)
+        //     ->where('user_id', Auth::user()->id)
         //     ->with('account')
         //     ->get()
         //     ->map(function ($deposit) {
@@ -195,10 +197,10 @@ class Transactions extends Controller
             
             // Process API call within the same transaction for status 3
             if($status == 3){
-                activity()->causedBy(auth()->user()->id)
+                activity()->causedBy(Auth::user()->id)
                     ->withProperties([
                         'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
+                        'email' => Auth::user()->email,
                         'transaction_id' => $transaction_id,
                         'amount' => $depositAmount,
                         'status' => $status,
@@ -328,7 +330,7 @@ class Transactions extends Controller
             Log::error('Transaction update failed', [
                 'transaction_id' => $did,
                 'error' => $e->getMessage(),
-                'user_id' => auth()->user()->id
+                'user_id' => Auth::user()->id
             ]);
             return redirect()->back()->with('error', 'Transaction processing failed. Please try again.');
         }
