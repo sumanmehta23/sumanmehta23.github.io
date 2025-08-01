@@ -1,4 +1,8 @@
+
+use Illuminate\Support\Facades\DB;
+use function activity;
 <?php
+use Illuminate\Support\Facades\DB;
 
 namespace App\Http\Controllers;
 
@@ -169,12 +173,25 @@ class Transactions extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
 
-        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
-
+        // Use DB transaction and row-level locking to prevent double processing
+        \DB::beginTransaction();
+        $transaction = TradeWithdrawals::where('id', $did)->lockForUpdate()->first();
+        if (!$transaction) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Transaction Not Found');
+        }
         if($transaction->status == 1){
+            \DB::rollBack();
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
-        if ($transaction) {
+        // Update status before API call
+        $transaction->Status = $status;
+        $transaction->transaction_id = $transaction_id;
+        $transaction->admin_remark = 'Cancelled by User';
+        $transaction->save();
+        \DB::commit();
+        // Now call the API only if status==3
+        if($status==3){
             activity()->causedBy(auth()->user()->id)
                 ->withProperties(
                     [
@@ -250,15 +267,20 @@ class Transactions extends Controller
                             }
 
                             $deduct_from_this = min($promo->bonus_used, $remaining_deduction);
-                            dd($deduct_from_this);
+                            // Secure logging: log deduction, do not expose sensitive data
+                            \Log::info('Promo deduction applied', [
+                                'promo_id' => $promo->id,
+                                'account_id' => $account->id,
+                                'deducted_amount' => $deduct_from_this,
+                                'remaining_deduction' => $remaining_deduction,
+                                'user_id' => $transaction->user_id,
+                                'transaction_id' => $transaction->id
+                            ]);
                             $promo->bonus_used -= $deduct_from_this;
                             $promo->save();
 
-                            // Call API only once, when you’ve calculated total to transfer back
-                            // Or accumulate and call later if needed
-
-                            // Log this deduction (optional - if tracking partial usage is important)
-                            BonusTransaction::create([
+                            // Log this deduction in BonusTransaction
+                            $log = BonusTransaction::create([
                                 'email' => $account->email,
                                 'user_id' => $transaction->user_id,
                                 'account_id' => $account->id,
@@ -268,6 +290,12 @@ class Transactions extends Controller
                                 'status' => 1,
                                 'admin_remark' => 'Promo Addition',
                                 'bonus_currency' => 'USD',
+                            ]);
+                            \Log::info('Promo deduction BonusTransaction log created', [
+                                'bonus_transaction_id' => $log->id,
+                                'deducted_amount' => $deduct_from_this,
+                                'user_id' => $transaction->user_id,
+                                'transaction_id' => $transaction->id
                             ]);
 
                             $remaining_deduction -= $deduct_from_this;
