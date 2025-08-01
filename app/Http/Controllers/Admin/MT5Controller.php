@@ -154,7 +154,7 @@ class MT5Controller extends Controller
                 'required',
                 Rule::unique('promocode', 'code')->whereNull('deleted_at'),
             ],
-            'promo_percentage' => 'required|numeric|min:1|max:100',
+            'promo_percentage' => 'required|numeric|min:1|max:1000',
             // 'max_deposit' => 'required',
             'promo_status'     => 'required|boolean',
         ]);
@@ -706,6 +706,7 @@ class MT5Controller extends Controller
                     'email' => $email,
                     'user_id' => $user->id,
                     'account_id' => $account->id,
+                    'code' => $account->code,
                     'withdraw_to' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,

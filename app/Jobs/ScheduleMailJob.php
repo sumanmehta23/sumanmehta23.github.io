@@ -39,34 +39,34 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
-        Log::alert('ssssssssss'.$this->subject);
+        Log::alert('ssssssssss' . $this->subject);
         try {
 
-            if(strpos($this->subject, 'Competition Registration') !== false){
+            if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';
-            }else if(strpos($this->subject, 'Competition Activated') !== false){
+            } else if (strpos($this->subject, 'Competition Activated') !== false) {
                 $template = 'emails.competition_activated';
-            }else if(strpos($this->subject, 'Competition Ended') !== false){
+            } else if (strpos($this->subject, 'Competition Ended') !== false) {
                 $template = 'emails.competition_ended';
-            }else if(
-                        strpos($this->subject, 'Withdrawal Details Verification') !== false ||
-                        strpos($this->subject, 'Thank You for Confirming Your Wallet Withdrawal') !== false ||
-                        strpos($this->subject, 'Thank You for Confirming Your Wallet Address') !== false
-                    ){
+            } else if (
+                strpos($this->subject, 'Withdrawal Details Verification') !== false ||
+                strpos($this->subject, 'Thank You for Confirming Your Wallet Withdrawal') !== false ||
+                strpos($this->subject, 'Thank You for Confirming Your Wallet Address') !== false
+            ) {
                 $template = 'emails.emailVerification';
-            }else if(strpos($this->subject, 'Transaction Approved') !== false){
+            } else if (strpos($this->subject, 'Transaction Approved') !== false) {
                 $template = 'emails.transactionApproved';
-            }elseif(strpos($this->subject, 'Fund Deposit') !== false){
+            } elseif (strpos($this->subject, 'Fund Deposit') !== false) {
                 $template = 'emails.fundsAdd';
-            }elseif((strpos($this->subject, 'Live Account Details') !== false)){
+            } elseif ((strpos($this->subject, 'Live Account Details') !== false)) {
                 $template = 'emails.issueLiveAccount';
-            }elseif((strpos($this->subject, 'Demo Account Details') !== false)){
+            } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
                 $template = 'emails.issueDemoAccount';
             }elseif((strpos($this->subject, 'Competition Account Details') !== false)){
                 $template = 'emails.issueCompetitionAccount';
             }elseif(strpos($this->subject, 'Password Reset') !== false){
                 $template = 'emails.resetPassword';
-            }else{
+            } else {
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
@@ -92,10 +92,10 @@ class ScheduleMailJob implements ShouldQueue
                 ])->post('https://api.brevo.com/v3/smtp/email', $payload);
                 if ($response->failed()) {
                     // Handle the error
-                    Log::error('Email sending failed: ' . $response->body());
+                    // Log::error('Email sending failed: ' . $response->body());
                 } else {
                     // Handle the success
-                    Log::info('Email sent successfully: ' . $response->body());
+                    // Log::info('Email sent successfully: ' . $response->body());
                 }
             } else {
 
@@ -106,7 +106,7 @@ class ScheduleMailJob implements ShouldQueue
                     $message->subject($this->subject);
                 });
             }
-            Log::info('Email sent successfully to ' . $this->toEmail);
+            // Log::info('Email sent successfully to ' . $this->toEmail);
         } catch (\Exception $e) {
             Log::error('Email sending failed: ' . $e->getMessage());
         }

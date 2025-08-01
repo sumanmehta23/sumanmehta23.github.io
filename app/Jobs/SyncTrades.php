@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Trade;
@@ -29,7 +30,7 @@ class SyncTrades implements ShouldQueue
 
     public function handle(MT5Service $mt5Service)
     {
-        Log::info("Started SyncTrades job for account ID: {$this->account->code}");
+        // Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
         // Get existing trades to check their status
         $existingTrades = Trade::where('account_id', $this->account->id)
@@ -81,7 +82,7 @@ class SyncTrades implements ShouldQueue
             $orders = [];
 
             // Get total with retries
-            $error_code = $this->executeWithRetries(function() use ($api, $login, $from, $to, &$total) {
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, &$total) {
                 return $api->HistoryGetTotal($login, $from, $to, $total);
             }, $mt5Service);
 
@@ -91,7 +92,7 @@ class SyncTrades implements ShouldQueue
             }
 
             // Get history page with retries
-            $error_code = $this->executeWithRetries(function() use ($api, $login, $from, $to, $total, &$orders) {
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, $total, &$orders) {
                 return $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
             }, $mt5Service);
 
@@ -144,13 +145,13 @@ class SyncTrades implements ShouldQueue
                 } else {
                     // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
-                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(),$rateProfit);
+                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
                         // Set ID to perform update on the correct row
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                     } else {
                         // No open trade exists but we have a closed trade - insert it
-                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(),$rateProfit);
+                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
                     }
                 }
 
@@ -163,7 +164,7 @@ class SyncTrades implements ShouldQueue
                 $this->processBatch($tradesToUpsert);
             }
 
-            Log::info("Completed SyncTrades job for account ID: {$account->code}");
+            // Log::info("Completed SyncTrades job for account ID: {$account->code}");
         } catch (\Exception $e) {
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
@@ -214,19 +215,19 @@ class SyncTrades implements ShouldQueue
             'tp' => $order->PriceTP,
             'type' => $order->Type,
             'updated_at' => now(),
-            'volume' => $order->VolumeInitial/10000,
+            'volume' => $order->VolumeInitial / 10000,
             'volume_ext' => $order->VolumeInitialExt,
         ];
     }
 
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder,$rateProfit)
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
     {
-        log::info("account->code : {$account->code}");
-        log::info("closeOrder->PriceCurrent : {$closeOrder->PriceCurrent}");
-        log::info("openOrder->PriceCurrent : {$openOrder->PriceCurrent}");
-        log::info("openOrder->VolumeInitialExt : {$openOrder->VolumeInitialExt}");
-        log::info("openOrder->ContractSize : {$openOrder->ContractSize}");
-        log::info("rateProfit : {$rateProfit}");
+        // log::info("account->code : {$account->code}");
+        // log::info("closeOrder->PriceCurrent : {$closeOrder->PriceCurrent}");
+        // log::info("openOrder->PriceCurrent : {$openOrder->PriceCurrent}");
+        // log::info("openOrder->VolumeInitialExt : {$openOrder->VolumeInitialExt}");
+        // log::info("openOrder->ContractSize : {$openOrder->ContractSize}");
+        // log::info("rateProfit : {$rateProfit}");
 
         return [
             'account_id' => $account->id,
@@ -234,7 +235,7 @@ class SyncTrades implements ShouldQueue
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
             'type' => $openOrder->Type,
-            'volume' => $openOrder->VolumeInitial/10000,
+            'volume' => $openOrder->VolumeInitial / 10000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
             'close_price' => $closeOrder->PriceCurrent,

@@ -66,11 +66,12 @@
                                                 <div class="col-md-3 col-lg-4 col-xl-4">
                                                     <div class="border rounded address-check">
                                                         <div class="form-check paycard">
-                                                            <input id="liveaccount{{ $liveaccount->code }}" type="radio"
-                                                                name="live-account"
-                                                                class="select-liveaccount form-check-input input-primary"
-                                                                data-balance="{{ $liveaccount->balance }}"
-                                                                value="{{ $liveaccount->id }}">
+
+                                                            <input id="liveaccount{{ $liveaccount->code }}" type="radio" name="live-account"
+                                                            class="select-liveaccount form-check-input input-primary" data-balance="{{ $liveaccount->balance }}"
+                                                            value="{{ $liveaccount->id }}"
+                                                            @if(isset($account_id) && $account_id == $liveaccount->id) checked @endif>
+
                                                             <label class="form-check-label d-block" required>
                                                                 <div class="p-1 my-1 row">
                                                                     <span class="mt-1 col-6">
@@ -482,7 +483,7 @@
             jQuery('#twoFactorModal').modal('hide');
 
             // Handle the withdrawal button click
-            jQuery('#withdrawFromWallet').click(function () {
+            jQuery('#account_withdraw').click(function () {
                 var withdrawAmount = parseFloat(jQuery('#withdrawAmount').val());
 
                 // Validate withdraw amount before proceeding
@@ -520,7 +521,6 @@
             // Corrected change event for .select-liveaccount
             jQuery('.select-liveaccount').on('change', function () {
                 const selectedValue = this.value;
-                console.log(selectedValue);
                 document.getElementById('selectedLiveAccount').value = selectedValue;
             });
 
@@ -530,6 +530,6 @@
                 document.getElementById('selectedLiveAccount').value = checkedRadio.value;
             }
         });
-
     </script>
+
 @endsection

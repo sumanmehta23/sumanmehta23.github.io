@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\MT5\MTWebAPI;
+use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\MT5\MTEnDealAction;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
+use App\Models\BonusTransaction;
 use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Services\MailService as MailService;
-use App\MT5\MTEnDealAction;
-use App\MT5\MTRetCode;
-use App\MT5\MTWebAPI;
 
 
 class Transactions extends Controller
@@ -206,14 +207,105 @@ class Transactions extends Controller
                 );
 
                 $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Something went wrong',
-                        'error' => $error,
-                    ], 400);
-                }
+
+                // if ($errorCode != MTRetCode::MT_RET_OK) {
+                //     $error = MTRetCode::GetError($errorCode);
+                //     return response()->json([
+                //         'success' => false,
+                //         'message' => 'Something went wrong',
+                //         'error' => $error,
+                //     ], 400);
+                // }else{
+
+                    $bonus = BonusTransaction::where('account_id', $transaction->account_id)
+                            ->where(function ($query) {
+                                $query->where('bonus_type', 'Bonus In')
+                                    ->orWhere('bonus_type', 'Bonus Out');
+                            })
+                            ->where('admin_remark', 'LIKE', '%Promo Bonus%')
+                            ->selectRaw("
+                                SUM(bonus_amount) as total_promo_bonus_amount,
+                                SUM(bonus_used) as total_promo_bonus_used
+                            ")
+                            ->first();
+                    $total_promo_bonus = $bonus->total_promo_bonus_amount;
+                    $total_promo_bonus_used = $bonus->total_promo_bonus_used;
+                    $promo_left = $total_promo_bonus - $total_promo_bonus_used;
+
+                    if ($total_promo_bonus_used) {
+                        $promo_deduction = $transaction->promo_deduction;
+                        $remaining_deduction = $promo_deduction;
+                        $account = Account::where('id', $transaction->account_id)->first();
+                        $promos = $account->BonusTransaction()
+                            ->where('admin_remark', 'Promo Bonus')
+                            ->with('promocode') // assuming 'promocode' is the relation name
+                            ->get()
+                            ->sortByDesc(function ($transaction) {
+                                return $transaction->bonus_used;
+                            });
+
+                        foreach ($promos as $promo) {
+                            if ($remaining_deduction <= 0) {
+                                break;
+                            }
+
+                            $deduct_from_this = min($promo->bonus_used, $remaining_deduction);
+                            dd($deduct_from_this);
+                            $promo->bonus_used -= $deduct_from_this;
+                            $promo->save();
+
+                            // Call API only once, when you’ve calculated total to transfer back
+                            // Or accumulate and call later if needed
+
+                            // Log this deduction (optional - if tracking partial usage is important)
+                            BonusTransaction::create([
+                                'email' => $account->email,
+                                'user_id' => $transaction->user_id,
+                                'account_id' => $account->id,
+                                'code' => $account->code,
+                                'bonus_amount' => $deduct_from_this,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Addition',
+                                'bonus_currency' => 'USD',
+                            ]);
+
+                            $remaining_deduction -= $deduct_from_this;
+                        }
+
+                        // $i = 0;
+
+                        // if ($promo_left > 0 && isset($promos[$i])) {
+                        //     $promo = $promos[$i];
+
+
+
+                        //     $promo->bonus_used -= $transaction->promo_deduction;
+                        //     $promo->save();
+
+                        //     $promo_transfer_back = $transaction->promo_deduction;
+                        //     dd($promo_transfer_back);
+                        //     if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $promo_transfer_back, 'Promo Addition', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                        //         return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
+                        //     }
+
+                        //     // Record the deduction
+                        //     BonusTransaction::create([
+                        //         'email' => $account->email,
+                        //         'user_id' => $transaction->user_id,
+                        //         'account_id' => $account->id,
+                        //         'code' => $account->code,
+                        //         'bonus_amount' => $transaction->promo_deduction,
+                        //         'bonus_type' => 'Bonus In',
+                        //         'status' => 1,
+                        //         'admin_remark' => 'Promo Addition',
+                        //         'bonus_currency' => 'USD',
+                        //     ]);
+                        // }
+                    }
+                // }
+
+
 
                 if ( ($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty

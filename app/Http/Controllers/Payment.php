@@ -158,6 +158,7 @@ class Payment extends Controller
                             if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
                             } else {
+
                                 BonusTransaction::create([
                                     'email' => $email,
                                     'user_id' => $paymentLog->user_id,
@@ -171,6 +172,22 @@ class Payment extends Controller
                                     'transaction_id' => $transactionId,
                                     'promocode_id' => $promo->id
                                 ]);
+
+                                // Updating leverage
+                                $trade_user = NULL;
+                                $this->api->UserGet($account->code,$trade_user);
+                                if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                }
+
+                                $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)),2);
+                                $trade_user->Leverage = $leverage;
+
+                                $updated_user = "";
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
+                                // Updating leverage
                             }
                         }
                     }
@@ -218,6 +235,8 @@ class Payment extends Controller
                             'deposted_date' => now(),
                             'callback_data' => json_encode($responsedata),
                             'callback_code' => "success",
+                            'promocode_percentage' => $promo->promo_percentage,
+                            'promocode_code' => $promo->code,
                         ]);
 
                         // Update total balance

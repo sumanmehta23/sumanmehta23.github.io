@@ -550,6 +550,15 @@
             color: #ffffff !important;
         }
 
+        .rank_text {
+            color: #000000 !important;
+            transition: color 0.2s ease;
+        }
+        .trader-select:hover .rank_text,
+        .trader-select.active .rank_text {
+            color: #ffffff !important;
+        }
+
         @media (max-width: 991.98px) {
             .list-group {
                 max-height: 400px;

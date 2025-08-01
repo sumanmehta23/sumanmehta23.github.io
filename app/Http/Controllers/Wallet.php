@@ -1073,6 +1073,8 @@ class Wallet extends Controller
                     return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                 }
             } elseif ($deposit_to === "Account") {
+                //  Log::info('Account');
+                //  Log::info('transactionId '.$transactionId);
 
                 // Check for duplicate transaction
                 $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
@@ -1093,6 +1095,8 @@ class Wallet extends Controller
                 $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
                     $query->where('status', 1);
                 }])->first();
+
+                // Log::info('Account' . $account);
 
                 // Prepare callback data and insert it into the database
                 $callback_data = json_encode($payload);
@@ -1133,40 +1137,6 @@ class Wallet extends Controller
                         'callback_code' => $callback_code,
                     ]);
 
-                    // Handle promocode bonus BEFORE main deposit
-                    $bonus_amount = 0;
-                    if ($promocode && $promocode != '') {
-                        $promo = Promocode::where('code', $promocode)->first();
-                        if ($promo) {
-                            $ticket = NULL;
-                            if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
-                                $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
-                            } else {
-                                $bonus_amount = ($promo->promo_percentage / 100) * $amount;
-                            }
-
-                            $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
-                            if ($errorCode !== MTRetCode::MT_RET_OK) {
-                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                                DB::rollBack();
-                                return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
-                            }
-
-                            BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $customerID,
-                                'account_id' => $customerAccountID,
-                                'code' => $account->code,
-                                'bonus_amount' => $bonus_amount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Bonus',
-                                'bonus_currency' => 'USD',
-                                'transaction_id' => $transactionId,
-                                'promocode_id' => $promo->id
-                            ]);
-                        }
-                    }
 
                     // Handle 10x leverage bonus
                     if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
@@ -1215,6 +1185,62 @@ class Wallet extends Controller
 
                     // Update deposit status to success only after MT5 operations succeed
                     $tradeDeposit->update(['status' => 1]);
+
+                    // Handle promocode bonus BEFORE main deposit
+                    $bonus_amount = 0;
+                    if ($promocode && $promocode != '') {
+                        $promo = Promocode::where('code', $promocode)->first();
+                        if ($promo) {
+                            $ticket = NULL;
+                            if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                            } else {
+                                $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                            }
+
+                            $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
+                            if ($errorCode !== MTRetCode::MT_RET_OK) {
+                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                                DB::rollBack();
+                                return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
+                            }
+
+                            // Updating leverage
+                            $trade_user = NULL;
+                            $this->api->UserGet($account->code,$trade_user);
+
+                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                            }
+                            Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+
+                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))),2);
+                            $trade_user->Leverage = $leverage;
+
+                            $updated_user = "";
+                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                            }
+                            // Updating leverage
+
+                            BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $customerID,
+                                'account_id' => $customerAccountID,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonus_amount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => 'Promo Bonus',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
+                                'promocode_id' => $promo->id
+                            ]);
+                            $tradeDeposit->promocode_percentage = $promo->promo_percentage;
+                            $tradeDeposit->promocode_code = $promo->code;
+                            $tradeDeposit->save();
+                        }
+                    }
 
                     // Update total balance
                     TotalBalance::create([
