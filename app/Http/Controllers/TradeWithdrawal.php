@@ -340,7 +340,7 @@ class TradeWithdrawal extends Controller
                 foreach ($promos as $promo) {
 
                     $depositamountofbonusused = 0;
-                    $promo_percentage_value = $promo->promocode->promo_percentage;
+                    $promo_percentage_value = $promo->promocode ? $promo->promocode->promo_percentage : 0;
                     if ($amount_to_deduct > 0) {
                         $threshold = $amount_to_deduct;
                         $depositamountofbonus = $promo->bonus_amount / ($promo_percentage_value / 100);
