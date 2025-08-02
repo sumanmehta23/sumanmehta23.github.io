@@ -341,7 +341,7 @@ class TradeWithdrawal extends Controller
 
                     $depositamountofbonusused = 0;
                     $promo_percentage_value = $promo->promocode ? $promo->promocode->promo_percentage : 0;
-                    if ($amount_to_deduct > 0) {
+                    if ($promo_percentage_value && $amount_to_deduct > 0) {
                         $threshold = $amount_to_deduct;
                         $depositamountofbonus = $promo->bonus_amount / ($promo_percentage_value / 100);
                         Log::alert("depositamountofbonus " . $depositamountofbonus);
