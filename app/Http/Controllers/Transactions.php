@@ -15,6 +15,11 @@ use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TradeWithdrawal;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+
 use App\Services\MailService as MailService;
 
 
@@ -32,14 +37,14 @@ class Transactions extends Controller
     public function index()
     {
 
-        $email = $email = auth()->user()->email;
+        $email = Auth::user()->email;
 
-        $deposit_history1 = WalletDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history1 = WalletDeposit::where('user_id',  Auth::user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
-        $deposit_history2 = TradeDeposit::where('user_id',  auth()->user()->id)
+        $deposit_history2 = TradeDeposit::where('user_id',  Auth::user()->id)
             ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
@@ -76,7 +81,7 @@ class Transactions extends Controller
         // dd($internal_transfer);
         // $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','withdraw_to','account_id')
-        //     ->where('user_id', auth()->user()->id)
+            //     ->where('user_id', Auth::user()->id)
         //     ->get()
         //     ->map(function ($withdrawal) {
         //         // if($withdrawal->withdraw_to){
@@ -99,7 +104,7 @@ class Transactions extends Controller
         // // Fetch filtered data from TradeDeposit with deposit_amount
         // $tradeDeposits = TradeDeposit::whereIn('deposit_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id', 'deposit_amount','deposted_date','deposit_type','email','status','code','deposit_from')
-        //     ->where('user_id', auth()->user()->id)
+        //     ->where('user_id', Auth::user()->id)
         //     ->with('account')
         //     ->get()
         //     ->map(function ($deposit) {
@@ -169,32 +174,43 @@ class Transactions extends Controller
         // dd($did);
         $transaction_id = $request->input('id');
 
-        $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
-
-        if($transaction->status == 1){
-            return redirect()->back()->with('status', 'Your transaction is already approved.');
-        }
-        if ($transaction) {
-            activity()->causedBy(auth()->user()->id)
-                ->withProperties(
-                    [
+        // Use DB transaction and row-level locking to prevent double processing
+        DB::beginTransaction();
+        try {
+            $transaction = TradeWithdrawals::where('id', $did)->lockForUpdate()->first();
+            if (!$transaction) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Transaction Not Found');
+            }
+            
+            // Check if already processed to prevent double execution
+            if($transaction->status == 1 || $transaction->status == 3){
+                DB::rollBack();
+                return redirect()->back()->with('status', 'Your transaction is already processed.');
+            }
+            
+            // Update status to prevent concurrent processing
+            $transaction->status = $status;
+            $transaction->transaction_id = $transaction_id;
+            $transaction->admin_remark = 'Cancelled by User';
+            $transaction->save();
+            
+            // Process API call within the same transaction for status 3
+            if($status == 3){
+                activity()->causedBy(Auth::user()->id)
+                    ->withProperties([
                         'ip' => $request->ip(),
-                        'email' => auth()->user()->email,
+                        'email' => Auth::user()->email,
                         'transaction_id' => $transaction_id,
                         'amount' => $depositAmount,
                         'status' => $status,
                         'remark' => 'Wallet Withdraw Cancel By Client'
                     ])
-            ->event('delete')
-            ->log('Wallet Withdraw Cancel');
-            $transaction->Status =$status;
-            $transaction->transaction_id = $transaction_id;
-            $transaction->admin_remark = 'Cancelled by User';
-            $transaction->save();
-            if($status==3){
+                ->event('delete')
+                ->log('Wallet Withdraw Cancel');
+                
                 $comment = "Deposit";
                 $ticket = NULL;
-
                 $settings = settings();
 
                 $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
@@ -208,156 +224,115 @@ class Transactions extends Controller
 
                 $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
 
-                // if ($errorCode != MTRetCode::MT_RET_OK) {
-                //     $error = MTRetCode::GetError($errorCode);
-                //     return response()->json([
-                //         'success' => false,
-                //         'message' => 'Something went wrong',
-                //         'error' => $error,
-                //     ], 400);
-                // }else{
+                // Process bonus deduction logic
+                $bonus = BonusTransaction::where('account_id', $transaction->account_id)
+                        ->where(function ($query) {
+                            $query->where('bonus_type', 'Bonus In')
+                                ->orWhere('bonus_type', 'Bonus Out');
+                        })
+                        ->where('admin_remark', 'LIKE', '%Promo Bonus%')
+                        ->selectRaw("
+                            SUM(bonus_amount) as total_promo_bonus_amount,
+                            SUM(bonus_used) as total_promo_bonus_used
+                        ")
+                        ->first();
+                        
+                $total_promo_bonus = $bonus->total_promo_bonus_amount;
+                $total_promo_bonus_used = $bonus->total_promo_bonus_used;
+                $promo_left = $total_promo_bonus - $total_promo_bonus_used;
 
-                    $bonus = BonusTransaction::where('account_id', $transaction->account_id)
-                            ->where(function ($query) {
-                                $query->where('bonus_type', 'Bonus In')
-                                    ->orWhere('bonus_type', 'Bonus Out');
-                            })
-                            ->where('admin_remark', 'LIKE', '%Promo Bonus%')
-                            ->selectRaw("
-                                SUM(bonus_amount) as total_promo_bonus_amount,
-                                SUM(bonus_used) as total_promo_bonus_used
-                            ")
-                            ->first();
-                    $total_promo_bonus = $bonus->total_promo_bonus_amount;
-                    $total_promo_bonus_used = $bonus->total_promo_bonus_used;
-                    $promo_left = $total_promo_bonus - $total_promo_bonus_used;
+                if ($total_promo_bonus_used) {
+                    $promo_deduction = $transaction->promo_deduction;
+                    $remaining_deduction = $promo_deduction;
+                    $account = Account::where('id', $transaction->account_id)->first();
+                    $promos = $account->BonusTransaction()
+                        ->where('admin_remark', 'Promo Bonus')
+                        ->with('promocode')
+                        ->get()
+                        ->sortByDesc(function ($transaction) {
+                            return $transaction->bonus_used;
+                        });
 
-                    if ($total_promo_bonus_used) {
-                        $promo_deduction = $transaction->promo_deduction;
-                        $remaining_deduction = $promo_deduction;
-                        $account = Account::where('id', $transaction->account_id)->first();
-                        $promos = $account->BonusTransaction()
-                            ->where('admin_remark', 'Promo Bonus')
-                            ->with('promocode') // assuming 'promocode' is the relation name
-                            ->get()
-                            ->sortByDesc(function ($transaction) {
-                                return $transaction->bonus_used;
-                            });
-
-                        foreach ($promos as $promo) {
-                            if ($remaining_deduction <= 0) {
-                                break;
-                            }
-
-                            $deduct_from_this = min($promo->bonus_used, $remaining_deduction);
-                            dd($deduct_from_this);
-                            $promo->bonus_used -= $deduct_from_this;
-                            $promo->save();
-
-                            // Call API only once, when you’ve calculated total to transfer back
-                            // Or accumulate and call later if needed
-
-                            // Log this deduction (optional - if tracking partial usage is important)
-                            BonusTransaction::create([
-                                'email' => $account->email,
-                                'user_id' => $transaction->user_id,
-                                'account_id' => $account->id,
-                                'code' => $account->code,
-                                'bonus_amount' => $deduct_from_this,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Addition',
-                                'bonus_currency' => 'USD',
-                            ]);
-
-                            $remaining_deduction -= $deduct_from_this;
+                    foreach ($promos as $promo) {
+                        if ($remaining_deduction <= 0) {
+                            break;
                         }
 
-                        // $i = 0;
+                        $deduct_from_this = min($promo->bonus_used, $remaining_deduction);
+                        Log::info('Promo deduction applied', [
+                            'promo_id' => $promo->id,
+                            'account_id' => $account->id,
+                            'deducted_amount' => $deduct_from_this,
+                            'remaining_deduction' => $remaining_deduction,
+                            'user_id' => $transaction->user_id,
+                            'transaction_id' => $transaction->id
+                        ]);
+                        
+                        $promo->bonus_used -= $deduct_from_this;
+                        $promo->save();
 
-                        // if ($promo_left > 0 && isset($promos[$i])) {
-                        //     $promo = $promos[$i];
+                        $log = BonusTransaction::create([
+                            'email' => $account->email,
+                            'user_id' => $transaction->user_id,
+                            'account_id' => $account->id,
+                            'code' => $account->code,
+                            'bonus_amount' => $deduct_from_this,
+                            'bonus_type' => 'Bonus In',
+                            'status' => 1,
+                            'admin_remark' => 'Promo Addition',
+                            'bonus_currency' => 'USD',
+                        ]);
+                        
+                        Log::info('Promo deduction BonusTransaction log created', [
+                            'bonus_transaction_id' => $log->id,
+                            'deducted_amount' => $deduct_from_this,
+                            'user_id' => $transaction->user_id,
+                            'transaction_id' => $transaction->id
+                        ]);
 
-
-
-                        //     $promo->bonus_used -= $transaction->promo_deduction;
-                        //     $promo->save();
-
-                        //     $promo_transfer_back = $transaction->promo_deduction;
-                        //     dd($promo_transfer_back);
-                        //     if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $promo_transfer_back, 'Promo Addition', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                        //         return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
-                        //     }
-
-                        //     // Record the deduction
-                        //     BonusTransaction::create([
-                        //         'email' => $account->email,
-                        //         'user_id' => $transaction->user_id,
-                        //         'account_id' => $account->id,
-                        //         'code' => $account->code,
-                        //         'bonus_amount' => $transaction->promo_deduction,
-                        //         'bonus_type' => 'Bonus In',
-                        //         'status' => 1,
-                        //         'admin_remark' => 'Promo Addition',
-                        //         'bonus_currency' => 'USD',
-                        //     ]);
-                        // }
+                        $remaining_deduction -= $deduct_from_this;
                     }
-                // }
+                }
 
+                // Send email notification
+                if (($transaction->payout_res) == NULL) {
+                    $from = $settings['email_from_address'];
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                    $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
+                    $content = '<p>We are pleased to inform you that your withdraw request has been successfully cancelled.</p>
+                                <p>The cancelled amount has been credited back to your wallet.</p>
+                                <p>Transaction Details</p>
+                                <p>Withdrawal Cancelled Amount: '.$depositAmount.'</p>
+                                <p>Transaction ID: '.$did.'</p>
+                                <p>Withdrawal Date: '.$transaction->withdraw_date.'</p>
+                                <p>Withdrawal Type: Wallet Withdrawal</p>';
 
-
-                if ( ($transaction->payout_res) == NULL) {
-                    // Decode the JSON string if it's not null or empty
-                    // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
-                    // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
-
-                    // if($message){
-                        //Send email
-                        $from = $settings['email_from_address'];
-                        // $transid = "WDID" . $payout_res;
-                        $headers = "MIME-Version: 1.0" . "\r\n";
-                        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $emailSubject = $settings['admin_title'] . ' - Transaction Cancelled';
-                        $content = '<p>
-                                        We are pleased to inform you that your withdraw request has been successfully cancelled.
-                                    </p>
-                                    <p>
-                                        The cancelled amount has been credited back to your wallet.
-                                    </p>
-                                    <p>
-                                        Transaction Details
-                                    </p>
-                                    <p>
-                                        Withdrawal Cancelled Amount: '.$depositAmount.'
-                                    </p>
-                                    <p>
-                                        Transaction ID: '.$did.'
-                                    </p>
-                                    <p>
-                                        Withdrawal Date: '.$transaction->withdraw_date.'
-                                    </p>
-                                    <p>
-                                        Withdrawal Type: Wallet Withdrawal
-                                    </p>';
-
-                        $templateVars = [
-                            'name' => $transaction->user->fullname,
-                            'site_link' => $settings['copyright_site_name_text'],
-                            'email' => $settings['email_from_address'],
-                            'content' => $content,
-                            'title_right' => 'Transaction',
-                            'subtitle_right' => 'Cancelled',
-                            'btn_text' => 'Go To Dashboard',
-                        ];
-                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                    // }
+                    $templateVars = [
+                        'name' => $transaction->user->fullname,
+                        'site_link' => $settings['copyright_site_name_text'],
+                        'email' => $settings['email_from_address'],
+                        'content' => $content,
+                        'title_right' => 'Transaction',
+                        'subtitle_right' => 'Cancelled',
+                        'btn_text' => 'Go To Dashboard',
+                    ];
+                    $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 }
             }
+            
+            DB::commit();
             return redirect()->back()->with('status', 'Transaction Cancelled Successfully');
-        } else {
-            return redirect()->back()->with('error', 'Transaction Not Found');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Transaction update failed', [
+                'transaction_id' => $did,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::user()->id
+            ]);
+            return redirect()->back()->with('error', 'Transaction processing failed. Please try again.');
         }
     }
     // public function history()

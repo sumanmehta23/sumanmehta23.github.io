@@ -61,7 +61,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                 ->orderBy('expert_position_id')
                 ->orderBy('time_closed')
 //                ->cursor();
-             ->chunkById(200, function ($ibcommissions) use ($i) {
+             ->chunkById(500, function ($ibcommissions) use ($i) {
             $finalResults = $walletsToCreate = [];
             $mergedTrades = collect($this->buffer)->flatten(1)->merge($ibcommissions)->flatten(1);
             $groupedTrades = $mergedTrades->groupBy('expert_position_id');
