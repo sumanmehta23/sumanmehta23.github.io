@@ -289,9 +289,9 @@ class TradeWithdrawal extends Controller
                 $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
                 Log::alert("tradedeposits " . $tradedeposits);
                 $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
-                                                            ->sum(function ($item) {
-                                                                return $item->withdrawal_amount + $item->transaction_fee;
-                                                            });
+                    ->sum(function ($item) {
+                        return $item->withdrawal_amount + $item->transaction_fee;
+                    });
                 Log::alert("tradewithdrawals " . $tradewithdrawals);
                 $depositswithoutpromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
                 Log::alert("depositswithoutpromo " . $depositswithoutpromo);
@@ -322,7 +322,7 @@ class TradeWithdrawal extends Controller
                 //     return optional($transaction->promocode)->promo_percentage;
                 // });
                 //log entire $promos
-                // Log::alert("promos " . $promos->toJson());
+                Log::alert("promos " . $promos->toJson());
                 // dd($promos);
                 // $promos = $account->BonusTransaction()
                 $i = 0;
@@ -423,7 +423,7 @@ class TradeWithdrawal extends Controller
                                 'bonus_currency' => 'USD',
                             ]);
 
-                            if($mt5account->Balance > 0){
+                            if ($mt5account->Balance > 0) {
                                 $trade_user = NULL;
                                 $this->api->UserGet($account->code, $trade_user);
                                 if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
@@ -432,7 +432,7 @@ class TradeWithdrawal extends Controller
 
                                 Log::alert(" $account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ) ");
 
-                                $leverage = round($account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ),2);
+                                $leverage = round($account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit))), 2);
 
                                 $trade_user->Leverage = $leverage;
 
@@ -440,7 +440,6 @@ class TradeWithdrawal extends Controller
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
                                     return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
                                 }
-
                             }
                         }
                         if ($deductedamounts == $totaldeductableamount) {

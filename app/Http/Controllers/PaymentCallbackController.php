@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -110,12 +111,10 @@ class PaymentCallbackController extends Controller
                     )
                     ->event('create')
                     ->log('Wallet Deposit');
-
             });
 
             Log::info($logData . "Transaction Confirmed\n");
             return response("true", 200);
-
         } catch (Exception $e) {
             $error = "Something went wrong...!" . $e->getMessage();
             Log::error($logData . "Transaction Failed\n" . $error);
