@@ -266,11 +266,11 @@ class Wallet extends Controller
             ->first();
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Wallet Address: ' . $request->wallet_address . ' </p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
@@ -1207,14 +1207,14 @@ class Wallet extends Controller
 
                             // Updating leverage
                             $trade_user = NULL;
-                            $this->api->UserGet($account->code,$trade_user);
+                            $this->api->UserGet($account->code, $trade_user);
 
                             if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }
                             Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
-                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))),2);
+                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
                             $trade_user->Leverage = $leverage;
 
                             $updated_user = "";
@@ -1404,9 +1404,9 @@ class Wallet extends Controller
 
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your wallet.</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Click the link below to activate your Wallet Withdrawal</p>';
 
         $templateVars = [
@@ -1458,9 +1458,9 @@ class Wallet extends Controller
 
             $content =
                 '<p><b>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '</b></p><br>' .
-                '<p></p>'.
+                '<p></p>' .
                 '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawAmount . ' from your account ' . $tradeWithdrawal->code . '.</p>' .
-                '<p></p>'.
+                '<p></p>' .
                 '<p>Click the link below to activate your Account Withdrawal</p>';
 
             $templateVars = [
