@@ -19,7 +19,7 @@ class SyncAccountTrades extends Command
     public function handle()
     {
         Ib1::with(['planDetails', 'user'])  // Eager load related models
-        ->where('status', 1)
+            ->where('status', 1)
             ->whereNotNull('ib_plan_details_id')
             ->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) {
@@ -51,18 +51,20 @@ class SyncAccountTrades extends Command
                 Account::select('id', 'code', 'user_id', 'account_type_id')
                     ->where('demo', false)
                     ->where('account_request_status', 1)
-                    ->whereHas('user', fn ($query) =>
-                    $query->where(function ($q) use ($referral_code) {
-                        for ($i = 1; $i <= 15; $i++) {
-                            $q->orWhere("ib$i", $referral_code);
-                        }
-                    })->where('status', 1)
+                    ->whereHas(
+                        'user',
+                        fn($query) =>
+                        $query->where(function ($q) use ($referral_code) {
+                            for ($i = 1; $i <= 15; $i++) {
+                                $q->orWhere("ib$i", $referral_code);
+                            }
+                        })->where('status', 1)
                     )
                     ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans) {
                         $jobs = [];
 
                         foreach ($accounts as $client) {
-                            Log::info('Accounts to sync commission : ' . $client->code);
+                            // Log::info('Accounts to sync commission : ' . $client->code);
                             $jobs[] = new SyncAccountTradesJob($client->id, $referral_code, $userId, $ib_acc_plans);
                         }
 
