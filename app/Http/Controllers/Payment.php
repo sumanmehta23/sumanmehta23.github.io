@@ -58,6 +58,11 @@ class Payment extends Controller
             $validationToken = $paymentlinkresponse->polygon_address_in;
             // && $responsedata['value_coin']==$paymentLog->payment_amount can't compare as it will never be same as intial input
             if ($responsedata['address_in'] == $validationToken) {
+                $existingPayment = TradeDeposit::where('transaction_id', $transactionId)->first();
+                if ($existingPayment) {
+                    Log::channel("creditcardpayissa")->info('Payment already exists for transaction ID: ' . $transactionId);
+                    return ['ok'];
+                }
                 $validcoins = config("services.payissa.valid_coins");
                 $coinString = strtolower($responsedata['coin']);
                 $matches = array_filter($validcoins, function ($coin) use ($coinString) {
@@ -118,7 +123,7 @@ class Payment extends Controller
 
                 $ticket1 = NULL;
                 if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
-                    $existingTransaction = BonusTransaction::where('transaction_id', $transactionId)->first();
+
                     if (!$existingTransaction) {
                         if ($amount > 250) {
                             $bonusamount = 9 * 250;
@@ -175,12 +180,12 @@ class Payment extends Controller
 
                                 // Updating leverage
                                 $trade_user = NULL;
-                                $this->api->UserGet($account->code,$trade_user);
+                                $this->api->UserGet($account->code, $trade_user);
                                 if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                     return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                 }
 
-                                $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)),2);
+                                $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
                                 $trade_user->Leverage = $leverage;
 
                                 $updated_user = "";
@@ -266,8 +271,8 @@ class Payment extends Controller
             $payment_res = json_encode($request->all());
             $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
             $account = Account::where('id', $paymentLog->account_id)->first();
-
-            if ($status == "success" && $account) {
+            $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
+            if ($status == "success" && $account && !$existingTransaction) {
                 // Get the payment log
                 if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
                     // Update payment log
@@ -343,13 +348,13 @@ class Payment extends Controller
 
         $account = Account::where('code', $code)->first();
 
-        $existingTransaction = TradeDeposit::where('transaction_id',$transactionId)->first();
-        if($existingTransaction){
+        $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
+        if ($existingTransaction) {
             return response()->json([
-                    'success' => false,
-                    'message' => 'Transaction already exist',
-                    'error' => 'Transaction already exist',
-                ], 400);
+                'success' => false,
+                'message' => 'Transaction already exist',
+                'error' => 'Transaction already exist',
+            ], 400);
         }
 
         if ($account) {
@@ -393,7 +398,7 @@ class Payment extends Controller
                     'payment_status' => 'success',
                     'payment_res' => 'success',
                     'initiated_by' => $email,
-                    'remarks' => 'https://my.lqhmarkets.com/payment-response?amount='.$amount.'&payment_id='.$transactionId.'&status=success',
+                    'remarks' => 'https://my.lqhmarkets.com/payment-response?amount=' . $amount . '&payment_id=' . $transactionId . '&status=success',
                     'created_at' => $deposit_date,
                     'updated_at' => now()
                 ]);
@@ -435,7 +440,7 @@ class Payment extends Controller
     public function sendSuccessEmail2($toEmail, $amount, $tradedeposit)
     {
         $tradedeposit->deposit_type == "CreditCardPayissa" ? "Credit Card" : '';
-        $user = User::where('id',$tradedeposit->user_id)->first();
+        $user = User::where('id', $tradedeposit->user_id)->first();
         $settings = settings();
         $from = $settings['email_from_address'];
         $transid = $tradedeposit->id;
