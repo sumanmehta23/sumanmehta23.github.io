@@ -225,8 +225,7 @@ class Payment extends Controller
                         //     'callback_data' => json_encode($responsedata),
                         //     'callback_code' => "success",
                         // ]);
-
-                        $tradeDeposit = TradeDeposit::create([
+                        $data = [
                             'user_id' => $paymentLog->user_id,
                             'account_id' => $paymentLog->account_id,
                             'email' => $email,
@@ -240,9 +239,16 @@ class Payment extends Controller
                             'deposted_date' => now(),
                             'callback_data' => json_encode($responsedata),
                             'callback_code' => "success",
-                            'promocode_percentage' => $promo->promo_percentage,
-                            'promocode_code' => $promo->code,
-                        ]);
+
+                        ];
+                        if (isset($promo) && isset($promo->promo_percentage) && $promo->promo_percentage > 0) {
+                            $data['promocode_percentage'] = $promo->promo_percentage;
+                            $data['promocode_code'] = $promo->code;
+                        } else {
+                            $data['promocode_percentage'] = null;
+                            $data['promocode_code'] = null;
+                        }
+                        $tradeDeposit = TradeDeposit::create($data);
 
                         // Update total balance
                         TotalBalance::create(
@@ -259,6 +265,9 @@ class Payment extends Controller
                     } catch (Exception $e) {
                         DB::rollBack();
                         Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
+                        $amount = -$amount;
+                        $comment = 'CreditCardPayissa - Error';
+                        $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
                         return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                     }
                 }
