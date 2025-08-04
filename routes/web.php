@@ -65,6 +65,41 @@ use App\Http\Controllers\Admin\CompetitionProductController;
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 
+    //parse csv file located at storage/logs/callback_errors_export.csv and for each make a http get request to http://lqhlaravel.test/failed-payment-response with json data read from csv file under Callback Data and no headers
+    $filePath = storage_path('logs/callback_errors_export.csv');
+    if (!file_exists($filePath)) {
+        return response("File not found", 404);
+    }
+    $file = fopen($filePath, 'r');
+    if ($file === false) {
+        return response("Failed to open file", 500);
+    }
+    $headers = fgetcsv($file);
+    $data = [];
+    while (($row = fgetcsv($file)) !== false) {
+        $rowData = [];
+        foreach ($headers as $index => $header) {
+            $rowData[$header] = $row[$index];
+        }
+        $data[] = $rowData;
+        $jsonData = json_decode($rowData['Callback Data'], true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $response = Http::get('http://lqhlaravel.test/failed-payment-response', [
+                'callback_data' => $jsonData,
+            ]);
+            if ($response->successful()) {
+                Log::info("Successfully sent data for transaction ID: " . $rowData['Transaction ID']);
+            } else {
+                Log::error("Failed to send data for transaction ID: " . $rowData['Transaction ID'] . " - " . $response->body());
+            }
+        } else {
+            Log::error("Invalid JSON data for transaction ID: " . $rowData['Transaction ID']);
+        }
+    }
+    fclose($file);
+    return response("Data processed successfully", 200);
+
+
     $settings = settings();
     $htmlContent = "<p>hello , please check your acount for more details</p>";
     $payload = [
