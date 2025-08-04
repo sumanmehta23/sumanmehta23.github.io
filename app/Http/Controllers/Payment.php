@@ -376,28 +376,35 @@ class Payment extends Controller
                 $transactionId = $responsedata['txid_in'];
 
                 if (empty($address_in)) {
-                    return response()->json(['error' => 'Missing address'], 400);
+                    Log::info('Missing address: ' . $transactionId);
+                    continue;
+                    // return response()->json(['error' => 'Missing address'], 400);
                 }
 
                 // Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
 
                 $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
                 if (!$paymentLog) {
-                    return response()->json(['error' => 'Invalid Payment ID'], 400);
+                    Log::info('Invalid Payment ID: ' . $payment_id);
+                    continue;
+                    // return response()->json(['error' => 'Invalid Payment ID'], 400);
                 }
 
                 $paymentlinkresponse = json_decode($paymentLog->payment_req);
                 $validationToken = $paymentlinkresponse->polygon_address_in;
 
                 if ($responsedata['address_in'] != $validationToken) {
-                    return response()->json(['error' => 'Address mismatch'], 400);
+                    Log::info('Address mismatch for transaction ID: ' . $responsedata['address_in']);
+                    continue;
                 }
 
                 // Check if transaction already exists
                 $existingPayment = TradeDeposit::where('transaction_id', $transactionId)->first();
                 if ($existingPayment) {
-                    Log::channel("creditcardpayissa")->info('Payment already exists for transaction ID: ' . $transactionId);
-                    return response()->json(['status' => 'already_processed']);
+                    // Log::channel("creditcardpayissa")->info('Payment already exists for transaction ID: ' . $transactionId);
+                    Log::info("already_processed " . $transactionId);
+                    continue;
+                    // return response()->json(['status' => 'already_processed']);
                 }
 
                 // Check valid coin
