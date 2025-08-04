@@ -65,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 5 request every 10 seconds
             return Limit::perSeconds(300, 3)->by(optional($request->user())->id ?: $request->ip());
         });
+        RateLimiter::for('cancel_withdrawal', function ($request) {
+            // Limit to 1 request every 10 seconds
+            return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
+        });
 
     }
 }

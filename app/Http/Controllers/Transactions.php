@@ -13,13 +13,14 @@ use App\Models\WalletWithdraw;
 use App\Models\BonusTransaction;
 use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\TradeWithdrawal;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\TradeWithdrawal;
+
+use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
 
 
@@ -150,7 +151,20 @@ class Transactions extends Controller
         // die;
         return view('transactions', compact('deposit_history', 'withdrawal_history', 'internal_transfer'));
     }
-    public function updateTransaction(Request $request){
+    public function updateTransaction(Request $request)
+    {
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'cancel_withdrawal:' . (auth()->id() ?: $request->ip());
+
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with([
+                'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            ]);
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $settings = settings();
         $status = $request->status;
@@ -182,19 +196,19 @@ class Transactions extends Controller
                 DB::rollBack();
                 return redirect()->back()->with('error', 'Transaction Not Found');
             }
-            
+
             // Check if already processed to prevent double execution
             if($transaction->status == 1 || $transaction->status == 3){
                 DB::rollBack();
                 return redirect()->back()->with('status', 'Your transaction is already processed.');
             }
-            
+
             // Update status to prevent concurrent processing
             $transaction->status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->admin_remark = 'Cancelled by User';
             $transaction->save();
-            
+
             // Process API call within the same transaction for status 3
             if($status == 3){
                 activity()->causedBy(Auth::user()->id)
@@ -208,7 +222,7 @@ class Transactions extends Controller
                     ])
                 ->event('delete')
                 ->log('Wallet Withdraw Cancel');
-                
+
                 $comment = "Deposit";
                 $ticket = NULL;
                 $settings = settings();
@@ -236,15 +250,21 @@ class Transactions extends Controller
                             SUM(bonus_used) as total_promo_bonus_used
                         ")
                         ->first();
-                        
+
                 $total_promo_bonus = $bonus->total_promo_bonus_amount;
                 $total_promo_bonus_used = $bonus->total_promo_bonus_used;
                 $promo_left = $total_promo_bonus - $total_promo_bonus_used;
 
                 if ($total_promo_bonus_used) {
                     $promo_deduction = $transaction->promo_deduction;
+
                     $remaining_deduction = $promo_deduction;
                     $account = Account::where('id', $transaction->account_id)->first();
+
+                    if (($error_codes = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Addition', $tickets, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_codes));
+                    }
+
                     $promos = $account->BonusTransaction()
                         ->where('admin_remark', 'Promo Bonus')
                         ->with('promocode')
@@ -267,7 +287,7 @@ class Transactions extends Controller
                             'user_id' => $transaction->user_id,
                             'transaction_id' => $transaction->id
                         ]);
-                        
+
                         $promo->bonus_used -= $deduct_from_this;
                         $promo->save();
 
@@ -282,7 +302,10 @@ class Transactions extends Controller
                             'admin_remark' => 'Promo Addition',
                             'bonus_currency' => 'USD',
                         ]);
-                        
+
+                        $transaction->promo_deduction = $transaction->promo_deduction - $deduct_from_this;
+                        $transaction->save();
+
                         Log::info('Promo deduction BonusTransaction log created', [
                             'bonus_transaction_id' => $log->id,
                             'deducted_amount' => $deduct_from_this,
@@ -321,10 +344,10 @@ class Transactions extends Controller
                     $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 }
             }
-            
+
             DB::commit();
             return redirect()->back()->with('status', 'Transaction Cancelled Successfully');
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Transaction update failed', [
