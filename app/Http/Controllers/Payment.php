@@ -476,7 +476,7 @@ class Payment extends Controller
             } else {
                 Log::error("Invalid JSON data for transaction ID: " . $rowData['TxID In']);
             }
-            exit;
+            // exit;
         }
         fclose($file);
         return 'ok';
