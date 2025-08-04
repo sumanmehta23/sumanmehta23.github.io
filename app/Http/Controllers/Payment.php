@@ -265,7 +265,7 @@ class Payment extends Controller
                     } catch (Exception $e) {
                         DB::rollBack();
                         Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
-                        $amount = -$amount;
+                        $amount = abs((float)$amount) * -1;
                         $comment = 'CreditCardPayissa - Error';
                         $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
                         return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
