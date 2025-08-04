@@ -108,7 +108,7 @@
                                                                 </div>
                                                             @endif
                                                             @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
-                                                            {{-- <div class="col-6 col-lg-6 col-xl-6">
+                                                            <div class="col-6 col-lg-6 col-xl-6">
                                                                 <div class="border rounded address-check trade-deposit-type">
                                                                     <div class="form-check">
                                                                         <input type="radio" name="deposit_type"
@@ -133,7 +133,7 @@
                                                                         </label>
                                                                     </div>
                                                                 </div>
-                                                            </div> --}}
+                                                            </div>
                                                             @endif
                                                         </div>
                                                         <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
