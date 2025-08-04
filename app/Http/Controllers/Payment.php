@@ -268,82 +268,83 @@ class Payment extends Controller
                         $amount = abs((float)$amount) * -1;
                         $comment = 'CreditCardPayissa - Error';
                         $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
-                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                        // return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                     }
                 }
             }
 
             return ["ok"];
             // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
-        } else {
-
-            $payment_res = json_encode($request->all());
-            $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
-            $account = Account::where('id', $paymentLog->account_id)->first();
-            $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
-            if ($status == "success" && $account && !$existingTransaction) {
-                // Get the payment log
-                if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
-                    // Update payment log
-                    $paymentLog->update([
-                        'payment_res' => $payment_res,
-                        'payment_status' => $status,
-                    ]);
-                    $email = $paymentLog->initiated_by;
-                    $amount = $paymentLog->payment_amount;
-                    // Create a new wallet deposit
-                    // $walletDeposit = WalletDeposit::create([
-                    //     'email' => $email,
-                    //     'deposit_amount' => $amount,
-                    //     'deposit_type' => "Now Payment",
-                    //     'currency_type' => "USD",
-                    //     'status' => 1,
-                    // ]);
-                    $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
-                    if ($errorCode != MTRetCode::MT_RET_OK) {
-                        $error = MTRetCode::GetError($errorCode);
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Something went wrong',
-                            'error' => $error,
-                        ], 400);
-                    } else {
-                        $tradeDeposit = TradeDeposit::create([
-                            'user_id' => $paymentLog->user_id,
-                            'account_id' => $paymentLog->account_id,
-                            'email' => $email,
-                            'code' => $account->code,
-                            'deposit_amount' => $amount,
-                            'deposit_type' => 'CreditCardPayissa',
-                            'deposit_from' => 'CreditCardPayissa',
-                            'status' => 1,
-                            'deposit_currency' => 'USD',
-                            'transaction_id' => $transactionId,
-                            'deposted_date' => now(),
-                            'callback_data' => json_encode($responsedata),
-                            'callback_code' => "success",
-                        ]);
-                    }
-
-                    if ($tradeDeposit) {
-                        $this->sendSuccessEmail($email, $amount, $paymentLog, $tradeDeposit->id);
-                        $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
-                        return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
-                    } else {
-                        return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
-                    }
-                } else {
-                    return redirect('trade-deposit')->with('error', "Payment already processed or invalid.");
-                }
-            } else {
-                // Update payment log for failed payment
-                $paymentLog->update([
-                    'payment_res' => $payment_res,
-                    'payment_status' => $status,
-                ]);
-                return redirect('/trade-deposit')->with('error', "Payment Failed: Something Went Wrong. Please try again");
-            }
         }
+        // else {
+
+        //     $payment_res = json_encode($request->all());
+        //     $paymentLog = PaymentLog::where(DB::raw('payment_id'), $payment_id)->with('user')->first();
+        //     $account = Account::where('id', $paymentLog->account_id)->first();
+        //     $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
+        //     if ($status == "success" && $account && !$existingTransaction) {
+        //         // Get the payment log
+        //         if ($paymentLog && strtolower($paymentLog->payment_status) != "success") {
+        //             // Update payment log
+        //             $paymentLog->update([
+        //                 'payment_res' => $payment_res,
+        //                 'payment_status' => $status,
+        //             ]);
+        //             $email = $paymentLog->initiated_by;
+        //             $amount = $paymentLog->payment_amount;
+        //             // Create a new wallet deposit
+        //             // $walletDeposit = WalletDeposit::create([
+        //             //     'email' => $email,
+        //             //     'deposit_amount' => $amount,
+        //             //     'deposit_type' => "Now Payment",
+        //             //     'currency_type' => "USD",
+        //             //     'status' => 1,
+        //             // ]);
+        //             $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+        //             if ($errorCode != MTRetCode::MT_RET_OK) {
+        //                 $error = MTRetCode::GetError($errorCode);
+        //                 return response()->json([
+        //                     'success' => false,
+        //                     'message' => 'Something went wrong',
+        //                     'error' => $error,
+        //                 ], 400);
+        //             } else {
+        //                 $tradeDeposit = TradeDeposit::create([
+        //                     'user_id' => $paymentLog->user_id,
+        //                     'account_id' => $paymentLog->account_id,
+        //                     'email' => $email,
+        //                     'code' => $account->code,
+        //                     'deposit_amount' => $amount,
+        //                     'deposit_type' => 'CreditCardPayissa',
+        //                     'deposit_from' => 'CreditCardPayissa',
+        //                     'status' => 1,
+        //                     'deposit_currency' => 'USD',
+        //                     'transaction_id' => $transactionId,
+        //                     'deposted_date' => now(),
+        //                     'callback_data' => json_encode($responsedata),
+        //                     'callback_code' => "success",
+        //                 ]);
+        //             }
+
+        //             if ($tradeDeposit) {
+        //                 $this->sendSuccessEmail($email, $amount, $paymentLog, $tradeDeposit->id);
+        //                 $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
+        //                 return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
+        //             } else {
+        //                 return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
+        //             }
+        //         } else {
+        //             return redirect('trade-deposit')->with('error', "Payment already processed or invalid.");
+        //         }
+        //     } else {
+        //         // Update payment log for failed payment
+        //         $paymentLog->update([
+        //             'payment_res' => $payment_res,
+        //             'payment_status' => $status,
+        //         ]);
+        //         return redirect('/trade-deposit')->with('error', "Payment Failed: Something Went Wrong. Please try again");
+        //     }
+        // }
     }
 
     public function manuallyPaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
