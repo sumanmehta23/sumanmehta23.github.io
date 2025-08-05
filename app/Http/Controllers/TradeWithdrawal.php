@@ -289,6 +289,7 @@ class TradeWithdrawal extends Controller
                 $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
                 Log::alert("tradedeposits " . $tradedeposits);
                 $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
+                    ->where('status','!=',3)
                     ->sum(function ($item) {
                         return $item->withdrawal_amount + $item->transaction_fee;
                     });
