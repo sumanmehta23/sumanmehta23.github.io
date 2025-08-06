@@ -497,7 +497,7 @@ if (app()->environment('local')) {
                         </li> --}}
 
                         @can('m_t5_group:viewAny')
-                            @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false)
+                            {{-- @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false) --}}
                                 <li class="slide__category menu-item-category">
                                     <span class="category-name">MT5 COMPETITION</span>
                                 </li>
@@ -533,7 +533,7 @@ if (app()->environment('local')) {
                                         </li>
                                     </ul>
                                 </li>
-                            @endif
+                            {{-- @endif --}}
                         @endcan
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
