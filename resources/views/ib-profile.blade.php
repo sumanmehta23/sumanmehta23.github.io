@@ -364,11 +364,13 @@
                                     <div class="p-3 card-body">
                                         <ul class="nav nav-pills nav-tabs nav-justified" role="tablist">
                                             <?php for ($i = 1; $i <= 7; $i++) { ?>
-                                            <li class="nav-item" data-target-form="#LEVEL{{ $i }}" role="presentation"><a
-                                                    class="nav-link client-level {{ $i == 1 ? 'active' : '' }}"
-                                                    data-level="{{ $i }}" aria-selected="false" role="tab" tabindex="-1"><i
-                                                        class="ti ti-chart-bar me-2"></i><span
-                                                        class="d-none d-sm-inline">LEVEL{{ $i }}</span></a>
+                                            <li class="nav-item" data-target-form="#LEVEL{{ $i }}" role="presentation">
+                                                <a class="nav-link client-level {{ $i == 1 ? 'active' : '' }}" data-level="{{ $i }}" aria-selected="false" role="tab" tabindex="-1">
+                                                    <i class="ti ti-chart-bar me-2"></i>
+                                                    <span class="d-none d-sm-inline">
+                                                        LEVEL{{ $i }}{{ $i == 0 ? ' (Direct)' : '' }}
+                                                    </span>
+                                                </a>
                                             </li>
                                             <?php } ?>
                                         </ul>
