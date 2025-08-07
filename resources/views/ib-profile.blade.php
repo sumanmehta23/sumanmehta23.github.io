@@ -368,7 +368,7 @@
                                                 <a class="nav-link client-level {{ $i == 1 ? 'active' : '' }}" data-level="{{ $i }}" aria-selected="false" role="tab" tabindex="-1">
                                                     <i class="ti ti-chart-bar me-2"></i>
                                                     <span class="d-none d-sm-inline">
-                                                        LEVEL{{ $i }}{{ $i == 0 ? ' (Direct)' : '' }}
+                                                        LEVEL{{ $i }}{{ $i == 1 ? ' (Direct)' : '' }}
                                                     </span>
                                                 </a>
                                             </li>
