@@ -62,11 +62,11 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\CompetitionProductController;
 
+Route::get("/five", function () {
+    throw new \Exception("This is a test exception for Klaviyo subscription.");
+});
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
-
-
-
     $settings = settings();
     $htmlContent = "<p>hello , please check your acount for more details</p>";
     $payload = [
