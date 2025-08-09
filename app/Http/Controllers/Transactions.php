@@ -265,16 +265,18 @@ class Transactions extends Controller
                             return redirect()->back()->with('error', MTRetCode::GetError($error_codes));
                     }
 
+
                     $promos = $account->BonusTransaction()
                         ->where('admin_remark', 'Promo Bonus')
                         ->with('promocode')
-                        ->get()
-                        ->sortByDesc(function ($transaction) {
-                            return $transaction->bonus_used;
-                        });
+                        ->orderBy('bonus_used', 'asc')
+                        ->get();
 
                     foreach ($promos as $promo) {
                         if ($remaining_deduction <= 0) {
+                            break;
+                        }
+                        if ($promo->bonus_used == 0) {
                             break;
                         }
 

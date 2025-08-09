@@ -303,10 +303,24 @@ class TradeWithdrawal extends Controller
                 Log::alert("PNL " . $pnl);
                 $totaldeductableamount = $amount_to_deduct = $amount - $depositswithoutpromo - $pnl;
                 Log::alert("amountForDeductions " . $amount_to_deduct);
+
+                if (($error_code2 = $this->api->UserAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
+                    session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
+                    return redirect()->route('trade-withdrawal')->with('error', 'Unable to get account details.');
+                }
                 //SPECIAL CASE TO TACKLE MULTIPLE PROMO CODES AND SECOND WITHDRAWAL :TODO
-                if ($amount_to_deduct < 0) {
+                // if ($amount_to_deduct < 0) {
+                //     $totaldeductableamount = $amount_to_deduct = $amount;
+                // }
+
+
+                if($mt5account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue){
+                    $totaldeductableamount = $amount_to_deduct = $amount - ($account->balance - $totalBonusDepositValue);
+                }elseif($mt5account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue){
                     $totaldeductableamount = $amount_to_deduct = $amount;
                 }
+
+
                 Log::alert("amountForDeductions " . $amount_to_deduct);
                 $promos = $account->BonusTransaction()
                     ->where('admin_remark', 'Promo Bonus')
@@ -327,22 +341,15 @@ class TradeWithdrawal extends Controller
                 // dd($promos);
                 // $promos = $account->BonusTransaction()
                 $i = 0;
-                if (($error_code2 = $this->api->UserAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
-                    session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
-                    return redirect()->route('trade-withdrawal')->with('error', 'Unable to get account details.');
-                }
-                // $mt5account->Balance = $mt5account->Balance - $amount;
-                // $deductionThreshold = $mt5account->Balance - $totalBonusDepositValue - $tradewithdrawals;
-                // Log::alert("deductionThreshold " . $mt5account->Balance . "-" . $totalBonusDepositValue . "=" . $deductionThreshold);
-                // echo $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
-                // Log::alert("PNL " . $pnl);
-                // die();
+
+
                 $deductedamounts = 0;
                 foreach ($promos as $promo) {
 
                     $depositamountofbonusused = 0;
                     $promo_percentage_value = $promo->promocode ? $promo->promocode->promo_percentage : 0;
-                    if ($promo_percentage_value && $amount_to_deduct > 0) {
+                    if ($promo_percentage_value && $amount_to_deduct > 0 && $mt5account->Balance < $totalBonusDepositValue) {
+                        $oldThreshold = $totalBonusDepositValue;
                         $threshold = $amount_to_deduct;
                         $depositamountofbonus = $promo->bonus_amount / ($promo_percentage_value / 100);
                         Log::alert("depositamountofbonus " . $depositamountofbonus);
@@ -356,7 +363,11 @@ class TradeWithdrawal extends Controller
                         if ($depositamountofbonusleft >= $threshold) {
                             $promo_deduction = ($threshold * ($promo_percentage_value / 100));
                             $deductedamounts += $threshold;
-                        } else {
+                        }
+                        elseif($mt5account->Balance > $oldThreshold){
+                            break;
+                        }
+                         else {
                             $promo_deduction = ($depositamountofbonusleft * ($promo_percentage_value / 100));
                             $amount_to_deduct = $threshold - $depositamountofbonusleft;
                             $deductedamounts += $depositamountofbonusleft;
