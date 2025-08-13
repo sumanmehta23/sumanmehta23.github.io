@@ -177,7 +177,7 @@ class TradeWithdrawal extends Controller
         // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
 
         // Check for sufficient balance
-        if ((float) ($amount) > (((float) $account->balance))) {
+        if ((float) ($amount) > (((float) $account->balance-(float)$total_bonus))) {
             return redirect()->back()->with('error', 'Insufficient balance');
         }
         if ((float)$amount > (float) $account->balance) {
