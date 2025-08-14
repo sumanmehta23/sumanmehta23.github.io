@@ -129,13 +129,14 @@ class Leaderboard extends Controller
             ->orderBy('mt5_grp_cat_id')
             ->get();
 
-        $mt5_groups = Mt5Group::where('mt5_group_type', 'demo')->get();
-
+        $mt5_groups = Mt5Group::where('mt5_group_type', 'demo')->first();
+        $competition_group = env('COMPETITION_GROUP');
+        // dd();
         $grp_books = MT5GroupCategory::where('mt5_grp_cat_type', 'book')
             ->orderBy('mt5_grp_cat_id')
             ->get();
 
-        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup'));
+        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup','competition_group'));
     }
     public function requested_competition()
     {
@@ -303,6 +304,7 @@ class Leaderboard extends Controller
 
     function CreateCompetition($user, &$user_server, $type)
     {
+        // dd($user);
         $settings = settings();
         if (!$this->api->IsConnected()) {
             $errorCode = $this->api->Connect(
@@ -318,11 +320,10 @@ class Leaderboard extends Controller
                 return ["status" => false, "message" => $error];
             }
         }
-
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $this->sendMail($user, 'Demo');
             $error = MTRetCode::GetError($error_code);
-            // dd($error);
+
             Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));
             return ["status" => false, "message" => $error];
         } else {

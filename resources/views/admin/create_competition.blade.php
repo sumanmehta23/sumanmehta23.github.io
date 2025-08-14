@@ -69,7 +69,9 @@
                     </div>
                     <div class="mb-0 modal-body custom-card card">
                         <div class="row">
-                            <div class="mb-3 form-group col-lg-3">
+                            {{-- {{ dd($mt5_groups) }} --}}
+                            <input type="text" value={{ $mt5_groups->mt5_group_id }} name="ac_type" hidden>
+                            {{-- <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_type" class="form-label">Group Type</label>
                                 <select class="form-control" id="ac_type" name="ac_type" required="">
                                     <option value="" selected disabled></option>
@@ -80,12 +82,12 @@
                                     </option>
                                     <?php } ?>
                                 </select>
-                            </div>
+                            </div> --}}
                             <div class="mb-3 form-group col-lg-3">
                                 <label for="group_name" class="form-label">Competition Name</label>
                                 <input type="text" class="form-control" name="ac_name" required="" id="group_name">
                             </div>
-                            <div class="mb-3 form-group col-lg-3">
+                            {{-- <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_type" class="form-label">Group Category</label>
                                 <select class="form-control" id="ac_type" name="ac_category" required="">
                                     <option selected="" default="" disabled=""></option>
@@ -97,8 +99,9 @@
                                         </option>
                                     <?php } ?>
                                 </select>
-                            </div>
-                            <div class="mb-3 form-group col-lg-3">
+                            </div> --}}
+                            {{-- {{ dd($grp_books) }} --}}
+                            {{-- <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_book_type" class="form-label">Group Book Type</label>
                                 <select class="form-control" id="ac_book_type" name="ac_book_type" required="">
                                     <option selected="" default="" disabled=""></option>
@@ -110,11 +113,11 @@
                                         </option>
                                     <?php } ?>
                                 </select>
-                            </div>
+                            </div> --}}
 
                             <div class="mb-3 form-group col-lg-6">
                                 <label for="group_name" class="form-label">Group Name</label>
-                                <input type="text" class="form-control" name="ac_group" required="" readonly="" id="group_name">
+                                <input type="text" class="form-control" name="ac_group" required="" readonly="" id="group_name" value='{{ $competition_group }}'>
                             </div>
                             <div class="mb-3 form-group col-lg-3">
                                 <label for="ac_min_deposit" class="form-label">Minimum Deposit</label>
@@ -349,38 +352,38 @@
             });
         }
 
-        function getInitials(input) {
-            if (input) {
-                const words = input.trim().split(/\s+/); // Split input by spaces
-                if (words.length === 1) {
-                    return words[0].slice(0, 3).toUpperCase(); // If it's a single word, return the first two letters
-                } else {
-                    return words.map(word => word[0].toUpperCase()).join(
-                        ''); // Otherwise, return the first letter of each word
-                }
-            }
-            return input;
-        }
+        // function getInitials(input) {
+        //     if (input) {
+        //         const words = input.trim().split(/\s+/); // Split input by spaces
+        //         if (words.length === 1) {
+        //             return words[0].slice(0, 3).toUpperCase(); // If it's a single word, return the first two letters
+        //         } else {
+        //             return words.map(word => word[0].toUpperCase()).join(
+        //                 ''); // Otherwise, return the first letter of each word
+        //         }
+        //     }
+        //     return input;
+        // }
 
-        function group_namer() {
-            // var dn = $("[name='ac_name']").val();
-            var dn = ($("[name='ac_type'] option:selected").data("gname")) ? $("[name='ac_type'] option:selected").data(
-                "gname").trim() : "";
-            var type = ($("[name='ac_type'] option:selected").data("name")) ? $("[name='ac_type'] option:selected").data(
-                "name").trim() : "";
-            var category = ($("[name='ac_category'] option:selected").text().toUpperCase()) ? $(
-                "[name='ac_category'] option:selected").text().toUpperCase().trim() : "";
-            var book = ($("[name='ac_book_type'] option:selected").text().toUpperCase()) ? $(
-                "[name='ac_book_type'] option:selected").text().toUpperCase().trim() : "";
-            dn = getInitials(dn);
-            var gn = type + "\\" + dn + "-" + category + "-" + book + "-USD"
-            // console.log("GGN", gn);
-            $("#groupMgmtCreation [name='ac_group']").val(gn);
-        }
+        // function group_namer() {
+        //     // var dn = $("[name='ac_name']").val();
+        //     var dn = ($("[name='ac_type'] option:selected").data("gname")) ? $("[name='ac_type'] option:selected").data(
+        //         "gname").trim() : "";
+        //     var type = ($("[name='ac_type'] option:selected").data("name")) ? $("[name='ac_type'] option:selected").data(
+        //         "name").trim() : "";
+        //     var category = ($("[name='ac_category'] option:selected").text().toUpperCase()) ? $(
+        //         "[name='ac_category'] option:selected").text().toUpperCase().trim() : "";
+        //     var book = ($("[name='ac_book_type'] option:selected").text().toUpperCase()) ? $(
+        //         "[name='ac_book_type'] option:selected").text().toUpperCase().trim() : "";
+        //     dn = getInitials(dn);
+        //     var gn = type + "\\" + dn + "-" + category + "-" + book + "-USD"
+        //     // console.log("GGN", gn);
+        //     $("#groupMgmtCreation [name='ac_group']").val(gn);
+        // }
 
-        $("[name='ac_name'],[name='ac_type'],[name='ac_category'],[name='ac_book_type']").change(function() {
-            group_namer();
-        });
+        // $("[name='ac_name'],[name='ac_type'],[name='ac_category'],[name='ac_book_type']").change(function() {
+        //     group_namer();
+        // });
 
 
         window.dTtable = $('#tableMT5Groups').on("draw.dt", dTSelection).DataTable({

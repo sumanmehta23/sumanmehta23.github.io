@@ -24,13 +24,14 @@ class CompetitionProductController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request->all());
         try {
             $validatedData = $request->validate([
                 'groupCreation' => ['required'],
                 'ac_type' => ['required', 'integer'],
                 'ac_name' => ['required', 'string'],
-                'ac_category' => ['required', 'integer'],
-                'ac_book_type' => ['required', 'integer'],
+                // 'ac_category' => ['required', 'integer'],
+                // 'ac_book_type' => ['required', 'integer'],
                 'ac_group' => ['required'],
                 'ac_min_deposit' => ['required'],
                 'ac_max_leverage' => ['required'],
@@ -53,8 +54,8 @@ class CompetitionProductController extends Controller
 
             $accountType = AccountType::create([
                 'ac_index' => $ac_index,
-                'ac_category' => $validatedData['ac_category'],
-                'ac_book_type' => $validatedData['ac_book_type'],
+                // 'ac_category' => $validatedData['ac_category'],
+                // 'ac_book_type' => $validatedData['ac_book_type'],
                 'ac_name' => $validatedData['ac_name'],
                 'ac_min_deposit' => $validatedData['ac_min_deposit'],
                 'ac_max_leverage' => $validatedData['ac_max_leverage'],
