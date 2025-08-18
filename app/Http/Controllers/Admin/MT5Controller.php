@@ -104,6 +104,7 @@ class MT5Controller extends Controller
                 'status' => $promocode->status,
                 'id' => $promocode->id,
                 'max_deposit' => $promocode->max_deposit,
+                'min_deposit' => $promocode->min_deposit,
             ]
         ]);
     }
@@ -138,6 +139,7 @@ class MT5Controller extends Controller
         $promocode->code = $request->promo_code;
         $promocode->promo_percentage = $request->promo_percentage;
         $promocode->status = (bool)$request->promo_status;
+        $promocode->min_deposit = $request->min_deposit ?? '';
         $promocode->max_deposit = $request->max_deposit ?? '';
         $promocode->save();
         return response()->json([
@@ -165,6 +167,7 @@ class MT5Controller extends Controller
                 'promo_percentage' => $request->promo_percentage,
                 'status'           => $request->promo_status,
                 'max_deposit'      => $request->max_deposit ?? '',
+                'min_deposit'      => $request->min_deposit ?? '',
             ]);
 
             return response()->json([

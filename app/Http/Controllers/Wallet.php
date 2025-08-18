@@ -1190,7 +1190,8 @@ class Wallet extends Controller
                     $bonus_amount = 0;
                     if ($promocode && $promocode != '') {
                         $promo = Promocode::where('code', $promocode)->first();
-                        if ($promo) {
+                        $min_depsoit = $promo->min_deposit;
+                        if ($promo && $amount >= $min_depsoit) {
                             $ticket = NULL;
                             if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
                                 $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;

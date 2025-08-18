@@ -44,6 +44,7 @@
                                         <th>ID</th>
                                         <th>Promo Code</th>
                                         <th>Percentage</th>
+                                        <th>Min Deposit</th>
                                         <th>Max Deposit</th>
                                         <th>Status</th>
                                         <th>Created At</th>
@@ -85,6 +86,14 @@
                                     </div>
                                     <div class="col-lg-8">
                                         <input type="number" class="form-control" name="promo_percentage" min="0" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Min Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="min_deposit" min="0" max="1000000000000" step="0.01">
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
@@ -145,6 +154,14 @@
                                     </div>
                                     <div class="col-lg-8">
                                         <input type="number" class="form-control" name="promo_percentage" min="0" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="m-auto col-lg-4">
+                                        <label class="form-label">Min Deposit</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <input type="number" class="form-control" name="min_deposit" min="0" max="1000000000000" step="0.01">
                                     </div>
                                 </div>
                                 <div class="mb-3 row">
@@ -226,6 +243,7 @@
                 { data: 'id', name: 'id' },
                 { data: 'code', name: 'code' },
                 { data: 'percentage', name: 'percentage' },
+                { data: 'min_deposit', name: 'min_deposit' },
                 { data: 'max_deposit', name: 'max_deposit' },
                 { data: 'status', name: 'status' },
                 { data: 'created_at', name: 'created_at' },
@@ -365,6 +383,7 @@
                     $('#editPromocodeForm input[name="promo_code"]').val(response.data.code);
                     $('#editPromocodeForm input[name="promo_percentage"]').val(response.data.percentage);
                     $('#editPromocodeForm input[name="max_deposit"]').val(response.data.max_deposit);
+                    $('#editPromocodeForm input[name="min_deposit"]').val(response.data.min_deposit);
                     $('#editPromocodeForm select[name="promo_status"]').val(response.data.status);
                     $('#editPromocodeForm input[name="id"]').val(response.data.id);
                     editPromoModal.show();
