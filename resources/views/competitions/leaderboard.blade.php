@@ -128,13 +128,26 @@
                                     id="your-rank-card"
                                 />
                             </div>
-                            <div class="col-sm-6 col-xl-3">
+                            {{-- <div class="col-sm-6 col-xl-3">
                                 <x-competition.stats-card
                                     class="w-100 h-100"
                                     title="Prize Pool"
                                     value="{{ $competition->prize ?? 'null'}}"
                                     icon="bar-chart-2"
                                 />
+                            </div> --}}
+                            <div class="col-sm-6 col-xl-3">
+                                <x-competition.stats-card
+                                    class="w-100 h-100"
+                                    title="Prize Pool"
+                                    value=""
+                                    icon="bar-chart-2"
+                                >
+                                    {{-- Slot content gets rendered inside the card --}}
+                                    <button type="button" class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#prizeModal">
+                                        More Info
+                                    </button>
+                                </x-competition.stats-card>
                             </div>
                             <div class="col-sm-6 col-xl-4">
                                 <x-competition.stats-card
@@ -147,6 +160,21 @@
                         </div>
 
                     </div>
+                </div>
+
+                <!-- Modal (place outside of grid/row for safety) -->
+                <div class="modal fade" id="prizeModal" tabindex="-1" aria-labelledby="prizeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="prizeModalLabel">Competition Prizes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {!! nl2br(e($competition->prize)) !!}
+                    </div>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Main Content Area -->
@@ -567,6 +595,7 @@
         </style>
     @endpush
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let chart;
         let currentPage = 1;

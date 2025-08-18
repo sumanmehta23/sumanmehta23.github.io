@@ -14,6 +14,11 @@
                     <h3 class="mb-0 pt-2">{{ $value }}</h3>
                 </div>
             </div>
+            @isset($slot)
+                <div class="mt-auto">
+                    {{ $slot }}
+                </div>
+            @endisset
         </div>
     </div>
 </div>
