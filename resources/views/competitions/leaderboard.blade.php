@@ -164,18 +164,24 @@
 
                 <!-- Modal (place outside of grid/row for safety) -->
                 <div class="modal fade" id="prizeModal" tabindex="-1" aria-labelledby="prizeModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="prizeModalLabel">Competition Prizes</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        {!! nl2br(e($competition->prize)) !!}
-                    </div>
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="prizeModalLabel">Competition Prizes</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                @if(!empty($competition->prize))
+                                    {!! $competition->prize !!}
+                                @else
+                                    <p class="text-muted">N/A</p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
-                </div>
+
+
 
                 <!-- Main Content Area -->
                 <div class="row">

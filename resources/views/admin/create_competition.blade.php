@@ -156,7 +156,9 @@
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="prize_pool" class="form-label">Prize Pool</label>
-                                <input type="text" class="form-control" id="prize_pool" name="prize_pool" required="">
+                                {{-- <input type="text" class="form-control" id="prize_pool" name="prize_pool" required=""> --}}
+                                <textarea class="form-control" id="prize_pool" name="prize_pool" rows="4" placeholder="- 1st Place: ...&#10;- 2nd Place: ..."></textarea>
+                                <small class="text-muted">Enter each prize on a new line.</small>
                             </div>
                             <div class="mb-3 form-group col-lg-6">
                                 <label for="inquiry_status" class="form-label">Inquiry Status</label>
@@ -248,7 +250,9 @@
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="prize_pool" class="form-label">Prize Pool</label>
-                                <input type="text" class="form-control" id="prize_pool" name="prize_pool" required="">
+                                {{-- <input type="text" class="form-control" id="prize_pool" name="prize_pool" required=""> --}}
+                                <textarea class="form-control" id="prize_pool" name="prize_pool" rows="4" placeholder="- 1st Place: ...&#10;- 2nd Place: ..."></textarea>
+                                <small class="text-muted">Enter each prize on a new line.</small>
                             </div>
                             <div class="mb-3 form-group col-lg-4">
                                 <label for="inquiry_status" class="form-label">Inquiry Status</label>

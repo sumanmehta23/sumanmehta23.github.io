@@ -52,6 +52,9 @@ class CompetitionProductController extends Controller
 
             $ac_index = AccountType::max('ac_index') + 1;
 
+            $prizes = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $validatedData['prize_pool'])));
+            $prizeHtml = '<ul><li>' . implode('</li><li>', $prizes) . '</li></ul>';
+
             $accountType = AccountType::create([
                 'ac_index' => $ac_index,
                 // 'ac_category' => $validatedData['ac_category'],
@@ -70,7 +73,7 @@ class CompetitionProductController extends Controller
                 'display_priority' => $validatedData['display_priority'],
                 'competition_start_date' => $validatedData['start_date'],
                 'competition_end_date' => $validatedData['end_date'],
-                'prize' => $validatedData['prize_pool'],
+                'prize' => $prizeHtml,
             ]);
 
             $leverages = array_map('intval', explode(',', $validatedData['ac_max_leverage']));
@@ -118,6 +121,9 @@ class CompetitionProductController extends Controller
 
             $now = Carbon::now();
 
+            $prizes = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $validatedData['prize_pool'])));
+            $prizeHtml = '<ul><li>' . implode('</li><li>', $prizes) . '</li></ul>';
+
             $updateData = [
                 'ac_name' => $validatedData['ac_name'],
                 'ac_min_deposit' => $validatedData['ac_min_deposit'],
@@ -129,7 +135,7 @@ class CompetitionProductController extends Controller
                 'inquiry_status' => $validatedData['inquiry_status'],
                 'status' => $validatedData['status'],
                 'display_priority' => $validatedData['display_priority'],
-                'prize' => $validatedData['prize_pool'],
+                'prize' => $prizeHtml,
             ];
 
 
