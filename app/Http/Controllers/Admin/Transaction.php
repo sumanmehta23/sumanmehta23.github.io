@@ -853,10 +853,10 @@ class Transaction extends Controller
                     $transaction->approved_by = $approved_by;
                     $transaction->approved_date =$approved_date;
                     $transaction->save();
-                    Log::info("transaction_details ".json_encode($transaction));
-                    Log::info("transaction_details ". $transaction->client_wallet_id);
+                    // Log::info("transaction_details ".json_encode($transaction));
+                    // Log::info("transaction_details ". $transaction->client_wallet_id);
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
-                    Log::info("wallet_details  ".json_encode($walletDetails));
+                    // Log::info("wallet_details  ".json_encode($walletDetails));
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;
                     $walletAddress = $walletDetails->wallet_address;
