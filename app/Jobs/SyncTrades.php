@@ -269,6 +269,6 @@ class SyncTrades implements ShouldQueue
             throw $e;
         }
 
-        Log::info("Processed trade batch for account ID: {$this->account->code}");
+        // Log::info("Processed trade batch for account ID: {$this->account->code}");
     }
 }
