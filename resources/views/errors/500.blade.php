@@ -71,7 +71,7 @@
 <body>
     <div class="container">
         <!-- Top Image (Logo or Graphic) -->
-        <img src="{{ $settings['admin_sidebar_logo'] }}" alt="Site Logo" class="top-image">
+        <img src="http://lqhlaravel.test/{{ $settings['admin_sidebar_logo'] }}" alt="Site Logo" class="top-image">
 
         <h1>Offline for Maintenance</h1>
         <p>
