@@ -350,6 +350,7 @@ class IBController extends Controller
     public function exportAllIbUsers(Request $request)
     {
         // return Excel::download(new IbUsersExport, 'IB_List_' . date('Y-m-d') . '.xlsx');
+        ini_set('max_execution_time', 1200);
         return Excel::download(new IbUsersExport, 'IB_List_' . date('Y-m-d') . '.xlsx');
     }
 }
