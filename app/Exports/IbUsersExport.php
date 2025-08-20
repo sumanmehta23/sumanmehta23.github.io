@@ -60,6 +60,6 @@ class IbUsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkRe
 
     public function chunkSize(): int
     {
-        return 100;  // Process 100 records at a time
+        return 500;  // Process 100 records at a time
     }
 }
