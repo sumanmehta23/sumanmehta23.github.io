@@ -961,7 +961,7 @@
                                                                 Deposits
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="/admin/transactions/trading_deposit"
+                                                                <a  href="{{route('admin.transactions.trading-deposit')}}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -993,7 +993,7 @@
                                                                 Withdrawal
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="/admin/transactions/wallet_withdrawal"
+                                                                <a href="{{route('admin.transactions.trading-withdrawal')}}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -1026,7 +1026,7 @@
                                                                 Internal Transfers
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="/admin/transactions/internal_transfer"
+                                                                <a href="{{route('admin.transactions.internal-transfer')}}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
