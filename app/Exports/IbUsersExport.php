@@ -11,12 +11,20 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class IbUsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
+    /**
+     * Build the query for export
+     */
     public function query()
     {
-        return Ib1::with(['user', 'ibWallet'])
+        // only select necessary fields for performance
+        return Ib1::query()
+            ->with(['user', 'ibWallet'])
             ->where('status', 1);
     }
 
+    /**
+     * Headings for Excel
+     */
     public function headings(): array
     {
         return [
@@ -31,9 +39,16 @@ class IbUsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkRe
         ];
     }
 
+    /**
+     * Map each row of data
+     */
     public function map($ib): array
     {
-        $wallets = $ib->ibWallet ?? collect();
+        // Handle ibWallet relation (hasOne or hasMany)
+        $wallets = $ib->ibWallet instanceof \Illuminate\Support\Collection
+            ? $ib->ibWallet
+            : collect([$ib->ibWallet])->filter();
+
         $total_deposit = '$' . number_format($wallets->sum('ib_wallet'), 2);
         $total_withdrawal = '$' . number_format($wallets->sum('ib_withdraw'), 2);
 
@@ -58,8 +73,11 @@ class IbUsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkRe
         ];
     }
 
+    /**
+     * Chunk size for processing
+     */
     public function chunkSize(): int
     {
-        return 500;  // Process 100 records at a time
+        return 1000; // process 1000 rows at a time
     }
 }
