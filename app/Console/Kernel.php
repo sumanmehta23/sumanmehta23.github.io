@@ -22,11 +22,13 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('app:breach-account')->everyMinute();
 
-
         $schedule->command('app:sync-accounts')->everyFiveMinutes();
         $schedule->command('app:sync-daily-reports')->daily();
         $schedule->command('app:sync-account-trades')->everyTenMinutes();
         // $schedule->command('app:update-price-snapshots')->hourly();
+        
+        // Export cleanup - runs daily at 2 AM to clean up exports older than 7 days
+        $schedule->command('export:cleanup --days=7')->daily()->at('02:00');
 
 
         $schedule->command('app:alter-group-codes --group_code=a_book');
