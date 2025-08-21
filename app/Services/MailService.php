@@ -23,7 +23,7 @@ class MailService
     public function sendEmail($toEmail, $subject, $headers,$templateFile,$data)
     {
         try {
-            ScheduleMailJob::dispatch($data,$toEmail,$subject)->onQueue('emails');
+            ScheduleMailJob::dispatch($data,$toEmail,$subject); // Remove ->onQueue('emails')
             // $response = $this->client->post('smtp/email', [
             //     'headers' => [
             //         'api-key' => $this->apiKey,
