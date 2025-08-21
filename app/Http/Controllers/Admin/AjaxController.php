@@ -3001,7 +3001,7 @@ class AjaxController extends Controller
             elseif($row->deposit_type == 'CreditCardPayissa'){
                 // $callback_data = json_decode($row->callback_data,true);
                 // $invoiceId = $callback_data['transaction']['invoice']['id'];
-                $link = ''
+                $link = '';
             }
 
             return [
