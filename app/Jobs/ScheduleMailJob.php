@@ -39,7 +39,7 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
-        Log::alert('ssssssssss' . $this->subject);
+        Log::alert('Email subject: ' . $this->subject);
         try {
 
             if (strpos($this->subject, 'Competition Registration') !== false) {
@@ -66,12 +66,19 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.issueCompetitionAccount';
             }elseif(strpos($this->subject, 'Password Reset') !== false){
                 $template = 'emails.resetPassword';
+            } elseif (strpos($this->subject, 'Export Started') !== false) {
+                $template = 'emails.export-started';
+            } elseif (strpos($this->subject, 'Export Completed') !== false) {
+                $template = 'emails.export-completed';
+            } elseif (strpos($this->subject, 'Export Failed') !== false) {
+                $template = 'emails.export-failed';
             } else {
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
 
-            if ($maildriver == 'brevo') {
+            // Always use Brevo API for export emails or if configured
+            if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
                 $htmlContent = view($template, $this->data)->render();
                 $payload = [
                     'sender' => [
@@ -86,27 +93,31 @@ class ScheduleMailJob implements ShouldQueue
                     'subject' => $this->subject,
                     'htmlContent' => $htmlContent,
                 ];
+                
                 $response = Http::withHeaders([
                     'api-key' => $this->apiKey,
                     'Content-Type' => 'application/json',
                 ])->post('https://api.brevo.com/v3/smtp/email', $payload);
+                
                 if ($response->failed()) {
-                    // Handle the error
-                    // Log::error('Email sending failed: ' . $response->body());
+                    Log::error('Brevo email sending failed', [
+                        'subject' => $this->subject,
+                        'email' => $this->toEmail,
+                        'response' => $response->body()
+                    ]);
                 } else {
-                    // Handle the success
-                    // Log::info('Email sent successfully: ' . $response->body());
+                    Log::info('Email sent successfully via Brevo', [
+                        'subject' => $this->subject,
+                        'email' => $this->toEmail
+                    ]);
                 }
             } else {
-
-
                 Mail::send($template, $this->data, function (Message $message) use ($settings) {
                     $message->from($settings['sender_email_address'], $settings['sender_name']);
                     $message->to($this->toEmail);
                     $message->subject($this->subject);
                 });
             }
-            // Log::info('Email sent successfully to ' . $this->toEmail);
         } catch (\Exception $e) {
             Log::error('Email sending failed: ' . $e->getMessage());
         }

@@ -11,10 +11,13 @@ use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\IbUsersExport;
+use App\Jobs\ExportIbUsersJob;
+use Illuminate\Support\Facades\Auth;
 
 class IBController extends Controller
 {
@@ -349,8 +352,139 @@ class IBController extends Controller
 
     public function exportAllIbUsers(Request $request)
     {
-        // return Excel::download(new IbUsersExport, 'IB_List_' . date('Y-m-d') . '.xlsx');
-        ini_set('max_execution_time', 1200);
-        return Excel::download(new IbUsersExport, 'IB_List_' . date('Y-m-d') . '.xlsx');
+        try {
+            // Validate request
+            $request->validate([
+                'status' => 'nullable|integer|in:0,1,2',
+                'date_from' => 'nullable|date',
+                'date_to' => 'nullable|date|after_or_equal:date_from',
+                'search' => 'nullable|string|max:255',
+                'email' => 'required|email|max:255'
+            ]);
+
+            // Get current authenticated user
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Prepare filters
+            $filters = array_filter([
+                'status' => $request->input('status'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'search' => $request->input('search')
+            ]);
+
+            // Get export email
+            $exportEmail = $request->input('email');
+
+            // Generate unique filename
+            $fileName = 'IB_List_' . date('Y-m-d_H-i-s') . '_' . $user->id . '.xlsx';
+
+            // Dispatch the export job with email
+            ExportIbUsersJob::dispatch($user, $filters, $fileName, $exportEmail);
+
+            // Return immediate response
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Export job has been queued successfully! We'll send notifications to {$exportEmail} when it's complete.",
+                    'export_email' => $exportEmail,
+                    'estimated_time' => 'This may take several minutes depending on the data size.'
+                ]);
+            }
+
+            alert()->success('Export Started!', "Export job has been queued successfully! We'll send notifications to {$exportEmail} when it's complete.");
+            return redirect()->back();
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            alert()->error('Validation Error', 'Please check your input and try again.');
+            return redirect()->back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Export initiation failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to start export. Please try again.'
+                ], 500);
+            }
+
+            alert()->error('Export Failed', 'Failed to start export. Please try again or contact support.');
+            return redirect()->back();
+        }
+    }
+
+    /**
+     * Download exported file with token verification
+     */
+    public function downloadExport(Request $request, $file, $token)
+    {
+        try {
+            // Decrypt and validate token
+            $tokenData = decrypt($token);
+            
+            // Check if token is expired
+            if (now()->greaterThan($tokenData['expires_at'])) {
+                abort(410, 'Download link has expired');
+            }
+
+            // Check if user matches (handle both User and EmployeeList models)
+            $currentUserId = Auth::id();
+            if ($tokenData['user_id'] !== $currentUserId) {
+                abort(403, 'Unauthorized access');
+            }
+
+            // Check if file name matches
+            if ($tokenData['file_name'] !== $file) {
+                abort(404, 'File not found');
+            }
+
+            $filePath = 'exports/' . $file;
+
+            // Check if file exists
+            if (!Storage::disk('local')->exists($filePath)) {
+                abort(404, 'Export file not found or has been deleted');
+            }
+
+            // Return file download
+            return response()->download(
+                Storage::disk('local')->path($filePath),
+                $file,
+                [
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0'
+                ]
+            );
+
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            abort(403, 'Invalid download token');
+        } catch (\Exception $e) {
+            Log::error('Download failed', [
+                'file' => $file,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            abort(500, 'Download failed');
+        }
     }
 }
