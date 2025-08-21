@@ -1298,13 +1298,17 @@ class AjaxController extends Controller
         } else {
             $query->where('code', $_GET['id']);
         }
-
+        // dd($request->all());
         if (isset($request->status)) {
             $query->where('trade_deposits.status', $request->status);
         }
 
         if (isset($request->type)) {
             $query->where('trade_deposits.deposit_type', $request->type);
+        }
+
+        if (isset($request->clientId)) {
+            $query->where('trade_deposits.user_id', $request->clientId);
         }
 
 
@@ -1462,6 +1466,10 @@ class AjaxController extends Controller
 
         if (isset($request->status)) {
             $query->where('trade_withdrawal.status', $request->status);
+        }
+
+        if (isset($request->clientId)) {
+            $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
         // Fetch data
@@ -1629,6 +1637,9 @@ class AjaxController extends Controller
 
         if (isset($request->type)) {
             $query->where('trade_deposits.deposit_type', $request->type);
+        }
+        if (isset($request->clientId)) {
+            $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
         if ($request->ajax()) {

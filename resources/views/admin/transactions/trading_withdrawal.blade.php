@@ -77,6 +77,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_withdrawal'? 'active show':''}}" id="tradingwithdrawal" role="tabpanel">
+                                    <input type="text" hidden id='client_id' value="{{ ($clientId) }}">
                                     <div class="table-responsive">
                                         <table id="tableTradingWithdrawal"
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
@@ -119,7 +120,7 @@
     @push('scripts')
     <script>
         $(document).ready(function () {
-
+          var clientId = $('#client_id').val();
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -148,6 +149,7 @@
                 type: 'GET',
                 data: function(d) {
                         d.status = $('select[name=status]').val();
+                        d.clientId = clientId??'';
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {

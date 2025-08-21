@@ -961,7 +961,7 @@
                                                                 Deposits
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a  href="{{route('admin.transactions.trading-deposit')}}"
+                                                                <a  href="{{route('admin.transactions.trading-deposit')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -993,7 +993,7 @@
                                                                 Withdrawal
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="{{route('admin.transactions.trading-withdrawal')}}"
+                                                                <a href="{{route('admin.transactions.trading-withdrawal')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -1026,7 +1026,7 @@
                                                                 Internal Transfers
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="{{route('admin.transactions.internal-transfer')}}"
+                                                                <a href="{{route('admin.transactions.internal-transfer')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>

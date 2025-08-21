@@ -60,20 +60,21 @@ class Transaction extends Controller
     }
     public function trading_deposit(Request $request)
     {
-
+        $clientId = $request->query('client_id', '');
         $id = "trading_deposit";
-        return view('admin.transactions.trading_deposit', compact('id'));
+        return view('admin.transactions.trading_deposit', compact('id','clientId'));
     }
     public function trading_withdrawal(Request $request)
     {
-
+        $clientId = $request->query('client_id', '');
         $id = "trading_withdrawal";
-        return view('admin.transactions.trading_withdrawal', compact('id'));
+        return view('admin.transactions.trading_withdrawal', compact('id','clientId'));
     }
     public function internal_transfer(Request $request)
     {
+        $clientId = $request->query('client_id', '');
         $id = "internal_transfer";
-        return view('admin.transactions.internal_transfer', compact('id'));
+        return view('admin.transactions.internal_transfer', compact('id','clientId'));
     }
     public function pendingWalletDeposit(Request $request)
     {
