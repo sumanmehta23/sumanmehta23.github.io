@@ -1639,7 +1639,7 @@ class AjaxController extends Controller
             $query->where('trade_deposits.deposit_type', $request->type);
         }
         if (isset($request->clientId)) {
-            $query->where('trade_withdrawal.user_id', $request->clientId);
+            $query->where('trade_deposits.user_id', $request->clientId);
         }
 
         if ($request->ajax()) {
