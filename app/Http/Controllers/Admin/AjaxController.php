@@ -3003,6 +3003,7 @@ class AjaxController extends Controller
                     2 => '<span class="badge bg-outline-danger">Rejected</span>',
                     default => '<span class="badge bg-outline-primary">Pending</span>',
                 },
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         });
 
@@ -3042,7 +3043,8 @@ class AjaxController extends Controller
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'))
+                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         return ['data' => $data];

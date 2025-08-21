@@ -975,6 +975,7 @@
                                                                             <th scope="col">Payment Method</th>
                                                                             <th scope="col">Amount</th>
                                                                             <th scope="col">Status</th>
+                                                                            <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -1008,6 +1009,7 @@
                                                                             <th scope="col">Amount</th>
                                                                             <th scope="col">Fee</th>
                                                                             <th scope="col">Status</th>
+                                                                            <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -1439,6 +1441,10 @@
                     {
                         data: 'status',
                         name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
                     }
                     ]
                 });
@@ -1475,6 +1481,10 @@
                     {
                         data: 'status',
                         name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
                     }
                     ]
                 });
