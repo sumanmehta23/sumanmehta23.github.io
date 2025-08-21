@@ -2993,10 +2993,21 @@ class AjaxController extends Controller
 
         // Prepare the data array
         $data = $results->map(function ($row) {
+            if($row->deposit_type == 'CryptoChill'){
+                $callback_data = json_decode($row->callback_data,true);
+                $invoiceId = $callback_data['transaction']['invoice']['id'];
+                $link = 'https://uniwire.com/invoice/'.$invoiceId;
+            }
+            elseif($row->deposit_type == 'CreditCardPayissa'){
+                // $callback_data = json_decode($row->callback_data,true);
+                // $invoiceId = $callback_data['transaction']['invoice']['id'];
+                // $link =
+            }
+
             return [
                 'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => $row->deposit_type,
+                'payment_method' => '<a class=" text-success" href='.$link.'>'.$row->deposit_type.'</a>',
                 'amount' => '$' . $row->deposit_amount,
                 'status' => match ($row->status) {
                     1 => '<div class="badge bg-outline-success">Approved</div>',
