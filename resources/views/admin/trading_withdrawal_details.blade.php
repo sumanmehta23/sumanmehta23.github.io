@@ -142,7 +142,7 @@
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-danger-transparent">-</span>
                                                             {{-- <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span> --}}
-                                                            <span>${{@$details->account->tradeWithdrawals->where('email_verified', 1)->where('status', 1)->sum('withdrawal_amount')}}</span>
+                                                            <span>${{@($details->account->tradeWithdrawals ? $details->account->tradeWithdrawals->where('email_verified', 1)->where('status', 1)->sum('withdrawal_amount') : 0)}}</span>
                                                         </div>
                                                     </div>
                                                 </div>
