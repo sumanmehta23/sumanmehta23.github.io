@@ -331,21 +331,244 @@
     </div>
     @section("scripts")
 <script>
-    $(document).ready(function() {
-        window.dTtable = $('#tableIbUsers').DataTable({
-            order: [[0, "desc"]],
-            destroy: true,
-            dom: '<"row"<"col"B><"col text-center"l><"col"f>>' +
-                 '<"row"<"col"t>>' +
-                 '<"row"<"col"i><"col"p>>',
-            buttons: [
+  $(document).ready(function() {
+    window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
+  });
+
+  function dTSelection() {
+    $('.ajaxDataTable tbody tr').off();
+    $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
+      var data = dTtable.row($(this).closest("tr")).data();
+      $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
+      $("#clientName,#clientEmail").html("");
+      $("#clientName").html(data.fullname)
+      $("#clientEmail").html(data.email)
+      $("#client_id").val(data.user_id)
+      $("[name='ib_status']").val(data.ib_status).trigger("change");
+      $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
+      myModal.show();
+    });
+  }
+
+  $(document).ready(function() {
+    window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
+      order: [[0, "desc"]],
+      destroy: true,
+      dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+      buttons: [
+        {
+          extend: 'excel',
+          text: 'Export to Excel',
+          filename: 'IB_Users_' + new Date().toISOString().slice(0, 10),
+          exportOptions: {
+            columns: [7,8,11,3,4,5,9,10]
+          }
+        },
+        {
+          text: 'Export All',
+          className: 'btn btn-primary export-btn',
+          action: function () {
+            openExportModal();
+          }
+        }
+      ],
+      processing: true,
+      serverSide: true,
+      searching: true,
+      ajax: {
+        url: '/admin/getIbUsers2',
+        type: 'GET',
+        data: {},
+        dataSrc: function(json) {
+          return json.data;
+        }
+      },
+      columns: [
+        {data: 'id', name: 'id'},
+        {data: 'agent_id', name: 'agent_id'},
+        {data: 'name', name: 'name'},
+        {data: 'total_deposit', name: 'total_deposit'},
+        {data: 'total_withdrawal', name: 'total_withdrawal'},
+        {data: 'status', name: 'status', orderable: false, searchable: false},
+        {data: 'date', name: 'date'},
+        {data: 'fullname', name: 'fullname'},
+        {data: 'fullemail', name: 'fullemail'},
+        {data: 'created_date', name: 'created_date'},
+        {data: 'created_time', name: 'created_time'},
+        {data: 'phone_number', name: 'phone_number'}
+      ]
+    });
+  });
+
+  let exportModal;
+
+  $(document).ready(function() {
+    exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+
+    // Set default email if user is logged in
+    @if(auth()->check())
+      @php
+        $userEmail = '';
+        if (auth()->user() instanceof \App\Models\User) {
+            $userEmail = auth()->user()->email ?? '';
+        } elseif (auth()->user() instanceof \App\Models\EmployeeList) {
+            $userEmail = auth()->user()->email ?? '';
+        }
+      @endphp
+      const userEmail = '{{ $userEmail }}';
+      if (userEmail) {
+        $('#export_email').val(userEmail);
+      }
+    @endif
+
+    // Handle export form submission
+    $('#exportForm').on('submit', function(e) {
+      e.preventDefault();
+      startExport();
+    });
+  });
+
+  // Open export modal
+  function openExportModal() {
+    exportModal.show();
+  }
+
+  // Start export process
+  function startExport() {
+    const email = $('#export_email').val();
+    if (!email) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Email Required',
+        text: 'Please enter an email address',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    // Show loading state
+    const submitBtn = $('#startExportBtn');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Starting Export...').prop('disabled', true);
+
+    // Send export request
+    $.ajax({
+      url: '/admin/export-all-ib-users',
+      method: 'POST',
+      data: $('#exportForm').serialize(),
+      headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        exportModal.hide();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Export Started!',
+          text: response.message || 'Export started successfully! You will receive an email when ready.',
+          confirmButtonColor: '#28a745',
+          timer: 3000,
+          timerProgressBar: true
+        }).then(() => {
+          // Reset form
+          $('#exportForm')[0].reset();
+          submitBtn.html(originalText).prop('disabled', false);
+
+          // Reload page to show any alerts from redirect
+          window.location.reload();
+        });
+      },
+      error: function(xhr) {
+        submitBtn.html(originalText).prop('disabled', false);
+
+        let message = 'Export failed. Please try again.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          message = xhr.responseJSON.message;
+        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+          const errors = Object.values(xhr.responseJSON.errors).flat();
+          message = errors.join(', ');
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Export Failed',
+          text: message,
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  // Show notification
+  function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' :
+                       type === 'error' ? 'alert-danger' : 'alert-info';
+
+    const notification = `
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;"
+           role="alert">
+        <strong>${type === 'success' ? 'Success!' : type === 'error' ? 'Error!' : 'Info'}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+
+    $('body').append(notification);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      $('.alert').last().fadeOut(500, function() {
+        $(this).remove();
+      });
+    }, 5000);
+  }
+</script>
+<script>
+  $(document).ready(function() {
+    window.myModal = new bootstrap.Modal(document.getElementById('ibModal'));
+  });
+
+  function dTSelection() {
+    // alert("Init");
+    $('.ajaxDataTable tbody tr').off();
+    $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
+      var data = dTtable.row($(this).closest("tr")).data();
+      // console.log(data);
+      $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
+      $("#clientName,#clientEmail").html("");
+      $("#clientName").html(data.fullname)
+      $("#clientEmail").html(data.email)
+      $("#client_id").val(data.user_id)
+      $("[name='ib_status']").val(data.ib_status).trigger("change");
+      $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
+      myModal.show();
+      // swal.fire({
+      //   icon: "info",
+      //   title: "IB Status ==> " + data.ib_status
+      // });
+
+    });
+  }
+
+  $(document).ready(function() {
+    window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
+      order: [[0, "desc"]],
+      destroy: true,
+    //   "ajax": {
+    //     "url": "/admin/ajax",
+    //     "type": "GET",
+    //     data: {
+    //       action: 'getIbUsers',
+    //     },
+    //   },
+      dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+      buttons: [
                 {
                     extend: 'excel',
                     text: 'Export to Excel',
                     filename: 'IB_Users_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
-                        // Export Full Name, Email, Phone, Tot. Comm., Tot. Withdrawal, Status, Date, Time
-                        columns: [7, 8, 11, 3, 4, 5, 9, 10]
+                        columns: [7,8,11,3,4,5,9,10] // Updated column indices to match your use case
                     }
                 },
                 {
@@ -356,67 +579,96 @@
                     }
                 }
             ],
-            processing: true,
-            serverSide: true,
-            searching: true,
-            ajax: {
-                url: '/admin/getIbUsers2',
-                type: 'GET',
-                dataSrc: function(json) {
-                    return json.data;
-                }
-            },
-            columns: [
-                {data: 'id', name: 'id'},
-                {data: 'agent_id', name: 'agent_id'},
-                {data: 'name', name: 'name'},
-                {data: 'total_deposit', name: 'total_deposit'},
-                {data: 'total_withdrawal', name: 'total_withdrawal'},
-                {data: 'status', name: 'status', orderable: false, searchable: false},
-                {data: 'date', name: 'date'},
-                {data: 'fullname', name: 'fullname'},
-                {data: 'fullemail', name: 'fullemail'},
-                {data: 'created_date', name: 'created_date'},
-                {data: 'created_time', name: 'created_time'},
-                {data: 'phone_number', name: 'phone_number'}
-            ]
-        });
+      processing: true,
+      serverSide: true,
+      searching: true,
+      ajax: {
+          url: '/admin/getIbUsers2',
+           type: 'GET',
+          data: {}, // Ensure this is populated dynamically if needed.
+          dataSrc: function(json) {
+              return json.data;
+          }
+      },
+      columns: [{
+          data: 'id',
+          name: 'id'
+        },
+        {
+          data: 'agent_id',
+          name: 'agent_id'
+        },
+        {
+          data: 'name',
+          name: 'name',
+        },
+        {
+          data: 'total_deposit',
+          name: 'total_deposit'
+        },
+        {
+          data: 'total_withdrawal',
+          name: 'total_withdrawal'
+        },
+        {
+          data: 'status',
+          name: 'status',
+        },
+        {
+          data: 'date',
+          name: 'date',
+        },
+        { data: 'fullname', name: 'fullname', visible: false },
+        { data: 'fullemail', name: 'fullemail', visible: false},
+        { data: 'created_date', name: 'created_date', visible: false},
+        { data: 'created_time', name: 'created_time', visible: false},
+        { data: 'phone_number', name: 'phone_number', visible: false},
+      ]
     });
+  });
 
-    let exportModal;
+  // Initialize modals
+  let exportModal, exportProgressModal;
 
-    $(document).ready(function() {
-        exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+  $(document).ready(function() {
+    exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+    exportProgressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
 
-        // Set default email if user is logged in
-        @if(auth()->check())
-        @php
-            $userEmail = '';
-            if (auth()->user() instanceof \App\Models\User) {
-                $userEmail = auth()->user()->email ?? '';
-            } elseif (auth()->user() instanceof \App\Models\EmployeeList) {
-                $userEmail = auth()->user()->email ?? '';
-            }
-        @endphp
-        const userEmail = '{{ $userEmail }}';
-        if (userEmail) {
-            $('#export_email').val(userEmail);
+    // Set default email if user is logged in
+    @if(auth()->check())
+      @php
+        $userEmail = '';
+        if (auth()->user() instanceof \App\Models\User) {
+            $userEmail = auth()->user()->email ?? '';
+        } elseif (auth()->user() instanceof \App\Models\EmployeeList) {
+            $userEmail = auth()->user()->email ?? '';
         }
-        @endif
+      @endphp
+      const userEmail = '{{ $userEmail }}';
+      if (userEmail) {
+        $('#export_email').val(userEmail);
+      }
+    @endif
 
-        // Handle export form submission
-        $('#exportForm').on('submit', function(e) {
-        e.preventDefault();
-        startExport();
-        });
+    // Add real-time email validation
+    $('#export_email').on('input', function() {
+      const email = $(this).val();
+      const isValid = isValidEmail(email);
+
+      if (email && !isValid) {
+        $(this).addClass('is-invalid');
+      } else {
+        $(this).removeClass('is-invalid');
+      }
     });
+  });
 
-    // Open export modal
-    function openExportModal() {
-        exportModal.show();
-    }
+  // Open export modal
+  function openExportModal() {
+    exportModal.show();
+  }
 
-    // Advanced export functionality with enhanced UX
+  // Advanced export functionality with enhanced UX
   function startAdvancedExport() {
     const form = document.getElementById('exportForm');
     const formData = new FormData(form);
