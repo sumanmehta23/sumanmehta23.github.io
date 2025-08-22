@@ -1190,7 +1190,7 @@ class Wallet extends Controller
                             $bonus_amount = 0;
                             if ($promocode && $promocode != '') {
                                 $promo = Promocode::where('code', $promocode)->first();
-                                // if($promo){
+                                if($promo){
                                     $min_depsoit = $promo->min_deposit;
                                     if ($promo && $amount >= $min_depsoit) {
                                         $ticket = NULL;
@@ -1245,7 +1245,7 @@ class Wallet extends Controller
                                         $tradeDeposit->promocode_code = $promo->code;
                                         $tradeDeposit->save();
                                     }
-                                // }
+                                }
                             }
 
                             // Update total balance
