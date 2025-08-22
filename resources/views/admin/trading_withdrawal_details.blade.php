@@ -128,7 +128,7 @@
                                                         </div>
                                                         <div class="lh-1 mt-2">
                                                             <span class="badge bg-success-transparent">+</span>
-                                                            <span>${{ @$details->account->tradeDeposits->sum('deposit_amount') }}</span>
+                                                            <span>${{ @($details->account->tradeDeposits ? $details->account->tradeDeposits->sum('deposit_amount') : 0) }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
