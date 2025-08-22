@@ -961,7 +961,7 @@
                                                                 Deposits
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a  href="{{route('admin.transactions.trading-deposit')}}"
+                                                                <a  href="{{route('admin.transactions.trading-deposit')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -975,6 +975,7 @@
                                                                             <th scope="col">Payment Method</th>
                                                                             <th scope="col">Amount</th>
                                                                             <th scope="col">Status</th>
+                                                                            <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -993,7 +994,7 @@
                                                                 Withdrawal
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="{{route('admin.transactions.trading-withdrawal')}}"
+                                                                <a href="{{route('admin.transactions.trading-withdrawal')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -1008,6 +1009,7 @@
                                                                             <th scope="col">Amount</th>
                                                                             <th scope="col">Fee</th>
                                                                             <th scope="col">Status</th>
+                                                                            <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -1026,7 +1028,7 @@
                                                                 Internal Transfers
                                                             </div>
                                                             <div class="prism-toggle">
-                                                                <a href="{{route('admin.transactions.internal-transfer')}}"
+                                                                <a href="{{route('admin.transactions.internal-transfer')}}?client_id={{ $user->id }}"
                                                                     class="btn btn-sm btn-primary-light">View All</a>
                                                             </div>
                                                         </div>
@@ -1439,6 +1441,10 @@
                     {
                         data: 'status',
                         name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
                     }
                     ]
                 });
@@ -1475,6 +1481,10 @@
                     {
                         data: 'status',
                         name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
                     }
                     ]
                 });

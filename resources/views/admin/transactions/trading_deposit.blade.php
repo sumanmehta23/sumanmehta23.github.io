@@ -36,6 +36,7 @@
                     </select>
                   </div>
               </div>
+
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
@@ -123,6 +124,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'trading_deposit'? 'active show':''}}" id="tradingdeposit" role="tabpanel">
+                                    <input type="text" hidden id='client_id' value="{{ ($clientId) }}">
                                     <div class="table-responsive">
                                         <table id="tableTradingDeposit"
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
@@ -199,6 +201,9 @@
     <script>
         $(document).ready(function () {
 
+          var clientId = $('#client_id').val();
+        //   console.log("Client ID:", clientId);
+
           var tableTradingDeposit = $('#tableTradingDeposit').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -233,6 +238,7 @@
                 data: function(d) {
                         d.status = $('select[name=status]').val();
                         d.type = $('select[name=type]').val();
+                        d.clientId = clientId??'';
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {

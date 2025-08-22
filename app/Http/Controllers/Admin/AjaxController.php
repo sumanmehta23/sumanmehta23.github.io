@@ -1298,13 +1298,17 @@ class AjaxController extends Controller
         } else {
             $query->where('code', $_GET['id']);
         }
-
+        // dd($request->all());
         if (isset($request->status)) {
             $query->where('trade_deposits.status', $request->status);
         }
 
         if (isset($request->type)) {
             $query->where('trade_deposits.deposit_type', $request->type);
+        }
+
+        if (isset($request->clientId)) {
+            $query->where('trade_deposits.user_id', $request->clientId);
         }
 
 
@@ -1462,6 +1466,10 @@ class AjaxController extends Controller
 
         if (isset($request->status)) {
             $query->where('trade_withdrawal.status', $request->status);
+        }
+
+        if (isset($request->clientId)) {
+            $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
         // Fetch data
@@ -1629,6 +1637,9 @@ class AjaxController extends Controller
 
         if (isset($request->type)) {
             $query->where('trade_deposits.deposit_type', $request->type);
+        }
+        if (isset($request->clientId)) {
+            $query->where('trade_deposits.user_id', $request->clientId);
         }
 
         if ($request->ajax()) {
@@ -2982,16 +2993,28 @@ class AjaxController extends Controller
 
         // Prepare the data array
         $data = $results->map(function ($row) {
+            if($row->deposit_type == 'CryptoChill'){
+                $callback_data = json_decode($row->callback_data,true);
+                $invoiceId = $callback_data['transaction']['invoice']['id'];
+                $link = 'https://uniwire.com/invoice/'.$invoiceId;
+            }
+            elseif($row->deposit_type == 'CreditCardPayissa'){
+                // $callback_data = json_decode($row->callback_data,true);
+                // $invoiceId = $callback_data['transaction']['invoice']['id'];
+                $link = '';
+            }
+
             return [
                 'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => $row->deposit_type,
+                'payment_method' => '<a class=" text-success" href='.$link.'>'.$row->deposit_type.'</a>',
                 'amount' => '$' . $row->deposit_amount,
                 'status' => match ($row->status) {
                     1 => '<div class="badge bg-outline-success">Approved</div>',
                     2 => '<span class="badge bg-outline-danger">Rejected</span>',
                     default => '<span class="badge bg-outline-primary">Pending</span>',
                 },
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
             ];
         });
 
@@ -3031,7 +3054,8 @@ class AjaxController extends Controller
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>'))
+                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
         return ['data' => $data];

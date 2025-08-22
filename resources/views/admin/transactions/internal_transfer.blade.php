@@ -89,6 +89,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane text-muted {{$id == 'internal_transfer'? 'active':''}}" id="transaction5" role="tabpanel">
+                                    <input type="text" hidden id='client_id' value="{{ ($clientId) }}">
                                     <table id="tableInternalTransfer"
                                         class="table ajaxDataTable table-bordered text-nowrap w-100">
                                         <thead>
@@ -119,7 +120,7 @@
     @push('scripts')
     <script>
         $(document).ready(function () {
-
+          var clientId = $('#client_id').val();
           var tableInternalTransfer = $('#tableInternalTransfer').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
@@ -154,6 +155,7 @@
                 data: function(d) {
                         d.status = $('select[name=status]').val();
                         d.type = $('select[name=type]').val();
+                        d.clientId = clientId??'';
                         return d;
                     },  // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
