@@ -1190,56 +1190,61 @@ class Wallet extends Controller
                     $bonus_amount = 0;
                     if ($promocode && $promocode != '') {
                         $promo = Promocode::where('code', $promocode)->first();
-                        $min_depsoit = $promo->min_deposit;
-                        if ($promo && $amount >= $min_depsoit) {
-                            $ticket = NULL;
-                            if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
-                                $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
-                            } else {
-                                $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                        if($promo){
+                            $min_depsoit = $promo->min_deposit;
+                            if ($promo && $amount >= $min_depsoit) {
+                                $ticket = NULL;
+                                if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                    $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                                } else {
+                                    $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                                }
+
+                                $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
+                                if ($errorCode !== MTRetCode::MT_RET_OK) {
+                                    DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                                    DB::rollBack();
+                                    Log::error("Promo bonus failed for transaction {$transactionId}: " . MTRetCode::GetError($errorCode));
+                                    // return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
+                                }
+
+                                // Updating leverage
+                                $trade_user = NULL;
+                                $this->api->UserGet($account->code, $trade_user);
+
+                                if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                    Log::error("Updating leverage failed for account {$account->code}: " . MTRetCode::GetError($error_code));
+                                    // return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                }
+                                Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+
+                                $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
+                                $trade_user->Leverage = $leverage;
+
+                                $updated_user = "";
+                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
+                                    // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
+                                // Updating leverage
+
+                                BonusTransaction::create([
+                                    'email' => $email,
+                                    'user_id' => $customerID,
+                                    'account_id' => $customerAccountID,
+                                    'code' => $account->code,
+                                    'bonus_amount' => $bonus_amount,
+                                    'bonus_type' => 'Bonus In',
+                                    'status' => 1,
+                                    'admin_remark' => 'Promo Bonus',
+                                    'bonus_currency' => 'USD',
+                                    'transaction_id' => $transactionId,
+                                    'promocode_id' => $promo->id
+                                ]);
+                                $tradeDeposit->promocode_percentage = $promo->promo_percentage;
+                                $tradeDeposit->promocode_code = $promo->code;
+                                $tradeDeposit->save();
                             }
-
-                            $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
-                            if ($errorCode !== MTRetCode::MT_RET_OK) {
-                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                                DB::rollBack();
-                                return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
-                            }
-
-                            // Updating leverage
-                            $trade_user = NULL;
-                            $this->api->UserGet($account->code, $trade_user);
-
-                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                            }
-                            Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
-
-                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
-                            $trade_user->Leverage = $leverage;
-
-                            $updated_user = "";
-                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                            }
-                            // Updating leverage
-
-                            BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $customerID,
-                                'account_id' => $customerAccountID,
-                                'code' => $account->code,
-                                'bonus_amount' => $bonus_amount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Bonus',
-                                'bonus_currency' => 'USD',
-                                'transaction_id' => $transactionId,
-                                'promocode_id' => $promo->id
-                            ]);
-                            $tradeDeposit->promocode_percentage = $promo->promo_percentage;
-                            $tradeDeposit->promocode_code = $promo->code;
-                            $tradeDeposit->save();
                         }
                     }
 
