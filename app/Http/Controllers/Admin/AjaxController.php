@@ -3141,11 +3141,15 @@ class AjaxController extends Controller
             });
         }
 
+         // ✅ Log raw SQL query
+
+
         // $rmCondition->orderBy('id', 'desc');
 
         // dd($query);
         if ($request->ajax()) {
-            return DataTables::of($rmCondition)
+            try{
+return DataTables::of($rmCondition)
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
@@ -3264,6 +3268,10 @@ class AjaxController extends Controller
                 // ->orderColumn('total_withdrawal', 'id $1')
                 ->orderColumn('date', 'id $1')
                 ->make(true);
+            }catch (Exception $e) {
+                return ['success' => false, 'message' => $e->getMessage()];
+            }
+
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
