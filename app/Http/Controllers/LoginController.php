@@ -450,6 +450,19 @@ class LoginController extends Controller
     }
     public function addUser(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
+
+        // Generate a unique rate-limiting key based on user or IP
+        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()->with([
+                'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            ]);
+        }
+
+        // Increment the rate limiter
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
         // dd($request->all());
         // Validate the request data
         $validator = Validator::make($request->all(), [
@@ -590,7 +603,7 @@ class LoginController extends Controller
             if ($list_id) {
                 $subscribeToKlaviyoList->handle($user, $list_id);
             }
-            
+
             DB::transaction(function () use ($user) {
                 $code = Str::random(32);
                 do {

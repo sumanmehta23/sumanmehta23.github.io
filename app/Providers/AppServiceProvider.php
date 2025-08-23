@@ -69,6 +69,10 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 1 request every 10 seconds
             return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
         });
+        RateLimiter::for('register', function ($request) {
+            // Limit to 1 request every 10 seconds
+            return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
+        });
 
     }
 }
