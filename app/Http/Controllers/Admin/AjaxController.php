@@ -2978,7 +2978,7 @@ class AjaxController extends Controller
 
         // Get wallet deposits
         $walletDeposits = WalletDeposit::where('user_id', $id)
-            ->whereNotIn('deposit_type', ['Internal Transfer', 'CRM', 'Wallet Transfer'])
+            ->whereNotIn('deposit_type', ['CRM', 'Wallet Transfer'])
             ->get();
 
         // Get trade deposits
@@ -3002,6 +3002,8 @@ class AjaxController extends Controller
                 // $callback_data = json_decode($row->callback_data,true);
                 $invoiceId = $row->transaction_id;
                 $link = 'https://blockscan.com/tx/'.$invoiceId;
+            }else{
+                $link ='';
             }
 
             return [
