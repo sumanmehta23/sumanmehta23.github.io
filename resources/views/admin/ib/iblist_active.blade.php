@@ -129,7 +129,7 @@
             <input type="email" class="form-control" id="export_email" name="email" required>
             <div class="form-text">The exported file will be sent to this email address.</div>
           </div>
-          
+
           <div class="row">
             <div class="col-md-6 mb-3">
               <label for="date_from" class="form-label">Date From</label>
@@ -140,7 +140,7 @@
               <input type="date" class="form-control" id="date_to" name="date_to">
             </div>
           </div>
-          
+
           <div class="mb-3">
             <label for="status_filter" class="form-label">Status Filter</label>
             <select class="form-select" id="status_filter" name="status">
@@ -149,7 +149,7 @@
               <option value="0">Inactive</option>
             </select>
           </div>
-          
+
           <div class="alert alert-info d-flex align-items-center">
             <i class="fas fa-info-circle me-2"></i>
             <div>
@@ -260,7 +260,7 @@
 
   $(document).ready(function() {
     exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
-    
+
     // Set default email if user is logged in
     @if(auth()->check())
       @php
@@ -276,7 +276,7 @@
         $('#export_email').val(userEmail);
       }
     @endif
-    
+
     // Handle export form submission
     $('#exportForm').on('submit', function(e) {
       e.preventDefault();
@@ -317,7 +317,7 @@
       },
       success: function(response) {
         exportModal.hide();
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Export Started!',
@@ -329,14 +329,14 @@
           // Reset form
           $('#exportForm')[0].reset();
           submitBtn.html(originalText).prop('disabled', false);
-          
+
           // Reload page to show any alerts from redirect
           window.location.reload();
         });
       },
       error: function(xhr) {
         submitBtn.html(originalText).prop('disabled', false);
-        
+
         let message = 'Export failed. Please try again.';
         if (xhr.responseJSON && xhr.responseJSON.message) {
           message = xhr.responseJSON.message;
@@ -344,7 +344,7 @@
           const errors = Object.values(xhr.responseJSON.errors).flat();
           message = errors.join(', ');
         }
-        
+
         Swal.fire({
           icon: 'error',
           title: 'Export Failed',
@@ -357,20 +357,20 @@
 
   // Show notification
   function showNotification(message, type = 'info') {
-    const alertClass = type === 'success' ? 'alert-success' : 
+    const alertClass = type === 'success' ? 'alert-success' :
                        type === 'error' ? 'alert-danger' : 'alert-info';
-    
+
     const notification = `
-      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" 
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+           style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;"
            role="alert">
         <strong>${type === 'success' ? 'Success!' : type === 'error' ? 'Error!' : 'Info'}</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
     `;
-    
+
     $('body').append(notification);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
       $('.alert').last().fadeOut(500, function() {
@@ -460,11 +460,15 @@
         },
         {
           data: 'total_deposit',
-          name: 'total_deposit'
+          name: 'total_deposit',
+          orderable: true,
+          searchable: true
         },
         {
           data: 'total_withdrawal',
-          name: 'total_withdrawal'
+          name: 'total_withdrawal',
+          orderable: true,
+          searchable: true
         },
         {
           data: 'status',
@@ -485,11 +489,11 @@
 
   // Initialize modals
   let exportModal, exportProgressModal;
-  
+
   $(document).ready(function() {
     exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
     exportProgressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
-    
+
     // Set default email if user is logged in
     @if(auth()->check())
       @php
@@ -505,12 +509,12 @@
         $('#export_email').val(userEmail);
       }
     @endif
-    
+
     // Add real-time email validation
     $('#export_email').on('input', function() {
       const email = $(this).val();
       const isValid = isValidEmail(email);
-      
+
       if (email && !isValid) {
         $(this).addClass('is-invalid');
       } else {
@@ -529,27 +533,27 @@
     const form = document.getElementById('exportForm');
     const formData = new FormData(form);
     const exportBtn = document.querySelector('.export-start-btn');
-    
+
     // Validate email
     const email = formData.get('export_email');
     if (!email || !isValidEmail(email)) {
       showAdvancedNotification('⚠️ Please enter a valid email address', 'error');
       return;
     }
-    
+
     // Add loading state to button
     exportBtn.classList.add('loading');
     exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    
+
     // Close export modal and show progress modal
     exportModal.hide();
-    
+
     // Small delay for better UX
     setTimeout(() => {
       exportProgressModal.show();
       updateExportStatus('🔍 Validating export parameters...');
     }, 300);
-    
+
     // Prepare data for submission
     const exportData = {
       export_email: email,
@@ -559,7 +563,7 @@
       search: formData.get('search') || '',
       _token: formData.get('_token')
     };
-    
+
     // Progressive status updates
     const statusUpdates = [
       { delay: 800, message: '📋 Preparing export parameters...' },
@@ -567,11 +571,11 @@
       { delay: 2400, message: '⚡ Starting background process...' },
       { delay: 3200, message: '📊 Export processing initiated...' }
     ];
-    
+
     statusUpdates.forEach(update => {
       setTimeout(() => updateExportStatus(update.message), update.delay);
     });
-    
+
     $.ajax({
         url: '/admin/export-all-ib-users',
         type: 'GET',
@@ -582,23 +586,23 @@
         success: function(response) {
             setTimeout(() => {
                 exportProgressModal.hide();
-                
+
                 // Reset button state
                 exportBtn.classList.remove('loading');
                 exportBtn.innerHTML = '<i class="fas fa-rocket"></i> Start Export';
-                
+
                 if (response.success) {
                     showAdvancedNotification(
                         `🎉 <strong>Export queued successfully!</strong><br>
                         📧 <strong>Delivery email:</strong> ${response.export_email}<br>
                         ⏱️ <strong>Estimated time:</strong> ${response.estimated_time}<br>
-                        <small>You'll receive email notifications about the progress.</small>`, 
+                        <small>You'll receive email notifications about the progress.</small>`,
                         'success',
                         10000
                     );
                 } else {
                     showAdvancedNotification(
-                        `❌ ${response.message || 'Export failed. Please try again.'}`, 
+                        `❌ ${response.message || 'Export failed. Please try again.'}`,
                         'error'
                     );
                 }
@@ -607,14 +611,14 @@
         error: function(xhr) {
             setTimeout(() => {
                 exportProgressModal.hide();
-                
+
                 // Reset button state
                 exportBtn.classList.remove('loading');
                 exportBtn.innerHTML = '<i class="fas fa-rocket"></i> Start Export';
-                
+
                 let message = '❌ Export failed. Please try again.';
                 let detailedMessage = '';
-                
+
                 if (xhr.responseJSON) {
                     if (xhr.responseJSON.errors) {
                         const errors = Object.values(xhr.responseJSON.errors).flat();
@@ -624,7 +628,7 @@
                         message = `❌ ${xhr.responseJSON.message}`;
                     }
                 }
-                
+
                 showAdvancedNotification(message, 'error', 10000);
             }, 4000);
         }
@@ -643,28 +647,28 @@
 
   // Enhanced notification system with better animations
   function showAdvancedNotification(message, type = 'info', duration = 8000) {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                      type === 'error' ? 'alert-danger' : 
+    const alertClass = type === 'success' ? 'alert-success' :
+                      type === 'error' ? 'alert-danger' :
                       'alert-info';
-    
-    const icon = type === 'success' ? '🚀' : 
-                 type === 'error' ? '⚠️' : 
+
+    const icon = type === 'success' ? '🚀' :
+                 type === 'error' ? '⚠️' :
                  '💡';
-    
+
     const bgGradient = type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' :
                        type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' :
                        'linear-gradient(135deg, #3b82f6, #2563eb)';
-    
+
     const notification = `
-      <div class="alert ${alertClass} alert-dismissible fade show position-fixed advanced-notification" 
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed advanced-notification"
            style="top: 30px; right: 30px; z-index: 9999; min-width: 420px; max-width: 550px;
                   border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.3);
                   border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(15px);
-                  background: ${bgGradient}; color: white; 
-                  animation: slideInRight 0.5s ease-out;" 
+                  background: ${bgGradient}; color: white;
+                  animation: slideInRight 0.5s ease-out;"
            role="alert">
         <div style="display: flex; align-items: flex-start; padding: 5px;">
-          <div style="font-size: 28px; margin-right: 18px; 
+          <div style="font-size: 28px; margin-right: 18px;
                       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${icon}</div>
           <div style="flex: 1;">
             <div style="font-weight: 700; margin-bottom: 8px; font-size: 16px;
@@ -674,13 +678,13 @@
             <div style="font-size: 14px; line-height: 1.5; opacity: 0.95;">${message}</div>
           </div>
         </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" 
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"
                 style="filter: brightness(1.2);"></button>
       </div>
     `;
-    
+
     $('body').append(notification);
-    
+
     // Enhanced auto-dismiss with slide animation
     setTimeout(() => {
       $('.advanced-notification').addClass('slideOutRight').fadeOut(500, function() {
@@ -695,38 +699,38 @@
       exportModal.hide();
       exportProgressModal.show();
       this.updateProgress(0, 'Initializing export...');
-      
+
       // Simulate realistic progress updates
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 12 + 3;
         if (progress > 95) progress = 95;
-        
+
         let message = 'Preparing data...';
         if (progress > 25) message = 'Processing IB users...';
         if (progress > 50) message = 'Generating Excel file...';
         if (progress > 75) message = 'Optimizing export...';
         if (progress > 90) message = 'Finalizing export...';
-        
+
         this.updateProgress(progress, message);
-        
+
         if (progress >= 95) {
           clearInterval(progressInterval);
         }
       }, 400);
     },
-    
+
     updateProgress(percent, message) {
       const progressBar = document.querySelector('#export-progress .progress-bar');
       const progressText = document.querySelector('#progress-text');
-      
+
       if (progressBar && progressText) {
         progressBar.style.width = `${percent}%`;
         progressBar.setAttribute('aria-valuenow', percent);
         progressText.textContent = message;
       }
     },
-    
+
     showSuccess(message) {
       const modalBody = document.querySelector('#exportProgressModal .modal-body');
       if (modalBody) {
@@ -747,7 +751,7 @@
         `;
       }
     },
-    
+
     showError(message) {
       const modalBody = document.querySelector('#exportProgressModal .modal-body');
       if (modalBody) {
@@ -772,10 +776,10 @@
         `;
       }
     },
-    
+
     resetModal() {
       exportProgressModal.hide();
-      
+
       // Reset progress modal to initial state
       const modalBody = document.querySelector('#exportProgressModal .modal-body');
       if (modalBody) {
@@ -789,7 +793,7 @@
             <h4 class="text-light mb-3" style="font-weight: 600;">Processing Your Export</h4>
             <div id="export-progress" class="mb-3">
               <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">
-                <div class="progress-bar bg-gradient" role="progressbar" style="width: 0%; border-radius: 5px;" 
+                <div class="progress-bar bg-gradient" role="progressbar" style="width: 0%; border-radius: 5px;"
                      aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
@@ -797,7 +801,7 @@
           </div>
         `;
       }
-      
+
       // Show export modal again with smooth transition
       setTimeout(() => {
         exportModal.show();
@@ -814,25 +818,25 @@
         70% { transform: scale(0.9); opacity: 0.9; }
         100% { transform: scale(1); opacity: 1; }
       }
-      
+
       @keyframes shake {
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
         20%, 40%, 60%, 80% { transform: translateX(5px); }
       }
-      
+
       @keyframes slideInRight {
         0% { transform: translateX(100%); opacity: 0; }
         100% { transform: translateX(0); opacity: 1; }
       }
-      
+
       @keyframes slideOutRight {
         0% { transform: translateX(0); opacity: 1; }
         100% { transform: translateX(100%); opacity: 0; }
       }
     </style>
   `;
-  
+
   // Inject animation styles
   if (!document.querySelector('#export-animations')) {
     const styleElement = document.createElement('div');
