@@ -3112,7 +3112,7 @@ class AjaxController extends Controller
         }
         return ['data' => $data];
     }
-     public function getIbUsers2(Request $request)
+    public function getIbUsers2(Request $request)
     {
 
         $role = session('userData')['userRole'];
@@ -3149,7 +3149,7 @@ class AjaxController extends Controller
         // dd($query);
         if ($request->ajax()) {
             try{
-return DataTables::of($rmCondition)
+                return DataTables::of($rmCondition)
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
@@ -3177,7 +3177,6 @@ return DataTables::of($rmCondition)
                         $order
                     );
                 })
-
 
 
 
@@ -3269,7 +3268,11 @@ return DataTables::of($rmCondition)
                 ->orderColumn('date', 'id $1')
                 ->make(true);
             }catch (Exception $e) {
-                return ['success' => false, 'message' => $e->getMessage()];
+                return response()->json([
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ], 500);
             }
 
         }
