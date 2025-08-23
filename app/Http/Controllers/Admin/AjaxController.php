@@ -3098,6 +3098,16 @@ class AjaxController extends Controller
 
         $rmCondition = Ib1::where('status', 1)
             ->select('ib1.*')
+            ->selectSub(function ($q) {
+                $q->from('ib_wallets')
+                ->selectRaw('SUM(ib_wallet)')
+                ->whereColumn('ib1.id', 'ib_wallets.ib_id');
+            }, 'total_deposit')
+            ->selectSub(function ($q) {
+                $q->from('ib_wallets')
+                ->selectRaw('SUM(ib_withdraw)')
+                ->whereColumn('ib1.id', 'ib_wallets.ib_id');
+            }, 'total_withdrawal')
             ->with(['user', 'ibWallet', 'planDetails.accountType']);
 
 
@@ -3144,19 +3154,25 @@ class AjaxController extends Controller
                 ->orderColumn('name', function ($query, $order) {
                     $query->orderBy('ib1.name', $order);
                 })
+                // ->orderColumn('total_deposit', function ($query, $order) {
+                //     $query->orderBy(
+                //         IbWallet::selectRaw('SUM(ib_wallet)')
+                //             ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                //         $order
+                //     );
+                // })
+                // ->orderColumn('total_withdrawal', function ($query, $order) {
+                //     $query->orderBy(
+                //         IbWallet::selectRaw('SUM(ib_withdraw)')
+                //             ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                //         $order
+                //     );
+                // })
                 ->orderColumn('total_deposit', function ($query, $order) {
-                    $query->orderBy(
-                        IbWallet::selectRaw('SUM(ib_wallet)')
-                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
-                        $order
-                    );
+                    $query->orderBy('total_deposit', $order);
                 })
                 ->orderColumn('total_withdrawal', function ($query, $order) {
-                    $query->orderBy(
-                        IbWallet::selectRaw('SUM(ib_withdraw)')
-                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
-                        $order
-                    );
+                    $query->orderBy('total_withdrawal', $order);
                 })
 
 
@@ -3177,13 +3193,19 @@ class AjaxController extends Controller
 ' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
                 })
 
+                // ->addColumn('total_deposit', function ($row) {
+                //     $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
+                //     return $total_deposit;
+                // })
+                // ->addColumn('total_withdrawal', function ($row) {
+                //     $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
+                //     return $total_withdrawal;
+                // })
                 ->addColumn('total_deposit', function ($row) {
-                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
-                    return $total_deposit;
+                    return "$" . ($row->total_deposit ?? 0);
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
-                    return $total_withdrawal;
+                    return "$" . ($row->total_withdrawal ?? 0);
                 })
 
                 ->editColumn('ib_status', function ($row) {
