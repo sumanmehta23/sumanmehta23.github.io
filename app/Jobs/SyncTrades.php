@@ -109,7 +109,7 @@ class SyncTrades implements ShouldQueue
             // if (!empty($orders)) {
             //     Log::info('First order details: ' . print_r($orders[0], true));
             // }
-            Log::info("orders for close competition ".json_encode($orders));
+            // Log::info("orders for close competition ".json_encode($orders));
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
 
             $tradesToUpsert = [];
