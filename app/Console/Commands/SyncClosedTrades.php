@@ -59,7 +59,7 @@ class SyncClosedTrades extends Command
             ->whereNull('deleted_at')
             ->whereHas('accountType', function ($query) {
                 $query->where('competition_start_date', '<=', Carbon::now('UTC'));
-                $query->where('competition_end_date', '>=', Carbon::now('UTC'));
+                // $query->where('competition_end_date', '>=', Carbon::now('UTC'));
             })
             ->chunk(500, function ($accounts) use ($batchSize) {
                 $jobs = [];
