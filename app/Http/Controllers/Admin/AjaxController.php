@@ -3112,100 +3112,157 @@ class AjaxController extends Controller
         }
         return ['data' => $data];
     }
-    public function getIbUsers2(Request $request)
+     public function getIbUsers2(Request $request)
     {
+
         $role = session('userData')['userRole'];
         $alogin = session('userData')['id'];
 
+        // Base query
+
         $rmCondition = Ib1::where('status', 1)
             ->select('ib1.*')
-            ->selectSub(function ($q) {
-                $q->from('ib_wallet')
-                ->selectRaw('COALESCE(SUM(ib_wallet),0)')
-                ->whereColumn('ib1.user_id', 'ib_wallet.user_id');
-            }, 'total_deposit')
-            ->selectSub(function ($q) {
-                $q->from('ib_wallet')
-                ->selectRaw('COALESCE(SUM(ib_withdraw),0)')
-                ->whereColumn('ib1.user_id', 'ib_wallet.user_id');
-            }, 'total_withdrawal')
             ->with(['user', 'ibWallet', 'planDetails.accountType']);
+
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
         }
 
+        // if ($role === "Relationship Manager") {
+        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
+        //         $query->where('rm_id', $alogin);
+        //     });
+        // }
+
         if ($role === "Relationship Manager") {
             $rmCondition->whereHas('user.employee', function ($q) use ($alogin) {
-                $q->where('relationship_manager.rm_id', $alogin);
+                $q->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
             });
         }
 
+        // $rmCondition->orderBy('id', 'desc');
+
+        // dd($query);
         if ($request->ajax()) {
             return DataTables::of($rmCondition)
                 ->filter(function ($rmCondition) use ($request) {
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('ib1.id', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('ib1.indexId', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('ib1.email', 'LIKE', "%{$searchValue}%")
-                            ->orWhereRaw("DATE_FORMAT(ib1.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                            $q->where('id', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                                // ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
 
-                // ✅ ordering logic
                 ->orderColumn('total_deposit', function ($query, $order) {
-                    $query->orderBy('total_deposit', $order);
+                    $query->orderBy(
+                        IbWallet::selectRaw('SUM(ib_wallet)')
+                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                        $order
+                    );
                 })
                 ->orderColumn('total_withdrawal', function ($query, $order) {
-                    $query->orderBy('total_withdrawal', $order);
+                    $query->orderBy(
+                        IbWallet::selectRaw('SUM(ib_withdraw)')
+                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                        $order
+                    );
+                })
+
+
+
+
+                ->addColumn('id', function ($row) {
+                    return $row->id;
+                })
+                ->addColumn('agent_id', function ($row) {
+                    return $row->indexId;
+                })
+                ->editColumn('name', function ($row) {
+                    if ($row->planDetails) {
+                        $small = $row->planDetails->accountType->ac_name != null ? $row->planDetails->accountType->ac_name : '';
+                    } else {
+                        $small = '';
+                    }
+
+                    return "<a href='/admin/client_details/{$row->user_id}'><div class='d-flex align-items-center'><div class='me-2'><svg xmlns='http://www.w3.org/2000/svg'width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg></div><div><div class='lh-1'><span>{$row->name}</span></div><div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>{$small}</div></div></a>";
                 })
 
                 ->addColumn('total_deposit', function ($row) {
-                    return number_format($row->total_deposit, 2, '.', ','); // display clean number
+                    $total_deposit = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_wallet')->sum() : "$0";
+                    return $total_deposit;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
-                    return number_format($row->total_withdrawal, 2, '.', ',');
+                    $total_withdrawal = $row->ibWallet ? "$" . $row->ibWallet->pluck('ib_withdraw')->sum() : "$0";
+                    return $total_withdrawal;
                 })
 
-                ->addColumn('id', fn($row) => $row->id)
-                ->addColumn('agent_id', fn($row) => $row->indexId)
-
-                ->editColumn('name', function ($row) {
-                    $small = $row->planDetails && $row->planDetails->accountType->ac_name
-                        ? $row->planDetails->accountType->ac_name : '';
-                    return "<a href='/admin/client_details/{$row->user_id}'>
-                                <div class='d-flex align-items-center'>
-                                    <div class='me-2'>
-                                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' ...></svg>
-                                    </div>
-                                    <div>
-                                        <div class='lh-1'><span>{$row->name}</span></div>
-                                        <div class='lh-1'><span class='fs-11 text-muted'>{$row->email}</span></div>
-                                        {$small}
-                                    </div>
-                                </div>
-                            </a>";
+                ->editColumn('ib_status', function ($row) {
+                    return $row->status;
                 })
 
                 ->addColumn('status', function ($row) {
-                    return match ($row->status) {
-                        1 => "<button class='ibToggle badge btn-sm btn btn-outline-success'><span data-status='1'>Active IB</span></button>",
-                        2 => "<button class='ibToggle badge btn-sm btn btn-outline-danger'><span data-status='2'>Rejected</span></button>",
-                        0 => "<button class='ibToggle badge btn-sm btn btn-outline-info'><span data-status='0'>IB Requested</span></button>",
-                        default => "<button class='ibToggle badge btn-sm btn btn-outline-primary'><span data-status='null'>Not Requested</span></button>",
-                    };
+                    if ($row->status == 1) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-success'>
+                                    <span class='status-value' data-status='1'>Active IB</span>
+                                </button>";
+                    } elseif ($row->status == 2) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-danger'>
+                                    <span class='status-value' data-status='2'>Rejected</span>
+                                </button>";
+                    } elseif ($row->status == 0) {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-info'>
+                                    <span class='status-value' data-status='0'>IB Requested</span>
+                                </button>";
+                    } else {
+                        return "<button class='ibToggle badge btn-sm btn btn-outline-primary'>
+                                    <span class='status-value' data-status='null'>Not Requested</span>
+                                </button>";
+                    }
                 })
-                ->addColumn('date', fn($row) => Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d H:i:s'))
-                ->addColumn('fullname', fn($row) => $row->user->fullname)
-                ->addColumn('fullemail', fn($row) => $row->email)
-                ->addColumn('created_date', fn($row) => Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d'))
-                ->addColumn('created_time', fn($row) => Carbon::parse($row->created_at)->addHours(3)->format('H:i:s'))
-                ->addColumn('phone_number', fn($row) => $row->user->number)
+                ->addColumn('date', function ($row) {
+                    // $date = date('Y-m-d', strtotime($row->created_at));
+                    $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                    // $time = date('H:i:s', strtotime($row->created_at));
+                    $time = Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                    return "<div class='lh-1'>
+                                $date
+                            </div>
+                            <div class='lh-2 text-muted'>
+                                $time
+                            </div>";
+                })
+                ->addColumn('fullname', function ($row) {
+                    return $row->user->fullname;
+                })
+                ->addColumn('fullemail', function ($row) {
+                    return $row->email;
+                })
+                ->addColumn('created_date', function ($row) {
+                    // return date('Y-m-d', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
+                })
+                ->addColumn('created_time', function ($row) {
+                    // return date('H:i:s', strtotime($row->created_at));
+                    return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->addColumn('phone_number', function ($row) {
+                    return $row->user->number;
+                })
 
-                ->rawColumns(['id', 'name', 'status'])
+                ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'status', 'date'])
+
+                ->orderColumn('id', 'id $1')
+                ->orderColumn('name', 'id $1')
+                ->orderColumn('agent_id', 'id $1')
+                // ->orderColumn('total_deposit', 'id $1')
+                // ->orderColumn('total_withdrawal', 'id $1')
+                ->orderColumn('date', 'id $1')
                 ->make(true);
         }
 
