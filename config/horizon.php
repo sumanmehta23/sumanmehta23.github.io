@@ -224,7 +224,7 @@ return [
             'queue' => ['sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 10),
+            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 30),
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 1000,
