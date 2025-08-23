@@ -111,6 +111,7 @@ class SyncTrades implements ShouldQueue
             // }
 
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+            Log::info("ordersByPosition  ".json_encode($ordersByPosition));
             $tradesToUpsert = [];
 
             foreach ($ordersByPosition as $positionId => $positionOrders) {
