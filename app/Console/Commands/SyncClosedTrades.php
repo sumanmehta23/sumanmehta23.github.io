@@ -62,7 +62,7 @@ class SyncClosedTrades extends Command
                 // $query->where('competition_end_date', '>=', Carbon::now('UTC'));
             })
             ->chunk(500, function ($accounts) use ($batchSize) {
-                Log::info("closed competition accounts ".json_encode($accounts));
+                // Log::info("closed competition accounts ".json_encode($accounts));
                 $jobs = [];
                 foreach ($accounts as $account) {
                     // dd($accounts);
