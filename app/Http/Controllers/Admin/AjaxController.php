@@ -3099,14 +3099,14 @@ class AjaxController extends Controller
         $rmCondition = Ib1::where('status', 1)
             ->select('ib1.*')
             ->selectSub(function ($q) {
-                $q->from('ib_wallets')
+                $q->from('ib_wallet')
                 ->selectRaw('SUM(ib_wallet)')
-                ->whereColumn('ib1.id', 'ib_wallets.ib_id');
+                ->whereColumn('ib1.user_id', 'ib_wallet.user_id');
             }, 'total_deposit')
             ->selectSub(function ($q) {
-                $q->from('ib_wallets')
+                $q->from('ib_wallet')
                 ->selectRaw('SUM(ib_withdraw)')
-                ->whereColumn('ib1.id', 'ib_wallets.ib_id');
+                ->whereColumn('ib1.user_id', 'ib_wallet.user_id');
             }, 'total_withdrawal')
             ->with(['user', 'ibWallet', 'planDetails.accountType']);
 
