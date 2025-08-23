@@ -2972,10 +2972,9 @@ class AjaxController extends Controller
             return ["false"];
         }
     }
+
     public function getLatestDeposit($id)
     {
-        header('Content-Type: application/json');
-
         // Get wallet deposits
         $walletDeposits = WalletDeposit::where('user_id', $id)
             ->whereNotIn('deposit_type', ['CRM', 'Wallet Transfer'])
@@ -2993,35 +2992,58 @@ class AjaxController extends Controller
 
         // Prepare the data array
         $data = $results->map(function ($row) {
-            if($row->deposit_type == 'CryptoChill'){
-                $callback_data = json_decode($row->callback_data,true);
-                $invoiceId = $callback_data['transaction']['invoice']['id'];
-                $link = 'https://uniwire.com/invoice/'.$invoiceId;
+            $link = '';
+
+            if ($row->deposit_type == 'CryptoChill') {
+                $callback_data = json_decode($row->callback_data, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    \Log::error("JSON Decode Error: " . json_last_error_msg(), [
+                        'row_id' => $row->id,
+                        'callback_data' => $row->callback_data
+                    ]);
+                }
+
+                if (isset($callback_data['transaction']['invoice']['id'])) {
+                    $invoiceId = $callback_data['transaction']['invoice']['id'];
+                    $link = 'https://uniwire.com/invoice/' . $invoiceId;
+                } else {
+                    \Log::warning("Missing invoice ID in callback_data", [
+                        'row_id' => $row->id,
+                        'callback_data' => $callback_data
+                    ]);
+                }
             }
-            elseif($row->deposit_type == 'CreditCardPayissa'){
-                // $callback_data = json_decode($row->callback_data,true);
-                $invoiceId = $row->transaction_id;
-                $link = 'https://blockscan.com/tx/'.$invoiceId;
-            }else{
-                $link ='';
+            elseif ($row->deposit_type == 'CreditCardPayissa') {
+                $invoiceId = $row->transaction_id ?? null;
+                if ($invoiceId) {
+                    $link = 'https://blockscan.com/tx/' . $invoiceId;
+                } else {
+                    \Log::warning("Missing transaction_id for CreditCardPayissa", [
+                        'row_id' => $row->id
+                    ]);
+                }
             }
 
             return [
-                'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
-                'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class=" text-success" href='.$link.'>'.$row->deposit_type.'</a>',
+                'created_on' => $row->deposted_date
+                    ? Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s')
+                    : null,
+                'from_to' => $row->code ? $row->code : 'Wallet',
+                'payment_method' => '<a class="text-success" href="' . $link . '">' . $row->deposit_type . '</a>',
                 'amount' => '$' . $row->deposit_amount,
                 'status' => match ($row->status) {
                     1 => '<div class="badge bg-outline-success">Approved</div>',
                     2 => '<span class="badge bg-outline-danger">Rejected</span>',
                     default => '<span class="badge bg-outline-primary">Pending</span>',
                 },
-                'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . ($row->id) . '">View</a>'
+                'action' => '<a class="btn btn-sm btn-primary" href="/admin/trading_deposit_details?id=' . $row->id . '">View</a>'
             ];
         });
 
         return ['data' => $data];
     }
+
 
     public function getLatestWithdrawal($id)
     {
