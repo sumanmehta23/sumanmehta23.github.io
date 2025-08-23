@@ -3154,11 +3154,20 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('id', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('indexId', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
-                                // ->orWhere('created_at', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                            $q->where('ib1.id', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('ib1.indexId', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('ib1.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhereRaw("DATE_FORMAT(ib1.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"])
+                                // ✅ Search inside total_deposit
+                                ->orWhereRaw(
+                                    "(SELECT SUM(w.ib_wallet) FROM ib_wallet w WHERE w.user_id = ib1.user_id) LIKE ?",
+                                    ["%{$searchValue}%"]
+                                )
+                                // ✅ Search inside total_withdrawal
+                                ->orWhereRaw(
+                                    "(SELECT SUM(w.ib_withdraw) FROM ib_wallet w WHERE w.user_id = ib1.user_id) LIKE ?",
+                                    ["%{$searchValue}%"]
+                                );
                         });
                     }
                 })
