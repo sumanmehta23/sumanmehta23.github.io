@@ -18,6 +18,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:activate-competition-accounts')->everySecond(10);
         $schedule->command('app:sync-trades')->everyMinute();
 
+        //sync closed competition trades
+        $schedule->command('app:sync-closed-trades')->everyMinute();
+
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
 
         $schedule->command('app:breach-account')->everyMinute();
@@ -26,7 +29,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:sync-daily-reports')->daily();
         $schedule->command('app:sync-account-trades')->everyTenMinutes();
         // $schedule->command('app:update-price-snapshots')->hourly();
-        
+
         // Export cleanup - runs daily at 2 AM to clean up exports older than 7 days
         $schedule->command('export:cleanup --days=7')->daily()->at('02:00');
 
