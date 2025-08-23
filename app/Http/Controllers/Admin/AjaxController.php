@@ -3134,6 +3134,32 @@ class AjaxController extends Controller
                         });
                     }
                 })
+
+                ->orderColumn('id', function ($query, $order) {
+                    $query->orderBy('ib1.id', $order);
+                })
+                ->orderColumn('agent_id', function ($query, $order) {
+                    $query->orderBy('ib1.indexId', $order);
+                })
+                ->orderColumn('name', function ($query, $order) {
+                    $query->orderBy('ib1.name', $order);
+                })
+                ->orderColumn('total_deposit', function ($query, $order) {
+                    $query->orderBy(
+                        IbWallet::selectRaw('SUM(ib_wallet)')
+                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                        $order
+                    );
+                })
+                ->orderColumn('total_withdrawal', function ($query, $order) {
+                    $query->orderBy(
+                        IbWallet::selectRaw('SUM(ib_withdraw)')
+                            ->whereColumn('ib1.user_id', 'ib_wallet.user_id'),
+                        $order
+                    );
+                })
+
+
                 ->addColumn('id', function ($row) {
                     return $row->id;
                 })
