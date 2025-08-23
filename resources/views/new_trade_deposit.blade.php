@@ -22,406 +22,307 @@
                             </div>
                         </div>
                         <div class="tab-content">
-                                @if ($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul>
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-                                <div class="row">
-                                    {{-- <div class="col-12"> --}}
-                                        {{-- <div class="row"> --}}
-                                            <div class="col-xl-8">
-                                                <div class="card">
-                                                    <div class="card-body border-bottom">
-                                                        <h6>CREATE DEPOSIT TICKET</h6>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
-                                                        <div class="row g-1">
-
-                                                            @foreach ($liveaccount_details as $liveaccount)
-                                                                <div class="col-md-3 col-lg-4 col-xl-4">
-                                                                    <div class="border rounded address-check">
-                                                                        <div class="form-check paycard">
-                                                                            <input id="{{ $liveaccount->code }}"
-                                                                                type="radio" name="live-account"
-                                                                                class="select-liveaccount form-check-input input-primary"
-                                                                                data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
-                                                                                data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
-                                                                                value="{{ $liveaccount->id }}">
-                                                                            <label class="form-check-label d-block" required>
-                                                                                <div class="p-1 my-1">
-                                                                                    <span class="row">
-                                                                                        <span class="mt-1 col-6">
-                                                                                            <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
-                                                                                                <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">{{ $liveaccount->code }}</span>
-                                                                                        </span>
-                                                                                        <span class="pb-0 mb-0 col-6 text-end pe-3">
-                                                                                            <span class="mb-0 h5 d-block f-w-500">
-                                                                                                ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
-                                                                                            </span>
-                                                                                            <span
-                                                                                                class="mb-0 text-muted f-10">Current
-                                                                                                Balance</span>
-                                                                                        </span>
-                                                                                    </span>
-                                                                                </div>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
-                                                        <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span>
-                                                        </div>
-                                                        <div class="row g-1">
-                                                            @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
-                                                                <div class="col-6 col-lg-6 col-xl-6">
-                                                                    <div
-                                                                        class="border rounded address-check trade-deposit-type">
-                                                                        <div class="form-check">
-                                                                            <input type="radio" name="deposit_type"
-                                                                                checked
-                                                                                class="form-check-input input-primary tradefund-deposit"
-                                                                                id="cryptochill" value="CryptoChill"
-                                                                                data-type="CryptoChill">
-                                                                            <label class="form-check-label d-block"
-                                                                                for="cryptochill">
-                                                                                <span class="p-2 card-body d-block">
-                                                                                    <span
-                                                                                        class="d-flex align-items-center justify-content-between">
-                                                                                        <span>Crypto</span>
-                                                                                            <span
-                                                                                                class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
-                                                                                                <img src="/assets/images/crypto_payments2.png"
-                                                                                                    alt="CryptoChill" class="w-xs-75 w-md-25">
-                                                                                            </span>
-                                                                                    </span>
-                                                                                </span>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                            @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
-                                                            <div class="col-6 col-lg-6 col-xl-6">
-                                                                <div class="border rounded address-check trade-deposit-type">
-                                                                    <div class="form-check">
-                                                                        <input type="radio" name="deposit_type"
-                                                                            checked
-                                                                            class="form-check-input input-primary tradefund-deposit"
-                                                                            id="option_cc" value="CreditCardPayissa"
-                                                                            data-type="CreditCardPayissa">
-                                                                        <label class="form-check-label d-block"
-                                                                            for="option_cc">
-                                                                            <span class="p-2 card-body d-block">
-                                                                                <span
-                                                                                    class="d-flex align-items-center justify-content-between">
-                                                                                    <span class="no-wrap">Credit Card</span>
-                                                                                        <span
-                                                                                            class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
-                                                                                            <img src="/assets/images/credit-card.png"
-                                                                                                alt="Credit Card"
-                                                                                                class="w-xs-100 w-md-25">
-                                                                                        </span>
-                                                                                </span>
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            <div class="row">
+                                <div class="col-xl-8">
+                                    <div class="card">
+                                        <div class="card-body border-bottom">
+                                            <h6>CREATE DEPOSIT TICKET</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
+                                            <div class="row g-1">
+                                                @foreach ($liveaccount_details as $liveaccount)
+                                                    <div class="col-md-3 col-lg-4 col-xl-4">
+                                                        <div class="border rounded address-check">
+                                                            <div class="form-check paycard">
+                                                                <input id="{{ $liveaccount->code }}"
+                                                                    type="radio" name="live-account"
+                                                                    class="select-liveaccount form-check-input input-primary"
+                                                                    data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
+                                                                    data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
+                                                                    value="{{ $liveaccount->id }}">
+                                                                <label class="form-check-label d-block" required>
+                                                                    <div class="p-1 my-1">
+                                                                        <span class="row">
+                                                                            <span class="mt-1 col-6">
+                                                                                <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
+                                                                                    <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">{{ $liveaccount->code }}</span>
                                                                             </span>
-                                                                        </label>
+                                                                            <span class="pb-0 mb-0 col-6 text-end pe-3">
+                                                                                <span class="mb-0 h5 d-block f-w-500">
+                                                                                    ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
+                                                                                </span>
+                                                                                <span class="mb-0 text-muted f-10">Current Balance</span>
+                                                                            </span>
+                                                                        </span>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
+                                            <div class="row g-1">
+                                                @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
+                                                    <div class="col-6 col-lg-6 col-xl-6">
+                                                        <div class="border rounded address-check trade-deposit-type">
+                                                            <div class="form-check">
+                                                                <input type="radio" name="deposit_type"
+                                                                    checked
+                                                                    class="form-check-input input-primary tradefund-deposit"
+                                                                    id="cryptochill" value="CryptoChill"
+                                                                    data-type="CryptoChill">
+                                                                <label class="form-check-label d-block" for="cryptochill">
+                                                                    <span class="p-2 card-body d-block">
+                                                                        <span class="d-flex align-items-center justify-content-between">
+                                                                            <span>Crypto</span>
+                                                                            <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                <img src="/assets/images/crypto_payments2.png" alt="CryptoChill" class="w-xs-75 w-md-25">
+                                                                            </span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
+                                                    <div class="col-6 col-lg-6 col-xl-6">
+                                                        <div class="border rounded address-check trade-deposit-type">
+                                                            <div class="form-check">
+                                                                <input type="radio" name="deposit_type"
+                                                                    class="form-check-input input-primary tradefund-deposit"
+                                                                    id="option_cc" value="CreditCardPayissa"
+                                                                    data-type="CreditCardPayissa">
+                                                                <label class="form-check-label d-block" for="option_cc">
+                                                                    <span class="p-2 card-body d-block">
+                                                                        <span class="d-flex align-items-center justify-content-between">
+                                                                            <span class="no-wrap">Credit Card</span>
+                                                                            <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                <img src="/assets/images/credit-card.png" alt="Credit Card" class="w-xs-100 w-md-25">
+                                                                            </span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
+                                            @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
+                                                <div class="CryptoChill trade-deposit-details">
+                                                    <form method="post">
+                                                        @csrf
+                                                        <input type="hidden" name="user[email]" value="{{ session('clogin') }}" min="10" required class="form-control fill">
+                                                        <input class="user_code form-control fill" type="hidden" name="code" value="">
+                                                        <div class="row">
+                                                            <div class="mt-2 col-12">
+                                                                <input type="hidden" name="user[deposit_type]" class="tradedeposittype" value="CryptoChill">
+                                                                <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
+                                                                        <small class="text-muted d-block">Please enter promocode</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <input name="promocode" id="promocode" type="text" class="form-control fill" placeholder="Promocode" aria-label="promocode">
+                                                                            <button type="button" id="verifyPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                        </div>
+                                                                        <small id="promocodeStatus" class="text-muted"></small>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
-                                                        @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
-                                                            <div class="CryptoChill trade-deposit-details">
-                                                            <form method="post">
-                                                                    @csrf
-                                                                    <input type="hidden" name="user[email]"
-                                                                        value="{{ session('clogin') }}" min="10"
-                                                                        required class="form-control fill">
-                                                                    <input class="user_code form-control fill" type="hidden"
-                                                                        name="code" value="">
-
+                                                                <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER AMOUNT:
+                                                                        <small class="text-muted d-block">Please enter the amount to be deposited</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <span class="input-group-text">USD</span>
+                                                                            <input name="user[deposit]" id="crypto_deposit_amount" min="10" type="number" class="form-control fill tradedeposit_amount" placeholder="Minimum $10" aria-label="Amount" required>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                                 <div class="row">
-                                                                    <div class="mt-2 col-12">
-                                                                        <input type="hidden"
-                                                                            name="user[deposit_type]"
-                                                                            class="tradedeposittype"
-                                                                            value="CryptoChill">
-                                                                        <div class="form-group row">
-                                                                            <label
-                                                                                class="col-lg-4 col-form-label">ENTER
-                                                                                PROMOCODE:
-                                                                                <small
-                                                                                    class="text-muted d-block">Please
-                                                                                    enter promocode</small>
+                                                                    <div class="col-lg-4"></div>
+                                                                    <div class="col-lg-8 pb-4">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
+                                                                            <label class="form-check-label" for="cryptoWarningCheckbox">
+                                                                                Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
                                                                             </label>
-                                                                            <div class="col-lg-8">
-                                                                                <div class="mb-3 input-group">
-                                                                                    <input name="promocode"
-                                                                                        id="promocode"
-                                                                                        type="text"
-                                                                                        class="form-control fill"
-                                                                                        placeholder="Promocode"
-                                                                                        aria-label="promocode">
-                                                                                    <button type="button" id="verifyPromocodeBtn" class="btn btn-primary">Verify</button>
-                                                                                </div>
-                                                                                <small id="promocodeStatus" class="text-muted"></small>
-                                                                            </div>
-
                                                                         </div>
-                                                                        <div class="form-group row">
-                                                                            <label
-                                                                                class="col-lg-4 col-form-label">ENTER
-                                                                                AMOUNT:
-                                                                                <small
-                                                                                    class="text-muted d-block">Please
-                                                                                    enter the amount to be
-                                                                                    deposited</small>
-                                                                            </label>
-                                                                            <div class="col-lg-8">
-                                                                                <div class="mb-3 input-group">
-                                                                                    <span
-                                                                                        class="input-group-text">USD</span>
-                                                                                    <input name="user[deposit]"
-                                                                                        id="crypto_deposit_amount"
-                                                                                        min="10" type="number"
-                                                                                        class="form-control fill tradedeposit_amount"
-                                                                                        placeholder="Minimum $10"
-                                                                                        aria-label="Amount" required>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
+                                                                    </div>
+                                                                    <div class="">
                                                                         <div class="row">
                                                                             <div class="col-lg-4"></div>
-                                                                            <div class="col-lg-8 pb-4">
-                                                                                <div class="form-check">
-                                                                                    <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  required>
-                                                                                    <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                                        Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
-                                                                                    </label>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="">
-                                                                                <div class="row">
-                                                                                    <div class="col-lg-4"></div>
-                                                                                    <div class="col-lg-8">
-                                                                                        <div class="row g-1">
-                                                                                            <input type="button"
-                                                                                                id="paynow"
-                                                                                                data-amount="10"
-                                                                                                data-currency="USD"
-                                                                                                data-product="Deposit To: {{ $settings['mt5_company_name'] }}"
-                                                                                                class="btn btn-primary cryptochill-button col-12"
-                                                                                                value="Deposit To Trading Account">
-                                                                                        </div>
-                                                                                    </div>
+                                                                            <div class="col-lg-8">
+                                                                                <div class="row g-1">
+                                                                                    <input type="button" id="paynow" data-amount="10" data-currency="USD" data-product="Deposit To: {{ $settings['mt5_company_name'] }}" class="btn btn-primary cryptochill-button col-12" value="Deposit To Trading Account" disabled>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </form>
-                                                        </div>
-                                                        @endif
-                                                        @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
-                                                            <div class="CreditCardPayissa trade-deposit-details" style="display:none">
-                                                                <form method="post" id="CreditCardPayissaForm">
-                                                                    @csrf
-                                                                    <input type="hidden" name="email"
-                                                                        value="{{ session('clogin') }}" min="10"
-                                                                        required class="form-control fill">
-                                                                    <input class="user_code" type="hidden"
-                                                                        name="user[code]" value=""
-                                                                        class="form-control fill" readonly required>
-                                                                    {{-- <input type="hidden" name="selected_account_code" id="selected_account_code" value=""> --}}
-                                                                    <div class="row">
-                                                                        <div class="mt-2 col-12">
-                                                                            <input type="hidden" name="deposit_type"
-                                                                                class="tradedeposittype"
-                                                                                value="CreditCardPayissa">
-
-                                                                            <div class="form-group row">
-                                                                                <label
-                                                                                    class="col-lg-4 col-form-label">ENTER
-                                                                                    PROMOCODE:
-                                                                                    <small
-                                                                                        class="text-muted d-block">Please
-                                                                                        enter promocode</small>
-                                                                                </label>
-                                                                                <div class="col-lg-8">
-                                                                                    <div class="mb-3 input-group">
-                                                                                        <input name="cc_promocode"
-                                                                                            id="cc_promocode"
-                                                                                            type="text"
-                                                                                            class="form-control fill"
-                                                                                            placeholder="Promocode"
-                                                                                            aria-label="promocode">
-                                                                                        <button type="button" id="verifyCcPromocodeBtn" class="btn btn-primary">Verify</button>
-                                                                                    </div>
-                                                                                    <small id="cc_promocodeStatus" class="text-muted"></small>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div class="form-group row">
-                                                                                <label
-                                                                                    class="col-lg-4 col-form-label">ENTER
-                                                                                    AMOUNT:
-                                                                                    <small
-                                                                                        class="text-muted d-block">Please
-                                                                                        enter the amount to be deposited </small>
-                                                                                </label>
-                                                                                <div class="col-lg-8">
-                                                                                    <div class="mb-3 input-group">
-                                                                                        <span
-                                                                                            class="input-group-text">USD</span>
-                                                                                        <input placeholder="Minimum $10"
-                                                                                            name="deposit"
-                                                                                            id="deposit_amount_cc"
-                                                                                            type="number" min="10"
-                                                                                            title="Minimum $10"
-                                                                                            class="form-control fill ccdeposit_amount"
-                                                                                            aria-label="Amount" required>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="row">
-                                                                                <div class="col-lg-4"></div>
-                                                                                <div class="col-lg-8 pb-4">
-                                                                                    <div class="form-check">
-                                                                                        <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox"  >
-                                                                                        <label class="form-check-label" for="cryptoWarningCheckbox">
-                                                                                            Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, This option may not be available in your country.
-                                                                                            In that case, please use cryptocurrency to deposit.
-                                                                                        </label>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="">
-                                                                                <div class="row">
-                                                                                    <div class="col-lg-4"></div>
-                                                                                    <div class="col-lg-8">
-                                                                                        <div class="row g-1">
-                                                                                            <input type="submit"
-                                                                                                name="ccpay"
-                                                                                                id="ccpay"
-                                                                                                class="btn btn-primary col-12"
-                                                                                                value="Deposit To Trading Account">
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </form>
                                                             </div>
-                                                        @endif
-                                                    </div>
+                                                        </div>
+                                                    </form>
                                                 </div>
-                                            </div>
-                                            <div class="col-xl-4">
-                                                <div class="card coupon-card bg-primary">
-                                                    <div class="card-body">
+                                            @endif
+                                            @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
+                                                <div class="CreditCardPayissa trade-deposit-details" style="display:none">
+                                                    <form method="post" id="CreditCardPayissaForm">
+                                                        @csrf
+                                                        <input type="hidden" name="email" value="{{ session('clogin') }}" min="10" required class="form-control fill">
+                                                        <input class="user_code" type="hidden" name="user[code]" value="" class="form-control fill" readonly required>
                                                         <div class="row">
-                                                            <div
-                                                                class="col-8 d-flex flex-column align-items-start justify-content-center">
-                                                                <h3 class="text-white f-w-500">Fuel Your Trading Journey</h3>
-                                                                <span class="py-2 text-white f-16">Deposit now and unlock the
-                                                                    gateway to global markets.</span>
-                                                            </div>
-                                                            <div class="col-4 text-end">
-                                                                <img src="{{ asset('assets/images/fund_now.png') }}"
-                                                                    alt="img" class="img-fluid wid-110">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        <h5>MT5 ACCOUNTS SUMMARY</h5>
-                                                    </div>
-                                                    <div class="p-0 card-body">
-                                                        <ul class="list-group list-group-flush">
-                                                            @foreach ($liveaccount_details as $liveaccount)
-                                                                <li class="list-group-item">
-                                                                    <div class="media align-items-start">
-                                                                        <span class="pb-0 mb-0 h4 d-block f-w-500">
-                                                                            <img src="{{ asset('assets/images/mt5.png') }}"
-                                                                                alt="user-image" class="wid-25 me-1 ms-1">
-                                                                        </span>
-                                                                        <div class="mx-2 media-body">
-                                                                            <h5 class="mb-1">
-                                                                                <span
-                                                                                    class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->code }}</span>
-                                                                            </h5>
-                                                                            <p class="mb-2 text-sm"><span
-                                                                                    class="text-muted">ACCOUNT CATEGORY:</span>
-                                                                                ECN</p>
-                                                                            <div class="border-dashed border-top">
-                                                                                <p class="mt-2 mb-1 d-grid">
-                                                                                    <span class="text-muted">LEVERAGE: {{ $liveaccount->leverage }}</span>
-                                                                                    <span class="text-muted">CREDIT: ${{ $liveaccount->credit }}</span>
-                                                                                    <span class="text-muted">EQUITY: ${{ $liveaccount->equity }}</span>
-                                                                                </p>
-                                                                            </div>
+                                                            <div class="mt-2 col-12">
+                                                                <input type="hidden" name="deposit_type" class="tradedeposittype" value="CreditCardPayissa">
+                                                                <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
+                                                                        <small class="text-muted d-block">Please enter promocode</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <input name="cc_promocode" id="cc_promocode" type="text" class="form-control fill" placeholder="Promocode" aria-label="promocode">
+                                                                            <button type="button" id="verifyCcPromocodeBtn" class="btn btn-primary">Verify</button>
                                                                         </div>
-                                                                        <div class="flex-shrink-0">
-                                                                            <h4 class="f-w-500">${{ $liveaccount->balance??0 }}
-                                                                            </h4>
-                                                                            <p class="mb-2 text-sm text-muted text-end">Balance
-                                                                            </p>
+                                                                        <small id="cc_promocodeStatus" class="text-muted"></small>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER AMOUNT:
+                                                                        <small class="text-muted d-block">Please enter the amount to be deposited</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <span class="input-group-text">USD</span>
+                                                                            <input placeholder="Minimum $10" name="deposit" id="deposit_amount_cc" type="number" min="10" title="Minimum $10" class="form-control fill ccdeposit_amount" aria-label="Amount" required>
                                                                         </div>
                                                                     </div>
-                                                                </li>
-                                                            @endforeach
-                                                            <li class="list-group-item">
-                                                                <div class="float-end">
-                                                                    <h4 class="mb-0 fw-medium">${{ $totals->credit }}</h4>
                                                                 </div>
-                                                                <span class="text-muted">TOTAL CREDIT</span>
-                                                            </li>
-                                                            <li class="list-group-item">
-                                                                <div class="float-end">
-                                                                    <h4 class="mb-0 fw-medium">${{ $totals->equity }}</h4>
+                                                                <div class="row">
+                                                                    <div class="col-lg-4"></div>
+                                                                    <div class="col-lg-8 pb-4">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <label class="form-check-label" for="creditWarningCheckbox">
+                                                                                Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, this option may not be available in your country. In that case, please use cryptocurrency to deposit.
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <span class="text-muted">TOTAL EQUITY</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
+                                                                <div class="">
+                                                                    <div class="row">
+                                                                        <div class="col-lg-4"></div>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="row g-1">
+                                                                                <input type="submit" name="ccpay" id="ccpay" class="btn btn-primary col-12" value="Deposit To Trading Account" disabled>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </form>
                                                 </div>
-                                                <div class="card">
-                                                    <div class="py-2 card-body">
-                                                        <ul class="list-group list-group-flush">
-                                                            <li class="px-0 list-group-item">
-                                                                <div class="float-end">
-                                                                    <h3 class="mb-0 fw-medium">${{ $totals->balance }}</h3>
-                                                                </div>
-                                                                <h5 class="mb-0 d-inline-block">TOTAL BALANCE</h5>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4">
+                                    <div class="card coupon-card bg-primary">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-8 d-flex flex-column align-items-start justify-content-center">
+                                                    <h3 class="text-white f-w-500">Fuel Your Trading Journey</h3>
+                                                    <span class="py-2 text-white f-16">Deposit now and unlock the gateway to global markets.</span>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <img src="{{ asset('assets/images/fund_now.png') }}" alt="img" class="img-fluid wid-110">
                                                 </div>
                                             </div>
-                                        {{-- </div> --}}
-                                    {{-- </div> --}}
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>MT5 ACCOUNTS SUMMARY</h5>
+                                        </div>
+                                        <div class="p-0 card-body">
+                                            <ul class="list-group list-group-flush">
+                                                @foreach ($liveaccount_details as $liveaccount)
+                                                    <li class="list-group-item">
+                                                        <div class="media align-items-start">
+                                                            <span class="pb-0 mb-0 h4 d-block f-w-500">
+                                                                <img src="{{ asset('assets/images/mt5.png') }}" alt="user-image" class="wid-25 me-1 ms-1">
+                                                            </span>
+                                                            <div class="mx-2 media-body">
+                                                                <h5 class="mb-1">
+                                                                    <span class="pb-0 mb-0 h4 d-block f-w-500">{{ $liveaccount->code }}</span>
+                                                                </h5>
+                                                                <p class="mb-2 text-sm"><span class="text-muted">ACCOUNT CATEGORY:</span> ECN</p>
+                                                                <div class="border-dashed border-top">
+                                                                    <p class="mt-2 mb-1 d-grid">
+                                                                        <span class="text-muted">LEVERAGE: {{ $liveaccount->leverage }}</span>
+                                                                        <span class="text-muted">CREDIT: ${{ $liveaccount->credit }}</span>
+                                                                        <span class="text-muted">EQUITY: ${{ $liveaccount->equity }}</span>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <h4 class="f-w-500">${{ $liveaccount->balance??0 }}</h4>
+                                                                <p class="mb-2 text-sm text-muted text-end">Balance</p>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                                <li class="list-group-item">
+                                                    <div class="float-end">
+                                                        <h4 class="mb-0 fw-medium">${{ $totals->credit }}</h4>
+                                                    </div>
+                                                    <span class="text-muted">TOTAL CREDIT</span>
+                                                </li>
+                                                <li class="list-group-item">
+                                                    <div class="float-end">
+                                                        <h4 class="mb-0 fw-medium">${{ $totals->equity }}</h4>
+                                                    </div>
+                                                    <span class="text-muted">TOTAL EQUITY</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="py-2 card-body">
+                                            <ul class="list-group list-group-flush">
+                                                <li class="px-0 list-group-item">
+                                                    <div class="float-end">
+                                                        <h3 class="mb-0 fw-medium">${{ $totals->balance }}</h3>
+                                                    </div>
+                                                    <h5 class="mb-0 d-inline-block">TOTAL BALANCE</h5>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 @else
                     <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
                         <div class="row p-3">
                             <div class="card-body text-center">
-                                <div class="text-center me-4"><a href="/transactions/deposit#"><img
-                                            src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
-                                <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !
-                                </h6>
-                                <a  id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span
-                                            class="text-truncate">Verify Now To Proceed</span></button></a>
+                                <div class="text-center me-4"><a href="/transactions/deposit#"><img src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
+                                <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !</h6>
+                                <a id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span class="text-truncate">Verify Now To Proceed</span></button></a>
                             </div>
                         </div>
                     </div>
@@ -430,91 +331,240 @@
         </div>
     </div>
     @include('add_amount_to_account')
-    {{-- <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const selectedIdInput = document.getElementById("selected_account_code");
-
-            // Handle radio button change
-            $('.select-liveaccount').on('change', function () {
-                const clientAccountId = $(this).val();
-                selectedIdInput.value = clientAccountId; // Update hidden input value
-            });
-
-            // Optional: prevent form submission if no account selected
-            const form = document.getElementById("CreditCardPayissaForm");
-            form.addEventListener("submit", function (e) {
-                if (!selectedIdInput.value) {
-                    e.preventDefault();
-                    alert("Please select a trading account.");
-                }
-            });
-        });
-    </script> --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function (){
-            $('form').on('submit', function(e) {
-                var promocode = $('#promocode').val();
-                // Now you have the promocode value
-                console.log('Promocode:', promocode);
-            });
+    document.addEventListener("DOMContentLoaded", function () {
+        // CryptoChill form handling
+        const cryptoPromocodeInput = $('#promocode');
+        const cryptoAmountInput = $('#crypto_deposit_amount');
+        const cryptoDepositButton = $('#paynow');
+        const cryptoPromocodeStatus = $('#promocodeStatus');
+        const cryptoVerifyButton = $('#verifyPromocodeBtn');
+        let isCryptoPromocodeValid = false;
+        let isCryptoPromocodeEntered = false;
 
-            $('#verifyPromocodeBtn').click(function() {
-                const promocode = $('#promocode').val().trim();
-                const statusElement = $('#promocodeStatus');
-                statusElement.text('Checking...').removeClass('text-success text-danger');
+        // CreditCard form handling
+        const ccPromocodeInput = $('#cc_promocode');
+        const ccAmountInput = $('#deposit_amount_cc');
+        const ccDepositButton = $('#ccpay');
+        const ccPromocodeStatus = $('#cc_promocodeStatus');
+        const ccVerifyButton = $('#verifyCcPromocodeBtn');
+        let isCcPromocodeValid = false;
+        let isCcPromocodeEntered = false;
 
-                if (promocode === '') {
-                    statusElement.text('Please enter a promocode.').addClass('text-danger');
-                    return;
-                }
-                $.ajax({
-                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        promocode: promocode
-                    },
-                    success: function(response) {
-                        if (response.valid) {
-                            statusElement.text(response.message).addClass('text-success');
-                        } else {
-                            statusElement.text(response.message).addClass('text-danger');
-                        }
-                    },
-                    error: function(xhr) {
-                        statusElement.text('Error verifying promocode.').addClass('text-danger');
+        // Function to update CryptoChill button state
+        function updateCryptoButtonState() {
+            const amount = parseFloat(cryptoAmountInput.val());
+            const isAmountValid = amount >= 10;
+            const isCheckboxChecked = $('#cryptoWarningCheckbox').is(':checked');
+            if (isCryptoPromocodeEntered) {
+                cryptoDepositButton.prop('disabled', !isCryptoPromocodeValid || !isAmountValid || !isCheckboxChecked);
+                cryptoDepositButton.css('opacity', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
+                cryptoDepositButton.css('cursor', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+            } else {
+                cryptoDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
+                cryptoDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
+                cryptoDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+            }
+        }
+
+        // Function to update CreditCard button state
+        function updateCcButtonState() {
+            const amount = parseFloat(ccAmountInput.val());
+            const isAmountValid = amount >= 10;
+            const isCheckboxChecked = $('#creditWarningCheckbox').is(':checked');
+            if (isCcPromocodeEntered) {
+                ccDepositButton.prop('disabled', !isCcPromocodeValid || !isAmountValid || !isCheckboxChecked);
+                ccDepositButton.css('opacity', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
+                ccDepositButton.css('cursor', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+            } else {
+                ccDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
+                ccDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
+                ccDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+            }
+        }
+
+        // CryptoChill promocode verification
+        cryptoVerifyButton.click(function() {
+            const promocode = cryptoPromocodeInput.val().trim();
+            isCryptoPromocodeEntered = promocode !== '';
+            cryptoPromocodeStatus.text('Verifying...').removeClass('text-success text-danger');
+            cryptoVerifyButton.prop('disabled', true).text('Verifying...');
+
+            if (promocode === '') {
+                cryptoPromocodeStatus.text('Please enter a promocode.').addClass('text-danger');
+                isCryptoPromocodeValid = false;
+                cryptoPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                updateCryptoButtonState();
+                cryptoVerifyButton.prop('disabled', false).text('Verify');
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route("verify.promocode") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    promocode: promocode
+                },
+                success: function(response) {
+                    if (response.valid) {
+                        cryptoPromocodeStatus.text(response.message || 'Promocode verified successfully!').addClass('text-success');
+                        isCryptoPromocodeValid = true;
+                        cryptoPromocodeInput.css('border-color', 'rgb(34, 197, 94)');
+                    } else {
+                        cryptoPromocodeStatus.text(response.message || 'Invalid promocode.').addClass('text-danger');
+                        isCryptoPromocodeValid = false;
+                        cryptoPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
                     }
-                });
-            });
-
-            $('#verifyCcPromocodeBtn').click(function() {
-                const promocode = $('#cc_promocode').val().trim();
-                const statusElement = $('#cc_promocodeStatus');
-                statusElement.text('Checking...').removeClass('text-success text-danger');
-
-                if (promocode === '') {
-                    statusElement.text('Please enter a promocode.').addClass('text-danger');
-                    return;
+                    updateCryptoButtonState();
+                },
+                error: function(xhr) {
+                    cryptoPromocodeStatus.text('Error verifying promocode. Please try again.').addClass('text-danger');
+                    isCryptoPromocodeValid = false;
+                    cryptoPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                    updateCryptoButtonState();
+                },
+                complete: function() {
+                    cryptoVerifyButton.prop('disabled', false).text('Verify');
                 }
-                $.ajax({
-                    url: '{{ route("verify.promocode") }}', // Adjust route as per your setup
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        promocode: promocode
-                    },
-                    success: function(response) {
-                        if (response.valid) {
-                            statusElement.text(response.message).addClass('text-success');
-                        } else {
-                            statusElement.text(response.message).addClass('text-danger');
-                        }
-                    },
-                    error: function(xhr) {
-                        statusElement.text('Error verifying promocode.').addClass('text-danger');
-                    }
-                });
             });
         });
-    </script>
+
+        // CreditCard promocode verification
+        ccVerifyButton.click(function() {
+            const promocode = ccPromocodeInput.val().trim();
+            isCcPromocodeEntered = promocode !== '';
+            ccPromocodeStatus.text('Verifying...').removeClass('text-success text-danger');
+            ccVerifyButton.prop('disabled', true).text('Verifying...');
+
+            if (promocode === '') {
+                ccPromocodeStatus.text('Please enter a promocode.').addClass('text-danger');
+                isCcPromocodeValid = false;
+                ccPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                updateCcButtonState();
+                ccVerifyButton.prop('disabled', false).text('Verify');
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route("verify.promocode") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    promocode: promocode
+                },
+                success: function(response) {
+                    if (response.valid) {
+                        ccPromocodeStatus.text(response.message || 'Promocode verified successfully!').addClass('text-success');
+                        isCcPromocodeValid = true;
+                        ccPromocodeInput.css('border-color', 'rgb(34, 197, 94)');
+                    } else {
+                        ccPromocodeStatus.text(response.message || 'Invalid promocode.').addClass('text-danger');
+                        isCcPromocodeValid = false;
+                        ccPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                    }
+                    updateCcButtonState();
+                },
+                error: function(xhr) {
+                    ccPromocodeStatus.text('Error verifying promocode. Please try again.').addClass('text-danger');
+                    isCcPromocodeValid = false;
+                    ccPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                    updateCcButtonState();
+                },
+                complete: function() {
+                    ccVerifyButton.prop('disabled', false).text('Verify');
+                }
+            });
+        });
+
+        // Handle promocode input changes
+        cryptoPromocodeInput.on('input', function() {
+            const promocode = $(this).val().trim();
+            isCryptoPromocodeEntered = promocode !== '';
+            isCryptoPromocodeValid = false;
+            cryptoPromocodeStatus.text(promocode ? 'Please verify this promocode before proceeding.' : '').removeClass('text-success').addClass(promocode ? 'text-danger' : '');
+            cryptoPromocodeInput.css('border-color', promocode ? 'rgb(239, 68, 68)' : '');
+            updateCryptoButtonState();
+        });
+
+        ccPromocodeInput.on('input', function() {
+            const promocode = $(this).val().trim();
+            isCcPromocodeEntered = promocode !== '';
+            isCcPromocodeValid = false;
+            ccPromocodeStatus.text(promocode ? 'Please verify this promocode before proceeding.' : '').removeClass('text-success').addClass(promocode ? 'text-danger' : '');
+            ccPromocodeInput.css('border-color', promocode ? 'rgb(239, 68, 68)' : '');
+            updateCcButtonState();
+        });
+
+        // Handle amount and checkbox input changes
+        cryptoAmountInput.on('input', updateCryptoButtonState);
+        ccAmountInput.on('input', updateCcButtonState);
+        $('#cryptoWarningCheckbox').on('change', updateCryptoButtonState);
+        $('#creditWarningCheckbox').on('change', updateCcButtonState);
+
+        // Handle account selection
+        $('.select-liveaccount').on('change', function () {
+            const clientAccountId = $(this).val();
+            $('.user_code').val(clientAccountId);
+            updateCryptoButtonState();
+            updateCcButtonState();
+        });
+
+        // Prevent form submission if no account selected
+        $('#CreditCardPayissaForm').on('submit', function(e) {
+            if (!$('.user_code').val()) {
+                e.preventDefault();
+                alert('Please select a trading account.');
+                return false;
+            }
+            if (isCcPromocodeEntered && !isCcPromocodeValid) {
+                e.preventDefault();
+                ccPromocodeStatus.text('Please verify the promocode before proceeding.').addClass('text-danger');
+                return false;
+            }
+            const amount = parseFloat(ccAmountInput.val());
+            if (!amount || amount < 10) {
+                e.preventDefault();
+                alert('Please enter a valid amount (minimum $10).');
+                return false;
+            }
+        });
+
+        // Prevent Crypto form submission if validations fail
+        $('.CryptoChill form').on('submit', function(e) {
+            if (!$('.user_code').val()) {
+                e.preventDefault();
+                alert('Please select a trading account.');
+                return false;
+            }
+            if (isCryptoPromocodeEntered && !isCryptoPromocodeValid) {
+                e.preventDefault();
+                cryptoPromocodeStatus.text('Please verify the promocode before proceeding.').addClass('text-danger');
+                return false;
+            }
+            const amount = parseFloat(cryptoAmountInput.val());
+            if (!amount || amount < 10) {
+                e.preventDefault();
+                alert('Please enter a valid amount (minimum $10).');
+                return false;
+            }
+        });
+
+        // Anti-tampering protection
+        setInterval(function() {
+            if (!cryptoDepositButton.prop('disabled') && (isCryptoPromocodeEntered && !isCryptoPromocodeValid)) {
+                cryptoDepositButton.prop('disabled', true).css({'opacity': '0.5', 'cursor': 'not-allowed'});
+                console.warn('🔒 Security: Crypto submit button was artificially enabled and has been re-disabled.');
+            }
+            if (!ccDepositButton.prop('disabled') && (isCcPromocodeEntered && !isCcPromocodeValid)) {
+                ccDepositButton.prop('disabled', true).css({'opacity': '0.5', 'cursor': 'not-allowed'});
+                console.warn('🔒 Security: Credit Card submit button was artificially enabled and has been re-disabled.');
+            }
+        }, 1000);
+
+        // Initial button state
+        updateCryptoButtonState();
+        updateCcButtonState();
+    });
+</script>
 @endsection
