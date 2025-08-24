@@ -237,6 +237,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tasks', [ClientTaskController::class, 'index'])->name('tasks');
     Route::post('/task/client_verify', [ClientTaskController::class, 'client_verify'])->name('task.client_verify');
 
+    // X9 Testing Routes
+    Route::get('/test-x9-connection', [App\Http\Controllers\X9TestController::class, 'testConnection'])->name('test-x9-connection');
+    Route::get('/test-x9-demo', [App\Http\Controllers\X9TestController::class, 'testDemoPage'])->name('test-x9-demo');
+
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');

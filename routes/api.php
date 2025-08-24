@@ -44,6 +44,16 @@ Route::post('/calculate-lot-size', [LotSizeCalculatorController::class, 'index']
 
 //Cell Expert Integration API
 
+// X9 CRM API Routes
+Route::middleware(['auth:sanctum'])->prefix('crm')->group(function () {
+    Route::get('/connection', [\App\Http\Controllers\Api\X9Controller::class, 'testConnection']);
+    Route::post('/create_user', [\App\Http\Controllers\Api\X9Controller::class, 'createUser']);
+    Route::get('/user/{loginId}', [\App\Http\Controllers\Api\X9Controller::class, 'getUserDetails']);
+    Route::post('/user/balance', [\App\Http\Controllers\Api\X9Controller::class, 'manageBalance']);
+    Route::get('/client_group_types', [\App\Http\Controllers\Api\X9Controller::class, 'getClientGroupTypes']);
+    Route::get('/client_groups_by_type/{typeId}', [\App\Http\Controllers\Api\X9Controller::class, 'getClientGroupsByType']);
+});
+
 
 
 

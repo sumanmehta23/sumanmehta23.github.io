@@ -1,0 +1,1421 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "X9-CRM-API",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/api/crm/group/trades": {
+      "post": {
+        "summary": "Group Active Trades ",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": "{\r\n    \"group_name\": \"Group A\",\r\n    \"date_from\": \"2025-01-01 00:00:00\", // OR null,\r\n    \"date_to\": \"2025-07-31 23:59:59\", // OR null\r\n    \"pagination\": false,\r\n    \"page\": 1,\r\n    \"per_page\": 20\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/group/orders": {
+      "post": {
+        "summary": "Group Orders",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": "{\r\n    \"group_name\": \"Group A\",\r\n    \"date_from\": \"2025-01-01 00:00:00\", // OR null,\r\n    \"date_to\": \"2025-07-31 23:59:59\", // OR null\r\n    \"pagination\": false,\r\n    \"page\": 1,\r\n    \"per_page\": 20\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/group/trades_history": {
+      "post": {
+        "summary": "Group Trades History",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": "{\r\n    \"group_name\": \"Group A\",\r\n    \"date_from\": \"2025-01-01 00:00:00\", // OR null,\r\n    \"date_to\": \"2025-07-31 23:59:59\", // OR null\r\n    \"pagination\": true,\r\n    \"page\": 1,\r\n    \"per_page\": 20\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/users/all": {
+      "get": {
+        "summary": "All Users",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "balance",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "700",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_demo",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/users/with-balance": {
+      "get": {
+        "summary": "Users With Balance",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "min_balance",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "50",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_demo",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/users/with-positions": {
+      "get": {
+        "summary": "Users With Positions",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "min_positions",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_demo",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": ""
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/connection": {
+      "get": {
+        "summary": "Connection Test",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/reset/password": {
+      "post": {
+        "summary": "Reset User Password",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  },
+                  "password_type": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "login_id",
+                  "password_type",
+                  "password"
+                ]
+              },
+              "example": "{\r\n    \"login_id\": 11111115,\r\n    \"password_type\": \"master\", // master, investor, api\r\n    \"password\": \"11223344\"\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/create_user": {
+      "post": {
+        "summary": "Create User (Trading Account)",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preferred_login": {
+                    "type": "string"
+                  },
+                  "client_id": {
+                    "type": "null"
+                  },
+                  "client_group_type_id": {
+                    "type": "integer"
+                  },
+                  "client_group_id": {
+                    "type": "integer"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "middle_name": {
+                    "type": "null"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": "null"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "master_password": {
+                    "type": "string"
+                  },
+                  "investor_password": {
+                    "type": "string"
+                  },
+                  "country_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "preferred_login",
+                  "client_id",
+                  "client_group_type_id",
+                  "client_group_id",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "company",
+                  "email",
+                  "phone",
+                  "master_password",
+                  "investor_password",
+                  "country_id"
+                ]
+              },
+              "example": "{\r\n    \"preferred_login\": \"default\", // OR Number of 8 digit\r\n    \"client_id\": null,\r\n    \"client_group_type_id\": 1,  // 1 for Demo, 2 for Real\r\n    \"client_group_id\": 1,\r\n    \"first_name\": \"Musa\",\r\n    \"middle_name\": null,\r\n    \"last_name\": \"Test USER\",\r\n    \"company\": null,\r\n    \"email\": \"muhammad.mk56d9c8@gmail.com\",\r\n    \"phone\": \"+971509760755\",\r\n    \"master_password\": \"11223344\",\r\n    \"investor_password\": \"11223344\",\r\n    \"country_id\": 5\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/account_settings": {
+      "put": {
+        "summary": "Account Settings",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  },
+                  "field_to_update": {
+                    "type": "string"
+                  },
+                  "field_setting": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "login_id",
+                  "field_to_update",
+                  "field_setting"
+                ]
+              },
+              "example": "{\r\n    \"login_id\": 11111115,\r\n    \"field_to_update\": \"trading\", // is_enable, password_change, trading\r\n    \"field_setting\": true // true, false\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/account_group": {
+      "put": {
+        "summary": "Update Account Group",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  },
+                  "group": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "login_id",
+                  "group"
+                ]
+              },
+              "example": "{\r\n    \"login_id\": 11111118,\r\n    \"group\": \"GROUP A\" // can be group_id or group_name\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/account_leverage": {
+      "put": {
+        "summary": "Update Account Leverage",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  },
+                  "leverage": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "login_id",
+                  "leverage"
+                ]
+              },
+              "example": {
+                "login_id": 11111118,
+                "leverage_profile_id": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/user/11122798": {
+      "get": {
+        "summary": "User Details (Including Balance Details)",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/users": {
+      "post": {
+        "summary": "All User Details (Including Balance Details)",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "login_ids": [
+                  11111115,
+                  11111116
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/transaction_types/2": {
+      "get": {
+        "summary": "Get Operation Transaction Types",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/client_groups_by_type/1": {
+      "get": {
+        "summary": "Client Groups By Type",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preferred_login": {
+                    "type": "string"
+                  },
+                  "client_id": {
+                    "type": "null"
+                  },
+                  "client_group_type_id": {
+                    "type": "integer"
+                  },
+                  "client_group_id": {
+                    "type": "integer"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "middle_name": {
+                    "type": "null"
+                  },
+                  "last_name": {
+                    "type": "null"
+                  },
+                  "company": {
+                    "type": "null"
+                  },
+                  "email": {
+                    "type": "null"
+                  },
+                  "phone": {
+                    "type": "null"
+                  },
+                  "master_password": {
+                    "type": "string"
+                  },
+                  "investor_password": {
+                    "type": "string"
+                  },
+                  "country_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "preferred_login",
+                  "client_id",
+                  "client_group_type_id",
+                  "client_group_id",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "company",
+                  "email",
+                  "phone",
+                  "master_password",
+                  "investor_password",
+                  "country_id"
+                ]
+              },
+              "example": "{\r\n    \"preferred_login\": \"default\", // OR Number of 8 digit\r\n    \"client_id\": null,\r\n    \"client_group_type_id\": 4,\r\n    \"client_group_id\": 1,\r\n    \"first_name\": \"Test User First Name 2\",\r\n    \"middle_name\": null,\r\n    \"last_name\": null,\r\n    \"company\": null,\r\n    \"email\": null,\r\n    \"phone\": null,\r\n    \"master_password\": \"11223344\",\r\n    \"investor_password\": \"11223345\",\r\n    \"country_id\": 5\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/operation_types": {
+      "get": {
+        "summary": "Get Operation Types",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/user/balance": {
+      "post": {
+        "summary": "User Balance Deposit/Withdraw",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  },
+                  "operation_type": {
+                    "type": "string"
+                  },
+                  "transaction_type": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "integer"
+                  },
+                  "comment": {
+                    "type": "string"
+                  },
+                  "operate_without_checking": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "login_id",
+                  "operation_type",
+                  "transaction_type",
+                  "amount",
+                  "comment",
+                  "operate_without_checking"
+                ]
+              },
+              "example": "{\r\n    \"login_id\": 11111121,\r\n    \"operation_type\": \"balance\", // balance, credit etc\r\n    \"transaction_type\": \"deposit\", // deposit, withdrawal etc\r\n    \"amount\": 500,\r\n    \"comment\": \"test comment\",\r\n    \"operate_without_checking\": true\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/user/close_trades": {
+      "post": {
+        "summary": "User Close All Trades",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": {
+                "login_id": 11111115
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/client_group_types": {
+      "get": {
+        "summary": "Client Group Types",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preferred_login": {
+                    "type": "string"
+                  },
+                  "client_id": {
+                    "type": "null"
+                  },
+                  "client_group_type_id": {
+                    "type": "integer"
+                  },
+                  "client_group_id": {
+                    "type": "integer"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "middle_name": {
+                    "type": "null"
+                  },
+                  "last_name": {
+                    "type": "null"
+                  },
+                  "company": {
+                    "type": "null"
+                  },
+                  "email": {
+                    "type": "null"
+                  },
+                  "phone": {
+                    "type": "null"
+                  },
+                  "master_password": {
+                    "type": "string"
+                  },
+                  "investor_password": {
+                    "type": "string"
+                  },
+                  "country_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "preferred_login",
+                  "client_id",
+                  "client_group_type_id",
+                  "client_group_id",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "company",
+                  "email",
+                  "phone",
+                  "master_password",
+                  "investor_password",
+                  "country_id"
+                ]
+              },
+              "example": "{\r\n    \"preferred_login\": \"default\", // OR Number of 8 digit\r\n    \"client_id\": null,\r\n    \"client_group_type_id\": 4,\r\n    \"client_group_id\": 1,\r\n    \"first_name\": \"Test User First Name 2\",\r\n    \"middle_name\": null,\r\n    \"last_name\": null,\r\n    \"company\": null,\r\n    \"email\": null,\r\n    \"phone\": null,\r\n    \"master_password\": \"11223344\",\r\n    \"investor_password\": \"11223345\",\r\n    \"country_id\": 5\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/user/account_trades": {
+      "post": {
+        "summary": "User All Active Trades",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": {
+                "login_id": 11121925
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/crm/user/account_trades_history": {
+      "post": {
+        "summary": "User Trades History",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{x-access-token}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "login_id"
+                ]
+              },
+              "example": "{\r\n    \"login_id\": 11111115,\r\n    \"date_from\": \"2025-05-01 00:00:00\", // OR null,\r\n    \"date_to\": \"2025-05-07 23:59:59\" // OR null\r\n}"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "required": [
+          "name",
+          "photoUrls",
+          "id",
+          "category",
+          "tags",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Pet ID"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category",
+            "description": "group"
+          },
+          "name": {
+            "type": "string",
+            "description": "name",
+            "example": "doggie"
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "image URL"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            },
+            "description": "tag"
+          },
+          "status": {
+            "type": "string",
+            "description": "Pet Sales Status",
+            "enum": [
+              "available",
+              "pending",
+              "sold"
+            ]
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Category ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Category Name"
+          }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Tag ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Tag Name"
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "servers": [],
+  "security": []
+}

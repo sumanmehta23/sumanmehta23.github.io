@@ -70,5 +70,9 @@ return [
     ],
     '1forge' => [
         'api_key' => env('FORGE_API_KEY', ''),
+    ],
+    'x9' => [
+        'base_url' => env('X9_BASE_URL', ''),
+        'access_token' => env('X9_ACCESS_TOKEN', ''),
     ]
 ];
