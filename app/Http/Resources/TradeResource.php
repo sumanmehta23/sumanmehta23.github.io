@@ -14,7 +14,8 @@ class TradeResource extends JsonResource
     public function toArray(Request $request): array
     {
         // check if $this->account->accountType->ac_group contains 'B-Book'
-        $isBBook = str_contains($this->account->accountType->ac_group, 'B-Book');
+
+        $isBBook = (isset($this->account->accountType)) && str_contains($this->account->accountType->ac_group, 'B-Book');
         return [
             'id' => $this->id,
             'user_id' => $this->account->user_id ?? null,
