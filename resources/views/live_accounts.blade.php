@@ -3,9 +3,9 @@
   <div class="pc-container">
     <div class="pc-content">
     @if(session('error'))
-    <div class="alert alert-danger mt-4">{{ session('error') }}</div>
+    <div class="mt-4 alert alert-danger">{{ session('error') }}</div>
     @endif
-    <div class="page-header mb-0 pb-0">
+    <div class="pb-0 mb-0 page-header">
       <div class="page-block">
       <div class="row align-items-center">
         <div class="col-md-12">
@@ -40,7 +40,6 @@
           <table class="table" id="">
             <thead>
             <tr>
-              <th>Platform</th>
               <th></th>
               <th>Nick Name</th>
               <th>Leverage</th>
@@ -52,19 +51,7 @@
             <tbody>
             @foreach ($results as $acc)
           <tr>
-            <td>
-            <div class="d-flex align-items-center">
-            @if($acc->platform === 'x9')
-          <img src="/images/x92.png" alt="X9 Platform" class="rounded me-2"
-          style="width: 32px; height: 32px;">
-          <span class="badge bg-danger">X9</span>
-          @else
-          <img src="/images/mt5-icon.svg" alt="MT5 Platform" class="rounded me-2"
-          style="width: 32px; height: 32px;">
-          <span class="badge bg-primary">MT5</span>
-          @endif
-            </div>
-            </td>
+
             <td>
             <div class="row align-items-center">
             <div class="col-auto pe-0">
@@ -99,7 +86,7 @@
             <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
             <td class="text-end f-w-200">
             @if ($acc->code && $acc->code != 'Rejected')
-          <div class="d-flex align-items-center gap-2">
+          <div class="gap-2 d-flex align-items-center">
           <button class="btn btn-sm btn-outline-secondary d-grid me-2">
           <a href="{{ route('view-account-details', $acc->id) }}">
           <span class="">View <svg class="pc-icon">
