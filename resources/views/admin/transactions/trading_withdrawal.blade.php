@@ -121,6 +121,13 @@
     <script>
         $(document).ready(function () {
           var clientId = $('#client_id').val();
+          var urlParams = new URLSearchParams(window.location.search);
+          var statusFromUrl = urlParams.get('status');
+
+          if (statusFromUrl !== null) {
+            $('#statusFilter').val(statusFromUrl);
+          }
+
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
