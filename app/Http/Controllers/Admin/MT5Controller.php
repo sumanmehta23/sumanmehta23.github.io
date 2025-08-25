@@ -252,13 +252,19 @@ class MT5Controller extends Controller
     {
         try {
             // For X9, we need to get the client group ID from the account type
-            // Assuming the account type has a field that maps to X9 group ID
-            $x9GroupId = $acc->x9_group_id ?? 1; // Default to group 1 if not mapped
+            // The form sends account_type_id, so we need to look up the x9_group_id from account_types table
+            $accountType = \App\Models\AccountType::find($account_type);
+            $x9GroupId = $accountType ? $accountType->x9_group_id : null;
 
-            // Update group in X9
-            $groupResponse = $this->x9Service->updateUserGroup(intval($code), $x9GroupId);
-            if (!$groupResponse['status']) {
-                return redirect()->back()->with('error', 'Failed to update group in X9: ' . $groupResponse['message']);
+            // Only update group if x9_group_id is mapped
+            if ($x9GroupId) {
+                $groupResponse = $this->x9Service->updateUserGroup(intval($code), $x9GroupId);
+                if (!$groupResponse['status']) {
+                    return redirect()->back()->with('error', 'Failed to update group in X9: ' . $groupResponse['message']);
+                }
+            } else {
+                // Log that this account type is not mapped to X9
+                Log::info('Account type not mapped to X9 group', ['account_type_id' => $account_type, 'code' => $code]);
             }
 
             // Update leverage in X9
@@ -289,12 +295,14 @@ class MT5Controller extends Controller
                     'account_type_id' => $account_type,
                     'platform' => 'x9',
                     'x9_group_id' => $x9GroupId,
+                    'group_updated' => $x9GroupId ? true : false,
                     'remark' => 'CRM Update Group Leverage (X9)'
                 ])
                 ->event('update')
                 ->log('CRM Update Group Leverage (X9)');
 
-            return redirect()->back()->with("success", "X9 Account Details Successfully Updated");
+            $updateMessage = $x9GroupId ? "X9 Account Details Successfully Updated" : "X9 Leverage Updated (Group unchanged - not mapped)";
+            return redirect()->back()->with("success", $updateMessage);
         } catch (\Exception $e) {
             Log::error('X9 Account Update Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error updating X9 account: ' . $e->getMessage());
@@ -357,61 +365,120 @@ class MT5Controller extends Controller
             $pass_type = $request->input('password_type');
             $new_password = $request->input('password');
             $type = $request->input('type', 'live'); // default to 'live' if 'type' is not provided
-            // Change main password
-            if ($pass_type == 'main') {
-                if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)) != MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
-                } else {
 
-                    $account = Account::where('code', $login)->first();
-                    if ($account) {
-                        $account->trader_password = $new_password;
-                        $account->save(); // Save will apply casting and encrypt the password
-                    }
-                    activity()
-                        ->causedBy(auth()->guard('admin')->user())
-                        ->withProperties([
-                            'ip' => request()->ip(),
-                            'admin_email' => auth()->guard('admin')->user()->email,
-                            'userRole' => auth()->guard('admin')->user()->userRole,
-                            'username' => auth()->guard('admin')->user()->username,
-                            'admin_id' => auth()->guard('admin')->user()->id,
-                            'code' => $login,
-                            'new_password' => $new_password,
-                            'remark' => 'CRM Update Master Password'
-                        ])
-                        ->event('update')
-                        ->log('CRM Update Master Password');
-                    return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
-                }
+            // Get account to check platform
+            $account = Account::where('code', $login)->first();
+            if (!$account) {
+                return redirect()->back()->with('error', 'Account not found');
             }
 
-            // Change investor password
-            if ($pass_type == 'investor') {
-                if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR)) != MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
-                } else {
-                    $account = Account::where('code', $login)->first();
-                    if ($account) {
-                        $account->invester_password = $new_password;
-                        $account->save(); // Save will apply casting and encrypt the password
-                    }
-                    activity()
-                        ->causedBy(auth()->guard('admin')->user())
-                        ->withProperties([
-                            'ip' => request()->ip(),
-                            'admin_email' => auth()->guard('admin')->user()->email,
-                            'userRole' => auth()->guard('admin')->user()->userRole,
-                            'username' => auth()->guard('admin')->user()->username,
-                            'admin_id' => auth()->guard('admin')->user()->id,
-                            'code' => $login,
-                            'new_password' => $new_password,
-                            'remark' => 'CRM Update Investor Password'
-                        ])
-                        ->event('update')
-                        ->log('CRM Update Investor Password');
-                    return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
-                }
+            // Handle password update based on platform
+            if ($account->platform === 'x9') {
+                return $this->updateX9Password($account, $login, $pass_type, $new_password);
+            } else {
+                return $this->updateMT5Password($account, $login, $pass_type, $new_password);
+            }
+        }
+    }
+
+    private function updateX9Password($account, $login, $pass_type, $new_password)
+    {
+        try {
+            // Map password types for X9 API
+            $x9PasswordType = $pass_type === 'main' ? 'master' : $pass_type;
+
+            // Update password in X9
+            $response = $this->x9Service->resetUserPassword(intval($login), $x9PasswordType, $new_password);
+
+            if (!$response['status']) {
+                return redirect()->back()->with('error', 'Failed to update password in X9: ' . $response['message']);
+            }
+
+            // Update in local database
+            if ($pass_type === 'main') {
+                $account->trader_password = $new_password;
+            } elseif ($pass_type === 'investor') {
+                $account->invester_password = $new_password;
+            }
+            $account->save();
+
+            // Log activity
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'code' => $login,
+                    'new_password' => $new_password,
+                    'platform' => 'x9',
+                    'password_type' => $x9PasswordType,
+                    'remark' => 'CRM Update ' . ucfirst($pass_type) . ' Password (X9)'
+                ])
+                ->event('update')
+                ->log('CRM Update ' . ucfirst($pass_type) . ' Password (X9)');
+
+            $passwordTypeName = $pass_type === 'main' ? 'Master' : ucfirst($pass_type);
+            return redirect()->back()->with('success', "Your {$passwordTypeName} Password Successfully Updated");
+        } catch (\Exception $e) {
+            Log::error('X9 Password Update Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating X9 password: ' . $e->getMessage());
+        }
+    }
+
+    private function updateMT5Password($account, $login, $pass_type, $new_password)
+    {
+        // Change main password
+        if ($pass_type == 'main') {
+            if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN)) != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
+            } else {
+                $account->trader_password = $new_password;
+                $account->save(); // Save will apply casting and encrypt the password
+
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
+                        'code' => $login,
+                        'new_password' => $new_password,
+                        'remark' => 'CRM Update Master Password'
+                    ])
+                    ->event('update')
+                    ->log('CRM Update Master Password');
+                return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
+            }
+        }
+
+        // Change investor password
+        if ($pass_type == 'investor') {
+            if (($error_code = $this->api->UserPasswordChange($login, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR)) != MTRetCode::MT_RET_OK) {
+                return redirect()->back()->with("error", 'Something went wrong on fetching details' . MTRetCode::GetError($error_code));
+            } else {
+                $account->invester_password = $new_password;
+                $account->save(); // Save will apply casting and encrypt the password
+
+                activity()
+                    ->causedBy(auth()->guard('admin')->user())
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'admin_email' => auth()->guard('admin')->user()->email,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
+                        'code' => $login,
+                        'new_password' => $new_password,
+                        'remark' => 'CRM Update Investor Password'
+                    ])
+                    ->event('update')
+                    ->log('CRM Update Investor Password');
+                return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
             }
         }
     }

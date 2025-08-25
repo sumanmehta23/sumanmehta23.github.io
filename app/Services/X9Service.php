@@ -312,7 +312,7 @@ class X9Service
                 'Accept' => 'application/json',
             ])->put($this->baseUrl . '/api/crm/account_group', [
                 'login_id' => $loginId,
-                'client_group_id' => $groupId
+                'group' => $groupId
             ]);
 
             if ($response->successful()) {
@@ -448,6 +448,45 @@ class X9Service
             return [
                 'status' => false,
                 'message' => 'Bonus operation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Reset user password in X9
+     */
+    public function resetUserPassword($loginId, $passwordType, $newPassword)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-access-token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post($this->baseUrl . '/api/crm/reset/password', [
+                'login_id' => intval($loginId),
+                'password_type' => $passwordType, // 'master', 'investor', or 'api'
+                'password' => $newPassword
+            ]);
+
+            if ($response->successful()) {
+                return [
+                    'status' => true,
+                    'message' => 'Password updated successfully',
+                    'data' => $response->json()
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to reset password: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Password Reset Failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Password reset failed: ' . $e->getMessage(),
                 'data' => null
             ];
         }
