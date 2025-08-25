@@ -14,7 +14,7 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-6">
-                                <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                                <h5 class="p-2 f-w-200">{{ $account->platform === 'x9' ? 'X9' : 'MT5' }} ACCOUNT</h5>
                             </div>
                             <div class="col-6">
                                 <h5 class="p-2 f-w-400">{{ $code }}</h5>
@@ -88,7 +88,7 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-6">
-                                <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                                <h5 class="p-2 f-w-200">{{ $account->platform === 'x9' ? 'X9' : 'MT5' }} ACCOUNT</h5>
                             </div>
                             <div class="col-6">
                                 <h5 class="p-2 f-w-400">{{ $code }}</h5>
@@ -118,7 +118,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <div class="page-header-title h5">
-                                <h2 class="mb-0">MT5 Details</h2>
+                                <h2 class="mb-0">{{ $account->platform === 'x9' ? 'X9' : 'MT5' }} Details</h2>
                             </div>
                         </div>
                     </div>
@@ -135,13 +135,25 @@
                                             <div class="col-sm-6">
                                                 <div class="row align-items-center">
                                                     <div class="col-auto pe-0">
-                                                        <img src="/assets/images/mt5.png" alt="user-image"
-                                                            class="rounded wid-60 hei-60">
+                                                        @if($account->platform === 'x9')
+                                                            <img src="/assets/images/x9.png" alt="x9-platform"
+                                                                class="rounded wid-60 hei-60">
+                                                        @else
+                                                            <img src="/assets/images/mt5.png" alt="mt5-platform"
+                                                                class="rounded wid-60 hei-60">
+                                                        @endif
                                                     </div>
                                                     <div class="col d-flex align-items-left gap-3">
-                                                        <h2 class="mb-0 f-w-500">
-                                                            <span class="text-truncate">{{ $code }}</span>
-                                                        </h2>
+                                                        <div>
+                                                            <h2 class="mb-0 f-w-500">
+                                                                <span class="text-truncate">{{ $code }}</span>
+                                                            </h2>
+                                                            @if($account->platform === 'x9' && isset($x9GroupName))
+                                                                <p class="mb-0 text-muted f-12">{{ $x9GroupName }}</p>
+                                                            @elseif($getUser && $getUser->accountType)
+                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
+                                                            @endif
+                                                        </div>
                                                         @if ($account->account_nick_name)
                                                             <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
                                                             {{-- <p class="mb-0 text-muted f-12"><span

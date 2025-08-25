@@ -254,6 +254,31 @@ class X9Service
     }
 
     /**
+     * Get client group name by ID
+     */
+    public function getClientGroupName($groupId, $typeId = 1)
+    {
+        try {
+            $response = $this->getClientGroupsByType($typeId);
+
+            if ($response['status'] && isset($response['data'])) {
+                $groups = $response['data'];
+
+                foreach ($groups as $group) {
+                    if (isset($group['id']) && $group['id'] == $groupId) {
+                        return $group['name'] ?? 'Unknown Group';
+                    }
+                }
+            }
+
+            return 'Group ID: ' . $groupId; // Fallback to show the ID
+        } catch (Exception $e) {
+            Log::error('X9 Get Client Group Name Failed: ' . $e->getMessage());
+            return 'Group ID: ' . $groupId;
+        }
+    }
+
+    /**
      * Generate a random 8-digit login ID for X9
      */
     protected function generateRandomLoginId()

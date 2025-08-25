@@ -21,10 +21,10 @@ if ($getUser) {
     <div class="main-content app-content">
         <div class="container-fluid">
             <div class="page-header">
-                <h1 class="page-title">Details of Trade Account</h1>
+                <h1 class="page-title">{{ $title ?? 'Details of Trade Account' }}</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">MT5 Account Details</li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ $title ?? 'Account Details' }}</li>
                 </ol>
             </div>
         </div>
@@ -60,12 +60,24 @@ if ($getUser) {
                                         <div class="card-body">
                                             <div class="wideget-user-desc d-flex align-items-center">
                                                 <div class="wideget-user-img">
-                                                    <img src="/assets/images/mt5.png" class="me-3" alt="img"
+                                                    <?php
+                                                        $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                        $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
+                                                    ?>
+                                                    <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
                                                         style="width:50px">
                                                 </div>
                                                 <div class="mt-auto mb-auto user-wrap">
                                                     <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
-                                                    <h6 class="fs-12 fw-normal text-muted"><?= $getUser->accountType->ac_group ?></h6>
+                                                    <h6 class="fs-12 fw-normal text-muted">
+                                                        <?php 
+                                                            if ($account->platform === 'x9') {
+                                                                echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
+                                                            } else {
+                                                                echo $getUser->accountType->ac_group;
+                                                            }
+                                                        ?>
+                                                    </h6>
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
@@ -599,7 +611,7 @@ if ($getUser) {
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-6">
-                                    <h5 class="p-2 f-w-200">MT5 ACCOUNT</h5>
+                                    <h5 class="p-2 f-w-200"><?= strtoupper($account->platform) ?> ACCOUNT</h5>
                                 </div>
                                 <div class="col-6">
                                     <h5 class="p-2 f-w-400"><?= $account->code ?></h5>

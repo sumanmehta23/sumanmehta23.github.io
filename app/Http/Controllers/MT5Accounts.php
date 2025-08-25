@@ -239,8 +239,12 @@ class MT5Accounts extends Controller
                     if (isset($balance)) $updateData['balance'] = $balance;
                     if (isset($credit)) $updateData['credit'] = $credit;
                     if (isset($equity)) $updateData['equity'] = $equity;
-                    if (isset($margin)) $updateData['margin'] = $margin;
-                    if (isset($freemargin)) $updateData['free_margin'] = $freemargin;
+                    if (isset($freemargin)) $updateData['margin_free'] = $freemargin;
+
+                    // Calculate and add margin level if we have the necessary data
+                    if (isset($margin) && isset($equity) && $margin > 0) {
+                        $updateData['margin_level'] = round(($equity / $margin) * 100, 2);
+                    }
 
                     if (!empty($updateData)) {
                         $account->update($updateData);
@@ -283,9 +287,12 @@ class MT5Accounts extends Controller
                 ->where('id', $account->id)
                 ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
+
+            // Get X9 group name for display
+            $x9GroupName = $this->x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
         }
 
-        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
+        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit', 'x9GroupName'));
     }
 
     public function showLiveAccountForm()
@@ -1112,8 +1119,15 @@ class MT5Accounts extends Controller
 
         $user = auth()->user();
 
-        // Get the account type for reference (even though X9 API doesn't use it directly)
+        // Get the account type for X9 group ID
         $accountType = AccountType::where('id', $validatedData['x9_options'])->first();
+
+        if (!$accountType) {
+            return redirect()->back()->with('error', 'Invalid account type selected');
+        }
+
+        // Use the x9_group_id from account_types table, fallback to 1 if not set
+        $x9GroupId = $accountType->x9_group_id ?? 1;
 
         // Generate random passwords for X9
         $masterPassword = $this->generatePassword();
@@ -1128,8 +1142,8 @@ class MT5Accounts extends Controller
         $x9UserData = [
             'preferred_login' => 'default',
             'client_id' => null,
-            'client_group_type_id' => 1, // Demo account
-            'client_group_id' => 1,
+            'client_group_type_id' => 1, // Always 1 for Demo account
+            'client_group_id' => $x9GroupId, // Use x9_group_id from account_types table
             'first_name' => $firstName,
             'middle_name' => null,
             'last_name' => $lastName,

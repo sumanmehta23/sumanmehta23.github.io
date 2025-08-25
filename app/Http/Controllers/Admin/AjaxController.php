@@ -822,16 +822,28 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
+
+                    // Determine platform image and display name
+                    $platformImage = '/assets/images/mt5.png';
+                    $platformName = 'MT5';
+
+                    if ($row->platform === 'x9') {
+                        $platformImage = '/assets/images/x9.png';
+                        $platformName = 'X9';
+                        // For X9 accounts, show the account type name instead of group
+                        $accountGroup = $row->accountType->ac_name ?? 'Standard';
+                    }
+
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
-                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
-                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col-auto pe-0'><img src='{$platformImage}'
+                                            alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
                                                 class='text-truncate w-100'> $row->code </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
-                                                class='text-truncate w-100'> $accountGroup </span>
+                                                class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>
                                         </p>
                                     </div>
                                 </div>
@@ -955,16 +967,28 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
+
+                    // Determine platform image and display name
+                    $platformImage = '/assets/images/mt5.png';
+                    $platformName = 'MT5';
+
+                    if ($row->platform === 'x9') {
+                        $platformImage = '/assets/images/x9.png';
+                        $platformName = 'X9';
+                        // For X9 accounts, show the account type name instead of group
+                        $accountGroup = $row->accountType->ac_name ?? 'Standard';
+                    }
+
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
-                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
-                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col-auto pe-0'><img src='{$platformImage}'
+                                            alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
                                                 class='text-truncate w-100'> $row->code </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
-                                                class='text-truncate w-100'> $accountGroup </span>
+                                                class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>
                                         </p>
                                     </div>
                                 </div>
@@ -2993,12 +3017,11 @@ class AjaxController extends Controller
 
         // Prepare the data array
         $data = $results->map(function ($row) {
-            if($row->deposit_type == 'CryptoChill'){
-                $callback_data = json_decode($row->callback_data,true);
+            if ($row->deposit_type == 'CryptoChill') {
+                $callback_data = json_decode($row->callback_data, true);
                 $invoiceId = $callback_data['transaction']['invoice']['id'];
-                $link = 'https://uniwire.com/invoice/'.$invoiceId;
-            }
-            elseif($row->deposit_type == 'CreditCardPayissa'){
+                $link = 'https://uniwire.com/invoice/' . $invoiceId;
+            } elseif ($row->deposit_type == 'CreditCardPayissa') {
                 // $callback_data = json_decode($row->callback_data,true);
                 // $invoiceId = $callback_data['transaction']['invoice']['id'];
                 $link = '';
@@ -3007,7 +3030,7 @@ class AjaxController extends Controller
             return [
                 'created_on' => Carbon::parse($row->deposted_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class=" text-success" href='.$link.'>'.$row->deposit_type.'</a>',
+                'payment_method' => '<a class=" text-success" href=' . $link . '>' . $row->deposit_type . '</a>',
                 'amount' => '$' . $row->deposit_amount,
                 'status' => match ($row->status) {
                     1 => '<div class="badge bg-outline-success">Approved</div>',
@@ -4444,7 +4467,7 @@ class AjaxController extends Controller
                             ";
                     return $html;
                 })
-                ->rawColumns(['id', 'code', 'percentage', 'min_deposit','max_deposit', 'status', 'created_at', 'action'])
+                ->rawColumns(['id', 'code', 'percentage', 'min_deposit', 'max_deposit', 'status', 'created_at', 'action'])
                 ->make(true);
         }
 
