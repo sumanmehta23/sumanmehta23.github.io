@@ -168,7 +168,7 @@ Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name
 // Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
 Route::get('/handle-failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
 
-// Route::get('/manually-payment-response', [Payment::class, 'manuallyPaymentResponse'])->name('manuallyPaymentResponse');
+Route::get('/manually-payment-response', [Payment::class, 'manuallyPaymentResponse'])->name('manuallyPaymentResponse');
 
 Route::post('/paymentcallback', [PaymentCallbackController::class, 'handleCallback'])->name('paymentcallback');
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login_index');
