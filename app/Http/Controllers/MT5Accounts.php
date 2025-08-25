@@ -1191,7 +1191,7 @@ class MT5Accounts extends Controller
                 'email' => $user->email,
                 'code' => $loginId,
                 'account_type_id' => $validatedData['x9_options'], // Use selected account type like MT5
-                'leverage' => $validatedData['x9_leverage'],
+                'leverage' => $validatedData['leverage'],
                 'currency' => 'USD',
                 'trader_password' => $masterPassword,
                 'invester_password' => $investorPassword,
