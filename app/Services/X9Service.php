@@ -260,9 +260,8 @@ class X9Service
     {
         try {
             $response = $this->getClientGroupsByType($typeId);
-
             if ($response['status'] && isset($response['data'])) {
-                $groups = $response['data'];
+                $groups = $response['data']['client_groups_by_type'];
 
                 foreach ($groups as $group) {
                     if (isset($group['id']) && $group['id'] == $groupId) {
@@ -299,5 +298,158 @@ class X9Service
         }
 
         return $password;
+    }
+
+    /**
+     * Update user group in X9
+     */
+    public function updateUserGroup($loginId, $groupId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-access-token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->put($this->baseUrl . '/api/crm/account_group', [
+                'login_id' => $loginId,
+                'client_group_id' => $groupId
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('X9 Update User Group Success: ' . json_encode($data));
+
+                return [
+                    'status' => true,
+                    'message' => 'User group updated successfully',
+                    'data' => $data
+                ];
+            } else {
+                Log::error('X9 Update User Group Failed: ' . $response->body());
+                return [
+                    'status' => false,
+                    'message' => 'Failed to update user group: ' . $response->body(),
+                    'data' => null
+                ];
+            }
+        } catch (Exception $e) {
+            Log::error('X9 Update User Group Exception: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Failed to update user group: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Update user leverage in X9
+     */
+    public function updateUserLeverage($loginId, $leverage)
+    {
+        try {
+            // Map leverage values to leverage_profile_id
+            // Based on actual X9 system configuration
+            $leverageProfileMapping = [
+                100 => 1,    // 1:100 - Standard leverage for regular trading
+                500 => 2,    // 1:500 - High leverage for experienced traders
+            ];
+
+            // Convert string leverage (e.g., "1:100" or "100") to integer
+            $leverageValue = is_string($leverage) ? intval(str_replace('1:', '', $leverage)) : intval($leverage);
+
+            // Get the leverage_profile_id
+            if (!isset($leverageProfileMapping[$leverageValue])) {
+                return [
+                    'status' => false,
+                    'message' => "Unsupported leverage value: {$leverageValue}. Available options: 100 (1:100), 500 (1:500)",
+                    'data' => null
+                ];
+            }
+
+            $leverageProfileId = $leverageProfileMapping[$leverageValue];
+
+            $response = Http::withHeaders([
+                'x-access-token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->put($this->baseUrl . '/api/crm/account_leverage', [
+                'login_id' => $loginId,
+                'leverage_profile_id' => $leverageProfileId
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('X9 Update User Leverage Success: ' . json_encode($data));
+
+                return [
+                    'status' => true,
+                    'message' => 'User leverage updated successfully',
+                    'data' => $data
+                ];
+            } else {
+                Log::error('X9 Update User Leverage Failed: ' . $response->body());
+                return [
+                    'status' => false,
+                    'message' => 'Failed to update user leverage: ' . $response->body(),
+                    'data' => null
+                ];
+            }
+        } catch (Exception $e) {
+            Log::error('X9 Update User Leverage Exception: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Failed to update user leverage: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Handle bonus operations (Bonus In/Out)
+     */
+    public function manageBonus($loginId, $bonusType, $amount, $comment = '', $operateWithoutChecking = true)
+    {
+        try {
+            // Determine the correct operation type based on bonus type
+            $operationType = 'Bonus';
+            $transactionType = $bonusType === 'in' ? 'Bonus In' : 'Bonus Out';
+
+            $payload = [
+                'login_id' => $loginId,
+                'operation_type' => $operationType,
+                'transaction_type' => $transactionType,
+                'amount' => abs($amount), // Always send positive amount
+                'comment' => $comment,
+                'operate_without_checking' => $operateWithoutChecking
+            ];
+
+            $response = Http::withHeaders([
+                'x-access-token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post($this->baseUrl . '/api/crm/user/balance', $payload);
+
+            if ($response->successful()) {
+                return [
+                    'status' => true,
+                    'message' => 'Bonus operation successful',
+                    'data' => $response->json()
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Bonus operation failed: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Bonus Operation Failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Bonus operation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 }

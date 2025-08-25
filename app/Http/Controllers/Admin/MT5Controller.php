@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use DB;
-use Mail;
 use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
@@ -14,12 +12,15 @@ use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
 use App\Services\MT5Service;
+use App\Services\X9Service;
 use Illuminate\Http\Request;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
 use Illuminate\Validation\Rule;
 use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -31,12 +32,15 @@ class MT5Controller extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    protected $x9Service;
+
+    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api, X9Service $x9Service)
     {
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
         $this->mailService = $mailService;
+        $this->x9Service = $x9Service;
         // $this->api = $api;
 
     }
@@ -210,97 +214,139 @@ class MT5Controller extends Controller
 
     public function updateAccountDetails(Request $request)
     {
-
         if ($request->has(['code', 'account_type'])) {
             $code = $request->input('code');
             $account_type = $request->input('account_type');
             $leverage = $request->input('leverage');
 
-            // Fetch user data from API (assume the API method and classes are available)
-            $trade_user = NULL;
-            $this->api->UserGet($code, $trade_user);
+            // Get the account to determine platform
+            $account = Account::with('user')->where('code', $code)->first();
 
-            if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
-
-                //dd(MTRetCode::GetError($error_code));
-                // return response()->json([
-                //     'status' => 'warning',
-                //     'message' => 'Something went wrong on Updating details',
-                //     'error' => MTRetCode::GetError($error_code)
-                // ], 400);
-                return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+            if (!$account) {
+                return redirect()->back()->with('error', 'Account not found');
             }
-
-
-            // dump($account_type);
-            // dump($this);
 
             // Fetch account type details
             $acc = DB::table('account_types')
                 ->where('id', $account_type)
                 ->first();
-            $account = Account::with('user')->where('code', $code)->first();
 
-            if ($account) {
-                $referral = $account->user->ib1;
-
-                // if($referral && ($referral=="wealthytrades")) {
-                //     $groupCode = str_replace("DF","SNSI",$acc->ac_group);
-                //     $group = AccountType::where('ac_group', $groupCode)->first();
-                //     // dd($group);
-                //     if($group){
-                //         $_POST["options"] =$group->id;
-                //         $account_type_id = $group->id;
-                //     }
-                // }elseif($referral && (strtolower($referral)=="swingtradinglab")) {
-                //     $groupCode = str_replace("DF","ALEX",$acc->ac_group);
-                //     $group = AccountType::where('ac_group', $groupCode)->first();
-                //     if($group){
-                //         $_POST["options"] =$group->id;
-                //         $account_type_id = $group->id;
-                //     }
-                // }else{
-                //     $groupCode = $acc->ac_group;
-                //     $account_type_id = $acc->id;
-                // }
-                $groupCode = $acc->ac_group;
-                $account_type_id = $acc->id;
+            if (!$acc) {
+                return redirect()->back()->with('error', 'Account type not found');
             }
 
-            $trade_user->Group = $groupCode;
-
-            $trade_user->Leverage = $leverage;
-            info("Updated User Details ", ['code' => $code, 'group' => $groupCode, 'leverage' => $leverage]);
-            // dd($trade_user);
-            // Update user data via API
-            $updated_user = "";
-            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 platform
+                return $this->updateX9AccountDetails($account, $acc, $leverage, $code, $account_type);
             } else {
-                // Update leverage and account type in the database
-                DB::table('accounts')
-                    ->where('code', $code)
-                    ->update([
-                        'leverage' => $leverage,
-                        'account_type_id' => $account_type_id
-                    ]);
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-                        'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' => auth()->guard('admin')->user()->userRole,
-                        'username' => auth()->guard('admin')->user()->username,
-                        'admin_id' => auth()->guard('admin')->user()->id,
-                        'code' => $code,
-                        'leverage' => $leverage,
-                        'account_type_id' => $account_type_id,
-                        'remark' => 'CRM Update Group Leverage'
-                    ])
-                    ->event('update')
-                    ->log('CRM Update Group Leverage');
-                return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
+                // Handle MT5 platform (existing logic)
+                return $this->updateMT5AccountDetails($account, $acc, $leverage, $code, $account_type);
             }
+        }
+
+        return redirect()->back()->with('error', 'Missing required parameters');
+    }
+
+    private function updateX9AccountDetails($account, $acc, $leverage, $code, $account_type)
+    {
+        try {
+            // For X9, we need to get the client group ID from the account type
+            // Assuming the account type has a field that maps to X9 group ID
+            $x9GroupId = $acc->x9_group_id ?? 1; // Default to group 1 if not mapped
+
+            // Update group in X9
+            $groupResponse = $this->x9Service->updateUserGroup(intval($code), $x9GroupId);
+            if (!$groupResponse['status']) {
+                return redirect()->back()->with('error', 'Failed to update group in X9: ' . $groupResponse['message']);
+            }
+
+            // Update leverage in X9
+            $leverageResponse = $this->x9Service->updateUserLeverage(intval($code), $leverage);
+            if (!$leverageResponse['status']) {
+                return redirect()->back()->with('error', 'Failed to update leverage in X9: ' . $leverageResponse['message']);
+            }
+
+            // Update in local database
+            DB::table('accounts')
+                ->where('code', $code)
+                ->update([
+                    'leverage' => $leverage,
+                    'account_type_id' => $account_type
+                ]);
+
+            // Log activity
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'code' => $code,
+                    'leverage' => $leverage,
+                    'account_type_id' => $account_type,
+                    'platform' => 'x9',
+                    'x9_group_id' => $x9GroupId,
+                    'remark' => 'CRM Update Group Leverage (X9)'
+                ])
+                ->event('update')
+                ->log('CRM Update Group Leverage (X9)');
+
+            return redirect()->back()->with("success", "X9 Account Details Successfully Updated");
+        } catch (\Exception $e) {
+            Log::error('X9 Account Update Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating X9 account: ' . $e->getMessage());
+        }
+    }
+
+    private function updateMT5AccountDetails($account, $acc, $leverage, $code, $account_type)
+    {
+        // Existing MT5 logic
+        $trade_user = NULL;
+        $this->api->UserGet($code, $trade_user);
+
+        if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
+            return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+        }
+
+        $referral = $account->user->ib1;
+        $groupCode = $acc->ac_group;
+        $account_type_id = $acc->id;
+
+        $trade_user->Group = $groupCode;
+        $trade_user->Leverage = $leverage;
+        info("Updated User Details ", ['code' => $code, 'group' => $groupCode, 'leverage' => $leverage]);
+
+        // Update user data via API
+        $updated_user = "";
+        if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+            return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+        } else {
+            // Update leverage and account type in the database
+            DB::table('accounts')
+                ->where('code', $code)
+                ->update([
+                    'leverage' => $leverage,
+                    'account_type_id' => $account_type_id
+                ]);
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'code' => $code,
+                    'leverage' => $leverage,
+                    'account_type_id' => $account_type_id,
+                    'remark' => 'CRM Update Group Leverage'
+                ])
+                ->event('update')
+                ->log('CRM Update Group Leverage');
+            return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
         }
     }
 
@@ -377,6 +423,11 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $code = $request->input('code');
         $account = Account::where('code', $code)->first();
+
+        if (!$account) {
+            return redirect()->back()->with('error', 'Account not found');
+        }
+
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
@@ -385,77 +436,92 @@ class MT5Controller extends Controller
             $deposit_currency = 'USD';
             $login = $code;
             $comment = 'CRM Deposited';
-            $ticket = null;
 
-            if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 deposit
+                $response = $this->x9Service->manageBalance(
+                    intval($login),
+                    'balance', // operation_type
+                    'deposit', // transaction_type
+                    floatval($amount),
+                    $comment
+                );
+
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Deposit Failed: ' . $response['message']);
+                }
             } else {
-
-                $tradeDeposit = TradeDeposit::create([
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'email' => $email,
-                    'code' => $code,
-                    'deposit_amount' => $amount,
-                    'deposit_type' => $deposit_type,
-                    'status' => 1,
-                    'admin_remark' => $description,
-                    'deposit_currency' => $deposit_currency,
-                    'created_by' => session('alogin')
-                ]);
-                $transid = "TDID" . str_pad($tradeDeposit->id, 4, '0', STR_PAD_LEFT);
-
-                // Store in total_balance table
-                // DB::table('total_balance')->insert([
-                //     'email' => $email,
-                //     'trading_deposited' => $amount
-                // ]);
-                TotalBalance::create([
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'email' => $email,
-                    'code' => $account->code,
-                    'trading_deposited' => $amount,
-                ]);
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-                        'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' => auth()->guard('admin')->user()->userRole,
-                        'username' => auth()->guard('admin')->user()->username,
-                        'admin_id' => auth()->guard('admin')->user()->id,
-                        'client_id' => $user->id,
-                        'client_email' => $email,
-                        'deposit_amount' => $amount,
-                        'code' => $code,
-                        'account_id' => $account->id,
-                        'remark' => 'CRM Deposit'
-                    ])
-                    ->event('create')
-                    ->log('CRM Deposit');
-
-                $settings = settings();
-                $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
-                $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
-          <div><b>Transaction Details</b></div>
-          <div><b>Amount: </b>$' . $amount . '</div>
-          <div><b>Account ID: </b>' . $code . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
-          <div><b>Deposit Type </b>' . $deposit_type . '</div>';
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'site_link' => settings()['copyright_site_name_text'],
-                    "btn_text" => "Go To Dashboard",
-                    'email' => settings()['email_from_address'],
-                    "content" => $content,
-                    "title_right" => "Fund",
-                    "subtitle_right" => "Deposit"
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
-                return redirect()->back()->with('success', 'Trade Deposit Successful');
+                // Handle MT5 deposit (existing logic)
+                $ticket = null;
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                }
             }
+
+            // Create deposit record in database (same for both platforms)
+            $tradeDeposit = TradeDeposit::create([
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'email' => $email,
+                'code' => $code,
+                'deposit_amount' => $amount,
+                'deposit_type' => $deposit_type,
+                'status' => 1,
+                'admin_remark' => $description,
+                'deposit_currency' => $deposit_currency,
+                'created_by' => session('alogin')
+            ]);
+            $transid = "TDID" . str_pad($tradeDeposit->id, 4, '0', STR_PAD_LEFT);
+
+            // Store in total_balance table
+            TotalBalance::create([
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'email' => $email,
+                'code' => $account->code,
+                'trading_deposited' => $amount,
+            ]);
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $email,
+                    'deposit_amount' => $amount,
+                    'code' => $code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Deposit'
+                ])
+                ->event('create')
+                ->log('CRM Deposit');
+
+            $settings = settings();
+            $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
+            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
+      <div><b>Transaction Details</b></div>
+      <div><b>Amount: </b>$' . $amount . '</div>
+      <div><b>Account ID: </b>' . $code . '</div>
+      <div><b>Transaction ID: </b>' . $transid . '</div>
+      <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
+      <div><b>Deposit Type </b>' . $deposit_type . '</div>';
+            $templateVars = [
+                'name' => $user->fullname,
+                'site_link' => settings()['copyright_site_name_text'],
+                "btn_text" => "Go To Dashboard",
+                'email' => settings()['email_from_address'],
+                "content" => $content,
+                "title_right" => "Fund",
+                "subtitle_right" => "Deposit"
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+            return redirect()->back()->with('success', 'Trade Deposit Successful');
         }
     }
 
@@ -480,8 +546,12 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $code = $request->input('code');
         $account = Account::where('code', $code)->first();
-        if ($request->has('bonus_to_account')) {
 
+        if (!$account) {
+            return redirect()->back()->with('error', 'Account not found');
+        }
+
+        if ($request->has('bonus_to_account')) {
             $amount = $request->input('amount');
             $description = $request->input('description');
             $type = $request->input('type');
@@ -490,87 +560,103 @@ class MT5Controller extends Controller
             $email = $eid;
             $deposit_currency = 'USD';
             $login = $code;
-            // $comment = $description;
-            $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';;
-            $ticket = null;
+            $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';
 
-            $loginss = [];
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 bonus using the correct bonus operation
+                $response = $this->x9Service->manageBonus(
+                    intval($login),
+                    $type, // 'in' or 'out'
+                    abs(floatval($amount)), // Always send positive amount
+                    $comment
+                );
 
-            if (in_array($login, $loginss)) {
-                $operation = MTEnDealAction::DEAL_BONUS;
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Bonus Operation Failed: ' . $response['message']);
+                }
             } else {
-                $operation = MTEnDealAction::DEAL_BALANCE;
-            }
+                // Handle MT5 bonus (existing logic)
+                $ticket = null;
+                $loginss = [];
 
-            if (($error_code = $this->api->TradeBalance($login, $operation, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-            } else {
-                $deposit_details = BonusTransaction::create([
-                    'email' => $email,
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'code' => $code,
-                    'bonus_amount' => $amount,
-                    'bonus_type' => $deposit_type,
-                    'status' => 1,
-                    'admin_remark' => $comment,
-                    'bonus_currency' => $deposit_currency,
-                    // 'created_by' => session('alogin')
-                ]);
-
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-                        'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' => auth()->guard('admin')->user()->userRole,
-                        'username' => auth()->guard('admin')->user()->username,
-                        'admin_id' => auth()->guard('admin')->user()->id,
-                        'client_id' => $user->id,
-                        'client_email' => $email,
-                        'bonus_amount' => $amount,
-                        'bonus_type' => $comment,
-                        'code' => $code,
-                        'account_id' => $account->id,
-                        'remark' => 'CRM Deposit Bonus'
-                    ])
-                    ->event('create')
-                    ->log('CRM Bonus');
-
-                $toEmail = $email;
-                $from = settings()['email_from_address'];
-                $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-                $emailSubject = settings()['admin_title'] . ' - Bonus Transaction';
-                if ($type == "in") {
-                    $content = '<p>We are pleased to inform your that Bonus have been successfully deposited into your account.</p>';
+                if (in_array($login, $loginss)) {
+                    $operation = MTEnDealAction::DEAL_BONUS;
                 } else {
-                    $content = '<p>This email to inform you, that Bonus credited out from your account.</p>';
+                    $operation = MTEnDealAction::DEAL_BALANCE;
                 }
 
-                $content .= '
-                                <p></p>
-                                <p></p>
-                                <p><b>Transaction Details</b></p>
-                                <p></p>
-                                <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
-                                <p><b>Account ID: </b>' . $deposit_details->code . '</p>
-                                <p><b>Transaction ID: </b>' . $transid . '</p>
-                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>';
-
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'site_link' => settings()['copyright_site_name_text'],
-                    'email' => settings()['email_from_address'],
-                    "content" => $content,
-                    "title_right" => "Bonus",
-                    "subtitle_right" => "Credit Out",
-                    "btn_text" => "Go To Dashboard",
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
-
-
-                return redirect()->back()->with('success', 'Bonus ' . ($type === 'in' ? 'Credited' : 'Debited') . ' Successfully');
+                if (($error_code = $this->api->TradeBalance($login, $operation, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                }
             }
+
+            // Create bonus record in database (same for both platforms)
+            $deposit_details = BonusTransaction::create([
+                'email' => $email,
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'code' => $code,
+                'bonus_amount' => $amount,
+                'bonus_type' => $deposit_type,
+                'status' => 1,
+                'admin_remark' => $comment,
+                'bonus_currency' => $deposit_currency,
+                // 'created_by' => session('alogin')
+            ]);
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $email,
+                    'bonus_amount' => $amount,
+                    'bonus_type' => $comment,
+                    'code' => $code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Deposit Bonus'
+                ])
+                ->event('create')
+                ->log('CRM Bonus');
+
+            $toEmail = $email;
+            $from = settings()['email_from_address'];
+            $transid = "BTID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+            $emailSubject = settings()['admin_title'] . ' - Bonus Transaction';
+            if ($type == "in") {
+                $content = '<p>We are pleased to inform your that Bonus have been successfully deposited into your account.</p>';
+            } else {
+                $content = '<p>This email to inform you, that Bonus credited out from your account.</p>';
+            }
+
+            $content .= '
+                            <p></p>
+                            <p></p>
+                            <p><b>Transaction Details</b></p>
+                            <p></p>
+                            <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
+                            <p><b>Account ID: </b>' . $deposit_details->code . '</p>
+                            <p><b>Transaction ID: </b>' . $transid . '</p>
+                            <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>';
+
+            $templateVars = [
+                'name' => $user->fullname,
+                'site_link' => settings()['copyright_site_name_text'],
+                'email' => settings()['email_from_address'],
+                "content" => $content,
+                "title_right" => "Bonus",
+                "subtitle_right" => "Credit Out",
+                "btn_text" => "Go To Dashboard",
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+
+            return redirect()->back()->with('success', 'Bonus ' . ($type === 'in' ? 'Credited' : 'Debited') . ' Successfully');
         }
     }
     public function creditBonusToAccount(Request $request)
@@ -608,10 +694,33 @@ class MT5Controller extends Controller
             // $comment = $description;
             $comment = $type === 'in' ? 'Bonus Credit In' : 'Bonus Credit Out';
             $ticket = null;
-            // dd($comment);
-            if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+
+            // Handle based on platform
+            $success = false;
+            if ($account->platform === 'x9') {
+                // Handle X9 bonus credit using the correct bonus operation
+                $response = $this->x9Service->manageBonus(
+                    intval($login),
+                    $type, // 'in' or 'out'
+                    abs($amount), // amount (always positive for X9)
+                    $comment
+                );
+
+                if ($response && $response['status']) {
+                    $success = true;
+                } else {
+                    return redirect()->back()->with('error', $response['message'] ?? 'X9 bonus operation failed');
+                }
             } else {
+                // Handle MT5 bonus credit
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BONUS, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                } else {
+                    $success = true;
+                }
+            }
+
+            if ($success) {
                 $deposit_details = BonusTransaction::create([
                     'email' => $email,
                     'user_id' => $user->id,
@@ -688,8 +797,11 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $code = $request->input('code');
         $account = Account::where('code', $code)->first();
-        // dd($user_id);
-        // dd($user->id);
+
+        if (!$account) {
+            return redirect()->back()->with('error', 'Account not found');
+        }
+
         if ($request->has('withdraw_from_account')) {
             $amount = $request->input('amount');
             $tw_amount = abs($request->input('amount')) * -1;
@@ -698,68 +810,84 @@ class MT5Controller extends Controller
             $email = $eid;
             $login = $code;
             $comment = 'CRM Withdrawal';
-            $ticket = null;
-            if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with("error", MTRetCode::GetError($error_code));
-            } else {
-                $deposit_details = TradeWithdrawals::create([
-                    'email' => $email,
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'code' => $account->code,
-                    'withdraw_to' => null,
-                    'withdrawal_amount' => $amount,
-                    'withdraw_type' => $withdraw_type,
-                    'admin_remark' => $description,
-                    'Status' => 1,
-                    'created_by' => session('alogin')
-                ]);
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-                        'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' => auth()->guard('admin')->user()->userRole,
-                        'username' => auth()->guard('admin')->user()->username,
-                        'admin_id' => auth()->guard('admin')->user()->id,
-                        'client_id' => $user->id,
-                        'client_email' => $email,
-                        'withdrawal_amount' => $amount,
-                        'code' => $code,
-                        'account_id' => $account->id,
-                        'remark' => 'CRM Withdraw'
-                    ])
-                    ->event('create')
-                    ->log('CRM Withdraw');
-                // Update total_balance table
-                // DB::table('total_balance')->insert([
-                //     'email' => $email,
-                //     'withdrawal_amount' => $amount
-                // ]);
 
-                // Send Email
-                $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-                $settings = settings();
-                $emailSubject = $settings['admin_title'] . ' - Fund Withdrawal';
-                $content = '<div>We are pleased to inform you that funds have been successfully withdrawn from your account.</div>
-                <div><b>Withdrawal Details</b></div>
-                <div><b>Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
-                <div><b>Account ID: </b>' . $deposit_details->code . '</div>
-                <div><b>Transaction ID: </b>' . $transid . '</div>
-                <div><b>Withdraw Date: </b>' . date("Y-m-d H:i:s") . '</div>
-                <div><b>Withdraw Type </b>' . $deposit_details->withdraw_type . '</div>';
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'site_link' => settings()['copyright_site_name_text'],
-                    'email' => settings()['email_from_address'],
-                    "content" => $content,
-                    "title_right" => "Fund",
-                    "subtitle_right" => "Withdrawal",
-                    "btn_text" => "Go To Dashboard",
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
-                return redirect()->back()->with("success", "Withdrawal Successful");
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 withdrawal
+                $response = $this->x9Service->manageBalance(
+                    intval($login),
+                    'balance', // operation_type
+                    'withdrawal', // transaction_type
+                    floatval($amount), // Always send positive amount
+                    $comment
+                );
+
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Withdrawal Failed: ' . $response['message']);
+                }
+            } else {
+                // Handle MT5 withdrawal (existing logic)
+                $ticket = null;
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", MTRetCode::GetError($error_code));
+                }
             }
+
+            // Create withdrawal record in database (same for both platforms)
+            $deposit_details = TradeWithdrawals::create([
+                'email' => $email,
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'code' => $account->code,
+                'withdraw_to' => null,
+                'withdrawal_amount' => $amount,
+                'withdraw_type' => $withdraw_type,
+                'admin_remark' => $description,
+                'Status' => 1,
+                'created_by' => session('alogin')
+            ]);
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $email,
+                    'withdrawal_amount' => $amount,
+                    'code' => $code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Withdraw'
+                ])
+                ->event('create')
+                ->log('CRM Withdraw');
+
+            // Send Email
+            $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+            $settings = settings();
+            $emailSubject = $settings['admin_title'] . ' - Fund Withdrawal';
+            $content = '<div>We are pleased to inform you that funds have been successfully withdrawn from your account.</div>
+            <div><b>Withdrawal Details</b></div>
+            <div><b>Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
+            <div><b>Account ID: </b>' . $deposit_details->code . '</div>
+            <div><b>Transaction ID: </b>' . $transid . '</div>
+            <div><b>Withdraw Date: </b>' . date("Y-m-d H:i:s") . '</div>
+            <div><b>Withdraw Type </b>' . $deposit_details->withdraw_type . '</div>';
+            $templateVars = [
+                'name' => $user->fullname,
+                'site_link' => settings()['copyright_site_name_text'],
+                'email' => settings()['email_from_address'],
+                "content" => $content,
+                "title_right" => "Fund",
+                "subtitle_right" => "Withdrawal",
+                "btn_text" => "Go To Dashboard",
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+            return redirect()->back()->with("success", "Withdrawal Successful");
         }
     }
 
@@ -850,11 +978,15 @@ class MT5Controller extends Controller
 
                 // Update account with fresh data from X9
                 try {
-                    $balance = $x9AccountData['balance'] ?? $account->balance;
-                    $credit = $x9AccountData['credit'] ?? 0;
-                    $equity = $balance + $credit;
-                    $marginFree = $x9AccountData['margin_free'] ?? 0;
-                    $margin = $x9AccountData['margin'] ?? 0;
+                    // Extract balance data from the correct nested structure
+                    $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
+
+                    $balance = floatval($balanceData['balance'] ?? $account->balance);
+                    $credit = floatval($balanceData['credit'] ?? 0);
+                    $bonus = floatval($balanceData['bonus'] ?? 0);
+                    $equity = floatval($balanceData['equity'] ?? ($balance + $credit + $bonus));
+                    $marginFree = floatval($balanceData['free_margin'] ?? 0);
+                    $margin = floatval($balanceData['margin'] ?? 0);
                     $marginLevel = $margin > 0 ? round(($equity / $margin) * 100, 2) : 0;
 
                     $account->update([
@@ -869,24 +1001,29 @@ class MT5Controller extends Controller
                 }
 
                 // Create a mock object for compatibility with view
+                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
                 $accountHelper = (object) [
-                    'Balance' => $x9AccountData['balance'] ?? $account->balance,
-                    'Credit' => $x9AccountData['credit'] ?? 0,
-                    'Equity' => ($x9AccountData['balance'] ?? $account->balance) + ($x9AccountData['credit'] ?? 0),
-                    'Margin' => $x9AccountData['margin'] ?? 0,
-                    'MarginFree' => $x9AccountData['margin_free'] ?? 0,
-                    'MarginLevel' => 0, // Calculate if needed
+                    'Balance' => floatval($balanceData['balance'] ?? $account->balance),
+                    'Credit' => floatval($balanceData['credit'] ?? 0),
+                    'Bonus' => floatval($balanceData['bonus'] ?? 0),
+                    'Equity' => floatval($balanceData['equity'] ?? $account->balance),
+                    'Margin' => floatval($balanceData['margin'] ?? 0),
+                    'MarginFree' => floatval($balanceData['free_margin'] ?? 0),
+                    'MarginLevel' => floatval($balanceData['margin_level'] ?? 0),
                 ];
 
                 // Get X9 group name for display
-                $x9GroupName = $x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
+                $x9GroupName = $x9AccountData['trading_account']['client_group_name'] ?? 'Standard';
+                $x9Leverage = $x9AccountData['trading_account']['leverage'] ?? $account->leverage ?? '1:100';
             } else {
                 $x9GroupName = null;
+                $x9Leverage = null;
             }
         } else {
             // For MT5 accounts, use the existing AccountHelper
             $accountHelper = AccountHelper::getAccount($account->code);
             $x9GroupName = null;
+            $x9Leverage = null;
         }
 
         $title = $account->platform === 'x9' ? 'X9 Account Details' : 'MT5 Account Details';
@@ -904,7 +1041,8 @@ class MT5Controller extends Controller
             'account_types' => $account_types,
             'type' => $type,
             'title' => $title,
-            'x9_group_name' => $x9GroupName
+            'x9_group_name' => $x9GroupName,
+            'x9_leverage' => $x9Leverage
         ]);
     }
 }
