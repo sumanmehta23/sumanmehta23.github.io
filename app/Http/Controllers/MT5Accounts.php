@@ -1113,7 +1113,7 @@ class MT5Accounts extends Controller
     {
         $validatedData = $request->validate([
             'x9_options' => 'required|string',
-            'x9_leverage' => 'required|string',
+            'leverage' => 'required|string',
             'demo_deposit' => 'required|numeric|min:1',
         ]);
 
@@ -1176,7 +1176,7 @@ class MT5Accounts extends Controller
                     'platform' => 'X9',
                     'code' => $loginId,
                     'amount' => $validatedData['demo_deposit'],
-                    'leverage' => $validatedData['x9_leverage'],
+                    'leverage' => $validatedData['leverage'],
                     'remark' => 'Create X9 Demo Account'
                 ])
                 ->event('create')
