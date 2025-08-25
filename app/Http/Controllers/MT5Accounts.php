@@ -216,7 +216,7 @@ class MT5Accounts extends Controller
         $accountSwap = '';
         $freemargin = '';
         $profit = '';
-
+        $x9GroupName = '';
         try {
             // Get X9 account details
             $response = $this->x9Service->getUserDetails($code);
