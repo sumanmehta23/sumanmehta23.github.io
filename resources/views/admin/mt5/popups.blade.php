@@ -5,8 +5,8 @@
             <form action="{{route('admin.depositToAccount')}}" id="depositForm" method="post">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
-                <input type="hidden" name="code" id="code" value="<?= $getUser->code??'' ?>">
-                <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
+                <input type="hidden" name="code" id="code" value="<?= $getUser->code ?? '' ?>">
+                <input type="hidden" name="email" id="email" value="<?= $getUser->email ?? '' ?>">
 
                 <div class="modal-header">
                     <h5 class="modal-title" id="depositModalLabel">Deposit To Trade Account</h5>
@@ -32,7 +32,8 @@
                                         <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
                                                 REMARK:</label>
                                             <div class="col-lg-8">
-                                                <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a remark"></textarea>
+                                                <textarea id="description" name="description" rows="3"
+                                                    class="mt-2 form-control" placeholder="Add a remark"></textarea>
                                             </div>
                                         </div>
                                         <div class="">
@@ -62,8 +63,8 @@
             <form action="{{route('admin.withdrawFromAccount')}}" id="withdrawalForm" method="post">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
-                <input type="hidden" name="code" id="code" value="<?= $getUser->code??'' ?>">
-                <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
+                <input type="hidden" name="code" id="code" value="<?= $getUser->code ?? '' ?>">
+                <input type="hidden" name="email" id="email" value="<?= $getUser->email ?? '' ?>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="withdrawalModalLabel">Withdraw From Trade Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -88,7 +89,8 @@
                                         <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
                                                 REMARK:</label>
                                             <div class="col-lg-8">
-                                                <textarea id="description" name="description" rows="3" class="mt-2 form-control" placeholder="Add a remark"></textarea>
+                                                <textarea id="description" name="description" rows="3"
+                                                    class="mt-2 form-control" placeholder="Add a remark"></textarea>
                                             </div>
                                         </div>
                                         <div class="">
@@ -96,8 +98,7 @@
                                                 <div class="col-lg-4"></div>
                                                 <div class="col-lg-8">
                                                     <div class="row g-1"><input type="submit"
-                                                            name="withdraw_from_account"
-                                                            class="btn btn-primary col-12"
+                                                            name="withdraw_from_account" class="btn btn-primary col-12"
                                                             value="Withdraw From Trade Account"></div>
                                                 </div>
                                             </div>
@@ -119,8 +120,8 @@
             <form action="{{route('admin.creditBonusToAccount')}}" id="bonusForm" method="post">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
-                <input type="hidden" name="code" id="code" value="<?= $getUser->code??'' ?>">
-                <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
+                <input type="hidden" name="code" id="code" value="<?= $getUser->code ?? '' ?>">
+                <input type="hidden" name="email" id="email" value="<?= $getUser->email ?? '' ?>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="bonusModalLabel">Bonus To Trade Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -134,8 +135,7 @@
                                         <div class="form-group row mb-3">
                                             <label class="col-lg-4 col-form-label">BONUS TYPE:</label>
                                             <div class="col-lg-8">
-                                                <select name="type" id="input" class="form-control"
-                                                    required="required">
+                                                <select name="type" id="input" class="form-control" required="required">
                                                     <option value="in">Bonus In</option>
                                                     <option value="out">Bonus Out</option>
                                                 </select>
@@ -153,11 +153,11 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {{-- <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
+                                        {{-- <div class="form-group row mb-3"><label
+                                                class="col-lg-4 col-form-label">ADMIN
                                                 REMARK:</label>
-                                            <div class="col-lg-8"><input id="description" name="description"
-                                                    rows="3" class="mt-2 form-control"
-                                                    placeholder="Add a remark" required>
+                                            <div class="col-lg-8"><input id="description" name="description" rows="3"
+                                                    class="mt-2 form-control" placeholder="Add a remark" required>
                                             </div>
                                         </div> --}}
                                         <div class="">
@@ -165,7 +165,8 @@
                                                 <div class="col-lg-4"></div>
                                                 <div class="col-lg-8">
                                                     <div class="row g-1"><input type="submit"
-                                                            name="bonus_to_account_credit" class="btn btn-primary col-12"
+                                                            name="bonus_to_account_credit"
+                                                            class="btn btn-primary col-12"
                                                             value="Bonus To Trade Account"></div>
                                                 </div>
                                             </div>
@@ -187,8 +188,8 @@
             <form action="{{route('admin.bonusToAccount')}}" id="bonusForm" method="post">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="<?= ($getUser->user_id) ?>">
-                <input type="hidden" name="code" id="code" value="<?= $getUser->code??'' ?>">
-                <input type="hidden" name="email" id="email" value="<?= $getUser->email??'' ?>">
+                <input type="hidden" name="code" id="code" value="<?= $getUser->code ?? '' ?>">
+                <input type="hidden" name="email" id="email" value="<?= $getUser->email ?? '' ?>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="bonusModalLabel">Bonus To Trade Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -202,8 +203,7 @@
                                         <div class="form-group row mb-3">
                                             <label class="col-lg-4 col-form-label">BONUS TYPE:</label>
                                             <div class="col-lg-8">
-                                                <select name="type" id="input" class="form-control"
-                                                    required="required">
+                                                <select name="type" id="input" class="form-control" required="required">
                                                     <option value="in">Bonus In</option>
                                                     <option value="out">Bonus Out</option>
                                                 </select>
@@ -221,19 +221,19 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {{-- <div class="form-group row mb-3"><label class="col-lg-4 col-form-label">ADMIN
+                                        {{-- <div class="form-group row mb-3"><label
+                                                class="col-lg-4 col-form-label">ADMIN
                                                 REMARK:</label>
-                                            <div class="col-lg-8"><input id="description" name="description"
-                                                    rows="3" class="mt-2 form-control"
-                                                    placeholder="Add a remark" required>
+                                            <div class="col-lg-8"><input id="description" name="description" rows="3"
+                                                    class="mt-2 form-control" placeholder="Add a remark" required>
                                             </div>
                                         </div> --}}
                                         <div class="">
                                             <div class="row">
                                                 <div class="col-lg-4"></div>
                                                 <div class="col-lg-8">
-                                                    <div class="row g-1"><input type="submit"
-                                                            name="bonus_to_account" class="btn btn-primary col-12"
+                                                    <div class="row g-1"><input type="submit" name="bonus_to_account"
+                                                            class="btn btn-primary col-12"
                                                             value="Bonus To Trade Account"></div>
                                                 </div>
                                             </div>

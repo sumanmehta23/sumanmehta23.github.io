@@ -7,7 +7,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <div class="page-header-title h2">
-                                <h4 class="mb-0">Create Demo MT5 Account</h4>
+                                <h4 class="mb-0">Create Demo Trading Account</h4>
                             </div>
                         </div>
                     </div>
@@ -31,7 +31,58 @@
                                 <form method="post" enctype="multipart/form-data"
                                     action="{{ route('create-demo-account') }}">
                                     @csrf
-                                    <div class="mb-0 form-group">
+                                    
+                                    <!-- Platform Selection -->
+                                    <div class="mb-4 form-group">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <label class="form-label">Choose Trading Platform</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="mb-2 col-lg-6 col-xl-6">
+                                                        <div class="auth-option">
+                                                            <input type="radio" class="btn-check platform-select" 
+                                                                   checked name="platform" id="platformMT5" value="mt5">
+                                                            <label class="auth-megaoption" for="platformMT5" style="height: 180px !important;">
+                                                                <div class="m-4 text-center d-block">
+                                                                    <img src="/assets/images/mt5.png" alt="MT5" class="mb-3" style="width: 64px; height: 64px;">
+                                                                    <span class="h5 d-block">
+                                                                        <strong>MetaTrader 5</strong>
+                                                                    </span>
+                                                                    <span class="mt-2 h6 d-block f-w-400 f-12">
+                                                                        The world's most popular trading platform with advanced features.
+                                                                    </span>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2 col-lg-6 col-xl-6">
+                                                        <div class="auth-option">
+                                                            <input type="radio" class="btn-check platform-select" 
+                                                                   name="platform" id="platformX9" value="x9">
+                                                            <label class="auth-megaoption" for="platformX9" style="height: 180px !important;">
+                                                                <div class="m-4 text-center d-block">
+                                                                    <img src="/images/x92.png" alt="X9" class="mb-3" style="width: 64px; height: 64px;">
+                                                                    <span class="h5 d-block">
+                                                                        <strong>X9 Platform</strong>
+                                                                    </span>
+                                                                    <span class="mt-2 h6 d-block f-w-400 f-12">
+                                                                        Advanced trading platform with cutting-edge technology.
+                                                                    </span>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @error('platform')
+                                                    <div class="invalid-feedback" style="display: block !important;">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-0 form-group mt5-options">
                                         <div class="row">
                                             <div class="col-3">
                                                 <label class="form-label">Choose Account Type</label>
@@ -88,13 +139,91 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="mt-5 row is_account">
+                                    </div>
+
+                                    <!-- X9 Account Types (Initially Hidden) -->
+                                    <div class="mb-0 form-group x9-options d-none">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <label class="form-label">Choose Account Type</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    @foreach ($results as $i => $acc)
+                                                        <div class="mb-2 col-lg-6 col-xl-4">
+                                                            <div class="auth-option">
+                                                                <input type="radio" data-group="{{ $acc->ac_name }}"
+                                                                    data-inquiry="{{ $acc->inquiry_status }}"
+                                                                    class="btn-check x9-acc-types"
+                                                                    {{ $i == 0 ? 'checked' : '' }} name="x9_options"
+                                                                    id="x9_option{{ $acc->ac_index }}"
+                                                                    value="{{ $acc->id }}">
+                                                                <label class="auth-megaoption"
+                                                                    for="x9_option{{ $acc->ac_index }}"
+                                                                    style="height: 230px !important;">
+                                                                    <div class="m-4 d-block">
+                                                                        <span>
+                                                                            <span class="h5 d-block">
+                                                                                <strong class="float-end">
+                                                                                    <span
+                                                                                        class="badge bg-light-danger">X9</span>
+                                                                                </strong>
+                                                                                {{ strtoupper($acc->ac_name) }}
+                                                                            </span>
+                                                                            <span class="mt-4 h6 d-block f-w-400 f-12"> X9 Platform account, optimized for advanced trading strategies. </span>
+                                                                            <hr>
+                                                                            <span
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
+                                                                                    class="float-end"><span
+                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_min_deposit) }}$</span></strong>
+                                                                                Minimum Deposit </span>
+                                                                            <span
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
+                                                                                    class="float-end"><span
+                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_spread) }}$</span></strong>
+                                                                                Spread </span>
+                                                                            <span
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
+                                                                                    class="float-end"><span
+                                                                                        class="f-w-400 f-16">Yes</span></strong>
+                                                                                Swap </span>
+                                                                        </span>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                    <div class="invalid-feedback" style="display: block !important;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                        <div class="mt-5 row is_account mt5-leverage">
                                             <div class="col-3">
                                                 <label class="form-label">Select Leverage</label>
                                             </div>
                                             <div class="col-9">
                                                 <select class="form-select" name="leverage" id="leverage">
                                                     <!-- Options should be populated dynamically -->
+                                                </select>
+                                                <div class="invalid-feedback" style="display: block !important;"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- X9 Leverage (Initially Hidden) -->
+                                        <div class="mt-5 row is_account x9-leverage d-none">
+                                            <div class="col-3">
+                                                <label class="form-label">Select Leverage</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <select class="form-select" name="x9_leverage" id="x9_leverage">
+                                                    <option value="1:50">1:50</option>
+                                                    <option value="1:100" selected>1:100</option>
+                                                    <option value="1:200">1:200</option>
+                                                    <option value="1:300">1:300</option>
+                                                    <option value="1:400">1:400</option>
+                                                    <option value="1:500">1:500</option>
                                                 </select>
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
@@ -174,7 +303,37 @@
         </script>
     @endif
     <script>
+        // Platform selection handler
+        $(".platform-select").change(function() {
+            var selectedPlatform = $(".platform-select:checked").val();
+            
+            if (selectedPlatform === 'mt5') {
+                // Show MT5 options, hide X9 options
+                $(".mt5-options").removeClass("d-none");
+                $(".mt5-leverage").removeClass("d-none");
+                $(".x9-options").addClass("d-none");
+                $(".x9-leverage").addClass("d-none");
+                
+                // Trigger account type change for MT5
+                $(".acc-types").trigger("change");
+            } else if (selectedPlatform === 'x9') {
+                // Show X9 options, hide MT5 options
+                $(".mt5-options").addClass("d-none");
+                $(".mt5-leverage").addClass("d-none");
+                $(".x9-options").removeClass("d-none");
+                $(".x9-leverage").removeClass("d-none");
+                
+                // Trigger account type change for X9
+                $(".x9-acc-types").trigger("change");
+            }
+        });
+
         $(".acc-types").change(function() {
+            var selectedPlatform = $(".platform-select:checked").val();
+            
+            // Only process if MT5 is selected
+            if (selectedPlatform !== 'mt5') return;
+            
             var inquiry_status = $(".acc-types:checked").data("inquiry");
             var inquiry = $(".acc-types:checked").data("group");
             var demoDepositInput = $("#demo_deposit");
@@ -210,6 +369,36 @@
                 $(".contactus-btn").attr("href", href);
             }
         });
+
+        // X9 Account type selection handler
+        $(".x9-acc-types").change(function() {
+            var inquiry_status = $(".x9-acc-types:checked").data("inquiry");
+            var inquiry = $(".x9-acc-types:checked").data("group");
+            var demoDepositInput = $("#demo_deposit");
+
+            // Reset deposit input state
+            demoDepositInput.prop('readonly', false);
+
+            // Check if selected account is Competition Account
+            if (inquiry == 'June 8-14 Trading Competition Account' || inquiry == 'June 15-21 Trading Competition Account') {
+                demoDepositInput.val(10000);
+                demoDepositInput.prop('readonly', true);
+            }
+
+            if (inquiry_status == 0) {
+                $(".is_account").removeClass("d-none");
+                $(".is_inquiry").addClass("d-none");
+                // X9 doesn't need leverage loading from server since it has fixed options
+            } else {
+                $(".is_account").addClass("d-none");
+                $(".is_inquiry").removeClass("d-none");
+                var href = "/support?reg=" + inquiry;
+                $(".contactus-btn").attr("href", href);
+            }
+        });
+        
+        // Initialize on page load
+        $(".platform-select").trigger("change");
         $(".acc-types").trigger("change");
     </script>
 @endsection

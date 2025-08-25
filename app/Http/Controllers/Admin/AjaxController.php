@@ -822,16 +822,28 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
+
+                    // Determine platform image and display name
+                    $platformImage = '/assets/images/mt5.png';
+                    $platformName = 'MT5';
+
+                    if ($row->platform === 'x9') {
+                        $platformImage = '/assets/images/x9.png';
+                        $platformName = 'X9';
+                        // For X9 accounts, show the account type name instead of group
+                        $accountGroup = $row->accountType->ac_name ?? 'Standard';
+                    }
+
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
-                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
-                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col-auto pe-0'><img src='{$platformImage}'
+                                            alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
                                                 class='text-truncate w-100'> $row->code </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
-                                                class='text-truncate w-100'> $accountGroup </span>
+                                                class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>
                                         </p>
                                     </div>
                                 </div>
@@ -955,16 +967,28 @@ class AjaxController extends Controller
                 })
                 ->addColumn('code', function ($row) {
                     $accountGroup = $row->accountType->ac_group;
+
+                    // Determine platform image and display name
+                    $platformImage = '/assets/images/mt5.png';
+                    $platformName = 'MT5';
+
+                    if ($row->platform === 'x9') {
+                        $platformImage = '/assets/images/x9.png';
+                        $platformName = 'X9';
+                        // For X9 accounts, show the account type name instead of group
+                        $accountGroup = $row->accountType->ac_name ?? 'Standard';
+                    }
+
                     return "<a href='/admin/view_account_details/{$row->id}'>
                                 <div class='row align-items-center'>
-                                    <div class='col-auto pe-0'><img src='/assets/images/mt5.png'
-                                            alt='user-image' class='rounded wid-50 hei-50'></div>
+                                    <div class='col-auto pe-0'><img src='{$platformImage}'
+                                            alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
                                                 class='text-truncate w-100'> $row->code </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
-                                                class='text-truncate w-100'> $accountGroup </span>
+                                                class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>
                                         </p>
                                     </div>
                                 </div>

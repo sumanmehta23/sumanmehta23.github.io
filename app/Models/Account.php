@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */
-    use HasFactory,HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
     protected $guarded = [];
+
+    // Define platform constants
+    const PLATFORM_MT5 = 'mt5';
+    const PLATFORM_X9 = 'x9';
+
     public function casts()
     {
         return [
@@ -70,12 +75,12 @@ class Account extends Model
         // Sum all bonus amounts where 'admin_remark' is NOT 'Credit' and NOT '10x Trader Leverage'
         $bonusDeposit = $this->BonusTransaction
             ? $this->BonusTransaction
-                ->filter(function ($transaction) {
-                    return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition');
-                })
-                ->sum(function ($transaction) {
-                    return (float) $transaction->bonus_amount; // Cast to float to avoid string issues
-                })
+            ->filter(function ($transaction) {
+                return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition');
+            })
+            ->sum(function ($transaction) {
+                return (float) $transaction->bonus_amount; // Cast to float to avoid string issues
+            })
             : 0;
 
         return $bonusDeposit;
@@ -85,7 +90,4 @@ class Account extends Model
     {
         return $this->hasMany(DailyReport::class, 'account_code', 'code');
     }
-
-
-
 }

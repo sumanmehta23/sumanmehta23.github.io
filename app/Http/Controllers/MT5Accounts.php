@@ -14,6 +14,7 @@ use App\Models\ToggleGroup;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Services\MT5Service;
+use App\Services\X9Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
@@ -21,6 +22,7 @@ use App\MT5\MTProtocolConsts;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\MailService as MailService;
 
@@ -29,9 +31,12 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MT5Service $mt5Service, MailService $mailService, MTWebAPI $api)
+    protected $x9Service;
+
+    public function __construct(MT5Service $mt5Service, X9Service $x9Service, MailService $mailService, MTWebAPI $api)
     {
         $this->mailService = $mailService;
+        $this->x9Service = $x9Service;
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
         $this->api = $this->mt5Service->getApi();
@@ -73,6 +78,26 @@ class MT5Accounts extends Controller
         // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
         $settings = settings();
         $results = [];
+
+        $getUser = [];
+        $equity = '';
+        $margin = '';
+        $marginlevel = '';
+        $accountSwap = '';
+        $freemargin = '';
+        $profit = '';
+
+        // Handle different platforms
+        if ($account->platform === Account::PLATFORM_X9) {
+            return $this->viewX9AccountDetails($account, $code, $type, $settings);
+        } else {
+            // Default to MT5 handling
+            return $this->viewMT5AccountDetails($account, $code, $type, $settings);
+        }
+    }
+
+    private function viewMT5AccountDetails(Account $account, $code, $type, $settings)
+    {
         $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
         $this->api->Connect(
             $settings['mt5_server_ip'],
@@ -81,6 +106,8 @@ class MT5Accounts extends Controller
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
+
+        $results = [];
         $getUser = [];
         $equity = '';
         $margin = '';
@@ -88,6 +115,7 @@ class MT5Accounts extends Controller
         $accountSwap = '';
         $freemargin = '';
         $profit = '';
+
         try {
             $login = $code;
             // Fetch positions
@@ -162,7 +190,7 @@ class MT5Accounts extends Controller
                             'code' => $item->Login,
                         ],
                         [
-                            'user_id' => auth()->user()->id,
+                            'user_id' => Auth::user()->id,
                             'account_id' => $account->id,
 
                             'volume' => $volume,
@@ -177,6 +205,96 @@ class MT5Accounts extends Controller
         }
         return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
     }
+
+    private function viewX9AccountDetails(Account $account, $code, $type, $settings)
+    {
+        $results = [];
+        $getUser = [];
+        $equity = '';
+        $margin = '';
+        $marginlevel = '';
+        $accountSwap = '';
+        $freemargin = '';
+        $profit = '';
+
+        try {
+            // Get X9 account details
+            $response = $this->x9Service->getUserDetails($code);
+
+            if ($response['status']) {
+                $x9AccountData = $response['data'];
+
+                // Extract account information from X9 response
+                $balance = $x9AccountData['balance'] ?? $account->balance ?? 0;
+                $credit = $x9AccountData['credit'] ?? 0;
+                $equity = $balance + $credit;
+                $profit = $x9AccountData['floating_profit'] ?? 0;
+                $margin = $x9AccountData['margin'] ?? 0;
+                $freemargin = $x9AccountData['margin_free'] ?? $equity - $margin;
+                $marginlevel = $margin > 0 ? round(($equity / $margin) * 100, 2) : 0;
+
+                // Try to update account with fresh data from X9 - be defensive about which fields to update
+                try {
+                    $updateData = [];
+                    if (isset($balance)) $updateData['balance'] = $balance;
+                    if (isset($credit)) $updateData['credit'] = $credit;
+                    if (isset($equity)) $updateData['equity'] = $equity;
+                    if (isset($freemargin)) $updateData['margin_free'] = $freemargin;
+
+                    // Calculate and add margin level if we have the necessary data
+                    if (isset($margin) && isset($equity) && $margin > 0) {
+                        $updateData['margin_level'] = round(($equity / $margin) * 100, 2);
+                    }
+
+                    if (!empty($updateData)) {
+                        $account->update($updateData);
+                    }
+                } catch (\Exception $updateError) {
+                    // Log the update error but continue with display
+                    Log::warning('Failed to update X9 account in database: ' . $updateError->getMessage());
+                }
+            } else {
+                // If X9 API fails, use database values
+                $balance = $account->balance ?? 0;
+                $credit = $account->credit ?? 0;
+                $equity = $account->equity ?? $balance + $credit;
+                $margin = $account->margin ?? 0;
+                $freemargin = $account->free_margin ?? $equity - $margin;
+                $profit = 0;
+                $marginlevel = $account->margin_level ?? 0;
+
+                session()->flash('warning', 'Unable to fetch live data from X9 server. Showing last known values.');
+            }
+
+            $getUser = Account::with('accountType', 'BonusTransaction')
+                ->where('id', $account->id)
+                ->first();
+            $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
+        } catch (\Exception $e) {
+            Log::error('X9 Account Details Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+            session()->flash('error', 'Unable to fetch account details from X9: ' . $e->getMessage());
+
+            // Fallback to database values
+            $balance = $account->balance ?? 0;
+            $credit = $account->credit ?? 0;
+            $equity = $account->equity ?? $balance + $credit;
+            $margin = $account->margin ?? 0;
+            $freemargin = $account->free_margin ?? $equity - $margin;
+            $profit = 0;
+            $marginlevel = $account->margin_level ?? 0;
+
+            $getUser = Account::with('accountType', 'BonusTransaction')
+                ->where('id', $account->id)
+                ->first();
+            $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
+
+            // Get X9 group name for display
+            $x9GroupName = $this->x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
+        }
+
+        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit', 'x9GroupName'));
+    }
+
     public function showLiveAccountForm()
     {
         $user = auth()->user();
@@ -304,7 +422,7 @@ class MT5Accounts extends Controller
 
         $group = AccountType::where('ac_group', $groupCode)->first();
 
-        if($email == 'juanpipkin@gmail.com'){
+        if ($email == 'juanpipkin@gmail.com') {
             $groupCode = 'LM\B-Book\PRO\LeverageTest';
             $group = AccountType::where('ac_group', $groupCode)->first();
             $account_type_id = $group->id;
@@ -363,6 +481,7 @@ class MT5Accounts extends Controller
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
                     'demo' => false,
+                    'platform' => Account::PLATFORM_MT5,
                     'email' => $new_user->Email,
                     'account_nick_name' =>  $nick_name,
                     'code' => $new_user->Login,
@@ -401,6 +520,7 @@ class MT5Accounts extends Controller
                 'user_id' => $user->id,
                 'name' => $user->fullname ?? $user->email,
                 'demo' => false,
+                'platform' => Account::PLATFORM_MT5,
                 'email' => $user->email,
                 'account_nick_name' =>  $nick_name,
                 'account_type_id' => $account_type_id,
@@ -519,7 +639,7 @@ class MT5Accounts extends Controller
             } else {
                 $groupCode = $group->ac_group;
             }
-            if($user->email == 'juanpipkin@gmail.com'){
+            if ($user->email == 'juanpipkin@gmail.com') {
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
                 $account_type_id = $group->id;
@@ -663,7 +783,7 @@ class MT5Accounts extends Controller
                 }
             }
 
-            if($user->email == 'juanpipkin@gmail.com'){
+            if ($user->email == 'juanpipkin@gmail.com') {
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
             }
@@ -869,6 +989,24 @@ class MT5Accounts extends Controller
     public function createDemoAccount(Request $request)
     {
         $settings = settings();
+
+        // Validate platform selection
+        $request->validate([
+            'platform' => 'required|in:mt5,x9',
+        ]);
+
+        $platform = $request->input('platform');
+
+        if ($platform === 'mt5') {
+            return $this->createMT5DemoAccount($request);
+        } else {
+            return $this->createX9DemoAccount($request);
+        }
+    }
+
+    private function createMT5DemoAccount(Request $request)
+    {
+        $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
             'leverage' => 'required|string',
@@ -889,7 +1027,6 @@ class MT5Accounts extends Controller
         }
 
         $userAcc = Account::where('user_id', $user->id)->where('demo', 1)->get();
-        // dd(($userAcc));
 
         if ($userAcc) {
             $new_user = $this->api->UserCreate();
@@ -920,6 +1057,7 @@ class MT5Accounts extends Controller
                             'ip' => $request->ip(),
                             'email' => $user->email,
                             'type' => 'Demo',
+                            'platform' => 'MT5',
                             'code' => $new_user->Login,
                             'amount' => $validatedData['demo_deposit'],
                             'leverage' => $new_user->Leverage,
@@ -928,10 +1066,12 @@ class MT5Accounts extends Controller
                     )
                     ->event('create')
                     ->log('Create Demo Account');
+
                 $account = Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
                     'demo' => true,
+                    'platform' => Account::PLATFORM_MT5,
                     'email' => $new_user->Email,
                     'code' => $new_user->Login,
                     'account_type_id' => $validatedData['options'],
@@ -943,6 +1083,7 @@ class MT5Accounts extends Controller
                     'balance' => $validatedData['demo_deposit'],
                     'account_request_status' => 1,
                 ]);
+
                 $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -966,55 +1107,130 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('error', $response['message']);
             }
         }
-        // else{
+    }
 
-        //     $account = Account::create([
-        //         'user_id' => $user->id,
-        //         'name' => $user->fullname??$user->email,
-        //         'demo' => true,
-        //         'email' => $user->email,
-        //         'account_type_id' => $validatedData['options'],
-        //         'leverage' => $validatedData['leverage'],
-        //         'currency' => 'USD',
-        //         'balance' => $validatedData['demo_deposit'],
-        //         'account_request_status' => 0,
-        //         // 'code' => $new_user->Login,
-        //         // 'trader_password' => $new_user->MainPassword,
-        //         // 'invester_password' => $new_user->InvestPassword,
-        //         // 'phone_password' => $new_user->PhonePassword,
-        //     ]);
+    private function createX9DemoAccount(Request $request)
+    {
+        $validatedData = $request->validate([
+            'x9_options' => 'required|string',
+            'x9_leverage' => 'required|string',
+            'demo_deposit' => 'required|numeric|min:1',
+        ]);
 
-        //     if($account){
+        $user = auth()->user();
 
-        //         $settings = settings();
+        // Get the account type for X9 group ID
+        $accountType = AccountType::where('id', $validatedData['x9_options'])->first();
 
-        //         $from = $settings['email_from_address'];
-        //         $emailSubject = 'Account send for approval';
-        //         $headers = "MIME-Version: 1.0" . "\r\n";
-        //         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        //         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        //         $content =
-        //             '<div>Thank you for choosing LQH Markets. Your request for new account will be approve within 2 days.</div>
+        if (!$accountType) {
+            return redirect()->back()->with('error', 'Invalid account type selected');
+        }
 
-        //             <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
-        //             <p>Best Regards.</p>
-        //         <p>LQH Markets Team</p>';
-        //         $templateVars = [
-        //             'name' =>  $user->fullname,
-        //             'email' => $settings['email_from_address'],
-        //             "content" => $content,
-        //             "title_right" => "Account Creation Request Pending",
-        //             "subtitle_right" => "",
-        //         ];
+        // Use the x9_group_id from account_types table, fallback to 1 if not set
+        $x9GroupId = $accountType->x9_group_id ?? 1;
 
-        //         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+        // Generate random passwords for X9
+        $masterPassword = $this->generatePassword();
+        $investorPassword = $this->generatePassword();
 
-        //         return redirect()->back()->with('success', 'Account created successfully');
+        // Prepare X9 user data
+        $fullname = $user->fullname ?? $user->email;
+        $nameParts = explode(' ', $fullname, 2);
+        $firstName = $nameParts[0] ?? 'User';
+        $lastName = $nameParts[1] ?? 'Demo';
 
-        //     } else {
-        //         return redirect()->back()->with('error', 'Account not created');
-        //     }
-        // }
+        $x9UserData = [
+            'preferred_login' => 'default',
+            'client_id' => null,
+            'client_group_type_id' => 1, // Always 1 for Demo account
+            'client_group_id' => $x9GroupId, // Use x9_group_id from account_types table
+            'first_name' => $firstName,
+            'middle_name' => null,
+            'last_name' => $lastName,
+            'company' => null,
+            'email' => $user->email,
+            'phone' => $user->number ?? null,
+            'master_password' => $masterPassword,
+            'investor_password' => $investorPassword,
+            'country_id' => 5 // Default country ID
+        ];
+
+        // Create user in X9
+        $response = $this->x9Service->createUser($x9UserData);
+
+        if ($response['status']) {
+            $x9AccountData = $response['data'];
+            $loginId = $x9AccountData['trading_account']['account_number'] ?? null;
+            $tradingAccountId = $x9AccountData['trading_account']['trading_account_id'] ?? null;
+
+            if (!$loginId) {
+                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned');
+            }
+
+            // Log activity
+            activity()->causedBy($user->id)
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'email' => $user->email,
+                    'type' => 'Demo',
+                    'platform' => 'X9',
+                    'code' => $loginId,
+                    'amount' => $validatedData['demo_deposit'],
+                    'leverage' => $validatedData['x9_leverage'],
+                    'remark' => 'Create X9 Demo Account'
+                ])
+                ->event('create')
+                ->log('Create X9 Demo Account');
+
+            // Create account record in our database
+            $account = Account::create([
+                'user_id' => $user->id,
+                'name' => $user->fullname ?? $user->email,
+                'demo' => true,
+                'platform' => Account::PLATFORM_X9,
+                'email' => $user->email,
+                'code' => $loginId,
+                'account_type_id' => $validatedData['x9_options'], // Use selected account type like MT5
+                'leverage' => $validatedData['x9_leverage'],
+                'currency' => 'USD',
+                'trader_password' => $masterPassword,
+                'invester_password' => $investorPassword,
+                'phone_password' => null,
+                'balance' => $validatedData['demo_deposit'],
+                'account_request_status' => 1,
+            ]);
+
+            // Deposit demo balance in X9
+            $balanceResponse = $this->x9Service->manageBalance(
+                $loginId,
+                'balance',
+                'deposit',
+                $validatedData['demo_deposit'],
+                'Demo Account Initial Deposit'
+            );
+
+            if ($balanceResponse['status']) {
+                // Create demo deposit record
+                $data = [
+                    'user_id' => $user->id,
+                    'account_id' => $account->id,
+                    'email' => $user->email,
+                    'code' => $loginId,
+                    'deposit_amount' => $validatedData['demo_deposit'],
+                    'Status' => 1
+                ];
+
+                DemoDeposit::create($data);
+
+                return redirect()->back()->with('success', 'X9 Demo account created successfully! Login ID: ' . $loginId);
+            } else {
+                // Account created but deposit failed
+                Log::error('X9 Demo Balance Deposit Failed: ' . $balanceResponse['message'] . ' for user ' . $user->id);
+                return redirect()->back()->with('warning', 'X9 Demo account created but initial deposit failed. Please contact support.');
+            }
+        } else {
+            return redirect()->back()->with('error', 'Failed to create X9 demo account: ' . $response['message']);
+        }
     }
 
     public function sendMail($new_user, $type)
