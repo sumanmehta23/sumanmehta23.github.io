@@ -1446,6 +1446,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
+            ->where('trade_withdrawal.email_verified',1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
