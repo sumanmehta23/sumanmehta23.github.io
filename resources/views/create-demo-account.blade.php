@@ -31,7 +31,7 @@
                                 <form method="post" enctype="multipart/form-data"
                                     action="{{ route('create-demo-account') }}">
                                     @csrf
-                                    
+
                                     <!-- Platform Selection -->
                                     <div class="mb-4 form-group">
                                         <div class="row">
@@ -42,7 +42,7 @@
                                                 <div class="row">
                                                     <div class="mb-2 col-lg-6 col-xl-6">
                                                         <div class="auth-option">
-                                                            <input type="radio" class="btn-check platform-select" 
+                                                            <input type="radio" class="btn-check platform-select"
                                                                    checked name="platform" id="platformMT5" value="mt5">
                                                             <label class="auth-megaoption" for="platformMT5" style="height: 180px !important;">
                                                                 <div class="m-4 text-center d-block">
@@ -59,7 +59,7 @@
                                                     </div>
                                                     <div class="mb-2 col-lg-6 col-xl-6">
                                                         <div class="auth-option">
-                                                            <input type="radio" class="btn-check platform-select" 
+                                                            <input type="radio" class="btn-check platform-select"
                                                                    name="platform" id="platformX9" value="x9">
                                                             <label class="auth-megaoption" for="platformX9" style="height: 180px !important;">
                                                                 <div class="m-4 text-center d-block">
@@ -212,7 +212,7 @@
                                         </div>
 
                                         <!-- X9 Leverage (Initially Hidden) -->
-                                        <div class="mt-5 row is_account x9-leverage d-none">
+                                        {{-- <div class="mt-5 row is_account x9-leverage d-none">
                                             <div class="col-3">
                                                 <label class="form-label">Select Leverage</label>
                                             </div>
@@ -227,7 +227,7 @@
                                                 </select>
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
-                                        </div>
+                                        </div> --}}
 
                                         <div class="mt-3 row">
                                             <div class="col-3">  Deposit Amount for Demo Account </div>
@@ -306,14 +306,14 @@
         // Platform selection handler
         $(".platform-select").change(function() {
             var selectedPlatform = $(".platform-select:checked").val();
-            
+
             if (selectedPlatform === 'mt5') {
                 // Show MT5 options, hide X9 options
                 $(".mt5-options").removeClass("d-none");
                 $(".mt5-leverage").removeClass("d-none");
                 $(".x9-options").addClass("d-none");
                 $(".x9-leverage").addClass("d-none");
-                
+
                 // Trigger account type change for MT5
                 $(".acc-types").trigger("change");
             } else if (selectedPlatform === 'x9') {
@@ -322,7 +322,7 @@
                 $(".mt5-leverage").addClass("d-none");
                 $(".x9-options").removeClass("d-none");
                 $(".x9-leverage").removeClass("d-none");
-                
+
                 // Trigger account type change for X9
                 $(".x9-acc-types").trigger("change");
             }
@@ -330,10 +330,10 @@
 
         $(".acc-types").change(function() {
             var selectedPlatform = $(".platform-select:checked").val();
-            
+
             // Only process if MT5 is selected
             if (selectedPlatform !== 'mt5') return;
-            
+
             var inquiry_status = $(".acc-types:checked").data("inquiry");
             var inquiry = $(".acc-types:checked").data("group");
             var demoDepositInput = $("#demo_deposit");
@@ -396,7 +396,7 @@
                 $(".contactus-btn").attr("href", href);
             }
         });
-        
+
         // Initialize on page load
         $(".platform-select").trigger("change");
         $(".acc-types").trigger("change");
