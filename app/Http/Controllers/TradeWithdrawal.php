@@ -589,7 +589,7 @@ class TradeWithdrawal extends Controller
                     "subtitle_right" => "Successful",
                 ];
                 $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('transactions')->with('status', 'WoW! Your Account Withdrawal is now Verified');
+                return redirect()->route('transactions')->with('status', 'Your withdrawal request has been successfully verified.');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Account Withdrawal is already Verified');
             }
