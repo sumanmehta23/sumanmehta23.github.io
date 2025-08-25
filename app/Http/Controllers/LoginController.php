@@ -604,55 +604,6 @@ class LoginController extends Controller
                 $subscribeToKlaviyoList->handle($user, $list_id);
             }
 
-            DB::transaction(function () use ($user) {
-                $code = Str::random(32);
-                do {
-                    $referral_code = Str::random(6);
-                } while (Ib1::where('referral_code', $referral_code)->exists());
-
-                $ibStatus = 1;
-                $ibGroup = DB::table('ib_plan_details')
-                    ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-                    ->where('ib_categories.ib_cat_name', 'default')
-                    ->where('ib_plan_details.status', $ibStatus)
-                    ->whereNull('ib_plan_details.deleted_at')
-                    ->value('ib_plan_details.id');
-
-                Ib1::create([
-                    'user_id' => $user->id,
-                    'email' => $user->email,
-                    'referral_code' => $referral_code,
-                    'ib_plan_details_id' => $ibGroup,
-                    'name' => $user->fullname,
-                    'password' => Hash::make($user->password),
-                    'number' => $user->number,
-                    'username' => $user->email,
-                    'emailToken' => $code,
-                    'status' => $ibStatus,
-                ]);
-
-                $adminUser = auth()->guard('admin')->user();
-
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-
-                        'user_email' => $adminUser ? $adminUser->email : null,
-                        'userRole' => $adminUser ? $adminUser->userRole : null,
-                        'username' => $adminUser ? $adminUser->username : null,
-                        'user_id' =>  $adminUser ? $adminUser->id : null,
-                        'client_id' => $user->id,
-                        'ib_status' => $ibStatus,
-                        'ib_group' => $ibGroup,
-                        'remark' => 'Ib Request'
-                    ])
-                    ->event('update')
-                    ->log('Ib Request');
-                $cacheKey = 'ib1_' . $user->id;
-                Cache::forget($cacheKey);
-            });
-
             return redirect()->route('register')->with('status', 'We have sent an email to ' . $toEmail . '. Please click on the confirmation link in the email to activate your account and login.');
         }
         return back()->withErrors(['error' => 'Registration failed. Please try again.']);
