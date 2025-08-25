@@ -165,7 +165,7 @@ Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
-// Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
+Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
 Route::get('/handle-failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
 
 // Route::get('/manually-payment-response', [Payment::class, 'manuallyPaymentResponse'])->name('manuallyPaymentResponse');
