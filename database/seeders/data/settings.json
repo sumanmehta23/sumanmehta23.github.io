@@ -306,5 +306,9 @@
     {
         "name": "now_payment_api_key",
         "value": "3ATGP0S-8PD472V-JKV7NKF-N77X4E7"
+    },
+    {
+        "name": "ib_toggle_activation",
+        "value": "manually"
     }
 ]
