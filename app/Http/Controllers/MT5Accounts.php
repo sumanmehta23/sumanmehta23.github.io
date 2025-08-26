@@ -1209,6 +1209,7 @@ class MT5Accounts extends Controller
                 'Demo Account Initial Deposit'
             );
             $new_user = json_decode(json_encode([
+                "Email" => $user->email,
                 "Name" => $user->fullname,
                 "Login" => $loginId,
                 "MainPassword" => $masterPassword,
