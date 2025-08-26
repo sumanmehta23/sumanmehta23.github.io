@@ -781,6 +781,6 @@ class SettingsController extends Controller
         }else{
             return redirect()->back()->with('error', 'IB Request setting not found.');
         }
-        return redirect()->back()->with('success', 'IB Request toggled set to ' . ucfirst($ibApprovalType) . ' successfully.');
+        return redirect()->back()->with('success', 'IB Request toggle set to ' . ucfirst($ibApprovalType) . ' successfully.');
     }
 }
