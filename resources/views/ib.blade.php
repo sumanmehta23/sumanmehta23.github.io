@@ -59,35 +59,46 @@
   </div>
   <script>
     $(".ib-enroll").click(function() {
-      $.ajax({
-        url: "{{ route('ib-enroll') }}",
-        data: "ib_enroll=true",
-        type: "POST",
-        beforeSend: function() {
-          Swal.fire({
-            showConfirmButton: false,
-            showCancelButton: false,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: function() {
-              Swal.enableLoading();
-            }
-          });
-        },
-        success: function(data) {
-          Swal.close();
-          if (data.status == 'true') {
+        $.ajax({
+            url: "{{ route('ib-enroll') }}",
+            data: { ib_enroll: true }, // ✅ better way to pass data
+            type: "POST",
+            beforeSend: function() {
             Swal.fire({
-              title: "You're officially enrolled as an Introducing Broker",
-              text: "Welcome to the team!",
-              icon: "success"
-            }).then((val) => {
-              location.reload();
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: function() {
+                Swal.showLoading(); // ✅ correct function to show loading
+                }
             });
-          }
-        }
-      });
+            },
+            success: function(data) {
+            Swal.close();
+
+            if (data.status === 'true' && data.activationType === 'automatic') {
+                Swal.fire({
+                title: "You're officially enrolled as an Introducing Broker",
+                text: "",
+                icon: "success"
+                }).then(() => {
+                location.reload();
+                });
+
+            } else if (data.status === 'true' && data.activationType === 'manually') {
+                Swal.fire({
+                title: "Your IB request has been submitted",
+                text: "It has been sent for approval. You will be notified once it is approved.",
+                icon: "success"
+                }).then(() => {
+                location.reload();
+                });
+            }
+            }
+        });
     });
+
     $(".ib-resend").click(function() {
       $.ajax({
         url: "{{ route('ib-resend') }}",

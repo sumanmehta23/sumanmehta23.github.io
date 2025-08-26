@@ -11,6 +11,7 @@ use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
+use App\Models\Setting;
 use App\Models\IbWallet;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
@@ -24,9 +25,9 @@ use App\Models\IbPlanDetails;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
 
 class Ib extends Controller
@@ -121,38 +122,41 @@ class Ib extends Controller
                     'emailToken' => $code,
                     'status' => 0,
                 ]);
+                // Log activity
+                $adminUser = auth()->guard('admin')->user();
+                activity()
+                    ->causedBy($adminUser)
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => $adminUser ? $adminUser->email : null,
+                        'userRole' => $adminUser ? $adminUser->userRole : null,
+                        'username' => $adminUser ? $adminUser->username : null,
+                        'user_id' => $adminUser ? $adminUser->id : null,
+                        'client_id' => $user->id,
+                        'ib_status' => $ib->status,
+                        'ib_group' => $ibGroup,
+                        'remark' => 'Ib Request'
+                    ])
+                    ->event('update')
+                    ->log('Ib Request');
             } else {
                 throw new \Exception('Invalid IB activation type');
             }
 
-            // Log activity
-            $adminUser = auth()->guard('admin')->user();
-            activity()
-                ->causedBy($adminUser)
-                ->withProperties([
-                    'ip' => request()->ip(),
-                    'user_email' => $adminUser ? $adminUser->email : null,
-                    'userRole' => $adminUser ? $adminUser->userRole : null,
-                    'username' => $adminUser ? $adminUser->username : null,
-                    'user_id' => $adminUser ? $adminUser->id : null,
-                    'client_id' => $user->id,
-                    'ib_status' => $ib->status,
-                    'ib_group' => $ibGroup,
-                    'remark' => 'Ib Request'
-                ])
-                ->event('update')
-                ->log('Ib Request');
-
             // Clear cache
             $cacheKey = 'ib1_' . $user->id;
             Cache::forget($cacheKey);
-
             // Return response based on activation type
             if ($settingsdata->value == 'automatic') {
-                return response()->json(['status' => 'true']);
+                return response()->json([
+                    'status' => 'true',
+                    'activationType' => 'automatic',
+                    'message' => 'IB request submitted successfully and is pending approval.'
+                ]);
             } else {
                 return response()->json([
                     'status' => 'true',
+                    'activationType' => 'manually',
                     'message' => 'IB request submitted successfully and is pending approval.'
                 ]);
             }
