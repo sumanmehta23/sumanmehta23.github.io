@@ -1208,14 +1208,14 @@ class MT5Accounts extends Controller
                 $validatedData['demo_deposit'],
                 'Demo Account Initial Deposit'
             );
-            $new_user = [
+            $new_user = json_decode(json_encode([
                 "Name" => $user->fullname,
                 "Login" => $loginId,
                 "MainPassword" => $masterPassword,
                 "InvestPassword" => $investorPassword,
                 "Leverage" => $validatedData['leverage'],
                 "type" => $accountType->ac_name,
-            ];
+            ]));
             $this->sendMail($new_user, 'Demo');
             if ($balanceResponse['status']) {
                 // Create demo deposit record
