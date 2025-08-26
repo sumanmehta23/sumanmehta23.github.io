@@ -113,13 +113,13 @@ class Ib extends Controller
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'referral_code' => $referral_code,
-                    'ib_plan_details_id' => $ibGroup,
+                    'ib_plan_details_id' => $request->ib_plan_details_id,
                     'name' => $user->fullname,
-                    'password' => Hash::make($user->password),
+                    'password' => $user->password,
                     'number' => $user->number,
                     'username' => $user->email,
                     'emailToken' => $code,
-                    'status' => 2, // Pending status
+                    'status' => 0,
                 ]);
             } else {
                 throw new \Exception('Invalid IB activation type');

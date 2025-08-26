@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Ib1;
 use App\Models\User;
 use App\MT5\MTWebAPI;
 use App\Models\Account;
@@ -11,6 +12,7 @@ use App\Models\ToggleGroup;
 use App\Models\EmployeeList;
 use App\Services\MT5Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Artisan;
@@ -759,6 +761,20 @@ class SettingsController extends Controller
             if ($ibApprovalType === 'manually') {
                 $ibRequestToggle->value = 'manually';
             } elseif($ibApprovalType === 'automatic') {
+                $ibStatus = 1; // Active status
+                $ibGroup = DB::table('ib_plan_details')
+                    ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
+                    ->where('ib_categories.ib_cat_name', 'default')
+                    ->where('ib_plan_details.status', $ibStatus)
+                    ->whereNull('ib_plan_details.deleted_at')
+                    ->value('ib_plan_details.id');
+                $Ibs = Ib1::where('status', 0)->get();
+                // dd($Ibs);
+                $Ibs->each(function ($ib) use ($ibGroup) {
+                    $ib->status = 1; // Approve status
+                    $ib->ib_plan_details_id = $ibGroup;
+                    $ib->save();
+                });
                 $ibRequestToggle->value = 'automatic';
             }
             $ibRequestToggle->save();
