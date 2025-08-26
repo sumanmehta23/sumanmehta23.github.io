@@ -88,8 +88,8 @@
 
             } else if (data.status === 'true' && data.activationType === 'manually') {
                 Swal.fire({
-                title: "Your IB request has been submitted",
-                text: "It has been sent for approval. You will be notified once it is approved.",
+                title: "Your IB request has been sent for approval. You will be notified once it’s approved.",
+                text: "",
                 icon: "success"
                 }).then(() => {
                 location.reload();
