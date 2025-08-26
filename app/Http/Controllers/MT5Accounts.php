@@ -1217,7 +1217,7 @@ class MT5Accounts extends Controller
                 "Leverage" => $validatedData['leverage'],
                 "type" => $accountType->ac_name,
             ]));
-            $this->sendMail($new_user, 'Demo');
+            $this->sendMail($new_user, 'Demo', 'X9');
             if ($balanceResponse['status']) {
                 // Create demo deposit record
                 $data = [
@@ -1242,7 +1242,7 @@ class MT5Accounts extends Controller
         }
     }
 
-    public function sendMail($new_user, $type)
+    public function sendMail($new_user, $type, $platform = 'MT5')
     {
 
         $settings = settings();
@@ -1253,8 +1253,8 @@ class MT5Accounts extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content = '
-                        <p>Your MT5 account is ready! You are all set to dive into the exciting world of trading.</p>
-                        <p>Here are your MT5 account details</p>
+                        <p>Your ' . $platform . ' account is ready! You are all set to dive into the exciting world of trading.</p>
+                        <p>Here are your ' . $platform . ' account details</p>
                     ';
         $templateVars = [
             'name' => $new_user->Name,
