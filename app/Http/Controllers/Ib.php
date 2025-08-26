@@ -121,27 +121,29 @@ class Ib extends Controller
                     'emailToken' => $code,
                     'status' => 0,
                 ]);
+
+                $adminUser = auth()->guard('admin')->user();
+                activity()
+                    ->causedBy($adminUser)
+                    ->withProperties([
+                        'ip' => request()->ip(),
+                        'user_email' => $adminUser ? $adminUser->email : null,
+                        'userRole' => $adminUser ? $adminUser->userRole : null,
+                        'username' => $adminUser ? $adminUser->username : null,
+                        'user_id' => $adminUser ? $adminUser->id : null,
+                        'client_id' => $user->id,
+                        'ib_status' => $ib->status,
+                        'ib_group' => $ibGroup,
+                        'remark' => 'Ib Request'
+                    ])
+                    ->event('update')
+                    ->log('Ib Request');
             } else {
                 throw new \Exception('Invalid IB activation type');
             }
 
             // Log activity
-            $adminUser = auth()->guard('admin')->user();
-            activity()
-                ->causedBy($adminUser)
-                ->withProperties([
-                    'ip' => request()->ip(),
-                    'user_email' => $adminUser ? $adminUser->email : null,
-                    'userRole' => $adminUser ? $adminUser->userRole : null,
-                    'username' => $adminUser ? $adminUser->username : null,
-                    'user_id' => $adminUser ? $adminUser->id : null,
-                    'client_id' => $user->id,
-                    'ib_status' => $ib->status,
-                    'ib_group' => $ibGroup,
-                    'remark' => 'Ib Request'
-                ])
-                ->event('update')
-                ->log('Ib Request');
+
 
             // Clear cache
             $cacheKey = 'ib1_' . $user->id;
