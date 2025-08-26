@@ -188,6 +188,9 @@
           <div class="col-lg-4 col-sm-12">
                  @include('admin.toggle_group_code')
           </div>
+          <div class="col-lg-4 col-sm-12">
+                 @include('admin.toggle_ib_request')
+          </div>
         </div>
     </div>
 @endSection

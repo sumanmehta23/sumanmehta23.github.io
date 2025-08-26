@@ -745,4 +745,26 @@ class SettingsController extends Controller
         }
         return redirect()->back()->with('success', 'Group code toggled to ' . strtoupper($groupCode) . ' successfully.');
     }
+
+    public function toggleIbApproveRequest(Request $request)
+    {
+        $ibApprovalType = $request->input('ibApprovalType');
+
+        if (!in_array($ibApprovalType, ['automatic', 'manually'])) {
+            return redirect()->back()->with('error', 'Invalid group code selected.');
+        }
+
+        $ibRequestToggle = Setting::where('name','ib_toggle_activation')->first();
+        if ($ibRequestToggle) {
+            if ($ibApprovalType === 'manually') {
+                $ibRequestToggle->value = 'manually';
+            } elseif($ibApprovalType === 'automatic') {
+                $ibRequestToggle->value = 'automatic';
+            }
+            $ibRequestToggle->save();
+        }else{
+            return redirect()->back()->with('error', 'IB Request setting not found.');
+        }
+        return redirect()->back()->with('success', 'IB Request toggled to ' . strtoupper($ibApprovalType) . ' successfully.');
+    }
 }
