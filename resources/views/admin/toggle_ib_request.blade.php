@@ -1,6 +1,6 @@
 <div class="card custom-card">
     <div class="card-header bg-info bg-gradient">
-        <div class="card-title text-white">IB Approval Configuration</div>
+        <div class="card-title ">IB Approval Configuration</div>
     </div>
     <div class="card-body p-4">
         <form method="POST" action="{{ route('admin.toggle_ib_approve_request') }}" id="ibApproveToggleForm">
