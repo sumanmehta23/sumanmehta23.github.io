@@ -215,16 +215,8 @@ class MTConnect
         // Log query content in hex to avoid issues with binary data
         // Log::debug("Sending query (hex): " . bin2hex($querdy));
 
-        if (!is_resource($this->m_connect)) {
-            Log::error("Socket is not a valid resource - attempting to reconnect");
-            if (!$this->Connect()) {
-                Log::error("Reconnection failed");
-                return false;
-            }
-        }
-
-        $send_data = @socket_write($this->m_connect, $query, $query_len);
-        if ($send_data === false) {
+        $send_data = socket_write($this->m_connect, $query, $query_len);
+        if (!$send_data) {
             Log::error("Send failed.", ['error' => $this->GetSocketError()]);
             return false;
         }
