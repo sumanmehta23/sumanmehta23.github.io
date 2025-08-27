@@ -36,27 +36,7 @@ class Payment extends Controller
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
         $this->mt5Service->connect();
-        $this->ensureConnection();
         $this->api = $this->mt5Service->getApi();
-    }
-
-    protected function ensureConnection($maxRetries = 3)
-    {
-        $attempts = 0;
-        while ($attempts < $maxRetries) {
-            try {
-                if ($this->mt5Service->connect()) {
-                    return true;
-                }
-            } catch (\Exception $e) {
-                Log::error("MT5 connection failed attempt " . ($attempts + 1) . ": " . $e->getMessage());
-            }
-            $attempts++;
-            if ($attempts < $maxRetries) {
-                sleep(1); // Wait 1 second before retrying
-            }
-        }
-        throw new \Exception("Failed to connect to MT5 server after {$maxRetries} attempts");
     }
     public function handlePaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
