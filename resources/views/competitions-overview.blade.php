@@ -56,9 +56,14 @@
 
     <!-- Content wrapper with conditional opacity -->
     <div class="{{ $status !== 'Upcoming' ? 'opacity-50' : '' }}">
-        <img src="/assets/image/competition-trophies.svg" alt="">
+        @if($status == 'Upcoming')
+            <img src="/assets/images/competition-trophies.svg" alt="" style="margin-bottom: 30px;">
+        @else
+            <img src="/assets/images/trophies-gray.svg" alt="" style="margin-bottom: 30px;">
+        @endif
+
         <!-- Title -->
-        <h2 class="text-xl font-semibold">{{ Str::upper($competition->ac_name) }}</h2>
+        <h2 class="text-xl font-semibold" style="margin-bottom: 20px;">{{ Str::upper($competition->ac_name) }}</h2>
 
         <!-- Demo + Status -->
         <p class="text-sm text-gray-600 mt-1 flex justify-center items-center space-x-2">
