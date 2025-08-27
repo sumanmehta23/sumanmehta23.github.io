@@ -123,7 +123,7 @@ class Payment extends Controller
 
                 $ticket1 = NULL;
                 if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
-
+                    $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
                     if (!$existingTransaction) {
                         if ($amount > 250) {
                             $bonusamount = 9 * 250;
