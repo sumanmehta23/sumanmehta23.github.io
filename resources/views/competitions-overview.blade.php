@@ -11,12 +11,14 @@
   <!-- Navbar -->
   <header class="flex justify-between items-center p-6 bg-white shadow">
     <div class="flex items-center space-x-2">
-      <img src="/{{ $settings['admin_sidebar_logo'] }}" class="img-fluid logo-lg 1 " alt="logo" style="width: 180px;">
+      <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-44" alt="logo">
     </div>
     <nav class="flex items-center space-x-6">
-      <a href="#" class="text-gray-700 hover:text-blue-600">Leaderboard</a>
-      <a href="#" class="text-gray-700 hover:text-blue-600">Competitions</a>
-      <button class="px-4 py-2 bg-blue-700 text-white rounded-lg">Sign Up</button>
+      <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Leaderboard</a>
+      <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Competitions</a>
+      <button class="px-5 py-2 bg-blue-700 text-white rounded-lg font-semibold shadow">
+        Sign Up
+      </button>
     </nav>
   </header>
 
@@ -27,64 +29,118 @@
 
   <!-- Filters -->
   <div class="flex justify-center mt-6 space-x-3">
-    <button class="px-4 py-2 bg-blue-700 text-white rounded-lg">All</button>
+    <button class="px-4 py-2 bg-blue-700 text-white rounded-lg shadow">All</button>
     <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">Finished</button>
     <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">In Progress</button>
   </div>
 
   <!-- Contest Cards -->
-  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12 px-6">
+  <!-- Contest Cards -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 px-10">
 
-    @foreach($competitions as $competition)
-    {{-- {{ dd($competition) }} --}}
-    @php
-        if ($competition->competition_start_date >= now() && $competition->competition_end_date < now()){
-            $status = 'In Progress';
-        }
-        else{
-            $status = 'Finished';
-        }
-    @endphp
+  @foreach($competitions as $competition)
+  @php
+      if ($competition->competition_end_date < now('UTC')) {
+          $status = 'Finished';
+      } elseif ($competition->competition_start_date > now('UTC')) {
+          $status = 'Upcoming';
+      } elseif ($competition->competition_start_date <= now('UTC') && $competition->competition_end_date >= now('UTC')) {
+          $status = 'In Progress';
+      }
+  @endphp
 
-        <div class="bg-white p-6 rounded-2xl shadow-md text-center">
-            <h2 class="text-xl font-semibold">{{ $competition->ac_name }}</h2>
-            <p class="text-sm text-gray-600 mt-1">
-                {{ $competition->ac_group }}
-                <span class="ml-2 px-2 py-1
-                    {{ $status == 'In Progress' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700' }}
-                    text-xs rounded">
-                    {{ $status }}
-                </span>
-            </p>
+  <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition">
 
-            <p class="mt-4 text-gray-800 font-bold">Prize Pool</p>
-            <p class="text-lg">{!! $competition->prize !!}</p>
+      <!-- Title -->
+      <h2 class="text-xl font-semibold">{{ $competition->ac_name }}</h2>
 
-            <p class="mt-4 text-gray-800 font-bold">Contestants</p>
-            <p class="text-lg">{{ $competition->account_count }}</p>
+      <!-- Demo + Status -->
+      <p class="text-sm text-gray-600 mt-1 flex justify-center items-center space-x-2">
+          {{-- <span>{{ $competition->ac_group }}</span> --}}
+          <span>Demo</span>
+          <span class="px-2 py-1
+              {{ $status == 'In Progress' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700' }}
+              text-xs font-medium rounded">
+              {{ $status }}
+          </span>
+      </p>
 
-            <p class="mt-4 text-gray-800 font-bold">
-                {{ $status == 'In Progress' ? 'Finishes At' : 'Finished At' }}
-            </p>
-            <p class="text-lg">{{ $competition->competition_end_date }}</p>
+      <!-- Contestants -->
+      <p class="mt-4 text-gray-800 font-bold">CONTESTANTS</p>
+      <p class="text-lg font-medium">{{ $competition->accounts ? $competition->accounts->count() : 0 }}</p>
 
-            <div class="mt-6 flex flex-col gap-3">
-                <button class="border border-blue-700 text-blue-700 py-2 rounded-lg">Rules</button>
-                <button class="border border-blue-700 text-blue-700 py-2 rounded-lg">Standings</button>
+      <!-- Date Box -->
+      <div class="bg-gray-50 border rounded-xl py-4 mt-6">
+        @if($status == 'Upcoming')
+            <p class="text-gray-800 font-bold">Starts At</p>
+            <p class="text-lg mt-1">{{ $competition->competition_start_date }}</p>
+        @elseif($status == 'In Progress')
+            <p class="text-gray-800 font-bold">Finishes At</p>
+            <p class="text-lg mt-1">{{ $competition->competition_end_date }}</p>
+        @elseif($status == 'Finished')
+            <p class="text-gray-800 font-bold">Finished At</p>
+            <p class="text-lg mt-1">{{ $competition->competition_end_date }}</p>
+        @endif
+      </div>
 
-                @if($status == 'In Progress')
-                    <button class="bg-blue-600 text-white py-2 rounded-lg">Register</button>
-                @else
-                    <button class="bg-gray-300 text-gray-700 py-2 rounded-lg cursor-not-allowed">
-                        Registration Finished
-                    </button>
-                @endif
-            </div>
-        </div>
-    @endforeach
+      <!-- Action Buttons -->
+      <div class="mt-6 flex gap-3">
+        <button
+          class="w-1/2 border border-blue-700 text-blue-700 py-2 rounded-lg font-medium hover:bg-blue-50"
+          onclick="openRulesModal('{{ $competition->prize }}')"
+        >
+          Rules
+        </button>
+        <button class="w-1/2 border border-blue-700 text-blue-700 py-2 rounded-lg font-medium hover:bg-blue-50">
+          Standings
+        </button>
+      </div>
+
+      <!-- Register / Finished -->
+      @if($status == 'Upcoming')
+        <button class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+          Register
+        </button>
+      @else
+        <button class="w-full mt-4 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium cursor-not-allowed">
+          Registration Finished
+        </button>
+      @endif
+
+  </div>
+  @endforeach
+</section>
 
 
-  </section>
+<!-- Rules Modal -->
+<div id="rulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+  <div class="bg-white rounded-2xl shadow-lg w-96 p-6 relative">
+
+    <!-- Close Button -->
+    <button onclick="closeRulesModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      ✖
+    </button>
+
+    <h2 class="text-xl font-semibold mb-4">Competition Rules</h2>
+    <div id="rulesContent" class="text-gray-700">
+      <!-- Prize text will be injected here -->
+    </div>
+  </div>
+</div>
+
+<script>
+  function openRulesModal(prize) {
+    document.getElementById("rulesContent").innerHTML = prize;
+    document.getElementById("rulesModal").classList.remove("hidden");
+    document.getElementById("rulesModal").classList.add("flex");
+  }
+
+  function closeRulesModal() {
+    document.getElementById("rulesModal").classList.add("hidden");
+    document.getElementById("rulesModal").classList.remove("flex");
+  }
+</script>
+
 
 </body>
 </html>
