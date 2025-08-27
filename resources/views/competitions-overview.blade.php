@@ -53,8 +53,10 @@
   <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition"
   data-status="{{ $status }}">
 
+
     <!-- Content wrapper with conditional opacity -->
     <div class="{{ $status !== 'Upcoming' ? 'opacity-50' : '' }}">
+        <img src="/assets/image/competition-trophies.svg" alt="">
         <!-- Title -->
         <h2 class="text-xl font-semibold">{{ Str::upper($competition->ac_name) }}</h2>
 
@@ -76,13 +78,19 @@
         <div class="bg-gray-50 border rounded-xl py-4 mt-6">
         @if($status == 'Upcoming')
             <p class="text-gray-800 font-bold">Starts At</p>
-            <p class="text-lg mt-1">{{ $competition->competition_start_date }}</p>
+            <p class="text-lg mt-1">
+                {{ \Carbon\Carbon::parse($competition->competition_start_date)->format('F jS, Y') }}
+            </p>
         @elseif($status == 'In Progress')
             <p class="text-gray-800 font-bold">Finishes At</p>
-            <p class="text-lg mt-1">{{ $competition->competition_end_date }}</p>
+            <p class="text-lg mt-1">
+                {{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}
+            </p>
         @elseif($status == 'Finished')
             <p class="text-gray-800 font-bold">Finished At</p>
-            <p class="text-lg mt-1">{{ $competition->competition_end_date }}</p>
+            <p class="text-lg mt-1">
+                {{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}
+            </p>
         @endif
         </div>
     </div>
