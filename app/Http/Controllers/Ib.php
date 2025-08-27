@@ -11,6 +11,7 @@ use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
+use App\Models\Setting;
 use App\Models\IbWallet;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
 
 class Ib extends Controller
@@ -59,23 +61,41 @@ class Ib extends Controller
     }
     public function ibEnroll(Request $request)
     {
+        // Validate that request is POST
+        if (!$request->isMethod('post')) {
+            return response()->json(['status' => 'false', 'message' => 'Invalid request method']);
+        }
 
-        if ($request->isMethod('post')) {
+        try {
             $uid = uniqid();
             $code = Str::random(32);
+
+            // Generate unique referral code
             do {
                 $referral_code = Str::random(6);
             } while (Ib1::where('referral_code', $referral_code)->exists());
+
             $user = auth()->user();
             $ibStatus = 1;
-            $ibGroup = DB::table('ib_plan_details')
-                        ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
-                        ->where('ib_categories.ib_cat_name', 'default')
-                        ->where('ib_plan_details.status', $ibStatus)
-                        ->whereNull('ib_plan_details.deleted_at')
-                        ->value('ib_plan_details.id');
-            try {
-                Ib1::create([
+            $ibGroup = '';
+
+            // Get IB activation setting
+            $settingsdata = Setting::where('name', 'ib_toggle_activation')->first();
+            if (!$settingsdata) {
+                throw new \Exception('IB activation settings not found');
+            }
+
+            if ($settingsdata->value == 'automatic') {
+                // Get default IB group
+                $ibGroup = DB::table('ib_plan_details')
+                    ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
+                    ->where('ib_categories.ib_cat_name', 'default')
+                    ->where('ib_plan_details.status', $ibStatus)
+                    ->whereNull('ib_plan_details.deleted_at')
+                    ->value('ib_plan_details.id');
+
+                // Create IB with active status
+                $ib = Ib1::create([
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'referral_code' => $referral_code,
@@ -87,34 +107,63 @@ class Ib extends Controller
                     'emailToken' => $code,
                     'status' => $ibStatus,
                 ]);
-                $adminUser = auth()->guard('admin')->user();
 
+            } else if ($settingsdata->value == 'manually') {
+                // Create IB with pending status
+                $ib = Ib1::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'referral_code' => $referral_code,
+                    'ib_plan_details_id' => $request->ib_plan_details_id,
+                    'name' => $user->fullname,
+                    'password' => $user->password,
+                    'number' => $user->number,
+                    'username' => $user->email,
+                    'emailToken' => $code,
+                    'status' => 0,
+                ]);
+                // Log activity
+                $adminUser = auth()->guard('admin')->user();
                 activity()
-                    ->causedBy(auth()->guard('admin')->user())
+                    ->causedBy($adminUser)
                     ->withProperties([
                         'ip' => request()->ip(),
-
                         'user_email' => $adminUser ? $adminUser->email : null,
                         'userRole' => $adminUser ? $adminUser->userRole : null,
                         'username' => $adminUser ? $adminUser->username : null,
-                        'user_id' =>  $adminUser ? $adminUser->id : null,
+                        'user_id' => $adminUser ? $adminUser->id : null,
                         'client_id' => $user->id,
-                        'ib_status' => $ibStatus,
+                        'ib_status' => $ib->status,
                         'ib_group' => $ibGroup,
                         'remark' => 'Ib Request'
                     ])
                     ->event('update')
                     ->log('Ib Request');
-                $cacheKey = 'ib1_' . $user->id;
-                Cache::forget($cacheKey);
-
-                return response()->json(['status' => 'true']);
-            } catch (\Exception $e) {
-                return response()->json(['status' => 'false', 'message' => $e->getMessage()]);
+            } else {
+                throw new \Exception('Invalid IB activation type');
             }
-        }
 
-        return response()->json(['status' => 'false', 'message' => 'Invalid request method']);
+            // Clear cache
+            $cacheKey = 'ib1_' . $user->id;
+            Cache::forget($cacheKey);
+            // Return response based on activation type
+            if ($settingsdata->value == 'automatic') {
+                return response()->json([
+                    'status' => 'true',
+                    'activationType' => 'automatic',
+                    'message' => 'IB request submitted successfully and is pending approval.'
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'true',
+                    'activationType' => 'manually',
+                    'message' => 'IB request submitted successfully and is pending approval.'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'false', 'message' => $e->getMessage()]);
+        }
     }
 
     public function ibResend(Request $request)
