@@ -66,9 +66,7 @@ Route::get("/five", function () {
     throw new \Exception("This is a test exception for Klaviyo subscription.");
 });
 
-Route::get('/competitions-overview', function () {
-    return view('competitions-overview'); // resources/views/competitions/overview.blade.php
-})->name('competitionsOverview');
+Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
     $settings = settings();

@@ -403,4 +403,19 @@ class CompetitionController extends Controller
         ]);
     }
 
+    public function competitionsOverview(Request $request)
+    {
+        $competitions = AccountType::where('ac_name','like', '%Competition%')
+            ->where('status',1)
+            ->withCount(['account' => function($query) {
+                $query->where( 'account_types.id','competition_product_id')
+                      ->whereNotNull('competition_start_date')
+                      ->whereNotNull('competition_end_date');
+            }])
+            ->orderBy('competition_start_date', 'desc')
+            ->get();
+            // dd($competitions);
+        return view('competitions-overview', compact('competitions'));
+    }
+
 }
