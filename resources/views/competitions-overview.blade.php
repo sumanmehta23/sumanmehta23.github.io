@@ -14,9 +14,9 @@
       <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-44" alt="logo">
     </div>
     <nav class="flex items-center space-x-6">
-      <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Leaderboard</a>
-      <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Competitions</a>
-      <button class="px-5 py-2 bg-blue-700 text-white rounded-lg font-semibold shadow">
+      <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Leaderboard</a>
+      <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
+      <button class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
         Sign Up
       </button>
     </nav>
@@ -29,16 +29,17 @@
 
   <!-- Filters -->
   <div class="flex justify-center mt-6 space-x-3">
-    <button class="px-4 py-2 bg-blue-700 text-white rounded-lg shadow">All</button>
-    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">Finished</button>
-    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">In Progress</button>
-  </div>
+    <button onclick="filterCards('All')" class="px-4 py-2 bg-emerald-700 text-white rounded-lg shadow hover:bg-emerald-800">All</button>
+    <button onclick="filterCards('Finished')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Finished</button>
+    <button onclick="filterCards('In Progress')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">In Progress</button>
+    <button onclick="filterCards('Upcoming')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Upcoming</button>
+   </div>
 
   <!-- Contest Cards -->
-  <!-- Contest Cards -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 px-10">
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 px-10">
 
   @foreach($competitions as $competition)
+
   @php
       if ($competition->competition_end_date < now('UTC')) {
           $status = 'Finished';
@@ -49,28 +50,30 @@
       }
   @endphp
 
-  <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition">
+  <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition"
+  data-status="{{ $status }}">
 
-      <!-- Title -->
-      <h2 class="text-xl font-semibold">{{ $competition->ac_name }}</h2>
+    <!-- Content wrapper with conditional opacity -->
+    <div class="{{ $status !== 'Upcoming' ? 'opacity-50' : '' }}">
+        <!-- Title -->
+        <h2 class="text-xl font-semibold">{{ Str::upper($competition->ac_name) }}</h2>
 
-      <!-- Demo + Status -->
-      <p class="text-sm text-gray-600 mt-1 flex justify-center items-center space-x-2">
-          {{-- <span>{{ $competition->ac_group }}</span> --}}
-          <span>Demo</span>
-          <span class="px-2 py-1
-              {{ $status == 'In Progress' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700' }}
-              text-xs font-medium rounded">
-              {{ $status }}
-          </span>
-      </p>
+        <!-- Demo + Status -->
+        <p class="text-sm text-gray-600 mt-1 flex justify-center items-center space-x-2">
+            <span>Demo</span>
+            <span class="px-2 py-1
+                {{ $status == 'In Progress' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-700' }}
+                text-xs font-medium rounded">
+                {{ $status }}
+            </span>
+        </p>
 
-      <!-- Contestants -->
-      <p class="mt-4 text-gray-800 font-bold">CONTESTANTS</p>
-      <p class="text-lg font-medium">{{ $competition->accounts ? $competition->accounts->count() : 0 }}</p>
+        <!-- Contestants -->
+        <p class="mt-4 text-gray-800 font-bold">CONTESTANTS</p>
+        <p class="text-lg font-medium">{{ $competition->accounts ? $competition->accounts->count() : 0 }}</p>
 
-      <!-- Date Box -->
-      <div class="bg-gray-50 border rounded-xl py-4 mt-6">
+        <!-- Date Box -->
+        <div class="bg-gray-50 border rounded-xl py-4 mt-6">
         @if($status == 'Upcoming')
             <p class="text-gray-800 font-bold">Starts At</p>
             <p class="text-lg mt-1">{{ $competition->competition_start_date }}</p>
@@ -81,47 +84,50 @@
             <p class="text-gray-800 font-bold">Finished At</p>
             <p class="text-lg mt-1">{{ $competition->competition_end_date }}</p>
         @endif
-      </div>
+        </div>
+    </div>
 
-      <!-- Action Buttons -->
-      <div class="mt-6 flex gap-3">
+    <!-- Action Buttons (not affected by opacity) -->
+    <div class="mt-6 flex gap-3">
         <button
-          class="w-1/2 border border-blue-700 text-blue-700 py-2 rounded-lg font-medium hover:bg-blue-50"
-          onclick="openRulesModal('{{ $competition->prize }}')"
+        class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50"
+        onclick="openRulesModal('{{ $competition->prize }}')"
         >
-          Rules
+        Rules
         </button>
-        <button class="w-1/2 border border-blue-700 text-blue-700 py-2 rounded-lg font-medium hover:bg-blue-50">
-          Standings
+        <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50">
+        Standings
         </button>
-      </div>
+    </div>
 
-      <!-- Register / Finished -->
-      @if($status == 'Upcoming')
-        <button class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition">
-          Register
-        </button>
-      @else
+    <!-- Register / Finished -->
+    @if($status == 'Upcoming')
+        <a href="/login"
+            class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
+            Register
+        </a>
+    @else
         <button class="w-full mt-4 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium cursor-not-allowed">
-          Registration Finished
+            Registration Finished
         </button>
-      @endif
+    @endif
 
-  </div>
+    </div>
+
   @endforeach
 </section>
 
 
 <!-- Rules Modal -->
 <div id="rulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
-  <div class="bg-white rounded-2xl shadow-lg w-96 p-6 relative">
+  <div class="bg-white rounded-2xl shadow-lg w-[600px] max-w-2xl p-6 relative">
 
     <!-- Close Button -->
     <button onclick="closeRulesModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
       ✖
     </button>
 
-    <h2 class="text-xl font-semibold mb-4">Competition Rules</h2>
+    <h2 class="text-xl font-semibold mb-4 text-emerald-800">Competition Rules</h2>
     <div id="rulesContent" class="text-gray-700">
       <!-- Prize text will be injected here -->
     </div>
@@ -131,6 +137,16 @@
 <script>
   function openRulesModal(prize) {
     document.getElementById("rulesContent").innerHTML = prize;
+
+    // Apply Tailwind styles to any <ul>/<li> inside
+    const rulesContent = document.getElementById("rulesContent");
+    rulesContent.querySelectorAll("ul").forEach(ul => {
+      ul.classList.add("list-disc", "pl-5", "space-y-2");
+    });
+    rulesContent.querySelectorAll("li").forEach(li => {
+      li.classList.add("text-gray-700");
+    });
+
     document.getElementById("rulesModal").classList.remove("hidden");
     document.getElementById("rulesModal").classList.add("flex");
   }
@@ -140,7 +156,19 @@
     document.getElementById("rulesModal").classList.remove("flex");
   }
 </script>
+<script>
+  function filterCards(filter) {
+    const cards = document.querySelectorAll("[data-status]");
 
+    cards.forEach(card => {
+      if (filter === "All" || card.getAttribute("data-status") === filter) {
+        card.style.display = "block"; // Show card
+      } else {
+        card.style.display = "none"; // Hide card
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
