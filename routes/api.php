@@ -24,13 +24,20 @@ use App\Http\Controllers\Api\WithdrawalController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('deposits', [Wallet::class, 'alldeposits'])->name('api.deposits.get');
     Route::get('withdrawals', [Wallet::class, 'allwithdrawals'])->name('account.deactivate');
-    Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+
+    // High-volume pagination endpoints with increased rate limits (still authenticated)
+    Route::middleware('throttle:api-pagination')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+        Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
+        Route::get('/transactions', [TransactionController::class, 'index']);
+        Route::get('/deposit', [TransactionController::class, 'index']); //API for Cell Expert
+        Route::get('/withdrawal', [WithdrawalController::class, 'index']); //API for Cell Expert
+    });
+
+    // Regular rate limit for other endpoints
     Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
-    Route::get('/trades', [TradeController::class, 'index'])->name('api.trades.index');
     Route::get('/trades/{id}', [TradeController::class, 'show'])->name('api.trades.show');
-    Route::get('/transactions', [TransactionController::class, 'index']);
-    Route::get('/deposit', [TransactionController::class, 'index']); //API for Cell Expert
-    Route::get('/withdrawal', [WithdrawalController::class, 'index']); //API for Cell Expert
+
     // Competition routes
     Route::get('/competition/trader-data/{account}', [\App\Http\Controllers\Api\CompetitionController::class, 'getTraderData']);
     Route::get('/competition/current', [\App\Http\Controllers\Api\CompetitionController::class, 'getCurrentCompetition']);
