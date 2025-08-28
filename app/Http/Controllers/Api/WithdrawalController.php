@@ -25,7 +25,7 @@ class WithdrawalController extends Controller
             'user_id' => 'nullable|string',
             'transaction_type' => 'nullable|string|max:50',
             'product_id' => 'nullable|string|max:50',
-            'per_page' => 'nullable|integer|min:1|max:100'
+            'per_page' => 'nullable|integer|min:1|max:500'
         ]);
 
         // Get filter parameters

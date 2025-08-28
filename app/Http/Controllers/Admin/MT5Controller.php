@@ -82,8 +82,7 @@ class MT5Controller extends Controller
 
     public function promocode(Request $request)
     {
-        return view('admin.promocode', [
-        ]);
+        return view('admin.promocode', []);
     }
 
     public function get_promocode($id)
@@ -176,7 +175,7 @@ class MT5Controller extends Controller
             ]);
         } catch (\Throwable $e) {
             // log the actual error for debugging
-            Log::error('Promocode create error: '.$e->getMessage());
+            Log::error('Promocode create error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -219,7 +218,7 @@ class MT5Controller extends Controller
 
             // Fetch user data from API (assume the API method and classes are available)
             $trade_user = NULL;
-            $this->api->UserGet($code,$trade_user);
+            $this->api->UserGet($code, $trade_user);
 
             if (($error_code = $this->api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
 
@@ -240,9 +239,9 @@ class MT5Controller extends Controller
             $acc = DB::table('account_types')
                 ->where('id', $account_type)
                 ->first();
-            $account =Account::with('user')->where('code',$code)->first();
+            $account = Account::with('user')->where('code', $code)->first();
 
-            if($account){
+            if ($account) {
                 $referral = $account->user->ib1;
 
                 // if($referral && ($referral=="wealthytrades")) {
@@ -290,16 +289,16 @@ class MT5Controller extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'code' => $code,
                         'leverage' => $leverage,
                         'account_type_id' => $account_type_id,
                         'remark' => 'CRM Update Group Leverage'
                     ])
-                ->event('update')
-                ->log('CRM Update Group Leverage');
+                    ->event('update')
+                    ->log('CRM Update Group Leverage');
                 return redirect()->back()->with("success", "MT5 Account Details Successfully Updated");
             }
         }
@@ -328,15 +327,15 @@ class MT5Controller extends Controller
                         ->withProperties([
                             'ip' => request()->ip(),
                             'admin_email' => auth()->guard('admin')->user()->email,
-                            'userRole' =>auth()->guard('admin')->user()->userRole,
-                            'username' =>auth()->guard('admin')->user()->username,
-                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'userRole' => auth()->guard('admin')->user()->userRole,
+                            'username' => auth()->guard('admin')->user()->username,
+                            'admin_id' => auth()->guard('admin')->user()->id,
                             'code' => $login,
                             'new_password' => $new_password,
                             'remark' => 'CRM Update Master Password'
                         ])
-                    ->event('update')
-                    ->log('CRM Update Master Password');
+                        ->event('update')
+                        ->log('CRM Update Master Password');
                     return redirect()->back()->with("success", 'Your Master Password Successfully Updated');
                 }
             }
@@ -356,15 +355,15 @@ class MT5Controller extends Controller
                         ->withProperties([
                             'ip' => request()->ip(),
                             'admin_email' => auth()->guard('admin')->user()->email,
-                            'userRole' =>auth()->guard('admin')->user()->userRole,
-                            'username' =>auth()->guard('admin')->user()->username,
-                            'admin_id' =>auth()->guard('admin')->user()->id,
+                            'userRole' => auth()->guard('admin')->user()->userRole,
+                            'username' => auth()->guard('admin')->user()->username,
+                            'admin_id' => auth()->guard('admin')->user()->id,
                             'code' => $login,
                             'new_password' => $new_password,
                             'remark' => 'CRM Update Investor Password'
                         ])
-                    ->event('update')
-                    ->log('CRM Update Investor Password');
+                        ->event('update')
+                        ->log('CRM Update Investor Password');
                     return redirect()->back()->with('success', 'Your Investor Password Successfully Updated');
                 }
             }
@@ -395,6 +394,7 @@ class MT5Controller extends Controller
                 $tradeDeposit = TradeDeposit::create([
                     'user_id' => $user->id,
                     'account_id' => $account->id,
+                    'transaction_id' => uniqid(),
                     'email' => $email,
                     'code' => $code,
                     'deposit_amount' => $amount,
@@ -423,9 +423,9 @@ class MT5Controller extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'client_id' => $user->id,
                         'client_email' => $email,
                         'deposit_amount' => $amount,
@@ -433,8 +433,8 @@ class MT5Controller extends Controller
                         'account_id' => $account->id,
                         'remark' => 'CRM Deposit'
                     ])
-                ->event('create')
-                ->log('CRM Deposit');
+                    ->event('create')
+                    ->log('CRM Deposit');
 
                 $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
@@ -524,9 +524,9 @@ class MT5Controller extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'client_id' => $user->id,
                         'client_email' => $email,
                         'bonus_amount' => $amount,
@@ -535,8 +535,8 @@ class MT5Controller extends Controller
                         'account_id' => $account->id,
                         'remark' => 'CRM Deposit Bonus'
                     ])
-                ->event('create')
-                ->log('CRM Bonus');
+                    ->event('create')
+                    ->log('CRM Bonus');
 
                 $toEmail = $email;
                 $from = settings()['email_from_address'];
@@ -556,8 +556,7 @@ class MT5Controller extends Controller
                                 <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
                                 <p><b>Account ID: </b>' . $deposit_details->code . '</p>
                                 <p><b>Transaction ID: </b>' . $transid . '</p>
-                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>'
-                            ;
+                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>';
 
                 $templateVars = [
                     'name' => $user->fullname,
@@ -632,9 +631,9 @@ class MT5Controller extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'client_id' => $user->id,
                         'client_email' => $email,
                         'bonus_amount' => $amount,
@@ -643,8 +642,8 @@ class MT5Controller extends Controller
                         'account_id' => $account->id,
                         'remark' => 'CRM Credit Bonus'
                     ])
-                ->event('create')
-                ->log('CRM Bonus');
+                    ->event('create')
+                    ->log('CRM Bonus');
 
                 $toEmail = $email;
                 $from = settings()['email_from_address'];
@@ -664,8 +663,7 @@ class MT5Controller extends Controller
                                 <p><b>Amount: </b>$' . $deposit_details->bonus_amount . '</p>
                                 <p><b>Account ID: </b>' . $deposit_details->code . '</p>
                                 <p><b>Transaction ID: </b>' . $transid . '</p>
-                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>'
-                            ;
+                                <p><b>Bonus Date: </b>' . date("Y-m-d H:i:s") . '</p>';
 
                 $templateVars = [
                     'name' => $user->fullname,
@@ -709,12 +707,13 @@ class MT5Controller extends Controller
                     'email' => $email,
                     'user_id' => $user->id,
                     'account_id' => $account->id,
+                    'transaction_id' => uniqid(),
                     'code' => $account->code,
                     'withdraw_to' => null,
                     'withdrawal_amount' => $amount,
                     'withdraw_type' => $withdraw_type,
                     'admin_remark' => $description,
-                    'Status'=>1,
+                    'Status' => 1,
                     'created_by' => session('alogin')
                 ]);
                 activity()
@@ -722,9 +721,9 @@ class MT5Controller extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'admin_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'admin_id' => auth()->guard('admin')->user()->id,
                         'client_id' => $user->id,
                         'client_email' => $email,
                         'withdrawal_amount' => $amount,
@@ -732,8 +731,8 @@ class MT5Controller extends Controller
                         'account_id' => $account->id,
                         'remark' => 'CRM Withdraw'
                     ])
-                ->event('create')
-                ->log('CRM Withdraw');
+                    ->event('create')
+                    ->log('CRM Withdraw');
                 // Update total_balance table
                 // DB::table('total_balance')->insert([
                 //     'email' => $email,
@@ -791,21 +790,21 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
+        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
-        if($account){
+        if ($account) {
             $code = $account->code;
-        }else{
-            $code ='';
+        } else {
+            $code = '';
         }
 
-        if($account->demo == false){
+        if ($account->demo == false) {
             AccountHelper::updateLiveAndDemoAccounts($account->id);
             $type = "live";
-        }else{
+        } else {
             $type = "demo";
         }
-        $account = Account::where('id',$id)->with(['accountType','user','BonusTransaction'])->first();
+        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
@@ -837,12 +836,12 @@ class MT5Controller extends Controller
             ->sum('withdrawal_amount');
 
         $bonus_trans = BonusTransaction::where('status', 1)
-            ->where("account_id"  ,$account->id)
+            ->where("account_id", $account->id)
             ->get();
         $account_types = AccountType::where('status', 1)->get();
 
         // $account = AccountHelper::getAccount( $account->code);
-        $accountHelper = AccountHelper::getAccount( $account->code);
+        $accountHelper = AccountHelper::getAccount($account->code);
 
         return view("admin.mt5.view", [
             "id" => $code,
