@@ -21,4 +21,8 @@ class AccountType extends Model
     {
         return $this->hasMany(LiveAccount::class, 'account_type', 'id');
     }
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
 }

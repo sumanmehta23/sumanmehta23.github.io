@@ -66,6 +66,8 @@ Route::get("/five", function () {
     throw new \Exception("This is a test exception for Klaviyo subscription.");
 });
 
+Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
+
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
     $settings = settings();
     $htmlContent = "<p>hello , please check your acount for more details</p>";
