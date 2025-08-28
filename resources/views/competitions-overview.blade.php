@@ -16,9 +16,9 @@
     <nav class="flex items-center space-x-6">
       {{-- <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Leaderboard</a> --}}
       <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
-      <button class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
+      <a href="/login" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
         Sign Up
-      </button>
+      </a>
     </nav>
   </header>
 
@@ -107,7 +107,7 @@
         onclick="openRulesModal('{{ $competition->prize }}')">
         Rules
         </button>
-        <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50">
+        <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50" onclick="openLeaderboard('{{ $competition }}')">
             Standings
         </button>
     </div>
@@ -161,6 +161,11 @@
 
     document.getElementById("rulesModal").classList.remove("hidden");
     document.getElementById("rulesModal").classList.add("flex");
+  }
+
+  function openLeaderboard(competition) {
+    // Redirect to the competition's leaderboard page
+    window.location.href = `/leaderboard/${competition.id}`;
   }
 
   function closeRulesModal() {
