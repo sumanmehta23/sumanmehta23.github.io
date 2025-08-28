@@ -417,27 +417,6 @@
             });
         });
     </script> --}}
-    @if (session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                showConfirmButton: true
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: '{{ session('error') }}',
-                showConfirmButton: true
-            });
-        </script>
-    @endif
     <script>
         document.getElementById('withdrawAmount').addEventListener('input', function () {
             const amount = parseFloat(this.value);

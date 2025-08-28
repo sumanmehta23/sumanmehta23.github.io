@@ -1268,10 +1268,14 @@ class Wallet extends Controller
 
                             return response()->json(['status' => 'true']);
                         } catch (\Throwable $th) {
+                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                            DB::rollBack();
+                            Log::error('Transaction failed during finalization: ' . $th->getMessage());
                             $ticket4 = NULL;
                             $amount = abs((float)$amount) * -1;
                             $comment = 'CryptoChillDeposit - Error';
                             $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket4, $margin_check = true);
+
                         }
                     }
 

@@ -159,6 +159,10 @@ class LoginController extends Controller
                 return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
             }
         }
+        User::where('id', $user->id)
+                ->whereNull('client_ip')
+                ->update(['client_ip' => $request->ip()]);
+
         Auth::login($user);
         $request->session()->regenerate();
         // Set session variables
@@ -559,6 +563,7 @@ class LoginController extends Controller
         $userData['country'] = $request->country;
         $userData['created_at'] = now();
         $userData['updated_at'] = now();
+        $userData['client_ip'] = $request->ip();
 
         // Check for affiliate reference code in cookie
         if ($request->hasCookie('cxd')) {

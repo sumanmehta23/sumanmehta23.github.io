@@ -25,7 +25,7 @@ class WithdrawalController extends Controller
             'user_id' => 'nullable|string',
             'transaction_type' => 'nullable|string|max:50',
             'product_id' => 'nullable|string|max:50',
-            'per_page' => 'nullable|integer|min:1|max:100'
+            'per_page' => 'nullable|integer|min:1|max:500'
         ]);
 
         // Get filter parameters
@@ -100,7 +100,7 @@ class WithdrawalController extends Controller
         $allWithdrawals = $allWithdrawals->sortByDesc('withdraw_date');
 
         // Handle pagination manually
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = min($request->input('per_page', 15), 500);
         $currentPage = $request->input('page', 1);
         $offset = ($currentPage - 1) * $perPage;
 

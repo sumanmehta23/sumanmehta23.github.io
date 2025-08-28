@@ -26,7 +26,7 @@ class TransactionController extends Controller
             'user_id' => 'nullable|string',
             'transaction_type' => 'nullable|string|max:50',
             'product_id' => 'nullable|string|max:50',
-            'per_page' => 'nullable|integer|min:1|max:100'
+            'per_page' => 'nullable|integer|min:1|max:500'
         ]);
 
         // Initialize query
@@ -68,7 +68,7 @@ class TransactionController extends Controller
         // Removed ordering by transaction_date as the column does not exist
 
         // Paginate the results
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = min($request->input('per_page', 15), 500);
         $transactions = $query->paginate($perPage);
 
         // Transform the paginated data using TransactionResource
