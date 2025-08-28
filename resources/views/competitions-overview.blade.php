@@ -14,8 +14,8 @@
       <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-44" alt="logo">
     </div>
     <nav class="flex items-center space-x-6">
-      <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Leaderboard</a>
-      <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
+      {{-- <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Leaderboard</a> --}}
+      <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
       <button class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
         Sign Up
       </button>
@@ -29,11 +29,11 @@
 
   <!-- Filters -->
   <div class="flex justify-center mt-6 space-x-3">
-    <button onclick="filterCards('All')" class="px-4 py-2 bg-emerald-700 text-white rounded-lg shadow hover:bg-emerald-800">All</button>
-    <button onclick="filterCards('Finished')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Finished</button>
-    <button onclick="filterCards('In Progress')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">In Progress</button>
-    <button onclick="filterCards('Upcoming')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Upcoming</button>
-   </div>
+    <button id="btn-All" onclick="filterCards('All')" class="filter-btn px-4 py-2 bg-emerald-700 text-white rounded-lg shadow">All</button>
+    <button id="btn-Upcoming" onclick="filterCards('Upcoming')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Upcoming</button>
+    <button id="btn-InProgress" onclick="filterCards('In Progress')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">In Progress</button>
+    <button id="btn-Finished" onclick="filterCards('Finished')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Finished</button>
+  </div>
 
   <!-- Contest Cards -->
   <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 px-10">
@@ -104,12 +104,11 @@
     <div class="mt-6 flex gap-3">
         <button
         class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50"
-        onclick="openRulesModal('{{ $competition->prize }}')"
-        >
+        onclick="openRulesModal('{{ $competition->prize }}')">
         Rules
         </button>
         <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50">
-        Standings
+            Standings
         </button>
     </div>
 
@@ -172,12 +171,27 @@
 <script>
   function filterCards(filter) {
     const cards = document.querySelectorAll("[data-status]");
+    const buttons = document.querySelectorAll(".filter-btn");
 
+    // Reset all buttons to default (gray)
+    buttons.forEach(btn => {
+      btn.classList.remove("bg-emerald-700", "text-white", "shadow");
+      btn.classList.add("bg-gray-200", "text-gray-700", "hover:bg-gray-300");
+    });
+
+    // Highlight the active button
+    const activeBtn = document.querySelector(`#btn-${filter.replace(" ", "")}`);
+    if (activeBtn) {
+      activeBtn.classList.remove("bg-gray-200", "text-gray-700", "hover:bg-gray-300");
+      activeBtn.classList.add("bg-emerald-700", "text-white", "shadow");
+    }
+
+    // Filter the cards
     cards.forEach(card => {
       if (filter === "All" || card.getAttribute("data-status") === filter) {
-        card.style.display = "block"; // Show card
+        card.style.display = "block";
       } else {
-        card.style.display = "none"; // Hide card
+        card.style.display = "none";
       }
     });
   }
