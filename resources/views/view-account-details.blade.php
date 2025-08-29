@@ -3,7 +3,7 @@
     <div id="passwordupdatemodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <form method="post" id="passwordForm">
+            <form method="post" id="passwordForm" action="{{ route('change-mt5-password', $account) }}">
                 @csrf
                 <input type="hidden" name="account_id" value="{{ $account->id }}">
                 <div class="modal-content">
@@ -196,7 +196,7 @@
                                                     <div class="row g-1">
                                                         <div class="col-6">
                                                             <h3 class="mb-0 text-white f-w-500">$
-                                                                {{ isset($account->balance) ? $account->balance : '0.00' }}
+                                                                {{ isset($balance) ? number_format($balance, 2) : '0.00' }}
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
