@@ -477,6 +477,9 @@ class MT5Controller extends Controller
         RateLimiter::hit($key, 10);
 
         $eid = $request->input('email');
+        if($eid == 'alejandrotrading2310@gmail.com'){
+            dd($request->all());
+        }
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
