@@ -466,5 +466,27 @@
         });
     }
   </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get("tab");
+
+        if (activeTab === "withdrawals") {
+            const withdrawalsTab = document.querySelector('#withdrawls');
+            const withdrawalsPane = document.querySelector('#withdrawls-pane');
+
+            if (withdrawalsTab && withdrawalsPane) {
+                // remove "active" from deposits
+                document.querySelector('#analytics-tab-1')?.classList.remove('active');
+                document.querySelector('#deposits')?.classList.remove('show', 'active');
+
+                // activate withdrawals tab
+                withdrawalsTab.classList.add('active');
+                withdrawalsPane.classList.add('show', 'active');
+            }
+        }
+    });
+  </script>
+
 
 @endsection
