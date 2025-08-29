@@ -67,6 +67,9 @@ Route::get("/five", function () {
 });
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
+// Change GET → POST
+Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');
+
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
     $settings = settings();
