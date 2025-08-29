@@ -569,10 +569,8 @@ class MT5Controller extends Controller
                     "subtitle_right" => "Credit Out",
                     "btn_text" => "Go To Dashboard",
                 ];
-                if($eid != 'alejandrotrading2310@gmail.com'){
-                    $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
-                }
 
+                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
 
 
                 return redirect()->back()->with('success', 'Bonus ' . ($type === 'in' ? 'Credited' : 'Debited') . ' Successfully');
