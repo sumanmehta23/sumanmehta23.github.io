@@ -477,13 +477,16 @@ class MT5Controller extends Controller
         RateLimiter::hit($key, 10);
 
         $eid = $request->input('email');
-        if($eid == 'alejandrotrading2310@gmail.com'){
-            dd($request->all());
-        }
+
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->first();
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        if($eid == 'alejandrotrading2310@gmail.com'){
+            dump($user);
+            dump($account);
+            dd($request->all());
+        }
         if ($request->has('bonus_to_account')) {
 
             $amount = $request->input('amount');
