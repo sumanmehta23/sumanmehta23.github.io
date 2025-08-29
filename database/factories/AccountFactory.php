@@ -48,6 +48,7 @@ class AccountFactory extends Factory
             'trader_password' => $this->faker->password(8, 16),
             'invester_password' => $this->faker->password(8, 16),
             'phone_password' => $this->faker->password(8, 16),
+            'platform' => $this->faker->randomElement(['mt5', 'x9']),
             'registered_date' => $this->faker->dateTimeThisYear(),
             'status' => $this->faker->randomElement(['active', 'inactive', 'suspended']),
             'bonus_deposit' => $this->faker->randomFloat(2, 0, 10000),

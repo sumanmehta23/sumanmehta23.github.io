@@ -110,6 +110,7 @@ class MT5Accounts extends Controller
         $results = [];
         $getUser = [];
         $equity = '';
+        $balance = '';
         $margin = '';
         $marginlevel = '';
         $accountSwap = '';
@@ -202,8 +203,12 @@ class MT5Accounts extends Controller
         } catch (\Exception $e) {
             Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
+
+            // Fallback to database values if MT5 API fails
+            $balance = $account->balance ?? 0;
+            $equity = $account->equity ?? $balance;
         }
-        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
+        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'balance', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
     }
 
     private function viewX9AccountDetails(Account $account, $code, $type, $settings)
@@ -224,13 +229,15 @@ class MT5Accounts extends Controller
             if ($response['status']) {
                 $x9AccountData = $response['data'];
 
-                // Extract account information from X9 response
-                $balance = $x9AccountData['balance'] ?? $account->balance ?? 0;
-                $credit = $x9AccountData['credit'] ?? 0;
-                $equity = $balance + $credit;
-                $profit = $x9AccountData['floating_profit'] ?? 0;
-                $margin = $x9AccountData['margin'] ?? 0;
-                $freemargin = $x9AccountData['margin_free'] ?? $equity - $margin;
+                // Extract account information from X9 response using correct nested structure
+                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
+                $balance = floatval($balanceData['balance'] ?? $account->balance ?? 0);
+                $credit = floatval($balanceData['credit'] ?? 0);
+                $bonus = floatval($balanceData['bonus'] ?? 0);
+                $equity = floatval($balanceData['equity'] ?? ($balance + $credit + $bonus));
+                $profit = floatval($balanceData['floating_profit'] ?? 0);
+                $margin = floatval($balanceData['margin'] ?? 0);
+                $freemargin = floatval($balanceData['free_margin'] ?? ($equity - $margin));
                 $marginlevel = $margin > 0 ? round(($equity / $margin) * 100, 2) : 0;
 
                 // Try to update account with fresh data from X9 - be defensive about which fields to update
@@ -239,7 +246,7 @@ class MT5Accounts extends Controller
                     if (isset($balance)) $updateData['balance'] = $balance;
                     if (isset($credit)) $updateData['credit'] = $credit;
                     if (isset($equity)) $updateData['equity'] = $equity;
-                    if (isset($freemargin)) $updateData['margin_free'] = $freemargin;
+                    if (isset($freemargin)) $updateData['free_margin'] = $freemargin;
 
                     // Calculate and add margin level if we have the necessary data
                     if (isset($margin) && isset($equity) && $margin > 0) {
@@ -292,7 +299,7 @@ class MT5Accounts extends Controller
             $x9GroupName = $this->x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
         }
 
-        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit', 'x9GroupName'));
+        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'balance', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit', 'x9GroupName'));
     }
 
     public function showLiveAccountForm()
@@ -1335,10 +1342,68 @@ class MT5Accounts extends Controller
             'password_type' => 'required|in:main,investor',
             'password' => 'required|min:6',
         ]);
+
         $code = $account->code;
         $pass_type = $request->input('password_type');
         $new_password = $request->input('password');
         $type = $request->input('type', 'live');
+
+        // Handle password update based on platform
+        if ($account->platform === 'x9') {
+            return $this->updateX9Password($account, $code, $pass_type, $new_password);
+        } else {
+            return $this->updateMT5Password($account, $code, $pass_type, $new_password);
+        }
+    }
+
+    private function updateX9Password($account, $code, $pass_type, $new_password)
+    {
+        try {
+            // Map password types for X9 API
+            $x9PasswordType = $pass_type === 'main' ? 'master' : $pass_type;
+
+            // Update password in X9
+            $response = $this->x9Service->resetUserPassword(intval($code), $x9PasswordType, $new_password);
+
+            if (!$response['status']) {
+                return redirect()->back()->with('error', 'Failed to update password in X9: ' . $response['message']);
+            }
+
+            // Update in local database
+            if ($pass_type === 'main') {
+                $account->trader_password = $new_password;
+            } elseif ($pass_type === 'investor') {
+                $account->invester_password = $new_password;
+            }
+            $account->save();
+
+            // Log activity
+            activity()
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_email' => Auth::user()->email,
+                    'username' => Auth::user()->username,
+                    'user_id' => Auth::user()->id,
+                    'code' => $code,
+                    'new_password' => $new_password,
+                    'platform' => 'x9',
+                    'password_type' => $x9PasswordType,
+                    'remark' => 'Update ' . ucfirst($pass_type) . ' Password (X9)'
+                ])
+                ->event('update')
+                ->log('Update ' . ucfirst($pass_type) . ' Password (X9)');
+
+            $passwordTypeName = $pass_type === 'main' ? 'Master' : ucfirst($pass_type);
+            return redirect()->back()->with('success', "Your {$passwordTypeName} Password Successfully Updated");
+        } catch (\Exception $e) {
+            Log::error('X9 Password Update Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating X9 password: ' . $e->getMessage());
+        }
+    }
+
+    private function updateMT5Password($account, $code, $pass_type, $new_password)
+    {
         if ($pass_type == 'main') {
             $error_code = $this->api->UserPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN);
         } else {
@@ -1355,6 +1420,22 @@ class MT5Accounts extends Controller
             $pass_type == 'main' ? 'trader_password' : 'invester_password' => $new_password
         ]);
 
+        // Log activity
+        activity()
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_email' => Auth::user()->email,
+                'username' => Auth::user()->username,
+                'user_id' => Auth::user()->id,
+                'code' => $code,
+                'new_password' => $new_password,
+                'platform' => 'mt5',
+                'password_type' => $pass_type,
+                'remark' => 'Update ' . ucfirst($pass_type) . ' Password (MT5)'
+            ])
+            ->event('update')
+            ->log('Update ' . ucfirst($pass_type) . ' Password (MT5)');
 
         // Display success message
         $message = $pass_type == 'main' ? 'Your Master Password Successfully Updated' : 'Your Investor Password Successfully Updated';
@@ -1367,7 +1448,7 @@ class MT5Accounts extends Controller
             'account_id' => 'required|exists:accounts,id', // Ensure account_id exists in the database
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         $account = Account::where('user_id', $user->id)
             ->where('id', $request->account_id)
