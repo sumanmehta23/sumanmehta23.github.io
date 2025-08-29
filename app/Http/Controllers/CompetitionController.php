@@ -420,5 +420,75 @@ class CompetitionController extends Controller
         return view('competitions-overview', compact('competitions'));
     }
 
+    public function competitionsOverviewLeaderboard($id)
+    {
+
+        $competition_id = $id;
+        $competition = AccountType::where('id', $competition_id)->first();
+        if (!$competition) {
+            return redirect()->back()->with('error', 'Competition not found.');
+        }
+
+        try {
+            $stats = $this->competitionService->getCurrentStats($competition);
+            $rankings = $this->competitionService->getRankings($competition);
+            $performers = $this->competitionService->getPerformers($competition);
+            $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
+
+            $availableCompetitions = Account::with('accountType')
+                ->whereHas('accountType', function ($query) {
+                    $query->whereColumn('id', 'accounts.competition_product_id');
+                })
+                ->where('demo', true)
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+                ->whereNotNull('competition_product_id')
+                ->orderBy('competition_start_date', 'desc')
+                ->get()
+                ->groupBy('competition_product_id');
+
+
+            //     dump($stats);
+            // dump($rankings);
+            // dump($performers);
+            // dump($availableCompetitions);
+            // dd($competitionStatus]);
+            // dd($competitionStatus['targetDate']);
+
+
+                $stats = $stats;
+                $rankings = $rankings;
+                $performers = $performers;
+                $competition_start_date = $competition->competition_start_date;
+                $competition_end_date = $competition->competition_end_date;
+                $availableCompetitions = $availableCompetitions;
+                $targetDate = $competitionStatus['targetDate'];
+                $showTimer = $competitionStatus['showTimer']?1:0;
+                $competitionStatus = $competitionStatus['status'];
+                $competition = $competition;
+
+
+            return view('overview.leaderboard', compact(
+                'stats',
+                'rankings',
+                'performers',
+                'competition_start_date',
+                'competition_end_date',
+                'availableCompetitions',
+                'competitionStatus',
+                'targetDate',
+                'showTimer',
+                'competition'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Error in competition leaderboard: ' . $e->getMessage());
+            echo 'Error in competition leaderboard: ' . $e->getMessage();
+            die;
+            return back()->with('error', 'Unable to load competition data. Please try again.');
+        }
+    }
+
+
 
 }
