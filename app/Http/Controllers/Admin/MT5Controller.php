@@ -482,11 +482,7 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $code = $request->input('code');
         $account = Account::where('code', $code)->where('user_id',$user_id)->first();
-        if($eid == 'alejandrotrading2310@gmail.com'){
-            dump($user);
-            dump($account);
-            dd($request->all());
-        }
+
         if ($request->has('bonus_to_account')) {
 
             $amount = $request->input('amount');
@@ -573,7 +569,10 @@ class MT5Controller extends Controller
                     "subtitle_right" => "Credit Out",
                     "btn_text" => "Go To Dashboard",
                 ];
-                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+                if($eid != 'alejandrotrading2310@gmail.com'){
+                    $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+                }
+
 
 
                 return redirect()->back()->with('success', 'Bonus ' . ($type === 'in' ? 'Credited' : 'Debited') . ' Successfully');
