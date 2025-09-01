@@ -234,7 +234,7 @@ return [
         ],
         'supervisor-5' => [
             'connection' => 'redis',
-            'queue' => ['sync-all-trades'],
+            'queue' => ['sync-all-trades', 'optimized-sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 20),
@@ -245,6 +245,7 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+
 
 
     ],
