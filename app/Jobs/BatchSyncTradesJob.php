@@ -132,7 +132,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
         // Incremental time range
         $fromDate = $fromTime->format('Y-m-d H:i:s');
-        $toDate = now()->format('Y-m-d H:i:s');
+        $toDate = now()->addHours(2)->format('Y-m-d H:i:s');
 
         // Get total with time filter
         $total = 0;
