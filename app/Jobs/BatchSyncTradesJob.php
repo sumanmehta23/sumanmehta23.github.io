@@ -48,8 +48,9 @@ class BatchSyncTradesJob implements ShouldQueue
 
         $this->fromTimes = $fromTimes;
 
-        // Set timeout based on number of accounts (60s per account + buffer)
-        $this->timeout = max(300, count($accounts) * 60 + 120);
+        // Set timeout based on number of accounts with more generous timing
+        // Base: 10 minutes, then 90 seconds per account + 5 minute buffer
+        $this->timeout = max(600, count($accounts) * 90 + 300);
     }
 
     public function handle(MT5Service $mt5Service)
@@ -98,7 +99,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
                 // Small delay between accounts to avoid overwhelming MT5
                 if ($index < count($this->accounts) - 1) {
-                    usleep(500000); // 0.5 second
+                    usleep(250000); // 0.25 second - reduced since we share connection
                 }
             }
         } catch (\Exception $e) {
@@ -171,7 +172,7 @@ class BatchSyncTradesJob implements ShouldQueue
     protected function processAndStoreTrades(Account $account, array $orders): int
     {
         $savedCount = 0;
-
+        Log::info("Processing " . count($orders) . " trades for account {$account->code}");
         foreach ($orders as $order) {
             try {
                 // Check if trade already exists
