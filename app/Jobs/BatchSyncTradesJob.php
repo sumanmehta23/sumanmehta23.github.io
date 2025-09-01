@@ -170,6 +170,30 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'error';
             }
 
+            // Debug logging for account 135405
+            if ($account->code == 135405) {
+                Log::info("=== DEBUG: Account 135405 - Orders Data ===");
+                Log::info("Total orders found: " . count($orders));
+                Log::info("Orders raw data: " . print_r($orders, true));
+                foreach ($orders as $index => $order) {
+                    if (is_object($order)) {
+                        Log::info("Order {$index}: " . json_encode([
+                            'Order' => $order->Order ?? 'NULL',
+                            'ExpertPositionID' => $order->ExpertPositionID ?? 'NULL',
+                            'Type' => $order->Type ?? 'NULL',
+                            'Symbol' => $order->Symbol ?? 'NULL',
+                            'VolumeInitial' => $order->VolumeInitial ?? 'NULL',
+                            'PriceCurrent' => $order->PriceCurrent ?? 'NULL',
+                            'TimeDone' => $order->TimeDone ?? 'NULL',
+                            'State' => $order->State ?? 'NULL',
+                            'Comment' => $order->Comment ?? 'NULL',
+                        ]));
+                    } else {
+                        Log::info("Order {$index}: " . print_r($order, true));
+                    }
+                }
+            }
+
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
             $tradesToUpsert = [];
             $savedCount = 0;
@@ -197,11 +221,44 @@ class BatchSyncTradesJob implements ShouldQueue
                 $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
                 $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
+                // Debug logging for account 135405 deals
+                if ($account->code == 135405) {
+                    Log::info("=== DEBUG: Account 135405 - Deals for Position {$positionId} ===");
+                    Log::info("Total deals found: " . count($deals));
+                    Log::info("Filtered deals for position {$positionId}: " . count($filteredDeals));
+                    foreach ($filteredDeals as $dealIndex => $deal) {
+                        if (is_object($deal)) {
+                            Log::info("Deal {$dealIndex}: " . json_encode([
+                                'Deal' => $deal->Deal ?? 'NULL',
+                                'Order' => $deal->Order ?? 'NULL',
+                                'Action' => $deal->Action ?? 'NULL',
+                                'Entry' => $deal->Entry ?? 'NULL',
+                                'Symbol' => $deal->Symbol ?? 'NULL',
+                                'Volume' => $deal->Volume ?? 'NULL',
+                                'Price' => $deal->Price ?? 'NULL',
+                                'Profit' => $deal->Profit ?? 'NULL',
+                                'RateProfit' => $deal->RateProfit ?? 'NULL',
+                                'Time' => $deal->Time ?? 'NULL',
+                            ]));
+                        } else {
+                            Log::info("Deal {$dealIndex}: " . print_r($deal, true));
+                        }
+                    }
+                    Log::info("Using RateProfit: {$rateProfit}");
+                }
+
                 if ($positionOrders->count() < 2) {
                     // OPEN TRADE: Insert if does not exist
                     if (!$existingTrade) {
-                        $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
+                        $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
+                        $tradesToUpsert[] = $tradeData;
                         $savedCount++;
+
+                        // Debug logging for account 135405
+                        if ($account->code == 135405) {
+                            Log::info("=== DEBUG: Account 135405 - Prepared OPEN Trade Data ===");
+                            Log::info("Position {$positionId}: " . json_encode($tradeData));
+                        }
                     }
                 } else {
                     // CLOSED TRADE: Update if exists, otherwise insert new
@@ -211,10 +268,23 @@ class BatchSyncTradesJob implements ShouldQueue
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                         $savedCount++;
+
+                        // Debug logging for account 135405
+                        if ($account->code == 135405) {
+                            Log::info("=== DEBUG: Account 135405 - Prepared CLOSED Trade Data (UPDATE) ===");
+                            Log::info("Position {$positionId}: " . json_encode($closedTradeData));
+                        }
                     } else {
                         // No open trade exists but we have a closed trade - insert it
-                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
+                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
+                        $tradesToUpsert[] = $closedTradeData;
                         $savedCount++;
+
+                        // Debug logging for account 135405
+                        if ($account->code == 135405) {
+                            Log::info("=== DEBUG: Account 135405 - Prepared CLOSED Trade Data (INSERT) ===");
+                            Log::info("Position {$positionId}: " . json_encode($closedTradeData));
+                        }
                     }
                 }
 
