@@ -15,7 +15,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Jobs\OptimizedSyncTradesJob;
 use App\Jobs\BatchSyncTradesJob;
 use Illuminate\Support\Facades\Cache;
 

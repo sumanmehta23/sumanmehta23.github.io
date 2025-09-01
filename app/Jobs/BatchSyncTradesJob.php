@@ -257,6 +257,9 @@ class BatchSyncTradesJob implements ShouldQueue
     {
         $account->update([
             'last_balance_sync_at' => now(),
+            'last_sync_attempt_at' => now(),
+            'sync_status' => $status === 'success' ? 'synced' : 'pending',
+            'sync_error' => $status === 'error' ? 'Sync failed' : null
         ]);
     }
 
