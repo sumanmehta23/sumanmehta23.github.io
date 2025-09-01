@@ -559,60 +559,60 @@ class Payment extends Controller
             }
         }
 
-        if ($account) {
-            $comment = 'CreditCardPayissa';
+        // if ($account) {
+        //     $comment = 'CreditCardPayissa';
 
-            $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Something went wrong',
-                    'error' => $error,
-                ], 400);
-            } else {
-                $tradeDeposit = TradeDeposit::create([
-                    'user_id' => $account->user_id,
-                    'account_id' => $account->id,
-                    'email' => $email,
-                    'code' => $account->code,
-                    'deposit_amount' => $amount,
-                    'deposit_type' => 'CreditCardPayissa',
-                    'deposit_from' => 'CreditCardPayissa',
-                    'status' => 1,
-                    'deposit_currency' => 'USD',
-                    'transaction_id' => $transactionId,
-                    'deposted_date' => $deposit_date,
-                    'callback_data' => 'Polygon Deposit',
-                    'callback_code' => "success",
-                ]);
+        //     $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+        //     if ($errorCode != MTRetCode::MT_RET_OK) {
+        //         $error = MTRetCode::GetError($errorCode);
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => 'Something went wrong',
+        //             'error' => $error,
+        //         ], 400);
+        //     } else {
+        //         $tradeDeposit = TradeDeposit::create([
+        //             'user_id' => $account->user_id,
+        //             'account_id' => $account->id,
+        //             'email' => $email,
+        //             'code' => $account->code,
+        //             'deposit_amount' => $amount,
+        //             'deposit_type' => 'CreditCardPayissa',
+        //             'deposit_from' => 'CreditCardPayissa',
+        //             'status' => 1,
+        //             'deposit_currency' => 'USD',
+        //             'transaction_id' => $transactionId,
+        //             'deposted_date' => $deposit_date,
+        //             'callback_data' => 'Polygon Deposit',
+        //             'callback_code' => "success",
+        //         ]);
 
-                PaymentLog::create([
-                    'user_id' => $account->user_id,
-                    'account_id' => $account->id,
-                    'payment_id' => 0,
-                    'promocode' => null,
-                    'payment_amount' => $amount,
-                    'payment_type' => 'CreditCardPayissa',
-                    'payment_req' => 'Polygon Manually Pay',
-                    'payment_reference_id' => 'Wallet',
-                    'payment_url' => '',
-                    'payment_status' => 'success',
-                    'payment_res' => 'success',
-                    'initiated_by' => $email,
-                    'remarks' => 'https://my.lqhmarkets.com/payment-response?amount=' . $amount . '&payment_id=' . $transactionId . '&status=success',
-                    'created_at' => $deposit_date,
-                    'updated_at' => now()
-                ]);
-            }
-            if ($tradeDeposit) {
-                $this->sendSuccessEmail2($email, $amount, $tradeDeposit);
-                // $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
-                return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
-            } else {
-                return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
-            }
-        }
+        //         PaymentLog::create([
+        //             'user_id' => $account->user_id,
+        //             'account_id' => $account->id,
+        //             'payment_id' => 0,
+        //             'promocode' => null,
+        //             'payment_amount' => $amount,
+        //             'payment_type' => 'CreditCardPayissa',
+        //             'payment_req' => 'Polygon Manually Pay',
+        //             'payment_reference_id' => 'Wallet',
+        //             'payment_url' => '',
+        //             'payment_status' => 'success',
+        //             'payment_res' => 'success',
+        //             'initiated_by' => $email,
+        //             'remarks' => 'https://my.lqhmarkets.com/payment-response?amount=' . $amount . '&payment_id=' . $transactionId . '&status=success',
+        //             'created_at' => $deposit_date,
+        //             'updated_at' => now()
+        //         ]);
+        //     }
+        //     if ($tradeDeposit) {
+        //         $this->sendSuccessEmail2($email, $amount, $tradeDeposit);
+        //         // $this->subscribeToKlaviyoList($paymentLog->user, $amount, $subscribeToKlaviyoList);
+        //         return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
+        //     } else {
+        //         return redirect('/trade-deposit')->with('error', "Something went wrong. Please Try Again");
+        //     }
+        // }
     }
 
 
