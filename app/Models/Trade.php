@@ -15,14 +15,15 @@ class Trade extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'opened' => 'datetime',
-        'closed' => 'datetime',
+        'open_time' => 'datetime',
+        'close_time' => 'datetime',
         'volume' => 'decimal:2',
+        'volume_ext' => 'decimal:2',
         'open_price' => 'decimal:5',
-        'current_price' => 'decimal:5',
+        'close_price' => 'decimal:5',
         'profit' => 'decimal:2',
-        'stop_loss' => 'decimal:5',
-        'take_profit' => 'decimal:5',
+        'sl' => 'decimal:5',
+        'tp' => 'decimal:5',
         'commission' => 'decimal:2',
         'swap' => 'decimal:2',
         'sell' => 'boolean',

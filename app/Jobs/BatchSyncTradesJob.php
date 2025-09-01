@@ -209,47 +209,48 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function shouldUpdateTrade($trade, $order)
     {
-        return $trade->current_price != ($order->PriceCurrent ?? $order->PriceOrder) ||
-            $trade->status != ($order->State == 1 ? 'CLOSED' : 'OPEN');
+        return $trade->close_price != ($order->PriceCurrent ?? null) ||
+            $trade->state != $order->State;
     }
 
     protected function createTradeFromOrder(Account $account, $order): void
     {
         Trade::create([
             'account_id' => $account->id,
-            'code' => (string) $order->Order, // Required field
+            'code' => (string) $order->Order,
             'order_id' => (string) $order->Order,
             'symbol' => $order->Symbol,
-            'currency' => 'USD', // Default currency - should be extracted from symbol
-            'external_position_id' => $order->Order,
-            'sell' => $order->Type == 1, // 1 = sell, 0 = buy
-            'volume' => $order->VolumeInitial ?? 0,
+            'position_id' => $order->Order,
+            'type' => $order->Type,
+            'volume' => ($order->VolumeInitial ?? 0) / 10000,
+            'volume_ext' => $order->VolumeInitialExt ?? ($order->VolumeInitial ?? 0),
             'open_price' => $order->PriceOrder,
-            'current_price' => $order->PriceCurrent ?? $order->PriceOrder,
+            'close_price' => $order->PriceCurrent ?? null,
             'profit' => 0, // MTOrder doesn't have profit, would need MTDeal
-            'stop_loss' => $order->PriceSL ?? null,
-            'take_profit' => $order->PriceTP ?? null,
+            'sl' => $order->PriceSL ?? null,
+            'tp' => $order->PriceTP ?? null,
             'comment' => $order->Comment ?? '',
-            'commission' => 0, // MTOrder doesn't have commission
-            'opened' => Carbon::createFromTimestamp($order->TimeSetup),
-            'closed' => $order->TimeSetup != $order->TimeDone ?
-                Carbon::createFromTimestamp($order->TimeDone) : null,
-            'status' => $order->State == 1 ? 'CLOSED' : 'OPEN',
-            'duration' => 0, // Required field
-            'last_update' => Carbon::createFromTimestamp($order->TimeDone),
-            'final_state' => $order->State == 1 ? 1 : 0, // Required field
+            'commission' => 0,
+            'open_time' => date('Y-m-d H:i:s', $order->TimeSetup),
+            'close_time' => $order->TimeSetup != $order->TimeDone ?
+                date('Y-m-d H:i:s', $order->TimeDone) : null,
+            'state' => $order->State,
+            'status' => $order->State == 1 ? 'closed' : 'open',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
     protected function updateTradeFromOrder(Trade $trade, $order): void
     {
         $trade->update([
-            'current_price' => $order->PriceCurrent ?? $order->PriceOrder,
+            'close_price' => $order->PriceCurrent ?? null,
             'profit' => 0, // MTOrder doesn't have profit
-            'status' => $order->State == 1 ? 'CLOSED' : 'OPEN',
-            'closed' => $order->TimeSetup != $order->TimeDone ?
-                Carbon::createFromTimestamp($order->TimeDone) : null,
-            'last_update' => Carbon::createFromTimestamp($order->TimeDone),
+            'state' => $order->State,
+            'status' => $order->State == 1 ? 'closed' : 'open',
+            'close_time' => $order->TimeSetup != $order->TimeDone ?
+                date('Y-m-d H:i:s', $order->TimeDone) : null,
+            'updated_at' => now(),
         ]);
     }
 
