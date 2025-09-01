@@ -230,7 +230,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'sl' => $order->PriceSL ?? null,
             'tp' => $order->PriceTP ?? null,
             'comment' => $order->Comment ?? '',
-            'commission' => 0,
+            // 'commission' => 0,
             'open_time' => date('Y-m-d H:i:s', $order->TimeSetup),
             'close_time' => $order->TimeSetup != $order->TimeDone ?
                 date('Y-m-d H:i:s', $order->TimeDone) : null,
