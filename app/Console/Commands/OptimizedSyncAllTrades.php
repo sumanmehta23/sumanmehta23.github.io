@@ -278,31 +278,34 @@ class OptimizedSyncAllTrades extends Command
 
     protected function syncTier($tier, $batchSize, $maxConcurrent)
     {
-        $query = Account::whereNotNull('code')
-            ->whereNull('deleted_at')
-            ->where('account_request_status', 1)
-            ->where('demo', false)
-            ->where('sync_tier', $tier)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            });
+        // Use raw SQL to avoid Laravel schema caching issues
+        try {
+            $sql = "
+                SELECT * FROM accounts 
+                WHERE code IS NOT NULL 
+                AND deleted_at IS NULL 
+                AND demo = 0 
+                AND sync_tier = ?
+                AND (competition_start_date IS NULL 
+                     OR competition_end_date IS NULL 
+                     OR competition_status IS NULL 
+                     OR competition_status != 'active')
+                LIMIT 100
+            ";
 
-        // Skip recently synced accounts based on tier (disabled for now due to column issues)
-        // $skipInterval = $this->getSkipIntervalForTier($tier);
-        // if ($skipInterval) {
-        //     $query->where(function ($q) use ($skipInterval) {
-        //         $q->whereNull('last_balance_sync_at')
-        //             ->orWhere('last_balance_sync_at', '<', now()->sub($skipInterval));
-        //     });
-        // }
+            $accountData = DB::select($sql, [$tier]);
 
-        $accounts = $query->take(100)->get(); // Limit batch to 100 accounts
+            if (empty($accountData)) {
+                $this->info("No {$tier} accounts need syncing");
+                return;
+            }
 
-        if ($accounts->isEmpty()) {
-            $this->info("No {$tier} accounts need syncing");
+            // Convert to Account models
+            $accounts = collect($accountData)->map(function ($data) {
+                return Account::find($data->id);
+            })->filter();
+        } catch (\Exception $e) {
+            $this->error("Error querying {$tier} accounts: " . $e->getMessage());
             return;
         }
 
@@ -394,10 +397,15 @@ class OptimizedSyncAllTrades extends Command
 
     protected function syncSpecificAccount($accountCode)
     {
-        $account = Account::where('code', $accountCode)->first();
+        try {
+            $account = Account::where('code', $accountCode)->first();
 
-        if (!$account) {
-            $this->error("Account {$accountCode} not found");
+            if (!$account) {
+                $this->error("Account {$accountCode} not found");
+                return;
+            }
+        } catch (\Exception $e) {
+            $this->error("Error finding account {$accountCode}: " . $e->getMessage());
             return;
         }
 
