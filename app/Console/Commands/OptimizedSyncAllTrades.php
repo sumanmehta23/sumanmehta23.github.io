@@ -140,8 +140,8 @@ class OptimizedSyncAllTrades extends Command
             $query->select('code')
                 ->from('trades')
                 ->where(function ($q) {
-                    $q->where('opened', '>=', now()->subDay())
-                        ->orWhere('closed', '>=', now()->subDay());
+                    $q->where('open_time', '>=', now()->subDay())
+                        ->orWhere('close_time', '>=', now()->subDay());
                 })
                 ->distinct();
         })->update(['sync_tier' => 'very_active']);
@@ -151,15 +151,15 @@ class OptimizedSyncAllTrades extends Command
             $query->select('code')
                 ->from('trades')
                 ->where(function ($q) {
-                    $q->where('opened', '>=', now()->subDays(7))
-                        ->orWhere('closed', '>=', now()->subDays(7));
+                    $q->where('open_time', '>=', now()->subDays(7))
+                        ->orWhere('close_time', '>=', now()->subDays(7));
                 })
                 ->whereNotIn('code', function ($subQuery) {
                     $subQuery->select('code')
                         ->from('trades')
                         ->where(function ($q) {
-                            $q->where('opened', '>=', now()->subDay())
-                                ->orWhere('closed', '>=', now()->subDay());
+                            $q->where('open_time', '>=', now()->subDay())
+                                ->orWhere('close_time', '>=', now()->subDay());
                         });
                 })
                 ->distinct();
@@ -170,15 +170,15 @@ class OptimizedSyncAllTrades extends Command
             $query->select('code')
                 ->from('trades')
                 ->where(function ($q) {
-                    $q->where('opened', '>=', now()->subDays(30))
-                        ->orWhere('closed', '>=', now()->subDays(30));
+                    $q->where('open_time', '>=', now()->subDays(30))
+                        ->orWhere('close_time', '>=', now()->subDays(30));
                 })
                 ->whereNotIn('code', function ($subQuery) {
                     $subQuery->select('code')
                         ->from('trades')
                         ->where(function ($q) {
-                            $q->where('opened', '>=', now()->subDays(7))
-                                ->orWhere('closed', '>=', now()->subDays(7));
+                            $q->where('open_time', '>=', now()->subDays(7))
+                                ->orWhere('close_time', '>=', now()->subDays(7));
                         });
                 })
                 ->distinct();
@@ -189,14 +189,27 @@ class OptimizedSyncAllTrades extends Command
             $query->select('code')
                 ->from('trades')
                 ->where(function ($q) {
-                    $q->where('opened', '>=', now()->subDays(30))
-                        ->orWhere('closed', '>=', now()->subDays(30));
+                    $q->where('open_time', '>=', now()->subDays(30))
+                        ->orWhere('close_time', '>=', now()->subDays(30));
                 });
         })->where('demo', false)
             ->whereNotNull('code')
             ->update(['sync_tier' => 'dormant']);
 
         $this->info("Tiers updated: Very Active: {$veryActive}, Active: {$active}, Inactive: {$inactive}, Dormant: {$dormant}");
+
+        // Update last_trade_at for all accounts with trades
+        $this->info("Updating last_trade_at timestamps...");
+        $updated = DB::statement("
+            UPDATE accounts a 
+            JOIN (
+                SELECT code, MAX(GREATEST(COALESCE(open_time, '1970-01-01'), COALESCE(close_time, '1970-01-01'))) as last_trade
+                FROM trades 
+                GROUP BY code
+            ) t ON a.code = t.code 
+            SET a.last_trade_at = t.last_trade
+        ");
+        $this->info("Updated last_trade_at timestamps");
     }
 
     protected function runDaemonMode()
