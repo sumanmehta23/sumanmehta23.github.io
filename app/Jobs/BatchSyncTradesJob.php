@@ -137,14 +137,14 @@ class BatchSyncTradesJob implements ShouldQueue
                 ->keyBy('position_id');
 
             $login = $account->code;
-            $from = 'March 01, 2016';
-            $to = 'March 31, 2080';
+            $fromDate = $fromTime->format('F d, Y');
+            $toDate = now()->addHours(4)->format('F d, Y');
             $total = 0;
             $orders = [];
 
             // Get total with retries
-            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, &$total) {
-                return $api->HistoryGetTotal($login, $from, $to, $total);
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $fromDate, $toDate, &$total) {
+                return $api->HistoryGetTotal($login, $fromDate, $toDate, $total);
             });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
@@ -153,9 +153,15 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'error';
             }
 
+            // Skip if no recent orders
+            if ($total == 0) {
+                $this->updateSyncStatus($account, 'no_changes');
+                return 'no_changes';
+            }
+
             // Get history page with retries
-            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, $total, &$orders) {
-                return $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $fromDate, $toDate, $total, &$orders) {
+                return $api->HistoryGetPage($login, $fromDate, $toDate, 0, $total, $orders);
             });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
@@ -174,7 +180,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
                 // Get total number of deals first
                 $totalDeals = 0;
-                $error_code = $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+                $error_code = $api->DealGetTotal($account->code, $fromDate, $toDate, $totalDeals);
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
                     continue;
@@ -182,7 +188,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
                 // Get the deals
                 $deals = [];
-                $error_code = $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
+                $error_code = $api->DealGetPage($account->code, $fromDate, $toDate, 0, $totalDeals, $deals);
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
                     continue;
