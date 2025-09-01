@@ -143,7 +143,9 @@ class BatchSyncTradesJob implements ShouldQueue
             $this->updateSyncStatus($account, 'error');
             return 'error';
         }
-
+        if ($account->code == 135405) {
+            Log::info("Syncing account 135405 from {$fromDate} to {$toDate}, total trades: {$total}");
+        }
         // Skip if no recent orders
         if ($total == 0) {
             $this->updateSyncStatus($account, 'no_changes');
