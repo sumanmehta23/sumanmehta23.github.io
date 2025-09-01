@@ -229,7 +229,7 @@ class SyncTrades implements ShouldQueue
         // log::info("openOrder->VolumeInitialExt : {$openOrder->VolumeInitialExt}");
         // log::info("openOrder->ContractSize : {$openOrder->ContractSize}");
         // log::info("rateProfit : {$rateProfit}");
-
+        $multiplier = $openOrder->Type ? -1 : 1;
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
@@ -246,7 +246,7 @@ class SyncTrades implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit, 2),
+            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit * $multiplier, 2),
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),

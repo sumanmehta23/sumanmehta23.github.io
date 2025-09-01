@@ -270,7 +270,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'status' => 'open',
             'symbol' => $order->Symbol,
             'tp' => $order->PriceTP,
-            'type' => $order->Type,
+            'type' => $order->Type ?? 'sell',
             'updated_at' => now(),
             'volume' => $order->VolumeInitial / 10000,
             'volume_ext' => $order->VolumeInitialExt,
@@ -279,12 +279,14 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
     {
+        $multiplier = $openOrder->Type ? -1 : 1;
+
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
-            'type' => $openOrder->Type,
+            'type' => $openOrder->Type ?? 'sell',
             'volume' => $openOrder->VolumeInitial / 10000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
@@ -295,7 +297,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit, 2),
+            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit * $multiplier, 2),
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
