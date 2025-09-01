@@ -66,7 +66,7 @@ class OptimizedSyncAllTrades extends Command
     public function handle()
     {
         $batchSize = (int) $this->option('batch-size');
-        $maxConcurrent = (int) $this->option('max-concurrent'); 
+        $maxConcurrent = (int) $this->option('max-concurrent');
         $delay = (int) $this->option('delay');
         $testAccount = $this->option('test-account');
         $isDaemon = $this->option('daemon');
@@ -124,13 +124,13 @@ class OptimizedSyncAllTrades extends Command
         $this->info("Accounts to sync: {$syncableAccounts}");
         $this->info("Total trades in system: {$totalTrades}");
         $this->info("Trades synced in last hour: {$recentTrades}");
-        
+
         // Estimate completion time
         $batchSize = (int) $this->option('batch-size');
         $delay = (int) $this->option('delay');
         $batches = ceil($syncableAccounts / $batchSize);
         $estimatedMinutes = ($batches * $delay) / 60;
-        
+
         $this->info("Estimated sync time: {$batches} batches, ~{$estimatedMinutes} minutes");
     }
 
@@ -193,7 +193,7 @@ class OptimizedSyncAllTrades extends Command
                     $processedCount += count($batch);
 
                     $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
-                    
+
                     if ($delay > 0) {
                         sleep($delay);
                     }
@@ -208,7 +208,7 @@ class OptimizedSyncAllTrades extends Command
     protected function runDaemonMode($batchSize, $maxConcurrent, $delay)
     {
         $this->info("Starting daemon mode...");
-        
+
         while (true) {
             try {
                 $this->syncAllAccounts($batchSize, $maxConcurrent, $delay);
@@ -227,7 +227,8 @@ class OptimizedSyncAllTrades extends Command
         // Simple incremental sync - last 7 days if never synced
         $lastSync = $account->last_balance_sync_at;
         return $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
-    }    protected function syncSpecificAccount($accountCode)
+    }
+    protected function syncSpecificAccount($accountCode)
     {
         $account = Account::where('code', $accountCode)->first();
 
