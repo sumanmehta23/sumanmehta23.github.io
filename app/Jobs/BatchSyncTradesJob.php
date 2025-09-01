@@ -133,7 +133,10 @@ class BatchSyncTradesJob implements ShouldQueue
         // Incremental time range
         $fromDate = $fromTime->format('Y-m-d H:i:s');
         $toDate = now()->addHours(4)->format('Y-m-d H:i:s');
-
+        if ($account->code == 135405) {
+            $fromDate = 'March 01, 2016';
+            $toDate = 'March 31, 2080';
+        }
         // Get total with time filter
         $total = 0;
         $error_code = $api->HistoryGetTotal($account->code, $fromDate, $toDate, $total);
@@ -145,6 +148,9 @@ class BatchSyncTradesJob implements ShouldQueue
         }
         if ($account->code == 135405) {
             Log::info("Syncing account 135405 from {$fromDate} to {$toDate}, total trades: {$total}");
+            $orders = [];
+            $error_code = $api->HistoryGetPage($account->code, $fromDate, $toDate, 0, $total, $orders);
+            Log::info("Orders: " . print_r($orders, true));
         }
         // Skip if no recent orders
         if ($total == 0) {
