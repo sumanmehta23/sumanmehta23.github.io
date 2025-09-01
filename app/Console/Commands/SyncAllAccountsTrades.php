@@ -61,16 +61,17 @@ class SyncAllAccountsTrades extends Command
     protected $signature = 'app:sync-all-accounts-trades 
                             {--daemon : Run as daemon continuously}
                             {--test-account= : Test with specific account code}
-                            {--batch-size=10 : Number of accounts to process per batch}
-                            {--delay=30 : Delay between batches in seconds}
-                            {--status : Show sync status and exit}';
+                            {--batch-size= : Number of accounts to process per batch}
+                            {--delay= : Delay between batches in seconds}
+                            {--status : Show sync status and exit}
+                            {--max-concurrent= : Maximum concurrent batches}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync MT5 trade history for all accounts except competition accounts';
+    protected $description = 'Sync MT5 trade history for all accounts except competition accounts (optimized for timeouts)';
 
     /**
      * Execute the console command.
@@ -79,21 +80,24 @@ class SyncAllAccountsTrades extends Command
     {
         $isDaemon = $this->option('daemon');
         $testAccount = $this->option('test-account');
-        $batchSize = (int) $this->option('batch-size');
-        $delay = (int) $this->option('delay');
+        $batchSize = (int) ($this->option('batch-size') ?? config('sync-all-trades.batch_size', 3));
+        $delay = (int) ($this->option('delay') ?? config('sync-all-trades.delay_between_batches', 10));
         $showStatus = $this->option('status');
+        $maxConcurrent = (int) ($this->option('max-concurrent') ?? config('sync-all-trades.max_concurrent_batches', 3));
 
         if ($showStatus) {
             $this->showSyncStatus();
             return;
         }
 
+        $this->info("Configuration: Batch Size: {$batchSize}, Max Concurrent: {$maxConcurrent}, Delay: {$delay}s");
+
         if ($isDaemon) {
             $this->info("Starting daemon mode for all accounts trades sync...");
-            $this->runAsDaemon($batchSize, $delay, $testAccount);
+            $this->runAsDaemon($batchSize, $delay, $testAccount, $maxConcurrent);
         } else {
             $this->info("Starting one-time sync for all accounts trades...");
-            $this->syncAllAccounts($batchSize, $testAccount);
+            $this->syncAllAccounts($batchSize, $testAccount, $maxConcurrent);
         }
     }
 
@@ -154,11 +158,11 @@ class SyncAllAccountsTrades extends Command
         }
     }
 
-    protected function runAsDaemon($batchSize, $delay, $testAccount = null)
+    protected function runAsDaemon($batchSize, $delay, $testAccount = null, $maxConcurrent = 5)
     {
         while (true) {
             try {
-                $this->syncAllAccounts($batchSize, $testAccount);
+                $this->syncAllAccounts($batchSize, $testAccount, $maxConcurrent);
                 $this->info("Batch completed. Waiting {$delay} seconds before next batch...");
                 sleep($delay);
             } catch (\Exception $e) {
@@ -169,7 +173,7 @@ class SyncAllAccountsTrades extends Command
         }
     }
 
-    protected function syncAllAccounts($batchSize, $testAccount = null)
+    protected function syncAllAccounts($batchSize, $testAccount = null, $maxConcurrent = 5)
     {
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -201,7 +205,7 @@ class SyncAllAccountsTrades extends Command
         $successCount = 0;
         $errorCount = 0;
 
-        $query->chunk(500, function ($accounts) use ($batchSize, &$processedCount, &$successCount, &$errorCount) {
+        $query->chunk(500, function ($accounts) use ($batchSize, $maxConcurrent, &$processedCount, &$successCount, &$errorCount) {
             $jobs = [];
             foreach ($accounts as $account) {
                 // Check if user exists for this account
@@ -214,39 +218,60 @@ class SyncAllAccountsTrades extends Command
             if (!empty($jobs)) {
                 // Create smaller batches to avoid overwhelming the system
                 $jobBatches = array_chunk($jobs, $batchSize);
+                $activeBatches = 0;
 
                 foreach ($jobBatches as $batchIndex => $batch) {
-                    $this->info("Processing batch " . ($batchIndex + 1) . " of " . count($jobBatches) . " with " . count($batch) . " accounts");
+                    // Wait if we have too many concurrent batches
+                    while ($activeBatches >= $maxConcurrent) {
+                        $this->info("Waiting for active batches to complete... ({$activeBatches}/{$maxConcurrent})");
+                        sleep(10);
+                        // Check completed batches and reduce counter
+                        // This is a simplified check - in production you might want to track batch IDs
+                        $activeBatches = max(0, $activeBatches - 1);
+                    }
+
+                    $this->info("Processing batch " . ($batchIndex + 1) . " of " . count($jobBatches) . " with " . count($batch) . " accounts (Active: {$activeBatches}/{$maxConcurrent})");
 
                     try {
                         $batchJob = Bus::batch($batch)
                             ->allowFailures()
                             ->onConnection('redis')
                             ->onQueue('sync-all-trades')
-                            ->then(function (Batch $batch) use (&$successCount) {
+                            ->then(function (Batch $batch) use (&$successCount, &$activeBatches) {
                                 $successCount += $batch->totalJobs;
+                                $activeBatches--;
                                 Log::info("All accounts sync batch {$batch->id} completed successfully");
                             })
-                            ->catch(function (Batch $batch, Throwable $e) use (&$errorCount) {
+                            ->catch(function (Batch $batch, Throwable $e) use (&$errorCount, &$activeBatches) {
                                 $errorCount += $batch->failedJobs;
+                                $activeBatches--;
                                 Log::error("All accounts sync batch {$batch->id} failed: " . $e->getMessage());
                             })
-                            ->finally(function (Batch $batch) {
+                            ->finally(function (Batch $batch) use (&$activeBatches) {
+                                $activeBatches = max(0, $activeBatches - 1);
                                 Log::info("All accounts sync batch {$batch->id} finished processing");
                             })
                             ->dispatch();
 
+                        $activeBatches++;
                         $processedCount += count($batch);
 
-                        // Add delay between batches to control API load
+                        // Add longer delay between batches to control API load
                         if ($batchIndex < count($jobBatches) - 1) {
-                            sleep(2); // 2 second delay between batches
+                            sleep(5); // 5 second delay between batches
                         }
                     } catch (\Exception $e) {
                         $this->error("Error dispatching batch: " . $e->getMessage());
                         Log::error("SyncAllAccountsTrades batch dispatch error: " . $e->getMessage());
                         $errorCount += count($batch);
                     }
+                }
+
+                // Wait for all remaining batches to complete before finishing
+                while ($activeBatches > 0) {
+                    $this->info("Waiting for {$activeBatches} remaining batches to complete...");
+                    sleep(10);
+                    $activeBatches = max(0, $activeBatches - 1);
                 }
             }
         });

@@ -20,49 +20,49 @@ class SyncAllAccountsTradesJob implements ShouldQueue
 
     protected $account;
     protected $maxRetries = 3;
-    protected $retryDelay = 1;
+    protected $retryDelay = 2; // Increased retry delay
     protected $batchSize = 1;
+
+    // Job configuration - using config values
+    public $timeout;
+    public $maxExceptions;
+    public $backoff;
+    public $tries;
 
     public function __construct($account)
     {
         $this->account = $account;
+
+        // Set job configuration from config file
+        $this->timeout = config('sync-all-trades.job_timeout', 300);
+        $this->maxExceptions = config('sync-all-trades.max_exceptions', 3);
+        $this->tries = config('sync-all-trades.max_retries', 3);
+
+        $baseDelay = config('sync-all-trades.retry_delay_base', 10);
+        $this->backoff = [$baseDelay, $baseDelay * 3, $baseDelay * 6];
     }
 
     public function handle(MT5Service $mt5Service)
     {
         try {
-            Log::info("Started SyncAllAccountsTradesJob for account ID: {$this->account->code}");
+            // Add random delay to prevent simultaneous connections (configurable)
+            $minDelay = config('sync-all-trades.random_delay_min', 2);
+            $maxDelay = config('sync-all-trades.random_delay_max', 8);
+            $randomDelay = rand($minDelay, $maxDelay);
+            sleep($randomDelay);
+
+            Log::info("Started SyncAllAccountsTradesJob for account ID: {$this->account->code} (delayed {$randomDelay}s)");
 
             // Get existing trades to check their status
             $existingTrades = Trade::where('account_id', $this->account->id)
                 ->get()
                 ->keyBy('position_id');
 
-            $mt5Service->connect();
+            // Use a dedicated connection with longer timeout for this job
+            $this->connectWithRetry($mt5Service);
             $api = $mt5Service->getApi();
             $settings = settings();
             $account = $this->account;
-
-            // Initialize connection
-            $api = $mt5Service->getApi();
-            $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-
-            // Verify and establish connection
-            if (!$api->IsConnected()) {
-                $error_code = $api->Connect(
-                    $settings['mt5_server_ip'],
-                    $settings['mt5_server_port'],
-                    300,
-                    $settings['mt5_server_web_login'],
-                    $settings['mt5_server_web_password']
-                );
-
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("MT5 connection failed for account {$account->code}: " . MTRetCode::GetError($error_code));
-                    // Don't throw exception for connection failures, just log and return
-                    return;
-                }
-            }
 
             if (!$account || !$account->code) {
                 Log::error("Account not found or missing code");
@@ -263,6 +263,66 @@ class SyncAllAccountsTradesJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Connect to MT5 with retry logic and rate limiting
+     */
+    protected function connectWithRetry(MT5Service $mt5Service)
+    {
+        $maxAttempts = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxAttempts) {
+            try {
+                $attempt++;
+
+                // Add exponential backoff for retry attempts
+                if ($attempt > 1) {
+                    $delay = pow(2, $attempt - 1) * 2; // 2, 4, 8 seconds
+                    Log::info("MT5 connection attempt {$attempt}, waiting {$delay}s");
+                    sleep($delay);
+                }
+
+                $mt5Service->connect();
+                $api = $mt5Service->getApi();
+                $settings = settings();
+
+                $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+
+                // Verify and establish connection with longer timeout
+                if (!$api->IsConnected()) {
+                    $error_code = $api->Connect(
+                        $settings['mt5_server_ip'],
+                        $settings['mt5_server_port'],
+                        config('sync-all-trades.connection_timeout', 300), // Use configurable timeout
+                        $settings['mt5_server_web_login'],
+                        $settings['mt5_server_web_password']
+                    );
+
+                    if ($error_code != MTRetCode::MT_RET_OK) {
+                        $errorMsg = MTRetCode::GetError($error_code);
+                        Log::warning("MT5 connection attempt {$attempt} failed for account {$this->account->code}: {$errorMsg}");
+
+                        if ($attempt >= $maxAttempts) {
+                            Log::error("MT5 connection failed after {$maxAttempts} attempts for account {$this->account->code}");
+                            throw new \Exception("MT5 connection failed: {$errorMsg}");
+                        }
+                        continue;
+                    }
+                }
+
+                Log::info("MT5 connection successful for account {$this->account->code} on attempt {$attempt}");
+                return; // Success
+
+            } catch (\Exception $e) {
+                Log::warning("MT5 connection attempt {$attempt} exception for account {$this->account->code}: " . $e->getMessage());
+
+                if ($attempt >= $maxAttempts) {
+                    throw $e;
+                }
+            }
         }
     }
 }
