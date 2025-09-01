@@ -60,20 +60,31 @@ class MT5Accounts extends Controller
             ->get();
         return view('demo_accounts', compact('results'));
     }
-    public function viewAccountDetails(Account $account)
-    {
 
-        session()->remove('error');
-        $user = auth()->user();
-        if ($user->id != $account->user_id) {
-            return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
-        }
-        $code = $account->code;
-        $type = $account->demo ? 'Demo' : 'Live';
-        // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
-        $settings = settings();
-        $results = [];
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+    public function viewAccountDetails(Account $account)
+{
+    session()->remove('error');
+    $user = auth()->user();
+    if ($user->id != $account->user_id) {
+        return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
+    }
+
+    $code = $account->code;
+    $type = $account->demo ? 'Demo' : 'Live';
+    $settings = settings();
+    $results = [];
+
+    Log::info("viewAccountDetails: Start for account {$account->id}, login: {$code}");
+
+    $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+
+    try {
+        Log::info("Connecting to MT5 server", [
+            'ip' => $settings['mt5_server_ip'],
+            'port' => $settings['mt5_server_port'],
+            'login' => $settings['mt5_server_web_login'],
+        ]);
+
         $this->api->Connect(
             $settings['mt5_server_ip'],
             $settings['mt5_server_port'],
@@ -81,6 +92,9 @@ class MT5Accounts extends Controller
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
+
+        Log::info("Connected to MT5 server successfully for login: {$code}");
+
         $getUser = [];
         $equity = '';
         $margin = '';
@@ -88,95 +102,125 @@ class MT5Accounts extends Controller
         $accountSwap = '';
         $freemargin = '';
         $profit = '';
-        try {
-            $login = $code;
-            // Fetch positions
-            if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            $open_order_history = $total;
-            $offset = 0;
-            $positions = [];
-            // Fetch position pages
-            if (($error_code = $this->api->PositionGetPage($login, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            // Fetch user account details
-            if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            if ($mt5account) {
-                // account login get
-                $mt5account->Login;
-                // balance get
-                $balance = $mt5account->Balance;
-                // balance get
-                $balance = $mt5account->Balance;
-                // Credit get
-                $credit = $mt5account->Credit;
-                // profit get
-                $profit = $mt5account->Floating;
-                // Free Margin get
-                $freemargin = $mt5account->MarginFree;
-                // credit get
-                $credit = $mt5account->Credit;
-                // equity --  $balance + $Credit+$Profit
-                $equity = ($balance + $credit + $profit);
-                // margin level get
-                $margin = $mt5account->Margin;
-                $marginlevel = round((($balance - $freemargin) / (1000)), 2);
-                // Update live account with new data
-                $account->update([
-                    'balance' => $mt5account->Balance,
-                    'credit' => $mt5account->Credit,
-                    'margin_free' => $mt5account->MarginFree,
-                    'margin_level' => $mt5account->MarginLevel,
-                    'equity' => $mt5account->Equity
-                ]);
-            }
-            // Fetch order history
-            $from = 'March 01,2016';
-            $to = 'March 31,2080';
-            if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            $closed_order_history = $total;
-            // Fetch order pages
-            if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
-            }
-            $getUser = Account::with('accountType', 'BonusTransaction')
-                ->where('id', $account->id)
-                ->first();
-            $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
-            // Process orders
-            // dd($orders);
-            if (!empty($orders)) {
-                foreach ($orders as $item) {
-                    $volume = $item->VolumeInitial * 0.00001;
-                    $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
-                    // Insert commission data into DB
-                    Ib1Commission::updateOrCreate(
-                        [
-                            'order_id' => $item->Order,
-                            'code' => $item->Login,
-                        ],
-                        [
-                            'user_id' => auth()->user()->id,
-                            'account_id' => $account->id,
 
-                            'volume' => $volume,
-                            'time_closed' => $time_closed
-                        ]
-                    );
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
-            session()->flash('error', 'Exception: ' . $e->getMessage());
+        $login = $code;
+
+        // Fetch positions
+        Log::info("Fetching positions for login {$login}");
+        if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
+            Log::error("PositionGetTotal failed", ['login' => $login, 'error' => MTRetCode::GetError($error_code)]);
+            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
         }
-        return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
+        Log::info("Position total: {$total}");
+
+        $open_order_history = $total;
+        $offset = 0;
+        $positions = [];
+
+        Log::info("Fetching position pages for login {$login}");
+        if (($error_code = $this->api->PositionGetPage($login, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
+            Log::error("PositionGetPage failed", ['login' => $login, 'error' => MTRetCode::GetError($error_code)]);
+            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+        }
+
+        // Fetch user account details
+        Log::info("Fetching user account details for login {$login}");
+        if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
+            Log::error("UserAccountGet failed", ['login' => $login, 'error' => MTRetCode::GetError($error_code)]);
+            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+        }
+
+        if ($mt5account) {
+            Log::info("UserAccountGet success", ['login' => $mt5account->Login]);
+
+            $balance = $mt5account->Balance;
+            $credit = $mt5account->Credit;
+            $profit = $mt5account->Floating;
+            $freemargin = $mt5account->MarginFree;
+            $equity = ($balance + $credit + $profit);
+            $margin = $mt5account->Margin;
+            $marginlevel = round((($balance - $freemargin) / (1000)), 2);
+
+            Log::info("MT5 account values", [
+                'balance' => $balance,
+                'credit' => $credit,
+                'profit' => $profit,
+                'freemargin' => $freemargin,
+                'equity' => $equity,
+                'margin' => $margin,
+                'marginlevel' => $marginlevel,
+            ]);
+
+            $account->update([
+                'balance' => $mt5account->Balance,
+                'credit' => $mt5account->Credit,
+                'margin_free' => $mt5account->MarginFree,
+                'margin_level' => $mt5account->MarginLevel,
+                'equity' => $mt5account->Equity
+            ]);
+        }
+
+        // Fetch order history
+        $from = 'March 01,2016';
+        $to = 'March 31,2080';
+        Log::info("Fetching history total for login {$login}");
+        if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
+            Log::error("HistoryGetTotal failed", ['login' => $login, 'error' => MTRetCode::GetError($error_code)]);
+            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+        }
+        $closed_order_history = $total;
+        Log::info("Closed order history total: {$closed_order_history}");
+
+        Log::info("Fetching history page for login {$login}");
+        if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
+            Log::error("HistoryGetPage failed", ['login' => $login, 'error' => MTRetCode::GetError($error_code)]);
+            session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+        }
+
+        $getUser = Account::with('accountType', 'BonusTransaction')
+            ->where('id', $account->id)
+            ->first();
+
+        $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
+
+        // Process orders
+        if (!empty($orders)) {
+            Log::info("Processing " . count($orders) . " orders for login {$login}");
+            foreach ($orders as $item) {
+                $volume = $item->VolumeInitial * 0.00001;
+                $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
+
+                Ib1Commission::updateOrCreate(
+                    [
+                        'order_id' => $item->Order,
+                        'code' => $item->Login,
+                    ],
+                    [
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $account->id,
+                        'volume' => $volume,
+                        'time_closed' => $time_closed
+                    ]
+                );
+            }
+        } else {
+            Log::info("No orders found for login {$login}");
+        }
+
+    } catch (\Exception $e) {
+        Log::error('Exception in viewAccountDetails', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+        session()->flash('error', 'Exception: ' . $e->getMessage());
     }
+
+    Log::info("viewAccountDetails: End for account {$account->id}, login: {$code}");
+
+    return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
+}
+
     public function showLiveAccountForm()
     {
         $user = auth()->user();
