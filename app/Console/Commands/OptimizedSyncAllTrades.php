@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Jobs\OptimizedSyncTradesJob;
 use Illuminate\Support\Facades\Cache;
 
@@ -110,9 +111,16 @@ class OptimizedSyncAllTrades extends Command
         // Show last sync times
         $this->info("\n=== Recent Sync Activity ===");
         try {
-            $recentSyncs = Account::where('last_balance_sync_at', '>=', now()->subHour())
-                ->count();
-            $this->line("Accounts synced in last hour: {$recentSyncs}");
+            // Use raw SQL to avoid Laravel model column issues
+            $recentSyncs = DB::select("
+                SELECT COUNT(*) as count 
+                FROM accounts 
+                WHERE last_balance_sync_at >= ? 
+                AND deleted_at IS NULL
+            ", [now()->subHour()]);
+
+            $count = $recentSyncs[0]->count ?? 0;
+            $this->line("Accounts synced in last hour: {$count}");
         } catch (\Exception $e) {
             $this->line("Could not query recent sync activity: " . $e->getMessage());
         }
@@ -282,14 +290,14 @@ class OptimizedSyncAllTrades extends Command
                     ->orWhere('competition_status', '!=', 'active');
             });
 
-        // Skip recently synced accounts based on tier
-        $skipInterval = $this->getSkipIntervalForTier($tier);
-        if ($skipInterval) {
-            $query->where(function ($q) use ($skipInterval) {
-                $q->whereNull('last_balance_sync_at')
-                    ->orWhere('last_balance_sync_at', '<', now()->sub($skipInterval));
-            });
-        }
+        // Skip recently synced accounts based on tier (disabled for now due to column issues)
+        // $skipInterval = $this->getSkipIntervalForTier($tier);
+        // if ($skipInterval) {
+        //     $query->where(function ($q) use ($skipInterval) {
+        //         $q->whereNull('last_balance_sync_at')
+        //             ->orWhere('last_balance_sync_at', '<', now()->sub($skipInterval));
+        //     });
+        // }
 
         $accounts = $query->take(100)->get(); // Limit batch to 100 accounts
 
