@@ -62,316 +62,118 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
-        $startTime = microtime(true);
         session()->remove('error');
         $user = auth()->user();
-        
-        // Initialize all variables early to prevent undefined variable errors
-        $code = $account->code;
-        $type = $account->demo ? 'Demo' : 'Live';
-        $results = [];
-        $getUser = [];
-        $equity = 0;
-        $margin = 0;
-        $marginlevel = 0;
-        $accountSwap = 0;
-        $freemargin = 0;
-        $profit = 0;
-        $mt5account = null;
-        $open_order_history = 0;
-        $closed_order_history = 0;
-        $positions = [];
-        $orders = [];
-        $total = 0;
-        
-        // Log account details request start
-        Log::info('ViewAccountDetails started', [
-            'account_id' => $account->id,
-            'account_code' => $code,
-            'user_id' => $user->id,
-            'user_email' => $user->email,
-            'account_type' => $type
-        ]);
-        
-        // Early validation check
         if ($user->id != $account->user_id) {
-            Log::warning('User details not matching', [
-                'auth_user_id' => $user->id,
-                'account_user_id' => $account->user_id,
-                'account_code' => $code
-            ]);
             return redirect()->route('liveAccounts')->with('error', 'User Details Not Matching');
         }
-        
-        // Validate account code exists
-        if (empty($code) || $code === 'Rejected') {
-            Log::warning('Invalid account code', ['account_code' => $code]);
-            return redirect()->route('liveAccounts')->with('error', 'Invalid account code');
-        }
-        
+        $code = $account->code;
+        $type = $account->demo ? 'Demo' : 'Live';
+        // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
         $settings = settings();
-        
+        $results = [];
+        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        $this->api->Connect(
+            $settings['mt5_server_ip'],
+            $settings['mt5_server_port'],
+            300,
+            $settings['mt5_server_web_login'],
+            $settings['mt5_server_web_password']
+        );
+        $getUser = [];
+        $equity = '';
+        $margin = '';
+        $marginlevel = '';
+        $accountSwap = '';
+        $freemargin = '';
+        $profit = '';
         try {
-            // Step 1: MT5 API Connection (Optimized with connection check)
-            Log::info('MT5 API connection attempt', ['account_code' => $code]);
-            $connectionStart = microtime(true);
-            
-            // Check if already connected to avoid unnecessary reconnection
-            if (!$this->api->IsConnected()) {
-                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                $connectResult = $this->api->Connect(
-                    $settings['mt5_server_ip'],
-                    $settings['mt5_server_port'],
-                    300,
-                    $settings['mt5_server_web_login'],
-                    $settings['mt5_server_web_password']
-                );
-                
-                // Early return if connection fails
-                if ($connectResult != MTRetCode::MT_RET_OK) {
-                    $error_msg = MTRetCode::GetError($connectResult);
-                    Log::error('MT5 API connection failed', [
-                        'account_code' => $code,
-                        'error_code' => $connectResult,
-                        'error_message' => $error_msg
-                    ]);
-                    session()->flash('error', 'MT5 Connection Failed: ' . $error_msg);
-                    return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
-                }
-            } else {
-                Log::info('MT5 API already connected', ['account_code' => $code]);
-            }
-            
-            $connectionTime = microtime(true) - $connectionStart;
-            Log::info('MT5 API connection completed', [
-                'account_code' => $code,
-                'connection_time' => round($connectionTime, 3) . 's'
-            ]);
-            
             $login = $code;
-            
-            // Step 2: Fetch positions total
-            Log::info('Fetching positions total', ['account_code' => $code]);
-            $positionTotalStart = microtime(true);
-            
+            // Fetch positions
             if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
-                $error_msg = MTRetCode::GetError($error_code);
-                Log::error('PositionGetTotal failed', [
-                    'account_code' => $code,
-                    'error_code' => $error_code,
-                    'error_message' => $error_msg
-                ]);
-                session()->flash('error', 'MT5 ' . $login . ': ' . $error_msg);
-            } else {
-                $positionTotalTime = microtime(true) - $positionTotalStart;
-                Log::info('PositionGetTotal completed', [
-                    'account_code' => $code,
-                    'total_positions' => $total,
-                    'time_taken' => round($positionTotalTime, 3) . 's'
-                ]);
+                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
             $open_order_history = $total;
-            
-            // Step 3: Fetch position pages
-            Log::info('Fetching position pages', ['account_code' => $code]);
-            $positionPageStart = microtime(true);
-            
             $offset = 0;
             $positions = [];
+            // Fetch position pages
             if (($error_code = $this->api->PositionGetPage($login, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
-                $error_msg = MTRetCode::GetError($error_code);
-                Log::error('PositionGetPage failed', [
-                    'account_code' => $code,
-                    'error_code' => $error_code,
-                    'error_message' => $error_msg
-                ]);
-                session()->flash('error', 'MT5 ' . $login . ': ' . $error_msg);
-                $positions = []; // Ensure positions is always an array
-            } else {
-                $positionPageTime = microtime(true) - $positionPageStart;
-                Log::info('PositionGetPage completed', [
-                    'account_code' => $code,
-                    'positions_count' => is_array($positions) ? count($positions) : 0,
-                    'time_taken' => round($positionPageTime, 3) . 's'
-                ]);
+                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
-            
-            // Step 4: Fetch user account details
-            Log::info('Fetching user account details', ['account_code' => $code]);
-            $userAccountStart = microtime(true);
-            
+            // Fetch user account details
             if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
-                $error_msg = MTRetCode::GetError($error_code);
-                Log::error('UserAccountGet failed', [
-                    'account_code' => $code,
-                    'error_code' => $error_code,
-                    'error_message' => $error_msg
-                ]);
-                session()->flash('error', 'MT5 ' . $login . ': ' . $error_msg);
-            } else {
-                $userAccountTime = microtime(true) - $userAccountStart;
-                Log::info('UserAccountGet completed', [
-                    'account_code' => $code,
-                    'time_taken' => round($userAccountTime, 3) . 's'
-                ]);
+                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
-            
-            // Step 5: Process account data if available
             if ($mt5account) {
-                Log::info('Processing MT5 account data', ['account_code' => $code]);
-                
-                // Get account data
+                // account login get
+                $mt5account->Login;
+                // balance get
                 $balance = $mt5account->Balance;
+                // balance get
+                $balance = $mt5account->Balance;
+                // Credit get
                 $credit = $mt5account->Credit;
+                // profit get
                 $profit = $mt5account->Floating;
+                // Free Margin get
                 $freemargin = $mt5account->MarginFree;
+                // credit get
+                $credit = $mt5account->Credit;
+                // equity --  $balance + $Credit+$Profit
                 $equity = ($balance + $credit + $profit);
+                // margin level get
                 $margin = $mt5account->Margin;
                 $marginlevel = round((($balance - $freemargin) / (1000)), 2);
-                
-                // Update account in database
-                try {
-                    $account->update([
-                        'balance' => $mt5account->Balance,
-                        'credit' => $mt5account->Credit,
-                        'margin_free' => $mt5account->MarginFree,
-                        'margin_level' => $mt5account->MarginLevel,
-                        'equity' => $mt5account->Equity
-                    ]);
-                    Log::info('Account updated successfully', ['account_code' => $code]);
-                } catch (\Exception $e) {
-                    Log::error('Failed to update account', [
-                        'account_code' => $code,
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                // Update live account with new data
+                $account->update([
+                    'balance' => $mt5account->Balance,
+                    'credit' => $mt5account->Credit,
+                    'margin_free' => $mt5account->MarginFree,
+                    'margin_level' => $mt5account->MarginLevel,
+                    'equity' => $mt5account->Equity
+                ]);
             }
-            
-            // Step 6: Fetch order history total
-            Log::info('Fetching order history total', ['account_code' => $code]);
-            $historyTotalStart = microtime(true);
-            
+            // Fetch order history
             $from = 'March 01,2016';
             $to = 'March 31,2080';
             if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
-                $error_msg = MTRetCode::GetError($error_code);
-                Log::error('HistoryGetTotal failed', [
-                    'account_code' => $code,
-                    'error_code' => $error_code,
-                    'error_message' => $error_msg,
-                    'from_date' => $from,
-                    'to_date' => $to
-                ]);
-                session()->flash('error', 'MT5 ' . $login . ': ' . $error_msg);
-            } else {
-                $historyTotalTime = microtime(true) - $historyTotalStart;
-                Log::info('HistoryGetTotal completed', [
-                    'account_code' => $code,
-                    'total_orders' => $total,
-                    'time_taken' => round($historyTotalTime, 3) . 's'
-                ]);
+                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
             $closed_order_history = $total;
-            
-            // Step 7: Fetch order pages
-            Log::info('Fetching order history pages', ['account_code' => $code]);
-            $historyPageStart = microtime(true);
-            
-            $orders = []; // Initialize orders array
+            // Fetch order pages
             if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
-                $error_msg = MTRetCode::GetError($error_code);
-                Log::error('HistoryGetPage failed', [
-                    'account_code' => $code,
-                    'error_code' => $error_code,
-                    'error_message' => $error_msg
-                ]);
-                session()->flash('error', 'MT5 ' . $error_msg);
-                $orders = []; // Ensure orders is always an array
-            } else {
-                $historyPageTime = microtime(true) - $historyPageStart;
-                Log::info('HistoryGetPage completed', [
-                    'account_code' => $code,
-                    'orders_count' => !empty($orders) ? count($orders) : 0,
-                    'time_taken' => round($historyPageTime, 3) . 's'
-                ]);
+                session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
             }
-            
-            // Step 8: Get user data from database
-            Log::info('Fetching user data from database', ['account_code' => $code]);
-            $dbStart = microtime(true);
-            
             $getUser = Account::with('accountType', 'BonusTransaction')
                 ->where('id', $account->id)
                 ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
-            
-            $dbTime = microtime(true) - $dbStart;
-            Log::info('Database query completed', [
-                'account_code' => $code,
-                'time_taken' => round($dbTime, 3) . 's'
-            ]);
-            
-            // Step 9: Process orders and commissions
+            // Process orders
+            // dd($orders);
             if (!empty($orders)) {
-                Log::info('Processing orders for commissions', [
-                    'account_code' => $code,
-                    'orders_count' => is_array($orders) ? count($orders) : 0
-                ]);
-                $commissionStart = microtime(true);
-                
                 foreach ($orders as $item) {
-                    try {
-                        $volume = $item->VolumeInitial * 0.00001;
-                        $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
-                        
-                        Ib1Commission::updateOrCreate(
-                            [
-                                'order_id' => $item->Order,
-                                'code' => $item->Login,
-                            ],
-                            [
-                                'user_id' => auth()->user()->id,
-                                'account_id' => $account->id,
-                                'volume' => $volume,
-                                'time_closed' => $time_closed
-                            ]
-                        );
-                    } catch (\Exception $e) {
-                        Log::error('Failed to process commission for order', [
-                            'account_code' => $code,
-                            'order_id' => $item->Order ?? 'unknown',
-                            'error' => $e->getMessage()
-                        ]);
-                    }
+                    $volume = $item->VolumeInitial * 0.00001;
+                    $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
+                    // Insert commission data into DB
+                    Ib1Commission::updateOrCreate(
+                        [
+                            'order_id' => $item->Order,
+                            'code' => $item->Login,
+                        ],
+                        [
+                            'user_id' => auth()->user()->id,
+                            'account_id' => $account->id,
+
+                            'volume' => $volume,
+                            'time_closed' => $time_closed
+                        ]
+                    );
                 }
-                
-                $commissionTime = microtime(true) - $commissionStart;
-                Log::info('Commission processing completed', [
-                    'account_code' => $code,
-                    'time_taken' => round($commissionTime, 3) . 's'
-                ]);
             }
-            
         } catch (\Exception $e) {
-            $totalTime = microtime(true) - $startTime;
-            Log::error('ViewAccountDetails exception occurred', [
-                'account_code' => $code,
-                'user_id' => $user->id,
-                'error_message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-                'total_time_until_error' => round($totalTime, 3) . 's'
-            ]);
+            Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
         }
-        
-        $totalTime = microtime(true) - $startTime;
-        Log::info('ViewAccountDetails completed', [
-            'account_code' => $code,
-            'total_time' => round($totalTime, 3) . 's'
-        ]);
-        
         return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit'));
     }
     public function showLiveAccountForm()
