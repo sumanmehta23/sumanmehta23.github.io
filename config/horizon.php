@@ -232,6 +232,20 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        'supervisor-5' => [
+            'connection' => 'redis',
+            'queue' => ['sync-all-trades'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 20),
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 1000,
+            'tries' => 1,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+
 
     ],
 
