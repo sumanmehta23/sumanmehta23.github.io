@@ -118,6 +118,7 @@ class SyncAllAccountsTrades extends Command
             ->where(function ($q) {
                 $q->whereNull('competition_start_date')
                     ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
                     ->orWhere('competition_status', '!=', 'active');
             })
             ->count();
@@ -140,6 +141,7 @@ class SyncAllAccountsTrades extends Command
             ->where(function ($q) {
                 $q->whereNull('competition_start_date')
                     ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
                     ->orWhere('competition_status', '!=', 'active');
             })
             ->take(5)
@@ -173,10 +175,11 @@ class SyncAllAccountsTrades extends Command
             ->whereNull('deleted_at')
             ->where('account_request_status', 1)
             ->where('demo', false) // Only live accounts
-            // Exclude current competition accounts (accounts with active competition status)
+            // Exclude competition accounts (accounts with competition dates AND active status)
             ->where(function ($q) {
                 $q->whereNull('competition_start_date')
                     ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
                     ->orWhere('competition_status', '!=', 'active');
             });
 
