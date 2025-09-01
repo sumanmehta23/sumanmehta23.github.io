@@ -184,7 +184,7 @@ class BatchSyncTradesJob implements ShouldQueue
         foreach ($orders as $order) {
             try {
                 // Check if trade already exists
-                $existingTrade = Trade::where('order_id', $order['Ticket'])
+                $existingTrade = Trade::where('order_id', $order->Order)
                     ->where('account_id', $account->id)
                     ->first();
 
@@ -200,66 +200,61 @@ class BatchSyncTradesJob implements ShouldQueue
                     $savedCount++;
                 }
             } catch (\Exception $e) {
-                Log::error("Error processing trade {$order['Ticket']} for account {$account->code}: " . $e->getMessage());
+                Log::error("Error processing trade {$order->Order} for account {$account->code}: " . $e->getMessage());
             }
         }
 
         return $savedCount;
     }
 
-    protected function shouldUpdateTrade(Trade $trade, array $order): bool
+    protected function shouldUpdateTrade($trade, $order)
     {
-        // Update if close price changed or status changed
-        return $trade->close_price != $order['PriceClose'] ||
-            $trade->status != $this->getTradeStatus($order);
+        return $trade->close_price != ($order->PriceCurrent ?? 0) ||
+            $trade->state != (string) $order->State;
     }
 
-    protected function createTradeFromOrder(Account $account, array $order): void
+    protected function createTradeFromOrder(Account $account, $order): void
     {
         Trade::create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
             'account_id' => $account->id,
-            'code' => $account->code,
-            'order_id' => (string) $order['Ticket'],
-            'symbol' => $order['Symbol'],
-            'position_id' => $order['Ticket'],
-            'type' => $order['Type'] == 0 ? 'buy' : 'sell',
-            'volume' => $order['Volume'],
-            'volume_ext' => $order['Volume'] * 100,
-            'open_price' => $order['PriceOpen'],
-            'close_price' => $order['PriceClose'],
-            'profit' => $order['Profit'],
-            'sl' => $order['SL'] ?? 0,
-            'tp' => $order['TP'] ?? 0,
-            'comment' => $order['Comment'] ?? '',
-            'status' => $this->getTradeStatus($order),
-            'state' => (string) $order['State'],
-            'open_time' => Carbon::createFromTimestamp($order['TimeSetup']),
-            'close_time' => $order['TimeSetup'] != $order['TimeDone'] ?
-                Carbon::createFromTimestamp($order['TimeDone']) : null,
+            'order_id' => (string) $order->Order,
+            'symbol' => $order->Symbol,
+            'position_id' => $order->Order,
+            'type' => $order->Type == 0 ? 'buy' : 'sell',
+            'volume' => $order->VolumeInitial ?? 0,
+            'volume_ext' => ($order->VolumeInitial ?? 0) * 100,
+            'open_price' => $order->PriceOrder,
+            'close_price' => $order->PriceCurrent ?? 0,
+            'profit' => 0, // MTOrder doesn't have profit, would need MTDeal
+            'sl' => $order->PriceSL ?? 0,
+            'tp' => $order->PriceTP ?? 0,
+            'comment' => $order->Comment ?? '',
+            'commission' => 0, // MTOrder doesn't have commission
+            'state' => (string) $order->State,
+            'open_time' => Carbon::createFromTimestamp($order->TimeSetup),
+            'close_time' => $order->TimeSetup != $order->TimeDone ?
+                Carbon::createFromTimestamp($order->TimeDone) : null,
         ]);
     }
 
-    protected function updateTradeFromOrder(Trade $trade, array $order): void
+    protected function updateTradeFromOrder(Trade $trade, $order): void
     {
         $trade->update([
-            'close_price' => $order['PriceClose'],
-            'profit' => $order['Profit'],
-            'status' => $this->getTradeStatus($order),
-            'close_time' => $order['TimeSetup'] != $order['TimeDone'] ?
-                Carbon::createFromTimestamp($order['TimeDone']) : null,
+            'close_price' => $order->PriceCurrent ?? 0,
+            'profit' => 0, // MTOrder doesn't have profit
+            'state' => (string) $order->State,
+            'close_time' => $order->TimeSetup != $order->TimeDone ?
+                Carbon::createFromTimestamp($order->TimeDone) : null,
         ]);
     }
 
-    protected function getTradeStatus(array $order): string
+    protected function getTradeStatus($order): string
     {
-        // Map MT5 order state to our status
-        return match ($order['State']) {
-            1 => 'open',      // ORDER_STATE_STARTED
-            2 => 'closed',    // ORDER_STATE_FILLED
-            3 => 'cancelled', // ORDER_STATE_CANCELED
-            default => 'unknown'
-        };
+        // Based on MTOrder state
+        if ($order->State == 1) { // Assuming 1 is filled/completed
+            return 'closed';
+        }
+        return 'open';
     }
 
     protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
@@ -272,7 +267,7 @@ class BatchSyncTradesJob implements ShouldQueue
         ]);
     }
 
-    protected function updateLastTradeTime(Account $account, array $orders): void
+    protected function updateLastTradeTime(Account $account, $orders): void
     {
         if (empty($orders)) {
             return;
@@ -281,7 +276,7 @@ class BatchSyncTradesJob implements ShouldQueue
         // Find the most recent trade time
         $latestTime = 0;
         foreach ($orders as $order) {
-            $latestTime = max($latestTime, $order['TimeDone'], $order['TimeSetup']);
+            $latestTime = max($latestTime, $order->TimeDone, $order->TimeSetup);
         }
 
         if ($latestTime > 0) {
