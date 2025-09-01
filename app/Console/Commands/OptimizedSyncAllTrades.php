@@ -19,40 +19,39 @@ use App\Jobs\OptimizedSyncTradesJob;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Optimized Sync All Accounts Trades - Tiered Strategy
+ * Efficient Sync All Accounts Trades - Simplified Strategy
  * 
- * This command implements a tiered syncing strategy to dramatically reduce MT5 API load:
+ * This command provides a much simpler, faster, and more reliable approach:
  * 
- * TIER SYSTEM:
- * - Very Active (24h trades): Sync every 15 min, process first
- * - Active (7d trades): Sync every 2 hours
- * - Inactive (30d trades): Sync every 24 hours
- * - Dormant (30d+ no trades): Sync weekly, off-peak only
+ * SIMPLE STRATEGY:
+ * - Process ALL accounts systematically in chunks
+ * - Use larger batches for better performance
+ * - Guarantee every account gets synced
+ * - Skip only competition accounts
  * 
- * OPTIMIZATION FEATURES:
- * - Skip accounts with no recent activity during peak hours
- * - Incremental sync using last_balance_sync_at timestamps
- * - Intelligent batching based on activity level
- * - Automatic tier adjustment based on trading patterns
- * - Peak/off-peak scheduling
+ * PERFORMANCE FEATURES:  
+ * - Large batch sizes (10-20 accounts per batch)
+ * - Higher concurrency (5-10 concurrent batches)
+ * - Efficient chunking through all accounts
+ * - Simple incremental sync timing
  * 
- * REQUIRED DATABASE COLUMNS (added via migrations):
- * - accounts.sync_tier ENUM('very_active','active','inactive','dormant')
- * - accounts.last_trade_at TIMESTAMP
- * - accounts.last_balance_sync_at TIMESTAMP
+ * RELIABILITY FEATURES:
+ * - No complex tier logic to fail
+ * - Processes every account exactly once per run
+ * - Clear progress tracking
+ * - Predictable completion time
  */
 class OptimizedSyncAllTrades extends Command
 {
     protected $signature = 'app:optimized-sync-trades 
-                            {--tier= : Sync specific tier (very_active,active,inactive,dormant)}
-                            {--peak-hours : Only sync high-priority accounts (very_active)}
-                            {--off-peak : Include all tiers including dormant}
+                            {--batch-size=15 : Number of accounts per batch}
+                            {--max-concurrent=8 : Maximum concurrent batches}
+                            {--delay=5 : Delay between batches in seconds}
                             {--test-account= : Test with specific account code}
-                            {--update-tiers : Update account tiers before sync}
-                            {--daemon : Run as daemon with smart scheduling}
-                            {--status : Show optimization status}';
+                            {--daemon : Run as daemon continuously}
+                            {--status : Show sync status}';
 
-    protected $description = 'Optimized MT5 sync with tiered strategy to reduce API load by 70-90%';
+    protected $description = 'Efficient MT5 sync - processes ALL accounts reliably with high performance';
 
     protected $mt5Service;
     protected $mailService;
@@ -66,30 +65,47 @@ class OptimizedSyncAllTrades extends Command
 
     public function handle()
     {
-        if ($this->option('status')) {
-            $this->showOptimizationStatus();
+        $batchSize = (int) $this->option('batch-size');
+        $maxConcurrent = (int) $this->option('max-concurrent'); 
+        $delay = (int) $this->option('delay');
+        $testAccount = $this->option('test-account');
+        $isDaemon = $this->option('daemon');
+        $showStatus = $this->option('status');
+
+        if ($showStatus) {
+            $this->showSyncStatus();
             return;
         }
 
-        if ($this->option('update-tiers')) {
-            $this->updateTiers();
-        }
-
-        if ($this->option('daemon')) {
-            $this->runDaemonMode();
+        if ($testAccount) {
+            $this->syncSpecificAccount($testAccount);
             return;
         }
 
-        $this->runOptimizedSync();
+        $this->info("Configuration: Batch Size: {$batchSize}, Max Concurrent: {$maxConcurrent}, Delay: {$delay}s");
+
+        if ($isDaemon) {
+            $this->runDaemonMode($batchSize, $maxConcurrent, $delay);
+        } else {
+            $this->syncAllAccounts($batchSize, $maxConcurrent, $delay);
+        }
     }
 
-    protected function showOptimizationStatus()
+    protected function showSyncStatus()
     {
-        $this->info("=== Optimized Sync Status ===");
+        $totalAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->count();
 
-        // Show tier distribution
-        $tiers = Account::selectRaw('sync_tier, COUNT(*) as count, MAX(last_trade_at) as latest_trade')
-            ->whereNotNull('code')
+        $competitionAccounts = Account::whereNotNull('code')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
+            ->where('competition_status', 'active')
+            ->count();
+
+        $syncableAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
             ->where('demo', false)
             ->where(function ($q) {
                 $q->whereNull('competition_start_date')
@@ -97,339 +113,132 @@ class OptimizedSyncAllTrades extends Command
                     ->orWhereNull('competition_status')
                     ->orWhere('competition_status', '!=', 'active');
             })
-            ->groupBy('sync_tier')
-            ->get();
+            ->count();
 
-        foreach ($tiers as $tier) {
-            $this->line("{$tier->sync_tier}: {$tier->count} accounts (latest: " . ($tier->latest_trade ? Carbon::parse($tier->latest_trade)->diffForHumans() : 'never') . ")");
-        }
+        $totalTrades = Trade::count();
+        $recentTrades = Trade::where('created_at', '>=', now()->subHour())->count();
 
-        // Calculate potential savings
-        $totalAccounts = $tiers->sum('count');
-        $veryActive = $tiers->where('sync_tier', 'very_active')->first()->count ?? 0;
-        $active = $tiers->where('sync_tier', 'active')->first()->count ?? 0;
-
-        $this->info("\n=== Peak Hours Impact ===");
-        $this->line("Accounts synced during peak: {$veryActive} (was {$totalAccounts})");
-        $this->line("Reduction: " . round((($totalAccounts - $veryActive) / $totalAccounts) * 100, 1) . "%");
-
-        // Show last sync times
-        $this->info("\n=== Recent Sync Activity ===");
-        try {
-            // Use raw SQL to avoid Laravel model column issues
-            $recentSyncs = DB::select("
-                SELECT COUNT(*) as count 
-                FROM accounts 
-                WHERE last_balance_sync_at >= ? 
-                AND deleted_at IS NULL
-            ", [now()->subHour()]);
-
-            $count = $recentSyncs[0]->count ?? 0;
-            $this->line("Accounts synced in last hour: {$count}");
-        } catch (\Exception $e) {
-            $this->line("Could not query recent sync activity: " . $e->getMessage());
-        }
+        $this->info("=== Efficient Sync Status ===");
+        $this->info("Total live accounts: {$totalAccounts}");
+        $this->info("Competition accounts (excluded): {$competitionAccounts}");
+        $this->info("Accounts to sync: {$syncableAccounts}");
+        $this->info("Total trades in system: {$totalTrades}");
+        $this->info("Trades synced in last hour: {$recentTrades}");
+        
+        // Estimate completion time
+        $batchSize = (int) $this->option('batch-size');
+        $delay = (int) $this->option('delay');
+        $batches = ceil($syncableAccounts / $batchSize);
+        $estimatedMinutes = ($batches * $delay) / 60;
+        
+        $this->info("Estimated sync time: {$batches} batches, ~{$estimatedMinutes} minutes");
     }
 
-    protected function updateTiers()
+    protected function syncAllAccounts($batchSize, $maxConcurrent, $delay)
     {
-        $this->info("Updating account tiers based on recent activity...");
+        $query = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->where(function ($q) {
+                $q->whereNull('competition_start_date')
+                    ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
+                    ->orWhere('competition_status', '!=', 'active');
+            });
 
-        // Very active: trades in last 24 hours
-        $veryActive = Account::whereIn('code', function ($query) {
-            $query->select('code')
-                ->from('trades')
-                ->where(function ($q) {
-                    $q->where('open_time', '>=', now()->subDay())
-                        ->orWhere('close_time', '>=', now()->subDay());
-                })
-                ->distinct();
-        })->update(['sync_tier' => 'very_active']);
+        $totalAccounts = $query->count();
+        $this->info("Found {$totalAccounts} accounts to sync (excluding competition accounts)");
 
-        // Active: trades in last 7 days
-        $active = Account::whereIn('code', function ($query) {
-            $query->select('code')
-                ->from('trades')
-                ->where(function ($q) {
-                    $q->where('open_time', '>=', now()->subDays(7))
-                        ->orWhere('close_time', '>=', now()->subDays(7));
-                })
-                ->whereNotIn('code', function ($subQuery) {
-                    $subQuery->select('code')
-                        ->from('trades')
-                        ->where(function ($q) {
-                            $q->where('open_time', '>=', now()->subDay())
-                                ->orWhere('close_time', '>=', now()->subDay());
-                        });
-                })
-                ->distinct();
-        })->update(['sync_tier' => 'active']);
-
-        // Inactive: trades in last 30 days
-        $inactive = Account::whereIn('code', function ($query) {
-            $query->select('code')
-                ->from('trades')
-                ->where(function ($q) {
-                    $q->where('open_time', '>=', now()->subDays(30))
-                        ->orWhere('close_time', '>=', now()->subDays(30));
-                })
-                ->whereNotIn('code', function ($subQuery) {
-                    $subQuery->select('code')
-                        ->from('trades')
-                        ->where(function ($q) {
-                            $q->where('open_time', '>=', now()->subDays(7))
-                                ->orWhere('close_time', '>=', now()->subDays(7));
-                        });
-                })
-                ->distinct();
-        })->update(['sync_tier' => 'inactive']);
-
-        // Dormant: no recent trades
-        $dormant = Account::whereNotIn('code', function ($query) {
-            $query->select('code')
-                ->from('trades')
-                ->where(function ($q) {
-                    $q->where('open_time', '>=', now()->subDays(30))
-                        ->orWhere('close_time', '>=', now()->subDays(30));
-                });
-        })->where('demo', false)
-            ->whereNotNull('code')
-            ->update(['sync_tier' => 'dormant']);
-
-        $this->info("Tiers updated: Very Active: {$veryActive}, Active: {$active}, Inactive: {$inactive}, Dormant: {$dormant}");
-
-        // Update last_trade_at for all accounts with trades
-        $this->info("Updating last_trade_at timestamps...");
-        $updated = DB::statement("
-            UPDATE accounts a 
-            JOIN (
-                SELECT code, MAX(GREATEST(COALESCE(open_time, '1970-01-01'), COALESCE(close_time, '1970-01-01'))) as last_trade
-                FROM trades 
-                GROUP BY code
-            ) t ON a.code = t.code 
-            SET a.last_trade_at = t.last_trade
-        ");
-        $this->info("Updated last_trade_at timestamps");
-    }
-
-    protected function runDaemonMode()
-    {
-        $this->info("Starting optimized daemon mode with smart scheduling...");
-
-        while (true) {
-            $currentHour = now()->hour;
-            $isPeakHours = $currentHour >= 8 && $currentHour <= 18; // 8 AM to 6 PM
-
-            if ($isPeakHours) {
-                $this->info("Peak hours detected - syncing only very active accounts");
-                $this->syncTier('very_active', 1, 1); // Small batches during peak
-                sleep(900); // 15 minutes
-            } else {
-                $this->info("Off-peak hours - running full tiered sync");
-
-                // Very active (every cycle)
-                $this->syncTier('very_active', 2, 2);
-                sleep(30);
-
-                // Active (every 4th cycle = 2 hours)
-                if (now()->minute % 30 == 0) {
-                    $this->syncTier('active', 3, 2);
-                    sleep(30);
-                }
-
-                // Inactive (once per hour)
-                if (now()->minute == 0) {
-                    $this->syncTier('inactive', 5, 3);
-                    sleep(30);
-                }
-
-                // Dormant (once every 6 hours)
-                if (now()->minute == 0 && now()->hour % 6 == 0) {
-                    $this->syncTier('dormant', 10, 2);
-                }
-
-                sleep(1800); // 30 minutes
-            }
-        }
-    }
-
-    protected function runOptimizedSync()
-    {
-        $tier = $this->option('tier');
-        $testAccount = $this->option('test-account');
-        $isPeakHours = $this->option('peak-hours');
-        $isOffPeak = $this->option('off-peak');
-
-        if ($testAccount) {
-            $this->syncSpecificAccount($testAccount);
+        if ($totalAccounts === 0) {
+            $this->info("No accounts found to sync.");
             return;
         }
 
-        if ($isPeakHours) {
-            $this->info("Peak hours mode - syncing only very active accounts");
-            $this->syncTier('very_active', 1, 1);
-        } elseif ($isOffPeak) {
-            $this->info("Off-peak mode - syncing all tiers");
-            $this->syncTier('very_active', 2, 2);
-            $this->syncTier('active', 3, 2);
-            $this->syncTier('inactive', 5, 3);
-            $this->syncTier('dormant', 10, 2);
-        } elseif ($tier) {
-            $this->info("Syncing tier: {$tier}");
-            $batchSize = $this->getBatchSizeForTier($tier);
-            $maxConcurrent = $this->getMaxConcurrentForTier($tier);
-            $this->syncTier($tier, $batchSize, $maxConcurrent);
-        } else {
-            $this->info("Smart sync mode - syncing based on time and priority");
-            $currentHour = now()->hour;
-
-            if ($currentHour >= 8 && $currentHour <= 18) {
-                // Peak hours
-                $this->syncTier('very_active', 1, 1);
-            } else {
-                // Off-peak
-                $this->syncTier('very_active', 2, 2);
-                $this->syncTier('active', 3, 2);
-            }
-        }
-    }
-
-    protected function syncTier($tier, $batchSize, $maxConcurrent)
-    {
-        // Use raw SQL to avoid Laravel schema caching issues
-        try {
-            $sql = "
-                SELECT * FROM accounts 
-                WHERE code IS NOT NULL 
-                AND deleted_at IS NULL 
-                AND demo = 0 
-                AND sync_tier = ?
-                AND (competition_start_date IS NULL 
-                     OR competition_end_date IS NULL 
-                     OR competition_status IS NULL 
-                     OR competition_status != 'active')
-                LIMIT 100
-            ";
-
-            $accountData = DB::select($sql, [$tier]);
-
-            if (empty($accountData)) {
-                $this->info("No {$tier} accounts need syncing");
-                return;
-            }
-
-            // Convert to Account models
-            $accounts = collect($accountData)->map(function ($data) {
-                return Account::find($data->id);
-            })->filter();
-        } catch (\Exception $e) {
-            $this->error("Error querying {$tier} accounts: " . $e->getMessage());
-            return;
-        }
-
-        $this->info("Syncing {$accounts->count()} {$tier} accounts (batch: {$batchSize}, concurrent: {$maxConcurrent})");
-
-        $jobs = $accounts->map(function ($account) {
-            return new OptimizedSyncTradesJob($account, $this->getIncrementalSyncTime($account));
-        })->toArray();
-
-        $jobBatches = array_chunk($jobs, $batchSize);
+        $processedCount = 0;
         $activeBatches = 0;
+        $startTime = now();
 
-        foreach ($jobBatches as $batchIndex => $batch) {
-            while ($activeBatches >= $maxConcurrent) {
-                sleep(5);
-                $activeBatches = max(0, $activeBatches - 1);
+        $query->chunk(500, function ($accounts) use ($batchSize, $maxConcurrent, $delay, $totalAccounts, &$processedCount, &$activeBatches) {
+            $jobs = [];
+            foreach ($accounts as $account) {
+                $jobs[] = new OptimizedSyncTradesJob($account, $this->getLastSyncTime($account));
             }
 
-            Bus::batch($batch)
-                ->allowFailures()
-                ->onConnection('redis')
-                ->onQueue('optimized-sync-trades')
-                ->then(function () use (&$activeBatches) {
-                    $activeBatches--;
-                })
-                ->catch(function () use (&$activeBatches) {
-                    $activeBatches--;
-                })
-                ->dispatch();
+            if (!empty($jobs)) {
+                $jobBatches = array_chunk($jobs, $batchSize);
 
-            $activeBatches++;
+                foreach ($jobBatches as $batchIndex => $batch) {
+                    // Wait if too many concurrent batches
+                    while ($activeBatches >= $maxConcurrent) {
+                        $this->info("Waiting for active batches... ({$activeBatches}/{$maxConcurrent})");
+                        sleep(5);
+                        $activeBatches = max(0, $activeBatches - 1);
+                    }
 
-            // Longer delays for lower priority tiers
-            $delay = $tier === 'dormant' ? 10 : ($tier === 'inactive' ? 5 : 2);
-            sleep($delay);
+                    $this->info("Processing batch " . ($batchIndex + 1) . " with " . count($batch) . " accounts");
+
+                    Bus::batch($batch)
+                        ->allowFailures()
+                        ->onConnection('redis')
+                        ->onQueue('optimized-sync-trades')
+                        ->then(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->catch(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->dispatch();
+
+                    $activeBatches++;
+                    $processedCount += count($batch);
+
+                    $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
+                    
+                    if ($delay > 0) {
+                        sleep($delay);
+                    }
+                }
+            }
+        });
+
+        $duration = $startTime->diffInMinutes(now());
+        $this->info("Sync completed! Processed {$processedCount} accounts in {$duration} minutes");
+    }
+
+    protected function runDaemonMode($batchSize, $maxConcurrent, $delay)
+    {
+        $this->info("Starting daemon mode...");
+        
+        while (true) {
+            try {
+                $this->syncAllAccounts($batchSize, $maxConcurrent, $delay);
+                $this->info("Cycle completed. Waiting 30 minutes before next cycle...");
+                sleep(1800); // 30 minutes between full cycles
+            } catch (\Exception $e) {
+                $this->error("Error in daemon mode: " . $e->getMessage());
+                Log::error("OptimizedSync daemon error: " . $e->getMessage());
+                sleep(300); // Wait 5 minutes before retrying on error
+            }
         }
     }
 
-    protected function getBatchSizeForTier($tier)
+    protected function getLastSyncTime($account)
     {
-        return match ($tier) {
-            'very_active' => 1,
-            'active' => 2,
-            'inactive' => 3,
-            'dormant' => 5,
-            default => 2
-        };
-    }
-
-    protected function getMaxConcurrentForTier($tier)
-    {
-        return match ($tier) {
-            'very_active' => 2,
-            'active' => 2,
-            'inactive' => 3,
-            'dormant' => 2,
-            default => 2
-        };
-    }
-
-    protected function getSkipIntervalForTier($tier)
-    {
-        return match ($tier) {
-            'very_active' => \DateInterval::createFromDateString('15 minutes'),
-            'active' => \DateInterval::createFromDateString('2 hours'),
-            'inactive' => \DateInterval::createFromDateString('24 hours'),
-            'dormant' => \DateInterval::createFromDateString('7 days'),
-            default => null
-        };
-    }
-
-    protected function getIncrementalSyncTime($account)
-    {
-        // Get last sync time, or use 7 days ago for dormant accounts
+        // Simple incremental sync - last 7 days if never synced
         $lastSync = $account->last_balance_sync_at;
-
-        if (!$lastSync) {
-            return match ($account->sync_tier) {
-                'very_active' => now()->subHours(2),
-                'active' => now()->subDays(1),
-                'inactive' => now()->subDays(7),
-                'dormant' => now()->subDays(30),
-                default => now()->subDays(7)
-            };
-        }
-
-        return Carbon::parse($lastSync);
-    }
-
-    protected function syncSpecificAccount($accountCode)
+        return $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
+    }    protected function syncSpecificAccount($accountCode)
     {
-        try {
-            $account = Account::where('code', $accountCode)->first();
+        $account = Account::where('code', $accountCode)->first();
 
-            if (!$account) {
-                $this->error("Account {$accountCode} not found");
-                return;
-            }
-        } catch (\Exception $e) {
-            $this->error("Error finding account {$accountCode}: " . $e->getMessage());
+        if (!$account) {
+            $this->error("Account {$accountCode} not found");
             return;
         }
 
-        $this->info("Testing optimized sync for account: {$accountCode} (tier: {$account->sync_tier})");
+        $this->info("Testing sync for account: {$accountCode}");
 
-        $job = new OptimizedSyncTradesJob($account, $this->getIncrementalSyncTime($account));
+        $job = new OptimizedSyncTradesJob($account, $this->getLastSyncTime($account));
 
         Bus::batch([$job])
             ->allowFailures()
