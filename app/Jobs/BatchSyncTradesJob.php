@@ -130,137 +130,194 @@ class BatchSyncTradesJob implements ShouldQueue
             return 'not_found';
         }
 
-        // Incremental time range
-        $fromDate = $fromTime->format('F d, Y');
-        $toDate = now()->addHours(4)->format('F d, Y');
-        // if ($account->code == 135405) {
-        //     $fromDate = 'March 01, 2016';
-        //     $toDate = 'March 31, 2080';
-        // }
-        // Get total with time filter
-        $total = 0;
-        $error_code = $api->HistoryGetTotal($account->code, $fromDate, $toDate, $total);
+        try {
+            // Get existing trades to check their status
+            $existingTrades = Trade::where('account_id', $account->id)
+                ->get()
+                ->keyBy('position_id');
 
-        if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::error("MT5 HistoryGetTotal error for {$account->code}: " . MTRetCode::GetError($error_code));
-            $this->updateSyncStatus($account, 'error');
-            return 'error';
-        }
-        if ($account->code == 135405) {
-            Log::info("Syncing account 135405 from {$fromDate} to {$toDate}, total trades: {$total}");
+            $login = $account->code;
+            $from = 'March 01, 2016';
+            $to = 'March 31, 2080';
+            $total = 0;
             $orders = [];
-            $error_code = $api->HistoryGetPage($account->code, $fromDate, $toDate, 0, $total, $orders);
-            Log::info("Orders: " . print_r($orders, true));
-        }
-        // Skip if no recent orders
-        if ($total == 0) {
-            $this->updateSyncStatus($account, 'no_changes');
-            return 'no_changes';
-        }
 
-        // Get recent orders
-        $orders = [];
-        $error_code = $api->HistoryGetPage($account->code, $fromDate, $toDate, 0, $total, $orders);
+            // Get total with retries
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, &$total) {
+                return $api->HistoryGetTotal($login, $from, $to, $total);
+            });
 
-        if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::error("MT5 HistoryGetPage error for {$account->code}: " . MTRetCode::GetError($error_code));
-            $this->updateSyncStatus($account, 'error');
-            return 'error';
-        }
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("MT5 HistoryGetTotal final error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return 'error';
+            }
 
-        // Process and store trades
-        $savedTrades = $this->processAndStoreTrades($account, $orders);
+            // Get history page with retries
+            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, $total, &$orders) {
+                return $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
+            });
 
-        $this->updateSyncStatus($account, 'success', $savedTrades);
-        $this->updateLastTradeTime($account, $orders);
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return 'error';
+            }
 
-        return 'success';
-    }
+            $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+            $tradesToUpsert = [];
+            $savedCount = 0;
 
-    protected function processAndStoreTrades(Account $account, array $orders): int
-    {
-        $savedCount = 0;
-        Log::info("Processing " . count($orders) . " trades for account {$account->code}");
-        foreach ($orders as $order) {
-            try {
-                // Check if trade already exists
-                $existingTrade = Trade::where('order_id', $order->Order)
-                    ->where('account_id', $account->id)
-                    ->first();
+            foreach ($ordersByPosition as $positionId => $positionOrders) {
+                $positionOrders = $positionOrders->sortBy('TimeDone');
+                $existingTrade = $existingTrades->get($positionId);
 
-                if ($existingTrade) {
-                    // Update existing trade if needed
-                    if ($this->shouldUpdateTrade($existingTrade, $order)) {
-                        $this->updateTradeFromOrder($existingTrade, $order);
+                // Get total number of deals first
+                $totalDeals = 0;
+                $error_code = $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
+                    continue;
+                }
+
+                // Get the deals
+                $deals = [];
+                $error_code = $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
+                    continue;
+                }
+
+                $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
+                $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
+
+                if ($positionOrders->count() < 2) {
+                    // OPEN TRADE: Insert if does not exist
+                    if (!$existingTrade) {
+                        $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                         $savedCount++;
                     }
                 } else {
-                    // Create new trade
-                    $this->createTradeFromOrder($account, $order);
-                    $savedCount++;
+                    // CLOSED TRADE: Update if exists, otherwise insert new
+                    if ($existingTrade) {
+                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
+                        // Set ID to perform update on the correct row
+                        $closedTradeData['id'] = $existingTrade->id;
+                        $tradesToUpsert[] = $closedTradeData;
+                        $savedCount++;
+                    } else {
+                        // No open trade exists but we have a closed trade - insert it
+                        $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
+                        $savedCount++;
+                    }
                 }
-            } catch (\Exception $e) {
-                Log::error("Error processing trade {$order->Order} for account {$account->code}: " . $e->getMessage());
+
+                if (count($tradesToUpsert) >= 50) { // Process in batches
+                    $this->processBatch($tradesToUpsert);
+                    $tradesToUpsert = [];
+                }
             }
+
+            if (!empty($tradesToUpsert)) {
+                $this->processBatch($tradesToUpsert);
+            }
+
+            $this->updateSyncStatus($account, 'success', $savedCount);
+            return 'success';
+        } catch (\Exception $e) {
+            Log::error("Error syncing account {$account->code}: " . $e->getMessage());
+            $this->updateSyncStatus($account, 'error');
+            return 'error';
         }
-
-        return $savedCount;
     }
 
-    protected function shouldUpdateTrade($trade, $order)
+    protected function executeWithRetries($callback)
     {
-        return $trade->close_price != ($order->PriceCurrent ?? null) ||
-            $trade->state != $order->State;
+        $maxRetries = 3;
+        $retryDelay = 1;
+        $attempt = 0;
+
+        do {
+            $error_code = $callback();
+            if ($error_code == MTRetCode::MT_RET_OK) {
+                break;
+            }
+            $attempt++;
+            if ($attempt < $maxRetries) {
+                sleep($retryDelay);
+            }
+        } while ($attempt < $maxRetries);
+
+        return $error_code;
     }
 
-    protected function createTradeFromOrder(Account $account, $order): void
+    protected function prepareOpenTrade($account, $positionId, $order)
     {
-        Trade::create([
+        return [
             'account_id' => $account->id,
-            'code' => (string) $order->Order,
-            'order_id' => (string) $order->Order,
-            'symbol' => $order->Symbol,
-            'position_id' => $order->Order,
-            'type' => $order->Type,
-            'volume' => ($order->VolumeInitial ?? 0) / 10000,
-            'volume_ext' => $order->VolumeInitialExt ?? ($order->VolumeInitial ?? 0),
-            'open_price' => $order->PriceOrder,
-            'close_price' => $order->PriceCurrent ?? null,
-            'profit' => 0, // MTOrder doesn't have profit, would need MTDeal
-            'sl' => $order->PriceSL ?? null,
-            'tp' => $order->PriceTP ?? null,
+            'close_price' => null,
+            'close_time' => null,
+            'code' => $account->code,
             'comment' => $order->Comment ?? '',
-            // 'commission' => 0,
-            'open_time' => date('Y-m-d H:i:s', $order->TimeSetup),
-            'close_time' => $order->TimeSetup != $order->TimeDone ?
-                date('Y-m-d H:i:s', $order->TimeDone) : null,
-            'state' => $order->State,
-            'status' => $order->State == 1 ? 'closed' : 'open',
             'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    protected function updateTradeFromOrder(Trade $trade, $order): void
-    {
-        $trade->update([
-            'close_price' => $order->PriceCurrent ?? null,
-            'profit' => 0, // MTOrder doesn't have profit
+            'open_price' => $order->PriceCurrent,
+            'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
+            'order_id' => $order->Order,
+            'position_id' => $positionId,
+            'profit' => 0,
+            'sl' => $order->PriceSL,
             'state' => $order->State,
-            'status' => $order->State == 1 ? 'closed' : 'open',
-            'close_time' => $order->TimeSetup != $order->TimeDone ?
-                date('Y-m-d H:i:s', $order->TimeDone) : null,
+            'status' => 'open',
+            'symbol' => $order->Symbol,
+            'tp' => $order->PriceTP,
+            'type' => $order->Type,
             'updated_at' => now(),
-        ]);
+            'volume' => $order->VolumeInitial / 10000,
+            'volume_ext' => $order->VolumeInitialExt,
+        ];
     }
 
-    protected function getTradeStatus($order): string
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
     {
-        // Based on MTOrder state
-        if ($order->State == 1) { // Assuming 1 is filled/completed
-            return 'closed';
+        return [
+            'account_id' => $account->id,
+            'position_id' => $positionId,
+            'order_id' => $openOrder->Order,
+            'symbol' => $openOrder->Symbol,
+            'type' => $openOrder->Type,
+            'volume' => $openOrder->VolumeInitial / 10000,
+            'volume_ext' => $openOrder->VolumeInitialExt,
+            'open_price' => $openOrder->PriceCurrent,
+            'close_price' => $closeOrder->PriceCurrent,
+            'sl' => $openOrder->PriceSL,
+            'tp' => $openOrder->PriceTP,
+            'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
+            'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
+            'state' => $closeOrder->State,
+            'comment' => $openOrder->Comment,
+            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit, 2),
+            'status' => 'closed',
+            'code' => $account->code,
+            'updated_at' => now(),
+            'created_at' => now(),
+        ];
+    }
+
+    protected function processBatch(array $trades)
+    {
+        try {
+            // Use both position_id and id for upsert
+            // This ensures new trades are inserted by position_id
+            // and existing trades are updated by id
+            Trade::upsert(
+                $trades,
+                ['position_id'], // unique identifier
+                ['id', 'close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // columns to update
+            );
+        } catch (\Exception $e) {
+            Log::error("Error processing trade batch: " . $e->getMessage());
+            throw $e;
         }
-        return 'open';
     }
 
     protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
