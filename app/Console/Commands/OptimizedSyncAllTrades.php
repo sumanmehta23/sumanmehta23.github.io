@@ -31,10 +31,15 @@ use Illuminate\Support\Facades\Cache;
  * 
  * OPTIMIZATION FEATURES:
  * - Skip accounts with no recent activity during peak hours
- * - Incremental sync using last_synced_at timestamps
+ * - Incremental sync using last_balance_sync_at timestamps
  * - Intelligent batching based on activity level
  * - Automatic tier adjustment based on trading patterns
  * - Peak/off-peak scheduling
+ * 
+ * REQUIRED DATABASE COLUMNS (added via migrations):
+ * - accounts.sync_tier ENUM('very_active','active','inactive','dormant')
+ * - accounts.last_trade_at TIMESTAMP
+ * - accounts.last_balance_sync_at TIMESTAMP
  */
 class OptimizedSyncAllTrades extends Command
 {
