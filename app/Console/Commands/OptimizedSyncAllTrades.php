@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\OptimizedSyncTradesJob;
+use App\Jobs\BatchSyncTradesJob;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -159,44 +160,49 @@ class OptimizedSyncAllTrades extends Command
         $startTime = now();
 
         $query->chunk(500, function ($accounts) use ($batchSize, $maxConcurrent, $delay, $totalAccounts, &$processedCount, &$activeBatches) {
-            $jobs = [];
-            foreach ($accounts as $account) {
-                $jobs[] = new OptimizedSyncTradesJob($account, $this->getLastSyncTime($account));
-            }
+            // Group accounts for batch processing
+            $accountBatches = $accounts->chunk($batchSize);
 
-            if (!empty($jobs)) {
-                $jobBatches = array_chunk($jobs, $batchSize);
+            foreach ($accountBatches as $batchIndex => $accountBatch) {
+                // Wait if too many concurrent batches
+                while ($activeBatches >= $maxConcurrent) {
+                    $this->info("Waiting for active batches... ({$activeBatches}/{$maxConcurrent})");
+                    sleep(5);
+                    $activeBatches = max(0, $activeBatches - 1);
+                }
 
-                foreach ($jobBatches as $batchIndex => $batch) {
-                    // Wait if too many concurrent batches
-                    while ($activeBatches >= $maxConcurrent) {
-                        $this->info("Waiting for active batches... ({$activeBatches}/{$maxConcurrent})");
-                        sleep(5);
-                        $activeBatches = max(0, $activeBatches - 1);
-                    }
+                // Prepare accounts and their sync times for batch job
+                $batchAccounts = $accountBatch->all(); // Keep as Account models
+                $batchSyncTimes = [];
 
-                    $this->info("Processing batch " . ($batchIndex + 1) . " with " . count($batch) . " accounts");
+                foreach ($accountBatch as $account) {
+                    $batchSyncTimes[] = $this->getLastSyncTime($account);
+                }
 
-                    Bus::batch($batch)
-                        ->allowFailures()
-                        ->onConnection('redis')
-                        ->onQueue('optimized-sync-trades')
-                        ->then(function () use (&$activeBatches) {
-                            $activeBatches--;
-                        })
-                        ->catch(function () use (&$activeBatches) {
-                            $activeBatches--;
-                        })
-                        ->dispatch();
+                $this->info("Processing batch " . ($batchIndex + 1) . " with " . count($batchAccounts) . " accounts");
 
-                    $activeBatches++;
-                    $processedCount += count($batch);
+                // Create single batch job to handle multiple accounts
+                $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
 
-                    $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
+                Bus::batch([$batchJob])
+                    ->allowFailures()
+                    ->onConnection('redis')
+                    ->onQueue('optimized-sync-trades')
+                    ->then(function () use (&$activeBatches) {
+                        $activeBatches--;
+                    })
+                    ->catch(function () use (&$activeBatches) {
+                        $activeBatches--;
+                    })
+                    ->dispatch();
 
-                    if ($delay > 0) {
-                        sleep($delay);
-                    }
+                $activeBatches++;
+                $processedCount += count($batchAccounts);
+
+                $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
+
+                if ($delay > 0) {
+                    sleep($delay);
                 }
             }
         });
@@ -239,7 +245,8 @@ class OptimizedSyncAllTrades extends Command
 
         $this->info("Testing sync for account: {$accountCode}");
 
-        $job = new OptimizedSyncTradesJob($account, $this->getLastSyncTime($account));
+        // Use batch job for single account (still benefits from connection reuse patterns)
+        $job = new BatchSyncTradesJob([$account], [$this->getLastSyncTime($account)]);
 
         Bus::batch([$job])
             ->allowFailures()
