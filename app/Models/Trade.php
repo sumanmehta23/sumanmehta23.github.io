@@ -8,22 +8,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Trade extends Model
 {
-    use HasFactory,HasUuids;
+    use HasFactory, HasUuids;
 
     protected $table = 'trades';
 
     protected $guarded = [];
 
     protected $casts = [
-        'open_time' => 'datetime',
-        'close_time' => 'datetime',
+        'opened' => 'datetime',
+        'closed' => 'datetime',
         'volume' => 'decimal:2',
-        'volume_ext' => 'decimal:2',
         'open_price' => 'decimal:5',
-        'close_price' => 'decimal:5',
+        'current_price' => 'decimal:5',
         'profit' => 'decimal:2',
-        'sl' => 'decimal:5',
-        'tp' => 'decimal:5',
+        'stop_loss' => 'decimal:5',
+        'take_profit' => 'decimal:5',
+        'commission' => 'decimal:2',
+        'swap' => 'decimal:2',
+        'sell' => 'boolean',
+        'invalid' => 'boolean',
+        'partial' => 'boolean',
+        'final_state' => 'boolean',
     ];
 
     public function account()
