@@ -484,7 +484,7 @@ class MT5Accounts extends Controller
                     )
                     ->event('create')
                     ->log('Create Live Account');
-                Account::create([
+                $account = Account::create([
                     'user_id' => $user->id,
                     'name' => $new_user->Name,
                     'demo' => false,
@@ -501,7 +501,7 @@ class MT5Accounts extends Controller
                     'ib1' => $new_user->LeadSource,
                     'account_request_status' => '1',
                 ]);
-                $this->sendMail($new_user, 'Live');
+                $this->sendMail($new_user, 'Live',$account->platform);
                 // return redirect()->back()->with('success', $response['message']);
                 return redirect()->back()->with('success', $response['message']);
             } else {
@@ -713,7 +713,7 @@ class MT5Accounts extends Controller
                             'ib1' => $new_user->LeadSource,
                             'account_request_status' => 1,
                         ]);
-                        $this->sendMail($new_user, 'Live');
+                        $this->sendMail($new_user, 'Live',$account->platform);
                         return redirect()->back()->with('success', $response['message']);
                     } else {
                         return redirect()->back()->with('error', 'No account found to update.');
@@ -857,7 +857,7 @@ class MT5Accounts extends Controller
                             'account_request_status' => 1,
                         ]);
 
-                        $this->sendMail($new_user, 'Live');
+                        $this->sendMail($new_user, 'Live',$account->platform);
                         $successCount++;
                     } else {
                         $failCount++;
@@ -1108,7 +1108,7 @@ class MT5Accounts extends Controller
 
                     DemoDeposit::create($data);
                 }
-                $this->sendMail($new_user, 'Demo');
+                $this->sendMail($new_user, 'Demo',$account->platform);
                 return redirect()->back()->with('success', $response['message']);
             } else {
                 return redirect()->back()->with('error', $response['message']);
@@ -1249,7 +1249,7 @@ class MT5Accounts extends Controller
         }
     }
 
-    public function sendMail($new_user, $type, $platform = 'MT5')
+    public function sendMail($new_user, $type, $platform)
     {
 
         $settings = settings();
