@@ -243,7 +243,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0;">{{ $content }}</p>
+                                                                    <p style="margin: 0;">{!! $content !!}</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -256,7 +256,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    {{-- <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
@@ -268,7 +268,11 @@
                                                         <tr>
                                                             <td class="pad" style="width:100%;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_2.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @if ($platform == 'MT5')
+                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @else
+                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/x9.jpg' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @endif
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -280,7 +284,7 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table> --}}
+                    </table>
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-7" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>

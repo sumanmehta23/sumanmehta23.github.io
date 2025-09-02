@@ -1275,7 +1275,8 @@ class MT5Accounts extends Controller
             "title_right" => "",
             "subtitle_right" => "Your " . $type . " Account is Ready!",
             "acc_type" => $new_user->type,
-            "content" => $content
+            "content" => $content,
+            "platform" => $platform,
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
