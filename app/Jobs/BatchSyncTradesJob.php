@@ -203,33 +203,37 @@ class BatchSyncTradesJob implements ShouldQueue
             $tradesToUpsert = [];
             $savedCount = 0;
 
+            // Get ALL deals for this account ONCE (moved outside the loop for efficiency)
+            $totalDeals = 0;
+            $allDeals = [];
+            $error_code = $api->DealGetTotal($account->code, $fromDate, $toDate, $totalDeals);
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return 'error';
+            }
+
+            if ($totalDeals > 0) {
+                $error_code = $api->DealGetPage($account->code, $fromDate, $toDate, 0, $totalDeals, $allDeals);
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                    $this->updateSyncStatus($account, 'error');
+                    return 'error';
+                }
+            }
+
             foreach ($ordersByPosition as $positionId => $positionOrders) {
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // Get total number of deals first
-                $totalDeals = 0;
-                $error_code = $api->DealGetTotal($account->code, $fromDate, $toDate, $totalDeals);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                // Get the deals
-                $deals = [];
-                $error_code = $api->DealGetPage($account->code, $fromDate, $toDate, 0, $totalDeals, $deals);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
+                // Filter deals for this specific position from the already-fetched deals
+                $filteredDeals = array_values(array_filter($allDeals, fn($deal) => $deal->Order == $positionId));
                 $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
                 // Debug logging for account 135405 deals
                 if ($account->code == 135405) {
                     Log::info("=== DEBUG: Account 135405 - Deals for Position {$positionId} ===");
-                    Log::info("Total deals found: " . count($deals));
+                    Log::info("Total deals found for account: " . count($allDeals));
                     Log::info("Filtered deals for position {$positionId}: " . count($filteredDeals));
                     foreach ($filteredDeals as $dealIndex => $deal) {
                         if (is_object($deal)) {

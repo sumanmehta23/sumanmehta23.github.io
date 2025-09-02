@@ -98,31 +98,33 @@ class SyncTrades implements ShouldQueue
 
             $tradesToUpsert = [];
 
+            // Get ALL deals for this account ONCE (moved outside the loop for efficiency)
+            $totalDeals = 0;
+            $allDeals = [];
+            $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
+                return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+            });
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                return;
+            }
+
+            if ($totalDeals > 0) {
+                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$allDeals) {
+                    return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $allDeals);
+                });
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                    return;
+                }
+            }
+
             foreach ($ordersByPosition as $positionId => $positionOrders) {
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // Get total number of deals first
-                $totalDeals = 0;
-                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
-                    return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
-                });
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                // Get the deals
-                $deals = [];
-                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$deals) {
-                    return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
-                });
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
+                // Filter deals for this specific position from the already-fetched deals
+                $filteredDeals = array_values(array_filter($allDeals, fn($deal) => $deal->Order == $positionId));
 
                 $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
