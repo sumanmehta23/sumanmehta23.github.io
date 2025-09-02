@@ -111,7 +111,7 @@ class BatchSyncTradesJob implements ShouldQueue
         $avgPerAccount = round($duration / $accountCount, 2);
 
         Log::info("BatchSyncTradesJob completed: {$results['processed']} accounts in {$duration}s (avg: {$avgPerAccount}s/account). " .
-            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}");
+            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']} accounts: {$accountCodes}");
     }
 
     protected function syncSingleAccount($api, Account $account, Carbon $fromTime): string
@@ -350,7 +350,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'status' => 'open',
             'symbol' => $order->Symbol,
             'tp' => $order->PriceTP,
-            'type' => $order->Type ?'sell' : 'buy',
+            'type' => $order->Type ? 'sell' : 'buy',
             'updated_at' => now(),
             'volume' => $order->VolumeInitial / 10000,
             'volume_ext' => $order->VolumeInitialExt,
@@ -371,7 +371,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'position_id' => $positionId,
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
-            'type' => $openOrder->Type ?'sell' : 'buy',
+            'type' => $openOrder->Type ? 'sell' : 'buy',
             'volume' => $openOrder->VolumeInitial / 10000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
