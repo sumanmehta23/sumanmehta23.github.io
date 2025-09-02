@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Trade extends Model
 {
-    use HasFactory,HasUuids;
+    use HasFactory, HasUuids;
 
     protected $table = 'trades';
 
@@ -24,6 +24,12 @@ class Trade extends Model
         'profit' => 'decimal:2',
         'sl' => 'decimal:5',
         'tp' => 'decimal:5',
+        'commission' => 'decimal:2',
+        'swap' => 'decimal:2',
+        'sell' => 'boolean',
+        'invalid' => 'boolean',
+        'partial' => 'boolean',
+        'final_state' => 'boolean',
     ];
 
     public function account()

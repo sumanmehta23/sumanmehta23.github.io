@@ -67,7 +67,6 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
-
         session()->remove('error');
         $user = auth()->user();
         if ($user->id != $account->user_id) {

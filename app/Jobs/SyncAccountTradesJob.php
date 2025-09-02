@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use App\Services\MT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
+use App\Jobs\DistributeIbCommissionJob;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -29,7 +30,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $mt5Service;
     protected $api;
     protected  $account;
-    protected $accountId;
+    protected $accountIds; // Changed from $accountId to support multiple accounts
     protected $newTrades = false;
     protected $referral_code;
     protected $ib_user_id;
@@ -38,9 +39,10 @@ class SyncAccountTradesJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($accountId, $referral_code, $ib_user_id, $ib_acc_plans)
+    public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans)
     {
-        $this->accountId = $accountId;
+        // Support both single account ID (backward compatibility) and array of IDs
+        $this->accountIds = is_array($accountIds) ? $accountIds : [$accountIds];
         $this->referral_code = $referral_code;
         $this->ib_user_id = $ib_user_id;
         $this->ib_acc_plans = $ib_acc_plans;
@@ -64,13 +66,29 @@ class SyncAccountTradesJob implements ShouldQueue
             $this->mt5Service = new MT5Service($api);
             $this->mt5Service->connect();
             $this->api = $this->mt5Service->getApi();
-            $this->account = Cache::remember("account:{$this->accountId}", now()->addMinutes(10), function () {
-                return Account::find($this->accountId);
+
+            // Process each account
+            foreach ($this->accountIds as $accountId) {
+                $this->processAccount($accountId);
+            }
+        } catch (\Exception $e) {
+            Log::error("SyncAccountTradesJob failed: " . $e->getMessage());
+            throw $e; // Ensure the job registers as failed
+        }
+    }
+
+    protected function processAccount($accountId): void
+    {
+        try {
+            $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
+                return Account::find($accountId);
             });
+
             if (!$this->account) {
-                Log::error('Account not found for id: ' . $this->accountId);
+                Log::error('Account not found for id: ' . $accountId);
                 return;
             }
+
             // Log::info('Syncing account trades for account: ' . $this->account->code);
             $login = $this->account->code;
             $from = 'September 01,2024';
@@ -97,7 +115,9 @@ class SyncAccountTradesJob implements ShouldQueue
             $symbolMappings = Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
                 return Symbol::pluck('path', 'symbol')->toArray();
             });
+
             while ($offset < $total && $attempts < $maxTries) {
+                $orders = []; // Initialize orders array
                 $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error('MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -197,8 +217,8 @@ class SyncAccountTradesJob implements ShouldQueue
                 DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             }
         } catch (\Exception $e) {
-            \Log::error("SyncAccountTradesJob failed: " . $e->getMessage());
-            throw $e; // Ensure the job registers as failed
+            Log::error("SyncAccountTradesJob failed for account {$accountId}: " . $e->getMessage());
+            // Don't throw here since we're processing multiple accounts
         }
     }
     private function processTradeBatch(array $orders, $account)

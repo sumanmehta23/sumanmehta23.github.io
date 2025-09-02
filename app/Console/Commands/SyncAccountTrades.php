@@ -13,17 +13,22 @@ use Illuminate\Support\Facades\Cache;
 
 class SyncAccountTrades extends Command
 {
-    protected $signature = 'app:sync-account-trades';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity}';
     protected $description = 'Sync account trades for IBs';
 
     public function handle()
     {
+        $batchSize = (int) $this->option('batch-size');
+        $maxJobs = (int) $this->option('max-jobs');
+        $activeOnly = $this->option('active-only');
+
+        $totalJobsCreated = 0;
         Ib1::with(['planDetails', 'user'])  // Eager load related models
             ->where('status', 1)
             // ->where('email', 'zhawk1@protonmail.com')
             ->whereNotNull('ib_plan_details_id')
             ->cursor()  // More memory efficient for large datasets
-            ->each(function ($ib1) {
+            ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
 
                 if (!$plan_id) return;
@@ -48,28 +53,49 @@ class SyncAccountTrades extends Command
                     }
                 }
 
-                // Fetch accounts in smaller batches
-                Account::select('id', 'code', 'user_id', 'account_type_id')
+                // Fetch accounts in smaller batches - only those with recent activity
+                $accountQuery = Account::select('id', 'code', 'user_id', 'account_type_id', 'last_trade_at')
                     ->where('demo', false)
-                    ->where('account_request_status', 1)
-                    ->whereHas(
-                        'user',
-                        fn($query) =>
-                        $query->where(function ($q) use ($referral_code) {
-                            for ($i = 1; $i <= 15; $i++) {
-                                $q->orWhere("ib$i", $referral_code);
-                            }
-                        })->where('status', 1)
-                    )
-                    ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans) {
-                        $jobs = [];
+                    ->where('account_request_status', 1);
 
-                        foreach ($accounts as $client) {
-                            // Log::info('Accounts to sync commission : ' . $client->code);
-                            $jobs[] = new SyncAccountTradesJob($client->id, $referral_code, $userId, $ib_acc_plans);
+                // Apply activity filter if requested
+                if ($activeOnly) {
+                    $accountQuery->where(function ($query) {
+                        $query->where('last_trade_at', '>=', now()->subDays(30))
+                            ->orWhereNull('last_trade_at');
+                    });
+                }
+
+                $accountQuery->whereHas(
+                    'user',
+                    fn($query) =>
+                    $query->where(function ($q) use ($referral_code) {
+                        for ($i = 1; $i <= 15; $i++) {
+                            $q->orWhere("ib$i", $referral_code);
+                        }
+                    })->where('status', 1)
+                )
+                    ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
+                        // Stop creating jobs if we've reached the limit
+                        if ($totalJobsCreated >= $maxJobs) {
+                            return false; // Stop chunking
                         }
 
-                        // Dispatch jobs in batches of 500
+                        // Process accounts in smaller batches within each job
+                        $accountChunks = $accounts->chunk($batchSize);
+                        $jobs = [];
+
+                        foreach ($accountChunks as $accountChunk) {
+                            if ($totalJobsCreated >= $maxJobs) {
+                                break;
+                            }
+
+                            $accountIds = $accountChunk->pluck('id')->toArray();
+                            $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
+                            $totalJobsCreated++;
+                        }
+
+                        // Dispatch jobs in batches
                         if (!empty($jobs)) {
                             Bus::batch($jobs)->onQueue('syncaccountstrades')->dispatch();
                         }

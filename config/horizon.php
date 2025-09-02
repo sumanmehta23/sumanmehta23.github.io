@@ -185,7 +185,7 @@ return [
             'queue' => ['default', 'emails'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 5),
+            'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 3), // Reduced from 5
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
@@ -198,7 +198,7 @@ return [
             'queue' => ['syncaccountstrades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_COMMISSION_PROCESSES', 30),
+            'maxProcesses' => env('SYNC_MAX_COMMISSION_PROCESSES', 5), // Reduced from 30
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 1000,
@@ -211,7 +211,7 @@ return [
             'queue' => ['distributeibcommission'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 10),
+            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 3), // Reduced from 10
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
@@ -224,23 +224,58 @@ return [
             'queue' => ['sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 40),
+            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 8), // Reduced from 40
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 1000,
             'tries' => 1,
-            'timeout' => 60,
+            'timeout' => 120, // Increased timeout
             'nice' => 0,
         ],
+        'supervisor-5' => [
+            'connection' => 'redis',
+            'queue' => ['sync-all-trades', 'optimized-sync-trades'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 3), // Drastically reduced from 20
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 1000,
+            'tries' => 1,
+            'timeout' => 300, // Increased timeout
+            'nice' => 0,
+        ],
+
+
 
     ],
 
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
+                'maxProcesses' => 2,
                 'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'balanceCooldown' => 5,
+            ],
+            'supervisor-2' => [
+                'maxProcesses' => 3,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+            'supervisor-3' => [
+                'maxProcesses' => 2,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+            'supervisor-4' => [
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+            'supervisor-5' => [
+                'maxProcesses' => 5, // Increased from 2 to 5 for BatchSyncTradesJob
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
             ],
         ],
 
@@ -256,7 +291,10 @@ return [
             ],
             'supervisor-4' => [
                 'maxProcesses' => 50,
-            ]
+            ],
+            'supervisor-5' => [
+                'maxProcesses' => 10, // Added for optimized-sync-trades queue
+            ],
         ],
     ],
 ];
