@@ -72,6 +72,14 @@ class SyncTrades implements ShouldQueue
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetTotal final error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return;
+            }
+
+            // Skip if no recent orders
+            if ($total == 0) {
+                $this->updateSyncStatus($account, 'no_changes');
+                Log::info("No recent orders found for account {$account->code}");
                 return;
             }
 
@@ -82,6 +90,7 @@ class SyncTrades implements ShouldQueue
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
                 return;
             }
 
@@ -106,6 +115,7 @@ class SyncTrades implements ShouldQueue
             });
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
                 return;
             }
 
@@ -115,6 +125,7 @@ class SyncTrades implements ShouldQueue
                 });
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("Failed to get deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                    $this->updateSyncStatus($account, 'error');
                     return;
                 }
             }
@@ -155,8 +166,10 @@ class SyncTrades implements ShouldQueue
                 $this->processBatch($tradesToUpsert);
             }
 
+            $this->updateSyncStatus($account, 'success', count($tradesToUpsert));
             Log::info("Completed SyncTrades job for account ID: {$account->code}");
         } catch (\Exception $e) {
+            $this->updateSyncStatus($account, 'error');
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
         } finally {
@@ -240,5 +253,23 @@ class SyncTrades implements ShouldQueue
         }
 
         // Log::info("Processed trade batch for account ID: {$this->account->code}");
+    }
+
+    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
+    {
+        $syncStatus = match ($status) {
+            'success', 'no_changes' => 'synced',
+            'error' => 'error',
+            default => 'pending'
+        };
+
+        $account->update([
+            'last_balance_sync_at' => now(),
+            'last_sync_attempt_at' => now(),
+            'sync_status' => $syncStatus,
+            'sync_error' => $status === 'error' ? 'Sync failed' : null
+        ]);
+
+        Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
     }
 }

@@ -137,6 +137,7 @@ class OptimizedSyncAllTrades extends Command
 
     protected function syncAllAccounts($batchSize, $maxConcurrent, $delay)
     {
+        // Prioritize accounts that haven't been synced recently
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
@@ -145,10 +146,29 @@ class OptimizedSyncAllTrades extends Command
                     ->orWhereNull('competition_end_date')
                     ->orWhereNull('competition_status')
                     ->orWhere('competition_status', '!=', 'active');
-            });
+            })
+            // ORDER BY sync priority: NULL sync attempts first, then oldest attempts
+            ->orderByRaw('last_sync_attempt_at IS NULL DESC')
+            ->orderBy('last_sync_attempt_at', 'asc');
 
         $totalAccounts = $query->count();
         $this->info("Found {$totalAccounts} accounts to sync (excluding competition accounts)");
+
+        // Show priority insights
+        $neverSynced = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->whereNull('last_sync_attempt_at')
+            ->count();
+
+        $staleSynced = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->whereNotNull('last_sync_attempt_at')
+            ->where('last_sync_attempt_at', '<', now()->subHours(6))
+            ->count();
+
+        $this->info("Priority: {$neverSynced} never synced, {$staleSynced} stale (>6h old)");
 
         if ($totalAccounts === 0) {
             $this->info("No accounts found to sync.");
