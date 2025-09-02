@@ -23,7 +23,7 @@ class PrioritySyncAccountsCommand extends Command
                             {--batch-size=10 : Number of accounts per batch}
                             {--max-concurrent=5 : Maximum concurrent batches}
                             {--cycle-delay=30 : Delay between sync cycles in seconds}
-                            {--min-sync-interval=1 : Minimum hours between syncs for same account}
+                            {--min-sync-interval=60 : Minimum minutes between syncs for same account}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}';
 
@@ -152,7 +152,7 @@ class PrioritySyncAccountsCommand extends Command
     protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval): int
     {
         // Get accounts that need syncing, prioritized by last sync attempt
-        $cutoffTime = now()->subHours($minSyncInterval);
+        $cutoffTime = now()->subMinutes($minSyncInterval);
 
         $accounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
