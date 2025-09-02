@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\OptimizedMT5Service;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
@@ -19,8 +19,6 @@ class SyncTrades implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
     protected $account;
-    protected $maxRetries = 3;
-    protected $retryDelay = 1; // reduced from 2 to 1 second
     protected $batchSize = 1;
 
     public function __construct($account)
@@ -28,7 +26,7 @@ class SyncTrades implements ShouldQueue
         $this->account = $account;
     }
 
-    public function handle(MT5Service $mt5Service)
+    public function handle()
     {
         // Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
@@ -37,41 +35,27 @@ class SyncTrades implements ShouldQueue
             ->get()
             ->keyBy('position_id');
 
-        $mt5Service->connect();
-        $api = $mt5Service->getApi();
-        $settings = settings();
-        $account = ($this->account);
-        // Initialize connection
-        $api = $mt5Service->getApi();
-        $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-
-        // Verify and establish connection
-        if (!$api->IsConnected()) {
-            $error_code = $api->Connect(
-                $settings['mt5_server_ip'],
-                $settings['mt5_server_port'],
-                300,
-                $settings['mt5_server_web_login'],
-                $settings['mt5_server_web_password']
-            );
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("MT5 connection failed for account {$account->code}: " . MTRetCode::GetError($error_code));
-                return;
-            }
-        }
+        // Use optimized MT5 service with connection pooling
+        $mt5Service = new OptimizedMT5Service();
 
         try {
+            $api = $mt5Service->getApi();
+            $account = $this->account;
+
             if (!$account || !$account->code) {
                 Log::error("Account not found");
                 return;
             }
 
-            // Verify account exists on MT5 server
+            // Verify account exists on MT5 server using optimized service
             $mt5_user = null;
-            $error_code = $api->UserGet($account->code, $mt5_user);
+            $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, &$mt5_user) {
+                return $api->UserGet($account->code, $mt5_user);
+            });
+
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                $mt5Service->reportError();
                 return;
             }
 
@@ -82,9 +66,9 @@ class SyncTrades implements ShouldQueue
             $orders = [];
 
             // Get total with retries
-            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, &$total) {
+            $error_code = $mt5Service->executeWithRetry(function ($api) use ($login, $from, $to, &$total) {
                 return $api->HistoryGetTotal($login, $from, $to, $total);
-            }, $mt5Service);
+            });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetTotal final error for login {$login}: " . MTRetCode::GetError($error_code));
@@ -92,9 +76,9 @@ class SyncTrades implements ShouldQueue
             }
 
             // Get history page with retries
-            $error_code = $this->executeWithRetries(function () use ($api, $login, $from, $to, $total, &$orders) {
+            $error_code = $mt5Service->executeWithRetry(function ($api) use ($login, $from, $to, $total, &$orders) {
                 return $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
-            }, $mt5Service);
+            });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
@@ -120,7 +104,9 @@ class SyncTrades implements ShouldQueue
 
                 // Get total number of deals first
                 $totalDeals = 0;
-                $error_code = $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
+                    return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+                });
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
                     continue;
@@ -128,7 +114,9 @@ class SyncTrades implements ShouldQueue
 
                 // Get the deals
                 $deals = [];
-                $error_code = $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
+                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$deals) {
+                    return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
+                });
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
                     continue;
@@ -169,30 +157,9 @@ class SyncTrades implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
+        } finally {
+            // Connection will be automatically returned to pool by OptimizedMT5Service
         }
-    }
-
-    protected function executeWithRetries($callback, $mt5Service)
-    {
-        $attempt = 0;
-        do {
-            $error_code = $callback();
-            if ($error_code == MTRetCode::MT_RET_OK) {
-                break;
-            }
-            $attempt++;
-            if ($attempt < $this->maxRetries) {
-                // Log::warning("MT5 operation attempt {$attempt} failed: " . MTRetCode::GetError($error_code) . ". Retrying...");
-                sleep($this->retryDelay);
-
-                // Reconnect if needed
-                if (!$mt5Service->getApi()->IsConnected()) {
-                    $mt5Service->connect();
-                }
-            }
-        } while ($attempt < $this->maxRetries);
-
-        return $error_code;
     }
 
     protected function prepareOpenTrade($account, $positionId, $order)

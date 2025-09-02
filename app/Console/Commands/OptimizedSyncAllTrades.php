@@ -49,7 +49,8 @@ class OptimizedSyncAllTrades extends Command
                             {--delay=5 : Delay between batches in seconds}
                             {--test-account= : Test with specific account code}
                             {--daemon : Run as daemon continuously}
-                            {--status : Show sync status}';
+                            {--status : Show sync status}
+                            {--use-batches : Use Laravel batches (adds overhead for tracking)}';
 
     protected $description = 'Efficient MT5 sync - processes ALL accounts reliably with high performance';
 
@@ -183,19 +184,24 @@ class OptimizedSyncAllTrades extends Command
                 // Create single batch job to handle multiple accounts
                 $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
 
-                Bus::batch([$batchJob])
-                    ->allowFailures()
-                    ->onConnection('redis')
-                    ->onQueue('optimized-sync-trades')
-                    ->then(function () use (&$activeBatches) {
-                        $activeBatches--;
-                    })
-                    ->catch(function () use (&$activeBatches) {
-                        $activeBatches--;
-                    })
-                    ->dispatch();
-
-                $activeBatches++;
+                // Only use batch if we have monitoring/callback needs, otherwise dispatch directly
+                if ($this->option('use-batches')) {
+                    Bus::batch([$batchJob])
+                        ->allowFailures()
+                        ->onConnection('redis')
+                        ->onQueue('optimized-sync-trades')
+                        ->then(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->catch(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->dispatch();
+                    $activeBatches++;
+                } else {
+                    // Direct dispatch - no batch overhead
+                    $batchJob->onQueue('optimized-sync-trades')->dispatch();
+                }
                 $processedCount += count($batchAccounts);
 
                 $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
@@ -244,15 +250,10 @@ class OptimizedSyncAllTrades extends Command
 
         $this->info("Testing sync for account: {$accountCode}");
 
-        // Use batch job for single account (still benefits from connection reuse patterns)
+        // Direct dispatch for single account - no batch overhead needed
         $job = new BatchSyncTradesJob([$account], [$this->getLastSyncTime($account)]);
+        $job->onQueue('optimized-sync-trades')->dispatch();
 
-        Bus::batch([$job])
-            ->allowFailures()
-            ->onConnection('redis')
-            ->onQueue('optimized-sync-trades')
-            ->dispatch();
-
-        $this->info("Sync job dispatched for account {$accountCode}");
+        $this->info("Sync job dispatched directly for account {$accountCode}");
     }
 }

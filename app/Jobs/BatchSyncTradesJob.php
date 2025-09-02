@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Trade;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\OptimizedMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +53,7 @@ class BatchSyncTradesJob implements ShouldQueue
         $this->timeout = max(600, count($accounts) * 90 + 300);
     }
 
-    public function handle(MT5Service $mt5Service)
+    public function handle(OptimizedMT5Service $mt5Service)
     {
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
         $accountCount = count($this->accounts);
@@ -70,8 +70,10 @@ class BatchSyncTradesJob implements ShouldQueue
         ];
 
         try {
-            // Single MT5 connection for all accounts
-            $this->connectWithRetry($mt5Service);
+            // Single optimized MT5 connection for all accounts
+            if (!$mt5Service->connect()) {
+                throw new \Exception("Failed to establish MT5 connection");
+            }
             $api = $mt5Service->getApi();
 
             foreach ($this->accounts as $index => $accountData) {
@@ -95,6 +97,9 @@ class BatchSyncTradesJob implements ShouldQueue
                     $results['errors']++;
                     $results['processed']++;
                     Log::error("Error syncing account {$accountData['code']}: " . $e->getMessage());
+
+                    // Report error to connection pool for adaptive management
+                    $mt5Service->reportError();
                 }
 
                 // Small delay between accounts to avoid overwhelming MT5
@@ -309,22 +314,9 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function executeWithRetries($callback)
     {
-        $maxRetries = 3;
-        $retryDelay = 1;
-        $attempt = 0;
-
-        do {
-            $error_code = $callback();
-            if ($error_code == MTRetCode::MT_RET_OK) {
-                break;
-            }
-            $attempt++;
-            if ($attempt < $maxRetries) {
-                sleep($retryDelay);
-            }
-        } while ($attempt < $maxRetries);
-
-        return $error_code;
+        // Note: This method is now simplified since OptimizedMT5Service 
+        // handles retries internally. Keep for backward compatibility.
+        return $callback();
     }
 
     protected function prepareOpenTrade($account, $positionId, $order)
@@ -436,20 +428,11 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function connectWithRetry(MT5Service $mt5Service, int $maxRetries = 3): void
+    protected function connectWithRetry(OptimizedMT5Service $mt5Service, int $maxRetries = 3): void
     {
-        $attempt = 0;
-        while ($attempt < $maxRetries) {
-            try {
-                $mt5Service->connect();
-                return;
-            } catch (\Exception $e) {
-                $attempt++;
-                if ($attempt >= $maxRetries) {
-                    throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts: " . $e->getMessage());
-                }
-                sleep(2 * $attempt); // Exponential backoff
-            }
+        // This method is now deprecated - OptimizedMT5Service handles retries internally
+        if (!$mt5Service->connect()) {
+            throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts");
         }
     }
 }

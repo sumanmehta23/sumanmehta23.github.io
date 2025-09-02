@@ -273,7 +273,7 @@ return [
                 'balanceCooldown' => 5,
             ],
             'supervisor-5' => [
-                'maxProcesses' => 2,
+                'maxProcesses' => 5, // Increased from 2 to 5 for BatchSyncTradesJob
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 5,
             ],
@@ -291,7 +291,10 @@ return [
             ],
             'supervisor-4' => [
                 'maxProcesses' => 50,
-            ]
+            ],
+            'supervisor-5' => [
+                'maxProcesses' => 10, // Added for optimized-sync-trades queue
+            ],
         ],
     ],
 ];

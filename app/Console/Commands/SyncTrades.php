@@ -50,7 +50,7 @@ class SyncTrades extends Command
      */
     public function handle()
     {
-        $batchSize = 1; // Process accounts per batch
+        $batchSize = 10; // Increased from 1 to reduce single-job batches
 
         Account::with('accountType')->whereNotNull('code')
             ->whereNotNull('competition_start_date')
@@ -73,25 +73,36 @@ class SyncTrades extends Command
 
                 // Only proceed if there are valid jobs
                 if (!empty($jobs)) {
-                    // Create batches of jobs each
-                    $jobBatches = array_chunk($jobs, $batchSize);
+                    $this->info("Processing " . count($jobs) . " sync jobs");
 
-                    foreach ($jobBatches as $batch) {
+                    // For efficiency: dispatch directly if few jobs, use batches for many
+                    if (count($jobs) <= 3) {
+                        // Direct dispatch for small numbers - no batch overhead
+                        foreach ($jobs as $job) {
+                            $job->onQueue('sync-trades')->dispatch();
+                        }
+                        $this->info("Dispatched " . count($jobs) . " jobs directly (no batch overhead)");
+                    } else {
+                        // Use batches only when beneficial (multiple jobs)
+                        $jobBatches = array_chunk($jobs, $batchSize);
 
-                        Bus::batch($batch)
-                            ->allowFailures()
-                            ->onConnection('redis')
-                            ->onQueue('sync-trades')
-                            ->then(function (Batch $batch) {
-                                // Log::info("Batch {$batch->id} completed successfully");
-                            })
-                            ->catch(function (Batch $batch, Throwable $e) {
-                                Log::error("Batch {$batch->id} failed: " . $e->getMessage());
-                            })
-                            ->finally(function (Batch $batch) {
-                                // Log::info("Batch {$batch->id} finished processing");
-                            })
-                            ->dispatch();
+                        foreach ($jobBatches as $batch) {
+                            Bus::batch($batch)
+                                ->allowFailures()
+                                ->onConnection('redis')
+                                ->onQueue('sync-trades')
+                                ->then(function (Batch $batch) {
+                                    // Log::info("Batch {$batch->id} completed successfully");
+                                })
+                                ->catch(function (Batch $batch, Throwable $e) {
+                                    Log::error("Batch {$batch->id} failed: " . $e->getMessage());
+                                })
+                                ->finally(function (Batch $batch) {
+                                    // Log::info("Batch {$batch->id} finished processing");
+                                })
+                                ->dispatch();
+                        }
+                        $this->info("Created " . count($jobBatches) . " batches for processing");
                     }
                 }
             });
