@@ -1,5 +1,7 @@
 <?php
 
+namespace App\MT5;
+
 /**
  * Work with ping
  */
