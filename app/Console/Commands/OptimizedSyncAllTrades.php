@@ -252,7 +252,7 @@ class OptimizedSyncAllTrades extends Command
 
         // Direct dispatch for single account - no batch overhead needed
         $job = new BatchSyncTradesJob([$account], [$this->getLastSyncTime($account)]);
-        $job->onQueue('optimized-sync-trades')->dispatch();
+        dispatch($job)->onQueue('optimized-sync-trades');
 
         $this->info("Sync job dispatched directly for account {$accountCode}");
     }
