@@ -200,7 +200,7 @@ class OptimizedSyncAllTrades extends Command
                     $activeBatches++;
                 } else {
                     // Direct dispatch - no batch overhead
-                    $batchJob->onQueue('optimized-sync-trades')->dispatch();
+                    dispatch($batchJob)->onQueue('optimized-sync-trades');
                 }
                 $processedCount += count($batchAccounts);
 
