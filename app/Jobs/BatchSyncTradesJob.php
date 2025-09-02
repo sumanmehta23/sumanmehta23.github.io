@@ -17,7 +17,7 @@ use Carbon\Carbon;
 
 /**
  * Batch Sync Trades Job - Multiple Accounts per Connection
- * 
+ *
  * This job processes multiple accounts in a single job to:
  * 1. Reuse MT5 connection across accounts (major performance gain)
  * 2. Reduce job overhead (fewer queue items)
@@ -163,36 +163,36 @@ class BatchSyncTradesJob implements ShouldQueue
             $error_code = $this->executeWithRetries(function () use ($api, $login, $fromDate, $toDate, $total, &$orders) {
                 return $api->HistoryGetPage($login, $fromDate, $toDate, 0, $total, $orders);
             });
-
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
                 $this->updateSyncStatus($account, 'error');
                 return 'error';
             }
 
-            // Debug logging for account 135405
-            if ($account->code == 135405) {
-                Log::info("=== DEBUG: Account 135405 - Orders Data ===");
-                Log::info("Total orders found: " . count($orders));
-                Log::info("Orders raw data: " . print_r($orders, true));
-                foreach ($orders as $index => $order) {
-                    if (is_object($order)) {
-                        Log::info("Order {$index}: " . json_encode([
-                            'Order' => $order->Order ?? 'NULL',
-                            'ExpertPositionID' => $order->ExpertPositionID ?? 'NULL',
-                            'Type' => $order->Type ?? 'NULL',
-                            'Symbol' => $order->Symbol ?? 'NULL',
-                            'VolumeInitial' => $order->VolumeInitial ?? 'NULL',
-                            'PriceCurrent' => $order->PriceCurrent ?? 'NULL',
-                            'TimeDone' => $order->TimeDone ?? 'NULL',
-                            'State' => $order->State ?? 'NULL',
-                            'Comment' => $order->Comment ?? 'NULL',
-                        ]));
-                    } else {
-                        Log::info("Order {$index}: " . print_r($order, true));
-                    }
-                }
-            }
+            // Debug logging for account 253538
+            // if ($account->code == 253538) {
+            //     Log::info("=== DEBUG: Account 253538 - Orders Data ===");
+            //     Log::info("Total orders found: " . count($orders));
+            //     Log::info("Orders raw data: " . print_r($orders, true));
+            //     foreach ($orders as $index => $order) {
+            //         Log::info("order  ".json_encode($order));
+            //         if (is_object($order)) {
+            //             Log::info("Order {$index}: " . json_encode([
+            //                 'Order' => $order->Order ?? 'NULL',
+            //                 'ExpertPositionID' => $order->ExpertPositionID ?? 'NULL',
+            //                 'Type' => $order->Type ?? 'NULL',
+            //                 'Symbol' => $order->Symbol ?? 'NULL',
+            //                 'VolumeInitial' => $order->VolumeInitial ?? 'NULL',
+            //                 'PriceCurrent' => $order->PriceCurrent ?? 'NULL',
+            //                 'TimeDone' => $order->TimeDone ?? 'NULL',
+            //                 'State' => $order->State ?? 'NULL',
+            //                 'Comment' => $order->Comment ?? 'NULL',
+            //             ]));
+            //         } else {
+            //             Log::info("Order {$index}: " . print_r($order, true));
+            //         }
+            //     }
+            // }
 
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
             $tradesToUpsert = [];
@@ -329,6 +329,10 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function prepareOpenTrade($account, $positionId, $order)
     {
+        // Log::info("account code  ".$account->code);
+        // Log::info("order  ".json_encode($order));
+        // Log::info("order id  ".$order->Order);
+        // Log::info("trade type  ".$order->Type);
         return [
             'account_id' => $account->id,
             'close_price' => null,
@@ -346,7 +350,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'status' => 'open',
             'symbol' => $order->Symbol,
             'tp' => $order->PriceTP,
-            'type' => $order->Type ?? 'sell',
+            'type' => $order->Type ?'sell' : 'buy',
             'updated_at' => now(),
             'volume' => $order->VolumeInitial / 10000,
             'volume_ext' => $order->VolumeInitialExt,
@@ -357,12 +361,17 @@ class BatchSyncTradesJob implements ShouldQueue
     {
         $multiplier = $openOrder->Type ? -1 : 1;
 
+        // Log::info("account code  ".$account->code);
+        // Log::info("order  ".json_encode($closeOrder));
+        // Log::info("order id  ".$closeOrder->Order);
+        // Log::info("trade type  ".$closeOrder->Type);
+
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
-            'type' => $openOrder->Type ?? 'sell',
+            'type' => $openOrder->Type ?'sell' : 'buy',
             'volume' => $openOrder->VolumeInitial / 10000,
             'volume_ext' => $openOrder->VolumeInitialExt,
             'open_price' => $openOrder->PriceCurrent,
