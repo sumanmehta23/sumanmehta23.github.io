@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:breach-account')->everyMinute();
 
         $schedule->command('app:sync-accounts')->everyFiveMinutes();
-        $schedule->command('app:optimized-sync-trades')->everyFiveMinutes();
+        // $schedule->command('app:optimized-sync-trades')->everyFiveMinutes();
         $schedule->command('app:sync-daily-reports')->daily();
         $schedule->command('app:sync-account-trades')->everyTenMinutes();
 
