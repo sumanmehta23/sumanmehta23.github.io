@@ -56,15 +56,16 @@ class MonitorMT5ConnectionPool extends Command
                 ? ($stats['healthy_connections'] / $stats['total_connections']) * 100
                 : 0;
 
-            if ($healthyRatio >= 80) {
+            if ($stats['total_connections'] == 0) {
+                $this->info('✅ Pool health: OPTIMAL (Idle - no wasted resources)');
+                $this->line('💡 0 connections = efficient resource usage');
+            } elseif ($healthyRatio >= 80) {
                 $this->info('✅ Pool health: EXCELLENT');
             } elseif ($healthyRatio >= 60) {
                 $this->warn('⚠️  Pool health: FAIR');
             } else {
                 $this->error('❌ Pool health: POOR');
-            }
-
-            // Recommendations
+            }            // Recommendations
             $utilization = (float) str_replace('%', '', $stats['pool_utilization'] ?? '0');
             if ($utilization > 90) {
                 $this->warn('💡 Recommendation: Consider increasing max_connections in config/mt5.php');

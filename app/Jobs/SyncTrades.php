@@ -28,7 +28,7 @@ class SyncTrades implements ShouldQueue
 
     public function handle()
     {
-        // Log::info("Started SyncTrades job for account ID: {$this->account->code}");
+        Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
         // Get existing trades to check their status
         $existingTrades = Trade::where('account_id', $this->account->id)
@@ -153,7 +153,7 @@ class SyncTrades implements ShouldQueue
                 $this->processBatch($tradesToUpsert);
             }
 
-            // Log::info("Completed SyncTrades job for account ID: {$account->code}");
+            Log::info("Completed SyncTrades job for account ID: {$account->code}");
         } catch (\Exception $e) {
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
