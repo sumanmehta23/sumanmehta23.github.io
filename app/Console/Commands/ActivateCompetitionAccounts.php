@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Console\Commands;
 
 use Exception;
@@ -18,7 +19,6 @@ use App\Models\IbPlanDetails;
 use App\Services\MailService;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
-use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -61,13 +61,13 @@ class ActivateCompetitionAccounts extends Command
      */
     public function handle()
     {
-    // dd('$accounts');
+        // dd('$accounts');
         Account::with('accountType')
             ->where('demo', 1)
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
             // ->whereNull('competition_status')
-            ->where('competition_email',0)
+            ->where('competition_email', 0)
             ->whereHas('accountType', function ($query) {
                 $query->where('competition_start_date', '<=', Carbon::now('UTC'));
             })
@@ -76,24 +76,24 @@ class ActivateCompetitionAccounts extends Command
             ->chunk(100, function ($accounts) {
                 // dd($accounts);
                 foreach ($accounts as $account) {
-                    if($account->code == NULL){
-                        Log::info('Competition start time: '.$account->competition_start_date);
-                        Log::info('Current time: '.Carbon::now('UTC'));
-                        if($account->accountType->competition_start_date <= now()){
+                    if ($account->code == NULL) {
+                        Log::info('Competition start time: ' . $account->competition_start_date);
+                        Log::info('Current time: ' . Carbon::now('UTC'));
+                        if ($account->accountType->competition_start_date <= now()) {
                             //  dd($accounts);
                         }
                         $settings = settings();
                         $user = User::where('id', $account->user_id)->first();
-                        Log::info('Competition counts '.json_encode(count($accounts)));
+                        Log::info('Competition counts ' . json_encode(count($accounts)));
                         $group = AccountType::where('id', $account->account_type_id)->firstOrFail();
 
-                        $referral=$user->referral;
-                        $ib=$user->ib1;
+                        $referral = $user->referral;
+                        $ib = $user->ib1;
                         $account_type_id = $account->account_type_id;
 
                         $ibdata = '';
-                        if($ib){
-                            $ibdata = Ib1::where('referral_code',$ib)->first();
+                        if ($ib) {
+                            $ibdata = Ib1::where('referral_code', $ib)->first();
                         }
 
                         $new_user = $this->api->UserCreate();
@@ -109,10 +109,10 @@ class ActivateCompetitionAccounts extends Command
                         $new_user->Phone = $user->number;
                         $new_user->Currency = 'USD';
                         $new_user->Company = $settings['mt5_company_name'];
-                        $new_user->Name = $user->fullname??$user->email;
+                        $new_user->Name = $user->fullname ?? $user->email;
                         $new_user->Email = $user->email;
-                        $new_user->LeadSource = $user->ib1?? "" ;
-                        $new_user->Agent = $ibdata->indexId?? "" ;
+                        $new_user->LeadSource = $user->ib1 ?? "";
+                        $new_user->Agent = $ibdata->indexId ?? "";
                         $new_user->PhonePassword = $this->generatePassword();
                         $new_user->InvestPassword = $this->generatePassword();
                         $new_user->Login = $this->generateRandomNumber();
@@ -120,12 +120,11 @@ class ActivateCompetitionAccounts extends Command
 
                         if ($response['status']) {
                             $acc = Account::where('id', $account->id)->first();
-                            if($acc)
-                            {
+                            if ($acc) {
                                 $acc->update([
                                     'user_id' => $user->id,
                                     'name' => $new_user->Name,
-                                    'demo'=> true,
+                                    'demo' => true,
                                     'email' => $new_user->Email,
                                     'code' => $new_user->Login,
                                     'account_type_id' => $account->account_type_id,
@@ -141,12 +140,12 @@ class ActivateCompetitionAccounts extends Command
                                 $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $account->balance, 'Deposit', $ticket, $margin_check = true);
                                 if ($errorCode != MTRetCode::MT_RET_OK) {
                                     $error = MTRetCode::GetError($errorCode);
-                                    Log::error('MT5 demo account : ' . $error.' for user '.$user->id);
+                                    Log::error('MT5 demo account : ' . $error . ' for user ' . $user->id);
                                     // return redirect()->back()->with('success', $error);
                                 } else {
                                     $data = [
                                         'user_id' => $user->id,
-                                        'account_id'=>$account->id,
+                                        'account_id' => $account->id,
                                         'email' => $new_user->Email,
                                         'code' => $new_user->Login,
                                         'deposit_amount' => $account->balance,
@@ -154,47 +153,46 @@ class ActivateCompetitionAccounts extends Command
                                     ];
 
                                     DemoDeposit::create($data);
-
                                 }
-                            //     $from = $settings['email_from_address'];
-                            //     $emailSubject = 'Competition Activated';
-                            //     $headers = "MIME-Version: 1.0\r\n";
-                            //     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-                            //     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                            //    $content = "
-                            //                     <div style='font-family: Montserrat, sans-serif; color: #000000;'>
-                            //                         <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
-                            //                         <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
-                            //                         <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
-                            //                         <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
-                            //                         <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
-                            //                         <p style='color: #000000;'>Trade confidently,</p>
-                            //                         <p style='color: #000000;'>The LQH Markets Team</p>
-                            //                     </div>
-                            //                 ";
+                                //     $from = $settings['email_from_address'];
+                                //     $emailSubject = 'Competition Activated';
+                                //     $headers = "MIME-Version: 1.0\r\n";
+                                //     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
+                                //     $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                                //    $content = "
+                                //                     <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                                //                         <p style='color: #000000;'>The wait is over — the LQH Markets {$account->accountType->ac_name} is officially underway!</p>
+                                //                         <hr style='border: none; border-top: 0.3px solid rgb(183, 182, 182); margin: 20px 0;'>
+                                //                         <p style='color: #000000;'>Now is your chance to put your trading strategies to the test and aim for the top of the leaderboard.</p>
+                                //                         <p style='color: #000000;'>Log in to your account, start trading on your preferred instruments, and stay ahead of the market.</p>
+                                //                         <p style='color: #000000;'>We wish you the best of luck throughout the competition!</p>
+                                //                         <p style='color: #000000;'>Trade confidently,</p>
+                                //                         <p style='color: #000000;'>The LQH Markets Team</p>
+                                //                     </div>
+                                //                 ";
 
-                            //     $templateVars = [
-                            //         'name' => $user->fullname,
-                            //         'email' => $settings['email_from_address'],
-                            //         'content' => $content
-                            //     ];
+                                //     $templateVars = [
+                                //         'name' => $user->fullname,
+                                //         'email' => $settings['email_from_address'],
+                                //         'content' => $content
+                                //     ];
 
                                 // $this->mailService->sendEmail($new_user->Email, $emailSubject, $headers, '', $templateVars);
-                                $this->sendMail($new_user, 'Demo',$account);
+                                $this->sendMail($new_user, 'Demo', $account);
                                 $account->competition_email = 1;
                                 $account->save();
-                            }else{
+                            } else {
                             }
                         } else {
                         }
-                    }else{
+                    } else {
 
                         $settings = settings();
                         $user = User::where('id', $account->user_id)->first();
                         $type = 'Competition';
                         $toEmail = $user->email;
                         $from = $settings['email_from_address'];
-                        $emailSubject = $settings['admin_title'] . ' - ' .' Competition Account Details';
+                        $emailSubject = $settings['admin_title'] . ' - ' . ' Competition Account Details';
                         $headers = "MIME-Version: 1.0" . "\r\n";
                         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
@@ -242,16 +240,16 @@ class ActivateCompetitionAccounts extends Command
             );
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account connection error : ' . $error.' for user '.json_encode($user));
+                Log::error('MT5 live account connection error : ' . $error . ' for user ' . json_encode($user));
                 return ["status" => false, "message" => $error];
             }
         }
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
-            Log::error('Competition create error : ' . $error.' for user '.json_encode($user));
+            Log::error('Competition create error : ' . $error . ' for user ' . json_encode($user));
             return ["status" => false, "message" => $error];
         } else {
-            Log::info('Competition created successfully for user '.json_encode($user).' with server response '.json_encode($user_server));
+            Log::info('Competition created successfully for user ' . json_encode($user) . ' with server response ' . json_encode($user_server));
             return ["status" => true, "message" => $type . " Competition Created Successfully"];
         }
     }
@@ -289,7 +287,7 @@ class ActivateCompetitionAccounts extends Command
         return rand($min, $max);
     }
 
-    public function sendMail($new_user, $type,$account)
+    public function sendMail($new_user, $type, $account)
     {
         $settings = settings();
         $toEmail = $new_user->Email;
@@ -323,6 +321,5 @@ class ActivateCompetitionAccounts extends Command
             "content" => $content
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-
     }
 }
