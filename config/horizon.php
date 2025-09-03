@@ -273,7 +273,7 @@ return [
                 'balanceCooldown' => 5,
             ],
             'supervisor-5' => [
-                'maxProcesses' => 5, // Increased from 2 to 5 for BatchSyncTradesJob
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Increased from 2 to 5 for BatchSyncTradesJob
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 5,
             ],
