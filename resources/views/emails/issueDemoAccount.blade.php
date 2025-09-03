@@ -304,15 +304,15 @@
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Master Password:</td>
                                                                         </tr>
-                                                                        <tr>
+                                                                        {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Investor Password:</td>
-                                                                        </tr>
+                                                                        </tr> --}}
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Leverage:</td>
                                                                         </tr>
-                                                                        <tr>
+                                                                        {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">MT5 Server:</td>
-                                                                        </tr>
+                                                                        </tr> --}}
                                                                     </tbody>
                                                                 </table>
                                                             </td>
@@ -331,15 +331,15 @@
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $trader_password }}</strong></td>
                                                                         </tr>
-                                                                        <tr>
+                                                                        {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $investor_password }}</strong></td>
-                                                                        </tr>
+                                                                        </tr> --}}
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $leverage }}</strong></td>
                                                                         </tr>
-                                                                        <tr>
+                                                                        {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $server_name }}</strong></td>
-                                                                        </tr>
+                                                                        </tr> --}}
                                                                     </tbody>
                                                                 </table>
                                                             </td>
