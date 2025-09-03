@@ -62,9 +62,9 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.issueLiveAccount';
             } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
                 $template = 'emails.issueDemoAccount';
-            }elseif((strpos($this->subject, 'Competition Account Details') !== false)){
+            } elseif ((strpos($this->subject, 'Competition Account Details') !== false)) {
                 $template = 'emails.issueCompetitionAccount';
-            }elseif(strpos($this->subject, 'Password Reset') !== false){
+            } elseif (strpos($this->subject, 'Password Reset') !== false) {
                 $template = 'emails.resetPassword';
             } elseif (strpos($this->subject, 'Export Started') !== false) {
                 $template = 'emails.export-started';
@@ -93,12 +93,12 @@ class ScheduleMailJob implements ShouldQueue
                     'subject' => $this->subject,
                     'htmlContent' => $htmlContent,
                 ];
-                
+
                 $response = Http::withHeaders([
                     'api-key' => $this->apiKey,
                     'Content-Type' => 'application/json',
                 ])->post('https://api.brevo.com/v3/smtp/email', $payload);
-                
+
                 if ($response->failed()) {
                     Log::error('Brevo email sending failed', [
                         'subject' => $this->subject,

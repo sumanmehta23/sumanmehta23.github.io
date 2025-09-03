@@ -6,6 +6,8 @@ use App\Models\Account;
 use App\Jobs\BatchSyncTradesJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Queue;
 use Carbon\Carbon;
 
 /**
@@ -24,6 +26,7 @@ class PrioritySyncAccountsCommand extends Command
                             {--max-concurrent=5 : Maximum concurrent batches}
                             {--cycle-delay=30 : Delay between sync cycles in seconds}
                             {--min-sync-interval=60 : Minimum minutes between syncs for same account}
+                            {--max-pending-jobs=100 : Maximum pending BatchSyncTradesJob jobs allowed}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}';
 
@@ -35,6 +38,7 @@ class PrioritySyncAccountsCommand extends Command
         $maxConcurrent = (int) $this->option('max-concurrent');
         $cycleDelay = (int) $this->option('cycle-delay');
         $minSyncInterval = (int) $this->option('min-sync-interval');
+        $maxPendingJobs = (int) $this->option('max-pending-jobs');
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
 
@@ -47,18 +51,45 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("- Batch size: {$batchSize}");
         $this->info("- Max concurrent: {$maxConcurrent}");
         $this->info("- Cycle delay: {$cycleDelay}s");
-        $this->info("- Min sync interval: {$minSyncInterval}h");
+        $this->info("- Min sync interval: {$minSyncInterval}m");
+        $this->info("- Max pending jobs: {$maxPendingJobs}");
 
         if ($isDaemon) {
-            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval);
+            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs);
         } else {
-            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval);
+            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs);
+        }
+    }
+
+    /**
+     * Get the number of pending BatchSyncTradesJob jobs in the queue
+     */
+    protected function getPendingJobsCount(): int
+    {
+        try {
+            // For Redis queue - check the queue size
+            $queueName = 'queues:optimized-sync-trades';
+            $pendingCount = Redis::llen($queueName);
+
+            // Also check for any delayed/reserved jobs
+            $delayedCount = Redis::zcard($queueName . ':delayed');
+            $reservedCount = Redis::zcard($queueName . ':reserved');
+
+            return $pendingCount + $delayedCount + $reservedCount;
+        } catch (\Exception $e) {
+            Log::warning("Could not get queue count: " . $e->getMessage());
+            return 0; // Assume no jobs if we can't check
         }
     }
 
     protected function showSyncStatus()
     {
         $this->info("=== Account Sync Status Overview ===");
+
+        // Show queue status first
+        $pendingJobs = $this->getPendingJobsCount();
+        $this->info("Current BatchSyncTradesJob queue: {$pendingJobs} pending jobs");
+        $this->info("");
 
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -97,7 +128,15 @@ class PrioritySyncAccountsCommand extends Command
             ->where('last_sync_attempt_at', '<', now()->subDay())
             ->count();
 
+        $retryAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->where('sync_status', 'needs_retry')
+            ->count();
+
         $this->table(['Status', 'Count'], [
+            ['Current Queue Jobs (BatchSyncTradesJob)', $pendingJobs],
+            ['Needs Retry (Queue Limit Hit)', $retryAccounts],
             ['Total Eligible Accounts', $totalAccounts],
             ['Never Synced (Highest Priority)', $neverSynced],
             ['Synced Today', $syncedToday],
@@ -122,7 +161,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval)
+    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs)
     {
         $this->info("Running in daemon mode. Press Ctrl+C to stop.");
 
@@ -132,7 +171,17 @@ class PrioritySyncAccountsCommand extends Command
                 $cycleCount++;
                 $this->info("=== Sync Cycle #{$cycleCount} at " . now()->format('Y-m-d H:i:s') . " ===");
 
-                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval);
+                // Check pending jobs before processing
+                $pendingJobs = $this->getPendingJobsCount();
+                $this->info("Current pending BatchSyncTradesJob jobs: {$pendingJobs}");
+
+                if ($pendingJobs >= $maxPendingJobs) {
+                    $this->warn("Queue limit reached ({$pendingJobs}/{$maxPendingJobs}). Skipping dispatch cycle.");
+                    sleep($cycleDelay);
+                    continue;
+                }
+
+                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs);
 
                 if ($processed === 0) {
                     $this->info("No accounts needed syncing. Waiting {$cycleDelay}s before next cycle...");
@@ -149,8 +198,17 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval): int
+    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs): int
     {
+        // Check pending jobs first
+        $pendingJobs = $this->getPendingJobsCount();
+        $this->info("Current pending BatchSyncTradesJob jobs: {$pendingJobs}");
+
+        if ($pendingJobs >= $maxPendingJobs) {
+            $this->warn("Queue limit reached ({$pendingJobs}/{$maxPendingJobs}). Skipping sync cycle.");
+            return 0;
+        }
+
         // Get accounts that need syncing, prioritized by last sync attempt
         $cutoffTime = now()->subMinutes($minSyncInterval);
 
@@ -164,11 +222,13 @@ class PrioritySyncAccountsCommand extends Command
                     ->orWhere('competition_status', '!=', 'active');
             })
             ->where(function ($q) use ($cutoffTime) {
-                // Include accounts that have never been synced OR last sync was before cutoff
-                $q->whereNull('last_sync_attempt_at')
-                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime);
+                // Include accounts that need syncing:
+                $q->whereNull('last_sync_attempt_at')  // Never synced
+                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime)  // Old syncs
+                    ->orWhere('sync_status', 'needs_retry');  // Failed due to queue limits
             })
-            // Priority order: NULL sync attempts first, then oldest attempts
+            // Priority order: retry accounts first, then never synced, then oldest attempts
+            ->orderByRaw("CASE WHEN sync_status = 'needs_retry' THEN 0 ELSE 1 END")
             ->orderByRaw('last_sync_attempt_at IS NULL DESC')
             ->orderBy('last_sync_attempt_at', 'asc')
             ->limit($batchSize * $maxConcurrent) // Get enough for all concurrent batches
@@ -182,15 +242,38 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("Found {$accounts->count()} accounts needing sync");
 
         // Show priority breakdown
+        $retryAccounts = $accounts->where('sync_status', 'needs_retry')->count();
         $neverSynced = $accounts->whereNull('last_sync_attempt_at')->count();
-        $staleSynced = $accounts->whereNotNull('last_sync_attempt_at')->count();
-        $this->info("Priority: {$neverSynced} never synced, {$staleSynced} stale");
+        $staleSynced = $accounts->whereNotNull('last_sync_attempt_at')
+            ->where('sync_status', '!=', 'needs_retry')->count();
+
+        $this->info("Priority: {$retryAccounts} retry, {$neverSynced} never synced, {$staleSynced} stale");
 
         // Process in batches
         $accountBatches = $accounts->chunk($batchSize);
         $processedCount = 0;
 
         foreach ($accountBatches as $batchIndex => $accountBatch) {
+            // Check queue size before each batch dispatch
+            $currentPendingJobs = $this->getPendingJobsCount();
+            if ($currentPendingJobs >= $maxPendingJobs) {
+                $this->warn("Queue limit reached ({$currentPendingJobs}/{$maxPendingJobs}). Stopping further dispatches.");
+
+                // IMPORTANT: Reset the sync attempt timestamp for unprocessed accounts
+                // so they can be retried in the next cycle
+                $unprocessedAccountIds = $accountBatches->slice($batchIndex)->flatten()->pluck('id');
+                if ($unprocessedAccountIds->isNotEmpty()) {
+                    Account::whereIn('id', $unprocessedAccountIds)
+                        ->update([
+                            'sync_status' => 'needs_retry',
+                            'sync_error' => 'Queue limit reached - will retry next cycle'
+                        ]);
+
+                    $this->info("Marked " . $unprocessedAccountIds->count() . " accounts for retry in next cycle");
+                }
+                break;
+            }
+
             $batchAccounts = $accountBatch->values()->all();
             $batchSyncTimes = [];
 
@@ -201,9 +284,9 @@ class PrioritySyncAccountsCommand extends Command
             }
 
             $accountCodes = $accountBatch->pluck('code')->join(', ');
-            $this->info("Dispatching batch " . ($batchIndex + 1) . " with " . count($batchAccounts) . " accounts: {$accountCodes}");
+            $this->info("Dispatching batch " . ($batchIndex + 1) . " with " . count($batchAccounts) . " accounts: {$accountCodes} (Queue: {$currentPendingJobs}/{$maxPendingJobs})");
 
-            // Update sync attempt timestamp immediately to prevent duplicate processing
+            // Update sync attempt timestamp ONLY for accounts being dispatched
             Account::whereIn('id', $accountBatch->pluck('id'))
                 ->update([
                     'last_sync_attempt_at' => now(),

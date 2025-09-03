@@ -405,12 +405,28 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
     {
+        $syncStatus = match ($status) {
+            'success', 'no_changes' => 'synced',
+            'not_found' => 'error',
+            'error' => 'error',
+            default => 'pending'
+        };
+
+        $syncError = null;
+        if ($status === 'error') {
+            $syncError = 'Sync failed';
+        } elseif ($status === 'not_found') {
+            $syncError = 'MT5 account not found';
+        }
+
         $account->update([
             'last_balance_sync_at' => now(),
             'last_sync_attempt_at' => now(),
-            'sync_status' => $status === 'success' ? 'synced' : 'pending',
-            'sync_error' => $status === 'error' ? 'Sync failed' : null
+            'sync_status' => $syncStatus,
+            'sync_error' => $syncError
         ]);
+
+        Log::info("Updated sync status for account {$account->code}: {$status} -> {$syncStatus} (trades: {$tradesCount})");
     }
 
     protected function updateLastTradeTime(Account $account, $orders): void
