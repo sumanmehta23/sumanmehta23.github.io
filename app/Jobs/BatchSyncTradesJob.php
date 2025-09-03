@@ -48,17 +48,18 @@ class BatchSyncTradesJob implements ShouldQueue
 
         $this->fromTimes = $fromTimes;
 
-        // Set timeout based on number of accounts with more generous timing
-        // Base: 10 minutes, then 90 seconds per account + 5 minute buffer
-        $this->timeout = max(600, count($accounts) * 90 + 300);
+        // Set timeout based on number of accounts with optimized timing
+        // Base: 5 minutes, then 60 seconds per account (reduced from 90) + 2 minute buffer (reduced from 5)
+        $this->timeout = max(300, count($accounts) * 60 + 120);
     }
 
     public function handle(OptimizedMT5Service $mt5Service)
     {
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
         $accountCount = count($this->accounts);
+        $startMemory = memory_get_usage(true);
 
-        Log::info("Starting BatchSyncTradesJob for {$accountCount} accounts: {$accountCodes}");
+        Log::info("Starting BatchSyncTradesJob for {$accountCount} accounts: {$accountCodes} (Memory: " . round($startMemory / 1024 / 1024, 2) . "MB)");
 
         $startTime = now();
         $results = [
@@ -104,7 +105,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
                 // Small delay between accounts to avoid overwhelming MT5
                 if ($index < count($this->accounts) - 1) {
-                    usleep(250000); // 0.25 second - reduced since we share connection
+                    usleep(100000); // 0.1 second - optimized for better throughput
                 }
             }
         } catch (\Exception $e) {
@@ -114,9 +115,13 @@ class BatchSyncTradesJob implements ShouldQueue
 
         $duration = $startTime->diffInSeconds(now());
         $avgPerAccount = round($duration / $accountCount, 2);
+        $endMemory = memory_get_usage(true);
+        $memoryUsed = round(($endMemory - $startMemory) / 1024 / 1024, 2);
+        $peakMemory = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
 
         Log::info("BatchSyncTradesJob completed: {$results['processed']} accounts in {$duration}s (avg: {$avgPerAccount}s/account). " .
-            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']} accounts: {$accountCodes}");
+            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']} " .
+            "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak. Accounts: {$accountCodes}");
     }
 
     protected function syncSingleAccount($api, Account $account, Carbon $fromTime): string
@@ -136,8 +141,9 @@ class BatchSyncTradesJob implements ShouldQueue
         }
 
         try {
-            // Get existing trades to check their status
+            // Get existing trades to check their status - optimized with specific columns only
             $existingTrades = Trade::where('account_id', $account->id)
+                ->select(['id', 'position_id', 'status', 'close_time', 'updated_at'])
                 ->get()
                 ->keyBy('position_id');
 
@@ -174,30 +180,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'error';
             }
 
-            // Debug logging for account 253538
-            // if ($account->code == 253538) {
-            //     Log::info("=== DEBUG: Account 253538 - Orders Data ===");
-            //     Log::info("Total orders found: " . count($orders));
-            //     Log::info("Orders raw data: " . print_r($orders, true));
-            //     foreach ($orders as $index => $order) {
-            //         Log::info("order  ".json_encode($order));
-            //         if (is_object($order)) {
-            //             Log::info("Order {$index}: " . json_encode([
-            //                 'Order' => $order->Order ?? 'NULL',
-            //                 'ExpertPositionID' => $order->ExpertPositionID ?? 'NULL',
-            //                 'Type' => $order->Type ?? 'NULL',
-            //                 'Symbol' => $order->Symbol ?? 'NULL',
-            //                 'VolumeInitial' => $order->VolumeInitial ?? 'NULL',
-            //                 'PriceCurrent' => $order->PriceCurrent ?? 'NULL',
-            //                 'TimeDone' => $order->TimeDone ?? 'NULL',
-            //                 'State' => $order->State ?? 'NULL',
-            //                 'Comment' => $order->Comment ?? 'NULL',
-            //             ]));
-            //         } else {
-            //             Log::info("Order {$index}: " . print_r($order, true));
-            //         }
-            //     }
-            // }
+            // Clean up debug code - removed for production optimization
 
             $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
             $tradesToUpsert = [];
@@ -230,31 +213,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 $filteredDeals = array_values(array_filter($allDeals, fn($deal) => $deal->Order == $positionId));
                 $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
-                // Debug logging for account 135405 deals
-                if ($account->code == 135405) {
-                    Log::info("=== DEBUG: Account 135405 - Deals for Position {$positionId} ===");
-                    Log::info("Total deals found for account: " . count($allDeals));
-                    Log::info("Filtered deals for position {$positionId}: " . count($filteredDeals));
-                    foreach ($filteredDeals as $dealIndex => $deal) {
-                        if (is_object($deal)) {
-                            Log::info("Deal {$dealIndex}: " . json_encode([
-                                'Deal' => $deal->Deal ?? 'NULL',
-                                'Order' => $deal->Order ?? 'NULL',
-                                'Action' => $deal->Action ?? 'NULL',
-                                'Entry' => $deal->Entry ?? 'NULL',
-                                'Symbol' => $deal->Symbol ?? 'NULL',
-                                'Volume' => $deal->Volume ?? 'NULL',
-                                'Price' => $deal->Price ?? 'NULL',
-                                'Profit' => $deal->Profit ?? 'NULL',
-                                'RateProfit' => $deal->RateProfit ?? 'NULL',
-                                'Time' => $deal->Time ?? 'NULL',
-                            ]));
-                        } else {
-                            Log::info("Deal {$dealIndex}: " . print_r($deal, true));
-                        }
-                    }
-                    Log::info("Using RateProfit: {$rateProfit}");
-                }
+                // Debug logging removed for production optimization
 
                 if ($positionOrders->count() < 2) {
                     // OPEN TRADE: Insert if does not exist
@@ -262,12 +221,7 @@ class BatchSyncTradesJob implements ShouldQueue
                         $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
                         $tradesToUpsert[] = $tradeData;
                         $savedCount++;
-
-                        // Debug logging for account 135405
-                        if ($account->code == 135405) {
-                            Log::info("=== DEBUG: Account 135405 - Prepared OPEN Trade Data ===");
-                            Log::info("Position {$positionId}: " . json_encode($tradeData));
-                        }
+                        // Debug logging removed for production optimization
                     }
                 } else {
                     // CLOSED TRADE: Update if exists, otherwise insert new
@@ -277,27 +231,20 @@ class BatchSyncTradesJob implements ShouldQueue
                         $closedTradeData['id'] = $existingTrade->id;
                         $tradesToUpsert[] = $closedTradeData;
                         $savedCount++;
-
-                        // Debug logging for account 135405
-                        if ($account->code == 135405) {
-                            Log::info("=== DEBUG: Account 135405 - Prepared CLOSED Trade Data (UPDATE) ===");
-                            Log::info("Position {$positionId}: " . json_encode($closedTradeData));
-                        }
+                        // Debug logging removed for production optimization
                     } else {
                         // No open trade exists but we have a closed trade - insert it
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
                         $tradesToUpsert[] = $closedTradeData;
                         $savedCount++;
-
-                        // Debug logging for account 135405
-                        if ($account->code == 135405) {
-                            Log::info("=== DEBUG: Account 135405 - Prepared CLOSED Trade Data (INSERT) ===");
-                            Log::info("Position {$positionId}: " . json_encode($closedTradeData));
-                        }
+                        // Debug logging removed for production optimization
                     }
                 }
 
-                if (count($tradesToUpsert) >= 50) { // Process in batches
+                // Dynamic batch size based on account complexity
+                $batchSize = count($this->accounts) > 5 ? 100 : 50; // Larger batches for bigger jobs
+
+                if (count($tradesToUpsert) >= $batchSize) { // Process in dynamic batches
                     $this->processBatch($tradesToUpsert);
                     $tradesToUpsert = [];
                 }
@@ -389,13 +336,11 @@ class BatchSyncTradesJob implements ShouldQueue
     protected function processBatch(array $trades)
     {
         try {
-            // Use both position_id and id for upsert
-            // This ensures new trades are inserted by position_id
-            // and existing trades are updated by id
+            // Optimized upsert with minimal columns for better performance
             Trade::upsert(
                 $trades,
                 ['position_id'], // unique identifier
-                ['id', 'close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // columns to update
+                ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
             );
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
