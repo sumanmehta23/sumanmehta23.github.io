@@ -58,6 +58,11 @@ class UserController extends Controller
         if (!empty($userId)) {
             $query->where('id', $userId);
         }
+        // Filter by email (only if it has a value)
+        $email = $request->input('email');
+        if (!empty($email)) {
+            $query->where('email', $email);
+        }
 
         // Filter by affiliate ID (only if it has a value)
         $affId = $request->input('aff_id');
