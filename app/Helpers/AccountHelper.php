@@ -36,7 +36,7 @@ class AccountHelper
 
         if ($liveAccounts) {
             foreach ($liveAccounts as $account) {
-                $accountData = $mt5Interface->getAccountBalance($account->code);
+                $accountData = $mt5Interface->getAccountBalance((int)$account->code);
                 if ($account->code == 443128) {
                     Log::info("AccountHelper: Debug - Fetched data for account 443128: " . json_encode($accountData));
                 }
@@ -62,7 +62,7 @@ class AccountHelper
         }
 
         foreach ($demoAccounts as $account) {
-            $accountData = $mt5Interface->getAccountBalance($account->code);
+            $accountData = $mt5Interface->getAccountBalance((int)$account->code);
             if ($accountData) {
                 $account->update([
                     'balance' => $accountData['balance'],
@@ -129,7 +129,7 @@ class AccountHelper
             return null;
         }
 
-        $accountData = $mt5Interface->getAccountBalance($liveAccount->code);
+        $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
         if ($accountData) {
             $liveAccount->update([
                 'balance' => $accountData['balance'],
