@@ -28,7 +28,7 @@ class SyncTrades implements ShouldQueue
 
     public function handle()
     {
-        // Log::info("Started SyncTrades job for account ID: {$this->account->code}");
+        Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
         // Get existing trades to check their status
         $existingTrades = Trade::where('account_id', $this->account->id)
@@ -72,6 +72,14 @@ class SyncTrades implements ShouldQueue
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetTotal final error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return;
+            }
+
+            // Skip if no recent orders
+            if ($total == 0) {
+                $this->updateSyncStatus($account, 'no_changes');
+                Log::info("No recent orders found for account {$account->code}");
                 return;
             }
 
@@ -82,6 +90,7 @@ class SyncTrades implements ShouldQueue
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
                 return;
             }
 
@@ -98,31 +107,35 @@ class SyncTrades implements ShouldQueue
 
             $tradesToUpsert = [];
 
+            // Get ALL deals for this account ONCE (moved outside the loop for efficiency)
+            $totalDeals = 0;
+            $allDeals = [];
+            $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
+                return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
+            });
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                $this->updateSyncStatus($account, 'error');
+                return;
+            }
+
+            if ($totalDeals > 0) {
+                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$allDeals) {
+                    return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $allDeals);
+                });
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                    $this->updateSyncStatus($account, 'error');
+                    return;
+                }
+            }
+
             foreach ($ordersByPosition as $positionId => $positionOrders) {
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // Get total number of deals first
-                $totalDeals = 0;
-                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
-                    return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
-                });
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get total deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                // Get the deals
-                $deals = [];
-                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$deals) {
-                    return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $deals);
-                });
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get deals: " . MTRetCode::GetError($error_code));
-                    continue;
-                }
-
-                $filteredDeals = array_values(array_filter($deals, fn($deal) => $deal->Order == $positionId));
+                // Filter deals for this specific position from the already-fetched deals
+                $filteredDeals = array_values(array_filter($allDeals, fn($deal) => $deal->Order == $positionId));
 
                 $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
 
@@ -153,8 +166,10 @@ class SyncTrades implements ShouldQueue
                 $this->processBatch($tradesToUpsert);
             }
 
-            // Log::info("Completed SyncTrades job for account ID: {$account->code}");
+            $this->updateSyncStatus($account, 'success', count($tradesToUpsert));
+            Log::info("Completed SyncTrades job for account ID: {$account->code}");
         } catch (\Exception $e) {
+            $this->updateSyncStatus($account, 'error');
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
         } finally {
@@ -238,5 +253,23 @@ class SyncTrades implements ShouldQueue
         }
 
         // Log::info("Processed trade batch for account ID: {$this->account->code}");
+    }
+
+    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
+    {
+        $syncStatus = match ($status) {
+            'success', 'no_changes' => 'synced',
+            'error' => 'error',
+            default => 'pending'
+        };
+
+        $account->update([
+            'last_balance_sync_at' => now(),
+            'last_sync_attempt_at' => now(),
+            'sync_status' => $syncStatus,
+            'sync_error' => $status === 'error' ? 'Sync failed' : null
+        ]);
+
+        Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
     }
 }

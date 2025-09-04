@@ -122,8 +122,8 @@ class InternalTransfer extends Controller
             return redirect()->back()->with('error', 'Failed to withdraw from the account.');
         } else {
 
-
-            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
+            try {
+                DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
                 $customerID = auth()->user()->id;
                 TradeWithdrawals::create([
                     'email' => $email,
@@ -135,6 +135,40 @@ class InternalTransfer extends Controller
                     'withdraw_date' => now(),
                     'status' => 1
                 ]);
+                if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
+
+                    $multiplier = $transferable_amount;
+
+                    if ($multiplier > 250) {
+                        $multiplier = 250;
+                    }
+                    $bonusamount = -abs(-9 * $multiplier);
+
+                    // if($account->code==817752){
+                    //     dump($account_balance);
+                    //     dump($total_deposit_amount);
+                    //     dump($accountProfit);
+                    //     dump($multiplier);
+                    //     dump($bonusamount);
+                    // }
+
+                    if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    } else {
+                        $deposit_details = BonusTransaction::create([
+                            'email' => $fromAccount->email,
+                            'user_id' => $customerID,
+                            'account_id' => $fromAccount->id,
+                            'code' => $fromAccount->code,
+                            'bonus_amount' => $bonusamount,
+                            'bonus_type' => 'Bonus Out',
+                            'status' => 1,
+                            'admin_remark' => '10x Trader Leverage',
+                            'bonus_currency' => 'USD',
+                            // 'created_by' => session('alogin')
+                        ]);
+                    }
+                }
                 if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
 
                     if ($transferable_amount > 250) {
@@ -186,7 +220,14 @@ class InternalTransfer extends Controller
                         'deposit_type' => 'Internal Transfer',
                     ]);
                 }
+
+                
             });
+            } catch (\Throwable $th) {
+                Log::error('Transaction failed: ',$th->getMessage());
+                return redirect()->back()->with('error', 'Transaction Failed.');
+            }
+
         }
         RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');

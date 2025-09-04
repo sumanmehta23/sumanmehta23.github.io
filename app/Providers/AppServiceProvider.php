@@ -10,6 +10,12 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Gate;
+use App\Models\TradeDeposit;
+use App\Models\TradeWithdrawals;
+use App\Models\BonusTransaction;
+use App\Observers\TradeDepositObserver;
+use App\Observers\TradeWithdrawalObserver;
+use App\Observers\BonusTransactionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Register observers for balance tracking
+        TradeDeposit::observe(TradeDepositObserver::class);
+        TradeWithdrawals::observe(TradeWithdrawalObserver::class);
+        BonusTransaction::observe(BonusTransactionObserver::class);
 
 
         RateLimiter::for('deposit', function ($request) {
@@ -73,6 +84,5 @@ class AppServiceProvider extends ServiceProvider
             // Limit to 1 request every 10 seconds
             return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
         });
-
     }
 }
