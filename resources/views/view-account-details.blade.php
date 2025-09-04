@@ -24,16 +24,17 @@
                             and Master passwords for your trading accounts here. If you require any assistance or encounter any
                             challenges with password management, please don't hesitate to reach out to us for support.</p>
                         <div class="mt-0 mb-0 row">
-                            {{ dd($account) }}
-                            <div class="col-lg-6">
-                                <div class="p-3 border card">
-                                    <div class="form-check"><input type="radio" name="password_type"
-                                            class="form-check-input input-primary" id="customCheckdefhor1" value="investor"
-                                            checked><label class="form-check-label d-block"
-                                            for="customCheckdefhor1"><span><span class="h6">Investor
-                                                    Password</span></span></label></div>
+                            @if ($account->platform != 'x9')
+                                <div class="col-lg-6">
+                                    <div class="p-3 border card">
+                                        <div class="form-check"><input type="radio" name="password_type"
+                                                class="form-check-input input-primary" id="customCheckdefhor1" value="investor"
+                                                checked><label class="form-check-label d-block"
+                                                for="customCheckdefhor1"><span><span class="h6">Investor
+                                                        Password</span></span></label></div>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                             <div class="col-lg-6">
                                 <div class="p-3 border card">
                                     <div class="form-check"><input type="radio" name="password_type"
