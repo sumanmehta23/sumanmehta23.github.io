@@ -21,10 +21,10 @@
                             </div>
                         </div>
                         <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your Investor
-                            and
-                            Master passwords for your trading accounts here. If you require any assistance or encounter any
+                            and Master passwords for your trading accounts here. If you require any assistance or encounter any
                             challenges with password management, please don't hesitate to reach out to us for support.</p>
                         <div class="mt-0 mb-0 row">
+                            {{ dd($account) }}
                             <div class="col-lg-6">
                                 <div class="p-3 border card">
                                     <div class="form-check"><input type="radio" name="password_type"
