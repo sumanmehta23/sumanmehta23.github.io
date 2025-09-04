@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>August Competition - Leaderboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"> --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -41,17 +42,25 @@
         }
     </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0">August Competition</h4>
-            <div>
-                <a href="#" class="btn btn-primary btn-sm me-2">Leaderboard</a>
-                <a href="#" class="btn btn-primary btn-sm me-2">Competitions</a>
-                <a href="#" class="btn btn-primary btn-sm">Sign Up</a>
-            </div>
+<body class="bg-gray-50 font-sans">
+    <header class="flex justify-between items-center p-6 bg-white shadow">
+        <div class="flex items-center space-x-2">
+            <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-44" alt="logo">
         </div>
-
+        <nav class="flex items-center space-x-6">
+            {{-- <a href="#" class="text-gray-700 hover:text-emerald-600 font-medium">Leaderboard</a> --}}
+            <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
+            <a href="/login" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
+                Sign Up
+            </a>
+        </nav>
+    </header>
+    <div class="container-fluid">
+        <!-- Page Heading -->
+        <section class="text-center mt-10 mb-10">
+            <h1 class="text-4xl font-bold capitalize">{{ $competition->ac_name }}</h1>
+        </section>
+        {{-- {{ dd($stats) }} --}}
         <!-- Header Stats -->
         <div class="row mb-4">
             <div class="col-md-3">
@@ -69,7 +78,7 @@
             <div class="col-md-3">
                 <div class="card p-3">
                     <p class="text-muted mb-1">Contestants</p>
-                    <h5>238</h5>
+                    <h5>{{ $stats->participants }}</h5>
                 </div>
             </div>
             <div class="col-md-3">

@@ -109,8 +109,6 @@
                     <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50" onclick="openLeaderboard('{{ $competition->id }}')">
                         Standings
                     </button>
-
-
                 </div>
 
                 <!-- Register / Finished -->
@@ -164,22 +162,26 @@
             document.getElementById("rulesModal").classList.add("flex");
         }
 
+        // function openLeaderboard(competitionId) {
+        //     fetch(`/competitions-overview/leaderboard/${competitionId}`, {
+        //         method: "GET",
+        //         headers: {
+        //             "X-Requested-With": "XMLHttpRequest",
+        //             "Accept": "text/html"
+        //         }
+        //     })
+        //     .then(response => response.text()) // Laravel will return Blade HTML
+        //     .then(html => {
+        //         // Replace the whole body with leaderboard page
+        //         document.body.innerHTML = html;
+        //     })
+        //     .catch(error => {
+        //         console.error("Error:", error);
+        //     });
+        // }
+
         function openLeaderboard(competitionId) {
-            fetch(`/competitions-overview/leaderboard/${competitionId}`, {
-                method: "GET",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Accept": "text/html"
-                }
-            })
-            .then(response => response.text()) // Laravel will return Blade HTML
-            .then(html => {
-                // Replace the whole body with leaderboard page
-                document.body.innerHTML = html;
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
+            window.location.href = `/competitions-overview/leaderboard/${competitionId}`;
         }
 
 
