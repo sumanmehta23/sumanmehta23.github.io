@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\OptimizedMT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
@@ -35,8 +35,8 @@ class SyncTrades implements ShouldQueue
             ->get()
             ->keyBy('position_id');
 
-        // Use optimized MT5 service with connection pooling
-        $mt5Service = new OptimizedMT5Service();
+        // Use universal MT5 service with connection pooling
+        $mt5Service = app(UniversalMT5Service::class);
 
         try {
             $api = $mt5Service->getApi();
@@ -49,7 +49,7 @@ class SyncTrades implements ShouldQueue
 
             // Verify account exists on MT5 server using optimized service
             $mt5_user = null;
-            $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, &$mt5_user) {
+            $error_code = $mt5Service->executeOperation(function ($api) use ($account, &$mt5_user) {
                 return $api->UserGet($account->code, $mt5_user);
             });
 
@@ -66,7 +66,7 @@ class SyncTrades implements ShouldQueue
             $orders = [];
 
             // Get total with retries
-            $error_code = $mt5Service->executeWithRetry(function ($api) use ($login, $from, $to, &$total) {
+            $error_code = $mt5Service->executeOperation(function ($api) use ($login, $from, $to, &$total) {
                 return $api->HistoryGetTotal($login, $from, $to, $total);
             });
 
@@ -84,7 +84,7 @@ class SyncTrades implements ShouldQueue
             }
 
             // Get history page with retries
-            $error_code = $mt5Service->executeWithRetry(function ($api) use ($login, $from, $to, $total, &$orders) {
+            $error_code = $mt5Service->executeOperation(function ($api) use ($login, $from, $to, $total, &$orders) {
                 return $api->HistoryGetPage($login, $from, $to, 0, $total, $orders);
             });
 
@@ -110,7 +110,7 @@ class SyncTrades implements ShouldQueue
             // Get ALL deals for this account ONCE (moved outside the loop for efficiency)
             $totalDeals = 0;
             $allDeals = [];
-            $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, &$totalDeals) {
+            $error_code = $mt5Service->executeOperation(function ($api) use ($account, $from, $to, &$totalDeals) {
                 return $api->DealGetTotal($account->code, $from, $to, $totalDeals);
             });
             if ($error_code != MTRetCode::MT_RET_OK) {
@@ -120,7 +120,7 @@ class SyncTrades implements ShouldQueue
             }
 
             if ($totalDeals > 0) {
-                $error_code = $mt5Service->executeWithRetry(function ($api) use ($account, $from, $to, $totalDeals, &$allDeals) {
+                $error_code = $mt5Service->executeOperation(function ($api) use ($account, $from, $to, $totalDeals, &$allDeals) {
                     return $api->DealGetPage($account->code, $from, $to, 0, $totalDeals, $allDeals);
                 });
                 if ($error_code != MTRetCode::MT_RET_OK) {
@@ -173,7 +173,7 @@ class SyncTrades implements ShouldQueue
             Log::error("Error in SyncTrades job: " . $e->getMessage());
             throw $e;
         } finally {
-            // Connection will be automatically returned to pool by OptimizedMT5Service
+            // Connection will be automatically returned to pool by UniversalMT5Service
         }
     }
 

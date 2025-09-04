@@ -17,12 +17,10 @@ class TradeWithdrawalObserver
 
     public function created($tradeWithdrawal)
     {
-        // Assume account_code is the field, or we'll need to map from account_id to account_code
-        $accountCode = $tradeWithdrawal->account_code ?? $tradeWithdrawal->account_id;
-
-        if ($accountCode) {
+        // Use the account_id directly (it's a UUID string)
+        if ($tradeWithdrawal->account_id) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $tradeWithdrawal->account_id,
                 "trade_withdrawal:{$tradeWithdrawal->id}"
             );
         }
@@ -30,11 +28,9 @@ class TradeWithdrawalObserver
 
     public function updated($tradeWithdrawal)
     {
-        $accountCode = $tradeWithdrawal->account_code ?? $tradeWithdrawal->account_id;
-
-        if ($accountCode && $tradeWithdrawal->isDirty(['amount', 'status'])) {
+        if ($tradeWithdrawal->account_id && $tradeWithdrawal->isDirty(['amount', 'status'])) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $tradeWithdrawal->account_id,
                 "trade_withdrawal_updated:{$tradeWithdrawal->id}"
             );
         }

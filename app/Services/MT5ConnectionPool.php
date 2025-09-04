@@ -199,6 +199,14 @@ class MT5ConnectionPool
     }
 
     /**
+     * Public method to force cleanup of stale connections
+     */
+    public function forceCleanup(): void
+    {
+        $this->cleanupStaleConnections();
+    }
+
+    /**
      * Get pool statistics for monitoring
      */
     public function getStats(): array

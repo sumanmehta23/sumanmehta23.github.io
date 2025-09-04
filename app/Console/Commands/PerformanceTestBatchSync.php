@@ -59,7 +59,7 @@ class PerformanceTestBatchSync extends Command
         $job = new BatchSyncTradesJob($accounts->toArray(), $fromTimes);
 
         try {
-            $job->handle(app(\App\Services\OptimizedMT5Service::class));
+            $job->handle(app(\App\Services\UniversalMT5Service::class));
             $totalTime = round((microtime(true) - $startTime) * 1000, 2);
 
             $this->newLine();

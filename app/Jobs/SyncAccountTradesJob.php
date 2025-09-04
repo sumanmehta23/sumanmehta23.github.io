@@ -5,10 +5,10 @@ namespace App\Jobs;
 use App\Models\Trade;
 use Exception;
 use App\Models\Ib1;
-use App\MT5\MTWebAPI;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Services\UniversalMT5Service;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -62,10 +62,13 @@ class SyncAccountTradesJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $api = new MTWebAPI;
-            $this->mt5Service = new MT5Service($api);
-            $this->mt5Service->connect();
-            $this->api = $this->mt5Service->getApi();
+            $this->mt5Service = app(UniversalMT5Service::class);
+
+            // Connect to MT5 server
+            if (!$this->mt5Service->dealerConnect()) {
+                Log::error("SyncAccountTradesJob: Failed to connect to MT5 server");
+                throw new Exception("Failed to connect to MT5 server");
+            }
 
             // Process each account
             foreach ($this->accountIds as $accountId) {
@@ -95,9 +98,13 @@ class SyncAccountTradesJob implements ShouldQueue
             $to = 'March 31,2080';
             $total = 0;
 
-            $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
+            // Get total number of trades using universal service
+            $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $from, $to, &$total) {
+                return $api->HistoryGetTotal($login, $from, $to, $total);
+            });
+
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error('MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                Log::error('MT5 ' . $login . ': Failed to get history total');
                 return;
             }
 
@@ -117,10 +124,11 @@ class SyncAccountTradesJob implements ShouldQueue
             });
 
             while ($offset < $total && $attempts < $maxTries) {
-                $orders = []; // Initialize orders array
-                $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error('MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                // Get trade history using universal service
+                $orders = $this->mt5Service->getTradeHistory($login, strtotime($from), strtotime($to));
+
+                if (!$orders) {
+                    Log::error('MT5 ' . $login . ': Failed to get trade history');
                     break;
                 }
 

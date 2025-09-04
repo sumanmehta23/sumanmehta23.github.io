@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
+use App\Http\Controllers\MT5RedisCoordinationDemoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
@@ -580,4 +581,39 @@ Route::get('/test-affiliate', function (Request $request) {
     ];
 
     return response()->json($output);
+});
+
+// MT5 Redis Coordination Demo Routes
+Route::prefix('mt5-redis-demo')->group(function () {
+    Route::get('/status', [MT5RedisCoordinationDemoController::class, 'status'])
+        ->name('mt5.redis.demo.status');
+
+    Route::get('/balance', [MT5RedisCoordinationDemoController::class, 'checkBalance'])
+        ->name('mt5.redis.demo.balance');
+
+    Route::get('/trades', [MT5RedisCoordinationDemoController::class, 'tradeHistory'])
+        ->name('mt5.redis.demo.trades');
+
+    Route::post('/cleanup', [MT5RedisCoordinationDemoController::class, 'cleanupStaleProcesses'])
+        ->name('mt5.redis.demo.cleanup');
+
+    Route::post('/switch-mode', [MT5RedisCoordinationDemoController::class, 'switchMode'])
+        ->name('mt5.redis.demo.switch');
+
+    Route::get('/stress-test', [MT5RedisCoordinationDemoController::class, 'stressTest'])
+        ->name('mt5.redis.demo.stress');
+
+    Route::get('/dispatch-jobs', function () {
+        $count = request('count', 3);
+        $login = request('login', 12345);
+
+        $jobs = \App\Jobs\MT5RedisCoordinationDemoJob::dispatchDemoJobs($count, $login);
+
+        return response()->json([
+            'success' => true,
+            'jobs_dispatched' => count($jobs),
+            'jobs' => $jobs,
+            'message' => "Dispatched {$count} queue jobs that will coordinate through Redis with HTTP requests"
+        ]);
+    })->name('mt5.redis.demo.jobs');
 });

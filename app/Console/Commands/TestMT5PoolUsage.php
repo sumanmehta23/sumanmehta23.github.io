@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\MT5ConnectionPool;
-use App\Services\OptimizedMT5Service;
+use App\Services\UniversalMT5Service;
 
 class TestMT5PoolUsage extends Command
 {
@@ -32,7 +32,7 @@ class TestMT5PoolUsage extends Command
         $services = [];
 
         for ($i = 0; $i < $jobCount; $i++) {
-            $service = new OptimizedMT5Service();
+            $service = app(UniversalMT5Service::class);
             $api = $service->getApi(); // This will use the pool
             $services[] = $service;
 
@@ -76,8 +76,8 @@ class TestMT5PoolUsage extends Command
 
     private function showPoolStatus(string $label): void
     {
-        $service = new OptimizedMT5Service();
-        $stats = $service->getPoolStats();
+        $service = app(UniversalMT5Service::class);
+        $stats = $service->getStats();
 
         $this->line("📊 {$label}:");
         $this->line("   Total: {$stats['total_connections']}, " .

@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\MT5ConnectionPool;
-use App\Services\OptimizedMT5Service;
+use App\Services\UniversalMT5Service;
 
 class MonitorMT5ConnectionPool extends Command
 {
@@ -28,8 +28,8 @@ class MonitorMT5ConnectionPool extends Command
 
     private function showStatus(bool $isJson = false): void
     {
-        $mt5Service = new OptimizedMT5Service();
-        $stats = $mt5Service->getPoolStats();
+        $mt5Service = app(UniversalMT5Service::class);
+        $stats = $mt5Service->getStats();
 
         if ($isJson) {
             $this->line(json_encode($stats, JSON_PRETTY_PRINT));

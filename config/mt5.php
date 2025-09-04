@@ -29,6 +29,15 @@ return [
     // Enable connection pooling (can be disabled for debugging)
     'enable_pooling' => env('MT5_ENABLE_POOLING', true),
 
+    // Enable Redis coordination for cross-process connection sharing
+    'use_redis_coordination' => env('MT5_USE_REDIS_COORDINATION', true),
+
+    // Maximum connections globally (across all processes/servers)
+    'max_global_connections' => env('MT5_MAX_GLOBAL_CONNECTIONS', 20),
+
+    // Maximum connections per process
+    'max_local_connections' => env('MT5_MAX_LOCAL_CONNECTIONS', 5),
+
     // Retry configuration
     'max_retries' => env('MT5_MAX_RETRIES', 3),
     'retry_delay' => env('MT5_RETRY_DELAY', 1),
@@ -36,6 +45,26 @@ return [
     // Rate limiting
     'requests_per_minute' => env('MT5_REQUESTS_PER_MINUTE', 600),
     'burst_limit' => env('MT5_BURST_LIMIT', 100),
+
+    // Redis coordination configuration
+    'redis' => [
+        'connection' => env('MT5_REDIS_CONNECTION', 'default'),
+        'key_prefix' => env('MT5_REDIS_KEY_PREFIX', 'mt5_connections'),
+        'lock_timeout' => env('MT5_REDIS_LOCK_TIMEOUT', 10),
+        'process_cleanup_interval' => env('MT5_PROCESS_CLEANUP_INTERVAL', 7200), // 2 hours
+    ],
+
+    // Coordination strategy
+    'coordination' => [
+        'wait_timeout' => env('MT5_WAIT_TIMEOUT', 30), // seconds to wait for connection
+        'retry_interval' => env('MT5_RETRY_INTERVAL', 100), // milliseconds between retries
+    ],
+
+    // Monitoring and statistics
+    'monitoring' => [
+        'enable_detailed_logging' => env('MT5_DETAILED_LOGGING', false),
+        'stats_cache_ttl' => env('MT5_STATS_CACHE_TTL', 60), // seconds
+    ],
 
     /*
     |--------------------------------------------------------------------------
