@@ -20,19 +20,10 @@ class AccountHelper
             $userId = Auth::user()->id;
         }
 
-        // Handle both service instances and raw MTWebAPI instances
-        if ($mt5Service === null) {
-            $mt5Service = app(UniversalMT5Service::class);
-        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
-            // If a raw MTWebAPI instance is passed, wrap it in a service for consistent interface
-            Log::warning("AccountHelper: Raw MTWebAPI instance passed, wrapping in service for consistency");
-            $rawApi = $mt5Service;
-            $mt5Service = app(UniversalMT5Service::class);
-        }
-
-        // Connect to MT5 server
-        if (!$mt5Service->dealerConnect()) {
-            Log::error("AccountHelper: Failed to connect to MT5 server");
+        // Create a unified interface regardless of input type
+        $mt5Interface = self::createMT5Interface($mt5Service);
+        if (!$mt5Interface) {
+            Log::error("AccountHelper: Could not create MT5 interface");
             return;
         }
 
@@ -45,7 +36,7 @@ class AccountHelper
 
         if ($liveAccounts) {
             foreach ($liveAccounts as $account) {
-                $accountData = $mt5Service->getAccountBalance($account->code);
+                $accountData = $mt5Interface->getAccountBalance($account->code);
                 if ($accountData) {
                     $account->update([
                         'balance' => $accountData['balance'],
@@ -68,7 +59,7 @@ class AccountHelper
         }
 
         foreach ($demoAccounts as $account) {
-            $accountData = $mt5Service->getAccountBalance($account->code);
+            $accountData = $mt5Interface->getAccountBalance($account->code);
             if ($accountData) {
                 $account->update([
                     'balance' => $accountData['balance'],
@@ -83,21 +74,50 @@ class AccountHelper
         }
     }
 
+    /**
+     * Create a unified MT5 interface that handles both raw API and service instances
+     */
+    private static function createMT5Interface($mt5Service)
+    {
+        if ($mt5Service === null) {
+            // Default case - create new service and connect
+            $service = app(UniversalMT5Service::class);
+            $connectResult = $service->dealerConnect();
+            if ($connectResult !== \App\MT5\MTRetCode::MT_RET_OK) {
+                Log::error("AccountHelper: Failed to connect new service to MT5 server");
+                return null;
+            }
+            return $service;
+        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
+            // Legacy case - raw MTWebAPI instance, create a service wrapper
+            Log::warning("AccountHelper: Raw MTWebAPI passed, creating service wrapper");
+            $service = app(UniversalMT5Service::class);
+            $connectResult = $service->dealerConnect();
+            if ($connectResult !== \App\MT5\MTRetCode::MT_RET_OK) {
+                Log::error("AccountHelper: Failed to connect wrapper service to MT5 server");
+                return null;
+            }
+            return $service;
+        } elseif ($mt5Service instanceof UniversalMT5Service) {
+            // Preferred case - service instance, just ensure it's connected
+            $connectResult = $mt5Service->dealerConnect();
+            if ($connectResult !== \App\MT5\MTRetCode::MT_RET_OK) {
+                Log::error("AccountHelper: Failed to connect provided service to MT5 server");
+                return null;
+            }
+            return $mt5Service;
+        } else {
+            Log::error("AccountHelper: Invalid mt5Service parameter type: " . get_class($mt5Service));
+            return null;
+        }
+    }
+
     public static function getAccount($id, $mt5Service = null)
     {
-        // Handle both service instances and raw MTWebAPI instances
-        if ($mt5Service === null) {
-            $mt5Service = app(UniversalMT5Service::class);
-        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
-            // If a raw MTWebAPI instance is passed, wrap it in a service for consistent interface
-            Log::warning("AccountHelper: Raw MTWebAPI instance passed to getAccount, wrapping in service");
-            $rawApi = $mt5Service;
-            $mt5Service = app(UniversalMT5Service::class);
-        }
-
-        // Connect to MT5 server
-        if (!$mt5Service->dealerConnect()) {
-            Log::error("AccountHelper: Failed to connect to MT5 server for account {$id}");
+        // Create a unified interface regardless of input type
+        $mt5Interface = self::createMT5Interface($mt5Service);
+        if (!$mt5Interface) {
+            Log::error("AccountHelper: Could not create MT5 interface for account {$id}");
             return null;
         }
 
@@ -106,7 +126,7 @@ class AccountHelper
             return null;
         }
 
-        $accountData = $mt5Service->getAccountBalance($liveAccount->code);
+        $accountData = $mt5Interface->getAccountBalance($liveAccount->code);
         if ($accountData) {
             $liveAccount->update([
                 'balance' => $accountData['balance'],

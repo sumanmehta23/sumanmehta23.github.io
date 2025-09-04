@@ -68,9 +68,14 @@ class UniversalMT5Service
 
             // DealerConnect returns MTDealerConnect object on success or MTRetCode::MT_RET_ERROR on failure
             if ($result instanceof \App\MT5\MTDealerConnect) {
+                Log::debug("UniversalMT5Service: DealerConnect successful");
                 return MTRetCode::MT_RET_OK;
             } else {
-                // Return the error code (should be MTRetCode::MT_RET_ERROR or similar)
+                // Log the specific error for debugging
+                $errorMsg = method_exists('App\MT5\MTRetCode', 'GetError')
+                    ? \App\MT5\MTRetCode::GetError($result)
+                    : "Error code: {$result}";
+                Log::error("UniversalMT5Service: DealerConnect failed - {$errorMsg}");
                 return $result;
             }
         });
