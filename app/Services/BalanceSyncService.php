@@ -179,9 +179,28 @@ class BalanceSyncService
      * @param string|int $accountIdentifier Can be account ID (UUID), account code, or legacy integer ID
      * @param string $reason Reason for the balance activity
      */
-    public function markBalanceActivity(string|int $accountIdentifier, string $reason = 'manual'): void
+    public function markBalanceActivity($accountIdentifier, string $reason = 'manual'): void
     {
+        // Add debug logging to help diagnose type issues
+        Log::debug("BalanceSyncService::markBalanceActivity called", [
+            'account_identifier' => $accountIdentifier,
+            'account_identifier_type' => gettype($accountIdentifier),
+            'reason' => $reason,
+            'caller' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? 'unknown'
+        ]);
+
         try {
+            // Type validation and conversion
+            if (!is_string($accountIdentifier) && !is_int($accountIdentifier) && !is_numeric($accountIdentifier)) {
+                throw new \InvalidArgumentException(
+                    "Invalid account identifier type: " . gettype($accountIdentifier) . 
+                    ". Expected string, int, or numeric value. Received: " . var_export($accountIdentifier, true)
+                );
+            }
+
+            // Convert to string for consistent handling
+            $accountIdentifier = (string) $accountIdentifier;
+
             // Determine if we have an account ID (UUID), account code, or legacy integer ID
             $query = Account::query();
 
