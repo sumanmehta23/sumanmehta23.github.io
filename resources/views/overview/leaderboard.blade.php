@@ -78,7 +78,7 @@
             <div class="col-md-3">
                 <div class="card p-3">
                     <p class="text-muted mb-1">Contestants</p>
-                    <h5>{{ $stats->participants }}</h5>
+                    <h5>{{ $stats['participants'] }}</h5>
                 </div>
             </div>
             <div class="col-md-3">
