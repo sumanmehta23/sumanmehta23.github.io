@@ -89,17 +89,17 @@ class MT5Accounts extends Controller
         $profit = '';
         try {
             $login = $code;
-            // Fetch positions
-            if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            $open_order_history = $total;
+            // // Fetch positions
+            // if (($error_code = $this->api->PositionGetTotal($login, $total)) != MTRetCode::MT_RET_OK) {
+            //     session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+            // }
+            // $open_order_history = $total;
             $offset = 0;
-            $positions = [];
-            // Fetch position pages
-            if (($error_code = $this->api->PositionGetPage($login, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
+            // $positions = [];
+            // // Fetch position pages
+            // if (($error_code = $this->api->PositionGetPage($login, $offset, $total, $positions)) != MTRetCode::MT_RET_OK) {
+            //     session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+            // }
             // Fetch user account details
             if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
@@ -134,42 +134,42 @@ class MT5Accounts extends Controller
                 ]);
             }
             // Fetch order history
-            $from = 'March 01,2016';
-            $to = 'March 31,2080';
-            if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
-            }
-            $closed_order_history = $total;
-            // Fetch order pages
-            if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
-                session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
-            }
+            // $from = 'March 01,2016';
+            // $to = 'March 31,2080';
+            // if (($error_code = $this->api->HistoryGetTotal($login, $from, $to, $total)) != MTRetCode::MT_RET_OK) {
+            //     session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+            // }
+            // $closed_order_history = $total;
+            // // Fetch order pages
+            // if (($error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders)) != MTRetCode::MT_RET_OK) {
+            //     session()->flash('error', 'MT5 ' . MTRetCode::GetError($error_code));
+            // }
             $getUser = Account::with('accountType', 'BonusTransaction')
                 ->where('id', $account->id)
                 ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
             // Process orders
             // dd($orders);
-            if (!empty($orders)) {
-                foreach ($orders as $item) {
-                    $volume = $item->VolumeInitial * 0.00001;
-                    $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
-                    // Insert commission data into DB
-                    Ib1Commission::updateOrCreate(
-                        [
-                            'order_id' => $item->Order,
-                            'code' => $item->Login,
-                        ],
-                        [
-                            'user_id' => auth()->user()->id,
-                            'account_id' => $account->id,
+            // if (!empty($orders)) {
+            //     foreach ($orders as $item) {
+            //         $volume = $item->VolumeInitial * 0.00001;
+            //         $time_closed = gmdate("Y-m-d H:i:s", $item->TimeDone);
+            //         // Insert commission data into DB
+            //         Ib1Commission::updateOrCreate(
+            //             [
+            //                 'order_id' => $item->Order,
+            //                 'code' => $item->Login,
+            //             ],
+            //             [
+            //                 'user_id' => auth()->user()->id,
+            //                 'account_id' => $account->id,
 
-                            'volume' => $volume,
-                            'time_closed' => $time_closed
-                        ]
-                    );
-                }
-            }
+            //                 'volume' => $volume,
+            //                 'time_closed' => $time_closed
+            //             ]
+            //         );
+            //     }
+            // }
         } catch (\Exception $e) {
             Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
