@@ -402,7 +402,7 @@
                                                                         <th>Currency</th>
                                                                         <th>Network</th>
                                                                         <th>Address</th>
-                                                                        <th class="text-center">Verified</th>
+                                                                        <th class="text-center">Wallet Details</th>
                                                                         <th class="text-center">Status / Action</th>
                                                                     </tr>
                                                                 </thead>
@@ -803,7 +803,7 @@
 
         function resendWalletAddressDeleteConfirmationVerifyEmail(walletAddress, id) {
             console.log("Sending request...");
-            
+
             $.ajax({
                 url: "{{ route('resend.wallet.delete.confirmation') }}",
                 type: "POST",
