@@ -55,8 +55,8 @@ class TradeDepositController extends Controller
             ->where('demo', false)
             ->get()
             ->reject(function ($account) {
-                return $account->accountType->ac_group === 'LM\\B-Book\\10x\\DF-B' && $account->successful_trade_deposits_count > 0;
-            });;
+                // return $account->accountType->ac_group === 'LM\\B-Book\\10x\\DF-B' && $account->successful_trade_deposits_count > 0;
+            });
 
         $walletenabled = User::where('id', $user->id)->value('wallet_enabled') ?? false;
         $bank_details = ClientBankDetail::where('user_id', $user->id)->first() ?? [];

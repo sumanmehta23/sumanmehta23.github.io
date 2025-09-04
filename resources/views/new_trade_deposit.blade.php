@@ -49,6 +49,7 @@
                                                                     class="select-liveaccount form-check-input input-primary"
                                                                     data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
                                                                     data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
+                                                                    data-group="{{ $liveaccount->accountType->ac_group }}"
                                                                     value="{{ $liveaccount->id }}">
                                                                 <label class="form-check-label d-block" required>
                                                                     <div class="p-1 my-1">
@@ -129,7 +130,19 @@
                                                         <div class="row">
                                                             <div class="mt-2 col-12">
                                                                 <input type="hidden" name="user[deposit_type]" class="tradedeposittype" value="CryptoChill">
-                                                                <div class="form-group row">
+                                                                {{-- <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
+                                                                        <small class="text-muted d-block">Please enter promocode</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <input name="promocode" id="promocode" type="text" class="form-control fill" placeholder="Promocode" aria-label="promocode">
+                                                                            <button type="button" id="verifyPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                        </div>
+                                                                        <small id="promocodeStatus" class="text-muted"></small>
+                                                                    </div>
+                                                                </div> --}}
+                                                                <div class="form-group row promo-field-crypto">
                                                                     <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
                                                                         <small class="text-muted d-block">Please enter promocode</small>
                                                                     </label>
@@ -141,6 +154,7 @@
                                                                         <small id="promocodeStatus" class="text-muted"></small>
                                                                     </div>
                                                                 </div>
+
                                                                 <div class="form-group row">
                                                                     <label class="col-lg-4 col-form-label">ENTER AMOUNT:
                                                                         <small class="text-muted d-block">Please enter the amount to be deposited</small>
@@ -187,7 +201,19 @@
                                                         <div class="row">
                                                             <div class="mt-2 col-12">
                                                                 <input type="hidden" name="deposit_type" class="tradedeposittype" value="CreditCardPayissa">
-                                                                <div class="form-group row">
+                                                                {{-- <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
+                                                                        <small class="text-muted d-block">Please enter promocode</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <input name="cc_promocode" id="cc_promocode" type="text" class="form-control fill" placeholder="Promocode" aria-label="promocode">
+                                                                            <button type="button" id="verifyCcPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                        </div>
+                                                                        <small id="cc_promocodeStatus" class="text-muted"></small>
+                                                                    </div>
+                                                                </div> --}}
+                                                                <div class="form-group row promo-field-cc">
                                                                     <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
                                                                         <small class="text-muted d-block">Please enter promocode</small>
                                                                     </label>
@@ -505,7 +531,18 @@
         // Handle account selection
         $('.select-liveaccount').on('change', function () {
             const clientAccountId = $(this).val();
+            const group = $(this).data('group');
             $('.user_code').val(clientAccountId);
+
+            if (group === 'LM\\B-Book\\10x\\DF-B') {
+                $('.promo-field-crypto').hide();
+                $('.promo-field-cc').hide();
+                $('#promocode').val('');
+                $('#cc_promocode').val('');
+            } else {
+                $('.promo-field-crypto').show();
+                $('.promo-field-cc').show();
+            }
             updateCryptoButtonState();
             updateCcButtonState();
         });
