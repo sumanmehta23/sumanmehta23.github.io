@@ -37,6 +37,9 @@ class AccountHelper
         if ($liveAccounts) {
             foreach ($liveAccounts as $account) {
                 $accountData = $mt5Interface->getAccountBalance($account->code);
+                if ($account->code == 443128) {
+                    Log::info("AccountHelper: Debug - Fetched data for account 443128: " . json_encode($accountData));
+                }
                 if ($accountData) {
                     $account->update([
                         'balance' => $accountData['balance'],
