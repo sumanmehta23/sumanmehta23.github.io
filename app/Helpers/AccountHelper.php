@@ -20,7 +20,13 @@ class AccountHelper
             $userId = Auth::user()->id;
         }
 
+        // Handle both service instances and raw MTWebAPI instances
         if ($mt5Service === null) {
+            $mt5Service = app(UniversalMT5Service::class);
+        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
+            // If a raw MTWebAPI instance is passed, wrap it in a service for consistent interface
+            Log::warning("AccountHelper: Raw MTWebAPI instance passed, wrapping in service for consistency");
+            $rawApi = $mt5Service;
             $mt5Service = app(UniversalMT5Service::class);
         }
 
@@ -79,7 +85,13 @@ class AccountHelper
 
     public static function getAccount($id, $mt5Service = null)
     {
+        // Handle both service instances and raw MTWebAPI instances
         if ($mt5Service === null) {
+            $mt5Service = app(UniversalMT5Service::class);
+        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
+            // If a raw MTWebAPI instance is passed, wrap it in a service for consistent interface
+            Log::warning("AccountHelper: Raw MTWebAPI instance passed to getAccount, wrapping in service");
+            $rawApi = $mt5Service;
             $mt5Service = app(UniversalMT5Service::class);
         }
 

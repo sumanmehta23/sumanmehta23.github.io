@@ -193,8 +193,8 @@ class BalanceSyncService
             // Type validation and conversion
             if (!is_string($accountIdentifier) && !is_int($accountIdentifier) && !is_numeric($accountIdentifier)) {
                 throw new \InvalidArgumentException(
-                    "Invalid account identifier type: " . gettype($accountIdentifier) . 
-                    ". Expected string, int, or numeric value. Received: " . var_export($accountIdentifier, true)
+                    "Invalid account identifier type: " . gettype($accountIdentifier) .
+                        ". Expected string, int, or numeric value. Received: " . var_export($accountIdentifier, true)
                 );
             }
 
