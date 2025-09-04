@@ -3,9 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
+use App\Models\TradeDeposit;
+use App\Models\TradeWithdrawals;
+use App\Models\BonusTransaction;
+use App\Models\Trade;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 class SetInitialBalanceStatus extends Command
 {
@@ -140,44 +144,40 @@ class SetInitialBalanceStatus extends Command
         ];
     }
 
-    private function getLatestTradeDeposit(int $accountId): ?\Carbon\Carbon
+    private function getLatestTradeDeposit(string $accountId): ?Carbon
     {
-        $result = DB::table('trade_deposits')
-            ->where('account_id', $accountId)
+        $result = TradeDeposit::where('account_id', $accountId)
             ->orderBy('created_at', 'desc')
             ->first(['created_at']);
 
-        return $result ? \Carbon\Carbon::parse($result->created_at) : null;
+        return $result ? Carbon::parse($result->created_at) : null;
     }
 
-    private function getLatestTradeWithdrawal(int $accountId): ?\Carbon\Carbon
+    private function getLatestTradeWithdrawal(string $accountId): ?Carbon
     {
-        $result = DB::table('trade_withdrawals')
-            ->where('account_id', $accountId)
+        $result = TradeWithdrawals::where('account_id', $accountId)
             ->orderBy('created_at', 'desc')
             ->first(['created_at']);
 
-        return $result ? \Carbon\Carbon::parse($result->created_at) : null;
+        return $result ? Carbon::parse($result->created_at) : null;
     }
 
-    private function getLatestBonusTransaction(int $accountId): ?\Carbon\Carbon
+    private function getLatestBonusTransaction(string $accountId): ?Carbon
     {
-        $result = DB::table('bonus_transactions')
-            ->where('account_id', $accountId)
+        $result = BonusTransaction::where('account_id', $accountId)
             ->orderBy('created_at', 'desc')
             ->first(['created_at']);
 
-        return $result ? \Carbon\Carbon::parse($result->created_at) : null;
+        return $result ? Carbon::parse($result->created_at) : null;
     }
 
-    private function getLatestTrade(int $accountId): ?\Carbon\Carbon
+    private function getLatestTrade(string $accountId): ?Carbon
     {
-        $result = DB::table('trades')
-            ->where('account_id', $accountId)
+        $result = Trade::where('account_id', $accountId)
             ->whereIn('status', ['open', 'closed'])
             ->orderBy('updated_at', 'desc')
             ->first(['updated_at']);
 
-        return $result ? \Carbon\Carbon::parse($result->updated_at) : null;
+        return $result ? Carbon::parse($result->updated_at) : null;
     }
 }
