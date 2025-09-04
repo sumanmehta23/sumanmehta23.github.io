@@ -245,6 +245,15 @@ return [
             'timeout' => 300, // Increased timeout
             'nice' => 0,
         ],
+        'supervisor-balance' => [
+            'connection' => 'redis',
+            'queue' => ['balance-sync'],
+            'balance' => 'auto',
+            'maxProcesses' => 2,
+            'memory' => 512,
+            'tries' => 1,
+            'timeout' => 300,
+        ],
 
 
 
