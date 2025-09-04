@@ -58,13 +58,21 @@ class UniversalMT5Service
     {
         return $this->executeOperation(function ($api) {
             $settings = settings();
-            return $api->DealerConnect(
+            $result = $api->DealerConnect(
                 $settings['mt5_server_ip'],
                 $settings['mt5_server_port'],
                 30,
                 $settings['mt5_server_web_login'],
                 $settings['mt5_server_web_password']
             );
+
+            // DealerConnect returns MTDealerConnect object on success or MTRetCode::MT_RET_ERROR on failure
+            if ($result instanceof \App\MT5\MTDealerConnect) {
+                return MTRetCode::MT_RET_OK;
+            } else {
+                // Return the error code (should be MTRetCode::MT_RET_ERROR or similar)
+                return $result;
+            }
         });
     }
 
