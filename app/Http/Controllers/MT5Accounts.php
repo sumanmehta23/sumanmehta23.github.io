@@ -227,11 +227,13 @@ class MT5Accounts extends Controller
 
             if ($response['status']) {
                 $x9AccountData = $response['data'];
+
+
+                // Extract account information from X9 response using correct nested structure
+                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
                 if(isset($balanceData['balance'])){
                     $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
                 }
-                // Extract account information from X9 response using correct nested structure
-                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
                 $balance = floatval($balanceData['balance'] ?? $account->balance ?? 0);
                 $credit = floatval($balanceData['credit'] ?? 0);
                 $bonus = floatval($balanceData['bonus'] ?? 0);
