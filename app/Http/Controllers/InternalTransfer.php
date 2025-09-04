@@ -15,6 +15,7 @@ use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
 class InternalTransfer extends Controller
@@ -224,7 +225,7 @@ class InternalTransfer extends Controller
                 
             });
             } catch (\Throwable $th) {
-                Log::error('Transaction failed: ',$th->getMessage());
+                Log::error('Transaction failed: ' . $th->getMessage());
                 return redirect()->back()->with('error', 'Transaction Failed.');
             }
 
