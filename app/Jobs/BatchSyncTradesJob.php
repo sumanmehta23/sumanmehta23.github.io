@@ -443,10 +443,11 @@ class BatchSyncTradesJob implements ShouldQueue
     {
         $batchStart = microtime(true);
         try {
-            // Optimized upsert with minimal columns for better performance
+            // Optimized upsert with composite unique key to prevent duplicates
+            // Using account_id + position_id as the unique identifier prevents duplicate trades
             Trade::upsert(
                 $trades,
-                ['position_id'], // unique identifier
+                ['account_id', 'position_id'], // composite unique identifier
                 ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
             );
             $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
