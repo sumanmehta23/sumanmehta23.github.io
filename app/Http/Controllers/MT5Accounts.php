@@ -234,6 +234,7 @@ class MT5Accounts extends Controller
                 if(isset($balanceData['balance'])){
                     $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
                 }
+                dd($balanceData);
                 $balance = floatval($balanceData['balance'] ?? $account->balance ?? 0);
                 $credit = floatval($balanceData['credit'] ?? 0);
                 $bonus = floatval($balanceData['bonus'] ?? 0);
