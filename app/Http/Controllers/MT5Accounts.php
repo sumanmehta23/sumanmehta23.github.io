@@ -234,7 +234,12 @@ class MT5Accounts extends Controller
                 if(isset($balanceData['balance'])){
                     $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
                 }
-                dd($balanceData);
+                if(isset($balanceData['equity'])){
+                    $balanceData['equity'] = str_replace(',','',$balanceData['equity']);
+                }
+                if(isset($balanceData['free_margin'])){
+                    $balanceData['free_margin'] = str_replace(',','',$balanceData['free_margin']);
+                }
                 $balance = floatval($balanceData['balance'] ?? $account->balance ?? 0);
                 $credit = floatval($balanceData['credit'] ?? 0);
                 $bonus = floatval($balanceData['bonus'] ?? 0);
