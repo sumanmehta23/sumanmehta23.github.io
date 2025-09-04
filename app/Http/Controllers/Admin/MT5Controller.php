@@ -1043,11 +1043,21 @@ class MT5Controller extends Controller
 
             if ($response['status']) {
                 $x9AccountData = $response['data'];
+                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
 
+                if(isset($balanceData['balance'])){
+                    $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
+                }
+                if(isset($balanceData['equity'])){
+                    $balanceData['equity'] = str_replace(',','',$balanceData['equity']);
+                }
+                if(isset($balanceData['free_margin'])){
+                    $balanceData['free_margin'] = str_replace(',','',$balanceData['free_margin']);
+                }
                 // Update account with fresh data from X9
                 try {
                     // Extract balance data from the correct nested structure
-                    $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
+
 
                     $balance = floatval($balanceData['balance'] ?? $account->balance);
                     $credit = floatval($balanceData['credit'] ?? 0);
@@ -1068,8 +1078,6 @@ class MT5Controller extends Controller
                     Log::warning('Failed to update X9 account in admin panel: ' . $e->getMessage());
                 }
 
-                // Create a mock object for compatibility with view
-                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
                 $accountHelper = (object) [
                     'Balance' => floatval($balanceData['balance'] ?? $account->balance),
                     'Credit' => floatval($balanceData['credit'] ?? 0),
