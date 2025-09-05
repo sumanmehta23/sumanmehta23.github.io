@@ -151,7 +151,8 @@ class MT5Accounts extends Controller
             //     session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             // }
             // Fetch user account details
-            if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
+            $mt5account = null;
+            if (($error_code = $this->mt5Service->userAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
 
@@ -385,18 +386,20 @@ class MT5Accounts extends Controller
         $newLeverage = $request->leverage;
         $comment = $request->update_leverage;
         $updated_user = "";
+        $trade_user = null;
+        $total_positions = null;
 
-        if (($error_code = $this->api->UserGet($account_code, $trade_user)) != MTRetCode::MT_RET_OK) {
+        if (($error_code = $this->mt5Service->userGet($account_code, $trade_user)) != MTRetCode::MT_RET_OK) {
             return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
         }
-        if (($error_code = $this->api->PositionGetTotal($account_code, $total_positions)) != MTRetCode::MT_RET_OK) {
+        if (($error_code = $this->mt5Service->positionGetTotal($account_code, $total_positions)) != MTRetCode::MT_RET_OK) {
             return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
         }
 
         if ($total_positions == 0) {
             $trade_user->Leverage = $newLeverage;
 
-            $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+            $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
             if ($error_code != MTRetCode::MT_RET_OK) {
                 return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
             } else {
@@ -486,7 +489,7 @@ class MT5Accounts extends Controller
         }
 
         if ($userAcc && count($userAcc) < 2) {
-            $new_user = $this->api->UserCreate();
+            $new_user = $this->mt5Service->userCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
             $new_user->type = $group->ac_name;
@@ -700,7 +703,7 @@ class MT5Accounts extends Controller
                 $ibdata = Ib1::where('referral_code', $ib)->first();
             }
             if ($request->request_status == 1) {
-                $new_user = $this->api->UserCreate();
+                $new_user = $this->mt5Service->userCreate();
                 $new_user->MainPassword = $this->generatePassword();
                 $new_user->Group = $group->ac_group;
                 $new_user->type = $group->ac_name;
@@ -849,7 +852,7 @@ class MT5Accounts extends Controller
                 $ibdata = Ib1::where('referral_code', $ib)->first();
             }
             if ($request->request_status == 1) {
-                $new_user = $this->api->UserCreate();
+                $new_user = $this->mt5Service->userCreate();
                 $new_user->MainPassword = $this->generatePassword();
                 $new_user->Group = $group->ac_group;
                 $new_user->type = $group->ac_name;
@@ -975,7 +978,7 @@ class MT5Accounts extends Controller
             if ($account->balance > 0) {
                 return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
             }
-            if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
+            if (($error_code = $this->mt5Service->userDelete($login)) != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($error_code);
                 Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($login));
                 return ["status" => false, "message" => $error];
@@ -1092,7 +1095,7 @@ class MT5Accounts extends Controller
         $userAcc = Account::where('user_id', $user->id)->where('demo', 1)->get();
 
         if ($userAcc) {
-            $new_user = $this->api->UserCreate();
+            $new_user = $this->mt5Service->userCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
             $new_user->type = $group->ac_name;
@@ -1146,8 +1149,8 @@ class MT5Accounts extends Controller
                     'balance' => $validatedData['demo_deposit'],
                     'account_request_status' => 1,
                 ]);
-
-                $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
+                $ticket = null;
+                $errorCode = $this->mt5Service->tradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                     Log::error('MT5 demo account : ' . $error . ' for user ' . $user->id);
@@ -1372,7 +1375,7 @@ class MT5Accounts extends Controller
             return ["status" => false, "message" => "Failed to connect to MT5 server"];
         }
 
-        if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
+        if (($error_code = $this->mt5Service->userAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));
             return ["status" => false, "message" => $error];
@@ -1456,9 +1459,9 @@ class MT5Accounts extends Controller
     private function updateMT5Password($account, $code, $pass_type, $new_password)
     {
         if ($pass_type == 'main') {
-            $error_code = $this->api->UserPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN);
+            $error_code = $this->mt5Service->userPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_MAIN);
         } else {
-            $error_code = $this->api->UserPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR);
+            $error_code = $this->mt5Service->userPasswordChange($code, $new_password, MTProtocolConsts::WEB_VAL_USER_PASS_INVESTOR);
         }
 
         // Check if the password change was successful
