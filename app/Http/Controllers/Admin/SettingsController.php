@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\Models\Account;
 use App\Models\Setting;
 use App\Models\RestrictIps;
@@ -15,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -27,13 +27,26 @@ class SettingsController extends Controller
 {
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
+    protected $api;
+    public function __construct(MailService $mailService)
     {
-        $this->mt5Service = $mt5Service;
-        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->mailService = $mailService;
-        // $this->api = $api;
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+    }
 
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in SettingsController');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
 
     public function index()
@@ -755,11 +768,11 @@ class SettingsController extends Controller
             return redirect()->back()->with('error', 'Invalid group code selected.');
         }
 
-        $ibRequestToggle = Setting::where('name','ib_toggle_activation')->first();
+        $ibRequestToggle = Setting::where('name', 'ib_toggle_activation')->first();
         if ($ibRequestToggle) {
             if ($ibApprovalType === 'manually') {
                 $ibRequestToggle->value = 'manually';
-            } elseif($ibApprovalType === 'automatic') {
+            } elseif ($ibApprovalType === 'automatic') {
                 $ibStatus = 1; // Active status
                 $ibGroup = DB::table('ib_plan_details')
                     ->leftJoin('ib_categories', 'ib_categories.id', '=', 'ib_plan_details.ib_category_id')
@@ -777,9 +790,9 @@ class SettingsController extends Controller
                 $ibRequestToggle->value = 'automatic';
             }
             $ibRequestToggle->save();
-        }else{
+        } else {
             return redirect()->back()->with('error', 'IB Request setting not found.');
         }
-        return redirect()->back()->with('success', 'IB Request toggle set to ' . (($ibApprovalType=='manually')?'Manual':'Automatic')  . ' successfully.');
+        return redirect()->back()->with('success', 'IB Request toggle set to ' . (($ibApprovalType == 'manually') ? 'Manual' : 'Automatic')  . ' successfully.');
     }
 }

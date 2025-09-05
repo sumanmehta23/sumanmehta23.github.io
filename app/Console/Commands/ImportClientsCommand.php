@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use League\Csv\Reader;
 use App\Models\Country;
@@ -32,19 +31,11 @@ class ImportClientsCommand extends Command
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    // public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
-    // {
-    //     $this->mt5Service = $mt5Service;
-    //     $this->mt5Service->connect();
-    //     $this->api = $this->mt5Service->getApi();
-    //     $this->mailService = $mailService;
-    //     // $this->api = $api;
 
-    // }
     /**
      * Execute the console command.
      */
-    public function handle(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
+    public function handle(MailService $mailService, UniversalMT5Service $mt5Service)
     {
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);

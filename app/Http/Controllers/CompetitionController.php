@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
@@ -33,7 +32,7 @@ class CompetitionController extends Controller
     protected $mailService;
     protected $mt5Service;
     protected $competitionService;
-    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService,CompetitionService $competitionService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService, CompetitionService $competitionService)
     {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
@@ -109,7 +108,7 @@ class CompetitionController extends Controller
 
     public function showCompetitionForm()
     {
-        $user=auth()->user();
+        $user = auth()->user();
         $email  = $user->email;
 
         $results = AccountType::with('mt5Group')
@@ -117,7 +116,7 @@ class CompetitionController extends Controller
                 $query->where('mt5_group_type', 'demo');
             })
             ->where('is_client_group', 1)
-            ->where('ac_name','like', '%Competition%')
+            ->where('ac_name', 'like', '%Competition%')
             ->orderBy('display_priority', 'desc')
             ->get();
 
@@ -149,7 +148,7 @@ class CompetitionController extends Controller
 
         $email = $user->email;
 
-        $group = AccountType::where('id', $validatedData['options'])->where('status',1)->first();
+        $group = AccountType::where('id', $validatedData['options'])->where('status', 1)->first();
         if (!$group) {
             return redirect()->back()->with('error', 'Competition is not active.');
         }
@@ -158,19 +157,19 @@ class CompetitionController extends Controller
         $start_date = $group->competition_start_date;
         $end_date = $group->competition_end_date;
 
-        if($end_date < now()) {
+        if ($end_date < now()) {
             return redirect()->back()->with('error', 'Competition is over, try another.');
         }
-        if($start_date < now()) {
+        if ($start_date < now()) {
             return redirect()->back()->with('error', 'Competition registration is over, try another competition.');
         }
 
         $existingCompetition = Account::with('accountType')
             ->where('user_id', $user->id)
             ->where('demo', true)
-            ->whereHas('accountType', function ($query) use ($start_date, $end_date,$account_type_id) {
-                $query->where('competition_start_date', '>=',$start_date)
-                    ->where('competition_end_date','<=', $end_date)
+            ->whereHas('accountType', function ($query) use ($start_date, $end_date, $account_type_id) {
+                $query->where('competition_start_date', '>=', $start_date)
+                    ->where('competition_end_date', '<=', $end_date)
                     ->where('id', $account_type_id)
                     ->where('ac_name', 'like', '%Competition%');
             })
@@ -179,7 +178,7 @@ class CompetitionController extends Controller
         // dd($existingCompetition);
 
         if ($existingCompetition) {
-            return redirect()->back()->with('error', 'Competition already purchased for time period ' . $existingCompetition->competition_start_date. ' to '.  $existingCompetition->competition_end_date. '.');
+            return redirect()->back()->with('error', 'Competition already purchased for time period ' . $existingCompetition->competition_start_date . ' to ' .  $existingCompetition->competition_end_date . '.');
         }
 
         if (stripos($group->ac_name, 'competition') !== false) {
@@ -304,18 +303,18 @@ class CompetitionController extends Controller
             $performers = $this->competitionService->getPerformers($competition);
             $competitionStatus = $this->competitionService->getCompetitionStatus($competition);
             // Get available competitions for filtering
-             $availableCompetitions = Account::with('accountType')
-                                    ->whereHas('accountType', function ($query) {
-                                        $query->whereColumn('id', 'accounts.competition_product_id');
-                                    })
-                                    // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
-                                    ->where('demo', true)
-                                    ->whereNotNull('competition_start_date')
-                                    ->whereNotNull('competition_end_date')
-                                    ->whereNotNull('competition_product_id')
-                                    ->orderBy('competition_start_date', 'desc')
-                                    ->get()
-                                    ->groupBy('competition_product_id');
+            $availableCompetitions = Account::with('accountType')
+                ->whereHas('accountType', function ($query) {
+                    $query->whereColumn('id', 'accounts.competition_product_id');
+                })
+                // ->select('competition_start_date', 'competition_end_date', 'competition_product_id')
+                ->where('demo', true)
+                ->whereNotNull('competition_start_date')
+                ->whereNotNull('competition_end_date')
+                ->whereNotNull('competition_product_id')
+                ->orderBy('competition_start_date', 'desc')
+                ->get()
+                ->groupBy('competition_product_id');
 
             return view('competitions.leaderboard', [
                 'stats' => $stats,
@@ -382,7 +381,7 @@ class CompetitionController extends Controller
         }
 
         // Get trades data
-        $trades = $account->trades->map(function($trade) {
+        $trades = $account->trades->map(function ($trade) {
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,

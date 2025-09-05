@@ -16,7 +16,6 @@ use App\Models\TradeWithdrawals;
 use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
 use App\MT5\MTEnDealAction;
-use App\MT5\MTWebAPI;
 use App\Http\Controllers\ControllerB;
 
 
@@ -24,10 +23,9 @@ class ClientAccController extends Controller
 {
     protected $mailService;
     protected $api;
-    public function __construct(MailService  $mailService,MTWebAPI $api)
+    public function __construct(MailService  $mailService)
     {
         $this->mailService = $mailService;
-        $this->api = $api;
     }
     public function live_accounts()
     {
@@ -105,7 +103,4 @@ class ClientAccController extends Controller
     {
         return view('admin.client_accounts.requested_accounts');
     }
-
-    
-
 }

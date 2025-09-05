@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Promocode;
@@ -33,8 +32,7 @@ class MT5Controller extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    protected $x9Service;
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api,X9Service $x9Service)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service,X9Service $x9Service)
     {
         $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
@@ -42,6 +40,21 @@ class MT5Controller extends Controller
         $this->x9Service = $x9Service;
         // $this->api = $api;
 
+    }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
     }
     public function index(Request $request)
     {
@@ -213,6 +226,10 @@ class MT5Controller extends Controller
 
     public function updateAccountDetails(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         if ($request->has(['code', 'account_type'])) {
             $code = $request->input('code');
             $account_type = $request->input('account_type');
@@ -359,6 +376,10 @@ class MT5Controller extends Controller
 
     public function updatePassword(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         if ($request->has(['code', 'password_type'])) {
             $login = $request->input('code');
             $pass_type = $request->input('password_type');
@@ -484,6 +505,10 @@ class MT5Controller extends Controller
 
     public function depositToAccount(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
@@ -593,6 +618,10 @@ class MT5Controller extends Controller
 
     public function bonusToAccount(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
         // Check if the user has exceeded the rate limit
@@ -612,7 +641,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
 
         if (!$account) {
             return redirect()->back()->with('error', 'Account not found');
@@ -728,6 +757,10 @@ class MT5Controller extends Controller
     }
     public function creditBonusToAccount(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
         // Check if the user has exceeded the rate limit
@@ -859,6 +892,10 @@ class MT5Controller extends Controller
 
     public function withdrawFromAccount(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $eid = $request->input('email');
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
@@ -992,7 +1029,7 @@ class MT5Controller extends Controller
         }
 
         if ($account->demo == false) {
-            AccountHelper::updateLiveAndDemoAccounts($account->id);
+            AccountHelper::updateLiveAndDemoAccounts($account->user_id);
             $type = "live";
         } else {
             $type = "demo";
