@@ -46,14 +46,7 @@ class MT5ConnectionPool
      */
     public function getConnection(): ?MTWebAPI
     {
-        // Check global connection limit first
-        if (!$this->checkGlobalConnectionLimit()) {
-            Log::warning("MT5Pool: Global connection limit reached, waiting...");
-            sleep(1); // Brief delay before retry
-            return $this->getExistingConnection();
-        }
-
-        // Try to get existing healthy connection
+        // First, try to get existing healthy connection (no global limit check needed for reuse)
         foreach ($this->connections as $connectionId => $api) {
             if ($this->isConnectionHealthy($connectionId)) {
                 Log::debug("MT5Pool: Reusing connection {$connectionId}");
@@ -64,36 +57,29 @@ class MT5ConnectionPool
             }
         }
 
-        // Create new connection if under limit
-        if (count($this->connections) < $this->maxConnections) {
-            return $this->createNewConnection();
-        }
-
-        // Pool is full, try to clean up and retry
+        // Clean up stale connections before creating new ones
         $this->cleanupStaleConnections();
 
-        if (count($this->connections) < $this->maxConnections) {
-            return $this->createNewConnection();
+        // Check if we can create new connection within local limits
+        if (count($this->connections) >= $this->maxConnections) {
+            Log::warning("MT5Pool: Local connection limit reached ({$this->maxConnections})");
+            return null;
         }
 
-        // Pool exhausted - use round-robin
-        $connectionId = array_rand($this->connections);
-        Log::warning("MT5Pool: Pool exhausted, using round-robin connection {$connectionId}");
-        return $this->connections[$connectionId];
-    }
+        // Check global connection limit before creating new connection
+        if (!$this->checkGlobalConnectionLimit()) {
+            Log::warning("MT5Pool: Global connection limit reached, trying cleanup...");
+            $this->forceGlobalCleanup();
 
-    /**
-     * Get existing connection without creating new ones
-     */
-    private function getExistingConnection(): ?MTWebAPI
-    {
-        foreach ($this->connections as $connectionId => $api) {
-            if ($this->isConnectionHealthy($connectionId)) {
-                Log::debug("MT5Pool: Using existing connection {$connectionId} (global limit)");
-                return $api;
+            // Retry once after cleanup
+            if (!$this->checkGlobalConnectionLimit()) {
+                Log::warning("MT5Pool: Global limit still reached after cleanup");
+                return null;
             }
         }
-        return null;
+
+        // Create new connection
+        return $this->createNewConnection();
     }
 
     /**
@@ -109,13 +95,16 @@ class MT5ConnectionPool
             $globalConnections = Cache::get('mt5_global_connections', []);
             $activeConnections = 0;
             $currentTime = time();
+            $cleaned = false;
 
-            // Count active connections and cleanup stale ones
+            // Count active connections and cleanup stale ones (reduced threshold to 30 seconds)
             foreach ($globalConnections as $processId => $connectionData) {
-                if (($currentTime - $connectionData['last_seen']) < 60) { // 1 minute threshold
+                if (($currentTime - $connectionData['last_seen']) < 30) { // 30 second threshold
                     $activeConnections += $connectionData['count'];
                 } else {
                     unset($globalConnections[$processId]);
+                    $cleaned = true;
+                    Log::debug("MT5Pool: Cleaned stale process {$processId}");
                 }
             }
 
@@ -126,15 +115,59 @@ class MT5ConnectionPool
                 'last_seen' => $currentTime
             ];
 
+            // Save cleaned data back to cache
             Cache::put('mt5_global_connections', $globalConnections, 120); // 2 minutes TTL
 
             $maxGlobal = config('mt5.max_global_connections', 20);
-            Log::debug("MT5Pool: Global connections: {$activeConnections}/{$maxGlobal}");
+            Log::debug("MT5Pool: Global connections: {$activeConnections}/{$maxGlobal}" . ($cleaned ? " (after cleanup)" : ""));
 
             return $activeConnections < $maxGlobal;
         } catch (\Exception $e) {
             Log::warning("MT5Pool: Redis coordination failed: " . $e->getMessage());
             return true; // Allow if Redis fails
+        }
+    }
+
+    /**
+     * Force cleanup of global connection tracking
+     */
+    private function forceGlobalCleanup(): void
+    {
+        if (!config('mt5.use_redis_coordination', true)) {
+            return;
+        }
+
+        try {
+            $globalConnections = Cache::get('mt5_global_connections', []);
+            $currentTime = time();
+            $originalCount = count($globalConnections);
+
+            // More aggressive cleanup - remove entries older than 15 seconds
+            foreach ($globalConnections as $processId => $connectionData) {
+                if (($currentTime - $connectionData['last_seen']) > 15) {
+                    unset($globalConnections[$processId]);
+                }
+            }
+
+            // Verify processes are actually running
+            $runningProcesses = [];
+            exec('ps aux | grep "horizon:work\|artisan" | grep -v grep | awk \'{print $2}\'', $runningProcesses);
+            $runningProcesses = array_map('intval', $runningProcesses);
+
+            foreach ($globalConnections as $processId => $connectionData) {
+                if (!in_array($processId, $runningProcesses)) {
+                    unset($globalConnections[$processId]);
+                }
+            }
+
+            Cache::put('mt5_global_connections', $globalConnections, 120);
+
+            $cleanedCount = $originalCount - count($globalConnections);
+            if ($cleanedCount > 0) {
+                Log::info("MT5Pool: Force cleanup removed {$cleanedCount} stale process entries");
+            }
+        } catch (\Exception $e) {
+            Log::warning("MT5Pool: Force cleanup failed: " . $e->getMessage());
         }
     }
 
@@ -353,6 +386,54 @@ class MT5ConnectionPool
                 }
                 break;
             }
+        }
+    }
+
+    /**
+     * Reset global connection tracking (for debugging/emergency use)
+     */
+    public function resetGlobalTracking(): void
+    {
+        if (config('mt5.use_redis_coordination', true)) {
+            Cache::forget('mt5_global_connections');
+            Log::info("MT5Pool: Global connection tracking reset");
+        }
+    }
+
+    /**
+     * Get global connection tracking info for debugging
+     */
+    public function getGlobalStats(): array
+    {
+        if (!config('mt5.use_redis_coordination', true)) {
+            return ['redis_coordination' => false];
+        }
+
+        try {
+            $globalConnections = Cache::get('mt5_global_connections', []);
+            $currentTime = time();
+            $stats = [
+                'total_processes' => count($globalConnections),
+                'total_global_connections' => 0,
+                'max_global_connections' => config('mt5.max_global_connections', 20),
+                'processes' => []
+            ];
+
+            foreach ($globalConnections as $processId => $connectionData) {
+                $age = $currentTime - $connectionData['last_seen'];
+                $stats['total_global_connections'] += $connectionData['count'];
+                $stats['processes'][] = [
+                    'pid' => $processId,
+                    'connections' => $connectionData['count'],
+                    'last_seen' => $connectionData['last_seen'],
+                    'age_seconds' => $age,
+                    'is_stale' => $age > 30
+                ];
+            }
+
+            return $stats;
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
         }
     }
 }
