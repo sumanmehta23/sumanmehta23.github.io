@@ -261,6 +261,66 @@ class UniversalMT5Service
     }
 
     /**
+     * Get user account details (direct API wrapper)
+     */
+    public function userAccountGet(int $login, &$account)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$account) {
+            return $api->UserAccountGet($login, $account);
+        });
+    }
+
+    /**
+     * Add user to MT5 server (direct API wrapper)
+     */
+    public function userAdd($user, &$user_server)
+    {
+        return $this->executeOperation(function ($api) use ($user, &$user_server) {
+            return $api->UserAdd($user, $user_server);
+        });
+    }
+
+    /**
+     * Get position total count (direct API wrapper)
+     */
+    public function positionGetTotal(int $login, &$total)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$total) {
+            return $api->PositionGetTotal($login, $total);
+        });
+    }
+
+    /**
+     * Create new user (direct API wrapper)
+     */
+    public function userCreate()
+    {
+        return $this->executeOperation(function ($api) {
+            return $api->UserCreate();
+        });
+    }
+
+    /**
+     * Delete user from MT5 server (direct API wrapper)
+     */
+    public function userDelete(int $login)
+    {
+        return $this->executeOperation(function ($api) use ($login) {
+            return $api->UserDelete($login);
+        });
+    }
+
+    /**
+     * Change user password (direct API wrapper)
+     */
+    public function userPasswordChange(int $login, string $password, int $passwordType)
+    {
+        return $this->executeOperation(function ($api) use ($login, $password, $passwordType) {
+            return $api->UserPasswordChange($login, $password, $passwordType);
+        });
+    }
+
+    /**
      * Get health status
      */
     public function getHealth(): array

@@ -126,14 +126,15 @@ class TradeDepositController extends Controller
 
                 foreach ($accounts as $account) {
                     $login = $account->code;
+                    $mt5account = null;
 
-                    $error_code = $this->api->UserAccountGet($login, $mt5account);
+                    $error_code = $this->mt5Service->userAccountGet($login, $mt5account);
                     if ($error_code != MTRetCode::MT_RET_OK) {
                         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                         continue;
                     }
 
-                    if ($mt5account->Balance >= 0) {
+                    if ($mt5account && $mt5account->Balance >= 0) {
                         $accounts_code[] = $account->code;
                         $foundValidAccount = true;
                         break; // Stop checking other accounts once a valid one is found
@@ -191,7 +192,7 @@ class TradeDepositController extends Controller
                     )
                     ->event('create')
                     ->log('Account Deposit');
-                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+                $errorCode = $this->mt5Service->tradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -278,7 +279,7 @@ class TradeDepositController extends Controller
             )
             ->event('create')
             ->log('Account Deposit');
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+        $errorCode = $this->mt5Service->tradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
