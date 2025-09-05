@@ -139,6 +139,8 @@ class BalanceSyncService
 
         // Update account data
         $updateData = [
+            'balance' => $currentBalance,
+            'equity' => $currentEquity,
             'last_balance_sync_at' => now(),
             'last_known_balance' => $currentBalance,
             'last_known_equity' => $currentEquity
