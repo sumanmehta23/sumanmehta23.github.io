@@ -13,7 +13,7 @@ use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
@@ -33,12 +33,11 @@ class CompetitionController extends Controller
     protected $mailService;
     protected $mt5Service;
     protected $competitionService;
-    public function __construct(MT5Service $mt5Service, MailService $mailService,CompetitionService $competitionService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService,CompetitionService $competitionService)
     {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->competitionService = $competitionService;
     }
 

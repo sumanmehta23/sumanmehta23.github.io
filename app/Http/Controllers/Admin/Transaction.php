@@ -26,17 +26,16 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 class Transaction extends Controller
 {
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
     {
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->mailService = $mailService;
     }
     public function index(Request $request)

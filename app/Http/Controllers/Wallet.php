@@ -14,7 +14,7 @@ use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
@@ -47,14 +47,13 @@ class Wallet extends Controller
     protected $api;
     protected $mt5Service;
 
-    public function __construct(Payment $paymentController, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(Payment $paymentController, MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
     public function alldeposits()
     {

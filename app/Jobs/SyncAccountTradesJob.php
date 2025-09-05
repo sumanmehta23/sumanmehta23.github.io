@@ -13,7 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Jobs\DistributeIbCommissionJob;

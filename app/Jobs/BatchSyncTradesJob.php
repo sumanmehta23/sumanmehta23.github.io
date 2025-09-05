@@ -78,7 +78,7 @@ class BatchSyncTradesJob implements ShouldQueue
             // Track MT5 connection time
             $connectionStart = microtime(true);
             if (!$mt5Service->connect()) {
-                throw new \Exception("Failed to establish MT5 connection");
+                throw new \Exception("Failed to establish MT5 connection (via pool)");
             }
             $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
             $api = $mt5Service->getApi();
@@ -506,9 +506,9 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function connectWithRetry(UniversalMT5Service $mt5Service, int $maxRetries = 3): void
     {
-        // This method is now deprecated - UniversalMT5Service handles retries internally
+        // UniversalMT5Service handles connection pooling and retries
         if (!$mt5Service->connect()) {
-            throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts");
+            throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts (via pool)");
         }
     }
 }

@@ -8,7 +8,7 @@ use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use Illuminate\Bus\Batch;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
@@ -22,13 +22,12 @@ class SyncClosedTrades extends Command
     protected $mailService;
     protected $mt5Service;
 
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
         parent::__construct();
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // Defer connection until handle() method
     }
 
     /**
@@ -50,6 +49,13 @@ class SyncClosedTrades extends Command
      */
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
         $batchSize = 10; // Increased from 1 to reduce single-job batches
 
         Account::with('accountType')->whereNotNull('code')

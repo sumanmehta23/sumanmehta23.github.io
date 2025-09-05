@@ -12,7 +12,7 @@ use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\BonusTransaction;
@@ -30,13 +30,12 @@ class Payment extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(MTWebAPI $api, MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
     public function handlePaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {

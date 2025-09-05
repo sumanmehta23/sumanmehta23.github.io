@@ -70,6 +70,7 @@ class MT5RedisCoordinationDemoJob implements ShouldQueue
                     break;
 
                 case 'dealer_connect':
+                    // dealerConnect uses the connection pool (no direct connect)
                     $result = $mt5Service->dealerConnect();
                     break;
 
