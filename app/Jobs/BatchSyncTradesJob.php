@@ -378,6 +378,18 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function prepareOpenTrade($account, $positionId, $order)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('open', $account, $positionId, $order, [
+                'order_data' => $order,
+                'account_id' => $account->id,
+                'account_code' => $account->code
+            ]);
+
+            // Return null or throw exception to prevent trade creation
+            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
+        }
+
         // Log::info("account code  ".$account->code);
         // Log::info("order  ".json_encode($order));
         // Log::info("order id  ".$order->Order);
@@ -408,6 +420,20 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('closed', $account, $positionId, $closeOrder, [
+                'open_order_data' => $openOrder,
+                'close_order_data' => $closeOrder,
+                'rate_profit' => $rateProfit,
+                'account_id' => $account->id,
+                'account_code' => $account->code
+            ]);
+
+            // Return null or throw exception to prevent trade creation
+            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
+        }
+
         $multiplier = $openOrder->Type ? -1 : 1;
 
         // Log::info("account code  ".$account->code);
@@ -443,15 +469,57 @@ class BatchSyncTradesJob implements ShouldQueue
     {
         $batchStart = microtime(true);
         try {
-            // Optimized upsert with composite unique key to prevent duplicates
-            // Using account_id + position_id as the unique identifier prevents duplicate trades
-            Trade::upsert(
-                $trades,
-                ['account_id', 'position_id'], // composite unique identifier
-                ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
-            );
-            $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
-            Log::debug("DB Batch: " . count($trades) . " trades in {$batchTime}ms");
+            // FINAL VALIDATION: Check all trades in batch for invalid position_id
+            $validTrades = [];
+            $invalidCount = 0;
+
+            foreach ($trades as $trade) {
+                if (empty($trade['position_id']) || $trade['position_id'] == 0 || $trade['position_id'] === '0') {
+                    $invalidCount++;
+                    Log::critical("🚨 BATCH VALIDATION: Invalid position_id detected in batch", [
+                        'position_id' => $trade['position_id'],
+                        'account_id' => $trade['account_id'],
+                        'account_code' => $trade['code'] ?? 'unknown',
+                        'order_id' => $trade['order_id'] ?? 'unknown',
+                        'symbol' => $trade['symbol'] ?? 'unknown',
+                        'trade_data' => $trade,
+                        'batch_size' => count($trades),
+                        'issue_type' => 'INVALID_POSITION_ID_BATCH_LEVEL'
+                    ]);
+
+                    // Log to admin activity log
+                    activity('trade_data_integrity')
+                        ->withProperties([
+                            'position_id' => $trade['position_id'],
+                            'account_code' => $trade['code'] ?? 'unknown',
+                            'trade_data' => $trade
+                        ])
+                        ->log("🚨 CRITICAL: Invalid position_id ({$trade['position_id']}) caught at batch level");
+                } else {
+                    $validTrades[] = $trade;
+                }
+            }
+
+            if ($invalidCount > 0) {
+                Log::critical("BATCH PROCESSING: Filtered out {$invalidCount} trades with invalid position_id from batch of " . count($trades));
+            }
+
+            // Only process valid trades
+            if (!empty($validTrades)) {
+                // Optimized upsert with composite unique key to prevent duplicates
+                // Using account_id + position_id as the unique identifier prevents duplicate trades
+                Trade::upsert(
+                    $validTrades,
+                    ['account_id', 'position_id'], // composite unique identifier
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
+                );
+                $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
+                Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
+                    ($invalidCount > 0 ? " ({$invalidCount} invalid filtered)" : ""));
+            } else {
+                $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
+                Log::warning("DB Batch: No valid trades to process ({$invalidCount} invalid filtered) in {$batchTime}ms");
+            }
         } catch (\Exception $e) {
             $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
             Log::error("Error processing trade batch (" . count($trades) . " trades, {$batchTime}ms): " . $e->getMessage());
@@ -509,6 +577,54 @@ class BatchSyncTradesJob implements ShouldQueue
         // UniversalMT5Service handles connection pooling and retries
         if (!$mt5Service->connect()) {
             throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts (via pool)");
+        }
+    }
+
+    /**
+     * Log invalid position_id attempts with comprehensive details for admin investigation
+     */
+    protected function logInvalidPositionId(string $tradeType, $account, $positionId, $order, array $context = []): void
+    {
+        $logData = array_merge([
+            'trade_type' => $tradeType,
+            'position_id' => $positionId,
+            'account_id' => $account->id,
+            'account_code' => $account->code,
+            'account_demo' => $account->demo,
+            'order_id' => $order->Order ?? 'unknown',
+            'order_symbol' => $order->Symbol ?? 'unknown',
+            'order_type' => $order->Type ?? 'unknown',
+            'order_volume' => $order->VolumeInitial ?? 'unknown',
+            'order_price' => $order->PriceCurrent ?? 'unknown',
+            'order_time_done' => $order->TimeDone ?? 'unknown',
+            'order_comment' => $order->Comment ?? '',
+            'timestamp' => now(),
+            'job_id' => $this->job->getJobId() ?? 'unknown',
+            'queue' => $this->job->getQueue() ?? 'unknown',
+            'severity' => 'CRITICAL',
+            'issue_type' => 'INVALID_POSITION_ID_JOB_LEVEL',
+            'stack_trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15)
+        ], $context);
+
+        // Log critical data integrity issue with full context
+        Log::critical("🚨 INVALID POSITION_ID in BatchSyncTradesJob: {$tradeType} trade with position_id = {$positionId}", $logData);
+
+        // Log to admin activity log for dashboard visibility
+        activity('trade_data_integrity')
+            ->withProperties($logData)
+            ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$account->code}");
+
+        // Send immediate admin notification if configured
+        try {
+            // You can add email/slack notification here if needed
+            Log::channel('slack')->critical("Invalid position_id detected in trade sync", [
+                'account' => $account->code,
+                'position_id' => $positionId,
+                'trade_type' => $tradeType,
+                'order_id' => $order->Order ?? 'unknown'
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
         }
     }
 }

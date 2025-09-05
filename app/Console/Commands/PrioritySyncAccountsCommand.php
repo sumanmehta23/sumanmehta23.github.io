@@ -24,11 +24,11 @@ use Carbon\Carbon;
 class PrioritySyncAccountsCommand extends Command
 {
     protected $signature = 'app:priority-sync 
-                            {--batch-size=10 : Number of accounts per batch}
-                            {--max-concurrent=5 : Maximum concurrent batches}
-                            {--cycle-delay=30 : Delay between sync cycles in seconds}
-                            {--min-sync-interval=60 : Minimum minutes between syncs for same account}
-                            {--max-pending-jobs=100 : Maximum pending BatchSyncTradesJob jobs allowed}
+                            {--batch-size= : Number of accounts per batch (default from config)}
+                            {--max-concurrent= : Maximum concurrent batches (default from config)}
+                            {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
+                            {--min-sync-interval= : Minimum minutes between syncs for same account (default from config)}
+                            {--max-pending-jobs= : Maximum pending BatchSyncTradesJob jobs allowed (default from config)}
                             {--ignore-balance-filter : Sync all accounts regardless of balance changes}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}';
@@ -37,11 +37,11 @@ class PrioritySyncAccountsCommand extends Command
 
     public function handle()
     {
-        $batchSize = (int) $this->option('batch-size');
-        $maxConcurrent = (int) $this->option('max-concurrent');
-        $cycleDelay = (int) $this->option('cycle-delay');
-        $minSyncInterval = (int) $this->option('min-sync-interval');
-        $maxPendingJobs = (int) $this->option('max-pending-jobs');
+        $batchSize = (int) ($this->option('batch-size') ?: config('sync-all-trades.priority_sync.batch_size', 10));
+        $maxConcurrent = (int) ($this->option('max-concurrent') ?: config('sync-all-trades.priority_sync.max_concurrent', 5));
+        $cycleDelay = (int) ($this->option('cycle-delay') ?: config('sync-all-trades.priority_sync.cycle_delay', 30));
+        $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 60));
+        $maxPendingJobs = (int) ($this->option('max-pending-jobs') ?: config('sync-all-trades.priority_sync.max_pending_jobs', 100));
         $ignoreBalanceFilter = $this->option('ignore-balance-filter');
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
@@ -52,11 +52,11 @@ class PrioritySyncAccountsCommand extends Command
         }
 
         $this->info("Starting priority-based sync with:");
-        $this->info("- Batch size: {$batchSize}");
-        $this->info("- Max concurrent: {$maxConcurrent}");
-        $this->info("- Cycle delay: {$cycleDelay}s");
-        $this->info("- Min sync interval: {$minSyncInterval}m");
-        $this->info("- Max pending jobs: {$maxPendingJobs}");
+        $this->info("- Batch size: {$batchSize}" . ($this->option('batch-size') ? '' : ' (config)'));
+        $this->info("- Max concurrent: {$maxConcurrent}" . ($this->option('max-concurrent') ? '' : ' (config)'));
+        $this->info("- Cycle delay: {$cycleDelay}s" . ($this->option('cycle-delay') ? '' : ' (config)'));
+        $this->info("- Min sync interval: {$minSyncInterval}m" . ($this->option('min-sync-interval') ? '' : ' (config)'));
+        $this->info("- Max pending jobs: {$maxPendingJobs}" . ($this->option('max-pending-jobs') ? '' : ' (config)'));
         if ($ignoreBalanceFilter) {
             $this->warn("- Balance filter: DISABLED (will sync all accounts)");
         } else {
@@ -234,13 +234,13 @@ class PrioritySyncAccountsCommand extends Command
         if (!$ignoreBalanceFilter) {
             // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
             $query->where(function ($q) use ($cutoffTime) {
-                $q->where('sync_status', 'needs_retry') // Always include retry accounts
+                $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts
                     ->orWhere(function ($balanceQuery) use ($cutoffTime) {
                         $balanceQuery->where('has_balance_activity', true)
                             ->where(function ($syncQuery) use ($cutoffTime) {
-                                $syncQuery->whereNull('last_balance_sync_at') // Never synced
-                                    ->orWhereColumn('last_balance_changed_at', '>', 'last_balance_sync_at') // Balance changed since last sync
-                                    ->orWhere('last_balance_sync_at', '<', now()->subHours(6)); // Force sync every 6 hours
+                                $syncQuery->whereNull('last_sync_attempt_at') // Never synced trades
+                                    ->orWhereColumn('last_balance_changed_at', '>', 'last_sync_attempt_at') // Balance changed since last TRADE sync
+                                    ->orWhere('last_sync_attempt_at', '<', now()->subHours(6)); // Force sync every 6 hours
                             });
                     })
                     ->orWhere(function ($fallbackQuery) use ($cutoffTime) {
@@ -257,6 +257,7 @@ class PrioritySyncAccountsCommand extends Command
             $query->where(function ($q) use ($cutoffTime) {
                 $q->whereNull('last_sync_attempt_at')  // Never synced
                     ->orWhere('last_sync_attempt_at', '<', $cutoffTime)  // Old syncs
+                    ->orWhere('sync_status', 'pending')
                     ->orWhere('sync_status', 'needs_retry');  // Failed due to queue limits
             });
         }
@@ -288,8 +289,8 @@ class PrioritySyncAccountsCommand extends Command
         $balanceChanged = $accounts->where('has_balance_activity', true)
             ->filter(function ($account) {
                 return $account->last_balance_changed_at &&
-                    (!$account->last_balance_sync_at ||
-                        $account->last_balance_changed_at > $account->last_balance_sync_at);
+                    (!$account->last_sync_attempt_at ||
+                        $account->last_balance_changed_at > $account->last_sync_attempt_at);
             })->count();
         $neverSynced = $accounts->whereNull('last_sync_attempt_at')
             ->where('sync_status', '!=', 'needs_retry')->count();
