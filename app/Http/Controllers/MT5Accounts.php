@@ -648,6 +648,11 @@ class MT5Accounts extends Controller
     }
     public function activateAccount(Request $request)
     {
+        // Ensure MT5 connection before proceeding
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+
         $settings = settings();
         if ($request->accountType == 0) {
             $validatedData = $request->validate([
@@ -786,6 +791,11 @@ class MT5Accounts extends Controller
 
     public function bulkActivateAccount(Request $request)
     {
+        // Ensure MT5 connection before proceeding
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+
         $settings = settings();
         $validatedData = $request->validate([
             'client_id' => 'required|string',
@@ -1373,6 +1383,11 @@ class MT5Accounts extends Controller
     }
     public function changeMt5Password(Request $request, Account $account)
     {
+        // Ensure MT5 connection before proceeding
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+
         $request->validate([
             'account_id' => 'required',
             'password_type' => 'required|in:main,investor',
