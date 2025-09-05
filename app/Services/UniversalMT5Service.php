@@ -164,6 +164,43 @@ class UniversalMT5Service
     }
 
     /**
+     * Execute trade balance operation
+     */
+    public function tradeBalance(int $login, int $type, float $amount, string $comment = '', ?int &$ticket = null, bool $marginCheck = true): int
+    {
+        return $this->executeOperation(function ($api) use ($login, $type, $amount, $comment, &$ticket, $marginCheck) {
+            $result = $api->TradeBalance($login, $type, $amount, $comment, $ticket, $marginCheck);
+
+            if ($result !== MTRetCode::MT_RET_OK) {
+                $errorMsg = MTRetCode::GetError($result);
+                Log::warning("UniversalMT5Service: TradeBalance failed for login {$login} - {$errorMsg}");
+            }
+
+            return $result;
+        });
+    }
+
+    /**
+     * Update user information
+     */
+    public function userUpdate(object $user, ?string &$result = null): int
+    {
+        return $this->executeOperation(function ($api) use ($user, &$result) {
+            return $api->UserUpdate($user, $result);
+        });
+    }
+
+    /**
+     * Get user object by login
+     */
+    public function userGet(int $login, ?object &$user = null): int
+    {
+        return $this->executeOperation(function ($api) use ($login, &$user) {
+            return $api->UserGet($login, $user);
+        });
+    }
+
+    /**
      * Execute bulk operations efficiently
      */
     public function executeBulkOperation(array $operations): array
@@ -221,6 +258,66 @@ class UniversalMT5Service
     public function getStats(): array
     {
         return $this->connectionManager->getStats();
+    }
+
+    /**
+     * Get user account details (direct API wrapper)
+     */
+    public function userAccountGet(int $login, &$account)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$account) {
+            return $api->UserAccountGet($login, $account);
+        });
+    }
+
+    /**
+     * Add user to MT5 server (direct API wrapper)
+     */
+    public function userAdd($user, &$user_server)
+    {
+        return $this->executeOperation(function ($api) use ($user, &$user_server) {
+            return $api->UserAdd($user, $user_server);
+        });
+    }
+
+    /**
+     * Get position total count (direct API wrapper)
+     */
+    public function positionGetTotal(int $login, &$total)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$total) {
+            return $api->PositionGetTotal($login, $total);
+        });
+    }
+
+    /**
+     * Create new user (direct API wrapper)
+     */
+    public function userCreate()
+    {
+        return $this->executeOperation(function ($api) {
+            return $api->UserCreate();
+        });
+    }
+
+    /**
+     * Delete user from MT5 server (direct API wrapper)
+     */
+    public function userDelete(int $login)
+    {
+        return $this->executeOperation(function ($api) use ($login) {
+            return $api->UserDelete($login);
+        });
+    }
+
+    /**
+     * Change user password (direct API wrapper)
+     */
+    public function userPasswordChange(int $login, string $password, int $passwordType)
+    {
+        return $this->executeOperation(function ($api) use ($login, $password, $passwordType) {
+            return $api->UserPasswordChange($login, $password, $passwordType);
+        });
     }
 
     /**
