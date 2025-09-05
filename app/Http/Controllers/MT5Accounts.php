@@ -31,7 +31,8 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(UniversalMT5Service $mt5Service,X9Service $x9Service, MailService $mailService, MTWebAPI $api)
+    protected $x9Service;
+    public function __construct(UniversalMT5Service $mt5Service, X9Service $x9Service, MailService $mailService, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         $this->x9Service = $x9Service;
@@ -228,14 +229,14 @@ class MT5Accounts extends Controller
 
                 // Extract account information from X9 response using correct nested structure
                 $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
-                if(isset($balanceData['balance'])){
-                    $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
+                if (isset($balanceData['balance'])) {
+                    $balanceData['balance'] = str_replace(',', '', $balanceData['balance']);
                 }
-                if(isset($balanceData['equity'])){
-                    $balanceData['equity'] = str_replace(',','',$balanceData['equity']);
+                if (isset($balanceData['equity'])) {
+                    $balanceData['equity'] = str_replace(',', '', $balanceData['equity']);
                 }
-                if(isset($balanceData['free_margin'])){
-                    $balanceData['free_margin'] = str_replace(',','',$balanceData['free_margin']);
+                if (isset($balanceData['free_margin'])) {
+                    $balanceData['free_margin'] = str_replace(',', '', $balanceData['free_margin']);
                 }
                 $balance = floatval($balanceData['balance'] ?? $account->balance ?? 0);
                 $credit = floatval($balanceData['credit'] ?? 0);
@@ -507,7 +508,7 @@ class MT5Accounts extends Controller
                     'ib1' => $new_user->LeadSource,
                     'account_request_status' => '1',
                 ]);
-                $this->sendMail($new_user, 'Live',$account->platform);
+                $this->sendMail($new_user, 'Live', $account->platform);
                 // return redirect()->back()->with('success', $response['message']);
                 return redirect()->back()->with('success', $response['message']);
             } else {
@@ -719,7 +720,7 @@ class MT5Accounts extends Controller
                             'ib1' => $new_user->LeadSource,
                             'account_request_status' => 1,
                         ]);
-                        $this->sendMail($new_user, 'Live',$account->platform);
+                        $this->sendMail($new_user, 'Live', $account->platform);
                         return redirect()->back()->with('success', $response['message']);
                     } else {
                         return redirect()->back()->with('error', 'No account found to update.');
@@ -863,7 +864,7 @@ class MT5Accounts extends Controller
                             'account_request_status' => 1,
                         ]);
 
-                        $this->sendMail($new_user, 'Live',$account->platform);
+                        $this->sendMail($new_user, 'Live', $account->platform);
                         $successCount++;
                     } else {
                         $failCount++;
@@ -1114,7 +1115,7 @@ class MT5Accounts extends Controller
 
                     DemoDeposit::create($data);
                 }
-                $this->sendMail($new_user, 'Demo',$account->platform);
+                $this->sendMail($new_user, 'Demo', $account->platform);
                 return redirect()->back()->with('success', $response['message']);
             } else {
                 return redirect()->back()->with('error', $response['message']);
