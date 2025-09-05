@@ -259,14 +259,22 @@ class UniversalMT5Service
     {
         return $this->connectionManager->getStats();
     }
-
-    /**
+/**
      * Get user account details (direct API wrapper)
      */
     public function userAccountGet(int $login, &$account)
     {
         return $this->executeOperation(function ($api) use ($login, &$account) {
             return $api->UserAccountGet($login, $account);
+        });
+    }
+    /**
+     * Get user details (direct API wrapper)
+     */
+    public function userGet(int $login, &$user)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$user) {
+            return $api->UserGet($login, $user);
         });
     }
 
@@ -277,6 +285,15 @@ class UniversalMT5Service
     {
         return $this->executeOperation(function ($api) use ($user, &$user_server) {
             return $api->UserAdd($user, $user_server);
+        });
+    }
+     /**
+     * Update user details (direct API wrapper)
+     */
+    public function userUpdate($user, &$updated_user)
+    {
+        return $this->executeOperation(function ($api) use ($user, &$updated_user) {
+            return $api->UserUpdate($user, $updated_user);
         });
     }
 
