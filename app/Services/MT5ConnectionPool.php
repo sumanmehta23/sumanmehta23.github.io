@@ -46,6 +46,13 @@ class MT5ConnectionPool
      */
     public function getConnection(): ?MTWebAPI
     {
+        // Check global connection limit first
+        if (!$this->checkGlobalConnectionLimit()) {
+            Log::warning("MT5Pool: Global connection limit reached, waiting...");
+            sleep(1); // Brief delay before retry
+            return $this->getExistingConnection();
+        }
+
         // Try to get existing healthy connection
         foreach ($this->connections as $connectionId => $api) {
             if ($this->isConnectionHealthy($connectionId)) {
@@ -73,6 +80,62 @@ class MT5ConnectionPool
         $connectionId = array_rand($this->connections);
         Log::warning("MT5Pool: Pool exhausted, using round-robin connection {$connectionId}");
         return $this->connections[$connectionId];
+    }
+
+    /**
+     * Get existing connection without creating new ones
+     */
+    private function getExistingConnection(): ?MTWebAPI
+    {
+        foreach ($this->connections as $connectionId => $api) {
+            if ($this->isConnectionHealthy($connectionId)) {
+                Log::debug("MT5Pool: Using existing connection {$connectionId} (global limit)");
+                return $api;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check global connection limit using Redis
+     */
+    private function checkGlobalConnectionLimit(): bool
+    {
+        if (!config('mt5.use_redis_coordination', true)) {
+            return true;
+        }
+
+        try {
+            $globalConnections = Cache::get('mt5_global_connections', []);
+            $activeConnections = 0;
+            $currentTime = time();
+
+            // Count active connections and cleanup stale ones
+            foreach ($globalConnections as $processId => $connectionData) {
+                if (($currentTime - $connectionData['last_seen']) < 60) { // 1 minute threshold
+                    $activeConnections += $connectionData['count'];
+                } else {
+                    unset($globalConnections[$processId]);
+                }
+            }
+
+            // Update our process info
+            $processId = getmypid();
+            $globalConnections[$processId] = [
+                'count' => count($this->connections),
+                'last_seen' => $currentTime
+            ];
+
+            Cache::put('mt5_global_connections', $globalConnections, 120); // 2 minutes TTL
+
+            $maxGlobal = config('mt5.max_global_connections', 20);
+            Log::debug("MT5Pool: Global connections: {$activeConnections}/{$maxGlobal}");
+
+            return $activeConnections < $maxGlobal;
+        } catch (\Exception $e) {
+            Log::warning("MT5Pool: Redis coordination failed: " . $e->getMessage());
+            return true; // Allow if Redis fails
+        }
     }
 
     /**
@@ -105,6 +168,10 @@ class MT5ConnectionPool
                 ];
 
                 Log::info("MT5Pool: Created new connection {$connectionId}");
+
+                // Update global connection count
+                $this->updateGlobalConnectionCount();
+
                 return $api;
             } else {
                 Log::error("MT5Pool: Failed to create connection. Error code: " . MTRetCode::GetError($result));
@@ -177,6 +244,33 @@ class MT5ConnectionPool
 
         unset($this->connectionHealth[$connectionId]);
         Log::info("MT5Pool: Removed connection {$connectionId}");
+
+        // Update global count
+        $this->updateGlobalConnectionCount();
+    }
+
+    /**
+     * Update global connection count in Redis
+     */
+    private function updateGlobalConnectionCount(): void
+    {
+        if (!config('mt5.use_redis_coordination', true)) {
+            return;
+        }
+
+        try {
+            $globalConnections = Cache::get('mt5_global_connections', []);
+            $processId = getmypid();
+
+            $globalConnections[$processId] = [
+                'count' => count($this->connections),
+                'last_seen' => time()
+            ];
+
+            Cache::put('mt5_global_connections', $globalConnections, 120);
+        } catch (\Exception $e) {
+            Log::warning("MT5Pool: Failed to update global count: " . $e->getMessage());
+        }
     }
 
     /**

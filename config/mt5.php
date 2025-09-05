@@ -12,7 +12,7 @@ return [
     */
 
     // Maximum concurrent connections to MT5 server
-    'max_connections' => env('MT5_MAX_CONNECTIONS', 8),
+    'max_connections' => env('MT5_MAX_CONNECTIONS', 3),
 
     // Health check interval in seconds
     'health_check_interval' => env('MT5_HEALTH_CHECK_INTERVAL', 300),

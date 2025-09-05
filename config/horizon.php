@@ -290,19 +290,19 @@ return [
 
         'local' => [
             'supervisor-1' => [
-                'maxProcesses' => 3,
+                'maxProcesses' => 1,
             ],
             'supervisor-2' => [
-                'maxProcesses' => 50,
+                'maxProcesses' => 2,
             ],
             'supervisor-3' => [
-                'maxProcesses' => 50,
+                'maxProcesses' => 1,
             ],
             'supervisor-4' => [
-                'maxProcesses' => 50,
+                'maxProcesses' => 2,
             ],
             'supervisor-5' => [
-                'maxProcesses' => 10, // Added for optimized-sync-trades queue
+                'maxProcesses' => 1, // Reduced for connection management
             ],
         ],
     ],
