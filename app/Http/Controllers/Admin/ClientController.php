@@ -34,6 +34,7 @@ use Illuminate\Validation\Rule;
 use App\Models\ClientBankDetail;
 use Illuminate\Auth\Access\Gate;
 use App\Models\RelationshipManager;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -464,6 +465,37 @@ class ClientController extends Controller
                 $user = User::find($user_id);
 
                 if ($user) {
+                    if($email){
+                        $accounts = Account::where('email', $user->email)->get();
+
+                        $settings = settings();
+                        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                        $this->api->Connect(
+                            $settings['mt5_server_ip'],
+                            $settings['mt5_server_port'],
+                            300,
+                            $settings['mt5_server_web_login'],
+                            $settings['mt5_server_web_password']
+                        );
+                        foreach($accounts as $account){
+                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                Log::error('error'.' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                                return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                            }
+                            if($trade_user){
+                                $trade_user->Email = $email;
+                                $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                                if ($error_code != MTRetCode::MT_RET_OK) {
+                                    Log::error("error ". $account->code." Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                                    return redirect()->back()->with("error", "Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                                }else {
+                                    Account::where('code', $account->code)->update([
+                                        'email' => $email
+                                    ]);
+                                }
+                            }
+                        }
+                    }
 
                     $user->fullname = $fullname;
                     if ($password) {
