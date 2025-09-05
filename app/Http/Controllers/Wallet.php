@@ -984,330 +984,339 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
-        // Get signature and callback_id fields from provided data
-        $signature = $payload['signature'] ?? null;
-        $callback_id = $payload['callback_id'] ?? null;
-        $callbackToken = config('services.cryptochill.callbacktoken');
-        // Validate the signature
-        if ($callback_id !== null) {
-            $is_valid = $signature === $this->encodeHmac($callbackToken, $callback_id);
-        } else {
-            $is_valid = false;
-        }
-
-        // Throw an error if the signature does not match
-        if (!$is_valid) {
-            info('Failed to verify CryptoChill callback signature: ' . $callback_id . " and token is  " . $callbackToken);
-            throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
-        }
-
-        // Log callback data (you can change log storage if needed)
-        $logData = "IP: " . $request->ip() . "\nPayload: " . json_encode($payload, JSON_PRETTY_PRINT) . "\n";
-
-        // Check if the callback status is transaction confirmed or complete
-        if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
-            $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
-            if (isset($passedData['customerID'])) {
-                $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
+        try{
+            // Get signature and callback_id fields from provided data
+            $signature = $payload['signature'] ?? null;
+            $callback_id = $payload['callback_id'] ?? null;
+            $callbackToken = config('services.cryptochill.callbacktoken');
+            // Validate the signature
+            if ($callback_id !== null) {
+                $is_valid = $signature === $this->encodeHmac($callbackToken, $callback_id);
+            } else {
+                $is_valid = false;
             }
 
-            Log::info($logData);
-
-            if (!isset($passedData['depositTo'])) {
-                return response()->json(['error' => 'Deposit designation missing'], 400);
+            // Throw an error if the signature does not match
+            if (!$is_valid) {
+                info('Failed to verify CryptoChill callback signature: ' . $callback_id . " and token is  " . $callbackToken);
+                throw new Exception('Failed to verify CryptoChill callback signature: ' . $callback_id);
             }
 
-            $deposit_to = $passedData['depositTo'];
-            $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
-            $email = $passedData['customerEmail'];
-            $customerID = $passedData['customerID'];
-            $customerAccountID = $passedData['clientAccountID'];
-            $promocode = $passedData['promocode'] ?? '';
-            $transactionId = $payload['transaction']['id'];
-            $deposit_type = "CryptoChill";
+            // Log callback data (you can change log storage if needed)
+            $logData = "IP: " . $request->ip() . "\nPayload: " . json_encode($payload, JSON_PRETTY_PRINT) . "\n";
 
-
-
-            if ($deposit_to === "wallet") {
-                // Check for duplicate transaction
-                $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
-                if ($existingDeposit) {
-                    return response()->json(['status' => 'true']);
+            // Check if the callback status is transaction confirmed or complete
+            if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
+                $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
+                if (isset($passedData['customerID'])) {
+                    $logData .= "Customer ID: " . $passedData['customerID'] . "\n";
                 }
 
-                // Prepare callback data and insert it into the database
-                $callback_data = json_encode($payload);
-                $callback_code = json_encode($payload['transaction']["status"]);
+                Log::info($logData);
 
-                try {
-                    DB::beginTransaction();
-
-                    WalletDeposit::create([
-                        'user_id' => $customerID,
-                        'email' => $email,
-                        'deposit_type' => $deposit_type,
-                        'deposit_amount' => $amount,
-                        'company_bank' => $deposit_type,
-                        'transaction_id' => $transactionId,
-                        'status' => 1,
-                        'currency_type' => 'USD',
-                        'callback_data' => $callback_data,
-                        'callback_code' => $callback_code,
-                    ]);
-
-                    // Update total balance
-                    TotalBalance::create(
-                        ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
-                    );
-
-                    DB::commit();
-                    $user = User::where('id', $customerID)->first();
-                    $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                    Cache::forget("user:{$customerID}:wallet_balance");
-                    Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
-
-                    return response()->json(['status' => 'true']);
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
-                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
-                }
-            } elseif ($deposit_to === "Account") {
-                //  Log::info('Account');
-                //  Log::info('transactionId '.$transactionId);
-
-                // Check for duplicate transaction
-                $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
-                if ($existingDeposit) {
-                    return response()->json(['status' => 'Transaction Id already deposited']);
+                if (!isset($passedData['depositTo'])) {
+                    return response()->json(['error' => 'Deposit designation missing'], 400);
                 }
 
-                $settings = settings();
-                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                $this->api->Connect(
-                    $settings['mt5_server_ip'],
-                    $settings['mt5_server_port'],
-                    300,
-                    $settings['mt5_server_web_login'],
-                    $settings['mt5_server_web_password']
-                );
+                $deposit_to = $passedData['depositTo'];
+                $amount = $payload['transaction']['amount']['paid']['quotes']['USD'];
+                $email = $passedData['customerEmail'];
+                $customerID = $passedData['customerID'];
+                $customerAccountID = $passedData['clientAccountID'];
+                $promocode = $passedData['promocode'] ?? '';
+                $transactionId = $payload['transaction']['id'];
+                $deposit_type = "CryptoChill";
 
-                $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
-                    $query->where('status', 1);
-                }])->first();
 
-                // Log::info('Account' . $account);
 
-                // Prepare callback data and insert it into the database
-                $callback_data = json_encode($payload);
-                $callback_code = json_encode($payload['transaction']["status"]);
-
-                try {
-                    DB::beginTransaction();
-
-                    // CRITICAL: Use database locking to prevent race conditions
-                    $lockResult = DB::select('SELECT GET_LOCK(?, 10) as lock_acquired', ["cryptochill_deposit_{$transactionId}"]);
-                    if (!$lockResult[0]->lock_acquired) {
-                        DB::rollBack();
-                        return response()->json(['error' => 'Could not acquire lock'], 500);
-                    }
-
-                    // Double-check for duplicate after acquiring lock
-                    $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                if ($deposit_to === "wallet") {
+                    // Check for duplicate transaction
+                    $existingDeposit = WalletDeposit::where('transaction_id', $transactionId)->first();
                     if ($existingDeposit) {
-                        DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                        DB::rollBack();
                         return response()->json(['status' => 'true']);
                     }
 
-                    // Create the trade deposit record first
-                    $tradeDeposit = TradeDeposit::create([
-                        'user_id' => $customerID,
-                        'account_id' => $customerAccountID,
-                        'email' => $email,
-                        'code' => $account->code,
-                        'deposit_amount' => $amount,
-                        'deposit_type' => $deposit_type,
-                        'deposit_from' => $deposit_type,
-                        'status' => 0, // Set to 0 initially, will update to 1 after MT5 success
-                        'deposit_currency' => 'USD',
-                        'transaction_id' => $transactionId,
-                        'deposted_date' => now(),
-                        'callback_data' => $callback_data,
-                        'callback_code' => $callback_code,
-                    ]);
+                    // Prepare callback data and insert it into the database
+                    $callback_data = json_encode($payload);
+                    $callback_code = json_encode($payload['transaction']["status"]);
 
+                    try {
+                        DB::beginTransaction();
 
-                    // Handle 10x leverage bonus
-                    if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
-                        if ($amount > 250) {
-                            $leverageBonus = 9 * 250;
-                        } else {
-                            $leverageBonus = 9 * $amount;
+                        WalletDeposit::create([
+                            'user_id' => $customerID,
+                            'email' => $email,
+                            'deposit_type' => $deposit_type,
+                            'deposit_amount' => $amount,
+                            'company_bank' => $deposit_type,
+                            'transaction_id' => $transactionId,
+                            'status' => 1,
+                            'currency_type' => 'USD',
+                            'callback_data' => $callback_data,
+                            'callback_code' => $callback_code,
+                        ]);
+
+                        // Update total balance
+                        TotalBalance::create(
+                            ['email' => $email, 'user_id' => $customerID, 'deposit_amount' => $amount]
+                        );
+
+                        DB::commit();
+                        $user = User::where('id', $customerID)->first();
+                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                        Cache::forget("user:{$customerID}:wallet_balance");
+                        Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
+
+                        return response()->json(['status' => 'true']);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    }
+                } elseif ($deposit_to === "Account") {
+                    //  Log::info('Account');
+                    //  Log::info('transactionId '.$transactionId);
+
+                    // Check for duplicate transaction
+                    $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                    if ($existingDeposit) {
+                        return response()->json(['status' => 'Transaction Id already deposited']);
+                    }
+
+                    $settings = settings();
+                    $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+                    $this->api->Connect(
+                        $settings['mt5_server_ip'],
+                        $settings['mt5_server_port'],
+                        300,
+                        $settings['mt5_server_web_login'],
+                        $settings['mt5_server_web_password']
+                    );
+
+                    $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                        $query->where('status', 1);
+                    }])->first();
+
+                    // Log::info('Account' . $account);
+
+                    // Prepare callback data and insert it into the database
+                    $callback_data = json_encode($payload);
+                    $callback_code = json_encode($payload['transaction']["status"]);
+
+                    try {
+                        DB::beginTransaction();
+
+                        // CRITICAL: Use database locking to prevent race conditions
+                        $lockResult = DB::select('SELECT GET_LOCK(?, 10) as lock_acquired', ["cryptochill_deposit_{$transactionId}"]);
+                        if (!$lockResult[0]->lock_acquired) {
+                            DB::rollBack();
+                            return response()->json(['error' => 'Could not acquire lock'], 500);
                         }
 
-                        $ticket1 = NULL;
-                        $errorCode1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
-                        if ($errorCode1 !== MTRetCode::MT_RET_OK) {
+                        // Double-check for duplicate after acquiring lock
+                        $existingDeposit = TradeDeposit::where('transaction_id', $transactionId)->first();
+                        if ($existingDeposit) {
                             DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
                             DB::rollBack();
-                            return response()->json(['error' => '10x leverage bonus failed: ' . MTRetCode::GetError($errorCode1)], 400);
+                            return response()->json(['status' => 'true']);
                         }
 
-                        BonusTransaction::create([
-                            'email' => $email,
+                        // Create the trade deposit record first
+                        $tradeDeposit = TradeDeposit::create([
                             'user_id' => $customerID,
                             'account_id' => $customerAccountID,
+                            'email' => $email,
                             'code' => $account->code,
-                            'bonus_amount' => $leverageBonus,
-                            'bonus_type' => 'Bonus In',
-                            'status' => 1,
-                            'admin_remark' => '10x Trader Leverage',
-                            'bonus_currency' => 'USD',
+                            'deposit_amount' => $amount,
+                            'deposit_type' => $deposit_type,
+                            'deposit_from' => $deposit_type,
+                            'status' => 0, // Set to 0 initially, will update to 1 after MT5 success
+                            'deposit_currency' => 'USD',
                             'transaction_id' => $transactionId,
+                            'deposted_date' => now(),
+                            'callback_data' => $callback_data,
+                            'callback_code' => $callback_code,
                         ]);
-                    }
 
-                    // Main deposit to MT5
-                    $ticket2 = NULL;
-                    $comment = 'Deposit';
-                    $errorCode2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
 
-                    if ($errorCode2 != MTRetCode::MT_RET_OK) {
-                        DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'MT5 deposit failed',
-                            'error' => MTRetCode::GetError($errorCode2),
-                        ], 400);
-                    }else{
-                        try {
-                            // Update deposit status to success only after MT5 operations succeed
-                            $tradeDeposit->update(['status' => 1]);
-
-                            // Handle promocode bonus BEFORE main deposit
-                            $bonus_amount = 0;
-                            if ($promocode && $promocode != '') {
-                                $promo = Promocode::where('code', $promocode)->first();
-                                if($promo){
-                                    $min_depsoit = $promo->min_deposit;
-                                    if ($promo && $amount >= $min_depsoit) {
-                                        $ticket = NULL;
-                                        if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
-                                            $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
-                                        } else {
-                                            $bonus_amount = ($promo->promo_percentage / 100) * $amount;
-                                        }
-
-                                        $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
-                                        if ($errorCode !== MTRetCode::MT_RET_OK) {
-                                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                                            DB::rollBack();
-                                            Log::error("Promo bonus failed for transaction {$transactionId}: " . MTRetCode::GetError($errorCode));
-                                            // return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
-                                        }
-
-                                        // Updating leverage
-                                        $trade_user = NULL;
-                                        $this->api->UserGet($account->code, $trade_user);
-
-                                        if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                            Log::error("Updating leverage failed for account {$account->code}: " . MTRetCode::GetError($error_code));
-                                            // return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                                        }
-                                        Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
-
-                                        $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
-                                        $trade_user->Leverage = $leverage;
-
-                                        $updated_user = "";
-                                        if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                            Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
-                                            // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                                        }
-                                        // Updating leverage
-
-                                        BonusTransaction::create([
-                                            'email' => $email,
-                                            'user_id' => $customerID,
-                                            'account_id' => $customerAccountID,
-                                            'code' => $account->code,
-                                            'bonus_amount' => $bonus_amount,
-                                            'bonus_type' => 'Bonus In',
-                                            'status' => 1,
-                                            'admin_remark' => 'Promo Bonus',
-                                            'bonus_currency' => 'USD',
-                                            'transaction_id' => $transactionId,
-                                            'promocode_id' => $promo->id
-                                        ]);
-                                        $tradeDeposit->promocode_percentage = $promo->promo_percentage;
-                                        $tradeDeposit->promocode_code = $promo->code;
-                                        $tradeDeposit->save();
-                                    }
-                                }
+                        // Handle 10x leverage bonus
+                        if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                            if ($amount > 250) {
+                                $leverageBonus = 9 * 250;
+                            } else {
+                                $leverageBonus = 9 * $amount;
                             }
 
-                            // Update total balance
-                            TotalBalance::create([
+                            $ticket1 = NULL;
+                            $errorCode1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
+                            if ($errorCode1 !== MTRetCode::MT_RET_OK) {
+                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                                DB::rollBack();
+                                Log::channel("cryptochillcallback")->info('10x leverage bonus failed: : ' . json_encode($payload));
+                                return response()->json(['error' => '10x leverage bonus failed: ' . MTRetCode::GetError($errorCode1)], 200);
+                            }
+
+                            BonusTransaction::create([
                                 'email' => $email,
                                 'user_id' => $customerID,
-                                'deposit_amount' => $amount
+                                'account_id' => $customerAccountID,
+                                'code' => $account->code,
+                                'bonus_amount' => $leverageBonus,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $transactionId,
                             ]);
+                        }
 
-                            // Release the lock before committing
-                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                        // Main deposit to MT5
+                        $ticket2 = NULL;
+                        $comment = 'Deposit';
+                        $errorCode2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
 
-                            DB::commit();
-
-                            $user = User::where('id', $customerID)->first();
-                            $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
-                            Cache::forget("user:{$customerID}:wallet_balance");
-
-                            Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
-
-                            return response()->json(['status' => 'true']);
-                        } catch (\Throwable $th) {
+                        if ($errorCode2 != MTRetCode::MT_RET_OK) {
                             DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
                             DB::rollBack();
-                            Log::error('Transaction failed during finalization: ' . $th->getMessage());
-                            $ticket4 = NULL;
-                            $amount = abs((float)$amount) * -1;
-                            $comment = 'CryptoChillDeposit - Error';
-                            $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket4, $margin_check = true);
+                            Log::channel("cryptochillcallback")->info('cryptochill_deposit : ' . json_encode($payload));
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'MT5 deposit failed',
+                                'error' => MTRetCode::GetError($errorCode2),
+                            ], 200);
+                        }else{
+                            try {
+                                // Update deposit status to success only after MT5 operations succeed
+                                $tradeDeposit->update(['status' => 1]);
 
+                                // Handle promocode bonus BEFORE main deposit
+                                $bonus_amount = 0;
+                                if ($promocode && $promocode != '') {
+                                    $promo = Promocode::where('code', $promocode)->first();
+                                    if($promo){
+                                        $min_depsoit = $promo->min_deposit;
+                                        if ($promo && $amount >= $min_depsoit) {
+                                            $ticket = NULL;
+                                            if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                                $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                                            } else {
+                                                $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                                            }
+
+                                            $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
+                                            if ($errorCode !== MTRetCode::MT_RET_OK) {
+                                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                                                DB::rollBack();
+                                                Log::error("Promo bonus failed for transaction {$transactionId}: " . MTRetCode::GetError($errorCode));
+                                                // return response()->json(['error' => 'Promo bonus failed: ' . MTRetCode::GetError($errorCode)], 400);
+                                            }
+
+                                            // Updating leverage
+                                            $trade_user = NULL;
+                                            $this->api->UserGet($account->code, $trade_user);
+
+                                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                                Log::error("Updating leverage failed for account {$account->code}: " . MTRetCode::GetError($error_code));
+                                                // return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                            }
+                                            Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+
+                                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
+                                            $trade_user->Leverage = $leverage;
+
+                                            $updated_user = "";
+                                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                                Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
+                                                // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                            }
+                                            // Updating leverage
+
+                                            BonusTransaction::create([
+                                                'email' => $email,
+                                                'user_id' => $customerID,
+                                                'account_id' => $customerAccountID,
+                                                'code' => $account->code,
+                                                'bonus_amount' => $bonus_amount,
+                                                'bonus_type' => 'Bonus In',
+                                                'status' => 1,
+                                                'admin_remark' => 'Promo Bonus',
+                                                'bonus_currency' => 'USD',
+                                                'transaction_id' => $transactionId,
+                                                'promocode_id' => $promo->id
+                                            ]);
+                                            $tradeDeposit->promocode_percentage = $promo->promo_percentage;
+                                            $tradeDeposit->promocode_code = $promo->code;
+                                            $tradeDeposit->save();
+                                        }
+                                    }
+                                }
+
+                                // Update total balance
+                                TotalBalance::create([
+                                    'email' => $email,
+                                    'user_id' => $customerID,
+                                    'deposit_amount' => $amount
+                                ]);
+
+                                // Release the lock before committing
+                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+
+                                DB::commit();
+
+                                $user = User::where('id', $customerID)->first();
+                                $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                                Cache::forget("user:{$customerID}:wallet_balance");
+
+                                Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
+
+                                return response()->json(['status' => 'true']);
+                            } catch (\Throwable $th) {
+                                DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                                DB::rollBack();
+                                Log::error('Transaction failed during finalization: ' . $th->getMessage());
+                                $ticket4 = NULL;
+                                $amount = abs((float)$amount) * -1;
+                                $comment = 'CryptoChillDeposit - Error';
+                                $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket4, $margin_check = true);
+
+                            }
                         }
+
+                    } catch (Exception $e) {
+                        // Ensure lock is released in case of any exception
+                        try {
+                            DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
+                        } catch (Exception $lockError) {
+                            Log::error('Failed to release lock: ' . $lockError->getMessage());
+                        }
+
+                        DB::rollBack();
+                        Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
+                        return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 200);
+                    }
+                } else {
+                    // If depositTo is not "wallet", handle other cases
+                    if (!isset($passedData['accountID'])) {
+                        Log::channel("cryptochillcallback")->info('Account ID missing : ' . json_encode($payload));
+                        return response()->json(['error' => 'Account ID missing'], 200);
                     }
 
-                } catch (Exception $e) {
-                    // Ensure lock is released in case of any exception
-                    try {
-                        DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
-                    } catch (Exception $lockError) {
-                        Log::error('Failed to release lock: ' . $lockError->getMessage());
-                    }
+                    $logData .= "Credit directly to Account ID: " . $passedData['accountID'] . "\n";
+                    Log::channel("cryptochillcallback")->info($logData);
 
-                    DB::rollBack();
-                    Log::channel("cryptochillcallback")->error('Transaction failed: ' . $e->getMessage());
-                    return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+                    // Direct credit to account logic goes here, for example:
+                    // Call external API or perform other operations for direct account credit
+
+                    return response()->json(['status' => 'Transaction completed.']);
                 }
-            } else {
-                // If depositTo is not "wallet", handle other cases
-                if (!isset($passedData['accountID'])) {
-                    return response()->json(['error' => 'Account ID missing'], 400);
-                }
-
-                $logData .= "Credit directly to Account ID: " . $passedData['accountID'] . "\n";
-                Log::channel("cryptochillcallback")->info($logData);
-
-                // Direct credit to account logic goes here, for example:
-                // Call external API or perform other operations for direct account credit
-
-                return response()->json(['status' => 'Transaction completed.']);
             }
+        }catch (Exception $e) {
+            Log::channel("cryptochillcallback")->error('Error processing callback: ' . $e->getMessage());
+            //log stack trace
+            Log::channel("cryptochillcallback")->error($e->getTraceAsString());
         }
-
-        return response()->json(['error' => 'Invalid callback status'], 400);
+        Log::channel("cryptochillcallback")->info('Invalid callback status: ' . json_encode($payload));
+        return response()->json(['error' => 'Invalid callback status'], 200);
     }
 
     // Function to generate HMAC signature
