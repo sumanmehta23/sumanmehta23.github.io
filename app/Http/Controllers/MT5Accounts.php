@@ -104,6 +104,7 @@ class MT5Accounts extends Controller
             if (($error_code = $this->api->UserAccountGet($login, $mt5account)) != MTRetCode::MT_RET_OK) {
                 session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
             }
+
             if ($mt5account) {
                 // account login get
                 $mt5account->Login;
