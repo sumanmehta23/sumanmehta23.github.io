@@ -231,6 +231,17 @@ class OptimizedSyncTradesJob implements ShouldQueue
 
     protected function prepareOpenTrade($positionId, $openOrder)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('open', $positionId, $openOrder, [
+                'order_data' => $openOrder,
+                'account_id' => $this->account->id,
+                'account_code' => $this->account->code
+            ]);
+
+            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
+        }
+
         return [
             'account_id' => $this->account->id,
             'code' => $this->account->code,
@@ -253,6 +264,19 @@ class OptimizedSyncTradesJob implements ShouldQueue
 
     protected function prepareClosedTrade($positionId, $openOrder, $closeOrder, $rateProfit)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('closed', $positionId, $closeOrder, [
+                'open_order_data' => $openOrder,
+                'close_order_data' => $closeOrder,
+                'rate_profit' => $rateProfit,
+                'account_id' => $this->account->id,
+                'account_code' => $this->account->code
+            ]);
+
+            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
+        }
+
         $profit = ($closeOrder['Profit'] ?? 0) / $rateProfit;
         $commission = ($openOrder['Commission'] ?? 0) + ($closeOrder['Commission'] ?? 0);
         $swap = ($openOrder['Storage'] ?? 0) + ($closeOrder['Storage'] ?? 0);
@@ -312,6 +336,53 @@ class OptimizedSyncTradesJob implements ShouldQueue
         // UniversalMT5Service handles connection pooling and retries
         if (!$mt5Service->connect()) {
             throw new \Exception("Failed to connect to MT5 after retries");
+        }
+    }
+
+    /**
+     * Log invalid position_id attempts with comprehensive details for admin investigation
+     */
+    protected function logInvalidPositionId(string $tradeType, $positionId, $order, array $context = []): void
+    {
+        $logData = array_merge([
+            'trade_type' => $tradeType,
+            'position_id' => $positionId,
+            'account_id' => $this->account->id,
+            'account_code' => $this->account->code,
+            'account_demo' => $this->account->demo,
+            'order_id' => $order['Order'] ?? 'unknown',
+            'order_symbol' => $order['Symbol'] ?? 'unknown',
+            'order_type' => $order['Type'] ?? 'unknown',
+            'order_volume' => $order['VolumeClosed'] ?? 'unknown',
+            'order_price' => $order['PriceOrder'] ?? 'unknown',
+            'order_time_done' => $order['TimeDone'] ?? 'unknown',
+            'order_comment' => $order['Comment'] ?? '',
+            'timestamp' => now(),
+            'job_id' => $this->job->getJobId() ?? 'unknown',
+            'queue' => $this->job->getQueue() ?? 'unknown',
+            'severity' => 'CRITICAL',
+            'issue_type' => 'INVALID_POSITION_ID_OPTIMIZED_JOB',
+            'stack_trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15)
+        ], $context);
+
+        // Log critical data integrity issue with full context
+        Log::critical("🚨 INVALID POSITION_ID in OptimizedSyncTradesJob: {$tradeType} trade with position_id = {$positionId}", $logData);
+
+        // Log to admin activity log for dashboard visibility
+        activity('trade_data_integrity')
+            ->withProperties($logData)
+            ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$this->account->code}");
+
+        // Send immediate admin notification if configured
+        try {
+            Log::channel('slack')->critical("Invalid position_id detected in optimized trade sync", [
+                'account' => $this->account->code,
+                'position_id' => $positionId,
+                'trade_type' => $tradeType,
+                'order_id' => $order['Order'] ?? 'unknown'
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
         }
     }
 }

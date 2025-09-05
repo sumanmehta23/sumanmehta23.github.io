@@ -27,4 +27,26 @@ return [
     // Rate limiting
     'random_delay_min' => env('SYNC_ALL_RANDOM_DELAY_MIN', 2), // Min seconds
     'random_delay_max' => env('SYNC_ALL_RANDOM_DELAY_MAX', 8), // Max seconds
+
+    /*
+    |--------------------------------------------------------------------------
+    | Balance Sync Configuration
+    |--------------------------------------------------------------------------
+    */
+    'balance_sync' => [
+        'interval_minutes' => env('BALANCE_SYNC_INTERVAL', 20), // Minutes between daemon cycles
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Priority Sync Configuration
+    |--------------------------------------------------------------------------
+    */
+    'priority_sync' => [
+        'batch_size' => env('PRIORITY_SYNC_BATCH_SIZE', 10),
+        'max_concurrent' => env('PRIORITY_SYNC_MAX_CONCURRENT', 5),
+        'cycle_delay' => env('PRIORITY_SYNC_CYCLE_DELAY', 30), // Seconds
+        'min_sync_interval' => env('PRIORITY_SYNC_MIN_INTERVAL', 60), // Minutes
+        'max_pending_jobs' => env('PRIORITY_SYNC_MAX_PENDING_JOBS', 100),
+    ],
 ];

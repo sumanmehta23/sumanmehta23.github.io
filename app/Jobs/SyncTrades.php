@@ -179,6 +179,17 @@ class SyncTrades implements ShouldQueue
 
     protected function prepareOpenTrade($account, $positionId, $order)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('open', $account, $positionId, $order, [
+                'order_data' => $order,
+                'account_id' => $account->id,
+                'account_code' => $account->code
+            ]);
+
+            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
+        }
+
         return [
             'account_id' => $account->id,
             'close_price' => null,
@@ -205,6 +216,19 @@ class SyncTrades implements ShouldQueue
 
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
     {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('closed', $account, $positionId, $closeOrder, [
+                'open_order_data' => $openOrder,
+                'close_order_data' => $closeOrder,
+                'rate_profit' => $rateProfit,
+                'account_id' => $account->id,
+                'account_code' => $account->code
+            ]);
+
+            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
+        }
+
         // log::info("account->code : {$account->code}");
         // log::info("closeOrder->PriceCurrent : {$closeOrder->PriceCurrent}");
         // log::info("openOrder->PriceCurrent : {$openOrder->PriceCurrent}");
@@ -271,5 +295,52 @@ class SyncTrades implements ShouldQueue
         ]);
 
         Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
+    }
+
+    /**
+     * Log invalid position_id attempts with comprehensive details for admin investigation
+     */
+    protected function logInvalidPositionId(string $tradeType, $account, $positionId, $order, array $context = []): void
+    {
+        $logData = array_merge([
+            'trade_type' => $tradeType,
+            'position_id' => $positionId,
+            'account_id' => $account->id,
+            'account_code' => $account->code,
+            'account_demo' => $account->demo,
+            'order_id' => $order->Order ?? 'unknown',
+            'order_symbol' => $order->Symbol ?? 'unknown',
+            'order_type' => $order->Type ?? 'unknown',
+            'order_volume' => $order->VolumeInitial ?? 'unknown',
+            'order_price' => $order->PriceCurrent ?? 'unknown',
+            'order_time_done' => $order->TimeDone ?? 'unknown',
+            'order_comment' => $order->Comment ?? '',
+            'timestamp' => now(),
+            'job_id' => $this->job->getJobId() ?? 'unknown',
+            'queue' => $this->job->getQueue() ?? 'unknown',
+            'severity' => 'CRITICAL',
+            'issue_type' => 'INVALID_POSITION_ID_SYNC_TRADES_JOB',
+            'stack_trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15)
+        ], $context);
+
+        // Log critical data integrity issue with full context
+        Log::critical("🚨 INVALID POSITION_ID in SyncTrades: {$tradeType} trade with position_id = {$positionId}", $logData);
+
+        // Log to admin activity log for dashboard visibility
+        activity('trade_data_integrity')
+            ->withProperties($logData)
+            ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$account->code}");
+
+        // Send immediate admin notification if configured
+        try {
+            Log::channel('slack')->critical("Invalid position_id detected in legacy trade sync", [
+                'account' => $account->code,
+                'position_id' => $positionId,
+                'trade_type' => $tradeType,
+                'order_id' => $order->Order ?? 'unknown'
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
+        }
     }
 }
