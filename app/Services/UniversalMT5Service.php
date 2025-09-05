@@ -164,6 +164,43 @@ class UniversalMT5Service
     }
 
     /**
+     * Execute trade balance operation
+     */
+    public function tradeBalance(int $login, int $type, float $amount, string $comment = '', ?int &$ticket = null, bool $marginCheck = true): int
+    {
+        return $this->executeOperation(function ($api) use ($login, $type, $amount, $comment, &$ticket, $marginCheck) {
+            $result = $api->TradeBalance($login, $type, $amount, $comment, $ticket, $marginCheck);
+
+            if ($result !== MTRetCode::MT_RET_OK) {
+                $errorMsg = MTRetCode::GetError($result);
+                Log::warning("UniversalMT5Service: TradeBalance failed for login {$login} - {$errorMsg}");
+            }
+
+            return $result;
+        });
+    }
+
+    /**
+     * Update user information
+     */
+    public function userUpdate(object $user, ?string &$result = null): int
+    {
+        return $this->executeOperation(function ($api) use ($user, &$result) {
+            return $api->UserUpdate($user, $result);
+        });
+    }
+
+    /**
+     * Get user object by login
+     */
+    public function userGet(int $login, ?object &$user = null): int
+    {
+        return $this->executeOperation(function ($api) use ($login, &$user) {
+            return $api->UserGet($login, $user);
+        });
+    }
+
+    /**
      * Execute bulk operations efficiently
      */
     public function executeBulkOperation(array $operations): array
