@@ -6,7 +6,6 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
@@ -106,7 +105,6 @@ class Ib extends Controller
                     'emailToken' => $code,
                     'status' => $ibStatus,
                 ]);
-
             } else if ($settingsdata->value == 'manually') {
                 // Create IB with pending status
                 $ib = Ib1::create([
@@ -159,7 +157,6 @@ class Ib extends Controller
                     'message' => 'IB request submitted successfully and is pending approval.'
                 ]);
             }
-
         } catch (\Exception $e) {
             return response()->json(['status' => 'false', 'message' => $e->getMessage()]);
         }

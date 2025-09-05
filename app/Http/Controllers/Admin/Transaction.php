@@ -5,7 +5,6 @@ namespace App\Http\Controllers\admin;
 use PDO;
 use Exception;
 use App\Models\Ib1;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnDealAction;
@@ -27,16 +26,31 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Services\MailService as MailService;
 use App\Services\UniversalMT5Service;
+
 class Transaction extends Controller
 {
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService)
     {
-        $this->mt5Service = $mt5Service;
-        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->mailService = $mailService;
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in Transaction');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
     public function index(Request $request)
     {
@@ -61,19 +75,19 @@ class Transaction extends Controller
     {
         $clientId = $request->query('client_id', '');
         $id = "trading_deposit";
-        return view('admin.transactions.trading_deposit', compact('id','clientId'));
+        return view('admin.transactions.trading_deposit', compact('id', 'clientId'));
     }
     public function trading_withdrawal(Request $request)
     {
         $clientId = $request->query('client_id', '');
         $id = "trading_withdrawal";
-        return view('admin.transactions.trading_withdrawal', compact('id','clientId'));
+        return view('admin.transactions.trading_withdrawal', compact('id', 'clientId'));
     }
     public function internal_transfer(Request $request)
     {
         $clientId = $request->query('client_id', '');
         $id = "internal_transfer";
-        return view('admin.transactions.internal_transfer', compact('id','clientId'));
+        return view('admin.transactions.internal_transfer', compact('id', 'clientId'));
     }
     public function pendingWalletDeposit(Request $request)
     {
@@ -169,23 +183,23 @@ class Transaction extends Controller
                 // 'relationshipManager.emplist',
                 'user',
             ])
-            ->where('id',$id)
-            ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
-            ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
-            ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
-            ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
-            ->first();
-
-            if($details->client_wallet_id){
-                $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
-                ->where('status', 1)
+                ->where('id', $id)
+                ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+                ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+                ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+                ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
-            }else{
-                $client_wallet='';
+
+            if ($details->client_wallet_id) {
+                $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
+                    ->where('status', 1)
+                    ->first();
+            } else {
+                $client_wallet = '';
             }
             // dd($client_wallet);
             // dd($details);
-            return view('admin.wallet_withdrawal_details', compact('details','client_wallet'));
+            return view('admin.wallet_withdrawal_details', compact('details', 'client_wallet'));
         }
     }
 
@@ -194,11 +208,11 @@ class Transaction extends Controller
         $amount = $request->amount;
         $walletWithdrawal = WalletWithdraw::find($request->id);
 
-        if(!$amount){
+        if (!$amount) {
             return redirect()->back()->with('error', 'Please enter Amount');
         }
 
-        if($walletWithdrawal){
+        if ($walletWithdrawal) {
             $totalDeposits = WalletDeposit::where('email', $walletWithdrawal->user->email)
                 ->where('status', 1)
                 ->sum('deposit_amount');
@@ -216,25 +230,25 @@ class Transaction extends Controller
                 return redirect()->back()->with('error', 'Insufficient balance in your wallet.');
             }
 
-           if($amount >= 100){
-            $walletWithdrawal->withdraw_transaction_fee = 0;
-           }
-           $walletWithdrawal->withdraw_amount = $amount;
-           $walletWithdrawal->save();
+            if ($amount >= 100) {
+                $walletWithdrawal->withdraw_transaction_fee = 0;
+            }
+            $walletWithdrawal->withdraw_amount = $amount;
+            $walletWithdrawal->save();
 
-           activity('wallet-withdrawal')->causedBy(auth()->user()->id)
-           ->performedOn($walletWithdrawal)
-           ->withProperties(
-               [
-                'withdrawal_id' => $walletWithdrawal->id,
-                'updated_amount' => $amount,
-                'updated_by' => Auth::id()
-               ]
-           )
-           ->event('update')
-           ->log("Withdrawal amount updated by " . Auth::user()->name);
+            activity('wallet-withdrawal')->causedBy(auth()->user()->id)
+                ->performedOn($walletWithdrawal)
+                ->withProperties(
+                    [
+                        'withdrawal_id' => $walletWithdrawal->id,
+                        'updated_amount' => $amount,
+                        'updated_by' => Auth::id()
+                    ]
+                )
+                ->event('update')
+                ->log("Withdrawal amount updated by " . Auth::user()->name);
 
-        //    Send Mail Work Starts
+            //    Send Mail Work Starts
             $settings = settings();
             $from = $settings['email_from_address'];
             $headers = "MIME-Version: 1.0" . "\r\n";
@@ -267,10 +281,10 @@ class Transaction extends Controller
                 'subtitle_right' => 'Amount Update',
             ];
             $this->mailService->sendEmail($walletWithdrawal->user->email, $emailSubject, $headers, '', $templateVars);
-        //    Send Mail Work Starts
+            //    Send Mail Work Starts
 
-           return redirect()->back()->with('success', 'Amount updated successfully!');
-        }else{
+            return redirect()->back()->with('success', 'Amount updated successfully!');
+        } else {
             return redirect()->back()->with('error', 'No withdrawal found');
         }
     }
@@ -284,77 +298,84 @@ class Transaction extends Controller
 
         $tradeWithdrawal = TradeWithdrawals::find($request->id);
 
-        if(!$amount){
+        if (!$amount) {
             return redirect()->back()->with('error', 'Please enter Amount');
         }
         $user = User::where('id', $tradeWithdrawal->user_id)->first();
         $account = Account::where('id', $tradeWithdrawal->account_id)->first();
 
 
-        if($tradeWithdrawal){
+        if ($tradeWithdrawal) {
             $balance = $account->balance;
 
             if ($amount > ($balance + $total_amount)) {
                 return redirect()->back()->with('error', 'Insufficient balance in your account.');
             }
 
-           if($amount > $total_amount && $amount < ($balance + $total_amount)){
-                $adjusted_amount = -($amount - $total_amount);
-
-           }elseif($amount < $total_amount && $amount < ($balance + $total_amount)){
+            if ($amount > $total_amount && $amount < ($balance + $total_amount)) {
+                $adjusted_amount = - ($amount - $total_amount);
+            } elseif ($amount < $total_amount && $amount < ($balance + $total_amount)) {
                 $adjusted_amount = ($total_amount - $amount);
-           }elseif($amount ==  $total_amount){
+            } elseif ($amount ==  $total_amount) {
                 return redirect()->back()->with('error', 'Nothing to adjust');
-           }
+            }
 
 
-           if($amount < 100){
-            $tradeWithdrawal->transaction_fee = 5;
-            $tradeWithdrawal->withdrawal_amount = $amount - 5;
-           }else{
-            $tradeWithdrawal->transaction_fee = 0;
-            $tradeWithdrawal->withdrawal_amount = $amount;
-           }
+            if ($amount < 100) {
+                $tradeWithdrawal->transaction_fee = 5;
+                $tradeWithdrawal->withdrawal_amount = $amount - 5;
+            } else {
+                $tradeWithdrawal->transaction_fee = 0;
+                $tradeWithdrawal->withdrawal_amount = $amount;
+            }
 
 
 
-           activity('wallet-withdrawal')->causedBy(auth()->user()->id)
-           ->performedOn($tradeWithdrawal)
-           ->withProperties(
-               [
-                'withdrawal_id' => $tradeWithdrawal->id,
-                'updated_amount' => $amount,
-                'updated_by' => Auth::id(),
-                'remark' => 'Trade Withdrawal',
-               ]
-           )
-           ->event('update')
-           ->log("Withdrawal amount updated by " . Auth::user()->name);
+            activity('wallet-withdrawal')->causedBy(auth()->user()->id)
+                ->performedOn($tradeWithdrawal)
+                ->withProperties(
+                    [
+                        'withdrawal_id' => $tradeWithdrawal->id,
+                        'updated_amount' => $amount,
+                        'updated_by' => Auth::id(),
+                        'remark' => 'Trade Withdrawal',
+                    ]
+                )
+                ->event('update')
+                ->log("Withdrawal amount updated by " . Auth::user()->name);
 
-           $comment = "Trade Withdrawal Amount Adjustment";
-           $ticket = NULL;
+            $comment = "Trade Withdrawal Amount Adjustment";
+            $ticket = NULL;
 
-           $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $adjusted_amount, $comment, $ticket, $margin_check=true);
+            if (!$this->ensureMT5Connection()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'MT5 connection failed',
+                    'error' => 'Unable to connect to trading server',
+                ], 500);
+            }
 
-           if ($errorCode != MTRetCode::MT_RET_OK) {
-               $error = MTRetCode::GetError($errorCode);
-               // Return a JSON response with the error
-               return response()->json([
-                   'success' => false,
-                   'message' => 'Something went wrong',
-                   'error' => $error,
-               ], 400); // 400 Bad Request
-           }else{
-               $tradeWithdrawal->save();
-           }
+            $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $adjusted_amount, $comment, $ticket, $margin_check = true);
+
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode);
+                // Return a JSON response with the error
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong',
+                    'error' => $error,
+                ], 400); // 400 Bad Request
+            } else {
+                $tradeWithdrawal->save();
+            }
 
 
-        //    Send Mail Work Starts
+            //    Send Mail Work Starts
 
-        //    Send Mail Work Starts
+            //    Send Mail Work Starts
 
-           return redirect()->back()->with('success', 'Amount updated successfully!');
-        }else{
+            return redirect()->back()->with('success', 'Amount updated successfully!');
+        } else {
             return redirect()->back()->with('error', 'No withdrawal found');
         }
     }
@@ -386,19 +407,19 @@ class Transaction extends Controller
             //     ->groupBy('u.email')
             //     ->first();
             $details = TradeDeposit::with([
-                    'clientWallet',
-                    'user',
-                    'account',
-                    'totalBalance'
-                    // 'relationshipManager.emplist',
-                ])
-                ->where('id',request()->id)
+                'clientWallet',
+                'user',
+                'account',
+                'totalBalance'
+                // 'relationshipManager.emplist',
+            ])
+                ->where('id', request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
                 ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
                 ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
-                // dd($details);
+            // dd($details);
             return view('admin.trading_deposit_details', compact('details'));
         }
     }
@@ -428,28 +449,28 @@ class Transaction extends Controller
             //     ")
             //     ->groupBy('u.email')
             //     ->first();
-            $details = TradeWithdrawals::with('user','totalBalance', 'withdrawTo')
-                        ->where('id',request()->id)
-                        ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
-                        ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
-                        ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
-                        ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
-                        ->first();
-            if($details->clientWallet){
-                $client_wallet = ClientWallet::withTrashed()->where('id', $details->clientWallet->id)
-                ->where('status', 1)
+            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo')
+                ->where('id', request()->id)
+                ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
+                ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
+                ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
+                ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
-            }else{
-                $client_wallet='';
+            if ($details->clientWallet) {
+                $client_wallet = ClientWallet::withTrashed()->where('id', $details->clientWallet->id)
+                    ->where('status', 1)
+                    ->first();
+            } else {
+                $client_wallet = '';
             }
 
-            return view('admin.trading_withdrawal_details', compact('details','client_wallet'));
+            return view('admin.trading_withdrawal_details', compact('details', 'client_wallet'));
         }
     }
     public function manually_approve_withdrawal(Request $request)
     {
         $settings = settings();
-        if($request->transaction = 'Manually'){
+        if ($request->transaction = 'Manually') {
             $validatedData = $request->validate([
                 'status' => 'required|integer',
                 'email' => 'required|email',
@@ -466,10 +487,10 @@ class Transaction extends Controller
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
         if ($transaction) {
             $transaction->admin_remark = $rejection_reason;
-            $transaction->status =$status;
+            $transaction->status = $status;
             $transaction->transaction_id = $did;
             $transaction->approved_by = $approved_by;
-            $transaction->approved_date =$approved_date;
+            $transaction->approved_date = $approved_date;
             $transaction->save();
             TotalBalance::create([
                 'user_id' => $transaction->user_id,
@@ -483,21 +504,21 @@ class Transaction extends Controller
                     'ip' => request()->ip(),
                     'user_email' => auth()->guard('admin')->user()->email,
                     'client_email' => $email,
-                    'userRole' =>auth()->guard('admin')->user()->userRole,
-                    'username' =>auth()->guard('admin')->user()->username,
-                    'user_id' =>auth()->guard('admin')->user()->id,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'user_id' => auth()->guard('admin')->user()->id,
                     'approved_amount' => $depositAmount,
                     'reason' => $rejection_reason,
                     'transaction_id' => $did,
                     'remark' => 'Manually Approved Wallet Withdraw'
                 ])
-            ->event('update')
-            ->log('Manually Approved Wallet Withdraw');
+                ->event('update')
+                ->log('Manually Approved Wallet Withdraw');
 
 
             $deposit_details = TradeWithdrawals::with('user')
-                    ->whereRaw('id = ?', [$did])
-                    ->first();
+                ->whereRaw('id = ?', [$did])
+                ->first();
             $from = $settings['email_from_address'];
             $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
             $headers = "MIME-Version: 1.0" . "\r\n";
@@ -508,8 +529,7 @@ class Transaction extends Controller
                         <p>The approved amount has been withdrawn from your wallet.</p>
                         <p></p>
                         <p></p>
-                        <p><b>Transaction Details</b></p>'
-                        ;
+                        <p><b>Transaction Details</b></p>';
             $templateVars = [
                 'name' => $deposit_details->user->fullname,
                 'site_link' => $settings['copyright_site_name_text'],
@@ -526,7 +546,7 @@ class Transaction extends Controller
             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
             return redirect()->back()->with('success', 'Transaction Approved Manually');
-        }else {
+        } else {
             return redirect()->back()->with('error', 'Transaction Not Found');
         }
     }
@@ -543,7 +563,7 @@ class Transaction extends Controller
                 'amount' => 'required|numeric',
             ]);
             $rejection_reason = $validatedData['rejection_reason'];
-        }elseif($status == '1'){
+        } elseif ($status == '1') {
             $validatedData = $request->validate([
                 'status' => 'required|integer',
                 'email' => 'required|email',
@@ -562,18 +582,18 @@ class Transaction extends Controller
         $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
 
         if ($transaction) {
-            if($transaction->status == 3){
+            if ($transaction->status == 3) {
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
             $transaction->admin_remark = $rejection_reason;
-            $transaction->Status =$status;
+            $transaction->Status = $status;
             $transaction->transaction_id = $transaction_id;
             $transaction->save();
             if ($status == 1) {
                 if ($transaction && $transaction->withdraw_type == "Wallet Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
                     $transaction = WalletWithdraw::whereRaw('id = ?', [$did])->first();
                     $transaction->approved_by = $approved_by;
-                    $transaction->approved_date =$approved_date;
+                    $transaction->approved_date = $approved_date;
                     $transaction->save();
 
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
@@ -613,12 +633,12 @@ class Transaction extends Controller
                     if (json_last_error() !== JSON_ERROR_NONE) {
                         return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
-                    $responseData=json_decode($response);
+                    $responseData = json_decode($response);
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction,$email,$depositAmount) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount) {
                             // Update wallet_withdraw table with transaction_id and status
                             WalletWithdraw::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -628,11 +648,11 @@ class Transaction extends Controller
                                     'payout_req' => json_encode($payoutResult->passthrough),
                                     'status' => 1  // Set status to 1 (success)
                                 ]);
-                                TotalBalance::create([
-                                    'user_id' => $transaction->user_id,
-                                    'email' => $email,
-                                    'withdraw_amount' => $depositAmount,
-                                ]);
+                            TotalBalance::create([
+                                'user_id' => $transaction->user_id,
+                                'email' => $email,
+                                'withdraw_amount' => $depositAmount,
+                            ]);
                         });
                     } else {
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
@@ -649,7 +669,7 @@ class Transaction extends Controller
                             // Delete total_balance entry
                             // TotalBalance::where('id', $transaction->id)->delete();
                         });
-                        Log::error("Error Processing Request: " .json_encode([ $responseData]));
+                        Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
                         return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
                     }
@@ -660,17 +680,17 @@ class Transaction extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'user_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
                         'client_email' => $email,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'user_id' => auth()->guard('admin')->user()->id,
                         'approved_amount' => $depositAmount,
                         'transaction_id' => $transaction_id,
                         'reason' => $rejection_reason,
                         'remark' => 'Approve Wallet Withdraw'
                     ])
-                ->event('update')
-                ->log('Approve Wallet Withdraw');
+                    ->event('update')
+                    ->log('Approve Wallet Withdraw');
 
                 $deposit_details = WalletWithdraw::with('user')
                     ->whereRaw('id = ?', [$did])
@@ -694,42 +714,42 @@ class Transaction extends Controller
                     'btn_text' => 'Go To Dashboard',
                     'amount' => $deposit_details->withdraw_amount,
                     'id' => $deposit_details->id,
-                    'date' => $deposit_details->withdraw_date ,
+                    'date' => $deposit_details->withdraw_date,
                     'type' => $deposit_details->withdraw_type,
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif($status==3 && $rejection_reason == 'Invalid cryptocurrency address'){
+            } elseif ($status == 3 && $rejection_reason == 'Invalid cryptocurrency address') {
                 activity()
                     ->causedBy(auth()->guard('admin')->user())
                     ->withProperties([
                         'ip' => request()->ip(),
                         'user_email' => auth()->guard('admin')->user()->email,
                         'client_email' => $email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'user_id' => auth()->guard('admin')->user()->id,
                         'approved_amount' => $depositAmount,
                         'reason' => $rejection_reason,
                         'transaction_id' => $transaction_id,
                         'remark' => 'Reject Wallet Withdraw'
                     ])
-                ->event('update')
-                ->log('Reject Wallet Withdraw');
-                if ( ($transaction->payout_res) == NULL) {
+                    ->event('update')
+                    ->log('Reject Wallet Withdraw');
+                if (($transaction->payout_res) == NULL) {
                     // Decode the JSON string if it's not null or empty
                     // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
                     // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
 
                     // if($message){
-                        //Send email
-                        $from = $settings['email_from_address'];
-                        // $transid = "WDID" . $payout_res;
-                        $headers = "MIME-Version: 1.0" . "\r\n";
-                        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-                        $content = '<p>
+                    //Send email
+                    $from = $settings['email_from_address'];
+                    // $transid = "WDID" . $payout_res;
+                    $headers = "MIME-Version: 1.0" . "\r\n";
+                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                    $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                    $content = '<p>
                                         We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
                                     </p>
                                     <p>
@@ -752,16 +772,16 @@ class Transaction extends Controller
                                         The LQHMarkets Team
                                     </p>';
 
-                        $templateVars = [
-                            'name' => $transaction->user->fullname,
-                            'site_link' => $settings['copyright_site_name_text'],
-                            'email' => $settings['email_from_address'],
-                            'content' => $content,
-                            'title_right' => 'Transaction',
-                            'subtitle_right' => 'Declined',
-                            'btn_text' => 'Go To Dashboard',
-                        ];
-                        $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    $templateVars = [
+                        'name' => $transaction->user->fullname,
+                        'site_link' => $settings['copyright_site_name_text'],
+                        'email' => $settings['email_from_address'],
+                        'content' => $content,
+                        'title_right' => 'Transaction',
+                        'subtitle_right' => 'Declined',
+                        'btn_text' => 'Go To Dashboard',
+                    ];
+                    $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     // }
                 }
                 // $deposit_details = WalletWithdraw::with('user')
@@ -812,7 +832,7 @@ class Transaction extends Controller
                 'amount' => 'required|numeric',
             ]);
             $rejection_reason = $validatedData['rejection_reason'];
-        }elseif($status == '1'){
+        } elseif ($status == '1') {
             $validatedData = $request->validate([
                 'status' => 'required|integer',
                 'email' => 'required|email',
@@ -832,13 +852,13 @@ class Transaction extends Controller
 
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
 
-        if($transaction->status == 1){
+        if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
 
         if ($transaction) {
 
-            if($transaction->status == 2 || $transaction->status == 3){
+            if ($transaction->status == 2 || $transaction->status == 3) {
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 
@@ -851,7 +871,7 @@ class Transaction extends Controller
                 if ($transaction && $transaction->withdraw_type == "Trade Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
                     $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
                     $transaction->approved_by = $approved_by;
-                    $transaction->approved_date =$approved_date;
+                    $transaction->approved_date = $approved_date;
                     $transaction->save();
                     // Log::info("transaction_details ".json_encode($transaction));
                     // Log::info("transaction_details ". $transaction->client_wallet_id);
@@ -894,12 +914,12 @@ class Transaction extends Controller
                     if (json_last_error() !== JSON_ERROR_NONE) {
                         return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
                     }
-                    $responseData=json_decode($response);
+                    $responseData = json_decode($response);
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction,$email,$depositAmount) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount) {
                             // Update wallet_withdraw table with transaction_id and status
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -909,11 +929,11 @@ class Transaction extends Controller
                                     'payout_req' => json_encode($payoutResult->passthrough),
                                     'status' => 1  // Set status to 1 (success)
                                 ]);
-                                // TotalBalance::create([
-                                //     'user_id' => $transaction->user_id,
-                                //     'email' => $email,
-                                //     'withdraw_amount' => $depositAmount,
-                                // ]);
+                            // TotalBalance::create([
+                            //     'user_id' => $transaction->user_id,
+                            //     'email' => $email,
+                            //     'withdraw_amount' => $depositAmount,
+                            // ]);
                         });
                     } else {
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
@@ -930,7 +950,7 @@ class Transaction extends Controller
                             // Delete total_balance entry
                             // TotalBalance::where('id', $transaction->id)->delete();
                         });
-                        Log::error("Error Processing Request: " .json_encode([ $responseData]));
+                        Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
                         return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
                     }
@@ -941,17 +961,17 @@ class Transaction extends Controller
                     ->withProperties([
                         'ip' => request()->ip(),
                         'user_email' => auth()->guard('admin')->user()->email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
                         'client_email' => $email,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'user_id' => auth()->guard('admin')->user()->id,
                         'approved_amount' => $depositAmount,
                         'transaction_id' => $transaction->id,
                         'reason' => $rejection_reason,
                         'remark' => 'Approve Account Withdraw'
                     ])
-                ->event('update')
-                ->log('Approve Wallet Withdraw');
+                    ->event('update')
+                    ->log('Approve Wallet Withdraw');
 
                 $withdrawal_details = TradeWithdrawals::with('user')
                     ->whereRaw('id = ?', [$did])
@@ -983,37 +1003,37 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }elseif(($status==2 || $status==3) && $rejection_reason == 'Invalid cryptocurrency address'){
+            } elseif (($status == 2 || $status == 3) && $rejection_reason == 'Invalid cryptocurrency address') {
                 activity()
                     ->causedBy(auth()->guard('admin')->user())
                     ->withProperties([
                         'ip' => request()->ip(),
                         'user_email' => auth()->guard('admin')->user()->email,
                         'client_email' => $email,
-                        'userRole' =>auth()->guard('admin')->user()->userRole,
-                        'username' =>auth()->guard('admin')->user()->username,
-                        'user_id' =>auth()->guard('admin')->user()->id,
+                        'userRole' => auth()->guard('admin')->user()->userRole,
+                        'username' => auth()->guard('admin')->user()->username,
+                        'user_id' => auth()->guard('admin')->user()->id,
                         'approved_amount' => $depositAmount,
                         'reason' => $rejection_reason,
                         'transaction_id' => $transaction->id,
                         'remark' => 'Reject Wallet Withdraw'
                     ])
-                ->event('update')
-                ->log('Reject Wallet Withdraw');
+                    ->event('update')
+                    ->log('Reject Wallet Withdraw');
 
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check=true);
+                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
                 } else {
-                    if ( ($transaction->payout_res) == NULL) {
+                    if (($transaction->payout_res) == NULL) {
                         // Decode the JSON string if it's not null or empty
                         // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
                         // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
 
                         // if($message){
-                            //Send email
+                        //Send email
                         $from = $settings['email_from_address'];
                         // $transid = "WDID" . $payout_res;
                         $headers = "MIME-Version: 1.0" . "\r\n";
@@ -1056,35 +1076,9 @@ class Transaction extends Controller
                         return redirect()->back()->with('status', 'Transaction Rejected Successfully');
                     }
                 }
-                // $deposit_details = WalletWithdraw::with('user')
-                //     ->whereRaw('id = ?', [$did])
-                //     ->first();
-                // $from = $settings['email_from_address'];
-                // $transid = "WDID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-                // $headers = "MIME-Version: 1.0" . "\r\n";
-                // $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                // $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                // $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
-                // $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
-                //             <div>The approved amount has been withdrawn from your wallet.</div>
-                //             <div><b>Transaction Details</b></div>
-                //             <div><b>Approved Amount: </b>$' . $deposit_details->withdraw_amount . '</div>
-                //             <div><b>Transaction ID: </b>' . $transid . '</div>
-                //             <div><b>Withdrawal Date: </b>' . $deposit_details->withdraw_date . '</div>
-                //             <div><b>Withdrawal Type: </b>' . $deposit_details->withdraw_type . '</div>';
-                // $templateVars = [
-                //     'name' => $deposit_details->user->fullname,
-                //     'site_link' => $settings['copyright_site_name_text'],
-                //     'email' => $settings['email_from_address'],
-                //     'content' => $content,
-                //     'title_right' => 'Transaction',
-                //     'subtitle_right' => 'Approved',
-                //     'btn_text' => 'Go To Dashboard',
-                // ];
-                // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-            }elseif(($status==2 || $status==3) && $rejection_reason != 'Invalid cryptocurrency address'){
+            } elseif (($status == 2 || $status == 3) && $rejection_reason != 'Invalid cryptocurrency address') {
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check=true);
+                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -1096,144 +1090,5 @@ class Transaction extends Controller
         } else {
             return redirect()->back()->with('error', 'Transaction Not Found');
         }
-    //     // echo "<script>console.log('TradingDeposit Started')</script>";
-    //     define("PATH_TO_SCRIPTS", "./mt5_api/");
-    //     include PATH_TO_SCRIPTS . "mt5_api.php";
-    //     define('T_QUOTES', 'EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD'); //symbols list for publication
-    //     define("MT5_CRYPT_PROTOCOL", true); // enable crypt protocol
-    //     define("IS_WRITE_DEBUG_LOG", true); // Write all in logs
-    //     define("MT5_CONNECTION_TIMEOUT", 3);
-    //     // define("PATH_TO_LOGS", "./logs"); // Write all in logs
-    //     // define("AGENT", "WebAPITesterArt");
-    //     $api = new MTWebAPI(AGENT, PATH_TO_LOGS, MT5_CRYPT_PROTOCOL);
-    //     $api->SetLoggerWriteDebug(IS_WRITE_DEBUG_LOG);
-
-    //     if (($error_code = $api->Connect(MT5_SERVER_IP, MT5_SERVER_PORT, MT5_CONNECTION_TIMEOUT, MT5_SERVER_WEB_LOGIN, MT5_SERVER_WEB_PASSWORD)) != MTRetCode::MT_RET_OK) {
-    //     ?>
-    //     <script>
-    //       console.log("MT5 Connectivity Error: <?= MTRetCode::GetError($error_code) ?>");
-    //       $(document).ready(function() {
-    //         Sweetalert2.fire({
-    //           icon: 'error',
-    //           title: 'Something went wrong.',
-    //           text: 'Please try again after sometime or contact support. '
-    //         }).then((val) => {
-    //           location.href = "<?= $_SERVER['SCRIPT_NAME'] ?>"
-    //         });
-    //       });
-    //     </script>
-    //   <?php
-    //   }
-
-    //   // print_r($api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket = null, $margin_check = true));
-    //   // exit();
-    //   // print_r($data);
-    //   $ticket = null;
-    //   $comment = "Withdrawal";
-    //   // echo $login."==>". $type = MTEnDealAction::DEAL_BALANCE."==>". $amount."==>". $comment."==>". $ticket = null."==>". $margin_check = true;
-    //   // echo "<script>console.log('TradingDeposit Inited')</script>";
-
-    //   if ($status == 1) {
-    //     if (($error_code = $api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true)) != MTRetCode::MT_RET_OK) {
-    //       $error = MTRetCode::GetError($error_code);
-    //       echo "<script>console.log('TradingDeposit Error==> ".$error."')</script>";
-    //     } else {
-    //       $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
-    //       $query = $dbh->prepare($sql);
-    //       $query->bindParam(':description', $description, PDO::PARAM_STR);
-    //       $query->bindParam(':status', $status, PDO::PARAM_STR);
-    //       $query->bindParam(':did', $did, PDO::PARAM_STR);
-    //       $query->execute();
-
-    //       $sql = "INSERT INTO total_balance(email,trading_withdrawal) VALUES(:email,:amount)";
-    //       $query = $dbh->prepare($sql);
-    //       $query->bindParam(':email', $email, PDO::PARAM_STR);
-    //       $query->bindParam(':amount', $amount, PDO::PARAM_STR);
-    //       $query->execute();
-
-
-
-    //       $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where (md5(td.id)=:did || td.id=:did)";
-    //       $query = $dbh->prepare($sql);
-    //       $query->bindParam(':did', $did, PDO::PARAM_STR);
-    //       $query->execute();
-    //       $deposit_details = $query->fetch(PDO::FETCH_OBJ);
-
-    //       if ($deposit_details->type == "Wallet Withdrawal") {
-    //         $sql = "INSERT INTO total_balance(email,deposit_amount) VALUES(:email,:amount)";
-    //         $query = $dbh->prepare($sql);
-    //         $query->bindParam(':email', $email, PDO::PARAM_STR);
-    //         $query->bindParam(':amount', $amount, PDO::PARAM_STR);
-    //         $query->execute();
-    //       }
-
-    //       $toEmail = $email;
-    //       $from = $email_from_address;
-    //       $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-    //       $emailSubject = $title . ' - Transaction Approved';
-    //       $htmlContent = "";
-    //       $headers = "MIME-Version: 1.0" . "\r\n";
-    //       $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    //       $headers .= 'From:' . $title . '<' . $from . '>' . "\r\n";
-    //       $content = '<div>We are pleased to inform you that your transaction has been successfully approved. </div>
-    //         <div>The approved amount has been withdrawn to your wallet.</div>
-    //         <div><b>Transaction Details</b></div>
-    //         <div><b>Approved Amount: </b>$' . $deposit_details->amount . '</div>
-    //         <div><b>Account ID: </b>' . $deposit_details->code . '</div>
-    //         <div><b>Transaction ID: </b>' . $transid . '</div>
-    //         <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
-    //         <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>';
-    //       $templateVars = [
-    //         'name' => $deposit_details->fullname,
-    //         'site_link' => $copyright_site_name_text,
-    //         'email' => $email_from_address,
-    //         "content" => $content,
-    //         "title_right" => "Transaction",
-    //         "subtitle_right" => "Approved",
-    //         "btn_text" => "Go To Dashboard",
-    //       ];
-    //       phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
-    //     }
-    //   } else {
-    //     $sql = "update trade_withdrawal set admin_remark=:description,Status=:status where md5(id)=:did";
-    //     $query = $dbh->prepare($sql);
-    //     $query->bindParam(':description', $description, PDO::PARAM_STR);
-    //     $query->bindParam(':status', $status, PDO::PARAM_STR);
-    //     $query->bindParam(':did', $did, PDO::PARAM_STR);
-    //     $query->execute();
-
-    //     $sql = "Select td.id,ap.fullname,td.email,td.code,td.withdrawal_amount as amount, td.withdraw_date as date,td.withdraw_type as type from trade_withdrawal td left join aspnetusers ap on(td.email=ap.email) where md5(td.id)=:did";
-    //     $query = $dbh->prepare($sql);
-    //     $query->bindParam(':did', $did, PDO::PARAM_STR);
-    //     $query->execute();
-    //     $deposit_details = $query->fetch(PDO::FETCH_OBJ);
-
-    //     $toEmail = $email;
-    //     $from = $email_from_address;
-    //     $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
-    //     $emailSubject = $title . ' - Transaction Approved';
-    //     $htmlContent = "";
-    //     $headers = "MIME-Version: 1.0" . "\r\n";
-    //     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    //     $headers .= 'From:' . $title . '<' . $from . '>' . "\r\n";
-    //     $content = '<div>This email to inform you that your transaction has been Rejected. </div>
-    //       <div><b>Transaction Details</b></div>
-    //       <div><b>Rejected Amount: </b>$' . $deposit_details->amount . '</div>
-    //       <div><b>Account ID: </b>' . $deposit_details->code . '</div>
-    //       <div><b>Transaction ID: </b>' . $transid . '</div>
-    //       <div><b>Withdraw Date: </b>' . $deposit_details->date . '</div>
-    //       <div><b>Withdraw Type </b>' . $deposit_details->type . '</div>
-    //       <div><b>Rejection Remark </b>' . $description . '</div>';
-    //     $templateVars = [
-    //       'name' => $deposit_details->fullname,
-    //       'site_link' => $copyright_site_name_text,
-    //       'email' => $email_from_address,
-    //       "content" => $content,
-    //       "title_right" => "Transaction",
-    //       "subtitle_right" => "Rejected",
-    //       "btn_text" => "Go To Dashboard",
-    //     ];
-    //     phpMail($toEmail, $emailSubject, $htmlContent, $headers, 'email-template.php', $templateVars);
-    //   }
     }
 }

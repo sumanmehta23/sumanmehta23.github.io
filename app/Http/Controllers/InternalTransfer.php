@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\LiveAccount;
@@ -24,9 +23,8 @@ class InternalTransfer extends Controller
     protected $api;
     protected $mt5Service;
 
-    public function __construct(MTWebAPI $api)
+    public function __construct()
     {
-        $this->api = $api;
         // MT5 service will be initialized on demand to avoid startup hangs
     }
 

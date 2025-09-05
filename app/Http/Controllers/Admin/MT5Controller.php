@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use DB;
 use Mail;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Promocode;
@@ -31,7 +30,7 @@ class MT5Controller extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
@@ -839,7 +838,7 @@ class MT5Controller extends Controller
         }
 
         if ($account->demo == false) {
-            AccountHelper::updateLiveAndDemoAccounts($account->id);
+            AccountHelper::updateLiveAndDemoAccounts($account->user_id);
             $type = "live";
         } else {
             $type = "demo";

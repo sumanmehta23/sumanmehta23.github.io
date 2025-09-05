@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
@@ -135,7 +134,7 @@ class Leaderboard extends Controller
             ->orderBy('mt5_grp_cat_id')
             ->get();
 
-        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup','competition_group'));
+        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup', 'competition_group'));
     }
     public function requested_competition()
     {

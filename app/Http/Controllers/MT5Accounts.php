@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
@@ -30,11 +29,10 @@ class MT5Accounts extends Controller
     protected $mailService;
     protected $mt5Service;
 
-    public function __construct(MailService $mailService, MTWebAPI $api)
+    public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
         // MT5 service will be initialized on demand to avoid startup hangs
-        // $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
 

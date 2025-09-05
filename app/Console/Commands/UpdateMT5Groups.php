@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\MT5\MTRetCode;
-use App\MT5\MTWebAPI;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Services\UniversalMT5Service;
@@ -19,24 +18,33 @@ class UpdateMT5Groups extends Command
 
     protected $api;
     protected $mailService;
-    protected $mt5Service;
 
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService)
     {
         parent::__construct();
-        $this->mt5Service = $mt5Service;
-        // Defer connection until handle() method
         $this->mailService = $mailService;
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->api) {
+            $mt5Service = app(UniversalMT5Service::class);
+            if (!$mt5Service->connect()) {
+                Log::error('UpdateMT5Groups: Failed to connect to MT5 server');
+                return false;
+            }
+            $this->api = $mt5Service->getApi();
+        }
+        return true;
     }
 
     public function handle()
     {
-        // Connect to MT5 using connection pool
-        if (!$this->mt5Service->connect()) {
-            $this->error('Failed to connect to MT5 via pool.');
+        // Connect to MT5 using service pattern
+        if (!$this->ensureMT5Connection()) {
+            $this->error('Failed to connect to MT5 server.');
             return 1;
         }
-        $this->api = $this->mt5Service->getApi();
 
         $selectedGroupCode = $this->option('group_code');
         // dump('abhay');
@@ -73,64 +81,65 @@ class UpdateMT5Groups extends Command
                     $code = $account->code;
 
                     // if($code == 594782){
-                        $trade_user = null;
-                        if (($error_code = $api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                            Log::warning("Failed to fetch MT5 user", [
+                    $trade_user = null;
+                    if (($error_code = $api->UserGet($code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                        Log::warning("Failed to fetch MT5 user", [
+                            'code' => $code,
+                            'error' => MTRetCode::GetError($error_code)
+                        ]);
+                        continue;
+                    }
+
+                    $currentGroup = $trade_user->Group;
+
+                    $newGroup = $currentGroup;
+
+                    if (str_contains($selectedGroupCode, 'A-Book')) {
+                        // If selected is A-Book → switch B-Book to A-Book
+                        if (str_contains($currentGroup, 'B-Book')) {
+                            $newGroup = str_replace('B-Book', 'A-Book', $currentGroup);
+                            $newGroup = preg_replace('/-B($|\\\)/', '-A$1', $newGroup);
+                        }
+                    } elseif (str_contains($selectedGroupCode, 'B-Book')) {
+                        // If selected is B-Book → switch A-Book to B-Book
+                        if (str_contains($currentGroup, 'A-Book')) {
+                            $newGroup = str_replace('A-Book', 'B-Book', $currentGroup);
+                            $newGroup = preg_replace('/-A($|\\\)/', '-B$1', $newGroup);
+                        }
+                    }
+
+                    if ($newGroup !== $currentGroup) {
+
+                        $trade_user->Group = $newGroup;
+
+                        $updated_user = null;
+                        if (($error_code = $api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                            Log::warning("Failed to update MT5 user", [
                                 'code' => $code,
                                 'error' => MTRetCode::GetError($error_code)
                             ]);
                             continue;
                         }
 
-                        $currentGroup = $trade_user->Group;
+                        // Fetch corresponding AccountType (use first() not get())
+                        $accountType = AccountType::where('ac_group', $newGroup)->first();
 
-                        $newGroup = $currentGroup;
+                        if ($accountType) {
+                            Account::where('id', $account->id)->update([
+                                'mt5groupcode' => $newGroup,
+                                'account_type_id' => $accountType->id
+                            ]);
 
-                        if (str_contains($selectedGroupCode, 'A-Book')) {
-                            // If selected is A-Book → switch B-Book to A-Book
-                            if (str_contains($currentGroup, 'B-Book')) {
-                                $newGroup = str_replace('B-Book', 'A-Book', $currentGroup);
-                                $newGroup = preg_replace('/-B($|\\\)/', '-A$1', $newGroup);
-                            }
-                        } elseif (str_contains($selectedGroupCode, 'B-Book')) {
-                            // If selected is B-Book → switch A-Book to B-Book
-                            if (str_contains($currentGroup, 'A-Book')) {
-                                $newGroup = str_replace('A-Book', 'B-Book', $currentGroup);
-                                $newGroup = preg_replace('/-A($|\\\)/', '-B$1', $newGroup);
-                            }
+                            Log::info("Updated MT5 Group", [
+                                'code' => $code,
+                                'new_group' => $newGroup,
+                                'account_type_id' => $accountType->id
+                            ]);
+                            $changedAccounts[] = $code;
+                        } else {
+                            Log::warning("AccountType not found for group: {$newGroup}");
                         }
-
-                        if ($newGroup !== $currentGroup) {
-
-                            $trade_user->Group = $newGroup;
-
-                            if (($error_code = $api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                Log::warning("Failed to update MT5 user", [
-                                    'code' => $code,
-                                    'error' => MTRetCode::GetError($error_code)
-                                ]);
-                                continue;
-                            }
-
-                            // Fetch corresponding AccountType (use first() not get())
-                            $accountType = AccountType::where('ac_group', $newGroup)->first();
-
-                            if ($accountType) {
-                                Account::where('id', $account->id)->update([
-                                    'mt5groupcode' => $newGroup,
-                                    'account_type_id' => $accountType->id
-                                ]);
-
-                                Log::info("Updated MT5 Group", [
-                                    'code' => $code,
-                                    'new_group' => $newGroup,
-                                    'account_type_id' => $accountType->id
-                                ]);
-                                $changedAccounts[] = $code;
-                            } else {
-                                Log::warning("AccountType not found for group: {$newGroup}");
-                            }
-                        }
+                    }
                     // }
                 }
             });

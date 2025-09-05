@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\LiveAccount;
@@ -30,10 +29,9 @@ class TradeDepositController extends Controller
     protected $settings;
     protected $mt5Service;
 
-    public function __construct(MTWebAPI $api)
+    public function __construct()
     {
         $this->settings = settings();
-        $this->api = $api;
         // MT5 service will be initialized on demand to avoid startup hangs
     }
 

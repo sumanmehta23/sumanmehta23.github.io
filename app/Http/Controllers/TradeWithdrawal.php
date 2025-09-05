@@ -12,7 +12,6 @@ use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\MT5\MTEnDealAction;
 use App\Helpers\AccountHelper;
@@ -29,10 +28,9 @@ class TradeWithdrawal extends Controller
     protected $mailService;
     protected $mt5Service;
 
-    public function __construct(MTWebAPI $api, MailService $mailService)
+    public function __construct(MailService $mailService)
     {
         $this->settings = settings();
-        $this->api = $api;
         $this->mailService = $mailService;
         // MT5 service will be initialized on demand to avoid startup hangs
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
@@ -41,18 +39,17 @@ class TradeWithdrawal extends Controller
 
     private function ensureMT5Connection()
     {
-        try {
-            // Initialize MT5 service on demand to avoid startup hangs
-            if (!$this->mt5Service) {
-                $this->mt5Service = app(UniversalMT5Service::class);
-            }
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
 
-            $this->api = $this->mt5Service->connect()->getApi();
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to establish MT5 connection: ' . $e->getMessage());
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in TradeWithdrawal');
             return false;
         }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
 
     public function index(Request $request)
@@ -60,7 +57,13 @@ class TradeWithdrawal extends Controller
         $account_id = $request['account_id'];
         $email = auth()->user()->email;
         $user = auth()->user();
-        AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
+
+        // Ensure MT5 connection before using AccountHelper
+        if ($this->ensureMT5Connection()) {
+            AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
+        } else {
+            Log::warning('MT5 connection failed in TradeWithdrawal index method');
+        }
         // $liveaccount_details = Account::with('accountType','BonusTransaction')
         //     ->where('user_id', $user->id)
         //     ->where('demo', false)
@@ -509,14 +512,14 @@ class TradeWithdrawal extends Controller
 
                 $toEmail = $user_email;
                 $type = 'Withdrawal Details Verification';
-                $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                $from = $this->settings['email_from_address'];
+                $emailSubject = $this->settings['admin_title'] . ' - ' . $type;
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $headers .= 'From:' . $this->settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
                 $content =
-                    '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                    '<p>Welcome to ' . htmlspecialchars($this->settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
                     '<p></p>' .
                     '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</p>' .
                     '<p></p>' .
@@ -524,8 +527,8 @@ class TradeWithdrawal extends Controller
 
                 $templateVars = [
                     'name' => $user_fullname,
-                    'server_name' => $settings['mt5_company_name'],
-                    'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
+                    'server_name' => $this->settings['mt5_company_name'],
+                    'site_link' => $this->settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
                     'email' => $from,
                     "content" => $content,
                     "title_right" => "Activate",
