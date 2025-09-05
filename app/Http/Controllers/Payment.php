@@ -88,7 +88,7 @@ class Payment extends Controller
                     $existingPayment = TradeDeposit::where('transaction_id', $transactionId)->first();
                     if ($existingPayment) {
                         Log::channel("creditcardpayissa")->info('Payment already exists for transaction ID: ' . $transactionId);
-                        return ['ok'];
+                        return ['Payment already exists for transaction ID'];
                     }
                     $validcoins = config("services.payissa.valid_coins");
                     $coinString = strtolower($responsedata['coin']);
