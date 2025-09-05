@@ -224,6 +224,26 @@ class UniversalMT5Service
     }
 
     /**
+     * Get user details (direct API wrapper)
+     */
+    public function userGet(int $login, &$user)
+    {
+        return $this->executeOperation(function ($api) use ($login, &$user) {
+            return $api->UserGet($login, $user);
+        });
+    }
+
+    /**
+     * Update user details (direct API wrapper)
+     */
+    public function userUpdate($user, &$updated_user)
+    {
+        return $this->executeOperation(function ($api) use ($user, &$updated_user) {
+            return $api->UserUpdate($user, $updated_user);
+        });
+    }
+
+    /**
      * Get health status
      */
     public function getHealth(): array

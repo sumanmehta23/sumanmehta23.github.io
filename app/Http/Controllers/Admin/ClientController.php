@@ -6,7 +6,6 @@ use DB;
 use App\Models\Ib1;
 use App\Models\Role;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\Models\IbPlan;
 use App\Models\KycLog;
 use App\MT5\MTRetCode;
@@ -24,7 +23,7 @@ use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
@@ -45,13 +44,26 @@ class ClientController extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->mailService = $mailService;
         // Gate::validate('view-client');
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+    }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
     }
     public function index()
     {
@@ -465,30 +477,27 @@ class ClientController extends Controller
                 $user = User::find($user_id);
 
                 if ($user) {
-                    if($email){
+                    if ($email) {
                         $accounts = Account::where('email', $user->email)->get();
 
-                        $settings = settings();
-                        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                        $this->api->Connect(
-                            $settings['mt5_server_ip'],
-                            $settings['mt5_server_port'],
-                            300,
-                            $settings['mt5_server_web_login'],
-                            $settings['mt5_server_web_password']
-                        );
-                        foreach($accounts as $account){
-                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                Log::error('error'.' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                        if (!$this->ensureMT5Connection()) {
+                            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+                        }
+
+                        foreach ($accounts as $account) {
+                            $trade_user = null;
+                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                Log::error('error' . ' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
                                 return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
                             }
-                            if($trade_user){
+                            if ($trade_user) {
                                 $trade_user->Email = $email;
-                                $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                                $updated_user = "";
+                                $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
                                 if ($error_code != MTRetCode::MT_RET_OK) {
-                                    Log::error("error ". $account->code." Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                                    Log::error("error " . $account->code . " Something went wrong on Updating email" . MTRetCode::GetError($error_code));
                                     return redirect()->back()->with("error", "Something went wrong on Updating email" . MTRetCode::GetError($error_code));
-                                }else {
+                                } else {
                                     Account::where('code', $account->code)->update([
                                         'email' => $email
                                     ]);
@@ -522,7 +531,6 @@ class ClientController extends Controller
                         'client_number' => $number ?? '',
                         'client_country_code' => $country_code ?? '',
                         'client_country' => $country ?? '',
-                        'client_fullname' => $fullname ?? '',
                         'client_email' => $user->email,
                         'remark' => 'Update Client Details'
                     ])
@@ -619,7 +627,7 @@ class ClientController extends Controller
         $countries = Country::all();
         $acc_groups = IbPlanDetails::with('plan')
             ->where('status', 1)
-            ->where('deleted_at',null)
+            ->where('deleted_at', null)
             ->groupBy('ib_category_id')
             ->get();
 
@@ -660,13 +668,14 @@ class ClientController extends Controller
             // dd($login);
             if ($user->ib1) {
                 $ibdata = Ib1::where('referral_code', $user->ib1)->first();
-                if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
+                $trade_user = null;
+                if (($error_code = $this->mt5Service->userGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
                     // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
                 }
                 if ($trade_user) {
                     $trade_user->Agent = $ibdata->indexId ?? '';
-
-                    $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                    $updated_user = "";
+                    $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
                     // if ($error_code != MTRetCode::MT_RET_OK) {
                     //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
                     // }
