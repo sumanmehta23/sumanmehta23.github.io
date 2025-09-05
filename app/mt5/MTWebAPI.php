@@ -68,6 +68,7 @@ class MTWebAPI
    */
   public function Connect($ip, $port, $timeout, $login, $password)
   {
+    die('ll');
     Log::info("MTWebAPI: Attempting to connect to MT5 server at {$ip}:{$port} with login {$login}");
     //--- create connection class
     $this->m_connect = new MTConnect($ip, $port, $timeout, $this->m_is_crypt);

@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
 use App\Helpers\AccountHelper;
@@ -21,11 +22,34 @@ use Illuminate\Support\Facades\RateLimiter;
 class InternalTransfer extends Controller
 {
     protected $api;
+    protected $mt5Service;
 
     public function __construct(MTWebAPI $api)
     {
         $this->api = $api;
+        // MT5 service will be initialized on demand to avoid startup hangs
     }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
+    }
+
     public function index()
     {
         $email = auth()->user()->email;
@@ -63,15 +87,13 @@ class InternalTransfer extends Controller
         // Increment the rate limiter
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
-        $settings = settings();
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        if (!$this->ensureMT5Connection()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'MT5 connection failed',
+                'error' => 'Unable to connect to trading server'
+            ], 500);
+        }
         $validated = $request->validate([
             'fromAccount' => 'required',
             'toAccount' => 'required|different:fromAccount',
@@ -92,7 +114,7 @@ class InternalTransfer extends Controller
                 $query->where('bonus_type', 'Bonus In')
                     ->orWhere('bonus_type', 'Bonus Out');
             })
-            ->whereNotIn('admin_remark',['Credit', '10x Trader Leverage'])
+            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage'])
             ->sum('bonus_amount');
 
         $transferable_amount = $request->input('transferable_amount');
@@ -125,110 +147,107 @@ class InternalTransfer extends Controller
 
             try {
                 DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
-                $customerID = auth()->user()->id;
-                TradeWithdrawals::create([
-                    'email' => $email,
-                    'user_id' => $customerID,
-                    'account_id' => $fromAccount->id,
-                    'withdrawal_amount' => $transferable_amount,
-                    'withdraw_type' => 'Internal Transfer',
-                    'withdraw_to' => $toAccount->id,
-                    'withdraw_date' => now(),
-                    'status' => 1
-                ]);
-                if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
+                    $customerID = auth()->user()->id;
+                    TradeWithdrawals::create([
+                        'email' => $email,
+                        'user_id' => $customerID,
+                        'account_id' => $fromAccount->id,
+                        'withdrawal_amount' => $transferable_amount,
+                        'withdraw_type' => 'Internal Transfer',
+                        'withdraw_to' => $toAccount->id,
+                        'withdraw_date' => now(),
+                        'status' => 1
+                    ]);
+                    if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
 
-                    $multiplier = $transferable_amount;
+                        $multiplier = $transferable_amount;
 
-                    if ($multiplier > 250) {
-                        $multiplier = 250;
+                        if ($multiplier > 250) {
+                            $multiplier = 250;
+                        }
+                        $bonusamount = -abs(-9 * $multiplier);
+
+                        // if($account->code==817752){
+                        //     dump($account_balance);
+                        //     dump($total_deposit_amount);
+                        //     dump($accountProfit);
+                        //     dump($multiplier);
+                        //     dump($bonusamount);
+                        // }
+
+                        if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $fromAccount->email,
+                                'user_id' => $customerID,
+                                'account_id' => $fromAccount->id,
+                                'code' => $fromAccount->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus Out',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                // 'created_by' => session('alogin')
+                            ]);
+                        }
                     }
-                    $bonusamount = -abs(-9 * $multiplier);
+                    if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
 
-                    // if($account->code==817752){
-                    //     dump($account_balance);
-                    //     dump($total_deposit_amount);
-                    //     dump($accountProfit);
-                    //     dump($multiplier);
-                    //     dump($bonusamount);
-                    // }
+                        if ($transferable_amount > 250) {
+                            $bonusamount = 9 * 250;
+                        } else {
+                            $bonusamount = 9 * $transferable_amount;
+                        }
 
-                    if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                    } else {
-                        $deposit_details = BonusTransaction::create([
-                            'email' => $fromAccount->email,
-                            'user_id' => $customerID,
-                            'account_id' => $fromAccount->id,
-                            'code' => $fromAccount->code,
-                            'bonus_amount' => $bonusamount,
-                            'bonus_type' => 'Bonus Out',
-                            'status' => 1,
-                            'admin_remark' => '10x Trader Leverage',
-                            'bonus_currency' => 'USD',
-                            // 'created_by' => session('alogin')
-                        ]);
+                        if (($error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
+                        } else {
+                            $deposit_details = BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $customerID,
+                                'account_id' => $toAccount->id,
+                                'code' => $toAccount->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                            ]);
+                        }
                     }
-                }
-                if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
-
-                    if ($transferable_amount > 250) {
-                        $bonusamount = 9 * 250;
+                    // Deposit to the second account
+                    $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
+                    if ($errorCode != MTRetCode::MT_RET_OK) {
+                        $error = MTRetCode::GetError($errorCode);
+                        return redirect()->back()->with('error', 'Deposit Failed.');
                     } else {
-                        $bonusamount = 9 * $transferable_amount;
-                    }
-
-                    if (($error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
-                    } else {
-                        $deposit_details = BonusTransaction::create([
-                            'email' => $email,
-                            'user_id' => $customerID,
+                        // Log deposit
+                        TradeDeposit::create([
+                            'user_id' => auth()->user()->id,
                             'account_id' => $toAccount->id,
+                            'email' => $email,
                             'code' => $toAccount->code,
-                            'bonus_amount' => $bonusamount,
-                            'bonus_type' => 'Bonus In',
+                            'deposit_amount' => $transferable_amount,
+                            'deposit_type' => 'Internal Transfer',
+                            'deposit_from' => $fromAccount->id,
                             'status' => 1,
-                            'admin_remark' => '10x Trader Leverage',
-                            'bonus_currency' => 'USD',
+                            'callback_code' => 'success'
+                        ]);
+                        TotalBalance::create([
+                            'user_id' => auth()->user()->id,
+                            'account_id' => $toAccount->id,
+                            'email' => $email,
+                            'code' => $toAccount->code,
+                            'trading_deposited' => $transferable_amount,
+                            'deposit_type' => 'Internal Transfer',
                         ]);
                     }
-                }
-                // Deposit to the second account
-                $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
-                if ($errorCode != MTRetCode::MT_RET_OK) {
-                    $error = MTRetCode::GetError($errorCode);
-                    return redirect()->back()->with('error', 'Deposit Failed.');
-                } else {
-                    // Log deposit
-                    TradeDeposit::create([
-                        'user_id' => auth()->user()->id,
-                        'account_id' => $toAccount->id,
-                        'email' => $email,
-                        'code' => $toAccount->code,
-                        'deposit_amount' => $transferable_amount,
-                        'deposit_type' => 'Internal Transfer',
-                        'deposit_from' => $fromAccount->id,
-                        'status' => 1,
-                        'callback_code' => 'success'
-                    ]);
-                    TotalBalance::create([
-                        'user_id' => auth()->user()->id,
-                        'account_id' => $toAccount->id,
-                        'email' => $email,
-                        'code' => $toAccount->code,
-                        'trading_deposited' => $transferable_amount,
-                        'deposit_type' => 'Internal Transfer',
-                    ]);
-                }
-
-                
-            });
+                });
             } catch (\Throwable $th) {
                 Log::error('Transaction failed: ' . $th->getMessage());
                 return redirect()->back()->with('error', 'Transaction Failed.');
             }
-
         }
         RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');

@@ -29,11 +29,33 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService, MTWebAPI $api)
+
+    public function __construct(MailService $mailService, MTWebAPI $api)
     {
         $this->mailService = $mailService;
-        $this->mt5Service = $mt5Service;
+        // MT5 service will be initialized on demand to avoid startup hangs
+        // $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+    }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
     }
     public function liveAccounts()
     {
@@ -61,6 +83,10 @@ class MT5Accounts extends Controller
     }
     public function viewAccountDetails(Account $account)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         session()->remove('error');
         $user = auth()->user();
         if ($user->id != $account->user_id) {
@@ -71,14 +97,15 @@ class MT5Accounts extends Controller
         // $account=Account::where('id',$id)->where('user_id',$user->id)->firstOrFail();
         $settings = settings();
         $results = [];
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        // Connection handled by ensureMT5Connection()
+        // $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        // $this->api->Connect(
+        //     $settings['mt5_server_ip'],
+        //     $settings['mt5_server_port'],
+        //     300,
+        //     $settings['mt5_server_web_login'],
+        //     $settings['mt5_server_web_password']
+        // );
         $getUser = [];
         $equity = '';
         $margin = '';
@@ -216,6 +243,10 @@ class MT5Accounts extends Controller
     }
     public function updateLeverage(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         // dump($user);
         $login = $request->accountId;
         $account_code = Account::where('id', $login)->value('code');
@@ -250,6 +281,10 @@ class MT5Accounts extends Controller
     }
     public function createLiveAccount(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -302,7 +337,7 @@ class MT5Accounts extends Controller
 
         $group = AccountType::where('ac_group', $groupCode)->first();
 
-        if($email == 'juanpipkin@gmail.com'){
+        if ($email == 'juanpipkin@gmail.com') {
             $groupCode = 'LM\B-Book\PRO\LeverageTest';
             $group = AccountType::where('ac_group', $groupCode)->first();
             $account_type_id = $group->id;
@@ -517,7 +552,7 @@ class MT5Accounts extends Controller
             } else {
                 $groupCode = $group->ac_group;
             }
-            if($user->email == 'juanpipkin@gmail.com'){
+            if ($user->email == 'juanpipkin@gmail.com') {
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
                 $account_type_id = $group->id;
@@ -661,7 +696,7 @@ class MT5Accounts extends Controller
                 }
             }
 
-            if($user->email == 'juanpipkin@gmail.com'){
+            if ($user->email == 'juanpipkin@gmail.com') {
                 $groupCode = 'LM\B-Book\PRO\LeverageTest';
                 $group = AccountType::where('ac_group', $groupCode)->first();
             }
@@ -766,6 +801,10 @@ class MT5Accounts extends Controller
 
     public function deleteAccounts(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         $validatedData = $request->validate([
             'id' => 'required',
             'email' => 'required|email',
@@ -775,14 +814,15 @@ class MT5Accounts extends Controller
 
         $settings = settings();
 
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        // Connection handled by ensureMT5Connection()
+        // $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
+        // $this->api->Connect(
+        //     $settings['mt5_server_ip'],
+        //     $settings['mt5_server_port'],
+        //     300,
+        //     $settings['mt5_server_web_login'],
+        //     $settings['mt5_server_web_password']
+        // );
 
 
         try {
@@ -866,6 +906,8 @@ class MT5Accounts extends Controller
 
     public function createDemoAccount(Request $request)
     {
+        $this->ensureMT5Connection();
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -1076,21 +1118,10 @@ class MT5Accounts extends Controller
     }
     function CreateAccount($user, &$user_server, $type)
     {
-        $settings = settings();
-        if (!$this->api->IsConnected()) {
-            $errorCode = $this->api->Connect(
-                $settings['mt5_server_ip'],
-                $settings['mt5_server_port'],
-                300,
-                $settings['mt5_server_web_login'],
-                $settings['mt5_server_web_password']
-            );
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account connection error : ' . $error . ' for user ' . json_encode($user));
-                return ["status" => false, "message" => $error];
-            }
+        if (!$this->ensureMT5Connection()) {
+            return ["status" => false, "message" => "Failed to connect to MT5 server"];
         }
+
         if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));

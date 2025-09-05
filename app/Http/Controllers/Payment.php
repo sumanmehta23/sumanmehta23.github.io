@@ -30,15 +30,43 @@ class Payment extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MTWebAPI $api, MailService $mailService, UniversalMT5Service $mt5Service)
+    protected $settings;
+
+    public function __construct(MailService $mailService)
     {
         $this->settings = settings();
         $this->mailService = $mailService;
-        $this->mt5Service = $mt5Service;
+        // MT5 service will be initialized on demand to avoid startup hangs
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
+    }
+
     public function handlePaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
+        if (!$this->ensureMT5Connection()) {
+            Log::error('Failed to connect to MT5 server in handlePaymentResponse');
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
+
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
         $address_in = $request->input('address_in');
@@ -108,15 +136,8 @@ class Payment extends Controller
                 ]);
                 $email = $paymentLog->initiated_by;
                 $amount = $responsedata['value_coin'];
-                $settings = settings();
-                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                $this->api->Connect(
-                    $settings['mt5_server_ip'],
-                    $settings['mt5_server_port'],
-                    300,
-                    $settings['mt5_server_web_login'],
-                    $settings['mt5_server_web_password']
-                );
+
+                // Connection handled by ensureMT5Connection() called at method start
 
                 $account = Account::where('id', $paymentLog->account_id)->first();
 
