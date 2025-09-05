@@ -6,7 +6,7 @@ use App\MT5\MTRetCode;
 use App\MT5\MTWebAPI;
 use App\Models\Account;
 use App\Models\AccountType;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -21,17 +21,23 @@ class UpdateMT5Groups extends Command
     protected $mailService;
     protected $mt5Service;
 
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
     {
         parent::__construct();
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // Defer connection until handle() method
         $this->mailService = $mailService;
     }
 
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
         $selectedGroupCode = $this->option('group_code');
         // dump('abhay');
         // dd($selectedGroupCode);

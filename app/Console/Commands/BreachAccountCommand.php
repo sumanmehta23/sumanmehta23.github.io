@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnUsersRights;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -22,41 +22,24 @@ class BreachAccountCommand extends Command
     protected $signature = 'app:breach-account';
     protected $description = 'Handles expired competition accounts from previous months';
 
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
         parent::__construct();
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
-        $this->mt5Service->dealerConnect();
-        $this->dealerapi = $this->mt5Service->dealerConnect();
+        // No direct connect here; use connection pool in handle()
     }
 
     public function handle()
     {
+        // Use connection pool
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
         $api = $this->api;
         $settings = settings();
-
-        // Log::info('Starting breach account command');
-
-        if (!$api->IsConnected()) {
-            Log::info('MT5 API not connected. Attempting to connect...');
-            $error_code = $api->Connect(
-                $settings['mt5_server_ip'],
-                $settings['mt5_server_port'],
-                300,
-                $settings['mt5_server_web_login'],
-                $settings['mt5_server_web_password']
-            );
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("Failed to connect to MT5 server: " . MTRetCode::GetError($error_code));
-                return;
-            }
-
-            Log::info('Connected to MT5 API successfully.');
-        }
 
         try {
 

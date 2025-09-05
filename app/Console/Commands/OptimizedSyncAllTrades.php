@@ -8,7 +8,7 @@ use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use Illuminate\Bus\Batch;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
@@ -57,7 +57,7 @@ class OptimizedSyncAllTrades extends Command
     protected $mt5Service;
     protected $mailService;
 
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
         parent::__construct();
         $this->mt5Service = $mt5Service;
@@ -66,6 +66,13 @@ class OptimizedSyncAllTrades extends Command
 
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
         $batchSize = (int) $this->option('batch-size');
         $maxConcurrent = (int) $this->option('max-concurrent');
         $delay = (int) $this->option('delay');

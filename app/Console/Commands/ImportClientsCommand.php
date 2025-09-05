@@ -8,7 +8,7 @@ use App\MT5\MTRetCode;
 use League\Csv\Reader;
 use App\Models\Country;
 use App\Models\AccountType;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -44,17 +44,20 @@ class ImportClientsCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    public function handle(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
     {
         ini_set("memory_limit", "-1");
         ini_set('max_execution_time', 0);
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
+        // Use connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
         $this->api = $this->mt5Service->getApi();
         $this->mailService = $mailService;
-        // $this->api = $api;
         $filePath = $this->argument('file');
-        $newcustomers=$existingcounter=$missingcountries=0;
+        $newcustomers = $existingcounter = $missingcountries = 0;
 
         // Validate the file
         if (!file_exists($filePath) || !is_readable($filePath)) {
@@ -71,14 +74,14 @@ class ImportClientsCommand extends Command
 
             foreach ($records as $index => $record) {
 
-                $country=Country::where('country_name',$record['Where are you from?'])->first();
-                if(!$country){
+                $country = Country::where('country_name', $record['Where are you from?'])->first();
+                if (!$country) {
                     $missingcountries++;
                     Log::error("Row {$record['Where are you from?']}: Country not found");
                     // continue;
                 }
                 // dd($country);
-                $phone=str_replace("'","",$record['Your phone number']);
+                $phone = str_replace("'", "", $record['Your phone number']);
                 // $this->info("Row {$index}:");
                 // $this->line("Full Name: " . $record['Full Name']);
                 // $this->line("Email: " . $record['Your email address']);
@@ -86,14 +89,14 @@ class ImportClientsCommand extends Command
                 // $this->line("Location: " . $record['Where are you from?']);
                 // $this->line("Request: " . $record['What do you want?']);
                 // $this->line('---');
-                $existing=User::where('email',$record['Your email address'])->first();
-                if($existing){
+                $existing = User::where('email', $record['Your email address'])->first();
+                if ($existing) {
                     $existingcounter++;
-                    $existing->email_confirmed=1;
-                    $existing->status=1;
-                    if(empty( $existing->ib1) || $existing->ib1=='noIB'){
-                        $existing->ib1='Swingtradinglab';
-                        
+                    $existing->email_confirmed = 1;
+                    $existing->status = 1;
+                    if (empty($existing->ib1) || $existing->ib1 == 'noIB') {
+                        $existing->ib1 = 'Swingtradinglab';
+
                         // $accountcount=$existing->accounts()->count();
                         // foreach($existing->accounts as $account){
                         //     // dump($account->accountType);
@@ -115,7 +118,7 @@ class ImportClientsCommand extends Command
                         //         // dd($trade_user);
                         //         // // Fetch account type details
                         //         $trade_user->Group = $group->ac_group;
-                    
+
                         //         // Update user data via API
                         //         $updated_user = "";
                         //         if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
@@ -123,38 +126,38 @@ class ImportClientsCommand extends Command
                         //         } else {
                         //             $account->account_type_id = $account_type_id;
                         //             $account->save();
-                                    
+
                         //         }
                         //     }
                         // }
                         // Log::info("Row {$record['Your email address']}: User already exists and has $accountcount accounts");
-                        
+
                         // $this->sendWelcomeToExistingUser($existing);
-                    }else{
+                    } else {
                         Log::error("Row {$record['Your email address']}: User already exists and has an IB1");
                     }
                     $existing->save();
                     continue;
-                }else{
-                    $user=User::create([
-                        'fullname'=>$record['Full Name'],
-                        'email'=>$record['Your email address'],
-                        'username'=>$record['Your email address'],
-                        'password'=>Hash::make('password'.rand(999,999999)),
-                        'country_code'=>$country?$country->country_code:'',
-                        'number'=>$phone,
-                        'country'=>$record['Where are you from?'],
+                } else {
+                    $user = User::create([
+                        'fullname' => $record['Full Name'],
+                        'email' => $record['Your email address'],
+                        'username' => $record['Your email address'],
+                        'password' => Hash::make('password' . rand(999, 999999)),
+                        'country_code' => $country ? $country->country_code : '',
+                        'number' => $phone,
+                        'country' => $record['Where are you from?'],
                         // 'request'=>$record['What do you want?'],
-                        'wallet_enabled'=>1,
-                        'ib1'=>'Swingtradinglab',
-                        'email_confirmed'=>1,
-                        'status'=>1,
+                        'wallet_enabled' => 1,
+                        'ib1' => 'Swingtradinglab',
+                        'email_confirmed' => 1,
+                        'status' => 1,
                     ]);
-                    if($user){
+                    if ($user) {
                         Log::info("Row {$record['Your email address']}: User created successfully");
                         // $this->sendWelcomeEmail($user);
                         $newcustomers++;
-                    }else{
+                    } else {
                         Log::error("Row {$record['Your email address']}: User not created");
                     }
                 }
@@ -165,14 +168,14 @@ class ImportClientsCommand extends Command
             return Command::FAILURE;
         }
 
-        Log::info('CSV parsing completed successfully. Ignored '.$missingcountries.' rows with missing countries. '.$existingcounter.' existing users found. '.$newcustomers.' new users created.');
+        Log::info('CSV parsing completed successfully. Ignored ' . $missingcountries . ' rows with missing countries. ' . $existingcounter . ' existing users found. ' . $newcustomers . ' new users created.');
         return Command::SUCCESS;
     }
     private function sendWelcomeEmail($user)
     {
 
 
-        $email=$user->email;
+        $email = $user->email;
         // $code =Str::random(60);
         // User::where('email', $email)->update(['emailToken' => $code]);
         $settings = settings();
@@ -182,10 +185,10 @@ class ImportClientsCommand extends Command
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
-            
+
             '<div>Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:</div>
             <ol>
-                <li><b>Reset your password</b> using the secure link provided:<a href="'.$settings['copyright_site_name_text'] . "/forgot-password".'">'.$settings['copyright_site_name_text'] . "/forgot-password".'</a></li>
+                <li><b>Reset your password</b> using the secure link provided:<a href="' . $settings['copyright_site_name_text'] . "/forgot-password" . '">' . $settings['copyright_site_name_text'] . "/forgot-password" . '</a></li>
                 <li>Complete the <b>Know Your Customer (KYC)</b> verification process</li>
                 <li>Set up your <b>MetaTrader 5 (MT5)</b> trading account</li>
                 <li>Fill out your <b>bonus request form</b> here: <ahref="https://forms.gle/Jk9SH1sxM4fEDNre6">https://forms.gle/Jk9SH1sxM4fEDNre6</a></li>
@@ -194,7 +197,7 @@ class ImportClientsCommand extends Command
             <p>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com</p>
             <p>Best Regards.</p>
           <p>LQH Markets Team</p>';
-          $templateVars = [
+        $templateVars = [
             'name' => 'Valued Client',
             'email' => $settings['email_from_address'],
             "content" => $content,
@@ -206,7 +209,7 @@ class ImportClientsCommand extends Command
     private function sendWelcomeToExistingUser($user)
     {
 
-        $email=$user->email;
+        $email = $user->email;
         // $code =Str::random(60);
         // User::where('email', $email)->update(['emailToken' => $code]);
         $settings = settings();
@@ -215,7 +218,7 @@ class ImportClientsCommand extends Command
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content ='<div>Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:</div>
+        $content = '<div>Thank you for choosing LQH Markets. To activate your SwingTradingLabs $300 bonus, please complete the following steps in order:</div>
             
                 
                 <p>Fill out your <b>bonus request form</b> here: <ahref="https://forms.gle/Jk9SH1sxM4fEDNre6">https://forms.gle/Jk9SH1sxM4fEDNre6</a></p>

@@ -17,12 +17,10 @@ class BonusTransactionObserver
 
     public function created($bonusTransaction)
     {
-        // Assume account_code is the field, or we'll need to map from account_id to account_code
-        $accountCode = $bonusTransaction->account_code ?? $bonusTransaction->account_id;
-
-        if ($accountCode) {
+        // Use the account_id directly (it's a UUID string)
+        if ($bonusTransaction->account_id) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $bonusTransaction->account_id,
                 "bonus_transaction:{$bonusTransaction->id}"
             );
         }
@@ -30,11 +28,9 @@ class BonusTransactionObserver
 
     public function updated($bonusTransaction)
     {
-        $accountCode = $bonusTransaction->account_code ?? $bonusTransaction->account_id;
-
-        if ($accountCode && $bonusTransaction->isDirty(['amount', 'status'])) {
+        if ($bonusTransaction->account_id && $bonusTransaction->isDirty(['amount', 'status'])) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $bonusTransaction->account_id,
                 "bonus_transaction_updated:{$bonusTransaction->id}"
             );
         }

@@ -11,8 +11,9 @@ use App\Models\AccountType;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\X9Service;
+
 use Illuminate\Http\Request;
 use App\MT5\MTProtocolConsts;
 use App\Helpers\AccountHelper;
@@ -33,12 +34,10 @@ class MT5Controller extends Controller
     protected $mailService;
     protected $mt5Service;
     protected $x9Service;
-
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api, X9Service $x9Service)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api,X9Service $x9Service)
     {
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->mailService = $mailService;
         $this->x9Service = $x9Service;
         // $this->api = $api;

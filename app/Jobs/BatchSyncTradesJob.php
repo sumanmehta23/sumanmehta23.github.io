@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Trade;
 use App\Models\Account;
-use App\Services\OptimizedMT5Service;
+use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +53,7 @@ class BatchSyncTradesJob implements ShouldQueue
         $this->timeout = max(300, count($accounts) * 60 + 120);
     }
 
-    public function handle(OptimizedMT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service)
     {
         $jobStartTime = microtime(true);
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
@@ -78,7 +78,7 @@ class BatchSyncTradesJob implements ShouldQueue
             // Track MT5 connection time
             $connectionStart = microtime(true);
             if (!$mt5Service->connect()) {
-                throw new \Exception("Failed to establish MT5 connection");
+                throw new \Exception("Failed to establish MT5 connection (via pool)");
             }
             $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
             $api = $mt5Service->getApi();
@@ -371,7 +371,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected function executeWithRetries($callback)
     {
-        // Note: This method is now simplified since OptimizedMT5Service 
+        // Note: This method is now simplified since UniversalMT5Service 
         // handles retries internally. Keep for backward compatibility.
         return $callback();
     }
@@ -504,11 +504,11 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function connectWithRetry(OptimizedMT5Service $mt5Service, int $maxRetries = 3): void
+    protected function connectWithRetry(UniversalMT5Service $mt5Service, int $maxRetries = 3): void
     {
-        // This method is now deprecated - OptimizedMT5Service handles retries internally
+        // UniversalMT5Service handles connection pooling and retries
         if (!$mt5Service->connect()) {
-            throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts");
+            throw new \Exception("Failed to connect to MT5 after {$maxRetries} attempts (via pool)");
         }
     }
 }

@@ -24,7 +24,7 @@ use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
@@ -44,13 +44,12 @@ class ClientController extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         // Gate::validate('view-client');
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
     public function index()
     {

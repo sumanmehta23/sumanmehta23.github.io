@@ -5,15 +5,15 @@ namespace App\Jobs;
 use App\Models\Trade;
 use Exception;
 use App\Models\Ib1;
-use App\MT5\MTWebAPI;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use App\Services\QueueSafeMT5Service;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Jobs\DistributeIbCommissionJob;
@@ -62,10 +62,10 @@ class SyncAccountTradesJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $api = new MTWebAPI;
-            $this->mt5Service = new MT5Service($api);
-            $this->mt5Service->connect();
-            $this->api = $this->mt5Service->getApi();
+            $this->mt5Service = app(QueueSafeMT5Service::class);
+
+            // The QueueSafeMT5Service handles connection management internally
+            Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
 
             // Process each account
             foreach ($this->accountIds as $accountId) {
@@ -95,9 +95,13 @@ class SyncAccountTradesJob implements ShouldQueue
             $to = 'March 31,2080';
             $total = 0;
 
-            $error_code = $this->api->HistoryGetTotal($login, $from, $to, $total);
+            // Get total number of trades using universal service
+            $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $from, $to, &$total) {
+                return $api->HistoryGetTotal($login, $from, $to, $total);
+            });
+
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error('MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                Log::error('MT5 ' . $login . ': Failed to get history total');
                 return;
             }
 
@@ -117,12 +121,16 @@ class SyncAccountTradesJob implements ShouldQueue
             });
 
             while ($offset < $total && $attempts < $maxTries) {
-                $orders = []; // Initialize orders array
-                $error_code = $this->api->HistoryGetPage($login, $from, $to, $offset, $total, $orders);
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error('MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
+                // Get trade history using queue-safe service
+                $historyResult = $this->mt5Service->getTradeHistorySafe($login, strtotime($from), strtotime($to));
+
+                if (!$historyResult || !isset($historyResult['deals'])) {
+                    Log::error('MT5 ' . $login . ': Failed to get trade history');
                     break;
                 }
+
+                $orders = $historyResult['deals'];
+                $total = $historyResult['total'] ?? count($orders);
 
                 if ($orders) {
                     $ibcommissions = [];

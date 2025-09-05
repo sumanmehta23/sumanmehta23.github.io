@@ -17,12 +17,10 @@ class TradeDepositObserver
 
     public function created($tradeDeposit)
     {
-        // Assume account_code is the field, or we'll need to map from account_id to account_code
-        $accountCode = $tradeDeposit->account_code ?? $tradeDeposit->account_id;
-
-        if ($accountCode) {
+        // Use the account_id directly (it's a UUID string)
+        if ($tradeDeposit->account_id) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $tradeDeposit->account_id,
                 "trade_deposit:{$tradeDeposit->id}"
             );
         }
@@ -30,11 +28,9 @@ class TradeDepositObserver
 
     public function updated($tradeDeposit)
     {
-        $accountCode = $tradeDeposit->account_code ?? $tradeDeposit->account_id;
-
-        if ($accountCode && $tradeDeposit->isDirty(['amount', 'status'])) {
+        if ($tradeDeposit->account_id && $tradeDeposit->isDirty(['amount', 'status'])) {
             $this->balanceSyncService->markBalanceActivity(
-                $accountCode,
+                $tradeDeposit->account_id,
                 "trade_deposit_updated:{$tradeDeposit->id}"
             );
         }

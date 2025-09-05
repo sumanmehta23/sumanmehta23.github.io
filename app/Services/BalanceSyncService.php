@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Account;
-use App\Services\OptimizedMT5Service;
+use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -12,7 +12,7 @@ class BalanceSyncService
 {
     protected $mt5Service;
 
-    public function __construct(OptimizedMT5Service $mt5Service)
+    public function __construct(UniversalMT5Service $mt5Service)
     {
         $this->mt5Service = $mt5Service;
     }
@@ -175,18 +175,64 @@ class BalanceSyncService
 
     /**
      * Mark account as having balance activity (called from deposit/withdrawal handlers)
+     * 
+     * @param string|int $accountIdentifier Can be account ID (UUID), account code, or legacy integer ID
+     * @param string $reason Reason for the balance activity
      */
-    public function markBalanceActivity(int $accountId, string $reason = 'manual'): void
+    public function markBalanceActivity($accountIdentifier, string $reason = 'manual'): void
     {
+        // Add debug logging to help diagnose type issues
+        Log::debug("BalanceSyncService::markBalanceActivity called", [
+            'account_identifier' => $accountIdentifier,
+            'account_identifier_type' => gettype($accountIdentifier),
+            'reason' => $reason,
+            'caller' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? 'unknown'
+        ]);
+
         try {
-            Account::where('id', $accountId)->update([
+            // Type validation and conversion
+            if (!is_string($accountIdentifier) && !is_int($accountIdentifier) && !is_numeric($accountIdentifier)) {
+                throw new \InvalidArgumentException(
+                    "Invalid account identifier type: " . gettype($accountIdentifier) .
+                        ". Expected string, int, or numeric value. Received: " . var_export($accountIdentifier, true)
+                );
+            }
+
+            // Convert to string for consistent handling
+            $accountIdentifier = (string) $accountIdentifier;
+
+            // Determine if we have an account ID (UUID), account code, or legacy integer ID
+            $query = Account::query();
+
+            if (is_string($accountIdentifier)) {
+                // Check if it's a UUID (account ID) or account code
+                if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $accountIdentifier)) {
+                    // It's a UUID - use as account ID
+                    $query->where('id', $accountIdentifier);
+                    $logIdentifier = "account ID {$accountIdentifier}";
+                } else {
+                    // It's an account code
+                    $query->where('code', $accountIdentifier);
+                    $logIdentifier = "account code {$accountIdentifier}";
+                }
+            } else {
+                // Legacy integer ID support (though this shouldn't happen with UUIDs)
+                $query->where('id', $accountIdentifier);
+                $logIdentifier = "account ID {$accountIdentifier}";
+            }
+
+            $updated = $query->update([
                 'last_balance_changed_at' => now(),
                 'has_balance_activity' => true
             ]);
 
-            Log::info("Marked balance activity for account ID {$accountId}: {$reason}");
+            if ($updated > 0) {
+                Log::info("Marked balance activity for {$logIdentifier}: {$reason}");
+            } else {
+                Log::warning("No account found for identifier {$accountIdentifier} when marking balance activity: {$reason}");
+            }
         } catch (\Exception $e) {
-            Log::error("Failed to mark balance activity for account ID {$accountId}: " . $e->getMessage());
+            Log::error("Failed to mark balance activity for account identifier {$accountIdentifier}: " . $e->getMessage());
         }
     }
 

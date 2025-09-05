@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
 use App\Models\ClientWallet;
 use App\Services\MailService as MailService;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 
 class TradeWithdrawal extends Controller
 {
@@ -28,13 +28,13 @@ class TradeWithdrawal extends Controller
     protected $settings;
     protected $mailService;
 
-    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(MTWebAPI $api, MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->api = $api;
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $email = session('clogin');
         AccountHelper::updateLiveAndDemoAccounts($email, $api);
     }

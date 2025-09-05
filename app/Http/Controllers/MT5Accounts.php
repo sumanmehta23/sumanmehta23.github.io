@@ -13,7 +13,7 @@ use App\Models\DemoDeposit;
 use App\Models\ToggleGroup;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\X9Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
@@ -31,15 +31,12 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    protected $x9Service;
-
-    public function __construct(MT5Service $mt5Service, X9Service $x9Service, MailService $mailService, MTWebAPI $api)
+    public function __construct(UniversalMT5Service $mt5Service,X9Service $x9Service, MailService $mailService, MTWebAPI $api)
     {
         $this->mailService = $mailService;
         $this->x9Service = $x9Service;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
     public function liveAccounts()
     {

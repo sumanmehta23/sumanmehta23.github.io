@@ -7,6 +7,8 @@ use App\MT5\MTRetCode;
 use Illuminate\Support\Facades\Log;
 
 /**
+ * @deprecated This service is deprecated. Use UniversalMT5Service instead.
+ * 
  * Optimized MT5 Service with Connection Pooling
  * 
  * Benefits:
@@ -14,6 +16,9 @@ use Illuminate\Support\Facades\Log;
  * - Handles connection failures gracefully  
  * - Provides fallback to direct connection
  * - Monitors connection health
+ * 
+ * MIGRATION: This class will be removed in a future version.
+ * Please use UniversalMT5Service which provides all the same functionality plus enhanced features.
  */
 class OptimizedMT5Service
 {
@@ -23,6 +28,9 @@ class OptimizedMT5Service
 
     public function __construct(bool $usePool = true)
     {
+        // Deprecation warning
+        Log::warning('OptimizedMT5Service is deprecated. Please use UniversalMT5Service instead.');
+
         $this->usePool = $usePool;
         if ($this->usePool) {
             $this->connectionPool = MT5ConnectionPool::getInstance();
@@ -120,13 +128,21 @@ class OptimizedMT5Service
         }
 
         $settings = settings();
-        return $api->DealerConnect(
+        $result = $api->DealerConnect(
             $settings['mt5_server_ip'],
             $settings['mt5_server_port'],
             30,
             $settings['mt5_server_web_login'],
             $settings['mt5_server_web_password']
         );
+
+        // DealerConnect returns MTDealerConnect object on success or MTRetCode::MT_RET_ERROR on failure
+        if ($result instanceof \App\MT5\MTDealerConnect) {
+            return MTRetCode::MT_RET_OK;
+        } else {
+            // Return the error code (should be MTRetCode::MT_RET_ERROR or similar)
+            return $result;
+        }
     }
 
     /**
