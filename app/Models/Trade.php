@@ -34,7 +34,6 @@ class Trade extends Model
         'partial' => 'boolean',
         'final_state' => 'boolean',
     ];
-
     /**
      * Boot method for model-level validation
      */
@@ -98,7 +97,6 @@ class Trade extends Model
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
-
     public function account()
     {
         return $this->belongsTo(Account::class);

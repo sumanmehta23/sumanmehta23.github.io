@@ -189,7 +189,6 @@ class SyncTrades implements ShouldQueue
 
             throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
         }
-
         return [
             'account_id' => $account->id,
             'close_price' => null,
@@ -296,7 +295,6 @@ class SyncTrades implements ShouldQueue
 
         Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
     }
-
     /**
      * Log invalid position_id attempts with comprehensive details for admin investigation
      */
