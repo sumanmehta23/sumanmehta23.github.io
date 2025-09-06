@@ -97,7 +97,26 @@ class BatchSyncTradesJob implements ShouldQueue
 
                     $fromTime = $this->fromTimes[$index] ?? now()->subDays(7);
                     $result = $this->syncSingleAccount($api, $account, $fromTime);
-                    $results[$result]++;
+
+                    // Map the result status to the correct results array key
+                    switch ($result) {
+                        case 'error':
+                            $results['errors']++;
+                            break;
+                        case 'success':
+                            $results['success']++;
+                            break;
+                        case 'no_changes':
+                            $results['no_changes']++;
+                            break;
+                        case 'not_found':
+                            $results['not_found']++;
+                            break;
+                        default:
+                            Log::warning("Unknown sync result status: {$result} for account {$account->code}");
+                            $results['errors']++;
+                            break;
+                    }
                     $results['processed']++;
 
                     $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
