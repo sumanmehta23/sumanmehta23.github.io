@@ -819,6 +819,10 @@ class Transaction extends Controller
 
     public function update_trading_withdrawal(Request $request)
     {
+        // Ensure MT5 connection is established
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
 
         $settings = settings();
 
@@ -1022,7 +1026,8 @@ class Transaction extends Controller
                     ->log('Reject Wallet Withdraw');
 
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
+                $ticket = null;
+                $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -1078,7 +1083,8 @@ class Transaction extends Controller
                 }
             } elseif (($status == 2 || $status == 3) && $rejection_reason != 'Invalid cryptocurrency address') {
                 $comment = 'Cancelled Withdrawal';
-                $errorCode = $this->api->TradeBalance($transaction->code, $type = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
+                $ticket = null;
+                $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
