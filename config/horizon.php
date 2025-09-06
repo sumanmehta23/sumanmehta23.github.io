@@ -237,12 +237,12 @@ return [
             'queue' => ['optimized-sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 3), // Drastically reduced from 20
+            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for high volume
             'maxTime' => 0,
-            'maxJobs' => 0,
-            'memory' => 1000,
-            'tries' => 1,
-            'timeout' => 300, // Increased timeout
+            'maxJobs' => 100, // Process 100 jobs before restarting worker
+            'memory' => 1500, // Increased memory for larger batches
+            'tries' => 2, // Reduced retries for faster processing
+            'timeout' => 600, // Increased timeout for large batches
             'nice' => 0,
         ],
         'supervisor-balance' => [
@@ -292,9 +292,9 @@ return [
                 'balanceCooldown' => 5,
             ],
             'supervisor-optimized-sync' => [
-                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Increased from 2 to 5 for BatchSyncTradesJob
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 5,
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for production high volume
+                'balanceMaxShift' => 2, // Allow more dynamic scaling
+                'balanceCooldown' => 3, // Faster scaling response
             ],
         ],
 
