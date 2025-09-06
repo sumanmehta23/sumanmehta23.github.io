@@ -86,7 +86,7 @@ class BatchSyncTradesJob implements ShouldQueue
 
             // Pre-warm cache for all accounts in this batch
             $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
-            $cacheService->warmupAccounts($accountModels->toArray());
+            $cacheService->warmupAccounts($accountModels->all());
 
             foreach ($this->accounts as $index => $accountData) {
                 $accountIterationStart = microtime(true);

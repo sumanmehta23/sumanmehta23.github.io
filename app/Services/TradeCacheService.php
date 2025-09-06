@@ -60,13 +60,21 @@ class TradeCacheService
     public function warmupAccounts(array $accounts): void
     {
         $startTime = microtime(true);
+        $loadedCount = 0;
 
         foreach ($accounts as $account) {
+            // Type check to ensure we have Account models
+            if (!($account instanceof Account)) {
+                Log::warning("Cache WARMUP: Skipping invalid account type: " . gettype($account));
+                continue;
+            }
+
             $this->getAccountTrades($account);
+            $loadedCount++;
         }
 
         $warmupTime = round((microtime(true) - $startTime) * 1000, 2);
-        Log::info("Cache WARMUP: " . count($accounts) . " accounts pre-loaded in {$warmupTime}ms");
+        Log::info("Cache WARMUP: {$loadedCount}/{" . count($accounts) . "} accounts pre-loaded in {$warmupTime}ms");
     }
 
     /**
