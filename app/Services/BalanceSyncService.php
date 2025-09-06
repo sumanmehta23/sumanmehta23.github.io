@@ -55,7 +55,7 @@ class BalanceSyncService
                     $results[$result]++;
                     $results['processed']++;
 
-                    Log::debug("Balance sync for account {$account->code}: {$result}");
+                    // Log::debug("Balance sync for account {$account->code}: {$result}");
                 } catch (\Exception $e) {
                     $results['errors']++;
                     $results['processed']++;
@@ -85,8 +85,7 @@ class BalanceSyncService
     {
         $query = Account::whereNotNull('code')
             ->where('demo', false) // Non-competition accounts only
-            ->whereNull('competition_start_date') // Exclude competition accounts
-            ->whereNull('competition_end_date');
+        ;
 
         if ($accountCodes) {
             $query->whereIn('code', $accountCodes);

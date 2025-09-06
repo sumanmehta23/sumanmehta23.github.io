@@ -103,12 +103,6 @@ class PrioritySyncAccountsCommand extends Command
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            })
             ->count();
 
         $neverSynced = Account::whereNotNull('code')
@@ -223,13 +217,7 @@ class PrioritySyncAccountsCommand extends Command
 
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            });
+            ->where('demo', false);
 
         if (!$ignoreBalanceFilter) {
             // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
