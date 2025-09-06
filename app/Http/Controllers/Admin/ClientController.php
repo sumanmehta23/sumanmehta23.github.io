@@ -380,7 +380,10 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
-
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+        
         $user_id = $request->input('id');
         $validatedData = Validator::make($request->all(), [
             'email' => [
