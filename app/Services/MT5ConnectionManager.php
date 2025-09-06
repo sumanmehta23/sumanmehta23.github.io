@@ -56,7 +56,7 @@ class MT5ConnectionManager
 
         if ($connection) {
             $this->stats['pool_hits']++;
-            Log::debug("MT5Manager: Connection provided from pool");
+            // Log::debug("MT5Manager: Connection provided from pool");
         } else {
             $this->stats['pool_misses']++;
             Log::warning("MT5Manager: No connection available from pool");
