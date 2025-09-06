@@ -759,7 +759,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'], // composite unique identifier
-                    ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'updated_at'] // essential columns including volume
                 );
                 $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
                 Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
