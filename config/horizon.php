@@ -221,7 +221,7 @@ return [
         ],
         'supervisor-4' => [
             'connection' => 'redis',
-            'queue' => ['sync-trades'],
+            'queue' => ['sync-trades', 'sync-all-trades',],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 8), // Reduced from 40
@@ -232,9 +232,9 @@ return [
             'timeout' => 120, // Increased timeout
             'nice' => 0,
         ],
-        'supervisor-5' => [
+        'supervisor-optimized-sync' => [
             'connection' => 'redis',
-            'queue' => ['sync-all-trades', 'optimized-sync-trades'],
+            'queue' => ['optimized-sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 3), // Drastically reduced from 20
@@ -291,7 +291,7 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 5,
             ],
-            'supervisor-5' => [
+            'supervisor-optimized-sync' => [
                 'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Increased from 2 to 5 for BatchSyncTradesJob
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 5,
@@ -311,8 +311,8 @@ return [
             'supervisor-4' => [
                 'maxProcesses' => 2,
             ],
-            'supervisor-5' => [
-                'maxProcesses' => 1, // Reduced for connection management
+            'supervisor-optimized-sync' => [
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Reduced for connection management
             ],
         ],
     ],
