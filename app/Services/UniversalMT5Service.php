@@ -329,8 +329,10 @@ class UniversalMT5Service
 
     /**
      * Change user password (direct API wrapper)
+     *
+     * Note: MT protocol password type constants are strings (e.g. "MAIN", "INVESTOR").
      */
-    public function userPasswordChange(int $login, string $password, int $passwordType)
+    public function userPasswordChange(int $login, string $password, string $passwordType)
     {
         return $this->executeOperation(function ($api) use ($login, $password, $passwordType) {
             return $api->UserPasswordChange($login, $password, $passwordType);
