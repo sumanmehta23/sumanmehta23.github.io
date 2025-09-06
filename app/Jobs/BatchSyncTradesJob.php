@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Trade;
 use App\Models\Account;
+use App\Services\TradeCacheService;
 use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
@@ -53,7 +54,7 @@ class BatchSyncTradesJob implements ShouldQueue
         $this->timeout = max(300, count($accounts) * 60 + 120);
     }
 
-    public function handle(UniversalMT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service, TradeCacheService $cacheService)
     {
         $jobStartTime = microtime(true);
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
@@ -83,6 +84,10 @@ class BatchSyncTradesJob implements ShouldQueue
             $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
             $api = $mt5Service->getApi();
 
+            // Pre-warm cache for all accounts in this batch
+            $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
+            $cacheService->warmupAccounts($accountModels->toArray());
+
             foreach ($this->accounts as $index => $accountData) {
                 $accountIterationStart = microtime(true);
                 try {
@@ -96,7 +101,7 @@ class BatchSyncTradesJob implements ShouldQueue
                     }
 
                     $fromTime = $this->fromTimes[$index] ?? now()->subDays(7);
-                    $result = $this->syncSingleAccount($api, $account, $fromTime);
+                    $result = $this->syncSingleAccount($api, $account, $fromTime, $cacheService);
 
                     // Map the result status to the correct results array key
                     switch ($result) {
@@ -193,7 +198,7 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function syncSingleAccount($api, Account $account, Carbon $fromTime): string
+    protected function syncSingleAccount($api, Account $account, Carbon $fromTime, TradeCacheService $cacheService): string
     {
         $accountStartTime = microtime(true);
         $timings = [];
@@ -217,12 +222,9 @@ class BatchSyncTradesJob implements ShouldQueue
         }
 
         try {
-            // Phase 2: Database Query for Existing Trades
+            // Phase 2: Cached Database Query for Existing Trades
             $phaseStart = microtime(true);
-            $existingTrades = Trade::where('account_id', $account->id)
-                ->select(['id', 'position_id', 'status', 'close_time', 'updated_at'])
-                ->get()
-                ->keyBy('position_id');
+            $existingTrades = $cacheService->getAccountTrades($account);
             $timings['db_existing_trades'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             $login = $account->code;
@@ -528,9 +530,15 @@ class BatchSyncTradesJob implements ShouldQueue
             $timings['final_batch'] = round((microtime(true) - $phaseStart) * 1000, 2);
             $timings['total_batch_processing'] = $batchProcessingTime + $timings['final_batch'];
 
-            // Phase 10: Update Account Status
+            // Phase 10: Update Account Status & Cache Invalidation
             $phaseStart = microtime(true);
             $this->updateSyncStatus($account, 'success', $savedCount);
+
+            // Invalidate cache since we've updated trades
+            if ($savedCount > 0) {
+                $cacheService->invalidateAccount($account);
+            }
+
             $timings['status_update'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             // Final Performance Summary
@@ -759,7 +767,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'], // composite unique identifier
-                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'updated_at'] // essential columns including volume
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'updated_at'] // essential columns including volume and type
                 );
                 $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
                 Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
