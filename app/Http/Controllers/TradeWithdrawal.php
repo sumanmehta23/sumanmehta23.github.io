@@ -12,7 +12,6 @@ use App\Models\TotalBalance;
 use App\Models\WalletDeposit;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\MT5\MTEnDealAction;
 use App\Helpers\AccountHelper;
@@ -20,30 +19,51 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
 use App\Models\ClientWallet;
 use App\Services\MailService as MailService;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 
 class TradeWithdrawal extends Controller
 {
     protected $api;
     protected $settings;
     protected $mailService;
+    protected $mt5Service;
 
-    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(MailService $mailService)
     {
         $this->settings = settings();
-        $this->api = $api;
         $this->mailService = $mailService;
-        $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $email = session('clogin');
-        AccountHelper::updateLiveAndDemoAccounts($email, $api);
+        // MT5 service will be initialized on demand to avoid startup hangs
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+        // Note: AccountHelper calls moved to individual methods to avoid startup issues
     }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in TradeWithdrawal');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
+    }
+
     public function index(Request $request)
     {
         $account_id = $request['account_id'];
         $email = auth()->user()->email;
         $user = auth()->user();
-        AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
+
+        // Ensure MT5 connection before using AccountHelper
+        if ($this->ensureMT5Connection()) {
+            AccountHelper::updateLiveAndDemoAccounts($user->id, $this->api);
+        } else {
+            Log::warning('MT5 connection failed in TradeWithdrawal index method');
+        }
         // $liveaccount_details = Account::with('accountType','BonusTransaction')
         //     ->where('user_id', $user->id)
         //     ->where('demo', false)
@@ -78,6 +98,10 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'deposit:' . (auth()->id() ?: $request->ip());
 
@@ -91,15 +115,6 @@ class TradeWithdrawal extends Controller
         // Increment the rate limiter
         RateLimiter::hit($key, 10); // Lock for 10 seconds
         // TODO: 'Implement Policy to check ownership of the account';
-        $settings = settings();
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
         $user_id = auth()->user()->id;
         $user_email = auth()->user()->email;
         $user_fullname = auth()->user()->fullname;
@@ -177,7 +192,7 @@ class TradeWithdrawal extends Controller
         // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
 
         // Check for sufficient balance
-        if ((float) ($amount) > (((float) $account->balance-(float)$total_bonus))) {
+        if ((float) ($amount) > (((float) $account->balance - (float)$total_bonus))) {
             return redirect()->back()->with('error', 'Insufficient balance');
         }
         if ((float)$amount > (float) $account->balance) {
@@ -289,7 +304,7 @@ class TradeWithdrawal extends Controller
                 $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
                 Log::alert("tradedeposits " . $tradedeposits);
                 $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
-                    ->where('status','!=',3)
+                    ->where('status', '!=', 3)
                     ->sum(function ($item) {
                         return $item->withdrawal_amount + $item->transaction_fee;
                     });
@@ -314,9 +329,9 @@ class TradeWithdrawal extends Controller
                 // }
 
 
-                if($mt5account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue){
+                if ($mt5account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue) {
                     $totaldeductableamount = $amount_to_deduct = $amount - ($account->balance - $totalBonusDepositValue);
-                }elseif($mt5account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue){
+                } elseif ($mt5account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue) {
                     $totaldeductableamount = $amount_to_deduct = $amount;
                 }
 
@@ -363,11 +378,9 @@ class TradeWithdrawal extends Controller
                         if ($depositamountofbonusleft >= $threshold) {
                             $promo_deduction = ($threshold * ($promo_percentage_value / 100));
                             $deductedamounts += $threshold;
-                        }
-                        elseif($mt5account->Balance > $oldThreshold){
+                        } elseif ($mt5account->Balance > $oldThreshold) {
                             break;
-                        }
-                         else {
+                        } else {
                             $promo_deduction = ($depositamountofbonusleft * ($promo_percentage_value / 100));
                             $amount_to_deduct = $threshold - $depositamountofbonusleft;
                             $deductedamounts += $depositamountofbonusleft;
@@ -499,14 +512,14 @@ class TradeWithdrawal extends Controller
 
                 $toEmail = $user_email;
                 $type = 'Withdrawal Details Verification';
-                $from = $settings['email_from_address'];
-                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                $from = $this->settings['email_from_address'];
+                $emailSubject = $this->settings['admin_title'] . ' - ' . $type;
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $headers .= 'From:' . $this->settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
                 $content =
-                    '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                    '<p>Welcome to ' . htmlspecialchars($this->settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
                     '<p></p>' .
                     '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</p>' .
                     '<p></p>' .
@@ -514,8 +527,8 @@ class TradeWithdrawal extends Controller
 
                 $templateVars = [
                     'name' => $user_fullname,
-                    'server_name' => $settings['mt5_company_name'],
-                    'site_link' => $settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
+                    'server_name' => $this->settings['mt5_company_name'],
+                    'site_link' => $this->settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
                     'email' => $from,
                     "content" => $content,
                     "title_right" => "Activate",
@@ -591,7 +604,6 @@ class TradeWithdrawal extends Controller
                 $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
                 // return redirect()->route('transactions')->with('status', 'Your withdrawal request has been successfully verified.');
                 return redirect()->route('transactions', ['tab' => 'withdrawals'])->with('status', 'Your withdrawal request has been successfully verified.');
-
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Account Withdrawal is already Verified');
             }

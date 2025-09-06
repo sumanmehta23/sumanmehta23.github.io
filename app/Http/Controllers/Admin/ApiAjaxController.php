@@ -15,17 +15,35 @@ use App\Models\User;
 use DB;
 use Exception;
 use Illuminate\Support\Facades\Validator;
-use App\MT5\MTWebAPI;
+use App\Services\UniversalMT5Service;
+use Illuminate\Support\Facades\Log;
+use App\MT5\MTRetCode;
 
 // use Illuminate\Support\Facades\Hash;
 
 class ApiAjaxController extends Controller
 {
-     protected $api;
+    protected $api;
+    protected $mt5Service;
 
-    public function __construct(MTWebAPI $api)
+    public function __construct()
     {
-        $this->api = $api;
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in ApiAjaxController');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
     public function handleRequest(Request $request)
     {
@@ -157,22 +175,22 @@ class ApiAjaxController extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => auth()->guard('admin')->user()->email,
-                'userRole' =>auth()->guard('admin')->user()->userRole,
-                'username' =>auth()->guard('admin')->user()->username,
-                'user_id' =>auth()->guard('admin')->user()->id,
+                'userRole' => auth()->guard('admin')->user()->userRole,
+                'username' => auth()->guard('admin')->user()->username,
+                'user_id' => auth()->guard('admin')->user()->id,
                 'ib_cat_name' => $request->ib_cat_name,
                 'ib_cat_desc' => $request->ib_cat_desc,
                 'is_active' => $request->is_active,
                 'remark' => 'IB Plan Create'
             ])
-        ->event('create')
-        ->log('IB Plan Create');
+            ->event('create')
+            ->log('IB Plan Create');
 
         return response()->json($ibPlan ? 'true' : 'false');
     }
     private function updateIbPlan($request)
     {
-        $ibPlan = IbCategory::where('id',$request->id)->update([
+        $ibPlan = IbCategory::where('id', $request->id)->update([
             'ib_cat_name' => $request->ib_cat_name,
             'ib_cat_desc' => $request->ib_cat_desc,
             'is_active' => $request->is_active
@@ -182,16 +200,16 @@ class ApiAjaxController extends Controller
             ->withProperties([
                 'ip' => request()->ip(),
                 'user_email' => auth()->guard('admin')->user()->email,
-                'userRole' =>auth()->guard('admin')->user()->userRole,
-                'username' =>auth()->guard('admin')->user()->username,
-                'user_id' =>auth()->guard('admin')->user()->id,
+                'userRole' => auth()->guard('admin')->user()->userRole,
+                'username' => auth()->guard('admin')->user()->username,
+                'user_id' => auth()->guard('admin')->user()->id,
                 'ib_cat_name' => $request->ib_cat_name,
                 'ib_cat_desc' => $request->ib_cat_desc,
                 'is_active' => $request->is_active,
                 'remark' => 'IB Plan Update'
             ])
-        ->event('update')
-        ->log('IB Plan Update');
+            ->event('update')
+            ->log('IB Plan Update');
         return response()->json($ibPlan ? 'true' : 'false');
     }
 
@@ -224,6 +242,13 @@ class ApiAjaxController extends Controller
     private function createGroup($request)
     {
         try {
+            if (!$this->ensureMT5Connection()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'MT5 connection failed'
+                ], 500);
+            }
+
             DB::beginTransaction();
 
             $userGroup = DB::table('mt5_groups')

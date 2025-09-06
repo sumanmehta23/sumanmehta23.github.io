@@ -6,7 +6,6 @@ use DB;
 use App\Models\Ib1;
 use App\Models\Role;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\Models\IbPlan;
 use App\Models\KycLog;
 use App\MT5\MTRetCode;
@@ -24,8 +23,9 @@ use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\IbPlanDetails;
 use App\Models\WalletDeposit;
 use App\Services\MailService;
@@ -44,13 +44,27 @@ class ClientController extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MailService $mailService, MT5Service $mt5Service, MTWebAPI $api)
+
+    public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
         // Gate::validate('view-client');
-        $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in ClientController');
+            return false;
+        }
+
         $this->api = $this->mt5Service->getApi();
+        return true;
     }
     public function index()
     {
@@ -587,7 +601,7 @@ class ClientController extends Controller
         $countries = Country::all();
         $acc_groups = IbPlanDetails::with('plan')
             ->where('status', 1)
-            ->where('deleted_at',null)
+            ->where('deleted_at', null)
             ->groupBy('ib_category_id')
             ->get();
 
@@ -623,21 +637,29 @@ class ClientController extends Controller
 
         $IbTotalDeposits = $user->IbTotalDeposits;
 
-        foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
-            $login = $liveAccount->code;
-            // dd($login);
-            if ($user->ib1) {
-                $ibdata = Ib1::where('referral_code', $user->ib1)->first();
-                if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
-                    // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
-                }
-                if ($trade_user) {
-                    $trade_user->Agent = $ibdata->indexId ?? '';
+        // Ensure MT5 connection before using MT5 API
+        if (!$this->ensureMT5Connection()) {
+            Log::warning('MT5 connection failed in clientDetails method');
+            // Continue without MT5 operations
+        } else {
+            foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
+                $login = $liveAccount->code;
+                // dd($login);
+                if ($user->ib1) {
+                    $ibdata = Ib1::where('referral_code', $user->ib1)->first();
+                    $trade_user = '';
+                    if (($error_code = $this->api->UserGet($login, $trade_user)) != MTRetCode::MT_RET_OK) {
+                        // return redirect()->back()->with('error', 'Something went wrong on Updating details' . MTRetCode::GetError($error_code));
+                    }
+                    if ($trade_user) {
+                        $trade_user->Agent = $ibdata->indexId ?? '';
 
-                    $error_code = $this->api->UserUpdate($trade_user, $updated_user);
-                    // if ($error_code != MTRetCode::MT_RET_OK) {
-                    //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
-                    // }
+                        $updated_user = '';
+                        $error_code = $this->api->UserUpdate($trade_user, $updated_user);
+                        // if ($error_code != MTRetCode::MT_RET_OK) {
+                        //     return redirect()->back()->with("error", "Something went wrong on Updating details" . MTRetCode::GetError($error_code));
+                        // }
+                    }
                 }
             }
         }

@@ -6,7 +6,6 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
@@ -18,7 +17,7 @@ use App\MT5\MTEnDealAction;
 use Illuminate\Support\Str;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
@@ -34,11 +33,10 @@ class Ib extends Controller
 {
     protected $mt5Service;
     protected $api;
-    public function __construct(MT5Service $mt5Service)
+    public function __construct(UniversalMT5Service $mt5Service)
     {
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
     public function index()
     {
@@ -107,7 +105,6 @@ class Ib extends Controller
                     'emailToken' => $code,
                     'status' => $ibStatus,
                 ]);
-
             } else if ($settingsdata->value == 'manually') {
                 // Create IB with pending status
                 $ib = Ib1::create([
@@ -160,7 +157,6 @@ class Ib extends Controller
                     'message' => 'IB request submitted successfully and is pending approval.'
                 ]);
             }
-
         } catch (\Exception $e) {
             return response()->json(['status' => 'false', 'message' => $e->getMessage()]);
         }

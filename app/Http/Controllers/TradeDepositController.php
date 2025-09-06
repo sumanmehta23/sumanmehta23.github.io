@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\LiveAccount;
@@ -21,17 +20,41 @@ use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\PaymentLog;
 use Illuminate\Support\Facades\Http;
+use App\Services\UniversalMT5Service;
+use Illuminate\Support\Facades\Log;
 
 class TradeDepositController extends Controller
 {
     protected $api;
     protected $settings;
+    protected $mt5Service;
 
-    public function __construct(MTWebAPI $api)
+    public function __construct()
     {
         $this->settings = settings();
-        $this->api = $api;
+        // MT5 service will be initialized on demand to avoid startup hangs
     }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
+    }
+
     public function index()
     {
         $email = auth()->user()->email;
@@ -69,22 +92,18 @@ class TradeDepositController extends Controller
         $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status', [2, 3])->sum('withdraw_transaction_fee');
         $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
         // return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
-        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'wallet_balance','user'));
+        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'wallet_balance', 'user'));
     }
 
     public function sync_amount(Request $request)
     {
         set_time_limit(6000);
-        $settings = settings();
+
+        if (!$this->ensureMT5Connection()) {
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
+
         $results = [];
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
         $emails = [];
         $amounts = [];
 
@@ -107,14 +126,15 @@ class TradeDepositController extends Controller
 
                 foreach ($accounts as $account) {
                     $login = $account->code;
+                    $mt5account = null;
 
-                    $error_code = $this->api->UserAccountGet($login, $mt5account);
+                    $error_code = $this->mt5Service->userAccountGet($login, $mt5account);
                     if ($error_code != MTRetCode::MT_RET_OK) {
                         session()->flash('error', 'MT5 ' . $login . ': ' . MTRetCode::GetError($error_code));
                         continue;
                     }
 
-                    if ($mt5account->Balance >= 0) {
+                    if ($mt5account && $mt5account->Balance >= 0) {
                         $accounts_code[] = $account->code;
                         $foundValidAccount = true;
                         break; // Stop checking other accounts once a valid one is found
@@ -172,7 +192,7 @@ class TradeDepositController extends Controller
                     )
                     ->event('create')
                     ->log('Account Deposit');
-                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+                $errorCode = $this->mt5Service->tradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
                     $error = MTRetCode::GetError($errorCode);
@@ -230,16 +250,9 @@ class TradeDepositController extends Controller
     {
         // Check the values coming from the route
 
-        $settings = settings();
-
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        if (!$this->ensureMT5Connection()) {
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
 
         $user = User::findOrFail($user_id);
         $depositamount = $amount;
@@ -266,7 +279,7 @@ class TradeDepositController extends Controller
             )
             ->event('create')
             ->log('Account Deposit');
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+        $errorCode = $this->mt5Service->tradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
@@ -358,7 +371,7 @@ class TradeDepositController extends Controller
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'ccPayissa' . $paymentLog->id;
                 $currency = 'USD';
-                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id,$promocode);
+                $payment = $this->createCCPayment($trading_deposited1, $currency, $orderId, $paymentLog->id, $promocode);
                 if ($payment) {
                     return redirect($payment['invoice_url']);
                 } else {
@@ -376,7 +389,7 @@ class TradeDepositController extends Controller
                 $paymentLog = PaymentLog::create($data);
                 $orderId = 'nowPay' . $paymentLog->id;
                 $currency = 'USD';
-                $payment = $this->createPayment($trading_deposited1, $currency, $orderId, $paymentLog->payment_id,$promocode);
+                $payment = $this->createPayment($trading_deposited1, $currency, $orderId, $paymentLog->payment_id, $promocode);
                 if ($payment) {
                     return redirect($payment['invoice_url']);
                 } else {
@@ -509,7 +522,7 @@ class TradeDepositController extends Controller
     }
 
 
-    private function createCCPayment($amount, $currency, $orderId, $paymentId,$promocode)
+    private function createCCPayment($amount, $currency, $orderId, $paymentId, $promocode)
     {
         $user = auth()->user();
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
@@ -535,7 +548,7 @@ class TradeDepositController extends Controller
         }
         return null;
     }
-    private function createPayment($amount, $currency, $orderId, $paymentId,$promocode)
+    private function createPayment($amount, $currency, $orderId, $paymentId, $promocode)
     {
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";

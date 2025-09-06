@@ -8,12 +8,12 @@ use App\Models\Ib1;
 use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\UniversalMT5Service;
+use App\Services\QueueSafeMT5Service;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Jobs\DistributeIbCommissionJob;
@@ -62,13 +62,10 @@ class SyncAccountTradesJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $this->mt5Service = app(UniversalMT5Service::class);
+            $this->mt5Service = app(QueueSafeMT5Service::class);
 
-            // Connect to MT5 server
-            if (!$this->mt5Service->dealerConnect()) {
-                Log::error("SyncAccountTradesJob: Failed to connect to MT5 server");
-                throw new Exception("Failed to connect to MT5 server");
-            }
+            // The QueueSafeMT5Service handles connection management internally
+            Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
 
             // Process each account
             foreach ($this->accountIds as $accountId) {
@@ -124,13 +121,16 @@ class SyncAccountTradesJob implements ShouldQueue
             });
 
             while ($offset < $total && $attempts < $maxTries) {
-                // Get trade history using universal service
-                $orders = $this->mt5Service->getTradeHistory($login, strtotime($from), strtotime($to));
+                // Get trade history using queue-safe service
+                $historyResult = $this->mt5Service->getTradeHistorySafe($login, strtotime($from), strtotime($to));
 
-                if (!$orders) {
+                if (!$historyResult || !isset($historyResult['deals'])) {
                     Log::error('MT5 ' . $login . ': Failed to get trade history');
                     break;
                 }
+
+                $orders = $historyResult['deals'];
+                $total = $historyResult['total'] ?? count($orders);
 
                 if ($orders) {
                     $ibcommissions = [];

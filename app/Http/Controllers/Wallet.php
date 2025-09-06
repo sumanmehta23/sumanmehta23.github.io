@@ -14,7 +14,7 @@ use App\MT5\MTEnDealAction;
 use App\Models\ClientWallet;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
@@ -43,18 +43,14 @@ class Wallet extends Controller
     protected $settings;
     protected $paymentController;
     protected $mailService;
-
-    protected $api;
     protected $mt5Service;
 
-    public function __construct(Payment $paymentController, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(Payment $paymentController, MailService $mailService, UniversalMT5Service $mt5Service)
     {
         $this->settings = settings();
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
     }
     public function alldeposits()
     {
@@ -127,30 +123,14 @@ class Wallet extends Controller
 
     public function transaction_deposit_manually(Request $request, $trx_id, $amount, $code, $deposit_type)
     {
-
-        $settings = settings();
-
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
-
-
-
         $account = Account::where('code', $code)->firstOrFail();
         if (!$account) {
             return response()->json(['error' => 'Account not found'], 404);
         }
 
-
         $user = User::findOrFail($account->user_id);
         $depositamount = $amount;
         $email = $user->email;
-
 
         $deposit_type = $deposit_type;
         $deposit_from = NULL;
@@ -160,7 +140,8 @@ class Wallet extends Controller
 
         $depositProofPath = null;
 
-        $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, $margin_check = true);
+        // Use UniversalMT5Service instead of direct API calls
+        $errorCode = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $depositamount, $comment, $ticket, true);
 
         if ($errorCode != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode);
@@ -984,7 +965,7 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
-        try{
+        try {
             // Get signature and callback_id fields from provided data
             $signature = $payload['signature'] ?? null;
             $callback_id = $payload['callback_id'] ?? null;
@@ -1083,16 +1064,6 @@ class Wallet extends Controller
                         return response()->json(['status' => 'Transaction Id already deposited']);
                     }
 
-                    $settings = settings();
-                    $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                    $this->api->Connect(
-                        $settings['mt5_server_ip'],
-                        $settings['mt5_server_port'],
-                        300,
-                        $settings['mt5_server_web_login'],
-                        $settings['mt5_server_web_password']
-                    );
-
                     $account = Account::where('id', $customerAccountID)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
                         $query->where('status', 1);
                     }])->first();
@@ -1148,7 +1119,7 @@ class Wallet extends Controller
                             }
 
                             $ticket1 = NULL;
-                            $errorCode1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
+                            $errorCode1 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $leverageBonus, '10x Trader Leverage', $ticket1, true);
                             if ($errorCode1 !== MTRetCode::MT_RET_OK) {
                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
                                 DB::rollBack();
@@ -1173,7 +1144,7 @@ class Wallet extends Controller
                         // Main deposit to MT5
                         $ticket2 = NULL;
                         $comment = 'Deposit';
-                        $errorCode2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
+                        $errorCode2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
 
                         if ($errorCode2 != MTRetCode::MT_RET_OK) {
                             DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
@@ -1184,7 +1155,7 @@ class Wallet extends Controller
                                 'message' => 'MT5 deposit failed',
                                 'error' => MTRetCode::GetError($errorCode2),
                             ], 200);
-                        }else{
+                        } else {
                             try {
                                 // Update deposit status to success only after MT5 operations succeed
                                 $tradeDeposit->update(['status' => 1]);
@@ -1193,7 +1164,7 @@ class Wallet extends Controller
                                 $bonus_amount = 0;
                                 if ($promocode && $promocode != '') {
                                     $promo = Promocode::where('code', $promocode)->first();
-                                    if($promo){
+                                    if ($promo) {
                                         $min_depsoit = $promo->min_deposit;
                                         if ($promo && $amount >= $min_depsoit) {
                                             $ticket = NULL;
@@ -1203,7 +1174,7 @@ class Wallet extends Controller
                                                 $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                                             }
 
-                                            $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
+                                            $errorCode = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
                                             if ($errorCode !== MTRetCode::MT_RET_OK) {
                                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
                                                 DB::rollBack();
@@ -1213,21 +1184,24 @@ class Wallet extends Controller
 
                                             // Updating leverage
                                             $trade_user = NULL;
-                                            $this->api->UserGet($account->code, $trade_user);
+                                            $this->mt5Service->userGet($account->code, $trade_user);
 
-                                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                                 Log::error("Updating leverage failed for account {$account->code}: " . MTRetCode::GetError($error_code));
                                                 // return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                             }
-                                            Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
-                                            $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
-                                            $trade_user->Leverage = $leverage;
+                                            if ($trade_user) {
+                                                Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
-                                            $updated_user = "";
-                                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                                Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
-                                                // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                                $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
+                                                $trade_user->Leverage = $leverage;
+
+                                                $updated_user = "";
+                                                if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                                    Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
+                                                    // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                                }
                                             }
                                             // Updating leverage
 
@@ -1277,11 +1251,12 @@ class Wallet extends Controller
                                 $ticket4 = NULL;
                                 $amount = abs((float)$amount) * -1;
                                 $comment = 'CryptoChillDeposit - Error';
-                                $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket4, $margin_check = true);
-
+                                $ticket4 = NULL;
+                                $amount = abs((float)$amount) * -1;
+                                $comment = 'CryptoChillDeposit - Error';
+                                $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket4, true);
                             }
                         }
-
                     } catch (Exception $e) {
                         // Ensure lock is released in case of any exception
                         try {
@@ -1310,7 +1285,7 @@ class Wallet extends Controller
                     return response()->json(['status' => 'Transaction completed.']);
                 }
             }
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             Log::channel("cryptochillcallback")->error('Error processing callback: ' . $e->getMessage());
             //log stack trace
             Log::channel("cryptochillcallback")->error($e->getTraceAsString());

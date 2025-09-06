@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
@@ -42,7 +42,7 @@ class SyncAllAccountsTradesJob implements ShouldQueue
         $this->backoff = [$baseDelay, $baseDelay * 3, $baseDelay * 6];
     }
 
-    public function handle(MT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service)
     {
         try {
             // Add random delay to prevent simultaneous connections (configurable)
@@ -189,14 +189,9 @@ class SyncAllAccountsTradesJob implements ShouldQueue
             if ($attempt < $this->maxRetries) {
                 Log::warning("MT5 operation attempt {$attempt} failed: " . MTRetCode::GetError($error_code) . ". Retrying...");
                 sleep($this->retryDelay);
-
-                // Reconnect if needed
-                if (!$mt5Service->getApi()->IsConnected()) {
-                    $mt5Service->connect();
-                }
+                // No direct reconnect, UniversalMT5Service handles pooling
             }
         } while ($attempt < $this->maxRetries);
-
         return $error_code;
     }
 
@@ -269,60 +264,11 @@ class SyncAllAccountsTradesJob implements ShouldQueue
     /**
      * Connect to MT5 with retry logic and rate limiting
      */
-    protected function connectWithRetry(MT5Service $mt5Service)
+    protected function connectWithRetry(UniversalMT5Service $mt5Service)
     {
-        $maxAttempts = 3;
-        $attempt = 0;
-
-        while ($attempt < $maxAttempts) {
-            try {
-                $attempt++;
-
-                // Add exponential backoff for retry attempts
-                if ($attempt > 1) {
-                    $delay = pow(2, $attempt - 1) * 2; // 2, 4, 8 seconds
-                    Log::info("MT5 connection attempt {$attempt}, waiting {$delay}s");
-                    sleep($delay);
-                }
-
-                $mt5Service->connect();
-                $api = $mt5Service->getApi();
-                $settings = settings();
-
-                $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-
-                // Verify and establish connection with longer timeout
-                if (!$api->IsConnected()) {
-                    $error_code = $api->Connect(
-                        $settings['mt5_server_ip'],
-                        $settings['mt5_server_port'],
-                        config('sync-all-trades.connection_timeout', 300), // Use configurable timeout
-                        $settings['mt5_server_web_login'],
-                        $settings['mt5_server_web_password']
-                    );
-
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        $errorMsg = MTRetCode::GetError($error_code);
-                        Log::warning("MT5 connection attempt {$attempt} failed for account {$this->account->code}: {$errorMsg}");
-
-                        if ($attempt >= $maxAttempts) {
-                            Log::error("MT5 connection failed after {$maxAttempts} attempts for account {$this->account->code}");
-                            throw new \Exception("MT5 connection failed: {$errorMsg}");
-                        }
-                        continue;
-                    }
-                }
-
-                Log::info("MT5 connection successful for account {$this->account->code} on attempt {$attempt}");
-                return; // Success
-
-            } catch (\Exception $e) {
-                Log::warning("MT5 connection attempt {$attempt} exception for account {$this->account->code}: " . $e->getMessage());
-
-                if ($attempt >= $maxAttempts) {
-                    throw $e;
-                }
-            }
+        // UniversalMT5Service handles connection pooling and retries
+        if (!$mt5Service->connect()) {
+            throw new \Exception("Failed to connect to MT5 after retries");
         }
     }
 }

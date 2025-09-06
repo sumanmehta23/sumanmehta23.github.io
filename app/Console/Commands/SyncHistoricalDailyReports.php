@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use App\Models\Account;
 use App\Models\DailyReport;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\MT5\MTEnDealAction;
@@ -17,7 +17,7 @@ class SyncHistoricalDailyReports extends Command
 
     protected $mt5Service;
 
-    public function __construct(MT5Service $mt5Service)
+    public function __construct(UniversalMT5Service $mt5Service)
     {
         parent::__construct();
         $this->mt5Service = $mt5Service;
@@ -25,6 +25,13 @@ class SyncHistoricalDailyReports extends Command
 
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
         $days = $this->option('days');
         $this->info("Starting historical daily reports sync for the last {$days} days...");
 

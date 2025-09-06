@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnDealAction;
 use App\Models\TradeDeposit;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
@@ -29,31 +29,54 @@ class Transactions extends Controller
     protected $mailService;
     protected $api;
     protected $settings;
-    public function __construct(MailService $mailService,MTWebAPI $api)
+    protected $mt5Service;
+
+    public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
         $this->settings = settings();
-        $this->api = $api;
+        // MT5 service will be initialized on demand to avoid startup hangs
     }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
+    }
+
     public function index()
     {
 
         $email = Auth::user()->email;
 
         $deposit_history1 = WalletDeposit::where('user_id',  Auth::user()->id)
-            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
         $deposit_history2 = TradeDeposit::where('user_id',  Auth::user()->id)
-            ->whereIn('deposit_type', ['CryptoChill','CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->orderBy('id', 'desc')
             ->get();
 
         $deposit_history = $deposit_history1->merge($deposit_history2)
             ->values(); // reset the keys
 
-            // dd($wallet_deposit_history);
+        // dd($wallet_deposit_history);
         // Fetching withdrawal history
 
         $withdrawal_history1 = WalletWithdraw::where('email', $email)
@@ -74,15 +97,15 @@ class Transactions extends Controller
         // Fetching internal transfers
 
         $internal_transfer = InternalTransfer::where('email', $email)
-            ->with('accountTo','accountFrom')
-            ->whereIn('type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM','IB Withdraw'])
+            ->with('accountTo', 'accountFrom')
+            ->whereIn('type', ['Internal Transfer', 'Wallet Withdrawal', 'Wallet Transfer', 'CRM', 'IB Withdraw'])
             ->where('status', 1)
             ->orderBy('date', 'desc')
             ->get();
         // dd($internal_transfer);
         // $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','withdraw_to','account_id')
-            //     ->where('user_id', Auth::user()->id)
+        //     ->where('user_id', Auth::user()->id)
         //     ->get()
         //     ->map(function ($withdrawal) {
         //         // if($withdrawal->withdraw_to){
@@ -153,6 +176,10 @@ class Transactions extends Controller
     }
     public function updateTransaction(Request $request)
     {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'cancel_withdrawal:' . (auth()->id() ?: $request->ip());
 
@@ -174,7 +201,7 @@ class Transactions extends Controller
                 'email' => 'required|email',
                 'amount' => 'required|numeric',
             ]);
-        }elseif($status == '1'){
+        } elseif ($status == '1') {
             $validatedData = $request->validate([
                 'status' => 'required|integer',
                 'email' => 'required|email',
@@ -198,7 +225,7 @@ class Transactions extends Controller
             }
 
             // Check if already processed to prevent double execution
-            if($transaction->status == 1 || $transaction->status == 3){
+            if ($transaction->status == 1 || $transaction->status == 3) {
                 DB::rollBack();
                 return redirect()->back()->with('status', 'Your transaction is already processed.');
             }
@@ -210,7 +237,7 @@ class Transactions extends Controller
             $transaction->save();
 
             // Process API call within the same transaction for status 3
-            if($status == 3){
+            if ($status == 3) {
                 activity()->causedBy(Auth::user()->id)
                     ->withProperties([
                         'ip' => $request->ip(),
@@ -220,36 +247,27 @@ class Transactions extends Controller
                         'status' => $status,
                         'remark' => 'Wallet Withdraw Cancel By Client'
                     ])
-                ->event('delete')
-                ->log('Wallet Withdraw Cancel');
+                    ->event('delete')
+                    ->log('Wallet Withdraw Cancel');
 
                 $comment = "Deposit";
                 $ticket = NULL;
-                $settings = settings();
 
-                $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                $this->api->Connect(
-                    $settings['mt5_server_ip'],
-                    $settings['mt5_server_port'],
-                    300,
-                    $settings['mt5_server_web_login'],
-                    $settings['mt5_server_web_password']
-                );
-
+                // Connection handled by ensureMT5Connection() called at method start
                 $errorCode = $this->api->TradeBalance($transaction->code, $typed = MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, $margin_check = true);
 
                 // Process bonus deduction logic
                 $bonus = BonusTransaction::where('account_id', $transaction->account_id)
-                        ->where(function ($query) {
-                            $query->where('bonus_type', 'Bonus In')
-                                ->orWhere('bonus_type', 'Bonus Out');
-                        })
-                        ->where('admin_remark', 'LIKE', '%Promo Bonus%')
-                        ->selectRaw("
+                    ->where(function ($query) {
+                        $query->where('bonus_type', 'Bonus In')
+                            ->orWhere('bonus_type', 'Bonus Out');
+                    })
+                    ->where('admin_remark', 'LIKE', '%Promo Bonus%')
+                    ->selectRaw("
                             SUM(bonus_amount) as total_promo_bonus_amount,
                             SUM(bonus_used) as total_promo_bonus_used
                         ")
-                        ->first();
+                    ->first();
 
                 $total_promo_bonus = $bonus->total_promo_bonus_amount;
                 $total_promo_bonus_used = $bonus->total_promo_bonus_used;
@@ -262,7 +280,7 @@ class Transactions extends Controller
                     $account = Account::where('id', $transaction->account_id)->first();
 
                     if (($error_codes = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Addition', $tickets, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_codes));
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_codes));
                     }
 
 
@@ -329,9 +347,9 @@ class Transactions extends Controller
                     $content = '<p>We are pleased to inform you that your withdraw request has been successfully cancelled.</p>
                                 <p>The cancelled amount has been credited back to your wallet.</p>
                                 <p>Transaction Details</p>
-                                <p>Withdrawal Cancelled Amount: '.$depositAmount.'</p>
-                                <p>Transaction ID: '.$did.'</p>
-                                <p>Withdrawal Date: '.$transaction->withdraw_date.'</p>
+                                <p>Withdrawal Cancelled Amount: ' . $depositAmount . '</p>
+                                <p>Transaction ID: ' . $did . '</p>
+                                <p>Withdrawal Date: ' . $transaction->withdraw_date . '</p>
                                 <p>Withdrawal Type: Wallet Withdrawal</p>';
 
                     $templateVars = [
@@ -349,7 +367,6 @@ class Transactions extends Controller
 
             DB::commit();
             return redirect()->back()->with('status', 'Transaction Cancelled Successfully');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Transaction update failed', [

@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
@@ -57,7 +57,7 @@ class OptimizedSyncTradesJob implements ShouldQueue
         $this->backoff = [$baseDelay, $baseDelay * 2];
     }
 
-    public function handle(MT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service)
     {
         try {
             // Smaller random delay for optimized version
@@ -307,56 +307,11 @@ class OptimizedSyncTradesJob implements ShouldQueue
         ]);
     }
 
-    protected function connectWithRetry(MT5Service $mt5Service)
+    protected function connectWithRetry(UniversalMT5Service $mt5Service)
     {
-        $maxAttempts = 2; // Reduced attempts for optimization
-
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            try {
-                // Shorter delay for optimized version
-                if ($attempt > 1) {
-                    $delay = $attempt * 2; // 2, 4 seconds
-                    Log::info("MT5 connection attempt {$attempt}, waiting {$delay}s");
-                    sleep($delay);
-                }
-
-                $mt5Service->connect();
-                $api = $mt5Service->getApi();
-                $settings = settings();
-
-                $api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-
-                // Quick connection check with reduced timeout
-                if (!$api->IsConnected()) {
-                    $error_code = $api->Connect(
-                        $settings['mt5_server_ip'],
-                        $settings['mt5_server_port'],
-                        120, // Reduced timeout for optimization
-                        $settings['mt5_server_web_login'],
-                        $settings['mt5_server_web_password']
-                    );
-
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        $errorMsg = MTRetCode::GetError($error_code);
-                        Log::warning("MT5 connection attempt {$attempt} failed for account {$this->account->code}: {$errorMsg}");
-
-                        if ($attempt >= $maxAttempts) {
-                            throw new \Exception("MT5 connection failed: {$errorMsg}");
-                        }
-                        continue;
-                    }
-                }
-
-                Log::info("MT5 connection successful for account {$this->account->code} on attempt {$attempt}");
-                return; // Success
-
-            } catch (\Exception $e) {
-                Log::warning("MT5 connection attempt {$attempt} exception for account {$this->account->code}: " . $e->getMessage());
-
-                if ($attempt >= $maxAttempts) {
-                    throw $e;
-                }
-            }
+        // UniversalMT5Service handles connection pooling and retries
+        if (!$mt5Service->connect()) {
+            throw new \Exception("Failed to connect to MT5 after retries");
         }
     }
 }

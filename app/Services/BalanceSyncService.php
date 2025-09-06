@@ -34,11 +34,10 @@ class BalanceSyncService
         Log::info("Starting balance sync" . ($accountCodes ? " for specific accounts: " . implode(', ', $accountCodes) : " for all eligible accounts"));
 
         try {
-            // Get MT5 connection
+            // Ensure MT5 connection is ready
             if (!$this->mt5Service->connect()) {
                 throw new \Exception("Failed to establish MT5 connection for balance sync");
             }
-            $api = $this->mt5Service->getApi();
 
             // Get accounts to sync
             $accounts = $this->getAccountsForBalanceSync($accountCodes, $forceSync);
@@ -52,7 +51,7 @@ class BalanceSyncService
 
             foreach ($accounts as $account) {
                 try {
-                    $result = $this->syncSingleAccountBalance($api, $account);
+                    $result = $this->syncSingleAccountBalance($account);
                     $results[$result]++;
                     $results['processed']++;
 
@@ -110,27 +109,21 @@ class BalanceSyncService
     /**
      * Sync balance for a single account
      */
-    private function syncSingleAccountBalance($api, Account $account): string
+    private function syncSingleAccountBalance(Account $account): string
     {
         $accountCode = $account->code;
 
-        // Get user info from MT5
-        $mt5_user = null;
-        $error_code = $api->UserGet($accountCode, $mt5_user);
+        // Use the proper service method instead of direct API calls
+        $accountData = $this->mt5Service->getAccountBalance((int)$accountCode);
 
-        if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("MT5 user not found for balance sync: {$accountCode}");
+        if (!$accountData) {
+            Log::warning("MT5 account data not found for balance sync: {$accountCode}");
             return 'not_found';
         }
 
-        // Extract balance and equity with proper null checking
-        $currentBalance = 0.0;
-        $currentEquity = 0.0;
-
-        if ($mt5_user && is_object($mt5_user)) {
-            $currentBalance = (float) ($mt5_user->Balance ?? 0);
-            $currentEquity = (float) ($mt5_user->Equity ?? 0);
-        }
+        // Extract balance and equity from the standardized response
+        $currentBalance = (float) ($accountData['balance'] ?? 0);
+        $currentEquity = (float) ($accountData['equity'] ?? 0);
 
         $previousBalance = $account->last_known_balance;
         $previousEquity = $account->last_known_equity;
@@ -146,6 +139,8 @@ class BalanceSyncService
 
         // Update account data
         $updateData = [
+            'balance' => $currentBalance,
+            'equity' => $currentEquity,
             'last_balance_sync_at' => now(),
             'last_known_balance' => $currentBalance,
             'last_known_equity' => $currentEquity

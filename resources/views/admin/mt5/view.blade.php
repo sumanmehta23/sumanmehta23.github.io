@@ -144,8 +144,8 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['balance'])) {
-                                                                        echo "$" . number_format($accountHelper['balance'], 2);
+                                                                    if (isset($account->balance)) {
+                                                                        echo "$" . number_format($account->balance, 2);
                                                                     } else {
                                                                         echo "$0.00";
                                                                     }
@@ -337,7 +337,7 @@ if ($getUser) {
                                                         {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('H:i:s') }}
                                                     </small>
                                                 </td>
-                                                <td><?= strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
+                                                <td><?php echo  strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
                                                 <td><?= $bns->bonus_amount ?></td>
                                                 <td><?= $bns->bonus_type ?></td>
                                             </tr>

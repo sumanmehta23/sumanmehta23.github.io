@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Promocode;
@@ -12,7 +11,7 @@ use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\BonusTransaction;
@@ -30,22 +29,49 @@ class Payment extends Controller
     protected $mailService;
     protected $api;
     protected $mt5Service;
-    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    protected $settings;
+
+    public function __construct(MailService $mailService)
     {
         $this->settings = settings();
         $this->mailService = $mailService;
-        $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 service will be initialized on demand to avoid startup hangs
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            // Initialize MT5 service on demand to avoid startup hangs
+            if (!$this->mt5Service) {
+                $this->mt5Service = app(UniversalMT5Service::class);
+            }
+
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
+    }
+
     public function handlePaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
+        if (!$this->ensureMT5Connection()) {
+            Log::error('Failed to connect to MT5 server in handlePaymentResponse');
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
+
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
         $address_in = $request->input('address_in');
         $responsedata = $request->all();
         $transactionId = $responsedata['txid_in'];
-        try{
+        try {
             if (!empty($address_in)) {
 
                 Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
@@ -110,15 +136,11 @@ class Payment extends Controller
                     ]);
                     $email = $paymentLog->initiated_by;
                     $amount = $responsedata['value_coin'];
-                    $settings = settings();
-                    $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-                    $this->api->Connect(
-                        $settings['mt5_server_ip'],
-                        $settings['mt5_server_port'],
-                        300,
-                        $settings['mt5_server_web_login'],
-                        $settings['mt5_server_web_password']
-                    );
+
+                    // Ensure MT5 connection is available
+                    if (!$this->ensureMT5Connection()) {
+                        return response()->json(['error' => 'MT5 connection failed'], 500);
+                    }
 
                     $account = Account::where('id', $paymentLog->account_id)->first();
 
@@ -132,7 +154,7 @@ class Payment extends Controller
                                 $bonusamount = 9 * $amount;
                             }
 
-                            if (($error_code1 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
+                            if (($error_code1 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
                             } else {
                                 $deposit_details = BonusTransaction::create([
@@ -162,7 +184,7 @@ class Payment extends Controller
                                     $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                                 }
                                 if ($promo) {
-                                    if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                                    if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
                                         return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
                                     } else {
 
@@ -181,18 +203,20 @@ class Payment extends Controller
                                         ]);
 
                                         // Updating leverage
-                                        $trade_user = NULL;
-                                        $this->api->UserGet($account->code, $trade_user);
-                                        if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                        $trade_user = null;
+                                        $this->mt5Service->userGet($account->code, $trade_user);
+                                        if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                             return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                         }
 
-                                        $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                        $trade_user->Leverage = $leverage;
+                                        if ($trade_user) {
+                                            $leverage = round($account->leverage * (100 / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                            $trade_user->Leverage = $leverage;
 
-                                        $updated_user = "";
-                                        if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                            return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                            $updated_user = "";
+                                            if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                            }
                                         }
                                         // Updating leverage
                                     }
@@ -204,7 +228,7 @@ class Payment extends Controller
                     $comment = 'CreditCardPayissa';
                     $ticket3 = NULL;
 
-                    $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
+                    $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, true);
                     if ($errorCode3 != MTRetCode::MT_RET_OK) {
                         $error = MTRetCode::GetError($errorCode3);
                         Log::channel("CreditCardPayissa")->info('Something went wrong: ' . json_encode($paymentLog));
@@ -272,7 +296,7 @@ class Payment extends Controller
                             Log::channel("creditcardpayissa")->error('Transaction failed: ' . $e->getMessage());
                             $amount = abs((float)$amount) * -1;
                             $comment = 'CreditCardPayissa - Error';
-                            $errorCode3 = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, $margin_check = true);
+                            $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, true);
                             // return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
                         }
                     }
@@ -527,7 +551,7 @@ class Payment extends Controller
                         $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                     }
                     if ($promo) {
-                        if (($error_code2 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                        if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
                             return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
                         } else {
 
@@ -547,8 +571,7 @@ class Payment extends Controller
 
                             // Updating leverage
                             $trade_user = NULL;
-                            $this->api->UserGet($account->code, $trade_user);
-                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                             }
 
@@ -556,7 +579,7 @@ class Payment extends Controller
                             $trade_user->Leverage = $leverage;
 
                             $updated_user = "";
-                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                            if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
                             }
                             // Updating leverage
@@ -568,8 +591,9 @@ class Payment extends Controller
 
         if ($account) {
             $comment = 'CreditCardPayissa';
+            $ticket = NULL;
 
-            $errorCode = $this->api->TradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
+            $errorCode = $this->mt5Service->tradeBalance($account->code, $typed = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, $margin_check = true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 $error = MTRetCode::GetError($errorCode);
                 return response()->json([

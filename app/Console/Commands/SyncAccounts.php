@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Services\MailService;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Carbon;
@@ -18,13 +18,12 @@ class SyncAccounts extends Command
     protected $mailService;
     protected $mt5Service;
 
-    public function __construct(MT5Service $mt5Service, MailService $mailService)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
         parent::__construct();
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // No direct connect here; use connection pool in handle()
     }
 
     /**
@@ -46,6 +45,19 @@ class SyncAccounts extends Command
      */
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
+        // Use connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
         Account::where('demo', 1)
             ->whereNotNull('competition_start_date')
             ->whereNotNull('competition_end_date')
@@ -57,7 +69,6 @@ class SyncAccounts extends Command
                 $settings = settings();
                 foreach ($accounts as $account) {
                     $login = $account->code; // Assuming `login` column exists
-                    // Connect to MT5 server
                     AccountHelper::getAccount($login);
                 }
             });

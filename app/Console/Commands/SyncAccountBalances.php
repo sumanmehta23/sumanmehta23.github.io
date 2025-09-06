@@ -11,8 +11,8 @@ class SyncAccountBalances extends Command
     protected $signature = 'app:sync-account-balances 
                             {--accounts= : Comma-separated list of account codes to sync}
                             {--force : Force sync even if recently synced}
-                            {--daemon : Run continuously every 20 minutes}
-                            {--interval=20 : Interval in minutes for daemon mode}';
+                            {--daemon : Run continuously}
+                            {--interval= : Interval in minutes for daemon mode (default from config)}';
 
     protected $description = 'Sync account balances and equity from MT5 for non-competition accounts';
 
@@ -29,7 +29,7 @@ class SyncAccountBalances extends Command
         $specificAccounts = $this->option('accounts');
         $forceSync = $this->option('force');
         $isDaemon = $this->option('daemon');
-        $interval = (int) $this->option('interval');
+        $interval = (int) ($this->option('interval') ?: config('sync-all-trades.balance_sync.interval_minutes', 20));
 
         if ($isDaemon) {
             $this->runAsDaemon($interval, $specificAccounts, $forceSync);

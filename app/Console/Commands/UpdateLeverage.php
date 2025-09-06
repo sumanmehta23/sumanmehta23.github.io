@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -27,11 +27,10 @@ class UpdateLeverage extends Command
      * @var string
      */
     protected $description = 'Command description';
-    function __construct(MT5Service $mt5Service)
+    function __construct(UniversalMT5Service $mt5Service)
     {
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // Defer connection until handle() method
         parent::__construct();
     }
 
@@ -40,6 +39,13 @@ class UpdateLeverage extends Command
      */
     public function handle()
     {
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
+
         $account_code = $this->argument('account_code');
         $leverage = $this->argument('leverage');
         if (($error_code = $this->api->UserGet($account_code, $trade_user)) != MTRetCode::MT_RET_OK) {

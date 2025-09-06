@@ -91,16 +91,6 @@ class AccountHelper
                 return null;
             }
             return $service;
-        } elseif ($mt5Service instanceof \App\MT5\MTWebAPI) {
-            // Legacy case - raw MTWebAPI instance, create a service wrapper
-            Log::warning("AccountHelper: Raw MTWebAPI passed, creating service wrapper");
-            $service = app(UniversalMT5Service::class);
-            $connectResult = $service->dealerConnect();
-            if ($connectResult !== \App\MT5\MTRetCode::MT_RET_OK) {
-                Log::error("AccountHelper: Failed to connect wrapper service to MT5 server");
-                return null;
-            }
-            return $service;
         } elseif ($mt5Service instanceof UniversalMT5Service) {
             // Preferred case - service instance, just ensure it's connected
             $connectResult = $mt5Service->dealerConnect();

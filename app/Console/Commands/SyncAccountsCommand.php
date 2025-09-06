@@ -12,7 +12,7 @@ use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\IbWallet;
 use Illuminate\Support\Str;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use Illuminate\Console\Command;

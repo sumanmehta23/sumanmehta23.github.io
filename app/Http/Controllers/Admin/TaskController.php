@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Task;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use Illuminate\View\View;
 use App\Models\ClientTask;
 use App\MT5\MTEnDealAction;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Services\MailService;
 use App\Helpers\AccountHelper;
@@ -17,27 +16,41 @@ use App\Models\BonusTransaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
     protected $api;
     protected $settings;
     protected $mailService;
+    protected $mt5Service;
 
-    public function __construct(MTWebAPI $api, MailService $mailService, MT5Service $mt5Service)
+    public function __construct(MailService $mailService)
     {
         $this->settings = settings();
-        $this->api = $api;
         $this->mailService = $mailService;
-        $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $email = session('clogin');
-        AccountHelper::updateLiveAndDemoAccounts($email, $api);
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
+        // Removed AccountHelper call from constructor to avoid startup hangs
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in TaskController');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
 
     public function index(): View
     {
-        $tasks = Task::where('status',1)->get();
+        $tasks = Task::where('status', 1)->get();
         return view('admin.tasks.index', compact('tasks'));
     }
 
@@ -55,7 +68,7 @@ class TaskController extends Controller
             'status' => 'required|boolean',
             'expiration_date' => 'required|date'
         ]);
-        Task::create($request->only('name', 'title', 'description', 'status', 'expiration_date','points'));
+        Task::create($request->only('name', 'title', 'description', 'status', 'expiration_date', 'points'));
 
         return redirect()->route('admin.tasks.index')->with('success', 'Task created successfully.');
     }
@@ -148,38 +161,32 @@ class TaskController extends Controller
         //     $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
         // })->first();
         $accounts = Account::where('user_id', $clientId)
-                            ->whereHas('accountType', function ($query) {
-                                $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
-                            })
-                            ->get();
+            ->whereHas('accountType', function ($query) {
+                $query->where('ac_group', '!=', 'LM\\B-Book\\10x\\DF-B');
+            })
+            ->get();
         if ($accounts->isEmpty()) {
             return redirect()->back()->with('error', 'No valid accounts found for this user.');
         }
 
-        $settings = settings();
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
         $comment = "Task Bonus";
 
         // Update its status
 
         $task->status = $status;
-        if($status == 2){
-           $task->image_path = '';
-           $task->client_verification = 0;
+        if ($status == 2) {
+            $task->image_path = '';
+            $task->client_verification = 0;
         }
 
         $task->save();
 
         // Now $task is the updated model instance
         // dd($task);
-        if($task->status==1){
+        if ($task->status == 1) {
             // if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $task->task->points, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
             //     return redirect()->back()->with('error', MTRetCode::GetError($error_code));
             // } else {

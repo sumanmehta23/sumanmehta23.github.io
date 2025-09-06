@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Ib1;
 use App\Models\User;
-use App\MT5\MTWebAPI;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
@@ -13,7 +12,7 @@ use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
-use App\Services\MT5Service;
+use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
@@ -37,15 +36,29 @@ class Leaderboard extends Controller
     protected $mt5Service;
     protected $competitionService;
     public function __construct(
-        MT5Service $mt5Service,
+        UniversalMT5Service $mt5Service,
         MailService $mailService,
         CompetitionService $competitionService
     ) {
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
-        $this->mt5Service->connect();
-        $this->api = $this->mt5Service->getApi();
+        // MT5 connection deferred - use ensureMT5Connection() in methods that need it
         $this->competitionService = $competitionService;
+    }
+
+    /**
+     * Ensure MT5 connection is established
+     */
+    private function ensureMT5Connection(): bool
+    {
+        if (!$this->api) {
+            if (!$this->mt5Service->connect()) {
+                Log::error('Failed to connect to MT5 via pool.');
+                return false;
+            }
+            $this->api = $this->mt5Service->getApi();
+        }
+        return $this->api !== null;
     }
 
     public function competiton_dashboard(Request $request)
@@ -68,17 +81,13 @@ class Leaderboard extends Controller
 
         $settings = settings();
 
-        $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        $this->api->Connect(
-            $settings['mt5_server_ip'],
-            $settings['mt5_server_port'],
-            300,
-            $settings['mt5_server_web_login'],
-            $settings['mt5_server_web_password']
-        );
+        if (!$this->ensureMT5Connection()) {
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
 
         foreach ($accounts as $account) {
-            $apiResponse = $this->api->UserAccountGet($account->code, $accountData);
+            $accountData = null;
+            $apiResponse = $this->mt5Service->userAccountGet($account->code, $accountData);
             if ($apiResponse === MTRetCode::MT_RET_OK) {
                 $account->update([
                     'balance' => $accountData->Balance,
@@ -136,7 +145,7 @@ class Leaderboard extends Controller
             ->orderBy('mt5_grp_cat_id')
             ->get();
 
-        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup','competition_group'));
+        return view('admin.create_competition', compact('mt5_groups', 'results', 'grp_books', 'activeType', 'activeGroup', 'competition_group'));
     }
     public function requested_competition()
     {
@@ -168,7 +177,7 @@ class Leaderboard extends Controller
             }
 
             if ($request->request_status == 1) {
-                $new_user = $this->api->UserCreate();
+                $new_user = $this->mt5Service->userCreate();
                 $new_user->MainPassword = $this->generatePassword();
                 $new_user->Group = $group->ac_group;
                 $new_user->type = $group->ac_name;
@@ -207,8 +216,9 @@ class Leaderboard extends Controller
                         ->event('create')
                         ->log('Create Demo Account');
                     if ($account) {
+                        $ticket = null;
 
-                        $errorCode = $this->api->TradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
+                        $errorCode = $this->mt5Service->tradeBalance($new_user->Login, $type = MTEnDealAction::DEAL_BALANCE, $validatedData['demo_deposit'], 'Deposit', $ticket, $margin_check = true);
                         if ($errorCode != MTRetCode::MT_RET_OK) {
                             // dd('sadasdsa');
                             $error = MTRetCode::GetError($errorCode);
@@ -306,21 +316,11 @@ class Leaderboard extends Controller
     {
         // dd($user);
         $settings = settings();
-        if (!$this->api->IsConnected()) {
-            $errorCode = $this->api->Connect(
-                $settings['mt5_server_ip'],
-                $settings['mt5_server_port'],
-                300,
-                $settings['mt5_server_web_login'],
-                $settings['mt5_server_web_password']
-            );
-            if ($errorCode != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($errorCode);
-                Log::error('MT5 live account connection error : ' . $error . ' for user ' . json_encode($user));
-                return ["status" => false, "message" => $error];
-            }
+        if (!$this->ensureMT5Connection()) {
+            return ["status" => false, "message" => "Failed to connect to MT5 server"];
         }
-        if (($error_code = $this->api->UserAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
+
+        if (($error_code = $this->mt5Service->userAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $this->sendMail($user, 'Demo');
             $error = MTRetCode::GetError($error_code);
 
@@ -435,14 +435,9 @@ class Leaderboard extends Controller
             // dd($competition);
             $settings = settings();
 
-            $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-            $this->api->Connect(
-                $settings['mt5_server_ip'],
-                $settings['mt5_server_port'],
-                300,
-                $settings['mt5_server_web_login'],
-                $settings['mt5_server_web_password']
-            );
+            if (!$this->ensureMT5Connection()) {
+                return response()->json(['error' => 'MT5 connection failed'], 500);
+            }
             $accounts = Account::where('demo', true)
                 ->whereNotNull('competition_start_date')
                 ->whereNotNull('competition_end_date')
@@ -450,8 +445,9 @@ class Leaderboard extends Controller
                 ->get();
 
             foreach ($accounts as $account) {
-                $apiResponse = $this->api->UserAccountGet($account->code, $accountData);
-                if ($apiResponse === MTRetCode::MT_RET_OK) {
+                $accountData = null;
+                $apiResponse = $this->mt5Service->userAccountGet($account->code, $accountData);
+                if ($apiResponse === MTRetCode::MT_RET_OK && $accountData) {
                     $account->update([
                         'balance' => $accountData->Balance,
                         'credit' => $accountData->Credit,
