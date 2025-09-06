@@ -266,6 +266,9 @@ class BatchSyncTradesJob implements ShouldQueue
                 $this->updateSyncStatus($account, 'error');
                 return 'error';
             }
+            if ($login == 394402) {
+                Log::info("Orders for account {$account->code}: " . json_encode($orders));
+            }
 
             // Phase 5: Data Processing - Orders Grouping
             $phaseStart = microtime(true);
