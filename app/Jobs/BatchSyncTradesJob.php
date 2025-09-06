@@ -403,8 +403,8 @@ class BatchSyncTradesJob implements ShouldQueue
                     $currentDealPageSize = min($requestedDealPageSize, $remainingDeals);
 
                     $dealPageStart = microtime(true);
-                    $error_code = $this->executeWithRetries(function () use ($api, $account, $fromDate, $toDate, $startIndex, $currentDealPageSize, &$pageDeals) {
-                        return $api->DealGetPage($account->code, $fromDate, $toDate, $startIndex, $currentDealPageSize, $pageDeals);
+                    $error_code = $this->executeWithRetries(function () use ($api, $account, $fromDate, $toDate, $startIndex, $currentDealPageSize, $totalDeals, &$pageDeals) {
+                        return $api->DealGetPage($account->code, $fromDate, $toDate, $startIndex, $totalDeals, $pageDeals);
                     });
                     $dealPageTime = round((microtime(true) - $dealPageStart) * 1000, 2);
                     $totalDealTime += $dealPageTime;

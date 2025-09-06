@@ -121,9 +121,17 @@ class QueueSafeMT5Service extends UniversalMT5Service
     public function getTradeHistorySafe(int $login, int $from, int $to): ?array
     {
         return $this->executeQueueOperation(function ($api) use ($login, $from, $to) {
-            $deals = null;
+            $deals = [];
             $total = 0;
-            $result = $api->DealGetPage($login, $from, $to, $deals, $total);
+
+            // First get the total number of deals
+            $error_code = $api->DealGetTotal($login, date('F d, Y', $from), date('F d, Y', $to), $total);
+            if ($error_code !== MTRetCode::MT_RET_OK) {
+                return null;
+            }
+
+            // Then get the deals with correct parameters: login, from, to, offset, total, &deals
+            $result = $api->DealGetPage($login, date('F d, Y', $from), date('F d, Y', $to), 0, $total, $deals);
 
             if ($result === MTRetCode::MT_RET_OK && $deals) {
                 return [
