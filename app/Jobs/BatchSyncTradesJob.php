@@ -272,7 +272,8 @@ class BatchSyncTradesJob implements ShouldQueue
 
             // Phase 5: Data Processing - Orders Grouping
             $phaseStart = microtime(true);
-            $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+            $ordersByPosition = collect($orders)->filter(fn($order) => $order['ExpertPositionID'] > 0)
+                ->groupBy('ExpertPositionID');
             $tradesToUpsert = [];
             $savedCount = 0;
             $timings['orders_processing'] = round((microtime(true) - $phaseStart) * 1000, 2);
