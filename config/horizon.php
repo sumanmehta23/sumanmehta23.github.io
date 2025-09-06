@@ -254,6 +254,16 @@ return [
             'tries' => 1,
             'timeout' => 300,
         ],
+        'supervisor-priority-sync' => [
+            'connection' => 'redis',
+            'queue' => ['priority-sync-trades'],
+            'balance' => 'auto',
+            'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 10),
+            'memory' => 1024,
+            'tries' => 1,
+            'timeout' => 300,
+        ],
+
 
 
 
