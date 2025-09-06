@@ -309,9 +309,8 @@ class BatchSyncTradesJob implements ShouldQueue
 
             // Phase 8: Trade Data Preparation
             $phaseStart = microtime(true);
-            // Phase 8: Trade Data Preparation
-            $phaseStart = microtime(true);
             $batchProcessingTime = 0;
+            $skippedTradesCount = 0; // Track skipped trades with invalid position_id
             foreach ($ordersByPosition as $positionId => $positionOrders) {
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
@@ -324,22 +323,34 @@ class BatchSyncTradesJob implements ShouldQueue
                     // OPEN TRADE: Insert if does not exist
                     if (!$existingTrade) {
                         $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
-                        $tradesToUpsert[] = $tradeData;
-                        $savedCount++;
+                        if ($tradeData !== null) { // Only add if valid trade data returned
+                            $tradesToUpsert[] = $tradeData;
+                            $savedCount++;
+                        } else {
+                            $skippedTradesCount++; // Track skipped invalid trades
+                        }
                     }
                 } else {
                     // CLOSED TRADE: Update if exists, otherwise insert new
                     if ($existingTrade) {
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
-                        // Set ID to perform update on the correct row
-                        $closedTradeData['id'] = $existingTrade->id;
-                        $tradesToUpsert[] = $closedTradeData;
-                        $savedCount++;
+                        if ($closedTradeData !== null) { // Only add if valid trade data returned
+                            // Set ID to perform update on the correct row
+                            $closedTradeData['id'] = $existingTrade->id;
+                            $tradesToUpsert[] = $closedTradeData;
+                            $savedCount++;
+                        } else {
+                            $skippedTradesCount++; // Track skipped invalid trades
+                        }
                     } else {
                         // No open trade exists but we have a closed trade - insert it
                         $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
-                        $tradesToUpsert[] = $closedTradeData;
-                        $savedCount++;
+                        if ($closedTradeData !== null) { // Only add if valid trade data returned
+                            $tradesToUpsert[] = $closedTradeData;
+                            $savedCount++;
+                        } else {
+                            $skippedTradesCount++; // Track skipped invalid trades
+                        }
                     }
                 }
 
@@ -377,7 +388,8 @@ class BatchSyncTradesJob implements ShouldQueue
                 "API: {$totalApiTime}ms (" . count($apiCalls) . " calls) | " .
                 "DB: {$totalDbTime}ms | " .
                 "Processing: {$timings['trade_preparation']}ms | " .
-                "Orders: {$total}, Deals: {$totalDeals}, Trades: {$savedCount} | " .
+                "Orders: {$total}, Deals: {$totalDeals}, Trades: {$savedCount}" .
+                ($skippedTradesCount > 0 ? ", Skipped: {$skippedTradesCount}" : "") . " | " .
                 "Breakdown: " . json_encode($timings) . " | " .
                 "API Calls: " . json_encode($apiCalls));
 
@@ -408,8 +420,9 @@ class BatchSyncTradesJob implements ShouldQueue
                 'account_code' => $account->code
             ]);
 
-            // Return null or throw exception to prevent trade creation
-            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
+            // Return null to skip this trade but continue with others
+            Log::warning("Skipping open trade with invalid position_id: {$positionId} for account {$account->code}");
+            return null;
         }
 
         // Log::info("account code  ".$account->code);
@@ -452,8 +465,9 @@ class BatchSyncTradesJob implements ShouldQueue
                 'account_code' => $account->code
             ]);
 
-            // Return null or throw exception to prevent trade creation
-            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
+            // Return null to skip this trade but continue with others
+            Log::warning("Skipping closed trade with invalid position_id: {$positionId} for account {$account->code}");
+            return null;
         }
 
         $multiplier = $openOrder->Type ? -1 : 1;
