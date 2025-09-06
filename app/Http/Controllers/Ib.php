@@ -25,6 +25,7 @@ use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
@@ -38,6 +39,22 @@ class Ib extends Controller
         $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
     }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in Ib');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
+    }
+
     public function index()
     {
 
@@ -315,6 +332,11 @@ class Ib extends Controller
     }
     public function processTransfer(Request $request)
     {
+        // Ensure MT5 connection is established
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+
         // Generate a unique rate-limiting key based on user or IP
         $key = 'processTransfer:' . (auth()->id() ?: $request->ip());
 
@@ -352,7 +374,7 @@ class Ib extends Controller
 
                 $comment = 'IB Comm. - Dep';
                 $ticket = null;
-                $errorCode = $this->api->TradeBalance($account->code, $type = MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
+                $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
                 activity()->causedBy(auth()->user()->id)
                     ->withProperties(
                         [
