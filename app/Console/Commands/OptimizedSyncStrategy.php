@@ -37,12 +37,6 @@ class OptimizedSyncStrategy extends Command
             ->whereNull('deleted_at')
             ->where('account_request_status', 1)
             ->where('demo', false)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            })
             ->count();
 
         // Accounts with recent activity (last 7 days)

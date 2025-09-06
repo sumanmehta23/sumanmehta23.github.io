@@ -14,7 +14,7 @@ class SyncAccountBalances extends Command
                             {--daemon : Run continuously}
                             {--interval= : Interval in minutes for daemon mode (default from config)}';
 
-    protected $description = 'Sync account balances and equity from MT5 for non-competition accounts';
+    protected $description = 'Sync account balances and equity from MT5 for  accounts';
 
     protected $balanceSyncService;
 
