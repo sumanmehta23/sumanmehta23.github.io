@@ -1,388 +1,286 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Console\Commands;
 
+use Throwable;
+use App\Models\User;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
+use Illuminate\Bus\Batch;
 use App\Services\UniversalMT5Service;
-use Illuminate\Bus\Queueable;
+use App\Services\MailService;
+use Illuminate\Support\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Bus\Batchable;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Jobs\BatchSyncTradesJob;
+use Illuminate\Support\Facades\Cache;
 
 /**
- * Optimized Sync Trades Job - Incremental Strategy
+ * Efficient Sync All Accounts Trades - Simplified Strategy
  * 
- * This job implements incremental sync to dramatically reduce MT5 API requests:
+ * This command provides a much simpler, faster, and more reliable approach:
  * 
- * OPTIMIZATIONS:
- * 1. Incremental Time Range: Only sync trades since last sync
- * 2. Smart Skip Logic: Skip if no recent activity expected
- * 3. Reduced API Calls: Combine operations where possible
- * 4. Activity Tracking: Update last_trade_at for tier management
+ * SIMPLE STRATEGY:
+ * - Process ALL accounts systematically in chunks
+ * - Use larger batches for better performance
+ * - Guarantee every account gets synced
+ * - Skip only competition accounts
  * 
- * REDUCTION: From 3+(2×positions) requests to 2-5 requests per account
+ * PERFORMANCE FEATURES:  
+ * - Large batch sizes (10-20 accounts per batch)
+ * - Higher concurrency (5-10 concurrent batches)
+ * - Efficient chunking through all accounts
+ * - Simple incremental sync timing
+ * 
+ * RELIABILITY FEATURES:
+ * - No complex tier logic to fail
+ * - Processes every account exactly once per run
+ * - Clear progress tracking
+ * - Predictable completion time
  */
-class OptimizedSyncTradesJob implements ShouldQueue
+class OptimizedSyncAllTrades extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
+    protected $signature = 'app:optimized-sync-trades 
+                            {--batch-size=15 : Number of accounts per batch}
+                            {--max-concurrent=8 : Maximum concurrent batches}
+                            {--delay=5 : Delay between batches in seconds}
+                            {--test-account= : Test with specific account code}
+                            {--daemon : Run as daemon continuously}
+                            {--status : Show sync status}
+                            {--use-batches : Use Laravel batches (adds overhead for tracking)}';
 
-    protected $account;
-    protected $fromTime;
-    protected $maxRetries = 2;
-    protected $retryDelay = 3;
+    protected $description = 'Efficient MT5 sync - processes ALL accounts reliably with high performance';
 
-    // Job configuration
-    public $timeout;
-    public $maxExceptions;
-    public $backoff;
-    public $tries;
+    protected $mt5Service;
+    protected $mailService;
 
-    public function __construct(Account $account, Carbon $fromTime)
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
-        $this->account = $account;
-        $this->fromTime = $fromTime;
-
-        // Set job configuration from config file
-        $this->timeout = config('sync-all-trades.job_timeout', 180); // Reduced timeout
-        $this->maxExceptions = config('sync-all-trades.max_exceptions', 2);
-        $this->tries = config('sync-all-trades.max_retries', 2);
-
-        $baseDelay = config('sync-all-trades.retry_delay_base', 5);
-        $this->backoff = [$baseDelay, $baseDelay * 2];
+        parent::__construct();
+        $this->mt5Service = $mt5Service;
+        $this->mailService = $mailService;
     }
 
-    public function handle(UniversalMT5Service $mt5Service)
+    public function handle()
     {
-        try {
-            // Smaller random delay for optimized version
-            $minDelay = config('sync-all-trades.random_delay_min', 1);
-            $maxDelay = config('sync-all-trades.random_delay_max', 4);
-            $randomDelay = rand($minDelay, $maxDelay);
-            sleep($randomDelay);
+        // Connect to MT5 using connection pool
+        if (!$this->mt5Service->connect()) {
+            $this->error('Failed to connect to MT5 via pool.');
+            return 1;
+        }
+        $this->api = $this->mt5Service->getApi();
 
-            Log::info("Started OptimizedSyncTradesJob for account {$this->account->code} from {$this->fromTime->format('Y-m-d H:i:s')} (delayed {$randomDelay}s)");
+        $batchSize = (int) $this->option('batch-size');
+        $maxConcurrent = (int) $this->option('max-concurrent');
+        $delay = (int) $this->option('delay');
+        $testAccount = $this->option('test-account');
+        $isDaemon = $this->option('daemon');
+        $showStatus = $this->option('status');
 
-            // Connect with optimized timeout
-            $this->connectWithRetry($mt5Service);
-            $api = $mt5Service->getApi();
-            $settings = settings();
-
-            if (!$this->account->code) {
-                Log::error("Account missing code");
-                return;
-            }
-
-            // OPTIMIZATION 1: Quick user check (1 request)
-            $mt5_user = null;
-            $error_code = $api->UserGet($this->account->code, $mt5_user);
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::warning("MT5 user not found for account {$this->account->code}: " . MTRetCode::GetError($error_code));
-                $this->updateSyncStatus('not_found');
-                return;
-            }
-
-            // OPTIMIZATION 2: Incremental time range
-            $fromDate = $this->fromTime->format('Y-m-d H:i:s');
-            $toDate = now()->format('Y-m-d H:i:s');
-
-            Log::info("Syncing incremental range for {$this->account->code}: {$fromDate} to {$toDate}");
-
-            // OPTIMIZATION 3: Get total with time filter (1 request)
-            $total = 0;
-            $error_code = $api->HistoryGetTotal($this->account->code, $fromDate, $toDate, $total);
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("MT5 HistoryGetTotal error for {$this->account->code}: " . MTRetCode::GetError($error_code));
-                $this->updateSyncStatus('error');
-                return;
-            }
-
-            // OPTIMIZATION 4: Skip if no recent orders
-            if ($total == 0) {
-                Log::info("No new orders for account {$this->account->code} since {$fromDate}");
-                $this->updateSyncStatus('no_changes');
-                return;
-            }
-
-            Log::info("Found {$total} recent orders for account {$this->account->code}");
-
-            // OPTIMIZATION 5: Get recent orders only (1 request)
-            $orders = [];
-            $error_code = $api->HistoryGetPage($this->account->code, $fromDate, $toDate, 0, $total, $orders);
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("MT5 HistoryGetPage error for {$this->account->code}: " . MTRetCode::GetError($error_code));
-                $this->updateSyncStatus('error');
-                return;
-            }
-
-            if (empty($orders)) {
-                Log::info("No orders returned for account {$this->account->code}");
-                $this->updateSyncStatus('no_changes');
-                return;
-            }
-
-            // OPTIMIZATION 6: Get deals for all positions at once (1-2 requests)
-            $this->syncOrdersOptimized($api, $orders);
-
-            // OPTIMIZATION 7: Update activity tracking
-            $this->updateActivityTracking();
-
-            $this->updateSyncStatus('success');
-
-            Log::info("Completed OptimizedSyncTradesJob for account {$this->account->code}. Processed {$total} orders with minimal API calls.");
-        } catch (\Exception $e) {
-            Log::error("Error in OptimizedSyncTradesJob for account {$this->account->code}: " . $e->getMessage());
-            $this->updateSyncStatus('error', $e->getMessage());
+        if ($showStatus) {
+            $this->showSyncStatus();
             return;
         }
-    }
 
-    protected function syncOrdersOptimized($api, $orders)
-    {
-        // Get existing trades for comparison
-        $existingTrades = Trade::where('account_id', $this->account->id)
-            ->get()
-            ->keyBy('position_id');
-
-        // Group orders by position
-        $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
-        $tradesToUpsert = [];
-        $lastTradeTime = null;
-
-        // OPTIMIZATION: Get all deals at once instead of per position
-        $fromDate = $this->fromTime->format('Y-m-d H:i:s');
-        $toDate = now()->format('Y-m-d H:i:s');
-
-        $totalDeals = 0;
-        $error_code = $api->DealGetTotal($this->account->code, $fromDate, $toDate, $totalDeals);
-
-        $allDeals = [];
-        if ($error_code == MTRetCode::MT_RET_OK && $totalDeals > 0) {
-            $api->DealGetPage($this->account->code, $fromDate, $toDate, 0, $totalDeals, $allDeals);
+        if ($testAccount) {
+            $this->syncSpecificAccount($testAccount);
+            return;
         }
 
-        // Index deals by order for quick lookup
-        $dealsByOrder = collect($allDeals)->groupBy('Order');
+        $this->info("Configuration: Batch Size: {$batchSize}, Max Concurrent: {$maxConcurrent}, Delay: {$delay}s");
 
-        foreach ($ordersByPosition as $positionId => $positionOrders) {
-            $positionOrders = $positionOrders->sortBy('TimeDone');
-            $existingTrade = $existingTrades->get($positionId);
-
-            // Get deals for this position
-            $relevantDeals = $dealsByOrder->get($positionId, collect());
-            $rateProfit = $relevantDeals->first()->RateProfit ?? 1;
-
-            if ($positionOrders->count() < 2) {
-                // OPEN TRADE: Insert if does not exist
-                if (!$existingTrade) {
-                    $tradeData = $this->prepareOpenTrade($positionId, $positionOrders->first());
-                    $tradesToUpsert[] = $tradeData;
-
-                    // Track latest trade time
-                    $tradeTime = Carbon::parse($positionOrders->first()['TimeDone']);
-                    if (!$lastTradeTime || $tradeTime->gt($lastTradeTime)) {
-                        $lastTradeTime = $tradeTime;
-                    }
-                }
-            } else {
-                // CLOSED TRADE: Update if exists, otherwise insert
-                $tradeData = $this->prepareClosedTrade($positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
-
-                if ($existingTrade) {
-                    $tradeData['id'] = $existingTrade->id;
-                }
-
-                $tradesToUpsert[] = $tradeData;
-
-                // Track latest trade time
-                $closeTime = Carbon::parse($positionOrders->last()['TimeDone']);
-                if (!$lastTradeTime || $closeTime->gt($lastTradeTime)) {
-                    $lastTradeTime = $closeTime;
-                }
-            }
-        }
-
-        // Batch upsert all trades
-        if (!empty($tradesToUpsert)) {
-            foreach ($tradesToUpsert as $trade) {
-                if (isset($trade['id'])) {
-                    // Update existing
-                    Trade::where('id', $trade['id'])->update($trade);
-                } else {
-                    // Insert new
-                    Trade::create($trade);
-                }
-            }
-        }
-
-        // Update account's last trade time
-        if ($lastTradeTime) {
-            $this->account->update(['last_trade_at' => $lastTradeTime]);
+        if ($isDaemon) {
+            $this->runDaemonMode($batchSize, $maxConcurrent, $delay);
+        } else {
+            $this->syncAllAccounts($batchSize, $maxConcurrent, $delay);
         }
     }
 
-    protected function prepareOpenTrade($positionId, $openOrder)
+    protected function showSyncStatus()
     {
-        // CRITICAL: Validate position_id before creating trade data
-        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
-            $this->logInvalidPositionId('open', $positionId, $openOrder, [
-                'order_data' => $openOrder,
-                'account_id' => $this->account->id,
-                'account_code' => $this->account->code
-            ]);
+        $totalAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->count();
 
-            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
-        }
+        $competitionAccounts = Account::whereNotNull('code')
+            ->whereNotNull('competition_start_date')
+            ->whereNotNull('competition_end_date')
+            ->where('competition_status', 'active')
+            ->count();
 
-        return [
-            'account_id' => $this->account->id,
-            'code' => $this->account->code,
-            'position_id' => $positionId,
-            'external_position_id' => $positionId,
-            'symbol' => $openOrder['Symbol'],
-            'currency' => $this->account->currency,
-            'sell' => $openOrder['Type'] == 1, // 1 = sell, 0 = buy
-            'volume' => $openOrder['VolumeClosed'],
-            'open_price' => $openOrder['PriceOrder'],
-            'stop_loss' => $openOrder['PriceSL'] ?? null,
-            'take_profit' => $openOrder['PriceTP'] ?? null,
-            'opened' => Carbon::parse($openOrder['TimeDone']),
-            'status' => 'OPEN',
-            'last_update' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-    }
-
-    protected function prepareClosedTrade($positionId, $openOrder, $closeOrder, $rateProfit)
-    {
-        // CRITICAL: Validate position_id before creating trade data
-        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
-            $this->logInvalidPositionId('closed', $positionId, $closeOrder, [
-                'open_order_data' => $openOrder,
-                'close_order_data' => $closeOrder,
-                'rate_profit' => $rateProfit,
-                'account_id' => $this->account->id,
-                'account_code' => $this->account->code
-            ]);
-
-            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
-        }
-
-        $profit = ($closeOrder['Profit'] ?? 0) / $rateProfit;
-        $commission = ($openOrder['Commission'] ?? 0) + ($closeOrder['Commission'] ?? 0);
-        $swap = ($openOrder['Storage'] ?? 0) + ($closeOrder['Storage'] ?? 0);
-
-        return [
-            'account_id' => $this->account->id,
-            'code' => $this->account->code,
-            'position_id' => $positionId,
-            'external_position_id' => $positionId,
-            'symbol' => $openOrder['Symbol'],
-            'currency' => $this->account->currency,
-            'sell' => $openOrder['Type'] == 1,
-            'volume' => $openOrder['VolumeClosed'],
-            'open_price' => $openOrder['PriceOrder'],
-            'current_price' => $closeOrder['PriceOrder'],
-            'stop_loss' => $openOrder['PriceSL'] ?? null,
-            'take_profit' => $openOrder['PriceTP'] ?? null,
-            'profit' => $profit,
-            'commission' => $commission,
-            'swap' => $swap,
-            'opened' => Carbon::parse($openOrder['TimeDone']),
-            'closed' => Carbon::parse($closeOrder['TimeDone']),
-            'status' => 'CLOSED',
-            'last_update' => now(),
-            'updated_at' => now(),
-        ];
-    }
-
-    protected function updateActivityTracking()
-    {
-        // Update tier based on recent activity
-        $recentTrades = Trade::where('account_id', $this->account->id)
+        $syncableAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
             ->where(function ($q) {
-                $q->where('opened', '>=', now()->subDay())
-                    ->orWhere('closed', '>=', now()->subDay());
+                $q->whereNull('competition_start_date')
+                    ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
+                    ->orWhere('competition_status', '!=', 'active');
             })
-            ->exists();
+            ->count();
 
-        if ($recentTrades && $this->account->sync_tier !== 'very_active') {
-            $this->account->update(['sync_tier' => 'very_active']);
-            Log::info("Upgraded account {$this->account->code} to very_active tier");
+        $totalTrades = Trade::count();
+        $recentTrades = Trade::where('created_at', '>=', now()->subHour())->count();
+
+        $this->info("=== Efficient Sync Status ===");
+        $this->info("Total live accounts: {$totalAccounts}");
+        $this->info("Competition accounts (excluded): {$competitionAccounts}");
+        $this->info("Accounts to sync: {$syncableAccounts}");
+        $this->info("Total trades in system: {$totalTrades}");
+        $this->info("Trades synced in last hour: {$recentTrades}");
+
+        // Estimate completion time
+        $batchSize = (int) $this->option('batch-size');
+        $delay = (int) $this->option('delay');
+        $batches = ceil($syncableAccounts / $batchSize);
+        $estimatedMinutes = ($batches * $delay) / 60;
+
+        $this->info("Estimated sync time: {$batches} batches, ~{$estimatedMinutes} minutes");
+    }
+
+    protected function syncAllAccounts($batchSize, $maxConcurrent, $delay)
+    {
+        // Prioritize accounts that haven't been synced recently
+        $query = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->where(function ($q) {
+                $q->whereNull('competition_start_date')
+                    ->orWhereNull('competition_end_date')
+                    ->orWhereNull('competition_status')
+                    ->orWhere('competition_status', '!=', 'active');
+            })
+            // ORDER BY sync priority: NULL sync attempts first, then oldest attempts
+            ->orderByRaw('last_sync_attempt_at IS NULL DESC')
+            ->orderBy('last_sync_attempt_at', 'asc');
+
+        $totalAccounts = $query->count();
+        $this->info("Found {$totalAccounts} accounts to sync (excluding competition accounts)");
+
+        // Show priority insights
+        $neverSynced = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->whereNull('last_sync_attempt_at')
+            ->count();
+
+        $staleSynced = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->whereNotNull('last_sync_attempt_at')
+            ->where('last_sync_attempt_at', '<', now()->subHours(6))
+            ->count();
+
+        $this->info("Priority: {$neverSynced} never synced, {$staleSynced} stale (>6h old)");
+
+        if ($totalAccounts === 0) {
+            $this->info("No accounts found to sync.");
+            return;
+        }
+
+        $processedCount = 0;
+        $activeBatches = 0;
+        $startTime = now();
+
+        $query->chunk(500, function ($accounts) use ($batchSize, $maxConcurrent, $delay, $totalAccounts, &$processedCount, &$activeBatches) {
+            // Group accounts for batch processing
+            $accountBatches = $accounts->chunk($batchSize);
+
+            foreach ($accountBatches as $batchIndex => $accountBatch) {
+                // Wait if too many concurrent batches
+                while ($activeBatches >= $maxConcurrent) {
+                    $this->info("Waiting for active batches... ({$activeBatches}/{$maxConcurrent})");
+                    sleep(5);
+                    $activeBatches = max(0, $activeBatches - 1);
+                }
+
+                // Prepare accounts and their sync times for batch job
+                $batchAccounts = $accountBatch->all(); // Keep as Account models
+                $batchSyncTimes = [];
+
+                foreach ($accountBatch as $account) {
+                    $batchSyncTimes[] = $this->getLastSyncTime($account);
+                }
+
+                $this->info("Processing batch " . ($batchIndex + 1) . " with " . count($batchAccounts) . " accounts");
+
+                // Create single batch job to handle multiple accounts
+                $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
+
+                // Only use batch if we have monitoring/callback needs, otherwise dispatch directly
+                if ($this->option('use-batches')) {
+                    Bus::batch([$batchJob])
+                        ->allowFailures()
+                        ->onConnection('redis')
+                        ->onQueue('optimized-sync-trades')
+                        ->then(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->catch(function () use (&$activeBatches) {
+                            $activeBatches--;
+                        })
+                        ->dispatch();
+                    $activeBatches++;
+                } else {
+                    // Direct dispatch - no batch overhead
+                    dispatch($batchJob)->onQueue('optimized-sync-trades');
+                }
+                $processedCount += count($batchAccounts);
+
+                $this->info("Dispatched {$processedCount}/{$totalAccounts} accounts");
+
+                if ($delay > 0) {
+                    sleep($delay);
+                }
+            }
+        });
+
+        $duration = $startTime->diffInMinutes(now());
+        $this->info("Sync completed! Processed {$processedCount} accounts in {$duration} minutes");
+    }
+
+    protected function runDaemonMode($batchSize, $maxConcurrent, $delay)
+    {
+        $this->info("Starting daemon mode...");
+
+        while (true) {
+            try {
+                $this->syncAllAccounts($batchSize, $maxConcurrent, $delay);
+                $this->info("Cycle completed. Waiting 30 minutes before next cycle...");
+                sleep(1800); // 30 minutes between full cycles
+            } catch (\Exception $e) {
+                $this->error("Error in daemon mode: " . $e->getMessage());
+                Log::error("OptimizedSync daemon error: " . $e->getMessage());
+                sleep(300); // Wait 5 minutes before retrying on error
+            }
         }
     }
 
-    protected function updateSyncStatus($status, $error = null)
+    protected function getLastSyncTime($account)
     {
-        $this->account->update([
-            'last_balance_sync_at' => now(),
-            'last_sync_attempt_at' => now(),
-            'sync_status' => $status === 'success' ? 'synced' : 'pending',
-            'sync_error' => $error,
-        ]);
+        // Simple incremental sync - last 7 days if never synced
+        $lastSync = $account->last_balance_sync_at;
+        return $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
     }
-
-    protected function connectWithRetry(UniversalMT5Service $mt5Service)
+    protected function syncSpecificAccount($accountCode)
     {
-        // UniversalMT5Service handles connection pooling and retries
-        if (!$mt5Service->connect()) {
-            throw new \Exception("Failed to connect to MT5 after retries");
+        $account = Account::where('code', $accountCode)->first();
+
+        if (!$account) {
+            $this->error("Account {$accountCode} not found");
+            return;
         }
-    }
 
-    /**
-     * Log invalid position_id attempts with comprehensive details for admin investigation
-     */
-    protected function logInvalidPositionId(string $tradeType, $positionId, $order, array $context = []): void
-    {
-        $logData = array_merge([
-            'trade_type' => $tradeType,
-            'position_id' => $positionId,
-            'account_id' => $this->account->id,
-            'account_code' => $this->account->code,
-            'account_demo' => $this->account->demo,
-            'order_id' => $order['Order'] ?? 'unknown',
-            'order_symbol' => $order['Symbol'] ?? 'unknown',
-            'order_type' => $order['Type'] ?? 'unknown',
-            'order_volume' => $order['VolumeClosed'] ?? 'unknown',
-            'order_price' => $order['PriceOrder'] ?? 'unknown',
-            'order_time_done' => $order['TimeDone'] ?? 'unknown',
-            'order_comment' => $order['Comment'] ?? '',
-            'timestamp' => now(),
-            'job_id' => $this->job->getJobId() ?? 'unknown',
-            'queue' => $this->job->getQueue() ?? 'unknown',
-            'severity' => 'CRITICAL',
-            'issue_type' => 'INVALID_POSITION_ID_OPTIMIZED_JOB',
-            'stack_trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15)
-        ], $context);
+        $this->info("Testing sync for account: {$accountCode}");
 
-        // Log critical data integrity issue with full context
-        Log::critical("🚨 INVALID POSITION_ID in OptimizedSyncTradesJob: {$tradeType} trade with position_id = {$positionId}", $logData);
+        // Direct dispatch for single account - no batch overhead needed
+        $job = new BatchSyncTradesJob([$account], [$this->getLastSyncTime($account)]);
+        dispatch($job)->onQueue('optimized-sync-trades');
 
-        // Log to admin activity log for dashboard visibility
-        activity('trade_data_integrity')
-            ->withProperties($logData)
-            ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$this->account->code}");
-
-        // Send immediate admin notification if configured
-        try {
-            Log::channel('slack')->critical("Invalid position_id detected in optimized trade sync", [
-                'account' => $this->account->code,
-                'position_id' => $positionId,
-                'trade_type' => $tradeType,
-                'order_id' => $order['Order'] ?? 'unknown'
-            ]);
-        } catch (\Exception $e) {
-            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
-        }
+        $this->info("Sync job dispatched directly for account {$accountCode}");
     }
 }
