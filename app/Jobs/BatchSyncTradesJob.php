@@ -479,8 +479,8 @@ class BatchSyncTradesJob implements ShouldQueue
                     $rateProfit = $filteredDeals[0]->RateProfit ?? 1;
                 }
 
-                Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
-                    (count($filteredDeals) > 0 ? ", actual profit: {$actualProfit}" : ""));
+                // Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
+                //     (count($filteredDeals) > 0 ? ", actual profit: {$actualProfit}" : ""));
 
                 if ($positionOrders->count() == 1) {
                     // Single order = Open position (no close yet)
