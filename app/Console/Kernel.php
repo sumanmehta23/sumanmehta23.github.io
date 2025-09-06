@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('app:sync-trades')->everyFiveMinutes();
 
         //sync closed competition trades
-        $schedule->command('app:sync-closed-trades')->everyTenMinutes();
+        // $schedule->command('app:sync-closed-trades')->everyTenMinutes();
 
         // $schedule->command('app:breach-account')->monthlyOn(1, '00:00');
 
