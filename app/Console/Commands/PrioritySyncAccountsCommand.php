@@ -287,11 +287,14 @@ class PrioritySyncAccountsCommand extends Command
             });
         } else {
             // Original logic when balance filter is disabled
-            // Exclude accounts that have been explicitly skipped or failed
+            // Only include accounts that need syncing or retry
             $query->where(function ($q) use ($cutoffTime) {
                 $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
                     ->orWhere(function ($timeQuery) use ($cutoffTime) {
-                        $timeQuery->whereNotIn('sync_status', ['skipped', 'failed', 'completed'])  // Exclude final statuses
+                        $timeQuery->where(function ($statusQuery) {
+                            $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
+                                ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error']);  // Exclude final statuses
+                        })
                             ->where(function ($syncQuery) use ($cutoffTime) {
                                 $syncQuery->whereNull('last_sync_attempt_at')  // Never synced
                                     ->orWhere('last_sync_attempt_at', '<', $cutoffTime);  // Old syncs
