@@ -239,6 +239,13 @@ class SyncAccountTradesJob implements ShouldQueue
 
                 $orders = array_merge($orders, $pageOrders);
 
+                if ($this->newTrades) {
+                    Log::info('New Trades exists');
+                    // ($referral_code, $userId, $ib_acc_plans)
+                    // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
+                    DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+                }
+
                 // Small delay between pages to avoid overwhelming MT5
                 if (count($orders) < $total) {
                     usleep(50000); // 0.05 second delay between pages
