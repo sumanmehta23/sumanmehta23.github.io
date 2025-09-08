@@ -157,9 +157,6 @@
                                             <div class="p-1 mt-1 rounded bg-body">
                                                 <div class="mt-1 row align-items-center">
                                                     <div class="col-12 text-end">
-                                                        @if (auth()->user()->email == 'okerekemarv123@gmail.com')
-                                                                {{ dd('test'); }}
-                                                            @endif
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             @money($ib_wallet)</h3>
                                                         <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>

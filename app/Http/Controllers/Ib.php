@@ -296,7 +296,9 @@ class Ib extends Controller
         $ib_wallet_raw = IbWallet::where('user_id', $userId)
             ->selectRaw('SUM(ib_wallet) as wallet, SUM(ib_withdraw) as withdraw')
             ->first();
-
+        if($user->email == 'okerekemarv123@gmail.com'){
+            dd($ib_wallet_raw);
+        }
         if ($ib_wallet_raw) {
             $ib_wallet = $ib_wallet_raw->wallet - $ib_wallet_raw->withdraw;
         }
