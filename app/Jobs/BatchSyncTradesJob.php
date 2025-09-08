@@ -269,10 +269,27 @@ class BatchSyncTradesJob implements ShouldQueue
             }
 
             // TRADE COUNT FILTERING: Skip accounts based on trade count limits
-            if ($this->maxTradesLimit !== null && $total > $this->maxTradesLimit) {
+            // Consider both MT5 total and existing database trades for intelligent filtering
+            $existingTradesCount = $existingTrades->count();
+            $newTradesToProcess = max(0, $total - $existingTradesCount); // Estimate new trades to process
+            $totalTradesInSystem = $existingTradesCount; // Current database count
+
+            Log::info("TRADE_ANALYSIS[{$account->code}]: MT5 total: {$total}, DB existing: {$existingTradesCount}, Estimated new: {$newTradesToProcess}");
+
+            // Skip if too many total trades in database (regardless of new trades)
+            if ($this->maxTradesLimit !== null && $totalTradesInSystem > $this->maxTradesLimit) {
                 $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
-                Log::info("SKIP[{$account->code}]: {$total} trades exceeds max limit of {$this->maxTradesLimit} - skipped for performance");
-                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many trades ({$total}) - use high-volume sync");
+                Log::info("SKIP[{$account->code}]: {$totalTradesInSystem} existing trades in DB exceeds max limit of {$this->maxTradesLimit} - use high-volume sync");
+                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many existing trades ({$totalTradesInSystem}) - use high-volume sync");
+                return 'skipped_high_volume';
+            }
+
+            // Skip if too many new trades to process (performance consideration)
+            if ($this->maxTradesLimit !== null && $newTradesToProcess > ($this->maxTradesLimit * 0.5)) {
+                $maxNewTrades = intval($this->maxTradesLimit * 0.5);
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$newTradesToProcess} new trades exceeds processing limit of {$maxNewTrades} - use high-volume sync");
+                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many new trades to process ({$newTradesToProcess}) - use high-volume sync");
                 return 'skipped_high_volume';
             }
 
@@ -283,7 +300,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'skipped_low_volume';
             }
 
-            Log::info("Account {$account->code} has {$total} orders to process" .
+            Log::info("Account {$account->code} has {$total} MT5 orders, {$existingTradesCount} existing DB trades, ~{$newTradesToProcess} new to process" .
                 ($this->maxTradesLimit ? " (limit: {$this->maxTradesLimit})" : "") .
                 ($this->minTradesLimit ? " (min: {$this->minTradesLimit})" : ""));
 
