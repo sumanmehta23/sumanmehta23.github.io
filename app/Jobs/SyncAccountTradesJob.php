@@ -29,7 +29,7 @@ class SyncAccountTradesJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
     protected $mt5Service;
     protected $api;
-    protected  $account;
+    protected $account;
     protected $accountIds; // Changed from $accountId to support multiple accounts
     protected $newTrades = false;
     protected $referral_code;

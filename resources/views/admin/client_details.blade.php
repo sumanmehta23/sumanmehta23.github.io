@@ -1092,6 +1092,9 @@
                                                                 </div>
                                                                 <div class="col-8">
                                                                     <p class=" text-muted">IB WALLET</p>
+                                                                    @if ($user->email == 'okerekemarv123@gmail.com')
+                                                                        {{ dd($ib_details) }}
+                                                                    @endif
                                                                     <h4>@money($ib_details->deposit - $ib_details->withdraw)
                                                                     </h4>
                                                                 </div>

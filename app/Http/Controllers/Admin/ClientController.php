@@ -379,7 +379,6 @@ class ClientController extends Controller
     }
     public function updateUser(Request $request)
     {
-
         $user_id = $request->input('id');
         $validatedData = Validator::make($request->all(), [
             'email' => [
@@ -477,6 +476,35 @@ class ClientController extends Controller
                 $user = User::find($user_id);
 
                 if ($user) {
+                    if ($email) {
+                        $accounts = Account::where('email', $user->email)->get();
+
+                        if (!$this->ensureMT5Connection()) {
+                            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+                        }
+
+                        foreach ($accounts as $account) {
+                            $trade_user = null;
+                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                Log::error('error' . ' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                                return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                            }
+                            if ($trade_user) {
+                                $trade_user->Email = $email;
+                                $updated_user = "";
+                                $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
+                                if ($error_code != MTRetCode::MT_RET_OK) {
+                                    Log::error("error " . $account->code . " Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                                    return redirect()->back()->with("error", "Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                                } else {
+                                    Account::where('code', $account->code)->update([
+                                        'email' => $email
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+
                     if ($email) {
                         $accounts = Account::where('email', $user->email)->get();
 

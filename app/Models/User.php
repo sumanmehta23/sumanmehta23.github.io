@@ -226,6 +226,7 @@ class User extends Authenticatable
         return TradeWithdrawals::where('user_id', $this->id)
             ->where('withdraw_type', 'Trade Withdrawal')
             ->where('status', 1)
+            ->whereNull('deleted_at')
             ->selectRaw('SUM(withdrawal_amount + COALESCE(transaction_fee, 0)) as total')
             ->value('total');
     }

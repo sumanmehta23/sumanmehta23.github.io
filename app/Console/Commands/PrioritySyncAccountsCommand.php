@@ -332,7 +332,7 @@ class PrioritySyncAccountsCommand extends Command
 
             // Dispatch the batch job
             $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
-            dispatch($batchJob)->onQueue('optimized-sync-trades');
+            dispatch($batchJob)->onQueue('priority-sync-trades');
 
             $processedCount += count($batchAccounts);
 

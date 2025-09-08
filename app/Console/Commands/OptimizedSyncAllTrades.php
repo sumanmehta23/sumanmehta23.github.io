@@ -56,7 +56,7 @@ class OptimizedSyncAllTrades extends Command
 
     protected $mt5Service;
     protected $mailService;
-
+    protected $api;
     public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
         parent::__construct();
@@ -107,20 +107,11 @@ class OptimizedSyncAllTrades extends Command
             ->count();
 
         $competitionAccounts = Account::whereNotNull('code')
-            ->whereNotNull('competition_start_date')
-            ->whereNotNull('competition_end_date')
-            ->where('competition_status', 'active')
             ->count();
 
         $syncableAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            })
             ->count();
 
         $totalTrades = Trade::count();
@@ -148,12 +139,7 @@ class OptimizedSyncAllTrades extends Command
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
-            ->where(function ($q) {
-                $q->whereNull('competition_start_date')
-                    ->orWhereNull('competition_end_date')
-                    ->orWhereNull('competition_status')
-                    ->orWhere('competition_status', '!=', 'active');
-            })
+
             // ORDER BY sync priority: NULL sync attempts first, then oldest attempts
             ->orderByRaw('last_sync_attempt_at IS NULL DESC')
             ->orderBy('last_sync_attempt_at', 'asc');
