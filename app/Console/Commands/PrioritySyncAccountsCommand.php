@@ -305,7 +305,7 @@ class PrioritySyncAccountsCommand extends Command
 
         // Add account age ordering if requested
         if ($newestFirst) {
-            $accounts = $accounts->orderBy('created_at', 'desc');
+            $accounts = $accounts->orderBy('created_at1', 'desc');
         } else {
             $accounts = $accounts->orderBy('created_at', 'asc');
         }
