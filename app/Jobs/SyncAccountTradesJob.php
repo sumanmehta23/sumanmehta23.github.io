@@ -167,7 +167,7 @@ class SyncAccountTradesJob implements ShouldQueue
                         }
 
                         $processedOrders[] = $item->Order . '-' . $item->Login;
-
+                        Log::info("ibcommissionsfffffffffcount ".json_encode($item));
                         $ibcommissions[] = [
                             'id' => (string)Str::orderedUuid(),
                             'user_id' => $this->account->user_id,
