@@ -9,6 +9,7 @@ use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -196,6 +197,9 @@ class BatchSyncTradesJob implements ShouldQueue
             "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
 
         Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+
+        // Clear sync-in-progress cache for all accounts in this batch
+        $this->clearBatchSyncInProgressCache();
     }
 
     private function calculateMedian(array $values): float
@@ -933,5 +937,40 @@ class BatchSyncTradesJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Clear sync-in-progress cache for all accounts in this batch
+     */
+    protected function clearBatchSyncInProgressCache(): void
+    {
+        foreach ($this->accounts as $accountData) {
+            Cache::forget("account_sync_in_progress:{$accountData['id']}");
+        }
+
+        $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
+        Log::debug("Cleared sync-in-progress cache for accounts: {$accountCodes}");
+    }
+
+    /**
+     * Handle job failure - clear sync-in-progress cache and reset account status
+     */
+    public function failed(\Throwable $exception)
+    {
+        Log::error("BatchSyncTradesJob permanently failed: " . $exception->getMessage(), [
+            'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+            'exception' => $exception->getTraceAsString()
+        ]);
+
+        // Clear sync-in-progress cache so accounts can be retried
+        $this->clearBatchSyncInProgressCache();
+
+        // Reset account sync status so they can be retried by the next cycle
+        $accountIds = collect($this->accounts)->pluck('id')->toArray();
+        Account::whereIn('id', $accountIds)
+            ->update([
+                'sync_status' => 'needs_retry',
+                'sync_error' => 'Job failed after max attempts: ' . $exception->getMessage()
+            ]);
     }
 }
