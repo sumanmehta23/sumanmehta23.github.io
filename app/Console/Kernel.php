@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:sync-accounts')->everyFiveMinutes();
         // $schedule->command('app:optimized-sync-trades')->everyFiveMinutes();
         $schedule->command('app:sync-daily-reports')->daily();
-        $schedule->command('app:sync-account-trades')->everyTenMinutes();
+        // $schedule->command('app:sync-account-trades')->everyTenMinutes();
 
         // Sync all non-competition accounts trades - uncomment to enable
         // $schedule->command('app:sync-all-accounts-trades --batch-size=20 --delay=60')->everyThirtyMinutes();
