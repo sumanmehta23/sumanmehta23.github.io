@@ -159,6 +159,9 @@
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             @money($ib_wallet)</h3>
+                                                            @if (auth()->user()->email == 'okerekemarv123@gmail.com')
+                                                                {{ dd($ib_wallet); }}
+                                                            @endif
                                                         <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
                                                     </div>
                                                 </div>
@@ -169,9 +172,7 @@
                                                 for="exampleFormControlSelect1">Select
                                                 Account</label>
                                             <div class="row">
-                                                @if (auth()->user()->email == 'okerekemarv123@gmail.com')
-                                                    {{ dd($live_accs); }}
-                                                @endif
+
                                                 @forelse ($live_accs as $acc)
                                                     <div class="col-lg-6">
                                                         <div class="p-2 border card">
