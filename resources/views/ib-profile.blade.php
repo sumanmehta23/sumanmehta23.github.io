@@ -142,9 +142,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if (auth()->user()->email == 'okerekemarv123@gmail.com')
-                                        {{ dd($IbTotalWithdrawal); }}
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -172,7 +169,9 @@
                                                 for="exampleFormControlSelect1">Select
                                                 Account</label>
                                             <div class="row">
-
+                                                @if (auth()->user()->email == 'okerekemarv123@gmail.com')
+                                                    {{ dd($live_accs); }}
+                                                @endif
                                                 @forelse ($live_accs as $acc)
                                                     <div class="col-lg-6">
                                                         <div class="p-2 border card">
