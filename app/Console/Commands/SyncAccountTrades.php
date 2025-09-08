@@ -25,7 +25,7 @@ class SyncAccountTrades extends Command
         $totalJobsCreated = 0;
         Ib1::with(['planDetails', 'user'])  // Eager load related models
             ->where('status', 1)
-            ->where('email', 'hautranrcb@gmail.com')
+            // ->where('email', 'hautranrcb@gmail.com')
             ->whereNotNull('ib_plan_details_id')
             ->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, &$totalJobsCreated) {
