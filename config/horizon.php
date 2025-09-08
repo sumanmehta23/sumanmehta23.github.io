@@ -263,6 +263,16 @@ return [
             'tries' => 1,
             'timeout' => 300,
         ],
+        'supervisor-high-volume-sync' => [
+            'connection' => 'redis',
+            'queue' => ['high-volume-sync'],
+            'balance' => 'auto',
+            'maxProcesses' => env('HIGH_VOLUME_SYNC_MAX_QUEUE_PROCESSES', 1),
+            'memory' => 1024,
+            'tries' => 1,
+            'timeout' => 1800,
+        ],
+
 
 
 
