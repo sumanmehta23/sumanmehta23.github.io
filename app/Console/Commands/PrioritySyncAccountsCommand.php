@@ -287,11 +287,16 @@ class PrioritySyncAccountsCommand extends Command
             });
         } else {
             // Original logic when balance filter is disabled
+            // Exclude accounts that have been explicitly skipped or failed
             $query->where(function ($q) use ($cutoffTime) {
-                $q->whereNull('last_sync_attempt_at')  // Never synced
-                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime)  // Old syncs
-                    ->orWhere('sync_status', 'pending')
-                    ->orWhere('sync_status', 'needs_retry');  // Failed due to queue limits
+                $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
+                    ->orWhere(function ($timeQuery) use ($cutoffTime) {
+                        $timeQuery->whereNotIn('sync_status', ['skipped', 'failed', 'completed'])  // Exclude final statuses
+                            ->where(function ($syncQuery) use ($cutoffTime) {
+                                $syncQuery->whereNull('last_sync_attempt_at')  // Never synced
+                                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime);  // Old syncs
+                            });
+                    });
             });
         }
 
@@ -305,7 +310,7 @@ class PrioritySyncAccountsCommand extends Command
 
         // Add account age ordering if requested
         if ($newestFirst) {
-            $accounts = $accounts->orderBy('created_at1', 'desc');
+            $accounts = $accounts->orderBy('created_at', 'desc');
         } else {
             $accounts = $accounts->orderBy('created_at', 'asc');
         }
