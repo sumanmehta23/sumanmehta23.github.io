@@ -188,7 +188,7 @@
                                                     href="/login" class="link-primary"
                                                     style="font-size: 14px !important; padding-left: 10px; margin-top: 10px;">
                                                     Login</a>
-                                                    <a href="https://www.liquidityhouse.com/risk-disclaimer" class="link-primary ms-auto"
+                                                    <a href="https://www.lqhmarkets.com/risk-disclaimer" class="link-primary ms-auto"
                                                     style="font-size: 14px !important; padding-left: 10px;">
                                                     Risk Disclaimer
                                                     </a>
