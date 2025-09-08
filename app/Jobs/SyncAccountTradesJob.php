@@ -119,36 +119,19 @@ class SyncAccountTradesJob implements ShouldQueue
 
             // Prepare IB commission data
             return [
-                // 'code' => $this->account->code,
-                // 'expert_position_id' => $order->ExpertPositionID ?? $order->PositionID,
-                // 'symbol' => $symbolWithoutP,
-                // 'type' => $order->Action,
-                // 'lots' => $lotSize,
-                // 'commission' => 0, // Will be calculated by DistributeIbCommissionJob
-                // 'swap' => $order->Storage ?? 0,
-                // 'profit' => $order->Profit,
-                // 'open_time' => Carbon::createFromTimestamp($order->TimeMsc / 1000),
-                // 'close_time' => Carbon::createFromTimestamp($order->TimeDoneMsc / 1000),
-                // 'ib_user_id' => $this->ib_user_id,
-                // 'referral_code' => $this->referral_code,
-                // 'status' => 0,
-                // 'created_at' => now(),
-                // 'updated_at' => now(),
-
-
-                            'id' => (string)Str::orderedUuid(),
-                            'user_id' => $this->account->user_id,
-                            'account_id' => $this->account->id,
-                            'order_id' => $order->Order,
-                            'expert_position_id' => $order->ExpertPositionID,
-                            'code' => $order->Login,
-                            'init_volume' => $order->VolumeInitial,
-                            'symbol' => $symbolWithoutP,
-                            'orderstate' => $order->State,
-                            'volume' => $order->VolumeInitial * $b,
-                            'time_closed' => Carbon::createFromTimestamp($order->TimeDone),
-                            'created_at' => now(),
-                            'updated_at' => now()
+                'id' => (string)Str::orderedUuid(),
+                'user_id' => $this->account->user_id,
+                'account_id' => $this->account->id,
+                'order_id' => $order->Order,
+                'expert_position_id' => $order->ExpertPositionID,
+                'code' => $order->Login,
+                'init_volume' => $order->VolumeInitial,
+                'symbol' => $symbolWithoutP,
+                'orderstate' => $order->State,
+                'volume' => $order->VolumeInitial * $b,
+                'time_closed' => Carbon::createFromTimestamp($order->TimeDone),
+                'created_at' => now(),
+                'updated_at' => now()
             ];
 
         } catch (\Exception $e) {
@@ -234,18 +217,12 @@ class SyncAccountTradesJob implements ShouldQueue
 
                 // Insert any remaining records
                 if (!empty($ibCommissionBatch)) {
+                    Log::info('Processing remaining IB commissions batch');
                     Ib1Commission::insert($ibCommissionBatch);
                     $this->newTrades = true;
                 }
 
                 $orders = array_merge($orders, $pageOrders);
-
-                if ($this->newTrades) {
-                    Log::info('New Trades exists');
-                    // ($referral_code, $userId, $ib_acc_plans)
-                    // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
-                    DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
-                }
 
                 // Small delay between pages to avoid overwhelming MT5
                 if (count($orders) < $total) {
@@ -254,6 +231,12 @@ class SyncAccountTradesJob implements ShouldQueue
             }
 
             Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
+
+            // Dispatch the IB commission job if we had new trades
+            if ($this->newTrades) {
+                Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
+                DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+            }
         } catch (\Exception $e) {
             Log::error("Error processing account {$accountId}: " . $e->getMessage());
             throw $e;
