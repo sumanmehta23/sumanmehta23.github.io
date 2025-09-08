@@ -100,6 +100,8 @@ class SyncAccountTradesJob implements ShouldQueue
                 return $api->HistoryGetTotal($login, $from, $to, $total);
             });
 
+            Log::info("HistoryGetTotallllll ".json_encode($total));
+
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error('MT5 ' . $login . ': Failed to get history total');
                 return;

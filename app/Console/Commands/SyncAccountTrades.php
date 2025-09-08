@@ -83,8 +83,6 @@ class SyncAccountTrades extends Command
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
-
-                        Log::info("accountChunksssssss ".json_encode($accountChunks));
                         foreach ($accountChunks as $accountChunk) {
                             if ($totalJobsCreated >= $maxJobs) {
                                 break;
