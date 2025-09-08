@@ -29,11 +29,15 @@ class PrioritySyncAccountsCommand extends Command
                             {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
                             {--min-sync-interval= : Minimum minutes between syncs for same account (default from config)}
                             {--max-pending-jobs= : Maximum pending BatchSyncTradesJob jobs allowed (default from config)}
+                            {--max-trades= : Skip accounts with more than this many pending trades (e.g., 200)}
+                            {--min-trades= : Only sync accounts with at least this many pending trades}
+                            {--trades-range= : Sync accounts with trades in range, format: min,max (e.g., 200,500)}
                             {--ignore-balance-filter : Sync all accounts regardless of balance changes}
+                            {--newest-first : Prioritize newer accounts (created_at desc) over older accounts}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}';
 
-    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs';
+    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs. Supports trade count filtering.';
 
     public function handle()
     {
@@ -43,8 +47,25 @@ class PrioritySyncAccountsCommand extends Command
         $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 60));
         $maxPendingJobs = (int) ($this->option('max-pending-jobs') ?: config('sync-all-trades.priority_sync.max_pending_jobs', 100));
         $ignoreBalanceFilter = $this->option('ignore-balance-filter');
+        $newestFirst = $this->option('newest-first');
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
+
+        // Parse trade count filtering options
+        $maxTrades = $this->option('max-trades') ? (int) $this->option('max-trades') : null;
+        $minTrades = $this->option('min-trades') ? (int) $this->option('min-trades') : null;
+
+        // Parse trades range (format: min,max)
+        if ($this->option('trades-range')) {
+            $range = explode(',', $this->option('trades-range'));
+            if (count($range) === 2) {
+                $minTrades = (int) trim($range[0]);
+                $maxTrades = (int) trim($range[1]);
+            } else {
+                $this->error("Invalid trades-range format. Use: min,max (e.g., 200,500)");
+                return 1;
+            }
+        }
 
         if ($showStatus) {
             $this->showSyncStatus();
@@ -57,6 +78,30 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("- Cycle delay: {$cycleDelay}s" . ($this->option('cycle-delay') ? '' : ' (config)'));
         $this->info("- Min sync interval: {$minSyncInterval}m" . ($this->option('min-sync-interval') ? '' : ' (config)'));
         $this->info("- Max pending jobs: {$maxPendingJobs}" . ($this->option('max-pending-jobs') ? '' : ' (config)'));
+
+        // Trade count filtering info
+        if ($maxTrades || $minTrades) {
+            if ($minTrades && $maxTrades) {
+                $this->warn("- Trade count filter: {$minTrades} to {$maxTrades} trades only");
+            } elseif ($maxTrades) {
+                $this->warn("- Max trades filter: Skip accounts with > {$maxTrades} trades");
+            } elseif ($minTrades) {
+                $this->warn("- Min trades filter: Only accounts with >= {$minTrades} trades");
+            }
+        }
+
+        // Account ordering info
+        if ($newestFirst) {
+            $this->info("- Account order: Newest first (created_at DESC)");
+        } else {
+            $this->info("- Account order: Oldest first (created_at ASC)");
+        }
+
+        // Trade count filter status
+        if (!$maxTrades && !$minTrades) {
+            $this->info("- Trade count filter: DISABLED (sync all account sizes)");
+        }
+
         if ($ignoreBalanceFilter) {
             $this->warn("- Balance filter: DISABLED (will sync all accounts)");
         } else {
@@ -64,9 +109,9 @@ class PrioritySyncAccountsCommand extends Command
         }
 
         if ($isDaemon) {
-            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $newestFirst);
         } else {
-            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $newestFirst);
         }
     }
 
@@ -164,7 +209,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter)
+    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $newestFirst = false)
     {
         $this->info("Running in daemon mode. Press Ctrl+C to stop.");
 
@@ -184,7 +229,7 @@ class PrioritySyncAccountsCommand extends Command
                     continue;
                 }
 
-                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $newestFirst);
 
                 if ($processed === 0) {
                     $this->info("No accounts needed syncing. Waiting {$cycleDelay}s before next cycle...");
@@ -201,7 +246,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false): int
+    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $newestFirst = false): int
     {
         // Check pending jobs first
         $pendingJobs = $this->getPendingJobsCount();
@@ -256,7 +301,16 @@ class PrioritySyncAccountsCommand extends Command
             ->orderByRaw("CASE WHEN has_balance_activity = 1 AND last_balance_changed_at > COALESCE(last_balance_sync_at, '1970-01-01') THEN 0 ELSE 1 END")
             ->orderByRaw('last_sync_attempt_at IS NULL DESC')
             ->orderBy('last_balance_changed_at', 'desc')
-            ->orderBy('last_sync_attempt_at', 'asc')
+            ->orderBy('last_sync_attempt_at', 'asc');
+
+        // Add account age ordering if requested
+        if ($newestFirst) {
+            $accounts = $accounts->orderBy('created_at', 'desc');
+        } else {
+            $accounts = $accounts->orderBy('created_at', 'asc');
+        }
+
+        $accounts = $accounts
             ->limit($batchSize * $maxConcurrent) // Get enough for all concurrent batches
             ->get();
 
@@ -330,8 +384,8 @@ class PrioritySyncAccountsCommand extends Command
                     'sync_status' => 'pending'
                 ]);
 
-            // Dispatch the batch job
-            $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
+            // Dispatch the batch job with trade count limits
+            $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes, $maxTrades, $minTrades);
             dispatch($batchJob)->onQueue('priority-sync-trades');
 
             $processedCount += count($batchAccounts);

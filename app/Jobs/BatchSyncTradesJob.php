@@ -31,10 +31,12 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected $accounts;
     protected $fromTimes;
+    protected $maxTradesLimit;
+    protected $minTradesLimit;
     public $timeout = 300; // 5 minutes for batch
     public $tries = 2;
 
-    public function __construct(array $accounts, array $fromTimes = [])
+    public function __construct(array $accounts, array $fromTimes = [], int $maxTradesLimit = null, int $minTradesLimit = null)
     {
         // Convert Account models to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
@@ -48,6 +50,8 @@ class BatchSyncTradesJob implements ShouldQueue
         })->toArray();
 
         $this->fromTimes = $fromTimes;
+        $this->maxTradesLimit = $maxTradesLimit;
+        $this->minTradesLimit = $minTradesLimit;
 
         // Set timeout based on number of accounts with optimized timing
         // Base: 5 minutes, then 60 seconds per account (reduced from 90) + 2 minute buffer (reduced from 5)
@@ -254,7 +258,25 @@ class BatchSyncTradesJob implements ShouldQueue
                 $this->updateSyncStatus($account, 'no_changes');
                 return 'no_changes';
             }
-            Log::info("Account {$account->code} has {$total} orders to process.");
+
+            // TRADE COUNT FILTERING: Skip accounts based on trade count limits
+            if ($this->maxTradesLimit !== null && $total > $this->maxTradesLimit) {
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$total} trades exceeds max limit of {$this->maxTradesLimit} - skipped for performance");
+                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many trades ({$total}) - use high-volume sync");
+                return 'skipped_high_volume';
+            }
+
+            if ($this->minTradesLimit !== null && $total < $this->minTradesLimit) {
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$total} trades below min limit of {$this->minTradesLimit} - use regular sync");
+                $this->updateSyncStatus($account, 'skipped_low_volume', 0, "Too few trades ({$total}) - use regular sync");
+                return 'skipped_low_volume';
+            }
+
+            Log::info("Account {$account->code} has {$total} orders to process" .
+                ($this->maxTradesLimit ? " (limit: {$this->maxTradesLimit})" : "") .
+                ($this->minTradesLimit ? " (min: {$this->minTradesLimit})" : ""));
 
             // Phase 4: MT5 HistoryGetPage with Adaptive Pagination
             $phaseStart = microtime(true);
@@ -680,7 +702,7 @@ class BatchSyncTradesJob implements ShouldQueue
         if ($actualProfit !== null) {
             // Use real profit from MT5 deals (preferred method)
             $profit = round($actualProfit, 2);
-            Log::info("DEBUG[{$account->code}]: Position {$positionId} using actual profit: {$profit}");
+            // Log::info("DEBUG[{$account->code}]: Position {$positionId} using actual profit: {$profit}");
         } else {
             // Fallback: Calculate profit manually (less accurate)
             $multiplier = $openOrder->Type ? -1 : 1;
@@ -783,20 +805,23 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
+    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0, string $customError = null): void
     {
         $syncStatus = match ($status) {
             'success', 'no_changes' => 'synced',
             'not_found' => 'error',
             'error' => 'error',
+            'skipped_high_volume', 'skipped_low_volume' => 'skipped',
             default => 'pending'
         };
 
         $syncError = null;
         if ($status === 'error') {
-            $syncError = 'Sync failed';
+            $syncError = $customError ?: 'Sync failed';
         } elseif ($status === 'not_found') {
             $syncError = 'MT5 account not found';
+        } elseif (in_array($status, ['skipped_high_volume', 'skipped_low_volume'])) {
+            $syncError = $customError;
         }
 
         $account->update([
