@@ -131,7 +131,7 @@ class SyncAccountTradesJob implements ShouldQueue
 
                 $orders = $historyResult['deals'];
                 $total = $historyResult['total'] ?? count($orders);
-                Log::info("ordersssssss ".json_encode($orders));
+
                 if ($orders) {
                     $ibcommissions = [];
                     $orderIdsAndCodes = [];
@@ -183,8 +183,8 @@ class SyncAccountTradesJob implements ShouldQueue
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];
-
-                        if (count($ibcommissions) == 500) {
+                        Log::info("ibcommissionssssssssss count ".count($ibcommissions));
+                        if (count($ibcommissions) == 100) {
                             try {
                                 Ib1Commission::insert($ibcommissions);
                                 $this->newTrades = true;
