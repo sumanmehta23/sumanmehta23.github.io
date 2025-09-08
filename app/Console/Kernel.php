@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:breach-account')->everyMinute();
 
         // CONSOLIDATED SYNC: Use priority-sync instead of multiple commands
-        $schedule->command('app:priority-sync --daemon --max-pending-jobs=100')->everyFiveMinutes()->withoutOverlapping();
+        // $schedule->command('app:priority-sync --daemon --max-pending-jobs=100')->everyFiveMinutes()->withoutOverlapping();
 
         // DISABLED: Replaced by priority-sync
         // $schedule->command('app:sync-accounts')->everyFiveMinutes();
