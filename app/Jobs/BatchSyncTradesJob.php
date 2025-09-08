@@ -73,7 +73,8 @@ class BatchSyncTradesJob implements ShouldQueue
             'success' => 0,
             'errors' => 0,
             'no_changes' => 0,
-            'not_found' => 0
+            'not_found' => 0,
+            'skipped' => 0
         ];
 
         $connectionTime = 0;
@@ -120,6 +121,14 @@ class BatchSyncTradesJob implements ShouldQueue
                             break;
                         case 'not_found':
                             $results['not_found']++;
+                            break;
+                        case 'skipped_high_volume':
+                        case 'skipped_low_volume':
+                            // Track skipped accounts separately but don't count as errors
+                            if (!isset($results['skipped'])) {
+                                $results['skipped'] = 0;
+                            }
+                            $results['skipped']++;
                             break;
                         default:
                             Log::warning("Unknown sync result status: {$result} for account {$account->code}");
@@ -183,7 +192,7 @@ class BatchSyncTradesJob implements ShouldQueue
         Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
             "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
             "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']} " .
+            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
             "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
 
         Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
