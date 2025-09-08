@@ -1092,10 +1092,10 @@
                                                                 </div>
                                                                 <div class="col-8">
                                                                     <p class=" text-muted">IB WALLET</p>
-                                                                    @if ($user->email == 'okerekemarv123@gmail.com')
+                                                                    {{-- @if ($user->email == 'okerekemarv123@gmail.com')
                                                                         {{ dd($ib_details->deposit - $ib_details->withdraw) }}
-                                                                    @endif
-                                                                    <h4>@money($ib_details->deposit - $ib_details->withdraw)
+                                                                    @endif --}}
+                                                                    <h4>@money(number_format($ib_details->deposit - $ib_details->withdraw, 2))
                                                                     </h4>
                                                                 </div>
                                                             </div>
