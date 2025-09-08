@@ -17,6 +17,9 @@
                         <div class="pt-0 pb-0 mt-0 mb-0 col-md-12">
                             <div class="page-header-title h2">
                                 <h4 class="mb-0">My IB Profile</h4>
+                                @if (auth()->user()->email == 'okerekemarv123@gmail.com')
+                                    {{ dd('test'); }}
+                                @endif
                             </div>
                         </div>
                     </div>
