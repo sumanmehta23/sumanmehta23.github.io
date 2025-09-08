@@ -81,9 +81,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        @if (auth()->user()->email == 'okerekemarv123@gmail.com')
-                                            {{ dd($ib_wallet_raw); }}
-                                        @endif
                                         <div class="col-md-6 col-xxl-4">
                                             <div class="mb-0 card">
                                                 <div class="p-3 card-body">
@@ -145,6 +142,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @if (auth()->user()->email == 'okerekemarv123@gmail.com')
+                                        {{ dd($IbTotalWithdrawal); }}
+                                    @endif
                                 </div>
                             </div>
                         </div>
