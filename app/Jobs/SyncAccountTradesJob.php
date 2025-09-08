@@ -77,7 +77,70 @@ class SyncAccountTradesJob implements ShouldQueue
         }
     }
 
-    protected function processAccount($accountId): void
+    protected function getSymbolMappings()
+    {
+        return Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
+            return Symbol::pluck('path', 'symbol')->toArray();
+        });
+    }
+
+    protected function processOrderForIbCommission($order, $symbolMappings)
+    {
+        //  Log::info("message".json_encode($order));
+        try {
+            if ($order->State != 4) { // Only process completed orders
+                return null;
+            }
+
+            $symbolWithoutP = $order->Symbol;
+            if (!isset($symbolMappings[$symbolWithoutP])) {
+                try {
+                    $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
+                    $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
+                } catch (Exception $e) {
+                    Log::error('Error fetching symbol: ' . $e->getMessage());
+                    $symbolMappings[$symbolWithoutP] = 'error/path';
+                }
+            }
+
+            // Check if commission already exists
+            $exists = Ib1Commission::where('code', $this->account->code)
+                ->where('expert_position_id', $order->ExpertPositionID)
+                ->exists();
+
+            if ($exists) {
+                return null;
+            }
+
+            $symbolpath = $symbolMappings[$symbolWithoutP];
+            $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
+            // Calculate lot size
+            $lotSize = $this->calculateLotSize($order->VolumeInitialExt, $order->ContractSize ?? 100000);
+
+            // Prepare IB commission data
+            return [
+                'id' => (string)Str::orderedUuid(),
+                'user_id' => $this->account->user_id,
+                'account_id' => $this->account->id,
+                'order_id' => $order->Order,
+                'expert_position_id' => $order->ExpertPositionID,
+                'code' => $order->Login,
+                'init_volume' => $order->VolumeInitial,
+                'symbol' => $symbolWithoutP,
+                'orderstate' => $order->State,
+                'volume' => $order->VolumeInitial * $b,
+                'time_closed' => Carbon::createFromTimestamp($order->TimeDone),
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Error processing order for IB commission: " . $e->getMessage());
+            return null;
+        }
+    }
+
+   protected function processAccount($accountId): void
     {
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
@@ -89,7 +152,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 return;
             }
 
-            // Log::info('Syncing account trades for account: ' . $this->account->code);
+            Log::info('Syncing account trades for account: ' . $this->account->code);
             $login = $this->account->code;
             $from = 'September 01,2024';
             $to = 'March 31,2080';
@@ -101,137 +164,88 @@ class SyncAccountTradesJob implements ShouldQueue
             });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error('MT5 ' . $login . ': Failed to get history total');
+                Log::error("Failed to get total trades for account {$login}: " . MTRetCode::GetError($error_code));
                 return;
             }
 
-            $closedOrderHistory = $total;
-            if ($closedOrderHistory == 0) {
+            if ($total == 0) {
+                Log::info("No trades found for account {$login}");
                 return;
             }
 
-            $offset = Ib1Commission::where('code', $login)->count();
-            $total = $closedOrderHistory;
+            // Use pagination to get all trades
+            $orders = [];
+            $pageSize = 1000; // Fetch 1000 orders at a time
+            $totalPages = ceil($total / $pageSize);
+            $pageCount = 0;
+            $symbolMappings = $this->getSymbolMappings();
 
-            $maxTries = 10;
-            $attempts = 0;
-            $processedOrders = [];
-            $symbolMappings = Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
-                return Symbol::pluck('path', 'symbol')->toArray();
-            });
+            while (count($orders) < $total) {
+                $pageCount++;
+                $currentPageSize = min($pageSize, $total - count($orders));
+                $position = count($orders);
 
-            while ($offset < $total && $attempts < $maxTries) {
-                // Get trade history using queue-safe service
-                $historyResult = $this->mt5Service->getTradeHistorySafe($login, strtotime($from), strtotime($to));
+                $pageOrders = [];
+                $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $from, $to, $position, $currentPageSize, &$pageOrders) {
+                    return $api->HistoryGetPage($login, $from, $to, $position, $currentPageSize, $pageOrders);
+                });
 
-                if (!$historyResult || !isset($historyResult['deals'])) {
-                    Log::error('MT5 ' . $login . ': Failed to get trade history');
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("Failed to get trades page for account {$login}: " . MTRetCode::GetError($error_code));
                     break;
                 }
 
-                $orders = $historyResult['deals'];
-                $total = $historyResult['total'] ?? count($orders);
-
-                if ($orders) {
-                    $ibcommissions = [];
-                    $orderIdsAndCodes = [];
-
-                    foreach ($orders as $item) {
-                        // if ($item->State != 4) {
-                        //     continue;
-                        // }
-                        $symbolWithoutP = $item->Symbol;
-                        if (!isset($symbolMappings[$symbolWithoutP])) {
-                            try {
-                                $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
-                                $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
-                            } catch (Exception $e) {
-                                Log::error('Error fetching symbol: ' . $e->getMessage());
-                                $symbolMappings[$symbolWithoutP] = 'error/path';
-                            }
-                        }
-
-                        $symbolpath = $symbolMappings[$symbolWithoutP];
-                        $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
-                        if (in_array($item->Order . '-' . $item->Login, $processedOrders)) {
-                            continue;
-                        }
-                        //                    $lotSize = $this->calculateLotSize($item->VolumeInitial, $item->ContractSize);
-                        $existingCommission = Ib1Commission::where('order_id', $item->Order)
-                            ->where('code', $item->Login)
-                            ->limit(1)
-                            ->exists();
-
-                        if ($existingCommission) {
-                            continue;
-                        }
-
-                        $processedOrders[] = $item->Order . '-' . $item->Login;
-                        Log::info("ibcommissionsfffffffffcount ".json_encode($item));
-                        $ibcommissions[] = [
-                            'id' => (string)Str::orderedUuid(),
-                            'user_id' => $this->account->user_id,
-                            'account_id' => $this->account->id,
-                            'order_id' => $item->Order,
-                            'expert_position_id' => $item->ExpertPositionID,
-                            'code' => $item->Login,
-                            'init_volume' => $item->VolumeInitial,
-                            'symbol' => $symbolWithoutP,
-                            'orderstate' => $item->State,
-                            'volume' => $item->VolumeInitial * $b,
-                            'time_closed' => Carbon::createFromTimestamp($item->TimeDone),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                        Log::info("ibcommissionssssssssss count ".count($ibcommissions));
-                        if (count($ibcommissions) == 100) {
-                            try {
-                                Ib1Commission::insert($ibcommissions);
-                                $this->newTrades = true;
-                            } catch (Exception $e) {
-                                Log::error('Error inserting commission = : ' . $e->getMessage());
-                            }
-                            $ibcommissions = [];
-                        }
-                    }
-
-                    if (count($ibcommissions) > 0) {
-                        try {
-                            Ib1Commission::insert($ibcommissions);
-                            $this->newTrades = true;
-                        } catch (Exception $e) {
-                            Log::error('Error inserting commission: ' . $e->getMessage());
-                        }
-                    }
-                    $this->processTradeBatch($orders, $this->account);
-                    Log::info('Batch processed');
+                if (count($pageOrders) === 0) {
+                    Log::warning("Got 0 orders on page {$pageCount}, stopping pagination");
+                    break;
                 }
 
-                $offset += count($orders);
+                // Process orders in batches for better performance
+                $ibCommissionBatch = [];
+                foreach ($pageOrders as $order) {
+                    $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
+                    if ($ibCommission) {
+                        $ibCommissionBatch[] = $ibCommission;
+                    }
 
-                $attempts++;
-                if ($attempts >= $maxTries) {
-                    Log::warning("Reached max tries for account: $login after $attempts attempts.");
+                    // Insert in batches of batchSize
+                    if (count($ibCommissionBatch) >= $this->batchSize) {
+                        Ib1Commission::insert($ibCommissionBatch);
+                        $ibCommissionBatch = [];
+                    }
+                }
+
+                // Insert any remaining records
+                if (!empty($ibCommissionBatch)) {
+                    Log::info('Processing remaining IB commissions batch');
+                    Ib1Commission::insert($ibCommissionBatch);
+                    $this->newTrades = true;
+                }
+
+                $orders = array_merge($orders, $pageOrders);
+
+                // Small delay between pages to avoid overwhelming MT5
+                if (count($orders) < $total) {
+                    usleep(50000); // 0.05 second delay between pages
                 }
             }
 
-            if ($attempts >= $maxTries) {
-                Log::error("Reached maximum attempts for account: $login. Skipping.");
-            }
+            Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
+
+            // Dispatch the IB commission job if we had new trades
             if ($this->newTrades) {
-                Log::info('New Trades exists');
-                // ($referral_code, $userId, $ib_acc_plans)
-                // info('Dispatching DistributeIbCommissionJob for account: ' . json_encode([$this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id]));
+                Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
                 DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             }
         } catch (\Exception $e) {
-            Log::error("SyncAccountTradesJob failed for account {$accountId}: " . $e->getMessage());
-            // Don't throw here since we're processing multiple accounts
+            Log::error("Error processing account {$accountId}: " . $e->getMessage());
+            throw $e;
         }
     }
     private function processTradeBatch(array $orders, $account)
     {
-        $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+        // $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+        $ordersByPosition = collect($orders)->groupBy('PositionID');
         $tradesToUpsert = [];
 
         foreach ($ordersByPosition as $positionId => $positionOrders) {
@@ -291,8 +305,8 @@ class SyncAccountTradesJob implements ShouldQueue
             'order_id' => $openOrder->Order,
             'symbol' => $openOrder->Symbol,
             'type' => $openOrder->Type,
-            'volume' => $openOrder->VolumeInitial,
-            'volume_ext' => $openOrder->VolumeInitialExt,
+            'volume' => $openOrder->Volume,
+            'volume_ext' => $openOrder->Volume,
             'open_price' => $openOrder->PriceCurrent,
             'close_price' => $closeOrder->PriceCurrent,
             'sl' => $openOrder->PriceSL,
@@ -301,7 +315,7 @@ class SyncAccountTradesJob implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 10000000) * $openOrder->ContractSize,
+            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->Volume / 10000000) * $openOrder->ContractSize,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
@@ -321,4 +335,5 @@ class SyncAccountTradesJob implements ShouldQueue
 
         // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
     }
+
 }
