@@ -76,8 +76,8 @@ class PrioritySyncAccountsCommand extends Command
     protected function getPendingJobsCount(): int
     {
         try {
-            // For Redis queue - check the queue size
-            $queueName = 'queues:optimized-sync-trades';
+            // For Redis queue - check the queue size for the correct queue name
+            $queueName = 'queues:priority-sync-trades';
             $pendingCount = Redis::llen($queueName);
 
             // Also check for any delayed/reserved jobs

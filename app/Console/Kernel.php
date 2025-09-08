@@ -25,10 +25,14 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('app:breach-account')->everyMinute();
 
-        $schedule->command('app:sync-accounts')->everyFiveMinutes();
-        // $schedule->command('app:optimized-sync-trades')->everyFiveMinutes();
+        // CONSOLIDATED SYNC: Use priority-sync instead of multiple commands
+        $schedule->command('app:priority-sync --daemon --max-pending-jobs=100')->everyFiveMinutes()->withoutOverlapping();
+
+        // DISABLED: Replaced by priority-sync
+        // $schedule->command('app:sync-accounts')->everyFiveMinutes();
+        // $schedule->command('app:sync-account-trades')->everyTenMinutes();
+
         $schedule->command('app:sync-daily-reports')->daily();
-        $schedule->command('app:sync-account-trades')->everyTenMinutes();
 
         // Sync all non-competition accounts trades - uncomment to enable
         // $schedule->command('app:sync-all-accounts-trades --batch-size=20 --delay=60')->everyThirtyMinutes();
