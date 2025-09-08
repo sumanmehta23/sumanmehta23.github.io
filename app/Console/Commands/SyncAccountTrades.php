@@ -44,7 +44,7 @@ class SyncAccountTrades extends Command
                         ->get()
                         ->toArray();
                 });
-                
+
                 // Transform IB Plans for easy access
                 $ib_acc_plans = [];
                 foreach ($ibPlans as $plan) {
@@ -80,11 +80,11 @@ class SyncAccountTrades extends Command
                         if ($totalJobsCreated >= $maxJobs) {
                             return false; // Stop chunking
                         }
-                        Log::info("accountssss ".json_encode($accounts));
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
 
+                        Log::info("accountChunksssssss ".json_encode($accountChunks));
                         foreach ($accountChunks as $accountChunk) {
                             if ($totalJobsCreated >= $maxJobs) {
                                 break;
