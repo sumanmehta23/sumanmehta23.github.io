@@ -235,6 +235,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 // Insert any remaining records
                 if (!empty($ibCommissionBatch)) {
                     Ib1Commission::insert($ibCommissionBatch);
+                    $this->newTrades = true;
                 }
 
                 $orders = array_merge($orders, $pageOrders);
