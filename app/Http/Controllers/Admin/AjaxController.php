@@ -1769,7 +1769,7 @@ class AjaxController extends Controller
         if ($request->ajax()) {
             return DataTables::of($query)
                 ->editColumn('amount', function ($row) {
-                    return @money($row->ib_wallet) ?? @money($row->ib_withdraw);
+                    return $row->code ? @money($row->ib_wallet) : @money($row->ib_withdraw);
                 })
                 ->addColumn('type', function ($row) {
                     return $row->ib_wallet ? 'Commission' : 'Transfer';
