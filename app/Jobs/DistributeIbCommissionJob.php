@@ -42,7 +42,7 @@ class DistributeIbCommissionJob implements ShouldQueue
      */
     public function handle(): void
     {
-
+        Log::info("referral_code " . $this->referral_code . " userId " . $this->userId . " accountId " . $this->accountId);
         //Find all parent Ib of current account owner and distribute commission , change status of commission to 1
         DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
         for ($i = 1; $i <= 15; $i++) {

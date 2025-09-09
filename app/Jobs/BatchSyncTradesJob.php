@@ -4,10 +4,12 @@ namespace App\Jobs;
 
 use App\Models\Trade;
 use App\Models\Account;
+use App\Services\TradeCacheService;
 use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,10 +32,12 @@ class BatchSyncTradesJob implements ShouldQueue
 
     protected $accounts;
     protected $fromTimes;
+    protected $maxTradesLimit;
+    protected $minTradesLimit;
     public $timeout = 300; // 5 minutes for batch
     public $tries = 2;
 
-    public function __construct(array $accounts, array $fromTimes = [])
+    public function __construct(array $accounts, array $fromTimes = [], int $maxTradesLimit = null, int $minTradesLimit = null)
     {
         // Convert Account models to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
@@ -47,13 +51,15 @@ class BatchSyncTradesJob implements ShouldQueue
         })->toArray();
 
         $this->fromTimes = $fromTimes;
+        $this->maxTradesLimit = $maxTradesLimit;
+        $this->minTradesLimit = $minTradesLimit;
 
         // Set timeout based on number of accounts with optimized timing
         // Base: 5 minutes, then 60 seconds per account (reduced from 90) + 2 minute buffer (reduced from 5)
         $this->timeout = max(300, count($accounts) * 60 + 120);
     }
 
-    public function handle(UniversalMT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service, TradeCacheService $cacheService)
     {
         $jobStartTime = microtime(true);
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
@@ -68,7 +74,8 @@ class BatchSyncTradesJob implements ShouldQueue
             'success' => 0,
             'errors' => 0,
             'no_changes' => 0,
-            'not_found' => 0
+            'not_found' => 0,
+            'skipped' => 0
         ];
 
         $connectionTime = 0;
@@ -83,6 +90,10 @@ class BatchSyncTradesJob implements ShouldQueue
             $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
             $api = $mt5Service->getApi();
 
+            // Pre-warm cache for all accounts in this batch
+            $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
+            $cacheService->warmupAccounts($accountModels->all());
+
             foreach ($this->accounts as $index => $accountData) {
                 $accountIterationStart = microtime(true);
                 try {
@@ -96,8 +107,35 @@ class BatchSyncTradesJob implements ShouldQueue
                     }
 
                     $fromTime = $this->fromTimes[$index] ?? now()->subDays(7);
-                    $result = $this->syncSingleAccount($api, $account, $fromTime);
-                    $results[$result]++;
+                    $result = $this->syncSingleAccount($api, $account, $fromTime, $cacheService);
+
+                    // Map the result status to the correct results array key
+                    switch ($result) {
+                        case 'error':
+                            $results['errors']++;
+                            break;
+                        case 'success':
+                            $results['success']++;
+                            break;
+                        case 'no_changes':
+                            $results['no_changes']++;
+                            break;
+                        case 'not_found':
+                            $results['not_found']++;
+                            break;
+                        case 'skipped_high_volume':
+                        case 'skipped_low_volume':
+                            // Track skipped accounts separately but don't count as errors
+                            if (!isset($results['skipped'])) {
+                                $results['skipped'] = 0;
+                            }
+                            $results['skipped']++;
+                            break;
+                        default:
+                            Log::warning("Unknown sync result status: {$result} for account {$account->code}");
+                            $results['errors']++;
+                            break;
+                    }
                     $results['processed']++;
 
                     $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
@@ -155,10 +193,13 @@ class BatchSyncTradesJob implements ShouldQueue
         Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
             "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
             "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']} " .
+            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
             "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
 
         Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+
+        // Clear sync-in-progress cache for all accounts in this batch
+        $this->clearBatchSyncInProgressCache();
     }
 
     private function calculateMedian(array $values): float
@@ -174,7 +215,7 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function syncSingleAccount($api, Account $account, Carbon $fromTime): string
+    protected function syncSingleAccount($api, Account $account, Carbon $fromTime, TradeCacheService $cacheService): string
     {
         $accountStartTime = microtime(true);
         $timings = [];
@@ -198,12 +239,9 @@ class BatchSyncTradesJob implements ShouldQueue
         }
 
         try {
-            // Phase 2: Database Query for Existing Trades
+            // Phase 2: Cached Database Query for Existing Trades
             $phaseStart = microtime(true);
-            $existingTrades = Trade::where('account_id', $account->id)
-                ->select(['id', 'position_id', 'status', 'close_time', 'updated_at'])
-                ->get()
-                ->keyBy('position_id');
+            $existingTrades = $cacheService->getAccountTrades($account);
             $timings['db_existing_trades'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             $login = $account->code;
@@ -234,23 +272,156 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'no_changes';
             }
 
-            // Phase 4: MT5 HistoryGetPage
-            $phaseStart = microtime(true);
-            $error_code = $this->executeWithRetries(function () use ($api, $login, $fromDate, $toDate, $total, &$orders) {
-                return $api->HistoryGetPage($login, $fromDate, $toDate, 0, $total, $orders);
-            });
-            $timings['mt5_history_page'] = round((microtime(true) - $phaseStart) * 1000, 2);
-            $apiCalls[] = ['HistoryGetPage', $timings['mt5_history_page']];
+            // TRADE COUNT FILTERING: Skip accounts based on trade count limits
+            // Consider both MT5 total and existing database trades for intelligent filtering
+            $existingTradesCount = $existingTrades->count();
+            $newTradesToProcess = max(0, $total - $existingTradesCount); // Estimate new trades to process
+            $totalTradesInSystem = $existingTradesCount; // Current database count
 
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("MT5 HistoryGetPage error for login {$login}: " . MTRetCode::GetError($error_code));
-                $this->updateSyncStatus($account, 'error');
-                return 'error';
+            Log::info("TRADE_ANALYSIS[{$account->code}]: MT5 total: {$total}, DB existing: {$existingTradesCount}, Estimated new: {$newTradesToProcess}");
+
+            // Skip if too many total trades in database (regardless of new trades)
+            if ($this->maxTradesLimit !== null && $totalTradesInSystem > $this->maxTradesLimit) {
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$totalTradesInSystem} existing trades in DB exceeds max limit of {$this->maxTradesLimit} - use high-volume sync");
+                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many existing trades ({$totalTradesInSystem}) - use high-volume sync");
+                return 'skipped_high_volume';
             }
 
-            // Phase 5: Data Processing - Orders Grouping
+            // Skip if too many new trades to process (performance consideration)
+            if ($this->maxTradesLimit !== null && $newTradesToProcess > ($this->maxTradesLimit * 0.5)) {
+                $maxNewTrades = intval($this->maxTradesLimit * 0.5);
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$newTradesToProcess} new trades exceeds processing limit of {$maxNewTrades} - use high-volume sync");
+                $this->updateSyncStatus($account, 'skipped_high_volume', 0, "Too many new trades to process ({$newTradesToProcess}) - use high-volume sync");
+                return 'skipped_high_volume';
+            }
+
+            if ($this->minTradesLimit !== null && $total < $this->minTradesLimit) {
+                $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
+                Log::info("SKIP[{$account->code}]: {$total} trades below min limit of {$this->minTradesLimit} - use regular sync");
+                $this->updateSyncStatus($account, 'skipped_low_volume', 0, "Too few trades ({$total}) - use regular sync");
+                return 'skipped_low_volume';
+            }
+
+            Log::info("Account {$account->code} has {$total} MT5 orders, {$existingTradesCount} existing DB trades, ~{$newTradesToProcess} new to process" .
+                ($this->maxTradesLimit ? " (limit: {$this->maxTradesLimit})" : "") .
+                ($this->minTradesLimit ? " (min: {$this->minTradesLimit})" : ""));
+
+            // Phase 4: MT5 HistoryGetPage with Adaptive Pagination
             $phaseStart = microtime(true);
-            $ordersByPosition = collect($orders)->groupBy('ExpertPositionID');
+            $orders = [];
+            $requestedPageSize = 1000; // What we request
+            $actualPageSize = 100; // MT5 server limit (will be detected)
+            $totalHistoryTime = 0;
+            $pageCount = 0;
+
+            Log::info("DEBUG[{$account->code}]: Starting adaptive pagination for {$total} orders");
+
+            while (count($orders) < $total) {
+                $startIndex = count($orders);
+                $remainingOrders = $total - $startIndex;
+                $pageOrders = [];
+                $currentPageSize = min($requestedPageSize, $remainingOrders);
+
+                $pageStart = microtime(true);
+                $error_code = $this->executeWithRetries(function () use ($api, $login, $fromDate, $toDate, $startIndex, $currentPageSize, &$pageOrders) {
+                    return $api->HistoryGetPage($login, $fromDate, $toDate, $startIndex, $currentPageSize, $pageOrders);
+                });
+                $pageTime = round((microtime(true) - $pageStart) * 1000, 2);
+                $totalHistoryTime += $pageTime;
+                $pageCount++;
+
+                if ($error_code != MTRetCode::MT_RET_OK) {
+                    Log::error("MT5 HistoryGetPage error for login {$login} page {$pageCount}: " . MTRetCode::GetError($error_code));
+                    $this->updateSyncStatus($account, 'error');
+                    return 'error';
+                }
+
+                // Detect actual page size from first response
+                if ($pageCount === 1 && count($pageOrders) < $requestedPageSize) {
+                    $actualPageSize = count($pageOrders);
+                    Log::info("DEBUG[{$account->code}]: Detected actual page size: {$actualPageSize} (requested: {$requestedPageSize})");
+                }
+
+                // Merge page results
+                $orders = array_merge($orders, $pageOrders);
+                Log::info("DEBUG[{$account->code}]: Page {$pageCount} fetched " . count($pageOrders) . " orders in {$pageTime}ms (total so far: " . count($orders) . "/{$total})");
+
+                // Safety check: if we got fewer orders than expected and it's not the last page
+                if (count($pageOrders) === 0) {
+                    Log::warning("DEBUG[{$account->code}]: Got 0 orders on page {$pageCount}, stopping pagination");
+                    break;
+                }
+
+                // If we got fewer orders than requested, we might be at the end
+                if (count($pageOrders) < $currentPageSize && count($orders) < $total) {
+                    Log::warning("DEBUG[{$account->code}]: Got " . count($pageOrders) . " orders (expected {$currentPageSize}), may be at end of data");
+                }
+
+                // Small delay between pages to avoid overwhelming MT5
+                if (count($orders) < $total) {
+                    usleep(50000); // 0.05 second delay between pages
+                }
+            }
+
+            $timings['mt5_history_page'] = $totalHistoryTime;
+            $apiCalls[] = ['HistoryGetPage', $totalHistoryTime];
+
+            Log::info("DEBUG[{$account->code}]: Successfully fetched " . count($orders) . " total orders in {$pageCount} pages ({$totalHistoryTime}ms)");
+            if ($login == 394402) {
+                Log::info("Orders for account {$account->code}: " . json_encode($orders));
+            }
+
+            // Phase 5: Data Processing - Group Orders into Positions
+            $phaseStart = microtime(true);
+
+            Log::info("DEBUG[{$account->code}]: Processing {$total} orders to identify positions");
+
+            // CORRECT APPROACH: Group orders by position to identify complete trades
+            // Each position consists of at least 2 orders: open and close
+
+            // First, let's analyze what position identifiers are available
+            $ordersWithExpertPositionID = collect($orders)->filter(fn($order) => !empty($order->ExpertPositionID) && $order->ExpertPositionID > 0)->count();
+            $ordersWithPositionId = collect($orders)->filter(fn($order) => isset($order->PositionID) && $order->PositionID > 0)->count();
+            $ordersWithPositionBy = collect($orders)->filter(fn($order) => isset($order->PositionBy) && $order->PositionBy > 0)->count();
+
+            Log::info("DEBUG[{$account->code}]: Position Analysis - " .
+                "ExpertPositionID > 0: {$ordersWithExpertPositionID}, " .
+                "PositionID > 0: {$ordersWithPositionId}, " .
+                "PositionBy > 0: {$ordersWithPositionBy}");
+
+            // Determine the best position identifier to use
+            $positionField = null;
+            if ($ordersWithExpertPositionID > 0) {
+                $positionField = 'ExpertPositionID';
+            } elseif ($ordersWithPositionId > 0) {
+                $positionField = 'PositionID';
+            } elseif ($ordersWithPositionBy > 0) {
+                $positionField = 'PositionBy';
+            }
+
+            if ($positionField) {
+                // Group orders by position identifier
+                $ordersByPosition = collect($orders)
+                    ->filter(fn($order) => isset($order->$positionField) && $order->$positionField > 0)
+                    ->groupBy(fn($order) => $order->$positionField);
+
+                Log::info("DEBUG[{$account->code}]: Using {$positionField} for grouping. Found {$ordersByPosition->count()} positions");
+            } else {
+                // Fallback: Create artificial positions by grouping similar orders
+                // Group by Symbol + Volume + approximate time window
+                $ordersByPosition = collect($orders)
+                    ->filter(fn($order) => !empty($order->Symbol))
+                    ->groupBy(function ($order) {
+                        // Create artificial position ID based on symbol, volume, and time window
+                        $timeWindow = floor($order->TimeDone / 3600) * 3600; // 1-hour windows
+                        return $order->Symbol . '_' . $order->VolumeInitial . '_' . $timeWindow;
+                    });
+
+                Log::info("DEBUG[{$account->code}]: No position IDs found. Using fallback grouping. Created {$ordersByPosition->count()} artificial positions");
+            }
+
             $tradesToUpsert = [];
             $savedCount = 0;
             $timings['orders_processing'] = round((microtime(true) - $phaseStart) * 1000, 2);
@@ -269,55 +440,125 @@ class BatchSyncTradesJob implements ShouldQueue
                 return 'error';
             }
 
-            // Phase 7: MT5 DealGetPage (if deals exist)
+            // Phase 7: MT5 DealGetPage with Adaptive Pagination (if deals exist)
             if ($totalDeals > 0) {
                 $phaseStart = microtime(true);
-                $error_code = $api->DealGetPage($account->code, $fromDate, $toDate, 0, $totalDeals, $allDeals);
-                $timings['mt5_deal_page'] = round((microtime(true) - $phaseStart) * 1000, 2);
-                $apiCalls[] = ['DealGetPage', $timings['mt5_deal_page']];
+                $allDeals = [];
+                $requestedDealPageSize = 1000; // What we request
+                $totalDealTime = 0;
+                $dealPageCount = 0;
 
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get deals for account {$account->code}: " . MTRetCode::GetError($error_code));
-                    $this->updateSyncStatus($account, 'error');
-                    return 'error';
+                Log::info("DEBUG[{$account->code}]: Starting adaptive pagination for {$totalDeals} deals");
+
+                while (count($allDeals) < $totalDeals) {
+                    $startIndex = count($allDeals);
+                    $remainingDeals = $totalDeals - $startIndex;
+                    $pageDeals = [];
+                    $currentDealPageSize = min($requestedDealPageSize, $remainingDeals);
+
+                    $dealPageStart = microtime(true);
+                    $error_code = $this->executeWithRetries(function () use ($api, $account, $fromDate, $toDate, $startIndex, $currentDealPageSize, $totalDeals, &$pageDeals) {
+                        return $api->DealGetPage($account->code, $fromDate, $toDate, $startIndex, $totalDeals, $pageDeals);
+                    });
+                    $dealPageTime = round((microtime(true) - $dealPageStart) * 1000, 2);
+                    $totalDealTime += $dealPageTime;
+                    $dealPageCount++;
+
+                    if ($error_code != MTRetCode::MT_RET_OK) {
+                        Log::error("MT5 DealGetPage error for login {$account->code} page {$dealPageCount}: " . MTRetCode::GetError($error_code));
+                        $this->updateSyncStatus($account, 'error');
+                        return 'error';
+                    }
+
+                    // Merge page results
+                    $allDeals = array_merge($allDeals, $pageDeals);
+                    Log::info("DEBUG[{$account->code}]: Deal page {$dealPageCount} fetched " . count($pageDeals) . " deals in {$dealPageTime}ms (total so far: " . count($allDeals) . "/{$totalDeals})");
+
+                    // Safety check: if we got fewer deals than expected
+                    if (count($pageDeals) === 0) {
+                        Log::warning("DEBUG[{$account->code}]: Got 0 deals on page {$dealPageCount}, stopping deal pagination");
+                        break;
+                    }
+
+                    // If we got fewer deals than requested, log it
+                    if (count($pageDeals) < $currentDealPageSize && count($allDeals) < $totalDeals) {
+                        Log::warning("DEBUG[{$account->code}]: Got " . count($pageDeals) . " deals (expected {$currentDealPageSize}), may be at end of deal data");
+                    }
+
+                    // Small delay between pages to avoid overwhelming MT5
+                    if (count($allDeals) < $totalDeals) {
+                        usleep(50000); // 0.05 second delay between pages
+                    }
                 }
+
+                $timings['mt5_deal_page'] = $totalDealTime;
+                $apiCalls[] = ['DealGetPage', $totalDealTime];
+
+                Log::info("DEBUG[{$account->code}]: Successfully fetched " . count($allDeals) . " total deals in {$dealPageCount} pages ({$totalDealTime}ms)");
             } else {
                 $timings['mt5_deal_page'] = 0;
             }
 
-            // Phase 8: Trade Data Preparation
-            $phaseStart = microtime(true);
-            // Phase 8: Trade Data Preparation
+            // Phase 8: Trade Data Preparation - Process Positions (complete trades)
             $phaseStart = microtime(true);
             $batchProcessingTime = 0;
+            $skippedTradesCount = 0; // Track skipped trades with invalid position_id
+
             foreach ($ordersByPosition as $positionId => $positionOrders) {
+                // Sort orders by time to identify open/close sequence
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
 
-                // Filter deals for this specific position from the already-fetched deals
-                $filteredDeals = array_values(array_filter($allDeals, fn($deal) => $deal->Order == $positionId));
-                $rateProfit = $filteredDeals[0]->RateProfit ?? 1;  // Default to 1 if no deal found
+                // Filter deals for this specific position - improved matching
+                $filteredDeals = array_values(array_filter($allDeals, function ($deal) use ($positionOrders) {
+                    // Match deals to any order in this position
+                    foreach ($positionOrders as $order) {
+                        if ($deal->Order == $order->Order) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }));
 
-                if ($positionOrders->count() < 2) {
-                    // OPEN TRADE: Insert if does not exist
+                // Calculate actual profit from deals if available
+                $actualProfit = 0;
+                $rateProfit = 1;
+                if (!empty($filteredDeals)) {
+                    // Sum actual profit from all deals in this position
+                    $actualProfit = array_sum(array_map(function ($deal) {
+                        return $deal->Profit ?? 0;
+                    }, $filteredDeals));
+                    $rateProfit = $filteredDeals[0]->RateProfit ?? 1;
+                }
+
+                // Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
+                //     (count($filteredDeals) > 0 ? ", actual profit: {$actualProfit}" : ""));
+
+                if ($positionOrders->count() == 1) {
+                    // Single order = Open position (no close yet)
                     if (!$existingTrade) {
                         $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
-                        $tradesToUpsert[] = $tradeData;
-                        $savedCount++;
+                        if ($tradeData !== null) {
+                            $tradesToUpsert[] = $tradeData;
+                            $savedCount++;
+                        } else {
+                            $skippedTradesCount++;
+                        }
                     }
-                } else {
-                    // CLOSED TRADE: Update if exists, otherwise insert new
-                    if ($existingTrade) {
-                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
-                        // Set ID to perform update on the correct row
-                        $closedTradeData['id'] = $existingTrade->id;
+                } elseif ($positionOrders->count() >= 2) {
+                    // Multiple orders = Closed position (open + close)
+                    $openOrder = $positionOrders->first();  // First order = open
+                    $closeOrder = $positionOrders->last();  // Last order = close
+
+                    $closedTradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit, $rateProfit);
+                    if ($closedTradeData !== null) {
+                        if ($existingTrade) {
+                            $closedTradeData['id'] = $existingTrade->id; // Update existing
+                        }
                         $tradesToUpsert[] = $closedTradeData;
                         $savedCount++;
                     } else {
-                        // No open trade exists but we have a closed trade - insert it
-                        $closedTradeData = $this->prepareClosedTrade($account, $positionId, $positionOrders->first(), $positionOrders->last(), $rateProfit);
-                        $tradesToUpsert[] = $closedTradeData;
-                        $savedCount++;
+                        $skippedTradesCount++;
                     }
                 }
 
@@ -341,9 +582,15 @@ class BatchSyncTradesJob implements ShouldQueue
             $timings['final_batch'] = round((microtime(true) - $phaseStart) * 1000, 2);
             $timings['total_batch_processing'] = $batchProcessingTime + $timings['final_batch'];
 
-            // Phase 10: Update Account Status
+            // Phase 10: Update Account Status & Cache Invalidation
             $phaseStart = microtime(true);
             $this->updateSyncStatus($account, 'success', $savedCount);
+
+            // Invalidate cache since we've updated trades
+            if ($savedCount > 0) {
+                $cacheService->invalidateAccount($account);
+            }
+
             $timings['status_update'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             // Final Performance Summary
@@ -355,7 +602,8 @@ class BatchSyncTradesJob implements ShouldQueue
                 "API: {$totalApiTime}ms (" . count($apiCalls) . " calls) | " .
                 "DB: {$totalDbTime}ms | " .
                 "Processing: {$timings['trade_preparation']}ms | " .
-                "Orders: {$total}, Deals: {$totalDeals}, Trades: {$savedCount} | " .
+                "Orders: {$total}, Deals: {$totalDeals}, Positions: " . $ordersByPosition->count() . ", Trades: {$savedCount}" .
+                ($skippedTradesCount > 0 ? ", Skipped: {$skippedTradesCount}" : "") . " | " .
                 "Breakdown: " . json_encode($timings) . " | " .
                 "API Calls: " . json_encode($apiCalls));
 
@@ -386,8 +634,9 @@ class BatchSyncTradesJob implements ShouldQueue
                 'account_code' => $account->code
             ]);
 
-            // Return null or throw exception to prevent trade creation
-            throw new \InvalidArgumentException("Invalid position_id for open trade: {$positionId}");
+            // Return null to skip this trade but continue with others
+            Log::warning("Skipping open trade with invalid position_id: {$positionId} for account {$account->code}");
+            return null;
         }
 
         // Log::info("account code  ".$account->code);
@@ -418,7 +667,50 @@ class BatchSyncTradesJob implements ShouldQueue
         ];
     }
 
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $rateProfit)
+    protected function prepareClosedTradeFromOrder($account, $positionId, $order, $deal)
+    {
+        // CRITICAL: Validate position_id before creating trade data
+        if (empty($positionId) || $positionId == 0 || $positionId === '0') {
+            $this->logInvalidPositionId('closed', $account, $positionId, $order, [
+                'order_data' => $order,
+                'deal_data' => $deal,
+                'account_id' => $account->id,
+                'account_code' => $account->code
+            ]);
+
+            // Return null to skip this trade but continue with others
+            Log::warning("Skipping closed trade with invalid position_id: {$positionId} for account {$account->code}");
+            return null;
+        }
+
+        // Calculate profit based on deal information
+        $profit = $deal->Profit ?? 0;
+
+        return [
+            'account_id' => $account->id,
+            'position_id' => $positionId,
+            'order_id' => $order->Order,
+            'symbol' => $order->Symbol,
+            'type' => $order->Type ? 'sell' : 'buy',
+            'volume' => $order->VolumeInitial / 10000,
+            'volume_ext' => $order->VolumeInitialExt,
+            'open_price' => $order->PriceCurrent,
+            'close_price' => $deal->Price ?? $order->PriceCurrent,
+            'sl' => $order->PriceSL,
+            'tp' => $order->PriceTP,
+            'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
+            'close_time' => date('Y-m-d H:i:s', $deal->Time ?? $order->TimeDone),
+            'state' => $order->State,
+            'comment' => $order->Comment,
+            'profit' => $profit,
+            'status' => 'closed',
+            'code' => $account->code,
+            'updated_at' => now(),
+            'created_at' => now(),
+        ];
+    }
+
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit = null, $rateProfit = 1)
     {
         // CRITICAL: Validate position_id before creating trade data
         if (empty($positionId) || $positionId == 0 || $positionId === '0') {
@@ -430,11 +722,27 @@ class BatchSyncTradesJob implements ShouldQueue
                 'account_code' => $account->code
             ]);
 
-            // Return null or throw exception to prevent trade creation
-            throw new \InvalidArgumentException("Invalid position_id for closed trade: {$positionId}");
+            // Return null to skip this trade but continue with others
+            Log::warning("Skipping closed trade with invalid position_id: {$positionId} for account {$account->code}");
+            return null;
         }
 
-        $multiplier = $openOrder->Type ? -1 : 1;
+        // Use actual profit from deals if available, otherwise calculate manually
+        $profit = 0;
+        if ($actualProfit !== null) {
+            // Use real profit from MT5 deals (preferred method)
+            $profit = round($actualProfit, 2);
+            // Log::info("DEBUG[{$account->code}]: Position {$positionId} using actual profit: {$profit}");
+        } else {
+            // Fallback: Calculate profit manually (less accurate)
+            $multiplier = $openOrder->Type ? -1 : 1;
+            $priceDiff = $closeOrder->PriceCurrent - $openOrder->PriceCurrent;
+            $volumeInLots = $openOrder->VolumeInitialExt / 100000000;
+            $contractSize = $openOrder->ContractSize ?? 100000;
+
+            $profit = round($priceDiff * $volumeInLots * $contractSize * $rateProfit * $multiplier, 2);
+            Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
+        }
 
         // Log::info("account code  ".$account->code);
         // Log::info("order  ".json_encode($closeOrder));
@@ -457,7 +765,7 @@ class BatchSyncTradesJob implements ShouldQueue
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
-            'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit * $multiplier, 2),
+            'profit' => $profit,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
@@ -511,7 +819,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'], // composite unique identifier
-                    ['close_price', 'close_time', 'state', 'status', 'profit', 'updated_at'] // only essential columns
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'updated_at'] // essential columns including volume and type
                 );
                 $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
                 Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
@@ -527,20 +835,23 @@ class BatchSyncTradesJob implements ShouldQueue
         }
     }
 
-    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0): void
+    protected function updateSyncStatus(Account $account, string $status, int $tradesCount = 0, string $customError = null): void
     {
         $syncStatus = match ($status) {
             'success', 'no_changes' => 'synced',
             'not_found' => 'error',
             'error' => 'error',
+            'skipped_high_volume', 'skipped_low_volume' => 'skipped',
             default => 'pending'
         };
 
         $syncError = null;
         if ($status === 'error') {
-            $syncError = 'Sync failed';
+            $syncError = $customError ?: 'Sync failed';
         } elseif ($status === 'not_found') {
             $syncError = 'MT5 account not found';
+        } elseif (in_array($status, ['skipped_high_volume', 'skipped_low_volume'])) {
+            $syncError = $customError;
         }
 
         $account->update([
@@ -626,5 +937,40 @@ class BatchSyncTradesJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Clear sync-in-progress cache for all accounts in this batch
+     */
+    protected function clearBatchSyncInProgressCache(): void
+    {
+        foreach ($this->accounts as $accountData) {
+            Cache::forget("account_sync_in_progress:{$accountData['id']}");
+        }
+
+        $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
+        Log::debug("Cleared sync-in-progress cache for accounts: {$accountCodes}");
+    }
+
+    /**
+     * Handle job failure - clear sync-in-progress cache and reset account status
+     */
+    public function failed(\Throwable $exception)
+    {
+        Log::error("BatchSyncTradesJob permanently failed: " . $exception->getMessage(), [
+            'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+            'exception' => $exception->getTraceAsString()
+        ]);
+
+        // Clear sync-in-progress cache so accounts can be retried
+        $this->clearBatchSyncInProgressCache();
+
+        // Reset account sync status so they can be retried by the next cycle
+        $accountIds = collect($this->accounts)->pluck('id')->toArray();
+        Account::whereIn('id', $accountIds)
+            ->update([
+                'sync_status' => 'needs_retry',
+                'sync_error' => 'Job failed after max attempts: ' . $exception->getMessage()
+            ]);
     }
 }

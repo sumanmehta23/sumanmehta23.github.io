@@ -302,8 +302,9 @@ class Ib extends Controller
             ->first();
 
         if ($ib_wallet_raw) {
-            $ib_wallet = $ib_wallet_raw->wallet - $ib_wallet_raw->withdraw;
+            $ib_wallet = number_format($ib_wallet_raw->wallet - $ib_wallet_raw->withdraw,2);
         }
+
         $live_accs = Account::where('user_id', $userId)
             ->select('id', 'balance', 'code')
             ->where('demo', false)

@@ -25,7 +25,7 @@ class SyncAccountTrades extends Command
         $totalJobsCreated = 0;
         Ib1::with(['planDetails', 'user'])  // Eager load related models
             ->where('status', 1)
-            // ->where('email', 'zhawk1@protonmail.com')
+            // ->where('email', 'hautranrcb@gmail.com')
             ->whereNotNull('ib_plan_details_id')
             ->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, &$totalJobsCreated) {
@@ -80,11 +80,9 @@ class SyncAccountTrades extends Command
                         if ($totalJobsCreated >= $maxJobs) {
                             return false; // Stop chunking
                         }
-
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
-
                         foreach ($accountChunks as $accountChunk) {
                             if ($totalJobsCreated >= $maxJobs) {
                                 break;

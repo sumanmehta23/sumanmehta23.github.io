@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 /**
@@ -29,11 +30,17 @@ class PrioritySyncAccountsCommand extends Command
                             {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
                             {--min-sync-interval= : Minimum minutes between syncs for same account (default from config)}
                             {--max-pending-jobs= : Maximum pending BatchSyncTradesJob jobs allowed (default from config)}
+                            {--max-trades= : Skip accounts with more than this many pending trades (e.g., 200)}
+                            {--min-trades= : Only sync accounts with at least this many pending trades}
+                            {--trades-range= : Sync accounts with trades in range, format: min,max (e.g., 200,500)}
                             {--ignore-balance-filter : Sync all accounts regardless of balance changes}
+                            {--oldest-first : Prioritize older accounts (created_at asc) over newer accounts (default: newest first)}
                             {--daemon : Run continuously as daemon}
-                            {--status : Show current sync status}';
+                            {--status : Show current sync status}
+                            {--unflag-account= : Manually unflag a problematic account by code}
+                            {--clear-stuck-cache : Clear all stuck account cache markers}';
 
-    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs';
+    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs. Supports trade count filtering.';
 
     public function handle()
     {
@@ -43,11 +50,40 @@ class PrioritySyncAccountsCommand extends Command
         $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 60));
         $maxPendingJobs = (int) ($this->option('max-pending-jobs') ?: config('sync-all-trades.priority_sync.max_pending_jobs', 100));
         $ignoreBalanceFilter = $this->option('ignore-balance-filter');
+        $oldestFirst = $this->option('oldest-first'); // Default is newest first
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
 
+        // Parse trade count filtering options
+        $maxTrades = $this->option('max-trades') ? (int) $this->option('max-trades') : null;
+        $minTrades = $this->option('min-trades') ? (int) $this->option('min-trades') : null;
+
+        // Parse trades range (format: min,max)
+        if ($this->option('trades-range')) {
+            $range = explode(',', $this->option('trades-range'));
+            if (count($range) === 2) {
+                $minTrades = (int) trim($range[0]);
+                $maxTrades = (int) trim($range[1]);
+            } else {
+                $this->error("Invalid trades-range format. Use: min,max (e.g., 200,500)");
+                return 1;
+            }
+        }
+
         if ($showStatus) {
             $this->showSyncStatus();
+            return;
+        }
+
+        // Handle account unflagging
+        if ($this->option('unflag-account')) {
+            $this->unflagAccount($this->option('unflag-account'));
+            return;
+        }
+
+        // Handle clearing stuck cache
+        if ($this->option('clear-stuck-cache')) {
+            $this->clearAllStuckCache();
             return;
         }
 
@@ -57,6 +93,30 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("- Cycle delay: {$cycleDelay}s" . ($this->option('cycle-delay') ? '' : ' (config)'));
         $this->info("- Min sync interval: {$minSyncInterval}m" . ($this->option('min-sync-interval') ? '' : ' (config)'));
         $this->info("- Max pending jobs: {$maxPendingJobs}" . ($this->option('max-pending-jobs') ? '' : ' (config)'));
+
+        // Trade count filtering info
+        if ($maxTrades || $minTrades) {
+            if ($minTrades && $maxTrades) {
+                $this->warn("- Trade count filter: {$minTrades} to {$maxTrades} trades only");
+            } elseif ($maxTrades) {
+                $this->warn("- Max trades filter: Skip accounts with > {$maxTrades} trades");
+            } elseif ($minTrades) {
+                $this->warn("- Min trades filter: Only accounts with >= {$minTrades} trades");
+            }
+        }
+
+        // Account ordering info
+        if ($oldestFirst) {
+            $this->info("- Account order: Oldest first (created_at ASC)");
+        } else {
+            $this->info("- Account order: Newest first (created_at DESC) - default");
+        }
+
+        // Trade count filter status
+        if (!$maxTrades && !$minTrades) {
+            $this->info("- Trade count filter: DISABLED (sync all account sizes)");
+        }
+
         if ($ignoreBalanceFilter) {
             $this->warn("- Balance filter: DISABLED (will sync all accounts)");
         } else {
@@ -64,9 +124,9 @@ class PrioritySyncAccountsCommand extends Command
         }
 
         if ($isDaemon) {
-            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
         } else {
-            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
         }
     }
 
@@ -76,8 +136,8 @@ class PrioritySyncAccountsCommand extends Command
     protected function getPendingJobsCount(): int
     {
         try {
-            // For Redis queue - check the queue size
-            $queueName = 'queues:optimized-sync-trades';
+            // For Redis queue - check the queue size for the correct queue name
+            $queueName = 'queues:priority-sync-trades';
             $pendingCount = Redis::llen($queueName);
 
             // Also check for any delayed/reserved jobs
@@ -137,15 +197,46 @@ class PrioritySyncAccountsCommand extends Command
             ->where('sync_status', 'needs_retry')
             ->count();
 
+        $flaggedAccounts = Account::whereNotNull('code')
+            ->whereNull('deleted_at')
+            ->where('demo', false)
+            ->where('sync_status', 'flagged')
+            ->count();
+
         $this->table(['Status', 'Count'], [
             ['Current Queue Jobs (BatchSyncTradesJob)', $pendingJobs],
             ['Needs Retry (Queue Limit Hit)', $retryAccounts],
+            ['Flagged Problematic Accounts', $flaggedAccounts],
             ['Total Eligible Accounts', $totalAccounts],
             ['Never Synced (Highest Priority)', $neverSynced],
             ['Synced Today', $syncedToday],
             ['Stale (>6 hours)', $stale6h],
             ['Very Stale (>24 hours)', $stale24h],
         ]);
+
+        // Show flagged accounts details if any exist
+        if ($flaggedAccounts > 0) {
+            $this->info("\n=== Flagged Accounts Details ===");
+            $flaggedDetails = Account::whereNotNull('code')
+                ->whereNull('deleted_at')
+                ->where('demo', false)
+                ->where('sync_status', 'flagged')
+                ->select('code', 'sync_flag_reason', 'sync_flagged_at', 'sync_stuck_count', 'sync_error')
+                ->get();
+
+            $flaggedTable = $flaggedDetails->map(function ($account) {
+                return [
+                    $account->code,
+                    $account->sync_flag_reason,
+                    $account->sync_stuck_count,
+                    $account->sync_flagged_at ? $account->sync_flagged_at->format('Y-m-d H:i') : 'N/A',
+                    substr($account->sync_error, 0, 50) . '...'
+                ];
+            })->toArray();
+
+            $this->table(['Account', 'Flag Reason', 'Stuck Count', 'Flagged At', 'Error'], $flaggedTable);
+            $this->info("Use --unflag-account=CODE to manually unflag an account");
+        }
 
         // Show recent sync status distribution
         $statusCounts = Account::whereNotNull('code')
@@ -164,7 +255,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter)
+    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $oldestFirst = false)
     {
         $this->info("Running in daemon mode. Press Ctrl+C to stop.");
 
@@ -184,7 +275,7 @@ class PrioritySyncAccountsCommand extends Command
                     continue;
                 }
 
-                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter);
+                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
 
                 if ($processed === 0) {
                     $this->info("No accounts needed syncing. Waiting {$cycleDelay}s before next cycle...");
@@ -201,8 +292,11 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false): int
+    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $oldestFirst = false): int
     {
+        // First, handle any stuck accounts from previous cycles
+        $this->handleStuckAccounts();
+
         // Check pending jobs first
         $pendingJobs = $this->getPendingJobsCount();
         $this->info("Current pending BatchSyncTradesJob jobs: {$pendingJobs}");
@@ -217,7 +311,8 @@ class PrioritySyncAccountsCommand extends Command
 
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false);
+            ->where('demo', false)
+            ->where('sync_status', '!=', 'flagged'); // Exclude flagged problematic accounts
 
         if (!$ignoreBalanceFilter) {
             // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
@@ -242,21 +337,41 @@ class PrioritySyncAccountsCommand extends Command
             });
         } else {
             // Original logic when balance filter is disabled
+            // Only include accounts that need syncing or retry
             $query->where(function ($q) use ($cutoffTime) {
-                $q->whereNull('last_sync_attempt_at')  // Never synced
-                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime)  // Old syncs
-                    ->orWhere('sync_status', 'pending')
-                    ->orWhere('sync_status', 'needs_retry');  // Failed due to queue limits
+                $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
+                    ->orWhere(function ($timeQuery) use ($cutoffTime) {
+                        $timeQuery->where(function ($statusQuery) {
+                            $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
+                                ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error']);  // Exclude final statuses
+                        })
+                            ->where(function ($syncQuery) use ($cutoffTime) {
+                                $syncQuery->whereNull('last_sync_attempt_at')  // Never synced
+                                    ->orWhere('last_sync_attempt_at', '<', $cutoffTime);  // Old syncs
+                            });
+                    });
             });
         }
 
         $accounts = $query
-            // Priority order: retry accounts first, then balance changed, then never synced, then oldest attempts
+            // Priority order according to requirements:
+            // 1. Retry accounts first (highest priority)
             ->orderByRaw("CASE WHEN sync_status = 'needs_retry' THEN 0 ELSE 1 END")
-            ->orderByRaw("CASE WHEN has_balance_activity = 1 AND last_balance_changed_at > COALESCE(last_balance_sync_at, '1970-01-01') THEN 0 ELSE 1 END")
-            ->orderByRaw('last_sync_attempt_at IS NULL DESC')
+            // 2. Accounts with recent balance changes (most recent balance changes first)
+            ->orderByRaw("CASE WHEN has_balance_activity = 1 AND last_balance_changed_at > COALESCE(last_sync_attempt_at, '1970-01-01') THEN 0 ELSE 1 END")
             ->orderBy('last_balance_changed_at', 'desc')
-            ->orderBy('last_sync_attempt_at', 'asc')
+            // 3. Accounts that were synced longest ago (oldest sync attempts first)
+            ->orderByRaw('last_sync_attempt_at IS NULL DESC') // Never synced first
+            ->orderBy('last_sync_attempt_at', 'asc');
+
+        // 4. Latest accounts first (newest accounts have priority by default)
+        if ($oldestFirst) {
+            $accounts = $accounts->orderBy('created_at', 'asc');  // Oldest first (when flag specified)
+        } else {
+            $accounts = $accounts->orderBy('created_at', 'desc'); // Newest first (default)
+        }
+
+        $accounts = $accounts
             ->limit($batchSize * $maxConcurrent) // Get enough for all concurrent batches
             ->get();
 
@@ -266,6 +381,20 @@ class PrioritySyncAccountsCommand extends Command
             } else {
                 $this->info("No accounts need syncing (no balance changes detected)");
             }
+            return 0;
+        }
+
+        // Filter out accounts that are already being synced (cache-based)
+        $initialCount = $accounts->count();
+        $accounts = $this->filterAccountsNotInProgress($accounts);
+        $filteredCount = $accounts->count();
+
+        if ($filteredCount < $initialCount) {
+            $this->info("Filtered out " . ($initialCount - $filteredCount) . " accounts already in progress");
+        }
+
+        if ($accounts->isEmpty()) {
+            $this->info("No accounts available for sync (all currently in progress)");
             return 0;
         }
 
@@ -323,6 +452,11 @@ class PrioritySyncAccountsCommand extends Command
             $accountCodes = $accountBatch->pluck('code')->join(', ');
             $this->info("Dispatching batch " . ($batchIndex + 1) . " with " . count($batchAccounts) . " accounts: {$accountCodes} (Queue: {$currentPendingJobs}/{$maxPendingJobs})");
 
+            // Mark accounts as sync in progress (cache-based with 30-minute TTL)
+            foreach ($accountBatch as $account) {
+                $this->markAccountSyncInProgress($account->id, 30);
+            }
+
             // Update sync attempt timestamp ONLY for accounts being dispatched
             Account::whereIn('id', $accountBatch->pluck('id'))
                 ->update([
@@ -330,9 +464,9 @@ class PrioritySyncAccountsCommand extends Command
                     'sync_status' => 'pending'
                 ]);
 
-            // Dispatch the batch job
-            $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes);
-            dispatch($batchJob)->onQueue('optimized-sync-trades');
+            // Dispatch the batch job with trade count limits
+            $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes, $maxTrades, $minTrades);
+            dispatch($batchJob)->onQueue('priority-sync-trades');
 
             $processedCount += count($batchAccounts);
 
@@ -344,5 +478,154 @@ class PrioritySyncAccountsCommand extends Command
 
         $this->info("Dispatched {$processedCount} accounts in " . $accountBatches->count() . " batches");
         return $processedCount;
+    }
+
+    /**
+     * Check if account is currently being synced (cache-based to prevent duplicates)
+     */
+    protected function isAccountSyncInProgress(string $accountId): bool
+    {
+        return Cache::has("account_sync_in_progress:{$accountId}");
+    }
+
+    /**
+     * Mark account as sync in progress (cache-based with TTL)
+     */
+    protected function markAccountSyncInProgress(string $accountId, int $ttlMinutes = 30): void
+    {
+        Cache::put("account_sync_in_progress:{$accountId}", now()->toISOString(), now()->addMinutes($ttlMinutes));
+    }
+
+    /**
+     * Clear sync in progress marker for account
+     */
+    protected function clearAccountSyncInProgress(string $accountId): void
+    {
+        Cache::forget("account_sync_in_progress:{$accountId}");
+    }
+
+    /**
+     * Get accounts that have been stuck in pending/sync for too long
+     */
+    protected function getStuckAccounts(int $stuckThresholdMinutes = 45): array
+    {
+        $stuckThreshold = now()->subMinutes($stuckThresholdMinutes);
+
+        return Account::where('sync_status', 'pending')
+            ->where('last_sync_attempt_at', '<', $stuckThreshold)
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Handle stuck accounts - clear cache, update status, flag if recurring
+     */
+    protected function handleStuckAccounts(): void
+    {
+        $stuckAccounts = $this->getStuckAccounts();
+
+        if (empty($stuckAccounts)) {
+            return;
+        }
+
+        $this->warn("Found " . count($stuckAccounts) . " stuck accounts, clearing and flagging...");
+
+        foreach ($stuckAccounts as $account) {
+            // Clear cache marker
+            $this->clearAccountSyncInProgress($account['id']);
+
+            // Increment stuck count
+            Account::where('id', $account['id'])->increment('sync_stuck_count');
+
+            // Get updated count
+            $updatedAccount = Account::find($account['id']);
+            $stuckCount = $updatedAccount->sync_stuck_count;
+
+            if ($stuckCount >= 3) {
+                // Flag as problematic account
+                Account::where('id', $account['id'])->update([
+                    'sync_status' => 'flagged',
+                    'sync_error' => "Account repeatedly gets stuck in sync (stuck {$stuckCount} times) - requires manual review",
+                    'sync_flag_reason' => 'repeated_stuck_jobs',
+                    'sync_flagged_at' => now()
+                ]);
+
+                $this->error("Flagged account {$account['code']} - stuck {$stuckCount} times in sync");
+            } else {
+                // Reset to needs_retry with stuck indicator
+                Account::where('id', $account['id'])->update([
+                    'sync_status' => 'needs_retry',
+                    'sync_error' => "Job stuck #{$stuckCount} - cleared for retry",
+                ]);
+
+                $this->info("Reset stuck account {$account['code']} for retry (stuck count: {$stuckCount})");
+            }
+        }
+    }
+
+    /**
+     * Filter out accounts that are already in progress (cache-based)
+     */
+    protected function filterAccountsNotInProgress($accounts)
+    {
+        return $accounts->filter(function ($account) {
+            return !$this->isAccountSyncInProgress($account->id);
+        });
+    }
+
+    /**
+     * Manually unflag a problematic account
+     */
+    protected function unflagAccount(string $accountCode): void
+    {
+        $account = Account::where('code', $accountCode)->first();
+
+        if (!$account) {
+            $this->error("Account {$accountCode} not found");
+            return;
+        }
+
+        if ($account->sync_status !== 'flagged') {
+            $this->info("Account {$accountCode} is not flagged (current status: {$account->sync_status})");
+            return;
+        }
+
+        $account->update([
+            'sync_status' => 'needs_retry',
+            'sync_error' => 'Manually unflagged - cleared for retry',
+            'sync_flag_reason' => null,
+            'sync_flagged_at' => null,
+            'sync_stuck_count' => 0
+        ]);
+
+        // Also clear any cache marker
+        $this->clearAccountSyncInProgress($account->id);
+
+        $this->info("Account {$accountCode} has been unflagged and reset for sync");
+    }
+
+    /**
+     * Clear all stuck account cache markers
+     */
+    protected function clearAllStuckCache(): void
+    {
+        // Get all cache keys matching the pattern
+        $pattern = "account_sync_in_progress:*";
+        $keys = Cache::getRedis()->keys($pattern);
+
+        if (empty($keys)) {
+            $this->info("No stuck cache markers found");
+            return;
+        }
+
+        $clearedCount = 0;
+        foreach ($keys as $key) {
+            // Remove the Redis key prefix if present
+            $cleanKey = str_replace(config('database.redis.options.prefix', ''), '', $key);
+            Cache::forget($cleanKey);
+            $clearedCount++;
+        }
+
+        $this->info("Cleared {$clearedCount} stuck cache markers");
     }
 }
