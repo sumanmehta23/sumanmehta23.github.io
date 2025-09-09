@@ -245,14 +245,18 @@ return [
             'timeout' => 600, // Increased timeout for large batches
             'nice' => 0,
         ],
-        'supervisor-balance' => [
+        'supervisor-account-sync' => [
             'connection' => 'redis',
-            'queue' => ['balance-sync'],
+            'queue' => ['account-sync'],
             'balance' => 'auto',
-            'maxProcesses' => 2,
-            'memory' => 512,
-            'tries' => 1,
-            'timeout' => 300,
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => env('ACCOUNT_SYNC_MAX_PROCESSES', 3),
+            'maxTime' => 0,
+            'maxJobs' => 50, // Process 50 jobs before restarting worker
+            'memory' => 1024, // Adequate memory for batch processing
+            'tries' => 2, // Retries for account sync
+            'timeout' => 600, // 10 minutes timeout for batch operations
+            'nice' => 0, // Normal priority
         ],
         'supervisor-priority-sync' => [
             'connection' => 'redis',

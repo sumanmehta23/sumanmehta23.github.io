@@ -88,6 +88,16 @@ return [
             'after_commit' => false,
             'timeout' => 900, // 15 minutes timeout for deal sync
         ],
+
+        'account-sync' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => 'account-sync',
+            'retry_after' => 300, // 5 minutes between retries
+            'block_for' => null,
+            'after_commit' => false,
+            'timeout' => 600, // 10 minutes timeout for account sync
+        ],
     ],
 
     /*

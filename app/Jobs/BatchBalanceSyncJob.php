@@ -35,6 +35,7 @@ class BatchBalanceSyncJob implements ShouldQueue
     {
         $this->accountIds = $accountIds;
         $this->forceSync = $forceSync;
+        $this->onQueue('account-sync'); // Use dedicated account sync queue
     }
 
     /**
