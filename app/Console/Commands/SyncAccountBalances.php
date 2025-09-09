@@ -276,6 +276,7 @@ class SyncAccountBalances extends Command
                     'error' => $e->getMessage()
                 ]);
             })
+            ->onQueue('account-sync')  // Explicitly set the queue for the batch
             ->dispatch();
 
         $this->info("✅ Dispatched batch with ID: {$batch->id}");
