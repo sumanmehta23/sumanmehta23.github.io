@@ -227,7 +227,6 @@ class SyncAccountBalances extends Command
         }
 
         $accounts = $query->orderBy('last_balance_sync_at', 'asc')
-            ->limit(2000)
             ->get();
 
         if ($accounts->isEmpty()) {
