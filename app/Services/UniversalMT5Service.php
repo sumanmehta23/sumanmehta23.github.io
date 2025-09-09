@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Universal MT5 Service
- * 
+ *
  * This service provides a unified interface for all MT5 operations
  * and should be used throughout the application instead of direct
  * MTWebAPI instantiation.
- * 
+ *
  * Features:
  * - Uses centralized connection management
  * - Automatic retry logic
@@ -190,6 +190,16 @@ class UniversalMT5Service
         });
     }
 
+    //  /**
+    //  * Update user details (direct API wrapper)
+    //  */
+    // public function userUpdate($user, &$updated_user)
+    // {
+    //     return $this->executeOperation(function ($api) use ($user, &$updated_user) {
+    //         return $api->UserUpdate($user, $updated_user);
+    //     });
+    // }
+
     /**
      * Get user object by login
      */
@@ -268,15 +278,7 @@ class UniversalMT5Service
             return $api->UserAccountGet($login, $account);
         });
     }
-    /**
-     * Get user details (direct API wrapper)
-     */
-    public function userGet(int $login, &$user)
-    {
-        return $this->executeOperation(function ($api) use ($login, &$user) {
-            return $api->UserGet($login, $user);
-        });
-    }
+
 
     /**
      * Add user to MT5 server (direct API wrapper)
@@ -287,15 +289,7 @@ class UniversalMT5Service
             return $api->UserAdd($user, $user_server);
         });
     }
-     /**
-     * Update user details (direct API wrapper)
-     */
-    public function userUpdate($user, &$updated_user)
-    {
-        return $this->executeOperation(function ($api) use ($user, &$updated_user) {
-            return $api->UserUpdate($user, $updated_user);
-        });
-    }
+
 
     /**
      * Get position total count (direct API wrapper)
