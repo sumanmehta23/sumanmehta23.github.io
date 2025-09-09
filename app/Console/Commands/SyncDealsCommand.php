@@ -40,6 +40,16 @@ class SyncDealsCommand extends Command
         $this->info("Batch size: {$batchSize}");
         $this->info("Sync type: " . ($fullSync ? 'Full' : 'Incremental'));
 
+        // Show prioritization info
+        $this->info("Account prioritization (recently created accounts first):");
+        foreach ($accounts->take(5) as $index => $account) {
+            $createdDate = Carbon::parse($account->created_at)->format('M j, Y H:i');
+            $this->line("  " . ($index + 1) . ". Account {$account->code}: Created {$createdDate}");
+        }
+        if ($accounts->count() > 5) {
+            $this->line("  ... and " . ($accounts->count() - 5) . " more accounts");
+        }
+
         $accountBatches = $accounts->chunk($batchSize);
         $jobs = [];
 
@@ -100,6 +110,12 @@ class SyncDealsCommand extends Command
         // Only get accounts that are not currently syncing
         $query->whereNotIn('sync_status', ['syncing', 'pending']);
 
-        return $query->orderBy('code')->get();
+        // PRIORITY: Order by account creation date first (recently created accounts synced first)
+        // Recently created accounts are more likely to need initial deal syncing
+        $query->select('accounts.*')
+            ->orderByDesc('accounts.created_at') // Most recently created accounts first
+            ->orderBy('accounts.code'); // Secondary sort by account code for consistency
+
+        return $query->get();
     }
 }
