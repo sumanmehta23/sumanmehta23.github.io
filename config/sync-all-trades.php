@@ -35,6 +35,7 @@ return [
     */
     'balance_sync' => [
         'interval_minutes' => env('BALANCE_SYNC_INTERVAL', 20), // Minutes between daemon cycles
+        'batch_size' => env('BALANCE_SYNC_BATCH_SIZE', 20), // Accounts per batch job
     ],
 
     /*

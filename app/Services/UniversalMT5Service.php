@@ -331,10 +331,284 @@ class UniversalMT5Service
     }
 
     /**
+     * Get batch account balances using native MT5 GetBatch method
+     */
+    public function getBatchAccountBalances(array $logins): array
+    {
+        if (empty($logins)) {
+            return [];
+        }
+
+        Log::info("getBatchAccountBalances: Starting batch balance retrieval for " . count($logins) . " accounts");
+
+        return $this->executeOperation(function ($api) use ($logins) {
+            $results = [];
+
+            // Try native UserGetBatch method first
+            $batchResults = $this->tryUserGetBatch($api, $logins);
+            if ($batchResults !== null) {
+                Log::info("getBatchAccountBalances: Native UserGetBatch successful, processing results");
+                return $batchResults;
+            }
+
+            // Fallback to individual calls
+            Log::info("getBatchAccountBalances: Falling back to individual balance calls");
+            foreach ($logins as $login) {
+                $account = null;
+                $result = $api->UserAccountGet($login, $account);
+
+                if ($result === MTRetCode::MT_RET_OK && $account) {
+                    $results[$login] = [
+                        'balance' => $account->Balance ?? 0,
+                        'equity' => $account->Equity ?? 0,
+                        'margin' => $account->Margin ?? 0,
+                        'margin_free' => $account->MarginFree ?? 0,
+                        'profit' => $account->Profit ?? 0
+                    ];
+                } else {
+                    Log::warning("getBatchAccountBalances: Failed to get balance for login {$login}, result: {$result}");
+                    $results[$login] = null;
+                }
+            }
+
+            return $results;
+        });
+    }
+
+    /**
+     * Try to use native UserGetBatch method
+     */
+    private function tryUserGetBatch($api, array $logins): ?array
+    {
+        try {
+            Log::info("tryUserGetBatch: Attempting native batch call with " . count($logins) . " logins");
+            Log::debug("tryUserGetBatch: Login array: " . implode(', ', $logins));
+
+            // Convert array to comma-separated string as expected by MT5 protocol
+            $loginsString = implode(',', $logins);
+
+            $users = null;
+            $result = $api->UserGetBatch($loginsString, $users);
+
+            Log::info("tryUserGetBatch: UserGetBatch returned result code: {$result}");
+
+            if ($result === MTRetCode::MT_RET_OK) {
+                Log::info("tryUserGetBatch: Success! Processing batch response");
+                Log::debug("tryUserGetBatch: Raw response type: " . gettype($users));
+
+                if (is_array($users)) {
+                    Log::debug("tryUserGetBatch: Response is array with " . count($users) . " elements");
+                } else if (is_object($users)) {
+                    Log::debug("tryUserGetBatch: Response is object of class: " . get_class($users));
+                    Log::debug("tryUserGetBatch: Object properties: " . json_encode(get_object_vars($users)));
+                } else {
+                    Log::debug("tryUserGetBatch: Response content: " . json_encode($users));
+                }
+
+                return $this->parseBatchResponse($users, $logins);
+            } else {
+                $errorMsg = MTRetCode::GetError($result);
+                Log::warning("tryUserGetBatch: UserGetBatch failed with code {$result}: {$errorMsg}");
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error("tryUserGetBatch: Exception occurred: " . $e->getMessage());
+            Log::error("tryUserGetBatch: Stack trace: " . $e->getTraceAsString());
+            return null;
+        }
+    }
+
+    /**
+     * Parse the batch response from UserGetBatch
+     */
+    private function parseBatchResponse($users, array $requestedLogins): array
+    {
+        $results = [];
+
+        Log::info("parseBatchResponse: Starting to parse batch response");
+        Log::debug("parseBatchResponse: Requested logins: " . implode(', ', $requestedLogins));
+
+        if (is_array($users)) {
+            Log::info("parseBatchResponse: Processing array response with " . count($users) . " users");
+
+            foreach ($users as $index => $user) {
+                Log::debug("parseBatchResponse: Processing user at index {$index}");
+
+                if (is_object($user)) {
+                    $login = $user->Login ?? null;
+                    Log::debug("parseBatchResponse: User object login: {$login}");
+
+                    if ($login && in_array($login, $requestedLogins)) {
+                        $results[$login] = [
+                            'balance' => $user->Balance ?? 0,
+                            'equity' => $user->Equity ?? 0,
+                            'margin' => $user->Margin ?? 0,
+                            'margin_free' => $user->MarginFree ?? 0,
+                            'profit' => $user->Profit ?? 0
+                        ];
+                        Log::debug("parseBatchResponse: Added balance data for login {$login}");
+                    }
+                } else {
+                    Log::warning("parseBatchResponse: User at index {$index} is not an object: " . gettype($user));
+                }
+            }
+        } else if (is_object($users)) {
+            Log::info("parseBatchResponse: Processing single object response");
+            $login = $users->Login ?? null;
+
+            if ($login && in_array($login, $requestedLogins)) {
+                $results[$login] = [
+                    'balance' => $users->Balance ?? 0,
+                    'equity' => $users->Equity ?? 0,
+                    'margin' => $users->Margin ?? 0,
+                    'margin_free' => $users->MarginFree ?? 0,
+                    'profit' => $users->Profit ?? 0
+                ];
+                Log::debug("parseBatchResponse: Added balance data for single login {$login}");
+            }
+        } else {
+            Log::warning("parseBatchResponse: Unexpected response format: " . gettype($users));
+        }
+
+        $foundCount = count($results);
+        $requestedCount = count($requestedLogins);
+        Log::info("parseBatchResponse: Successfully parsed {$foundCount}/{$requestedCount} user balances");
+
+        // Fill in null for missing logins
+        foreach ($requestedLogins as $login) {
+            if (!isset($results[$login])) {
+                $results[$login] = null;
+                Log::debug("parseBatchResponse: Set null for missing login {$login}");
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Force cleanup of connections
      */
     public function cleanup(): void
     {
         $this->connectionManager->cleanup();
+    }
+
+    /**
+     * Get batch account balances using REST API (alternative method)
+     */
+    public function getBatchAccountBalancesREST(array $logins): array
+    {
+        if (empty($logins)) {
+            return [];
+        }
+
+        Log::info("UniversalMT5Service: Using REST API for batch balance retrieval of " . count($logins) . " accounts");
+
+        try {
+            $restAPIService = new \App\Services\MT5RestAPIService();
+            return $restAPIService->getBatchAccountBalances($logins);
+        } catch (\Exception $e) {
+            Log::error("UniversalMT5Service: REST API batch request failed - " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Compare performance between protocol-based and REST API approaches
+     */
+    public function compareAPIPerformance(array $logins): array
+    {
+        if (empty($logins)) {
+            return [];
+        }
+
+        $results = [
+            'protocol_based' => [],
+            'rest_api' => [],
+            'comparison' => []
+        ];
+
+        // Test protocol-based approach
+        Log::info("Testing protocol-based API...");
+        $startTime = microtime(true);
+        $protocolResults = $this->getBatchAccountBalances($logins);
+        $endTime = microtime(true);
+        $protocolDuration = round(($endTime - $startTime) * 1000, 2);
+
+        $results['protocol_based'] = [
+            'duration_ms' => $protocolDuration,
+            'success_count' => count(array_filter($protocolResults)),
+            'total_accounts' => count($logins),
+            'results' => $protocolResults
+        ];
+
+        // Test REST API approach
+        Log::info("Testing REST API...");
+        $startTime = microtime(true);
+        $restResults = $this->getBatchAccountBalancesREST($logins);
+        $endTime = microtime(true);
+        $restDuration = round(($endTime - $startTime) * 1000, 2);
+
+        $results['rest_api'] = [
+            'duration_ms' => $restDuration,
+            'success_count' => count(array_filter($restResults)),
+            'total_accounts' => count($logins),
+            'results' => $restResults
+        ];
+
+        // Performance comparison
+        $improvement = $protocolDuration > 0 ? round((($protocolDuration - $restDuration) / $protocolDuration) * 100, 2) : 0;
+
+        $results['comparison'] = [
+            'protocol_duration_ms' => $protocolDuration,
+            'rest_duration_ms' => $restDuration,
+            'performance_improvement_percent' => $improvement,
+            'faster_method' => $restDuration < $protocolDuration ? 'REST API' : 'Protocol-based',
+            'data_consistency' => $this->compareResultConsistency($protocolResults, $restResults)
+        ];
+
+        return $results;
+    }
+
+    /**
+     * Compare consistency between protocol and REST API results
+     */
+    private function compareResultConsistency(array $protocolResults, array $restResults): array
+    {
+        $matches = 0;
+        $total = 0;
+        $mismatches = [];
+
+        foreach ($protocolResults as $login => $protocolData) {
+            $total++;
+            $restData = $restResults[$login] ?? null;
+
+            if ($protocolData === null && $restData === null) {
+                $matches++;
+            } elseif ($protocolData !== null && $restData !== null) {
+                $balanceDiff = abs($protocolData['balance'] - $restData['balance']);
+                if ($balanceDiff < 0.01) { // Allow small floating point differences
+                    $matches++;
+                } else {
+                    $mismatches[$login] = [
+                        'protocol_balance' => $protocolData['balance'],
+                        'rest_balance' => $restData['balance'],
+                        'difference' => $balanceDiff
+                    ];
+                }
+            } else {
+                $mismatches[$login] = [
+                    'protocol_result' => $protocolData !== null ? 'success' : 'failed',
+                    'rest_result' => $restData !== null ? 'success' : 'failed'
+                ];
+            }
+        }
+
+        return [
+            'matches' => $matches,
+            'total' => $total,
+            'consistency_percent' => $total > 0 ? round(($matches / $total) * 100, 2) : 0,
+            'mismatches' => $mismatches
+        ];
     }
 }
