@@ -32,8 +32,10 @@ class DealSyncJob implements ShouldQueue
     protected $accounts;
     protected $fromTimes;
     protected $fullSync;
-    public $timeout = 300; // 5 minutes
-    public $tries = 2;
+    public $timeout = 600; // 10 minutes for deal sync
+    public $tries = 3; // More retries for deal sync
+    public $maxExceptions = 2;
+    public $retryAfter = 300; // 5 minutes between retries
 
     public function __construct(array $accounts, array $fromTimes = [], bool $fullSync = false)
     {
@@ -50,8 +52,11 @@ class DealSyncJob implements ShouldQueue
         $this->fromTimes = $fromTimes;
         $this->fullSync = $fullSync;
 
-        // Set timeout based on number of accounts
-        $this->timeout = max(300, count($accounts) * 60 + 120);
+        // Set queue explicitly for deal sync
+        $this->onQueue('deal-sync');
+
+        // Set timeout based on number of accounts (more generous for deal sync)
+        $this->timeout = max(600, count($accounts) * 120 + 300);
     }
 
     public function handle(UniversalMT5Service $mt5Service)
@@ -102,7 +107,28 @@ class DealSyncJob implements ShouldQueue
                     $results['errors']++;
                     $results['processed']++;
                     Log::error("Error syncing deals for account {$accountData['code']}: " . $e->getMessage());
-                    $mt5Service->reportError();
+
+                    // Check if it's a connection issue and report it
+                    if (
+                        strpos($e->getMessage(), 'Broken pipe') !== false ||
+                        strpos($e->getMessage(), 'socket') !== false
+                    ) {
+                        Log::warning("Connection issue detected, reporting error to MT5 service");
+                        $mt5Service->reportError();
+
+                        // Try to reconnect for remaining accounts
+                        if ($index < count($this->accounts) - 1) {
+                            Log::info("Attempting reconnection for remaining accounts...");
+                            usleep(2000000); // 2 second delay before reconnect attempt
+                            if (!$mt5Service->connect()) {
+                                Log::error("Failed to reconnect MT5 service, aborting remaining accounts");
+                                break;
+                            }
+                            $api = $mt5Service->getApi();
+                        }
+                    } else {
+                        $mt5Service->reportError();
+                    }
                 }
 
                 if ($index < count($this->accounts) - 1) {
@@ -111,6 +137,8 @@ class DealSyncJob implements ShouldQueue
             }
         } catch (\Exception $e) {
             Log::error("DealSyncJob failed: " . $e->getMessage());
+            // Ensure we report the error to release any held connections
+            $mt5Service->reportError();
             throw $e;
         }
 
@@ -170,13 +198,16 @@ class DealSyncJob implements ShouldQueue
 
         try {
             $login = $account->code;
-            $fromDate = $fromTime->format('F d, Y');
-            $toDate = now()->addHours(4)->format('F d, Y');
+            $fromTimestamp = $fromTime->timestamp; // Unix timestamp for MT5 API
+            $toTimestamp = now()->addHours(4)->timestamp; // Unix timestamp for MT5 API
+            $fromDateDb = $fromTime->format('Y-m-d H:i:s'); // For database queries (SAME RANGE)
+            $toDateDb = now()->addHours(4)->format('Y-m-d H:i:s'); // For database queries (SAME RANGE)
             $totalDeals = 0;
 
-            // Phase 2: MT5 DealGetTotal
+            // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
+            Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $phaseStart = microtime(true);
-            $error_code = $api->DealGetTotal($login, $fromDate, $toDate, $totalDeals);
+            $error_code = $api->DealGetTotal($login, $fromTimestamp, $toTimestamp, $totalDeals);
             $timings['mt5_deal_total'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             if ($error_code != MTRetCode::MT_RET_OK) {
@@ -184,20 +215,44 @@ class DealSyncJob implements ShouldQueue
                 return ['status' => 'errors', 'deals_count' => 0];
             }
 
+            // Count existing deals in our database for the EXACT SAME RANGE
+            $dbDealCount = Deal::where('account_id', $account->id)
+                ->whereBetween('time_done', [$fromDateDb, $toDateDb])
+                ->count();
+
+            Log::info("DEBUG[{$account->code}]: MT5 deal total: {$totalDeals}, DB deal count: {$dbDealCount} (range: {$fromDateDb} to {$toDateDb}, check took {$timings['mt5_deal_total']}ms)");
+
+            if ($totalDeals == $dbDealCount) {
+                if ($totalDeals > 0) {
+                    // Database is perfectly in sync with MT5 - no need to fetch from MT5!
+                    Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+                    $this->updateAccountDealSyncStatus($account, 'success', 0); // 0 new deals since we already have them
+                    return ['status' => 'success', 'deals_count' => 0]; // 0 new deals fetched from MT5
+                } else {
+                    // Both MT5 and DB report 0 deals for this range
+                    Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+                    $this->updateAccountDealSyncStatus($account, 'no_changes');
+                    return ['status' => 'no_changes', 'deals_count' => 0];
+                }
+            }
+
+            // Deal counts differ - need to sync the difference
+            $dealDifference = $totalDeals - $dbDealCount;
+            Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$totalDeals}, DB: {$dbDealCount}, Difference: {$dealDifference}. Proceeding with MT5 sync...");
+
             if ($totalDeals == 0) {
                 $this->updateAccountDealSyncStatus($account, 'no_changes');
                 return ['status' => 'no_changes', 'deals_count' => 0];
             }
 
-            Log::info("Account {$account->code} has {$totalDeals} deals from {$fromDate} to {$toDate}");
-
             // Phase 3: Get existing deals to avoid duplicates
             $phaseStart = microtime(true);
             $existingDealIds = Deal::where('account_id', $account->id)
-                ->where('time_done', '>=', $fromTime)
                 ->pluck('deal_id')
                 ->toArray();
             $timings['db_existing_deals'] = round((microtime(true) - $phaseStart) * 1000, 2);
+
+            Log::info("Account {$account->code}: Found {$totalDeals} new deals, " . count($existingDealIds) . " existing deals in database");
 
             // Phase 4: MT5 DealGetPage with Adaptive Pagination
             $phaseStart = microtime(true);
@@ -213,7 +268,7 @@ class DealSyncJob implements ShouldQueue
                 $currentPageSize = min($requestedPageSize, $remainingDeals);
 
                 $pageStart = microtime(true);
-                $error_code = $api->DealGetPage($login, $fromDate, $toDate, $startIndex, $totalDeals, $pageDeals);
+                $error_code = $api->DealGetPage($login, $fromTimestamp, $toTimestamp, $startIndex, $totalDeals, $pageDeals);
                 $pageTime = round((microtime(true) - $pageStart) * 1000, 2);
                 $totalDealTime += $pageTime;
                 $pageCount++;
@@ -302,6 +357,8 @@ class DealSyncJob implements ShouldQueue
             'position_id' => $dealData->PositionID ?? $dealData->ExpertPositionID ?? null,
             'symbol' => $dealData->Symbol ?? '',
             'type' => $dealData->Type ?? 0,
+            'action' => $dealData->Action ?? null, // Deal operation type (DEAL_TYPE_*)
+            'entry' => $dealData->Entry ?? null, // Deal direction: 0=in, 1=out, 2=inout
             'volume' => ($dealData->Volume ?? 0) / 10000, // Convert to lots
             'price' => $dealData->Price ?? 0,
             'profit' => $dealData->Profit ?? 0,
@@ -324,12 +381,27 @@ class DealSyncJob implements ShouldQueue
 
     protected function updateAccountDealSyncStatus(Account $account, string $status, int $dealsCount = 0): void
     {
-        $account->update([
-            'last_deal_sync_at' => now(),
-            'last_sync_attempt_at' => now(),
-        ]);
+        // Update the account's deal sync tracking properly
+        if ($status === 'success' || $status === 'no_changes') {
+            // Get the actual time range of deals we just synced
+            $dealTimeRange = Deal::where('account_id', $account->id)
+                ->selectRaw('MIN(time_done) as earliest, MAX(time_done) as latest')
+                ->first();
 
-        Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount})");
+            $from = $dealTimeRange && $dealTimeRange->earliest ?
+                Carbon::parse($dealTimeRange->earliest) : now()->subDays(30);
+            $to = $dealTimeRange && $dealTimeRange->latest ?
+                Carbon::parse($dealTimeRange->latest) : now();
+
+            // Update the account's deal sync status with the actual time range
+            $account->updateDealSyncStatus($from, $to, true);
+
+            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) from {$from} to {$to}");
+        } else {
+            // For errors, just update the fetch time
+            $account->update(['deals_last_fetch_at' => now()]);
+            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount})");
+        }
     }
 
     public function failed(\Throwable $exception)

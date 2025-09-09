@@ -115,35 +115,49 @@ class Account extends Model
 
     /**
      * Check if deal data is fresh enough for trade sync.
+     * 
+     * Deal data is considered fresh if:
+     * 1. We have recently fetched deals (within the last hour by default)
+     * 2. The sync was marked as complete
+     * 
+     * This logic is based on WHEN we last synced, not on deal coverage time.
+     * This is correct because an account might not have recent trading activity,
+     * but if we just synced deals, that data is still fresh.
      */
-    public function isDealDataFresh(Carbon $requiredUpTo = null): bool
+    public function isDealDataFresh(Carbon $freshnessCutoff = null): bool
     {
-        $requiredUpTo = $requiredUpTo ?? now()->subHours(1);
+        $freshnessCutoff = $freshnessCutoff ?? now()->subHours(1);
 
-        // Check if we have recent deals and complete sync
-        if (!$this->deals_sync_complete || !$this->deals_synced_to) {
+        // Check if we have a recent fetch and complete sync
+        if (!$this->deals_sync_complete || !$this->deals_last_fetch_at) {
             return false;
         }
 
-        return Carbon::parse($this->deals_synced_to)->gte($requiredUpTo);
+        // Deal data is fresh if we fetched it recently (regardless of deal coverage time)
+        return Carbon::parse($this->deals_last_fetch_at)->gte($freshnessCutoff);
     }
 
     /**
      * Get the range of time we need to fetch deals for.
+     * 
+     * This determines what time range to sync deals for based on:
+     * 1. If we have previous deal data, sync from the last deal time + 1 second
+     * 2. If we have no deal data, sync from 30 days ago
+     * 3. Always sync up to the current time to catch any new deals
      */
-    public function getRequiredDealSyncRange(Carbon $requiredUpTo = null): array
+    public function getRequiredDealSyncRange(Carbon $syncUpTo = null): array
     {
-        $requiredUpTo = $requiredUpTo ?? now();
+        $syncUpTo = $syncUpTo ?? now();
 
-        // If we have no deal data, start from 30 days ago
+        // If we have previous deal data, start from where we left off
         $from = $this->deals_synced_to
             ? Carbon::parse($this->deals_synced_to)->addSecond()
             : now()->subDays(30);
 
         return [
             'from' => $from,
-            'to' => $requiredUpTo,
-            'needs_sync' => $from->lt($requiredUpTo)
+            'to' => $syncUpTo,
+            'needs_sync' => $from->lt($syncUpTo)
         ];
     }
 }

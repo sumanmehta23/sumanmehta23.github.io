@@ -15,6 +15,8 @@ class Deal extends Model
         'position_id',
         'symbol',
         'type',
+        'action',
+        'entry',
         'volume',
         'price',
         'profit',
@@ -35,6 +37,9 @@ class Deal extends Model
     protected $casts = [
         'time_done' => 'datetime',
         'time_setup' => 'datetime',
+        'type' => 'integer',
+        'action' => 'integer',
+        'entry' => 'integer',
         'volume' => 'decimal:8',
         'price' => 'decimal:5',
         'profit' => 'decimal:2',
