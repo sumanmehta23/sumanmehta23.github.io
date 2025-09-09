@@ -17,7 +17,7 @@ class TradeResource extends JsonResource
 
         $isBBook = (isset($this->account->accountType)) && str_contains($this->account->accountType->ac_group, 'B-Book');
         return [
-            'id' => $this->id,
+            'id' => $this->position_id,
             'user_id' => $this->account->user_id ?? null,
             'account_id' => $this->account_id,
 
