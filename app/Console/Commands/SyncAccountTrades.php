@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 
 class SyncAccountTrades extends Command
 {
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity}';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email}';
     protected $description = 'Sync account trades for IBs';
 
     public function handle()
@@ -21,13 +21,20 @@ class SyncAccountTrades extends Command
         $batchSize = (int) $this->option('batch-size');
         $maxJobs = (int) $this->option('max-jobs');
         $activeOnly = $this->option('active-only');
+        $email      = $this->option('email');
 
         $totalJobsCreated = 0;
-        Ib1::with(['planDetails', 'user'])  // Eager load related models
+
+        $ibQuery = Ib1::with(['planDetails', 'user'])
             ->where('status', 1)
-            // ->where('email', 'duonghieu20121996@gmail.com')
-            ->whereNotNull('ib_plan_details_id')
-            ->cursor()  // More memory efficient for large datasets
+            ->whereNotNull('ib_plan_details_id');
+
+        // Apply email filter only if provided
+        if ($email) {
+            $ibQuery->where('email', $email);
+        }
+
+        $ibQuery->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
 
