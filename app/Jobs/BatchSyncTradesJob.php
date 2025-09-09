@@ -948,7 +948,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'], // composite unique identifier
-                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'code', 'updated_at'] // essential columns including volume, type, and code
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'code', 'order_id', 'updated_at'] // essential columns including volume, type, code, and order_id
                 );
                 $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
                 Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
@@ -1146,6 +1146,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $tradeData = [
                 'account_id' => $account->id,
                 'position_id' => $positionId,  // CORRECT: Use actual position_id from deal
+                'code' => $account->code,  // Add missing code field
+                'order_id' => $positionData['order_id'] ?? null,  // Add missing order_id field
                 'symbol' => $positionData['symbol'],
                 'type' => $positionData['type'],
                 'volume' => $positionData['volume'],
@@ -1154,6 +1156,9 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 'profit' => $positionData['profit'],
                 'comment' => $positionData['comment'],
                 'state' => $positionData['is_closed'] ? 'closed' : 'open',
+                'status' => $positionData['is_closed'] ? 'closed' : 'open',  // Add status field
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
 
             // Add closing data only if position is actually closed
@@ -1207,25 +1212,26 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $lastDeal = $deals->last();
 
         // Calculate volume balance to determine if position is open/closed
-        $buyVolume = $deals->where('type', 0)->sum('volume');  // Type 0 = BUY
-        $sellVolume = $deals->where('type', 1)->sum('volume'); // Type 1 = SELL
+        $openVolume = $deals->where('action', 0)->sum('volume');   // Action 0 = OPEN
+        $closeVolume = $deals->where('action', 1)->sum('volume'); // Action 1 = CLOSE
 
-        $netVolume = $buyVolume - $sellVolume;
-        $isPositionClosed = abs($netVolume) < 0.0001; // Consider closed if volume difference is negligible
+        $netVolume = $openVolume - $closeVolume;
+        $isPositionClosed = abs($netVolume) < 0.0001; // Consider closed if open/close volumes match
 
         // Determine position type (buy/sell) based on first deal
         $positionType = $firstDeal->type == 0 ? 'buy' : 'sell';
 
-        // If position involves both buy and sell, determine the net direction
-        if ($buyVolume > 0 && $sellVolume > 0) {
-            $positionType = $netVolume > 0 ? 'buy' : 'sell';
+        // If position involves both open and close actions, determine the net direction
+        if ($openVolume > 0 && $closeVolume > 0) {
+            // For closed positions, use the original deal type
+            $positionType = $firstDeal->type == 0 ? 'buy' : 'sell';
         }
 
         // Calculate effective volume (net position size)
         $effectiveVolume = abs($netVolume);
         if ($isPositionClosed) {
             // For closed positions, use the volume that was actually traded
-            $effectiveVolume = min($buyVolume, $sellVolume);
+            $effectiveVolume = min($openVolume, $closeVolume);
         }
 
         // Calculate weighted average opening price
@@ -1239,8 +1245,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
         // Calculate closing price if position is closed
         $closingPrice = null;
-        if ($isPositionClosed && $buyVolume > 0 && $sellVolume > 0) {
-            $closingDeals = $deals->where('type', '!=', $firstDeal->type);
+        if ($isPositionClosed && $openVolume > 0 && $closeVolume > 0) {
+            $closingDeals = $deals->where('action', 1); // Action 1 = CLOSE
             $totalCloseVolume = $closingDeals->sum('volume');
             $closingPrice = $totalCloseVolume > 0
                 ? $closingDeals->sum(function ($deal) {
@@ -1262,10 +1268,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             'profit' => $deals->sum('profit'),
             'comment' => $firstDeal->comment ?? '',
             'magic' => $firstDeal->magic ?? 0,
+            'order_id' => $firstDeal->order_id,  // Add order_id from first deal
             'is_closed' => $isPositionClosed,
             'deal_count' => $deals->count(),
-            'buy_volume' => $buyVolume,
-            'sell_volume' => $sellVolume,
+            'buy_volume' => $openVolume,
+            'sell_volume' => $closeVolume,
             'net_volume' => $netVolume
         ];
     }
