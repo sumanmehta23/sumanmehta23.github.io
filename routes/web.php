@@ -569,6 +569,23 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');
             Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
         });
+
+        // Sync Monitor Dashboard Routes
+        Route::prefix('sync-monitor')->name('sync-monitor.')->group(function () {
+            Route::get('/dashboard', [App\Http\Controllers\Admin\SyncMonitorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/data', [App\Http\Controllers\Admin\SyncMonitorController::class, 'getSyncData'])->name('data');
+            Route::get('/accounts/{account}/details', [App\Http\Controllers\Admin\SyncMonitorController::class, 'accountDetails'])->name('account.details');
+            Route::post('/accounts/{account}/clear-cache', [App\Http\Controllers\Admin\SyncMonitorController::class, 'clearAccountCache'])->name('account.clear-cache');
+            Route::post('/accounts/{account}/unflag', [App\Http\Controllers\Admin\SyncMonitorController::class, 'unflagAccount'])->name('account.unflag');
+        });
+
+        // Account Details with MT5 API Integration
+        Route::prefix('accounts')->name('accounts.')->group(function () {
+            Route::get('/{account}', [App\Http\Controllers\Admin\AccountDetailsController::class, 'show'])->name('details');
+            Route::get('/{account}/current-balance', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentBalance'])->name('current-balance');
+            Route::get('/{account}/current-positions', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentPositions'])->name('current-positions');
+            Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
+        });
     });
 });
 // Test route for affiliate reference code functionality

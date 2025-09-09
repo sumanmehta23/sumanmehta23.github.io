@@ -78,6 +78,16 @@ return [
             'after_commit' => false,
             'timeout' => 300,
         ],
+
+        'deal-sync' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => 'deal-sync',
+            'retry_after' => 600, // 10 minutes between retries
+            'block_for' => null,
+            'after_commit' => false,
+            'timeout' => 900, // 15 minutes timeout for deal sync
+        ],
     ],
 
     /*

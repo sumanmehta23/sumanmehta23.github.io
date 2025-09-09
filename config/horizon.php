@@ -282,6 +282,19 @@ return [
             'timeout' => 900, // 15 minutes timeout for demo accounts
             'nice' => 10, // Lower priority (higher nice value)
         ],
+        'supervisor-deal-sync' => [
+            'connection' => 'redis',
+            'queue' => ['deal-sync'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 3), // Conservative for MT5 connection management
+            'maxTime' => 0,
+            'maxJobs' => 50, // Process 50 jobs before restarting worker to manage MT5 connections
+            'memory' => 1024, // Adequate memory for deal processing
+            'tries' => 3, // More retries for deal sync due to MT5 connection issues
+            'timeout' => 900, // 15 minutes timeout for deal sync operations
+            'nice' => 5, // Medium priority
+        ],
 
     ],
 
@@ -317,6 +330,11 @@ return [
                 'balanceMaxShift' => 0, // No scaling for demos
                 'balanceCooldown' => 30, // Slow cooldown
             ],
+            'supervisor-deal-sync' => [
+                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 2), // Conservative for production
+                'balanceMaxShift' => 1, // Limited scaling
+                'balanceCooldown' => 10, // Moderate cooldown for deal sync
+            ],
         ],
 
         'local' => [
@@ -337,6 +355,9 @@ return [
             ],
             'supervisor-demo-sync' => [
                 'maxProcesses' => 1, // Only 1 process for demos in local too
+            ],
+            'supervisor-deal-sync' => [
+                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1), // Single process for local development
             ],
         ],
     ],
