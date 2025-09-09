@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Mt5User;
+use App\Models\Account;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Exception;
@@ -25,7 +26,7 @@ class MT5RestAPIService
     }
 
     /**
-     * Get multiple user balances in a single batch request
+     * Get multiple user balances using MT5 REST API batch endpoint with fallback to individual calls
      * 
      * @param array $logins Array of MT5 login IDs
      * @return array Array of user balance data indexed by login
@@ -36,6 +37,28 @@ class MT5RestAPIService
             return [];
         }
 
+        Log::info('MT5RestAPI: Starting batch balance sync', [
+            'login_count' => count($logins),
+            'logins' => $logins
+        ]);
+
+        // Try batch REST API endpoint first
+        $balances = $this->getBatchBalancesViaRestAPI($logins);
+
+        // If batch API failed or returned no results, fall back to individual calls
+        if (empty($balances)) {
+            Log::info('MT5RestAPI: Batch REST API failed, falling back to individual calls');
+            $balances = $this->getBatchBalancesViaIndividualCalls($logins);
+        }
+
+        return $balances;
+    }
+
+    /**
+     * Get batch balances using the /api/user/get_batch REST API endpoint
+     */
+    private function getBatchBalancesViaRestAPI(array $logins): array
+    {
         $apiRequest = $this->connectionPool->getConnection();
         if (!$apiRequest) {
             Log::error('MT5RestAPI: Failed to get connection from pool');
@@ -43,38 +66,27 @@ class MT5RestAPIService
         }
 
         try {
-            // Prepare the batch request data
-            $requestData = [
-                'logins' => array_values($logins), // Ensure numeric array
-                'fields' => [
-                    'Login',
-                    'Balance',
-                    'Credit',
-                    'Margin',
-                    'MarginFree',
-                    'MarginLevel',
-                    'Equity'
-                ]
-            ];
+            // Convert logins to comma-separated string as per MT5 REST API documentation
+            $loginString = implode(',', array_map('intval', $logins));
 
-            Log::info('MT5RestAPI: Sending batch balance request', [
-                'login_count' => count($logins),
-                'logins' => $logins
+            Log::info('MT5RestAPI: Making batch request', [
+                'endpoint' => '/api/user/get_batch',
+                'login_string' => $loginString,
+                'login_count' => count($logins)
             ]);
 
-            // Make the batch API request
-            $result = $apiRequest->Post('/api/user/get_batch', json_encode($requestData));
+            // Make batch request using GET with query parameters
+            $result = $apiRequest->Get('/api/user/get_batch?login=' . urlencode($loginString));
 
             if ($result === false) {
-                Log::error('MT5RestAPI: Batch balance request failed');
+                Log::warning('MT5RestAPI: Batch balance request failed');
                 $this->connectionPool->reportConnectionError($apiRequest);
                 return [];
             }
 
-            // Process and return the results
-            return $this->processBatchBalanceResponse($result, $logins);
+            return $this->processBatchUsersResponse($result, $logins);
         } catch (Exception $e) {
-            Log::error('MT5RestAPI: Exception in getBatchBalances', [
+            Log::error('MT5RestAPI: Exception in getBatchBalancesViaRestAPI', [
                 'error' => $e->getMessage(),
                 'logins' => $logins
             ]);
@@ -84,23 +96,238 @@ class MT5RestAPIService
     }
 
     /**
-     * Process the response from batch balance API
+     * Get batch balances using individual REST API calls as fallback
      */
-    private function processBatchBalanceResponse($response, array $requestedLogins): array
+    private function getBatchBalancesViaIndividualCalls(array $logins): array
     {
-        if (!is_array($response)) {
-            $response = json_decode($response, true);
+        Log::info('MT5RestAPI: Using individual REST API calls for batch balances', [
+            'login_count' => count($logins)
+        ]);
+
+        $balances = [];
+        $errors = 0;
+
+        foreach ($logins as $login) {
+            $userBalance = $this->getSingleUserBalance($login);
+            if ($userBalance !== null) {
+                $balances[(string)$login] = $userBalance;
+            } else {
+                $errors++;
+            }
         }
 
-        if (!isset($response['data']) || !is_array($response['data'])) {
-            Log::warning('MT5RestAPI: Invalid batch response format', ['response' => $response]);
+        Log::info('MT5RestAPI: Individual balance operation completed', [
+            'total_requests' => count($logins),
+            'successful' => count($balances),
+            'errors' => $errors,
+            'success_rate' => count($logins) > 0 ? round((count($balances) / count($logins)) * 100, 2) . '%' : '0%'
+        ]);
+
+        return $balances;
+    }
+
+    /**
+     * Process the response from MT5 protocol batch API
+     */
+    private function processProtocolBatchResponse($users, array $requestedLogins): array
+    {
+        if (!is_array($users)) {
+            Log::warning('MT5RestAPI: Invalid protocol batch response format', ['users' => $users]);
             return [];
         }
 
         $balances = [];
         $foundLogins = [];
 
-        foreach ($response['data'] as $userData) {
+        foreach ($users as $user) {
+            if (isset($user->Login)) {
+                $login = (string)$user->Login;
+                $foundLogins[] = $login;
+
+                $balances[$login] = [
+                    'login' => $login,
+                    'balance' => floatval($user->Balance ?? 0),
+                    'credit' => floatval($user->Credit ?? 0),
+                    'margin' => floatval($user->Margin ?? 0),
+                    'margin_free' => floatval($user->MarginFree ?? 0),
+                    'margin_level' => floatval($user->MarginLevel ?? 0),
+                    'equity' => floatval($user->Equity ?? 0),
+                ];
+            }
+        }
+
+        // Log results
+        $missingLogins = array_diff(array_map('strval', $requestedLogins), $foundLogins);
+        if (!empty($missingLogins)) {
+            Log::info('MT5RestAPI: Some users not found in protocol batch response', [
+                'requested' => count($requestedLogins),
+                'found' => count($foundLogins),
+                'missing_logins' => $missingLogins
+            ]);
+        }
+
+        Log::info('MT5RestAPI: Protocol batch processing completed', [
+            'requested_count' => count($requestedLogins),
+            'found_count' => count($balances),
+            'success_rate' => count($requestedLogins) > 0 ? round((count($balances) / count($requestedLogins)) * 100, 2) . '%' : '0%'
+        ]);
+
+        return $balances;
+    }
+
+    /**
+     * Get individual user balance via REST API
+     * 
+     * @param int|string $login MT5 login ID
+     * @return array|null User balance data or null on error
+     */
+    private function getSingleUserBalance($login): ?array
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool');
+            return null;
+        }
+
+        try {
+            // Make individual user request
+            $result = $apiRequest->Post('/api/user/get', json_encode(['login' => (int)$login]));
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: User balance request failed', ['login' => $login]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return null;
+            }
+
+            return $this->processSingleUserResponse($result, $login);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in getSingleUserBalance', [
+                'error' => $e->getMessage(),
+                'login' => $login
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+            return null;
+        }
+    }
+
+    /**
+     * Process single user response from REST API
+     */
+    private function processSingleUserResponse($response, $login): ?array
+    {
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON response for user', [
+                    'login' => $login,
+                    'raw_response' => substr($response, 0, 500)
+                ]);
+                return null;
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== "0" && $response['retcode'] !== 0) {
+            Log::warning('MT5RestAPI: User API error', [
+                'login' => $login,
+                'retcode' => $response['retcode'],
+                'retmsg' => $response['retmsg'] ?? 'Unknown error'
+            ]);
+            return null;
+        }
+
+        // Extract user data from answer field
+        if (!isset($response['answer']) || !is_array($response['answer'])) {
+            Log::warning('MT5RestAPI: Invalid single user response format', [
+                'login' => $login,
+                'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
+            ]);
+            return null;
+        }
+
+        $userData = $response['answer'];
+
+        if (!isset($userData['Login'])) {
+            Log::warning('MT5RestAPI: User data missing login field', [
+                'login' => $login,
+                'userData_keys' => array_keys($userData)
+            ]);
+            return null;
+        }
+
+        return [
+            'login' => (string)$userData['Login'],
+            'balance' => floatval($userData['Balance'] ?? 0),
+            'credit' => floatval($userData['Credit'] ?? 0),
+            'margin' => floatval($userData['Margin'] ?? 0),
+            'margin_free' => floatval($userData['MarginFree'] ?? 0),
+            'margin_level' => floatval($userData['MarginLevel'] ?? 0),
+            'equity' => floatval($userData['Equity'] ?? 0),
+        ];
+    }
+
+    /**
+     * Process the response from batch users API endpoint
+     */
+    private function processBatchUsersResponse($response, array $requestedLogins): array
+    {
+        // Decode JSON if needed
+        $originalResponse = $response;
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON in batch response', [
+                    'raw_response' => substr($originalResponse, 0, 500)
+                ]);
+                return [];
+            }
+        }
+
+        // Log::info('MT5RestAPI: Processing batch users response', [
+        //     'response_type' => gettype($response),
+        //     'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
+        // ]);
+
+        // Check for API error first
+        if (isset($response['retcode']) && $response['retcode'] !== "0 Done") {
+            Log::warning('MT5RestAPI: Batch API error', [
+                'retcode' => $response['retcode'],
+                'retmsg' => $response['retmsg'] ?? 'Unknown error',
+                'requested_logins' => $requestedLogins
+            ]);
+            return [];
+        }
+
+        // Extract users array from different possible response formats
+        $users = null;
+        if (isset($response['answer']) && is_array($response['answer'])) {
+            $users = $response['answer'];
+        } elseif (isset($response['data']) && is_array($response['data'])) {
+            $users = $response['data'];
+        } elseif (is_array($response) && !isset($response['retcode'])) {
+            // Direct array response
+            $users = $response;
+        } else {
+            Log::warning('MT5RestAPI: Invalid batch users response format', [
+                'response' => $response,
+                'requested_logins' => $requestedLogins
+            ]);
+            return [];
+        }
+
+        if (!is_array($users)) {
+            Log::warning('MT5RestAPI: Users data is not an array', [
+                'users_type' => gettype($users),
+                'requested_logins' => $requestedLogins
+            ]);
+            return [];
+        }
+
+        $balances = [];
+        $foundLogins = [];
+
+        foreach ($users as $userData) {
             if (isset($userData['Login'])) {
                 $login = (string)$userData['Login'];
                 $foundLogins[] = $login;
@@ -120,17 +347,18 @@ class MT5RestAPIService
         // Log missing logins for debugging
         $missingLogins = array_diff(array_map('strval', $requestedLogins), $foundLogins);
         if (!empty($missingLogins)) {
-            Log::info('MT5RestAPI: Some logins not found in batch response', [
-                'missing_logins' => $missingLogins,
-                'found_count' => count($foundLogins),
-                'requested_count' => count($requestedLogins)
+            Log::info('MT5RestAPI: Some users not found in batch response', [
+                'requested' => count($requestedLogins),
+                'found' => count($foundLogins),
+                'missing_logins' => $missingLogins
             ]);
         }
 
-        Log::info('MT5RestAPI: Batch balance processing completed', [
-            'processed_count' => count($balances),
-            'requested_count' => count($requestedLogins)
-        ]);
+        // Log::info('MT5RestAPI: Batch users processing completed', [
+        //     'requested_count' => count($requestedLogins),
+        //     'found_count' => count($balances),
+        //     'success_rate' => count($requestedLogins) > 0 ? round((count($balances) / count($requestedLogins)) * 100, 2) . '%' : '0%'
+        // ]);
 
         return $balances;
     }
@@ -156,7 +384,13 @@ class MT5RestAPIService
         } else {
             // Array of login IDs
             $logins = $mt5Users;
-            $usersByLogin = Mt5User::whereIn('login', $logins)->get()->keyBy('login');
+            try {
+                // Get Account objects instead of Mt5User
+                $usersByLogin = Account::whereIn('code', $logins)->get()->keyBy('code');
+            } catch (Exception $e) {
+                Log::error('MT5RestAPI: Failed to fetch accounts', ['error' => $e->getMessage()]);
+                return ['updated' => 0, 'errors' => count($logins), 'time' => 0];
+            }
         }
 
         if (empty($logins)) {
