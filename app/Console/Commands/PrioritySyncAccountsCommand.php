@@ -483,7 +483,7 @@ class PrioritySyncAccountsCommand extends Command
     /**
      * Check if account is currently being synced (cache-based to prevent duplicates)
      */
-    protected function isAccountSyncInProgress(int $accountId): bool
+    protected function isAccountSyncInProgress(string $accountId): bool
     {
         return Cache::has("account_sync_in_progress:{$accountId}");
     }
@@ -491,7 +491,7 @@ class PrioritySyncAccountsCommand extends Command
     /**
      * Mark account as sync in progress (cache-based with TTL)
      */
-    protected function markAccountSyncInProgress(int $accountId, int $ttlMinutes = 30): void
+    protected function markAccountSyncInProgress(string $accountId, int $ttlMinutes = 30): void
     {
         Cache::put("account_sync_in_progress:{$accountId}", now()->toISOString(), now()->addMinutes($ttlMinutes));
     }
@@ -499,7 +499,7 @@ class PrioritySyncAccountsCommand extends Command
     /**
      * Clear sync in progress marker for account
      */
-    protected function clearAccountSyncInProgress(int $accountId): void
+    protected function clearAccountSyncInProgress(string $accountId): void
     {
         Cache::forget("account_sync_in_progress:{$accountId}");
     }
