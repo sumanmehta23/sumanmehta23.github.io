@@ -17,12 +17,17 @@ class CleanAndResyncAccountDataCommand extends Command
 {
     protected $signature = 'app:clean-and-resync-account-data 
                             {--account= : Specific account code to clean and resync}
+                            {--all-accounts : Process ALL accounts (use with caution)}
                             {--confirm : Actually perform the cleanup (without this flag, only shows what would be deleted)}
+                            {--force : Force resync even if account was recently synced}
                             {--deals-only : Only clean deals, keep trades}
                             {--trades-only : Only clean trades, keep deals}
                             {--keep-cache : Don\'t clear cache (for testing)}
                             {--resync-after : Automatically resync after cleanup}
+                            {--resync-only : Skip cleanup, only resync data}
+                            {--dry-run : Show what would be processed without making changes}
                             {--from-days=30 : Days to resync from (default: 30)}
+                            {--skip-recent-hours=6 : Skip accounts synced within this many hours (default: 6)}
                             {--batch-size=1 : Number of accounts to process at once}';
 
     protected $description = 'Clean deals and trades data for accounts and optionally resync fresh data';
@@ -33,12 +38,17 @@ class CleanAndResyncAccountDataCommand extends Command
         $this->info('=====================================');
 
         $accountCode = $this->option('account');
+        $allAccounts = $this->option('all-accounts');
         $confirmCleanup = $this->option('confirm');
+        $force = $this->option('force');
         $dealsOnly = $this->option('deals-only');
         $tradesOnly = $this->option('trades-only');
         $keepCache = $this->option('keep-cache');
         $resyncAfter = $this->option('resync-after');
+        $resyncOnly = $this->option('resync-only');
+        $dryRun = $this->option('dry-run');
         $fromDays = $this->option('from-days');
+        $skipRecentHours = $this->option('skip-recent-hours');
 
         // Get account(s) to process
         if ($accountCode) {
@@ -47,21 +57,96 @@ class CleanAndResyncAccountDataCommand extends Command
                 $this->error("Account with code {$accountCode} not found.");
                 return 1;
             }
+        } elseif ($allAccounts) {
+            $accounts = Account::all();
+            $this->warn("⚠️  Processing ALL {$accounts->count()} accounts!");
+
+            if (!$confirmCleanup && !$resyncOnly && !$dryRun) {
+                $this->error('When using --all-accounts, you must use --confirm for cleanup, --resync-only for resync, or --dry-run to preview');
+                return 1;
+            }
+
+            if (!$resyncOnly && !$dryRun && !$this->confirm("Are you ABSOLUTELY sure you want to clean data for ALL {$accounts->count()} accounts?")) {
+                $this->info("Operation cancelled.");
+                return 1;
+            }
         } else {
-            $this->error('Please specify an account code with --account=XXXXX');
-            $this->info('Example: php artisan app:clean-and-resync-account-data --account=394402 --confirm --resync-after');
+            $this->error('Please specify either --account=XXXXX or --all-accounts');
+            $this->info('Examples:');
+            $this->info('  Single account: php artisan app:clean-and-resync-account-data --account=394402 --confirm --resync-after');
+            $this->info('  All accounts (dry run): php artisan app:clean-and-resync-account-data --all-accounts --resync-only --dry-run');
+            $this->info('  All accounts (resync only): php artisan app:clean-and-resync-account-data --all-accounts --resync-only --confirm');
+            $this->info('  All accounts (clean & resync): php artisan app:clean-and-resync-account-data --all-accounts --confirm --resync-after');
             return 1;
         }
 
-        foreach ($accounts as $account) {
-            $this->processAccount($account, [
+        // Filter accounts to avoid duplicate processing (for resync operations)
+        if (($resyncOnly || $resyncAfter) && !$force && $allAccounts) {
+            $recentlysynced = now()->subHours($skipRecentHours);
+            $originalCount = $accounts->count();
+
+            $accounts = $accounts->filter(function ($account) use ($recentlysynced, $fromDays) {
+                // Skip if recently synced (within skip hours) and sync covers our target period
+                if ($account->deals_last_fetch_at && $account->deals_last_fetch_at >= $recentlysynced) {
+                    $syncedFrom = $account->deals_synced_from;
+                    $targetFrom = now()->subDays($fromDays);
+
+                    // Skip if the previous sync covers our target period
+                    if ($syncedFrom && $syncedFrom <= $targetFrom) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            $filteredCount = $accounts->count();
+            $skippedCount = $originalCount - $filteredCount;
+
+            if ($skippedCount > 0) {
+                $this->info("📋 Filtered out {$skippedCount} recently synced accounts (use --force to override)");
+                $this->info("📊 Processing {$filteredCount} accounts that need sync");
+            }
+
+            if ($filteredCount == 0) {
+                $this->info("✅ All accounts are already up to date!");
+                return 0;
+            }
+        }
+
+        foreach ($accounts as $index => $account) {
+            if ($allAccounts) {
+                $this->info("\n📊 Progress: " . ($index + 1) . "/{$accounts->count()} accounts");
+            }
+
+            $accountOptions = [
                 'confirm' => $confirmCleanup,
+                'force' => $force,
                 'deals_only' => $dealsOnly,
                 'trades_only' => $tradesOnly,
                 'keep_cache' => $keepCache,
                 'resync_after' => $resyncAfter,
-                'from_days' => $fromDays
-            ]);
+                'resync_only' => $resyncOnly,
+                'dry_run' => $dryRun,
+                'from_days' => $fromDays,
+                'skip_recent_hours' => $skipRecentHours,
+                'skip_individual_confirm' => $allAccounts // Skip individual confirmations for bulk operations
+            ];
+
+            $this->processAccount($account, $accountOptions);
+        }
+
+        // Show summary for bulk operations
+        if ($allAccounts) {
+            $this->info("\n🎉 Bulk operation completed!");
+            $this->info("📊 Processed {$accounts->count()} accounts total");
+
+            if ($dryRun) {
+                $this->info("🔍 Mode: Dry run (no changes made)");
+            } elseif ($resyncOnly) {
+                $this->info("🔄 Mode: Resync only");
+            } else {
+                $this->info("🧹 Mode: " . ($resyncAfter ? "Clean and resync" : "Clean only"));
+            }
         }
 
         return 0;
@@ -75,14 +160,42 @@ class CleanAndResyncAccountDataCommand extends Command
         // Show current data status
         $this->showCurrentDataStatus($account);
 
+        // Check if account should be skipped (for individual processing)
+        if (($options['resync_only'] || $options['resync_after']) && !$options['force'] && !isset($options['skip_individual_confirm'])) {
+            if ($this->shouldSkipAccount($account, $options)) {
+                $this->info("⏭️  Skipping account {$account->code} - recently synced (use --force to override)");
+                return;
+            }
+        }
+
+        // If dry-run mode, show what would be done and return
+        if ($options['dry_run']) {
+            $this->info("\n🔍 DRY RUN MODE - Showing what would be processed:");
+            if ($options['resync_only']) {
+                $this->info("🔄 Would resync account {$account->code} from {$options['from_days']} days ago");
+            } else {
+                $this->showWhatWouldBeDeleted($account, $options);
+                if ($options['resync_after']) {
+                    $this->info("🔄 Would then resync account {$account->code} from {$options['from_days']} days ago");
+                }
+            }
+            return;
+        }
+
+        // If resync-only mode, skip cleanup and go straight to resync
+        if ($options['resync_only']) {
+            $this->resyncAccount($account, $options['from_days']);
+            return;
+        }
+
         if (!$options['confirm']) {
             $this->warn("\n⚠️  DRY RUN MODE - Add --confirm to actually perform cleanup");
             $this->showWhatWouldBeDeleted($account, $options);
             return;
         }
 
-        // Confirm with user
-        if (!$this->confirm("Are you sure you want to clean data for account {$account->code}?")) {
+        // Confirm with user (only for single account operations)
+        if (!isset($options['skip_individual_confirm']) && !$this->confirm("Are you sure you want to clean data for account {$account->code}?")) {
             $this->info("Cleanup cancelled for account {$account->code}");
             return;
         }
@@ -222,6 +335,30 @@ class CleanAndResyncAccountDataCommand extends Command
         $cacheService->invalidateAccountDeals($account);
 
         $this->info("   ✅ Cache cleared");
+    }
+
+    protected function shouldSkipAccount(Account $account, array $options)
+    {
+        // Don't skip if force is enabled
+        if ($options['force']) {
+            return false;
+        }
+
+        // Check if account was recently synced
+        $recentlysynced = now()->subHours($options['skip_recent_hours']);
+        if (!$account->deals_last_fetch_at || $account->deals_last_fetch_at < $recentlysynced) {
+            return false; // Not recently synced, don't skip
+        }
+
+        // Check if the previous sync covers our target period
+        $syncedFrom = $account->deals_synced_from;
+        $targetFrom = now()->subDays($options['from_days']);
+
+        if (!$syncedFrom || $syncedFrom > $targetFrom) {
+            return false; // Previous sync doesn't cover our target period, don't skip
+        }
+
+        return true; // Account was recently synced and covers our target period
     }
 
     protected function resyncAccount(Account $account, int $fromDays)
