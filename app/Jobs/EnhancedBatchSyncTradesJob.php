@@ -299,7 +299,7 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'],
-                    ['close_price', 'close_time', 'status', 'profit', 'volume', 'volume_ext', 'type', 'updated_at']
+                    ['close_price', 'close_time', 'status', 'profit', 'volume', 'volume_ext', 'type', 'code', 'updated_at']
                 );
             }
         } catch (\Exception $e) {
