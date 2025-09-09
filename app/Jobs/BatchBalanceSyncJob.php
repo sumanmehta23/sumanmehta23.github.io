@@ -146,8 +146,10 @@ class BatchBalanceSyncJob implements ShouldQueue
             if ($balanceChanged || $equityChanged || $this->forceSync) {
                 // Update account with new balance data
                 $updateData = [
-                    'last_known_balance' => $currentBalance,
-                    'last_known_equity' => $currentEquity,
+                    'balance' => $currentBalance,           // Update main balance field
+                    'equity' => $currentEquity,             // Update main equity field
+                    'last_known_balance' => $currentBalance, // Update tracking field
+                    'last_known_equity' => $currentEquity,   // Update tracking field
                     'last_balance_sync_at' => now(),
                     'sync_status' => 'completed'
                 ];
