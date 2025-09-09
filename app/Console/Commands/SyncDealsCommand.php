@@ -69,11 +69,11 @@ class SyncDealsCommand extends Command
 
         // Dispatch jobs
         if (count($jobs) === 1) {
-            // Single job - dispatch directly
-            dispatch($jobs[0]);
-            $this->info('Deal sync job dispatched.');
+            // Single job - dispatch directly to deal-sync queue
+            dispatch($jobs[0])->onQueue('deal-sync');
+            $this->info('Deal sync job dispatched to deal-sync queue.');
         } else {
-            // Multiple jobs - create batch
+            // Multiple jobs - create batch and dispatch to deal-sync queue
             $batch = Bus::batch($jobs)
                 ->then(function () {
                     Log::info('All deal sync jobs completed successfully.');
@@ -82,10 +82,11 @@ class SyncDealsCommand extends Command
                     Log::error('Deal sync batch failed: ' . $e->getMessage());
                 })
                 ->name('Deal Sync Batch')
+                ->onQueue('deal-sync') // Ensure batch jobs go to deal-sync queue
                 ->dispatch();
 
             $this->info("Deal sync batch created with ID: {$batch->id}");
-            $this->info("Dispatched " . count($jobs) . " jobs for {$accounts->count()} accounts.");
+            $this->info("Dispatched " . count($jobs) . " jobs for {$accounts->count()} accounts to deal-sync queue.");
         }
 
         return 0;
