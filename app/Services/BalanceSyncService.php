@@ -107,12 +107,12 @@ class BalanceSyncService
             // or have never been synced
             $query->where(function ($q) {
                 $q->whereNull('last_balance_sync_at')
-                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes(15));
+                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes(10));
             });
         }
 
         return $query->orderBy('last_balance_sync_at', 'asc')
-            ->limit(1000) // Limit to prevent overwhelming
+            ->limit(2000) // Limit to prevent overwhelming
             ->get();
     }
 
