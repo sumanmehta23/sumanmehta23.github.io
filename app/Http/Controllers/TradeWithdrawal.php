@@ -258,6 +258,30 @@ class TradeWithdrawal extends Controller
                 if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                 } else {
+                    $trade_user = NULL;
+                    $this->api->UserGet($account->code, $trade_user);
+                    if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                    }
+                    $bonusTransaction = BonusTransaction::where('email', $account->email)
+                        ->where('account_id', $account->id)
+                        ->where('user_id', $user_id)
+                        ->where('bonus_type', 'Bonus In')
+                        ->where('admin_remark', '10x Trader Leverage')
+                        ->first();
+
+                    $tradedeposits = $account->tradeDeposits->where('transaction_id',$bonusTransaction->transaction_id)->first();
+                    Log::alert(" $account->leverage * (($tradedeposits->deposit_amount) / ($tradedeposits->deposit_amount + ($trade_user->Credit)) ) ");
+
+                    $leverage = round($account->leverage * (($tradedeposits->deposit_amount) / ($tradedeposits->deposit_amount + ($trade_user->Credit))), 2);
+
+                    $trade_user->Leverage = $leverage;
+
+                    $updated_user = "";
+                    if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                    }
+
                     $deposit_details = BonusTransaction::create([
                         'email' => $account->email,
                         'user_id' => $user_id,

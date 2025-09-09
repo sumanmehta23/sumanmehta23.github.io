@@ -142,7 +142,11 @@ class Payment extends Controller
                         return response()->json(['error' => 'MT5 connection failed'], 500);
                     }
 
-                    $account = Account::where('id', $paymentLog->account_id)->first();
+                    // $account = Account::where('id', $paymentLog->account_id)->first();
+
+                    $account = Account::where('id', $paymentLog->account_id)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                        $query->where('status', 1);
+                    }])->first();
 
                     $ticket1 = NULL;
                     if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
