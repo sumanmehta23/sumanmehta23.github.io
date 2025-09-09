@@ -49,9 +49,48 @@ class TradeCacheService
      */
     public function invalidateAccount(Account $account): void
     {
-        $cacheKey = self::CACHE_PREFIX . "account:{$account->id}:existing";
-        Cache::forget($cacheKey);
+        $this->invalidateAccountTrades($account);
         Log::debug("Cache INVALIDATED for account {$account->code}");
+    }
+
+    /**
+     * Invalidate all trade-related caches for an account
+     * This should be called when deals are updated/inserted
+     */
+    public function invalidateAccountTrades(Account $account): void
+    {
+        $accountId = $account->id;
+
+        // Invalidate existing trades cache
+        $tradesKey = self::CACHE_PREFIX . "account:{$accountId}:existing";
+        Cache::forget($tradesKey);
+
+        // Invalidate position mapping cache
+        $positionsKey = self::CACHE_PREFIX . "account:{$accountId}:positions";
+        Cache::forget($positionsKey);
+
+        // Invalidate account stats cache
+        $statsKey = self::CACHE_PREFIX . "account:{$accountId}:stats";
+        Cache::forget($statsKey);
+
+        Log::debug("Cache INVALIDATED (trades, positions, stats) for account {$account->code}");
+    }
+
+    /**
+     * Invalidate deal-related caches when new deals are synced
+     * This ensures that any cached data dependent on deals is refreshed
+     */
+    public function invalidateAccountDeals(Account $account): void
+    {
+        // When deals change, trades derived from those deals need to be recalculated
+        // This invalidates all caches that might be affected by new deal data
+        $this->invalidateAccountTrades($account);
+
+        // Also invalidate any deal-specific caches if they exist
+        $dealsKey = self::CACHE_PREFIX . "account:{$account->id}:deals";
+        Cache::forget($dealsKey);
+
+        Log::info("Deal cache invalidation completed for account {$account->code}");
     }
 
     /**

@@ -46,7 +46,7 @@ class PrioritySyncAccountsCommand extends Command
     {
         $batchSize = (int) ($this->option('batch-size') ?: config('sync-all-trades.priority_sync.batch_size', 10));
         $maxConcurrent = (int) ($this->option('max-concurrent') ?: config('sync-all-trades.priority_sync.max_concurrent', 5));
-        $cycleDelay = (int) ($this->option('cycle-delay') ?: config('sync-all-trades.priority_sync.cycle_delay', 30));
+        $cycleDelay = (int) ($this->option('cycle-delay') ?: config('sync-all-trades.priority_sync.cycle_delay', 5));
         $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 60));
         $maxPendingJobs = (int) ($this->option('max-pending-jobs') ?: config('sync-all-trades.priority_sync.max_pending_jobs', 100));
         $ignoreBalanceFilter = $this->option('ignore-balance-filter');

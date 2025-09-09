@@ -236,7 +236,7 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
 
         // Get position details from first deal
         $symbol = $firstDeal->symbol;
-        $volume = $positionDeals->sum('volume'); // Total volume from all deals
+        $volume = $firstDeal->volume; // Total volume from all deals
         $openPrice = $firstDeal->price;
         $openTime = $firstDeal->time_done;
 
@@ -281,8 +281,8 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
         // 1. The total volume of buy deals != total volume of sell deals
         // 2. Or if we only have deals of one type (all buy or all sell)
 
-        $buyVolume = $positionDeals->where('type', 0)->sum('volume');
-        $sellVolume = $positionDeals->where('type', 1)->sum('volume');
+        $buyVolume = $positionDeals->where('action', 0)->sum('volume');
+        $sellVolume = $positionDeals->where('action', 1)->sum('volume');
 
         return abs($buyVolume - $sellVolume) > 0.01; // Allow small floating point differences
     }

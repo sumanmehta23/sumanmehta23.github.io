@@ -296,7 +296,10 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                 // Dispatch deal sync job and wait for it to complete
                 $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
-                $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class));
+                $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                // Ensure cache is invalidated after deal sync
+                $cacheService->invalidateAccountDeals($account);
 
                 Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
             } else {
@@ -1105,49 +1108,75 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
     /**
      * Process deals directly from database instead of using MT5 API
      * This provides massive performance improvement when deal data is fresh
+     * 
+     * CRITICAL: This method properly reconstructs POSITIONS from DEALS
+     * - Groups deals by position_id
+     * - Calculates if position is open/closed based on volume balance
+     * - Properly determines opening/closing times and prices
      */
     protected function processDealsBatch(Account $account, $deals, Carbon $fromTime, TradeCacheService $cacheService): string
     {
-        Log::info("DEBUG[{$account->code}]: Processing {$deals->count()} deals from database (optimized path)");
+        Log::info("DEBUG[{$account->code}]: Processing {$deals->count()} deals from database (position reconstruction)");
 
         $processedTrades = 0;
         $newTrades = 0;
         $updatedTrades = 0;
 
-        foreach ($deals as $deal) {
-            // Convert deal to trade format similar to MT5 order processing
+        // Group deals by position_id to reconstruct actual positions
+        $positionGroups = $deals->groupBy('position_id');
+
+        foreach ($positionGroups as $positionId => $positionDeals) {
+            if (empty($positionId)) {
+                Log::warning("DEBUG[{$account->code}]: Skipping deals with empty position_id");
+                continue;
+            }
+
+            // Sort deals by time to get proper sequence
+            $sortedDeals = $positionDeals->sortBy('time_done');
+
+            // Calculate position state from deals
+            $positionData = $this->reconstructPositionFromDeals($sortedDeals);
+
+            if (!$positionData) {
+                Log::warning("DEBUG[{$account->code}]: Could not reconstruct position {$positionId}");
+                continue;
+            }
+
+            // Prepare trade data for database
             $tradeData = [
                 'account_id' => $account->id,
-                'ticket' => $deal->deal_id,
-                'position_id' => $deal->position_id,
-                'symbol' => $deal->symbol,
-                'type' => $deal->type,
-                'volume' => $deal->volume,
-                'price_open' => $deal->price,
-                'time_open' => $deal->time_done,
-                'swap' => $deal->swap ?? 0,
-                'commission' => $deal->commission ?? 0,
-                'profit' => $deal->profit ?? 0,
-                'comment' => $deal->comment ?? '',
-                'magic' => $deal->magic ?? 0,
-                'is_closed' => true, // Deals represent completed transactions
-                'time_close' => $deal->time_done,
-                'price_close' => $deal->price,
+                'position_id' => $positionId,  // CORRECT: Use actual position_id from deal
+                'symbol' => $positionData['symbol'],
+                'type' => $positionData['type'],
+                'volume' => $positionData['volume'],
+                'open_price' => $positionData['price_open'],
+                'open_time' => $positionData['time_open'],
+                'profit' => $positionData['profit'],
+                'comment' => $positionData['comment'],
+                'state' => $positionData['is_closed'] ? 'closed' : 'open',
             ];
+
+            // Add closing data only if position is actually closed
+            if ($positionData['is_closed']) {
+                $tradeData['close_time'] = $positionData['time_close'];
+                $tradeData['close_price'] = $positionData['price_close'];
+            }
 
             // Check if trade already exists
             $existingTrade = Trade::where('account_id', $account->id)
-                ->where('ticket', $deal->deal_id)
+                ->where('position_id', $positionId)  // CORRECT: Use position_id
                 ->first();
 
             if ($existingTrade) {
-                // Update existing trade if needed
+                // Update existing trade
                 $existingTrade->update($tradeData);
                 $updatedTrades++;
+                Log::debug("DEBUG[{$account->code}]: Updated position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             } else {
                 // Create new trade
                 Trade::create($tradeData);
                 $newTrades++;
+                Log::debug("DEBUG[{$account->code}]: Created position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             }
 
             $processedTrades++;
@@ -1159,8 +1188,85 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         // Invalidate cache
         $cacheService->invalidateAccount($account);
 
-        Log::info("DEBUG[{$account->code}]: Deal processing completed: {$processedTrades} processed, {$newTrades} new, {$updatedTrades} updated");
+        Log::info("DEBUG[{$account->code}]: Position reconstruction completed: {$processedTrades} positions processed, {$newTrades} new, {$updatedTrades} updated from {$positionGroups->count()} position groups");
 
         return $newTrades > 0 ? 'success' : 'no_changes';
+    }
+
+    /**
+     * Reconstruct a position's state from its constituent deals
+     * This is the CORE LOGIC for converting deals back to position/trade data
+     */
+    protected function reconstructPositionFromDeals($deals): ?array
+    {
+        if ($deals->isEmpty()) {
+            return null;
+        }
+
+        $firstDeal = $deals->first();
+        $lastDeal = $deals->last();
+
+        // Calculate volume balance to determine if position is open/closed
+        $buyVolume = $deals->where('type', 0)->sum('volume');  // Type 0 = BUY
+        $sellVolume = $deals->where('type', 1)->sum('volume'); // Type 1 = SELL
+
+        $netVolume = $buyVolume - $sellVolume;
+        $isPositionClosed = abs($netVolume) < 0.0001; // Consider closed if volume difference is negligible
+
+        // Determine position type (buy/sell) based on first deal
+        $positionType = $firstDeal->type == 0 ? 'buy' : 'sell';
+
+        // If position involves both buy and sell, determine the net direction
+        if ($buyVolume > 0 && $sellVolume > 0) {
+            $positionType = $netVolume > 0 ? 'buy' : 'sell';
+        }
+
+        // Calculate effective volume (net position size)
+        $effectiveVolume = abs($netVolume);
+        if ($isPositionClosed) {
+            // For closed positions, use the volume that was actually traded
+            $effectiveVolume = min($buyVolume, $sellVolume);
+        }
+
+        // Calculate weighted average opening price
+        $openingDeals = $deals->where('type', $firstDeal->type);
+        $totalOpenVolume = $openingDeals->sum('volume');
+        $weightedOpenPrice = $totalOpenVolume > 0
+            ? $openingDeals->sum(function ($deal) {
+                return $deal->price * $deal->volume;
+            }) / $totalOpenVolume
+            : $firstDeal->price;
+
+        // Calculate closing price if position is closed
+        $closingPrice = null;
+        if ($isPositionClosed && $buyVolume > 0 && $sellVolume > 0) {
+            $closingDeals = $deals->where('type', '!=', $firstDeal->type);
+            $totalCloseVolume = $closingDeals->sum('volume');
+            $closingPrice = $totalCloseVolume > 0
+                ? $closingDeals->sum(function ($deal) {
+                    return $deal->price * $deal->volume;
+                }) / $totalCloseVolume
+                : $lastDeal->price;
+        }
+
+        return [
+            'symbol' => $firstDeal->symbol,
+            'type' => $positionType,
+            'volume' => $effectiveVolume,
+            'price_open' => $weightedOpenPrice,
+            'time_open' => $firstDeal->time_done,
+            'price_close' => $closingPrice,
+            'time_close' => $isPositionClosed ? $lastDeal->time_done : null,
+            'swap' => $deals->sum('swap'),
+            'commission' => $deals->sum('commission'),
+            'profit' => $deals->sum('profit'),
+            'comment' => $firstDeal->comment ?? '',
+            'magic' => $firstDeal->magic ?? 0,
+            'is_closed' => $isPositionClosed,
+            'deal_count' => $deals->count(),
+            'buy_volume' => $buyVolume,
+            'sell_volume' => $sellVolume,
+            'net_volume' => $netVolume
+        ];
     }
 }

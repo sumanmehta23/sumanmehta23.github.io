@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Deal;
 use App\Models\Account;
 use App\Services\UniversalMT5Service;
+use App\Services\TradeCacheService;
 use App\MT5\MTRetCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +60,7 @@ class DealSyncJob implements ShouldQueue
         $this->timeout = max(600, count($accounts) * 120 + 300);
     }
 
-    public function handle(UniversalMT5Service $mt5Service)
+    public function handle(UniversalMT5Service $mt5Service, TradeCacheService $cacheService = null)
     {
         $jobStartTime = microtime(true);
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
@@ -95,7 +96,7 @@ class DealSyncJob implements ShouldQueue
                     }
 
                     $fromTime = $this->determineFromTime($account, $index);
-                    $result = $this->syncAccountDeals($api, $account, $fromTime);
+                    $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
 
                     $results[$result['status']]++;
                     $results['deals_synced'] += $result['deals_count'];
@@ -176,7 +177,7 @@ class DealSyncJob implements ShouldQueue
         return now()->subDays(7);
     }
 
-    protected function syncAccountDeals($api, Account $account, Carbon $fromTime): array
+    protected function syncAccountDeals($api, Account $account, Carbon $fromTime, TradeCacheService $cacheService = null): array
     {
         $accountStartTime = microtime(true);
         $timings = [];
@@ -316,6 +317,12 @@ class DealSyncJob implements ShouldQueue
                 // Batch insert for performance
                 if (count($dealsToInsert) >= 100) {
                     Deal::insert($dealsToInsert);
+
+                    // Invalidate cache when new deals are inserted
+                    if ($cacheService && count($dealsToInsert) > 0) {
+                        $cacheService->invalidateAccountDeals($account);
+                    }
+
                     $dealsToInsert = [];
                 }
             }
@@ -323,6 +330,11 @@ class DealSyncJob implements ShouldQueue
             // Insert remaining deals
             if (!empty($dealsToInsert)) {
                 Deal::insert($dealsToInsert);
+
+                // Invalidate cache when new deals are inserted
+                if ($cacheService && count($dealsToInsert) > 0) {
+                    $cacheService->invalidateAccountDeals($account);
+                }
             }
 
             $timings['deal_processing'] = round((microtime(true) - $phaseStart) * 1000, 2);
