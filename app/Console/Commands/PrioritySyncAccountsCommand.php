@@ -312,7 +312,7 @@ class PrioritySyncAccountsCommand extends Command
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
-            ->where('sync_status', '!=', 'flagged'); // Exclude flagged problematic accounts
+            ->whereNotIn('sync_status', ['flagged', 'not_found_in_mt5']); // Exclude flagged problematic accounts and accounts not found in MT5
 
         if (!$ignoreBalanceFilter) {
             // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
@@ -343,7 +343,7 @@ class PrioritySyncAccountsCommand extends Command
                     ->orWhere(function ($timeQuery) use ($cutoffTime) {
                         $timeQuery->where(function ($statusQuery) {
                             $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
-                                ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error']);  // Exclude final statuses
+                                ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error', 'not_found_in_mt5']);  // Exclude final statuses and accounts not found in MT5
                         })
                             ->where(function ($syncQuery) use ($cutoffTime) {
                                 $syncQuery->whereNull('last_sync_attempt_at')  // Never synced

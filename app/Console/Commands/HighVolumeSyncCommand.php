@@ -45,7 +45,11 @@ class HighVolumeSyncCommand extends Command
         // Get accounts to sync
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false);
+            ->where('demo', false)
+            ->where(function ($query) {
+                $query->whereNull('sync_status')
+                    ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+            });
 
         if ($accountCodes) {
             $codes = array_map('trim', explode(',', $accountCodes));

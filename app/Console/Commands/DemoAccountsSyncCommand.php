@@ -127,7 +127,10 @@ class DemoAccountsSyncCommand extends Command
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', true) // Only demo accounts
-            ->where('sync_status', '!=', 'flagged'); // Exclude flagged accounts
+            ->where(function ($query) {
+                $query->whereNull('sync_status')
+                    ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+            }); // Exclude flagged and not found accounts
 
         // Include accounts that need syncing
         $query->where(function ($q) use ($cutoffTime) {

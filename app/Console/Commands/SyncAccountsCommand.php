@@ -107,6 +107,10 @@ class SyncAccountsCommand extends Command
                                 ->where('demo', false)
                                 // ->where('code', 637279)
                                 ->where('account_request_status', 1)
+                                ->where(function ($query) {
+                                    $query->whereNull('sync_status')
+                                        ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+                                })
                                 ->whereHas('user', function ($query) use ($referral_code, $i) {
                                     $query->where("ib$i", $referral_code)->where('status', 1);
                                 })

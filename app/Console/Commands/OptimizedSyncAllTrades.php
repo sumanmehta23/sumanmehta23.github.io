@@ -139,6 +139,10 @@ class OptimizedSyncAllTrades extends Command
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
+            ->where(function ($query) {
+                $query->whereNull('sync_status')
+                    ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+            })
 
             // ORDER BY sync priority: NULL sync attempts first, then oldest attempts
             ->orderByRaw('last_sync_attempt_at IS NULL DESC')
@@ -151,12 +155,20 @@ class OptimizedSyncAllTrades extends Command
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
+            ->where(function ($query) {
+                $query->whereNull('sync_status')
+                    ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+            })
             ->whereNull('last_sync_attempt_at')
             ->count();
 
         $staleSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
+            ->where(function ($query) {
+                $query->whereNull('sync_status')
+                    ->orWhereNotIn('sync_status', ['not_found_in_mt5', 'flagged']);
+            })
             ->whereNotNull('last_sync_attempt_at')
             ->where('last_sync_attempt_at', '<', now()->subHours(6))
             ->count();

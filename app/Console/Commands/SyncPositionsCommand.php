@@ -121,8 +121,8 @@ class SyncPositionsCommand extends Command
             $query->where('demo', false);
         }
 
-        // Only get accounts that are not currently syncing
-        $query->whereNotIn('sync_status', ['syncing', 'pending']);
+        // Only get accounts that are not currently syncing and not flagged
+        $query->whereNotIn('sync_status', ['syncing', 'pending', 'not_found_in_mt5', 'flagged']);
 
         return $query->orderBy('code')->get();
     }

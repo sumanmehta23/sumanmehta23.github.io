@@ -33,6 +33,16 @@ class BalanceSyncService
 
         Log::info("Starting balance sync" . ($accountCodes ? " for specific accounts: " . implode(', ', $accountCodes) : " for all eligible accounts"));
 
+        // Log how many accounts are excluded due to not being found in MT5
+        $excludedCount = Account::whereNotNull('code')
+            ->where('demo', false)
+            ->whereIn('sync_status', ['not_found_in_mt5'])
+            ->count();
+
+        if ($excludedCount > 0) {
+            Log::info("Excluding {$excludedCount} accounts marked as not_found_in_mt5 from balance sync");
+        }
+
         try {
             // Ensure MT5 connection is ready
             if (!$this->mt5Service->connect()) {
@@ -85,6 +95,7 @@ class BalanceSyncService
     {
         $query = Account::whereNotNull('code')
             ->where('demo', false) // Non-competition accounts only
+            ->whereNotIn('sync_status', ['not_found_in_mt5']) // Exclude accounts not found in MT5
         ;
 
         if ($accountCodes) {
@@ -116,7 +127,16 @@ class BalanceSyncService
         $accountData = $this->mt5Service->getAccountBalance((int)$accountCode);
 
         if (!$accountData) {
-            Log::warning("MT5 account data not found for balance sync: {$accountCode}");
+            Log::warning("MT5 account data not found for balance sync: {$accountCode} - marking as not_found_in_mt5");
+
+            // Mark account as not found in MT5 to avoid future processing
+            $account->update([
+                'sync_status' => 'not_found_in_mt5',
+                'sync_error' => 'Account not found in MT5 server',
+                'sync_flagged_at' => now(),
+                'sync_flag_reason' => 'Account not found during balance sync'
+            ]);
+
             return 'not_found';
         }
 

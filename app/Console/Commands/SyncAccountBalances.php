@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Account;
 use App\Services\BalanceSyncService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -57,6 +58,9 @@ class SyncAccountBalances extends Command
             $this->warn('Force sync enabled - ignoring last sync time');
         }
 
+        // Show exclusion information
+        $this->showExclusionInfo($accountCodes);
+
         $this->newLine();
 
         try {
@@ -89,6 +93,11 @@ class SyncAccountBalances extends Command
         while (true) {
             $iteration++;
             $this->info("[{$iteration}] " . now()->format('Y-m-d H:i:s') . " - Starting balance sync cycle");
+
+            // Show exclusion info for daemon mode
+            if ($iteration === 1) {
+                $this->showExclusionInfo($accountCodes, true);
+            }
 
             try {
                 $startTime = microtime(true);
@@ -157,6 +166,25 @@ class SyncAccountBalances extends Command
             } else {
                 $this->info("✅ Balance sync completed! No balance changes detected.");
             }
+        }
+    }
+
+    private function showExclusionInfo(?array $accountCodes, bool $isDaemon = false): void
+    {
+        $excludedCount = Account::whereNotNull('code')
+            ->where('demo', false)
+            ->whereIn('sync_status', ['not_found_in_mt5'])
+            ->count();
+
+        if ($excludedCount > 0) {
+            if (!$isDaemon) {
+                $this->warn("⚠️  {$excludedCount} accounts excluded (marked as not_found_in_mt5)");
+                $this->line("💡 Use 'php artisan app:manage-not-found-accounts --stats' for details");
+            } else {
+                $this->line("[INFO] {$excludedCount} accounts excluded from sync (not_found_in_mt5)");
+            }
+        } elseif (!$isDaemon) {
+            $this->info("✅ All eligible accounts included in sync");
         }
     }
 }

@@ -108,8 +108,8 @@ class SyncDealsCommand extends Command
             $query->where('demo', false);
         }
 
-        // Only get accounts that are not currently syncing
-        $query->whereNotIn('sync_status', ['syncing', 'pending']);
+        // Only get accounts that are not currently syncing and not marked as not found in MT5
+        $query->whereNotIn('sync_status', ['syncing', 'pending', 'not_found_in_mt5']);
 
         // PRIORITY: Order by account creation date first (recently created accounts synced first)
         // Recently created accounts are more likely to need initial deal syncing
