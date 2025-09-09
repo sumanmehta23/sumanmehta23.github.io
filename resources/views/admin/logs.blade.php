@@ -559,15 +559,15 @@
                                                 $client_id = $log->properties['client_id'];
                                                 $client = \App\Models\User::where('id', $client_id)->first();
                                                 $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
-                                                if ($ib_status==1) {
+                                                if ($ib_status==1 && $ib_plan) {
                                                     $logDescription = "<div class=''>
                                                                     <span style=''>User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name}.</span>
                                                                 </div>";
-                                                }elseif($ib_status==0){
+                                                }elseif($ib_status==0 && $ib_plan){
                                                     $logDescription = "<div class=''>
                                                                     <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to pending.</span>
                                                                 </div>";
-                                                }elseif($ib_status==2){
+                                                }elseif($ib_status==2 && $ib_plan){
                                                     $logDescription = "<div class=''>
                                                                     <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to rejected.</span>
                                                                 </div>";
