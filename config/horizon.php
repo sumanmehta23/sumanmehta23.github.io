@@ -272,10 +272,16 @@ return [
             'tries' => 1,
             'timeout' => 1800,
         ],
-
-
-
-
+        'supervisor-demo-sync' => [
+            'connection' => 'redis',
+            'queue' => ['demo-sync-trades'],
+            'balance' => 'simple',
+            'maxProcesses' => 1, // Only 1 process for minimal impact
+            'memory' => 512, // Lower memory requirement
+            'tries' => 1,
+            'timeout' => 900, // 15 minutes timeout for demo accounts
+            'nice' => 10, // Lower priority (higher nice value)
+        ],
 
     ],
 
@@ -306,6 +312,11 @@ return [
                 'balanceMaxShift' => 2, // Allow more dynamic scaling
                 'balanceCooldown' => 3, // Faster scaling response
             ],
+            'supervisor-demo-sync' => [
+                'maxProcesses' => 1, // Only 1 process for demos
+                'balanceMaxShift' => 0, // No scaling for demos
+                'balanceCooldown' => 30, // Slow cooldown
+            ],
         ],
 
         'local' => [
@@ -323,6 +334,9 @@ return [
             ],
             'supervisor-optimized-sync' => [
                 'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Reduced for connection management
+            ],
+            'supervisor-demo-sync' => [
+                'maxProcesses' => 1, // Only 1 process for demos in local too
             ],
         ],
     ],

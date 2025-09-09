@@ -945,7 +945,9 @@ class BatchSyncTradesJob implements ShouldQueue
     protected function clearBatchSyncInProgressCache(): void
     {
         foreach ($this->accounts as $accountData) {
+            // Clear both regular and demo cache markers
             Cache::forget("account_sync_in_progress:{$accountData['id']}");
+            Cache::forget("demo_account_sync_in_progress:{$accountData['id']}");
         }
 
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
