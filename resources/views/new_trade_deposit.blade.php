@@ -378,36 +378,42 @@
         let isCcPromocodeEntered = false;
 
         // Function to update CryptoChill button state
-        function updateCryptoButtonState() {
-            const amount = parseFloat(cryptoAmountInput.val());
-            const isAmountValid = amount >= 10;
-            const isCheckboxChecked = $('#cryptoWarningCheckbox').is(':checked');
-            if (isCryptoPromocodeEntered) {
-                cryptoDepositButton.prop('disabled', !isCryptoPromocodeValid || !isAmountValid || !isCheckboxChecked);
-                cryptoDepositButton.css('opacity', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
-                cryptoDepositButton.css('cursor', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
-            } else {
-                cryptoDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
-                cryptoDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
-                cryptoDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
-            }
-        }
+        // Function to update CryptoChill button state
+function updateCryptoButtonState() {
+    const minDeposit = parseFloat($('#crypto_deposit_amount').attr('min')) || 10; // read dynamic min
+    const amount = parseFloat(cryptoAmountInput.val());
+    const isAmountValid = amount >= minDeposit;
+    const isCheckboxChecked = $('#cryptoWarningCheckbox').is(':checked');
 
-        // Function to update CreditCard button state
-        function updateCcButtonState() {
-            const amount = parseFloat(ccAmountInput.val());
-            const isAmountValid = amount >= 10;
-            const isCheckboxChecked = $('#creditWarningCheckbox').is(':checked');
-            if (isCcPromocodeEntered) {
-                ccDepositButton.prop('disabled', !isCcPromocodeValid || !isAmountValid || !isCheckboxChecked);
-                ccDepositButton.css('opacity', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
-                ccDepositButton.css('cursor', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
-            } else {
-                ccDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
-                ccDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
-                ccDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
-            }
-        }
+    if (isCryptoPromocodeEntered) {
+        cryptoDepositButton.prop('disabled', !isCryptoPromocodeValid || !isAmountValid || !isCheckboxChecked);
+        cryptoDepositButton.css('opacity', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        cryptoDepositButton.css('cursor', isCryptoPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    } else {
+        cryptoDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
+        cryptoDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        cryptoDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    }
+}
+
+// Function to update CreditCard button state
+function updateCcButtonState() {
+    const minDeposit = parseFloat($('#deposit_amount_cc').attr('min')) || 10; // read dynamic min
+    const amount = parseFloat(ccAmountInput.val());
+    const isAmountValid = amount >= minDeposit;
+    const isCheckboxChecked = $('#creditWarningCheckbox').is(':checked');
+
+    if (isCcPromocodeEntered) {
+        ccDepositButton.prop('disabled', !isCcPromocodeValid || !isAmountValid || !isCheckboxChecked);
+        ccDepositButton.css('opacity', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        ccDepositButton.css('cursor', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    } else {
+        ccDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
+        ccDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        ccDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    }
+}
+
 
         // CryptoChill promocode verification
         cryptoVerifyButton.click(function() {
@@ -532,6 +538,7 @@
         $('.select-liveaccount').on('change', function () {
             const clientAccountId = $(this).val();
             const group = $(this).data('group');
+            const minDeposit = (group === 'LM\\B-Book\\10x\\DF-B') ? 25 : 10;
             $('.user_code').val(clientAccountId);
 
             if (group === 'LM\\B-Book\\10x\\DF-B') {
@@ -543,6 +550,10 @@
                 $('.promo-field-crypto').show();
                 $('.promo-field-cc').show();
             }
+
+            $('#crypto_deposit_amount').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
+            $('#deposit_amount_cc').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
+
             updateCryptoButtonState();
             updateCcButtonState();
         });
