@@ -1127,6 +1127,29 @@ class Wallet extends Controller
                                 return response()->json(['error' => '10x leverage bonus failed: ' . MTRetCode::GetError($errorCode1)], 200);
                             }
 
+
+                            // Updating leverage
+                            $trade_user = NULL;
+                            $this->mt5Service->userGet($account->code, $trade_user);
+
+                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                Log::error("Updating leverage failed for account {$account->code}: " . MTRetCode::GetError($error_code));
+                                // return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                            }
+
+                            if ($trade_user) {
+                                Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+
+                                $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
+                                $trade_user->Leverage = $leverage;
+
+                                $updated_user = "";
+                                if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                    Log::error("Updating leverage failed for user {$trade_user->Login}: " . MTRetCode::GetError($error_code));
+                                    // return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                }
+                            }
+
                             BonusTransaction::create([
                                 'email' => $email,
                                 'user_id' => $customerID,
