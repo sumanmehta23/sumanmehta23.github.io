@@ -559,17 +559,17 @@
                                                 $client_id = $log->properties['client_id'];
                                                 $client = \App\Models\User::where('id', $client_id)->first();
                                                 $client_url = "<a href='/admin/client_details/{$client->id}' style='color: #007bff;'>{$client->email}</a>";
-                                                if ($ib_status==1 && $ib_plan) {
+                                                if ($ib_status==1) {
                                                     $logDescription = "<div class=''>
-                                                                    <span style=''>User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name}.</span>
+                                                                    <span style=''>User {$userLink} approve ib request of client {$client_url} having plan {$ib_plan ?$ib_plan->plan->ib_cat_name : ''}.</span>
                                                                 </div>";
-                                                }elseif($ib_status==0 && $ib_plan){
+                                                }elseif($ib_status==0){
                                                     $logDescription = "<div class=''>
-                                                                    <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to pending.</span>
+                                                                    <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan ? $ib_plan->plan->ib_cat_name : ''} to pending.</span>
                                                                 </div>";
-                                                }elseif($ib_status==2 && $ib_plan){
+                                                }elseif($ib_status==2){
                                                     $logDescription = "<div class=''>
-                                                                    <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan->plan->ib_cat_name} to rejected.</span>
+                                                                    <span style=''>User {$userLink} change ib request of client {$client_url} having plan {$ib_plan ? $ib_plan->plan->ib_cat_name : ''} to rejected.</span>
                                                                 </div>";
                                                 }
 
