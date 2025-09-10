@@ -162,12 +162,12 @@ class BatchBalanceSyncJob implements ShouldQueue
 
                 $account->update($updateData);
 
-                Log::debug("BatchBalanceSyncJob: Updated account {$accountCode}", [
-                    'balance' => $currentBalance,
-                    'equity' => $currentEquity,
-                    'balance_changed' => $balanceChanged,
-                    'equity_changed' => $equityChanged
-                ]);
+                // Log::debug("BatchBalanceSyncJob: Updated account {$accountCode}", [
+                //     'balance' => $currentBalance,
+                //     'equity' => $currentEquity,
+                //     'balance_changed' => $balanceChanged,
+                //     'equity_changed' => $equityChanged
+                // ]);
 
                 return 'updated';
             } else {
