@@ -520,6 +520,12 @@ class Payment extends Controller
 
     public function manuallyPaymentResponse(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
+
+        if (!$this->ensureMT5Connection()) {
+            Log::error('Failed to connect to MT5 server in handlePaymentResponse');
+            return response()->json(['error' => 'MT5 connection failed'], 500);
+        }
+
         $code = $request->input('code');
         $responsedata = $request->all();
         $transactionId = $responsedata['txid_in'];
