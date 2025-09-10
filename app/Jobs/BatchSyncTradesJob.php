@@ -357,7 +357,20 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 } else {
                     // Deal counts differ - need to sync the difference
                     $dealDifference = $mt5DealTotal - $dbDealCount;
-                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing full MT5 sync...");
+                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
+
+                    // FORCE DEAL SYNC: When deal counts don't match, we must sync deals first
+                    // This ensures we have all the missing deals before proceeding with trade sync
+                    Log::info("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
+
+                    // Force deal sync for the same date range to get missing deals
+                    $dealSyncJob = new DealSyncJob([$account], [$fromTime]);
+                    $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                    // Invalidate cache after deal sync to ensure fresh data
+                    $cacheService->invalidateAccountDeals($account);
+
+                    Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
 
                     // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
                     // This ensures we get the missing deals from MT5 instead of using stale database data
@@ -669,9 +682,9 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 if (!empty($filteredDeals)) {
                     // Sum actual profit from all deals in this position
                     $actualProfit = array_sum(array_map(function ($deal) {
-                        return $deal->Profit ?? 0;
+                        return $deal->profit ?? 0;
                     }, $filteredDeals));
-                    $rateProfit = $filteredDeals[0]->RateProfit ?? 1;
+                    $rateProfit = $filteredDeals[0]->rate_profit ?? 1;
                 }
 
                 // Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
@@ -827,7 +840,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         }
 
         // Calculate profit based on deal information
-        $profit = $deal->Profit ?? 0;
+        $profit = $deal->profit ?? 0;
 
         return [
             'account_id' => $account->id,
