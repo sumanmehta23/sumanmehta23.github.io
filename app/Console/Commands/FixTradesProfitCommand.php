@@ -31,7 +31,8 @@ class FixTradesProfitCommand extends Command
                             {--batch-size=100 : Number of trades to process per batch}
                             {--limit= : Maximum number of trades to process}
                             {--sync-deals : Automatically sync deals for accounts with insufficient deal data}
-                            {--check-deal-coverage : Check and report deal coverage for each account}';
+                            {--check-deal-coverage : Check and report deal coverage for each account}
+                            {--show-order : Show the order trades will be processed (most recent first)}';
 
     protected $description = 'Recalculate and fix profit values for existing trades using deal data';
 
@@ -46,6 +47,7 @@ class FixTradesProfitCommand extends Command
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
         $syncDeals = $this->option('sync-deals');
         $checkDealCoverage = $this->option('check-deal-coverage');
+        $showOrder = $this->option('show-order');
 
         $this->info("Starting trade profit fix process...");
 
@@ -99,6 +101,9 @@ class FixTradesProfitCommand extends Command
             $query->limit($limit);
         }
 
+        // Order by most recent first (updated_at desc, then close_time desc for closed trades)
+        $query->orderBy('updated_at', 'desc')->orderBy('close_time', 'desc');
+
         $totalTrades = $query->count();
         $this->info("Found {$totalTrades} trades to process");
 
@@ -107,11 +112,40 @@ class FixTradesProfitCommand extends Command
             return 0;
         }
 
+        // Show processing order if requested
+        if ($showOrder) {
+            $this->info("=== PROCESSING ORDER (Most Recent First) ===");
+            $previewQuery = clone $query;
+            $sampleTrades = $previewQuery->limit(min(10, $totalTrades))->get(['position_id', 'profit', 'status', 'close_time', 'updated_at']);
+
+            foreach ($sampleTrades as $i => $trade) {
+                $closeInfo = $trade->close_time ? "Closed: {$trade->close_time}" : "Open";
+                $this->line(sprintf(
+                    "%d. Position %s: Profit=%.2f, Status=%s, %s, Updated: %s",
+                    $i + 1,
+                    $trade->position_id,
+                    $trade->profit,
+                    $trade->status,
+                    $closeInfo,
+                    $trade->updated_at
+                ));
+            }
+
+            if ($totalTrades > 10) {
+                $this->info("... and " . ($totalTrades - 10) . " more trades");
+            }
+
+            if (!$this->confirm('Continue with processing?')) {
+                return 0;
+            }
+        }
+
         $fixedCount = 0;
         $skippedCount = 0;
         $errorCount = 0;
         $totalProfitChange = 0;
         $accountsNeedingDealSync = [];
+        $processedCount = 0;
 
         $progressBar = $this->output->createProgressBar($totalTrades);
         $progressBar->start();
@@ -123,11 +157,18 @@ class FixTradesProfitCommand extends Command
             &$errorCount,
             &$totalProfitChange,
             &$accountsNeedingDealSync,
+            &$processedCount,
             $dryRun,
             $progressBar,
-            $syncDeals
+            $syncDeals,
+            $limit
         ) {
             foreach ($trades as $trade) {
+                // Check limit if specified
+                if ($limit && $processedCount >= $limit) {
+                    return false; // Stop chunking
+                }
+
                 try {
                     // Check deal coverage for this account if not already done
                     if ($syncDeals && !in_array($trade->account_id, $accountsNeedingDealSync)) {
@@ -156,6 +197,7 @@ class FixTradesProfitCommand extends Command
                     Log::error("Trade profit fix error for {$trade->position_id}: " . $e->getMessage());
                 }
 
+                $processedCount++;
                 $progressBar->advance();
             }
         });
@@ -165,7 +207,7 @@ class FixTradesProfitCommand extends Command
 
         // Report results
         $this->info("=== TRADE PROFIT FIX RESULTS ===");
-        $this->info("Trades processed: {$totalTrades}");
+        $this->info("Trades processed: {$processedCount}");
         $this->info("Trades fixed: {$fixedCount}");
         $this->info("Trades skipped: {$skippedCount}");
         $this->info("Errors: {$errorCount}");
