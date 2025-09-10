@@ -630,12 +630,14 @@ class Payment extends Controller
                                     if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                         return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                     }
+                                    Log::info("account ". $account->code);
                                     Log::info("message". $trade_user->Leverage);
                                     Log::info("message". $amount);
                                     Log::info("message". $trade_user->Balance);
                                     Log::info("message". $trade_user->Credit);
                                     Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
                                     $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                    Log::info("New Leverage". $leverage);
                                     $trade_user->Leverage = $leverage;
 
                                     $updated_user = "";
