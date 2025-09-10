@@ -172,58 +172,7 @@ class Payment extends Controller
                             }
                         }
                     }
-                    if (isset($paymentLog->promocode) && $paymentLog->promocode != '') {
-                        $ticket2 = NULL;
-                        $promo = Promocode::where('code', $paymentLog->promocode)->first();
-                        if ($promo) {
-                            $min_depsoit = $promo->min_deposit;
-                            if ($promo && $amount >= $min_depsoit) {
-                                if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
-                                    $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
-                                } else {
-                                    $bonus_amount = ($promo->promo_percentage / 100) * $amount;
-                                }
-                                if ($promo) {
-                                    if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
-                                        return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
-                                    } else {
 
-                                        BonusTransaction::create([
-                                            'email' => $email,
-                                            'user_id' => $paymentLog->user_id,
-                                            'account_id' => $paymentLog->account_id,
-                                            'code' => $account->code,
-                                            'bonus_amount' => $bonus_amount,
-                                            'bonus_type' => 'Bonus In',
-                                            'status' => 1,
-                                            'admin_remark' => 'Promo Bonus',
-                                            'bonus_currency' => 'USD',
-                                            'transaction_id' => $transactionId,
-                                            'promocode_id' => $promo->id
-                                        ]);
-
-                                        // Updating leverage
-                                        $trade_user = null;
-                                        $this->mt5Service->userGet($account->code, $trade_user);
-                                        if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                            return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                                        }
-
-                                        if ($trade_user) {
-                                            $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                            $trade_user->Leverage = $leverage;
-
-                                            $updated_user = "";
-                                            if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                                            }
-                                        }
-                                        // Updating leverage
-                                    }
-                                }
-                            }
-                        }
-                    }
 
                     $comment = 'CreditCardPayissa';
                     $ticket3 = NULL;
@@ -278,6 +227,59 @@ class Payment extends Controller
                             }
 
                             $tradeDeposit = TradeDeposit::create($data);
+
+                            if (isset($paymentLog->promocode) && $paymentLog->promocode != '') {
+                                $ticket2 = NULL;
+                                $promo = Promocode::where('code', $paymentLog->promocode)->first();
+                                if ($promo) {
+                                    $min_depsoit = $promo->min_deposit;
+                                    if ($promo && $amount >= $min_depsoit) {
+                                        if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                            $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                                        } else {
+                                            $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                                        }
+                                        if ($promo) {
+                                            if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                                                return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
+                                            } else {
+
+                                                BonusTransaction::create([
+                                                    'email' => $email,
+                                                    'user_id' => $paymentLog->user_id,
+                                                    'account_id' => $paymentLog->account_id,
+                                                    'code' => $account->code,
+                                                    'bonus_amount' => $bonus_amount,
+                                                    'bonus_type' => 'Bonus In',
+                                                    'status' => 1,
+                                                    'admin_remark' => 'Promo Bonus',
+                                                    'bonus_currency' => 'USD',
+                                                    'transaction_id' => $transactionId,
+                                                    'promocode_id' => $promo->id
+                                                ]);
+
+                                                // Updating leverage
+                                                $trade_user = null;
+                                                $this->mt5Service->userGet($account->code, $trade_user);
+                                                if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                                    return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                                }
+
+                                                if ($trade_user) {
+                                                    $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                                    $trade_user->Leverage = $leverage;
+
+                                                    $updated_user = "";
+                                                    if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                                    }
+                                                }
+                                                // Updating leverage
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 
                             // Update total balance
                             TotalBalance::create(
@@ -545,55 +547,7 @@ class Payment extends Controller
         //     ], 400);
         // }
 
-        if (isset($promocode)) {
-            $ticket2 = NULL;
-            $promo = Promocode::where('code', $promocode)->first();
-            if ($promo) {
-                $min_depsoit = $promo->min_deposit;
-                if ($promo && $amount >= $min_depsoit) {
-                    if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
-                        $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
-                    } else {
-                        $bonus_amount = ($promo->promo_percentage / 100) * $amount;
-                    }
-                    if ($promo) {
-                        if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
-                        } else {
 
-                            BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $account->user_id,
-                                'account_id' => $account->id,
-                                'code' => $account->code,
-                                'bonus_amount' => $bonus_amount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Bonus',
-                                'bonus_currency' => 'USD',
-                                'transaction_id' => $transactionId,
-                                'promocode_id' => $promo->id
-                            ]);
-
-                            // Updating leverage
-                            $trade_user = NULL;
-                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                            }
-
-                            $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
-                            $trade_user->Leverage = $leverage;
-
-                            $updated_user = "";
-                            if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                            }
-                            // Updating leverage
-                        }
-                    }
-                }
-            }
-        }
 
         if ($account) {
             $comment = 'CreditCardPayissa';
@@ -641,6 +595,59 @@ class Payment extends Controller
                     'created_at' => $deposit_date,
                     'updated_at' => now()
                 ]);
+                if (isset($promocode)) {
+                    $ticket2 = NULL;
+                    $promo = Promocode::where('code', $promocode)->first();
+                    if ($promo) {
+                        $min_depsoit = $promo->min_deposit;
+                        if ($promo && $amount >= $min_depsoit) {
+                            if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                            } else {
+                                $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                            }
+                            if ($promo) {
+                                if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) !== MTRetCode::MT_RET_OK) {
+                                    return redirect()->back()->with('error', MTRetCode::GetError($error_code2));
+                                } else {
+
+                                    BonusTransaction::create([
+                                        'email' => $email,
+                                        'user_id' => $account->user_id,
+                                        'account_id' => $account->id,
+                                        'code' => $account->code,
+                                        'bonus_amount' => $bonus_amount,
+                                        'bonus_type' => 'Bonus In',
+                                        'status' => 1,
+                                        'admin_remark' => 'Promo Bonus',
+                                        'bonus_currency' => 'USD',
+                                        'transaction_id' => $transactionId,
+                                        'promocode_id' => $promo->id
+                                    ]);
+
+                                    // Updating leverage
+                                    $trade_user = NULL;
+                                    if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                                        return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                    }
+                                    Log::info("message". $trade_user->Leverage);
+                                    Log::info("message". $amount);
+                                    Log::info("message". $trade_user->Balance);
+                                    Log::info("message". $trade_user->Credit);
+                                    Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+                                    $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                    $trade_user->Leverage = $leverage;
+
+                                    $updated_user = "";
+                                    if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                    }
+                                    // Updating leverage
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if ($tradeDeposit) {
                 $this->sendSuccessEmail2($email, $amount, $tradeDeposit);
