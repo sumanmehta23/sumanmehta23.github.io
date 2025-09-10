@@ -1192,6 +1192,7 @@ class Wallet extends Controller
                                             }
 
                                             if ($trade_user) {
+                                                Log::info("account ". $account->code);
                                                 Log::info("message". $trade_user->Leverage);
                                                 Log::info("message". $amount);
                                                 Log::info("message". $trade_user->Balance);
