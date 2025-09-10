@@ -441,6 +441,7 @@ class DealSyncJob implements ShouldQueue
     protected function updateTradeProfilesAfterDealSync(): void
     {
         $updatedCount = 0;
+        Log::info("updateTradeProfilesAfterDealSync: Starting trade profit updates for " . count($this->accounts) . " accounts");
 
         foreach ($this->accounts as $accountData) {
             $account = Account::find($accountData['id']);
@@ -450,6 +451,8 @@ class DealSyncJob implements ShouldQueue
             $trades = \App\Models\Trade::where('account_id', $account->id)
                 ->where('status', 'closed') // Only update closed trades
                 ->get();
+
+            Log::info("updateTradeProfilesAfterDealSync: Account {$account->code} has {$trades->count()} closed trades to check");
 
             foreach ($trades as $trade) {
                 // Get all deals for this position
@@ -478,9 +481,10 @@ class DealSyncJob implements ShouldQueue
 
         if ($updatedCount > 0) {
             Log::info("Updated {$updatedCount} trade profits after deal sync");
+        } else {
+            Log::info("updateTradeProfilesAfterDealSync: No trade profits needed updating");
         }
     }
-
     public function failed(\Throwable $exception)
     {
         Log::error("DealSyncJob permanently failed: " . $exception->getMessage(), [
