@@ -49,7 +49,7 @@ class MT5ConnectionPool
         // First, try to get existing healthy connection (no global limit check needed for reuse)
         foreach ($this->connections as $connectionId => $api) {
             if ($this->isConnectionHealthy($connectionId)) {
-                Log::debug("MT5Pool: Reusing connection {$connectionId}");
+                // Log::debug("MT5Pool: Reusing connection {$connectionId}");
                 return $api;
             } else {
                 // Remove unhealthy connection

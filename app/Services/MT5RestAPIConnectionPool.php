@@ -43,7 +43,7 @@ class MT5RestAPIConnectionPool
         // First, try to get existing healthy connection
         foreach ($this->connections as $connectionId => $apiRequest) {
             if ($this->isConnectionHealthy($connectionId)) {
-                Log::debug("MT5RestPool: Reusing connection {$connectionId}");
+                // Log::debug("MT5RestPool: Reusing connection {$connectionId}");
                 return $apiRequest;
             } else {
                 // Remove unhealthy connection

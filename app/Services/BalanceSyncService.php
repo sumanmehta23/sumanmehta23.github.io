@@ -20,7 +20,7 @@ class BalanceSyncService
     /**
      * Sync balance and equity for non-competition accounts
      */
-    public function syncAccountBalances(array $accountCodes = null, bool $forceSync = false): array
+    public function syncAccountBalances(array $accountCodes = null, bool $forceSync = false, int $intelligentInterval = 10): array
     {
         $startTime = microtime(true);
         $results = [
@@ -50,7 +50,7 @@ class BalanceSyncService
             }
 
             // Get accounts to sync
-            $accounts = $this->getAccountsForBalanceSync($accountCodes, $forceSync);
+            $accounts = $this->getAccountsForBalanceSync($accountCodes, $forceSync, $intelligentInterval);
 
             if ($accounts->isEmpty()) {
                 Log::info("No accounts require balance sync");
@@ -91,7 +91,7 @@ class BalanceSyncService
     /**
      * Get accounts that need balance sync
      */
-    private function getAccountsForBalanceSync(array $accountCodes = null, bool $forceSync = false)
+    private function getAccountsForBalanceSync(array $accountCodes = null, bool $forceSync = false, int $intelligentInterval = 10)
     {
         $query = Account::whereNotNull('code')
             ->where('demo', false) // Non-competition accounts only
@@ -103,11 +103,12 @@ class BalanceSyncService
         }
 
         if (!$forceSync) {
-            // Only sync accounts that haven't been synced in the last 15 minutes
-            // or have never been synced
-            $query->where(function ($q) {
+            // Use intelligent sync interval instead of static 10 minutes
+            Log::info("Using intelligent balance sync interval: {$intelligentInterval} minutes");
+
+            $query->where(function ($q) use ($intelligentInterval) {
                 $q->whereNull('last_balance_sync_at')
-                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes(10));
+                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes($intelligentInterval));
             });
         }
 

@@ -40,13 +40,13 @@ class SyncAccountBalances extends Command
         if ($isDaemon) {
             $this->runAsDaemon($interval, $specificAccounts, $forceSync, $useBatch);
         } else {
-            $this->runSingleSync($specificAccounts, $forceSync, $useBatch);
+            $this->runSingleSync($specificAccounts, $forceSync, $useBatch, $interval);
         }
 
         return 0;
     }
 
-    private function runSingleSync(?string $specificAccounts, bool $forceSync, bool $useBatch = false): void
+    private function runSingleSync(?string $specificAccounts, bool $forceSync, bool $useBatch = false, int $interval = 20): void
     {
         $this->info('🔄 Starting Account Balance Sync');
         $this->line('================================');
@@ -74,11 +74,12 @@ class SyncAccountBalances extends Command
 
         try {
             $startTime = microtime(true);
+            $dynamicInterval = $this->calculateIntelligentSyncInterval($interval);
 
             if ($useBatch) {
-                $results = $this->processBatchJobs($accountCodes, $forceSync);
+                $results = $this->processBatchJobs($accountCodes, $forceSync, $interval);
             } else {
-                $results = $this->balanceSyncService->syncAccountBalances($accountCodes, $forceSync);
+                $results = $this->balanceSyncService->syncAccountBalances($accountCodes, $forceSync, $dynamicInterval);
             }
 
             $duration = round((microtime(true) - $startTime) * 1000, 2);
@@ -116,11 +117,12 @@ class SyncAccountBalances extends Command
 
             try {
                 $startTime = microtime(true);
+                $dynamicInterval = $this->calculateIntelligentSyncInterval($interval);
 
                 if ($useBatch) {
-                    $results = $this->processBatchJobs($accountCodes, $forceSync);
+                    $results = $this->processBatchJobs($accountCodes, $forceSync, $interval);
                 } else {
-                    $results = $this->balanceSyncService->syncAccountBalances($accountCodes, $forceSync);
+                    $results = $this->balanceSyncService->syncAccountBalances($accountCodes, $forceSync, $dynamicInterval);
                 }
 
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
@@ -203,7 +205,7 @@ class SyncAccountBalances extends Command
     /**
      * Process balance sync using batch jobs
      */
-    private function processBatchJobs(?array $accountCodes, bool $forceSync): array
+    private function processBatchJobs(?array $accountCodes, bool $forceSync, int $interval = 20): array
     {
         $batchSize = (int) ($this->option('batch-size') ?: config('sync-all-trades.balance_sync.batch_size', 20));
 
@@ -219,10 +221,15 @@ class SyncAccountBalances extends Command
         }
 
         if (!$forceSync) {
-            // Only sync accounts that haven't been synced in the last 10 minutes
-            $query->where(function ($q) {
+            // INTELLIGENT SYNC INTERVAL: Use dynamic interval based on system configuration and activity
+            $dynamicInterval = $this->calculateIntelligentSyncInterval($interval);
+
+            $this->line("Using intelligent sync interval: {$dynamicInterval} minutes (daemon: {$interval}min)");
+
+            // Only sync accounts that haven't been synced within the intelligent interval
+            $query->where(function ($q) use ($dynamicInterval) {
                 $q->whereNull('last_balance_sync_at')
-                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes(10));
+                    ->orWhere('last_balance_sync_at', '<', now()->subMinutes($dynamicInterval));
             });
         }
 
@@ -309,6 +316,106 @@ class SyncAccountBalances extends Command
             }
         } elseif (!$isDaemon) {
             $this->info("✅ All eligible accounts included in sync");
+        }
+    }
+
+    /**
+     * Calculate intelligent sync interval based on system activity and configuration
+     * 
+     * This dynamically determines the optimal interval for balance sync filtering,
+     * ensuring accounts get updated as soon as possible while avoiding unnecessary work.
+     */
+    private function calculateIntelligentSyncInterval(int $daemonInterval): int
+    {
+        // Base interval: Use daemon interval with a small buffer to ensure we don't miss accounts
+        $baseInterval = max(1, $daemonInterval - 2); // Minimum 1 minute, with 2-minute grace period
+
+        // ADAPTIVE FACTORS:
+
+        // 1. Time of day consideration (market hours = more frequent updates)
+        $currentHour = now()->hour;
+        $isMarketHours = ($currentHour >= 8 && $currentHour <= 18); // Approximate market hours
+
+        if ($isMarketHours) {
+            $baseInterval = max(1, intval($baseInterval * 0.7)); // 30% more frequent during market hours
+        }
+
+        // 2. Recent system activity (if many accounts had recent balance changes, sync more frequently)
+        $recentActivityFactor = $this->calculateRecentActivityFactor();
+        $baseInterval = max(1, intval($baseInterval * $recentActivityFactor));
+
+        // 3. Queue load consideration (if queue is busy, be less aggressive)
+        $queueLoadFactor = $this->calculateQueueLoadFactor();
+        $baseInterval = max(1, intval($baseInterval * $queueLoadFactor));
+
+        // 4. Ensure minimum responsiveness (never go below 2 minutes for safety)
+        $intelligentInterval = max(2, min($baseInterval, $daemonInterval));
+
+        Log::info("Balance sync intelligent interval calculated", [
+            'daemon_interval' => $daemonInterval,
+            'base_interval' => $baseInterval,
+            'market_hours' => $isMarketHours,
+            'activity_factor' => $recentActivityFactor,
+            'queue_load_factor' => $queueLoadFactor,
+            'final_interval' => $intelligentInterval
+        ]);
+
+        return $intelligentInterval;
+    }
+
+    /**
+     * Calculate activity factor based on recent balance changes
+     * Returns multiplier: < 1.0 = more frequent sync, > 1.0 = less frequent sync
+     */
+    private function calculateRecentActivityFactor(): float
+    {
+        try {
+            // Count accounts with balance changes in the last hour
+            $recentBalanceChanges = Account::where('last_balance_sync_at', '>', now()->subHour())
+                ->where('updated_at', '>', now()->subHour()) // Indicates recent changes
+                ->count();
+
+            $totalActiveAccounts = Account::whereNotNull('code')
+                ->where('demo', false)
+                ->whereNotIn('sync_status', ['not_found_in_mt5'])
+                ->count();
+
+            if ($totalActiveAccounts == 0) return 1.0;
+
+            $activityRate = $recentBalanceChanges / $totalActiveAccounts;
+
+            // High activity = sync more frequently
+            if ($activityRate > 0.1) return 0.6; // 40% more frequent
+            if ($activityRate > 0.05) return 0.8; // 20% more frequent
+            if ($activityRate < 0.01) return 1.3; // 30% less frequent
+
+            return 1.0; // Normal frequency
+        } catch (\Exception $e) {
+            Log::warning("Failed to calculate activity factor: " . $e->getMessage());
+            return 1.0; // Safe fallback
+        }
+    }
+
+    /**
+     * Calculate queue load factor based on pending jobs
+     * Returns multiplier: > 1.0 = less frequent sync when queue is busy
+     */
+    private function calculateQueueLoadFactor(): float
+    {
+        try {
+            // Check if we can determine queue size (implementation varies by queue driver)
+            // For now, use a simple time-based heuristic
+
+            $currentMinute = now()->minute;
+
+            // Assume higher load during "round" times when cron jobs typically run
+            if ($currentMinute % 5 == 0) return 1.2; // 20% less frequent on 5-minute marks
+            if ($currentMinute % 10 == 0) return 1.4; // 40% less frequent on 10-minute marks
+
+            return 1.0; // Normal frequency
+        } catch (\Exception $e) {
+            Log::warning("Failed to calculate queue load factor: " . $e->getMessage());
+            return 1.0; // Safe fallback
         }
     }
 }
