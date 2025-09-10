@@ -1109,6 +1109,10 @@ class Wallet extends Controller
                             'callback_code' => $callback_code,
                         ]);
 
+                        // Main deposit to MT5
+                        $ticket2 = NULL;
+                        $comment = 'Deposit';
+                        $errorCode2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
 
                         // Handle 10x leverage bonus
                         if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
@@ -1163,11 +1167,6 @@ class Wallet extends Controller
                                 'transaction_id' => $transactionId,
                             ]);
                         }
-
-                        // Main deposit to MT5
-                        $ticket2 = NULL;
-                        $comment = 'Deposit';
-                        $errorCode2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket2, true);
 
                         if ($errorCode2 != MTRetCode::MT_RET_OK) {
                             DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);

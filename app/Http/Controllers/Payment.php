@@ -148,6 +148,12 @@ class Payment extends Controller
                         $query->where('status', 1);
                     }])->first();
 
+
+                    $comment = 'CreditCardPayissa';
+                    $ticket3 = NULL;
+
+                    $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, true);
+
                     $ticket1 = NULL;
                     if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
                         $existingTransaction = TradeDeposit::where('transaction_id', $transactionId)->first();
@@ -196,10 +202,6 @@ class Payment extends Controller
                     }
 
 
-                    $comment = 'CreditCardPayissa';
-                    $ticket3 = NULL;
-
-                    $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, true);
                     if ($errorCode3 != MTRetCode::MT_RET_OK) {
                         $error = MTRetCode::GetError($errorCode3);
                         Log::channel("CreditCardPayissa")->info('Something went wrong: ' . json_encode($paymentLog));
