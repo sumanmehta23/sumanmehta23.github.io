@@ -1192,9 +1192,15 @@ class Wallet extends Controller
                                             }
 
                                             if ($trade_user) {
-                                                Log::alert(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
+                                                Log::info("message". $trade_user->Leverage);
+                                                Log::info("message". $amount);
+                                                Log::info("message". $trade_user->Balance);
+                                                Log::info("message". $trade_user->Credit);
+                                                Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
                                                 $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
+
+                                                Log::info("New Leverage". $leverage);
                                                 $trade_user->Leverage = $leverage;
 
                                                 $updated_user = "";

@@ -636,6 +636,7 @@ class Payment extends Controller
                                     Log::info("message". $trade_user->Credit);
                                     Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
                                     $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                    Log::info("New Leverage". $leverage);
                                     $trade_user->Leverage = $leverage;
 
                                     $updated_user = "";
