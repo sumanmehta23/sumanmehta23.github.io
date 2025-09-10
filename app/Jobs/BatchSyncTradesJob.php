@@ -357,16 +357,24 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 } else {
                     // Deal counts differ - need to sync the difference
                     $dealDifference = $mt5DealTotal - $dbDealCount;
-                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Proceeding with sync...");
+                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing full MT5 sync...");
+
+                    // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
+                    // This ensures we get the missing deals from MT5 instead of using stale database data
+                    Log::info("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
+                    // Continue to MT5 API calls below (skip all the database optimization logic)
                 }
             } else {
                 Log::warning("DEBUG[{$account->code}]: DealGetTotal failed with error: " . MTRetCode::GetError($error_code) . ". Proceeding with fallback sync...");
             }
 
             // SMART INCREMENTAL SYNC: Use last known deal time as starting point
+            // BUT ONLY if deal counts matched above (no mismatch detected)
             $latestDeal = Deal::where('account_id', $account->id)->latest('time_done')->first();
+            $hasDealCountMismatch = ($error_code == MTRetCode::MT_RET_OK && $mt5DealTotal != $dbDealCount);
+            $dealDifference = $hasDealCountMismatch ? ($mt5DealTotal - $dbDealCount) : 0;
 
-            if ($latestDeal) {
+            if ($latestDeal && !$hasDealCountMismatch) {
                 $latestDealTime = Carbon::parse($latestDeal->time_done);
                 $daysSinceLastDeal = now()->diffInDays($latestDealTime);
 
@@ -423,13 +431,19 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     Log::info("DEBUG[{$account->code}]: OPTIMIZATION: Reduced MT5 API query range from full 7 days to incremental sync since last deal ({$daysSinceLastDeal} days)");
                 } else {
                     // Account is inactive for too long, skip expensive API calls
-                    Log::info("DEBUG[{$account->code}]: Account inactive for {$daysSinceLastDeal} days (last deal: {$incrementalFromDb}). Skipping expensive MT5 API calls.");
+                    // BUT NOT if there's a deal count mismatch - we need to sync the missing data
+                    if ($hasDealCountMismatch) {
+                        Log::info("DEBUG[{$account->code}]: Account inactive for {$daysSinceLastDeal} days BUT deal count mismatch detected - FORCING full MT5 sync to get missing {$dealDifference} deals");
+                        // Continue with full MT5 API sync despite inactivity
+                    } else {
+                        Log::info("DEBUG[{$account->code}]: Account inactive for {$daysSinceLastDeal} days (last deal: {$incrementalFromDb}). Skipping expensive MT5 API calls.");
 
-                    $this->updateSyncStatus($account, 'success');
-                    $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                    Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (inactive account optimization)");
+                        $this->updateSyncStatus($account, 'success');
+                        $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (inactive account optimization)");
 
-                    return 'no_changes';
+                        return 'no_changes';
+                    }
                 }
             }
 
