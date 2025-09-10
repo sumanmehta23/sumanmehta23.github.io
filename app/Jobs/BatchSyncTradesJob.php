@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Models\Trade;
 use App\Models\Account;
+use App\Models\Deal;
+use App\Jobs\DealSyncJob;
 use App\Services\TradeCacheService;
 use App\Services\UniversalMT5Service;
 use App\MT5\MTRetCode;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Bus\Batchable;
 use Carbon\Carbon;
@@ -26,7 +29,7 @@ use Carbon\Carbon;
  * 3. Better resource utilization
  * 4. Maintain reliability with proper error handling per account
  */
-class BatchSyncTradesJob implements ShouldQueue
+class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
@@ -36,18 +39,39 @@ class BatchSyncTradesJob implements ShouldQueue
     protected $minTradesLimit;
     public $timeout = 300; // 5 minutes for batch
     public $tries = 2;
+    public $uniqueFor = 600; // Prevent duplicates for 10 minutes
+
+    /**
+     * Get the unique ID for the job to prevent concurrent executions for same accounts.
+     */
+    public function uniqueId()
+    {
+        $accountCodes = collect($this->accounts)->pluck('code')->sort()->join('-');
+        return "batch-sync-trades-{$accountCodes}";
+    }
 
     public function __construct(array $accounts, array $fromTimes = [], int $maxTradesLimit = null, int $minTradesLimit = null)
     {
-        // Convert Account models to serializable array format
+        // Convert Account models or arrays to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
-            return [
-                'id' => $account->id,
-                'code' => $account->code,
-                'demo' => $account->demo,
-                'last_balance_sync_at' => $account->last_balance_sync_at,
-                'last_trade_at' => $account->last_trade_at,
-            ];
+            // Handle both Account models and arrays
+            if (is_array($account)) {
+                return [
+                    'id' => $account['id'],
+                    'code' => $account['code'],
+                    'demo' => $account['demo'] ?? false,
+                    'last_balance_sync_at' => $account['last_balance_sync_at'] ?? null,
+                    'last_trade_at' => $account['last_trade_at'] ?? null,
+                ];
+            } else {
+                return [
+                    'id' => $account->id,
+                    'code' => $account->code,
+                    'demo' => $account->demo,
+                    'last_balance_sync_at' => $account->last_balance_sync_at,
+                    'last_trade_at' => $account->last_trade_at,
+                ];
+            }
         })->toArray();
 
         $this->fromTimes = $fromTimes;
@@ -66,140 +90,154 @@ class BatchSyncTradesJob implements ShouldQueue
         $accountCount = count($this->accounts);
         $startMemory = memory_get_usage(true);
 
-        Log::info("Starting BatchSyncTradesJob for {$accountCount} accounts: {$accountCodes} (Memory: " . round($startMemory / 1024 / 1024, 2) . "MB)");
+        // Additional duplicate protection using manual cache locks
+        $lockKey = "batch-sync-lock-" . collect($this->accounts)->pluck('code')->sort()->join('-');
+        $lock = Cache::lock($lockKey, 600); // 10 minute lock
 
-        $startTime = now();
-        $results = [
-            'processed' => 0,
-            'success' => 0,
-            'errors' => 0,
-            'no_changes' => 0,
-            'not_found' => 0,
-            'skipped' => 0
-        ];
-
-        $connectionTime = 0;
-        $accountTimings = [];
-
-        try {
-            // Track MT5 connection time
-            $connectionStart = microtime(true);
-            if (!$mt5Service->connect()) {
-                throw new \Exception("Failed to establish MT5 connection (via pool)");
-            }
-            $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
-            $api = $mt5Service->getApi();
-
-            // Pre-warm cache for all accounts in this batch
-            $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
-            $cacheService->warmupAccounts($accountModels->all());
-
-            foreach ($this->accounts as $index => $accountData) {
-                $accountIterationStart = microtime(true);
-                try {
-                    // Convert array back to Account model for processing
-                    $account = Account::find($accountData['id']);
-                    if (!$account) {
-                        Log::warning("Account {$accountData['code']} not found in database");
-                        $results['not_found']++;
-                        $results['processed']++;
-                        continue;
-                    }
-
-                    $fromTime = $this->fromTimes[$index] ?? now()->subDays(7);
-                    $result = $this->syncSingleAccount($api, $account, $fromTime, $cacheService);
-
-                    // Map the result status to the correct results array key
-                    switch ($result) {
-                        case 'error':
-                            $results['errors']++;
-                            break;
-                        case 'success':
-                            $results['success']++;
-                            break;
-                        case 'no_changes':
-                            $results['no_changes']++;
-                            break;
-                        case 'not_found':
-                            $results['not_found']++;
-                            break;
-                        case 'skipped_high_volume':
-                        case 'skipped_low_volume':
-                            // Track skipped accounts separately but don't count as errors
-                            if (!isset($results['skipped'])) {
-                                $results['skipped'] = 0;
-                            }
-                            $results['skipped']++;
-                            break;
-                        default:
-                            Log::warning("Unknown sync result status: {$result} for account {$account->code}");
-                            $results['errors']++;
-                            break;
-                    }
-                    $results['processed']++;
-
-                    $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
-                    $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
-
-                    Log::info("Account {$account->code}: {$result} ({$accountTime}ms)");
-                } catch (\Exception $e) {
-                    $results['errors']++;
-                    $results['processed']++;
-                    $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
-                    $accountTimings[] = ['account' => $accountData['code'], 'time' => $accountTime, 'result' => 'error'];
-                    Log::error("Error syncing account {$accountData['code']}: " . $e->getMessage());
-
-                    // Report error to connection pool for adaptive management
-                    $mt5Service->reportError();
-                }
-
-                // Small delay between accounts to avoid overwhelming MT5
-                if ($index < count($this->accounts) - 1) {
-                    usleep(100000); // 0.1 second - optimized for better throughput
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("BatchSyncTradesJob failed: " . $e->getMessage());
-            throw $e;
+        if (!$lock->get()) {
+            Log::warning("BatchSyncTradesJob skipped - another instance is already running for accounts: {$accountCodes}");
+            return;
         }
 
-        $duration = $startTime->diffInSeconds(now());
-        $totalJobTime = round((microtime(true) - $jobStartTime) * 1000, 2);
-        $avgPerAccount = round($duration / $accountCount, 2);
-        $avgPerAccountMs = round($totalJobTime / $accountCount, 2);
-        $endMemory = memory_get_usage(true);
-        $memoryUsed = round(($endMemory - $startMemory) / 1024 / 1024, 2);
-        $peakMemory = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+        try {
+            Log::info("Starting BatchSyncTradesJob for {$accountCount} accounts: {$accountCodes} (Memory: " . round($startMemory / 1024 / 1024, 2) . "MB)");
 
-        // Calculate statistics
-        $accountTimes = array_column($accountTimings, 'time');
-        $minTime = !empty($accountTimes) ? min($accountTimes) : 0;
-        $maxTime = !empty($accountTimes) ? max($accountTimes) : 0;
-        $medianTime = !empty($accountTimes) ? $this->calculateMedian($accountTimes) : 0;
+            $startTime = now();
+            $results = [
+                'processed' => 0,
+                'success' => 0,
+                'errors' => 0,
+                'no_changes' => 0,
+                'not_found' => 0,
+                'skipped' => 0
+            ];
 
-        // Detailed performance breakdown
-        $performanceReport = [
-            'job_total_ms' => $totalJobTime,
-            'connection_ms' => $connectionTime,
-            'avg_per_account_ms' => $avgPerAccountMs,
-            'min_account_ms' => $minTime,
-            'max_account_ms' => $maxTime,
-            'median_account_ms' => $medianTime,
-            'memory_used_mb' => $memoryUsed,
-            'peak_memory_mb' => $peakMemory,
-            'account_breakdown' => $accountTimings
-        ];
+            $connectionTime = 0;
+            $accountTimings = [];
 
-        Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
-            "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
-            "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-            "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
-            "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
+            try {
+                // Track MT5 connection time
+                $connectionStart = microtime(true);
+                if (!$mt5Service->connect()) {
+                    throw new \Exception("Failed to establish MT5 connection (via pool)");
+                }
+                $connectionTime = round((microtime(true) - $connectionStart) * 1000, 2);
+                $api = $mt5Service->getApi();
 
-        Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+                // Pre-warm cache for all accounts in this batch
+                $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
+                $cacheService->warmupAccounts($accountModels->all());
 
-        // Clear sync-in-progress cache for all accounts in this batch
-        $this->clearBatchSyncInProgressCache();
+                foreach ($this->accounts as $index => $accountData) {
+                    $accountIterationStart = microtime(true);
+                    try {
+                        // Convert array back to Account model for processing
+                        $account = Account::find($accountData['id']);
+                        if (!$account) {
+                            Log::warning("Account {$accountData['code']} not found in database");
+                            $results['not_found']++;
+                            $results['processed']++;
+                            continue;
+                        }
+
+                        $fromTime = $this->fromTimes[$index] ?? now()->subDays(7);
+                        $result = $this->syncSingleAccount($api, $account, $fromTime, $cacheService);
+
+                        // Map the result status to the correct results array key
+                        switch ($result) {
+                            case 'error':
+                                $results['errors']++;
+                                break;
+                            case 'success':
+                                $results['success']++;
+                                break;
+                            case 'no_changes':
+                                $results['no_changes']++;
+                                break;
+                            case 'not_found':
+                                $results['not_found']++;
+                                break;
+                            case 'skipped_high_volume':
+                            case 'skipped_low_volume':
+                                // Track skipped accounts separately but don't count as errors
+                                if (!isset($results['skipped'])) {
+                                    $results['skipped'] = 0;
+                                }
+                                $results['skipped']++;
+                                break;
+                            default:
+                                Log::warning("Unknown sync result status: {$result} for account {$account->code}");
+                                $results['errors']++;
+                                break;
+                        }
+                        $results['processed']++;
+
+                        $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
+                        $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
+
+                        Log::info("Account {$account->code}: {$result} ({$accountTime}ms)");
+                    } catch (\Exception $e) {
+                        $results['errors']++;
+                        $results['processed']++;
+                        $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
+                        $accountTimings[] = ['account' => $accountData['code'], 'time' => $accountTime, 'result' => 'error'];
+                        Log::error("Error syncing account {$accountData['code']}: " . $e->getMessage());
+
+                        // Report error to connection pool for adaptive management
+                        $mt5Service->reportError();
+                    }
+
+                    // Small delay between accounts to avoid overwhelming MT5
+                    if ($index < count($this->accounts) - 1) {
+                        usleep(100000); // 0.1 second - optimized for better throughput
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("BatchSyncTradesJob failed: " . $e->getMessage());
+                throw $e;
+            }
+
+            $duration = $startTime->diffInSeconds(now());
+            $totalJobTime = round((microtime(true) - $jobStartTime) * 1000, 2);
+            $avgPerAccount = round($duration / $accountCount, 2);
+            $avgPerAccountMs = round($totalJobTime / $accountCount, 2);
+            $endMemory = memory_get_usage(true);
+            $memoryUsed = round(($endMemory - $startMemory) / 1024 / 1024, 2);
+            $peakMemory = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+
+            // Calculate statistics
+            $accountTimes = array_column($accountTimings, 'time');
+            $minTime = !empty($accountTimes) ? min($accountTimes) : 0;
+            $maxTime = !empty($accountTimes) ? max($accountTimes) : 0;
+            $medianTime = !empty($accountTimes) ? $this->calculateMedian($accountTimes) : 0;
+
+            // Detailed performance breakdown
+            $performanceReport = [
+                'job_total_ms' => $totalJobTime,
+                'connection_ms' => $connectionTime,
+                'avg_per_account_ms' => $avgPerAccountMs,
+                'min_account_ms' => $minTime,
+                'max_account_ms' => $maxTime,
+                'median_account_ms' => $medianTime,
+                'memory_used_mb' => $memoryUsed,
+                'peak_memory_mb' => $peakMemory,
+                'account_breakdown' => $accountTimings
+            ];
+
+            Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
+                "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
+                "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
+                "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
+                "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
+
+            Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+
+            // Clear sync-in-progress cache for all accounts in this batch
+            $this->clearBatchSyncInProgressCache();
+        } finally {
+            // Always release the lock
+            $lock->release();
+        }
     }
 
     private function calculateMedian(array $values): float
@@ -239,14 +277,204 @@ class BatchSyncTradesJob implements ShouldQueue
         }
 
         try {
-            // Phase 2: Cached Database Query for Existing Trades
+            // PHASE 1 (MOVED): Check Deal Data Freshness FIRST - Avoid unnecessary MT5 API calls
+            $phaseStart = microtime(true);
+
+            $fromDateDb = $fromTime->format('Y-m-d H:i:s'); // For database queries
+            $toDateDb = now()->addHours(4)->format('Y-m-d H:i:s'); // For database queries
+
+            // Check if deal data is fresh (based on when we last synced, not deal coverage)
+            $isDealDataFresh = $account->isDealDataFresh();
+
+            if (!$isDealDataFresh) {
+                // Deal data is stale (we haven't synced recently), need to sync first
+                $syncRange = $account->getRequiredDealSyncRange();
+                $syncFromTime = $syncRange['from'];
+                $syncToTime = $syncRange['to'];
+
+                Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
+
+                // Dispatch deal sync job and wait for it to complete
+                $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
+                $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                // Ensure cache is invalidated after deal sync
+                $cacheService->invalidateAccountDeals($account);
+
+                Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
+            } else {
+                Log::info("DEBUG[{$account->code}]: Deal data is recently synced (last fetch: {$account->deals_last_fetch_at}), using existing deals");
+            }
+
+            // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
+            Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
+            $dealTotalStart = microtime(true);
+            $mt5DealTotal = 0;
+            $fromTimestamp = $fromTime->timestamp; // Unix timestamp for MT5 API
+            $toTimestamp = now()->addHours(4)->timestamp; // Unix timestamp for MT5 API
+            $fromDateDb = $fromTime->format('Y-m-d H:i:s'); // For database queries (SAME RANGE)
+            $toDateDb = now()->addHours(4)->format('Y-m-d H:i:s'); // For database queries (SAME RANGE)
+
+            $error_code = $this->executeWithRetries(function () use ($api, $account, $fromTimestamp, $toTimestamp, &$mt5DealTotal) {
+                return $api->DealGetTotal($account->code, $fromTimestamp, $toTimestamp, $mt5DealTotal);
+            });
+            $dealTotalTime = round((microtime(true) - $dealTotalStart) * 1000, 2);
+            $apiCalls[] = ['DealGetTotal', $dealTotalTime];
+            if ($error_code == MTRetCode::MT_RET_OK) {
+                // Count existing deals in our database for the EXACT SAME RANGE
+                $dbDealCount = Deal::where('account_id', $account->id)
+                    ->whereBetween('time_done', [$fromDateDb, $toDateDb])
+                    ->count();
+
+                Log::info("DEBUG[{$account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (range: {$fromDateDb} to {$toDateDb}, check took {$dealTotalTime}ms)");
+
+                if ($mt5DealTotal == $dbDealCount) {
+                    if ($mt5DealTotal > 0) {
+                        // Database is perfectly in sync with MT5 - use database deals!
+                        Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+
+                        // Get existing deals and process them directly
+                        $allDeals = Deal::where('account_id', $account->id)
+                            ->whereBetween('time_done', [$fromDateDb, $toDateDb])
+                            ->get();
+
+                        $result = $this->processDealsBatch($account, $allDeals, $fromTime, $cacheService);
+
+                        $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using COMPREHENSIVE DEAL COUNT optimization (avoided ALL MT5 processing!)");
+
+                        return $result;
+                    } else {
+                        // Both MT5 and DB report 0 deals for this range
+                        Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+
+                        $this->updateSyncStatus($account, 'success');
+                        $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no deals optimization)");
+
+                        return 'no_changes';
+                    }
+                } else {
+                    // Deal counts differ - need to sync the difference
+                    $dealDifference = $mt5DealTotal - $dbDealCount;
+                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
+
+                    // FORCE DEAL SYNC: When deal counts don't match, we must sync deals first
+                    // This ensures we have all the missing deals before proceeding with trade sync
+                    Log::info("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
+
+                    // Force deal sync for the same date range to get missing deals
+                    $dealSyncJob = new DealSyncJob([$account], [$fromTime]);
+                    $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                    // Invalidate cache after deal sync to ensure fresh data
+                    $cacheService->invalidateAccountDeals($account);
+
+                    Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
+
+                    // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
+                    // This ensures we get the missing deals from MT5 instead of using stale database data
+                    Log::info("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
+                    // Continue to MT5 API calls below (skip all the database optimization logic)
+                }
+            } else {
+                Log::warning("DEBUG[{$account->code}]: DealGetTotal failed with error: " . MTRetCode::GetError($error_code) . ". Proceeding with fallback sync...");
+            }
+
+            // SMART INCREMENTAL SYNC: Use last known deal time as starting point
+            // BUT ONLY if deal counts matched above (no mismatch detected)
+            $latestDeal = Deal::where('account_id', $account->id)->latest('time_done')->first();
+            $hasDealCountMismatch = ($error_code == MTRetCode::MT_RET_OK && $mt5DealTotal != $dbDealCount);
+            $dealDifference = $hasDealCountMismatch ? ($mt5DealTotal - $dbDealCount) : 0;
+
+            if ($latestDeal && !$hasDealCountMismatch) {
+                $latestDealTime = Carbon::parse($latestDeal->time_done);
+                $daysSinceLastDeal = now()->diffInDays($latestDealTime);
+
+                // If latest deal is BEFORE the requested sync range, account has no activity in requested period
+                if ($latestDealTime < $fromTime) {
+                    Log::info("DEBUG[{$account->code}]: Account inactive - latest deal ({$latestDeal->time_done}) is before requested range ({$fromDateDb}). No new activity to sync.");
+
+                    $this->updateSyncStatus($account, 'success');
+                    $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                    Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no activity optimization)");
+
+                    return 'no_changes';
+                }
+
+                // Use incremental sync from last known deal time
+                $incrementalFromTime = $latestDealTime;
+                $incrementalFromDb = $incrementalFromTime->format('Y-m-d H:i:s');
+
+                Log::info("DEBUG[{$account->code}]: Using INCREMENTAL sync from last deal time: {$incrementalFromDb} (instead of {$fromDateDb})");
+
+                // Check for existing deals in the requested range
+                $existingDealsQuery = Deal::where('account_id', $account->id)
+                    ->whereBetween('time_done', [$fromDateDb, $toDateDb]);
+                $existingDealsCount = $existingDealsQuery->count();
+
+                if ($existingDealsCount > 0) {
+                    Log::info("DEBUG[{$account->code}]: Found {$existingDealsCount} existing deals in requested range - USING DATABASE OPTIMIZATION!");
+
+                    // Get all relevant deals and process them directly
+                    $allDeals = $existingDealsQuery->get();
+                    $timings['deals_fetch'] = round((microtime(true) - $phaseStart) * 1000, 2);
+
+                    // Process deals directly into trades (skip all the MT5 order fetching)
+                    $result = $this->processDealsBatch($account, $allDeals, $fromTime, $cacheService);
+
+                    $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                    Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using DATABASE deal optimization (requested range)");
+
+                    return $result;
+                }
+
+                // Check if we need to do optimized MT5 API call for incremental sync (much smaller range)
+                if ($daysSinceLastDeal <= 30) {
+                    // Account is relatively active, use incremental approach for MT5 API
+                    Log::info("DEBUG[{$account->code}]: Account last active {$daysSinceLastDeal} days ago. Using INCREMENTAL MT5 API from {$incrementalFromDb} (reduced range)...");
+
+                    // Override the MT5 API from time to use incremental approach
+                    $fromTime = $incrementalFromTime;
+                    $fromDate = $incrementalFromTime->format('F d, Y'); // For MT5 API
+                    $toDate = now()->addHours(4)->format('F d, Y'); // For MT5 API
+                    $fromDateDb = $incrementalFromTime->format('Y-m-d H:i:s'); // For database queries
+                    $toDateDb = now()->addHours(4)->format('Y-m-d H:i:s'); // For database queries
+
+                    Log::info("DEBUG[{$account->code}]: OPTIMIZATION: Reduced MT5 API query range from full 7 days to incremental sync since last deal ({$daysSinceLastDeal} days)");
+                } else {
+                    // Account is inactive for too long, skip expensive API calls
+                    // BUT NOT if there's a deal count mismatch - we need to sync the missing data
+                    if ($hasDealCountMismatch) {
+                        Log::info("DEBUG[{$account->code}]: Account inactive for {$daysSinceLastDeal} days BUT deal count mismatch detected - FORCING full MT5 sync to get missing {$dealDifference} deals");
+                        // Continue with full MT5 API sync despite inactivity
+                    } else {
+                        Log::info("DEBUG[{$account->code}]: Account inactive for {$daysSinceLastDeal} days (last deal: {$incrementalFromDb}). Skipping expensive MT5 API calls.");
+
+                        $this->updateSyncStatus($account, 'success');
+                        $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
+                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (inactive account optimization)");
+
+                        return 'no_changes';
+                    }
+                }
+            }
+
+            $timings['deal_freshness_check'] = round((microtime(true) - $phaseStart) * 1000, 2);
+
+            // FALLBACK: If no deals available, proceed with original MT5 API approach
+            // Continue with MT5 API calls for historical data fetching
+
+            // Phase 3: Cached Database Query for Existing Trades
             $phaseStart = microtime(true);
             $existingTrades = $cacheService->getAccountTrades($account);
             $timings['db_existing_trades'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             $login = $account->code;
-            $fromDate = $fromTime->format('F d, Y');
-            $toDate = now()->addHours(4)->format('F d, Y');
+            $fromDate = $fromTime->format('F d, Y'); // For MT5 API
+            $toDate = now()->addHours(4)->format('F d, Y'); // For MT5 API
+            $fromDateDb = $fromTime->format('Y-m-d H:i:s'); // For database queries
+            $toDateDb = now()->addHours(4)->format('Y-m-d H:i:s'); // For database queries
             $total = 0;
             $orders = [];
 
@@ -424,80 +652,8 @@ class BatchSyncTradesJob implements ShouldQueue
 
             $tradesToUpsert = [];
             $savedCount = 0;
+            $allDeals = []; // Initialize for fallback MT5 API path (no deals optimization here)
             $timings['orders_processing'] = round((microtime(true) - $phaseStart) * 1000, 2);
-
-            // Phase 6: MT5 DealGetTotal
-            $phaseStart = microtime(true);
-            $totalDeals = 0;
-            $allDeals = [];
-            $error_code = $api->DealGetTotal($account->code, $fromDate, $toDate, $totalDeals);
-            $timings['mt5_deal_total'] = round((microtime(true) - $phaseStart) * 1000, 2);
-            $apiCalls[] = ['DealGetTotal', $timings['mt5_deal_total']];
-
-            if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
-                $this->updateSyncStatus($account, 'error');
-                return 'error';
-            }
-
-            // Phase 7: MT5 DealGetPage with Adaptive Pagination (if deals exist)
-            if ($totalDeals > 0) {
-                $phaseStart = microtime(true);
-                $allDeals = [];
-                $requestedDealPageSize = 1000; // What we request
-                $totalDealTime = 0;
-                $dealPageCount = 0;
-
-                Log::info("DEBUG[{$account->code}]: Starting adaptive pagination for {$totalDeals} deals");
-
-                while (count($allDeals) < $totalDeals) {
-                    $startIndex = count($allDeals);
-                    $remainingDeals = $totalDeals - $startIndex;
-                    $pageDeals = [];
-                    $currentDealPageSize = min($requestedDealPageSize, $remainingDeals);
-
-                    $dealPageStart = microtime(true);
-                    $error_code = $this->executeWithRetries(function () use ($api, $account, $fromDate, $toDate, $startIndex, $currentDealPageSize, $totalDeals, &$pageDeals) {
-                        return $api->DealGetPage($account->code, $fromDate, $toDate, $startIndex, $totalDeals, $pageDeals);
-                    });
-                    $dealPageTime = round((microtime(true) - $dealPageStart) * 1000, 2);
-                    $totalDealTime += $dealPageTime;
-                    $dealPageCount++;
-
-                    if ($error_code != MTRetCode::MT_RET_OK) {
-                        Log::error("MT5 DealGetPage error for login {$account->code} page {$dealPageCount}: " . MTRetCode::GetError($error_code));
-                        $this->updateSyncStatus($account, 'error');
-                        return 'error';
-                    }
-
-                    // Merge page results
-                    $allDeals = array_merge($allDeals, $pageDeals);
-                    Log::info("DEBUG[{$account->code}]: Deal page {$dealPageCount} fetched " . count($pageDeals) . " deals in {$dealPageTime}ms (total so far: " . count($allDeals) . "/{$totalDeals})");
-
-                    // Safety check: if we got fewer deals than expected
-                    if (count($pageDeals) === 0) {
-                        Log::warning("DEBUG[{$account->code}]: Got 0 deals on page {$dealPageCount}, stopping deal pagination");
-                        break;
-                    }
-
-                    // If we got fewer deals than requested, log it
-                    if (count($pageDeals) < $currentDealPageSize && count($allDeals) < $totalDeals) {
-                        Log::warning("DEBUG[{$account->code}]: Got " . count($pageDeals) . " deals (expected {$currentDealPageSize}), may be at end of deal data");
-                    }
-
-                    // Small delay between pages to avoid overwhelming MT5
-                    if (count($allDeals) < $totalDeals) {
-                        usleep(50000); // 0.05 second delay between pages
-                    }
-                }
-
-                $timings['mt5_deal_page'] = $totalDealTime;
-                $apiCalls[] = ['DealGetPage', $totalDealTime];
-
-                Log::info("DEBUG[{$account->code}]: Successfully fetched " . count($allDeals) . " total deals in {$dealPageCount} pages ({$totalDealTime}ms)");
-            } else {
-                $timings['mt5_deal_page'] = 0;
-            }
 
             // Phase 8: Trade Data Preparation - Process Positions (complete trades)
             $phaseStart = microtime(true);
@@ -521,14 +677,29 @@ class BatchSyncTradesJob implements ShouldQueue
                 }));
 
                 // Calculate actual profit from deals if available
-                $actualProfit = 0;
+                $actualProfit = null; // Use null to indicate "no deals found"
                 $rateProfit = 1;
                 if (!empty($filteredDeals)) {
                     // Sum actual profit from all deals in this position
                     $actualProfit = array_sum(array_map(function ($deal) {
-                        return $deal->Profit ?? 0;
+                        return $deal->profit ?? 0;
                     }, $filteredDeals));
-                    $rateProfit = $filteredDeals[0]->RateProfit ?? 1;
+                    $rateProfit = $filteredDeals[0]->rate_profit ?? 1;
+
+                    Log::info("DEBUG[{$account->code}]: Position {$positionId} found {count($filteredDeals)} deals, actual profit: {$actualProfit}");
+                } else {
+                    // No deals found through order matching - check database directly
+                    $dbDeals = Deal::where('account_id', $account->id)
+                        ->where('position_id', $positionId)
+                        ->get();
+
+                    if ($dbDeals->count() > 0) {
+                        $actualProfit = round($dbDeals->sum('profit'), 2);
+                        $rateProfit = $dbDeals->first()->rate_profit ?? 1;
+                        Log::info("DEBUG[{$account->code}]: Position {$positionId} found {$dbDeals->count()} deals via database lookup, actual profit: {$actualProfit}");
+                    } else {
+                        Log::warning("DEBUG[{$account->code}]: Position {$positionId} has no deals - will use manual calculation");
+                    }
                 }
 
                 // Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
@@ -596,13 +767,13 @@ class BatchSyncTradesJob implements ShouldQueue
             // Final Performance Summary
             $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
             $totalApiTime = array_sum(array_column($apiCalls, 1));
-            $totalDbTime = $timings['db_existing_trades'] + $timings['total_batch_processing'] + $timings['status_update'];
+            $totalDbTime = $timings['db_existing_trades'] + $timings['deal_freshness_check'] + $timings['total_batch_processing'] + $timings['status_update'];
 
             Log::info("PERF[{$account->code}]: {$totalTime}ms total | " .
                 "API: {$totalApiTime}ms (" . count($apiCalls) . " calls) | " .
-                "DB: {$totalDbTime}ms | " .
+                "DB: {$totalDbTime}ms (deals: {$timings['deal_freshness_check']}ms) | " .
                 "Processing: {$timings['trade_preparation']}ms | " .
-                "Orders: {$total}, Deals: {$totalDeals}, Positions: " . $ordersByPosition->count() . ", Trades: {$savedCount}" .
+                "Orders: {$total}, Positions: " . $ordersByPosition->count() . ", Trades: {$savedCount}" .
                 ($skippedTradesCount > 0 ? ", Skipped: {$skippedTradesCount}" : "") . " | " .
                 "Breakdown: " . json_encode($timings) . " | " .
                 "API Calls: " . json_encode($apiCalls));
@@ -684,7 +855,7 @@ class BatchSyncTradesJob implements ShouldQueue
         }
 
         // Calculate profit based on deal information
-        $profit = $deal->Profit ?? 0;
+        $profit = $deal->profit ?? 0;
 
         return [
             'account_id' => $account->id,
@@ -819,7 +990,7 @@ class BatchSyncTradesJob implements ShouldQueue
                 Trade::upsert(
                     $validTrades,
                     ['account_id', 'position_id'], // composite unique identifier
-                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'updated_at'] // essential columns including volume and type
+                    ['close_price', 'close_time', 'state', 'status', 'profit', 'volume', 'volume_ext', 'type', 'code', 'order_id', 'updated_at'] // essential columns including volume, type, code, and order_id
                 );
                 $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
                 Log::debug("DB Batch: " . count($validTrades) . " valid trades in {$batchTime}ms" .
@@ -945,7 +1116,9 @@ class BatchSyncTradesJob implements ShouldQueue
     protected function clearBatchSyncInProgressCache(): void
     {
         foreach ($this->accounts as $accountData) {
+            // Clear both regular and demo cache markers
             Cache::forget("account_sync_in_progress:{$accountData['id']}");
+            Cache::forget("demo_account_sync_in_progress:{$accountData['id']}");
         }
 
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
@@ -972,5 +1145,177 @@ class BatchSyncTradesJob implements ShouldQueue
                 'sync_status' => 'needs_retry',
                 'sync_error' => 'Job failed after max attempts: ' . $exception->getMessage()
             ]);
+    }
+
+    /**
+     * Process deals directly from database instead of using MT5 API
+     * This provides massive performance improvement when deal data is fresh
+     * 
+     * CRITICAL: This method properly reconstructs POSITIONS from DEALS
+     * - Groups deals by position_id
+     * - Calculates if position is open/closed based on volume balance
+     * - Properly determines opening/closing times and prices
+     */
+    protected function processDealsBatch(Account $account, $deals, Carbon $fromTime, TradeCacheService $cacheService): string
+    {
+        Log::info("DEBUG[{$account->code}]: Processing {$deals->count()} deals from database (position reconstruction)");
+
+        $processedTrades = 0;
+        $newTrades = 0;
+        $updatedTrades = 0;
+
+        // Group deals by position_id to reconstruct actual positions
+        $positionGroups = $deals->groupBy('position_id');
+
+        foreach ($positionGroups as $positionId => $positionDeals) {
+            if (empty($positionId)) {
+                Log::warning("DEBUG[{$account->code}]: Skipping deals with empty position_id");
+                continue;
+            }
+
+            // Sort deals by time to get proper sequence
+            $sortedDeals = $positionDeals->sortBy('time_done');
+
+            // Calculate position state from deals
+            $positionData = $this->reconstructPositionFromDeals($sortedDeals);
+
+            if (!$positionData) {
+                Log::warning("DEBUG[{$account->code}]: Could not reconstruct position {$positionId}");
+                continue;
+            }
+
+            // Prepare trade data for database
+            $tradeData = [
+                'account_id' => $account->id,
+                'position_id' => $positionId,  // CORRECT: Use actual position_id from deal
+                'code' => $account->code,  // Add missing code field
+                'order_id' => $positionData['order_id'] ?? null,  // Add missing order_id field
+                'symbol' => $positionData['symbol'],
+                'type' => $positionData['type'],
+                'volume' => $positionData['volume'],
+                'open_price' => $positionData['price_open'],
+                'open_time' => $positionData['time_open'],
+                'profit' => $positionData['profit'],
+                'comment' => $positionData['comment'],
+                'state' => $positionData['is_closed'] ? 'closed' : 'open',
+                'status' => $positionData['is_closed'] ? 'closed' : 'open',  // Add status field
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            // Add closing data only if position is actually closed
+            if ($positionData['is_closed']) {
+                $tradeData['close_time'] = $positionData['time_close'];
+                $tradeData['close_price'] = $positionData['price_close'];
+            }
+
+            // Check if trade already exists
+            $existingTrade = Trade::where('account_id', $account->id)
+                ->where('position_id', $positionId)  // CORRECT: Use position_id
+                ->first();
+
+            if ($existingTrade) {
+                // Update existing trade
+                $existingTrade->update($tradeData);
+                $updatedTrades++;
+                Log::debug("DEBUG[{$account->code}]: Updated position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
+            } else {
+                // Create new trade
+                Trade::create($tradeData);
+                $newTrades++;
+                Log::debug("DEBUG[{$account->code}]: Created position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
+            }
+
+            $processedTrades++;
+        }
+
+        // Update account sync status
+        $this->updateSyncStatus($account, 'success');
+
+        // Invalidate cache
+        $cacheService->invalidateAccount($account);
+
+        Log::info("DEBUG[{$account->code}]: Position reconstruction completed: {$processedTrades} positions processed, {$newTrades} new, {$updatedTrades} updated from {$positionGroups->count()} position groups");
+
+        return $newTrades > 0 ? 'success' : 'no_changes';
+    }
+
+    /**
+     * Reconstruct a position's state from its constituent deals
+     * This is the CORE LOGIC for converting deals back to position/trade data
+     */
+    protected function reconstructPositionFromDeals($deals): ?array
+    {
+        if ($deals->isEmpty()) {
+            return null;
+        }
+
+        $firstDeal = $deals->first();
+        $lastDeal = $deals->last();
+
+        // Calculate volume balance to determine if position is open/closed
+        $openVolume = $deals->where('action', 0)->sum('volume');   // Action 0 = OPEN
+        $closeVolume = $deals->where('action', 1)->sum('volume'); // Action 1 = CLOSE
+
+        $netVolume = $openVolume - $closeVolume;
+        $isPositionClosed = abs($netVolume) < 0.0001; // Consider closed if open/close volumes match
+
+        // Determine position type (buy/sell) based on first deal
+        $positionType = $firstDeal->type == 0 ? 'buy' : 'sell';
+
+        // If position involves both open and close actions, determine the net direction
+        if ($openVolume > 0 && $closeVolume > 0) {
+            // For closed positions, use the original deal type
+            $positionType = $firstDeal->type == 0 ? 'buy' : 'sell';
+        }
+
+        // Calculate effective volume (net position size)
+        $effectiveVolume = abs($netVolume);
+        if ($isPositionClosed) {
+            // For closed positions, use the volume that was actually traded
+            $effectiveVolume = min($openVolume, $closeVolume);
+        }
+
+        // Calculate weighted average opening price
+        $openingDeals = $deals->where('type', $firstDeal->type);
+        $totalOpenVolume = $openingDeals->sum('volume');
+        $weightedOpenPrice = $totalOpenVolume > 0
+            ? $openingDeals->sum(function ($deal) {
+                return $deal->price * $deal->volume;
+            }) / $totalOpenVolume
+            : $firstDeal->price;
+
+        // Calculate closing price if position is closed
+        $closingPrice = null;
+        if ($isPositionClosed && $openVolume > 0 && $closeVolume > 0) {
+            $closingDeals = $deals->where('action', 1); // Action 1 = CLOSE
+            $totalCloseVolume = $closingDeals->sum('volume');
+            $closingPrice = $totalCloseVolume > 0
+                ? $closingDeals->sum(function ($deal) {
+                    return $deal->price * $deal->volume;
+                }) / $totalCloseVolume
+                : $lastDeal->price;
+        }
+
+        return [
+            'symbol' => $firstDeal->symbol,
+            'type' => $positionType,
+            'volume' => $effectiveVolume,
+            'price_open' => $weightedOpenPrice,
+            'time_open' => $firstDeal->time_done,
+            'price_close' => $closingPrice,
+            'time_close' => $isPositionClosed ? $lastDeal->time_done : null,
+            'swap' => $deals->sum('swap'),
+            'commission' => $deals->sum('commission'),
+            'profit' => $deals->sum('profit'),
+            'comment' => $firstDeal->comment ?? '',
+            'magic' => $firstDeal->magic ?? 0,
+            'order_id' => $firstDeal->order_id,  // Add order_id from first deal
+            'is_closed' => $isPositionClosed,
+            'deal_count' => $deals->count(),
+            'buy_volume' => $openVolume,
+            'sell_volume' => $closeVolume,
+            'net_volume' => $netVolume
+        ];
     }
 }

@@ -358,6 +358,20 @@ class MTWebAPI
   }
 
   /**
+   * Get user Batch
+   *
+   * @param string  $logins
+   * @param MTUser $users
+   *
+   * @return MTRetCode
+   */
+  public function UserGetBatch($logins, &$users)
+  {
+    $mt_user = new MTUserProtocol($this->m_connect);
+    return $mt_user->GetBatch($logins, $users);
+  }
+
+  /**
    * Check login and password
    *
    * @param int    $login

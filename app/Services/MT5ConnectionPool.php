@@ -49,7 +49,7 @@ class MT5ConnectionPool
         // First, try to get existing healthy connection (no global limit check needed for reuse)
         foreach ($this->connections as $connectionId => $api) {
             if ($this->isConnectionHealthy($connectionId)) {
-                Log::debug("MT5Pool: Reusing connection {$connectionId}");
+                // Log::debug("MT5Pool: Reusing connection {$connectionId}");
                 return $api;
             } else {
                 // Remove unhealthy connection
@@ -104,7 +104,7 @@ class MT5ConnectionPool
                 } else {
                     unset($globalConnections[$processId]);
                     $cleaned = true;
-                    Log::debug("MT5Pool: Cleaned stale process {$processId}");
+                    // Log::debug("MT5Pool: Cleaned stale process {$processId}");
                 }
             }
 
@@ -200,7 +200,7 @@ class MT5ConnectionPool
                     'error_count' => 0
                 ];
 
-                Log::info("MT5Pool: Created new connection {$connectionId}");
+                // Log::info("MT5Pool: Created new connection {$connectionId}");
 
                 // Update global connection count
                 $this->updateGlobalConnectionCount();

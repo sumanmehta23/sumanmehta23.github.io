@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Trade;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -89,5 +90,79 @@ class Account extends Model
     public function dailyReports()
     {
         return $this->hasMany(DailyReport::class, 'account_code', 'code');
+    }
+
+    public function deals()
+    {
+        return $this->hasMany(Deal::class);
+    }
+
+    /**
+     * Update the deal sync tracking for this account.
+     */
+    public function updateDealSyncStatus(Carbon $from = null, Carbon $to = null, bool $isComplete = true): void
+    {
+        $updateData = [
+            'deals_last_fetch_at' => now(),
+            'deals_sync_complete' => $isComplete
+        ];
+
+        if ($from) {
+            $updateData['deals_synced_from'] = $from;
+        }
+
+        if ($to) {
+            $updateData['deals_synced_to'] = $to;
+        }
+
+        $this->update($updateData);
+    }
+
+    /**
+     * Check if deal data is fresh enough for trade sync.
+     * 
+     * Deal data is considered fresh if:
+     * 1. We have recently fetched deals (within the last hour by default)
+     * 2. The sync was marked as complete
+     * 
+     * This logic is based on WHEN we last synced, not on deal coverage time.
+     * This is correct because an account might not have recent trading activity,
+     * but if we just synced deals, that data is still fresh.
+     */
+    public function isDealDataFresh(Carbon $freshnessCutoff = null): bool
+    {
+        $freshnessCutoff = $freshnessCutoff ?? now()->subHours(1);
+
+        // Check if we have a recent fetch and complete sync
+        if (!$this->deals_sync_complete || !$this->deals_last_fetch_at) {
+            return false;
+        }
+
+        // Deal data is fresh if we fetched it recently (regardless of deal coverage time)
+        return Carbon::parse($this->deals_last_fetch_at)->gte($freshnessCutoff);
+    }
+
+    /**
+     * Get the range of time we need to fetch deals for.
+     * 
+     * This determines what time range to sync deals for based on:
+     * 1. If we have previous deal data, sync from the last deal time + 1 second
+     * 2. If we have no deal data, sync from 30 days ago
+     * 3. Always sync up to the current time to catch any new deals
+     */
+    public function getRequiredDealSyncRange(Carbon $syncUpTo = null): array
+    {
+        $syncUpTo = $syncUpTo ?? now();
+
+        // If we have previous deal data, start from where we left off
+        $from = $this->deals_synced_to
+            ? Carbon::parse($this->deals_synced_to)->addSecond()
+            : now()->subDays(30);
+
+        return [
+            'from' => $from,
+            'to' => $syncUpTo,
+            'needs_sync' => $from->lt($syncUpTo)
+        ];
     }
 }

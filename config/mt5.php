@@ -38,6 +38,24 @@ return [
     // Maximum connections per process
     'max_local_connections' => env('MT5_MAX_LOCAL_CONNECTIONS', 5),
 
+    /*
+    |--------------------------------------------------------------------------
+    | MT5 REST API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the modern MT5 REST API service which provides
+    | better performance and connection management than the legacy protocol.
+    |
+    */
+
+    // REST API Connection Pool Settings
+    'rest_api_max_connections' => env('MT5_REST_API_MAX_CONNECTIONS', 5),
+    'rest_api_timeout' => env('MT5_REST_API_TIMEOUT', 30),
+    'rest_api_connect_timeout' => env('MT5_REST_API_CONNECT_TIMEOUT', 10),
+
+    // REST API server port (usually 443 for HTTPS)
+    'rest_port' => env('MT5_REST_PORT', 443),
+
     // Retry configuration
     'max_retries' => env('MT5_MAX_RETRIES', 3),
     'retry_delay' => env('MT5_RETRY_DELAY', 1),

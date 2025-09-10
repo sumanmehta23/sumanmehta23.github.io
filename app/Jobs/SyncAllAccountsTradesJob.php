@@ -253,7 +253,7 @@ class SyncAllAccountsTradesJob implements ShouldQueue
             Trade::upsert(
                 $trades,
                 ['position_id'],
-                ['id', 'close_price', 'close_time', 'state', 'status', 'profit', 'updated_at']
+                ['id', 'close_price', 'close_time', 'state', 'status', 'profit', 'code', 'order_id', 'updated_at']
             );
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());

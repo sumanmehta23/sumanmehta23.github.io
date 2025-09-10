@@ -42,6 +42,11 @@ class Mt5ApiServiceProvider extends ServiceProvider
             return new RedisCoordinatedMT5Service();
         });
 
+        // Register MT5 REST API Service with connection pooling
+        $this->app->singleton(\App\Services\MT5RestAPIService::class, function ($app) {
+            return new \App\Services\MT5RestAPIService();
+        });
+
         // Alias for primary MT5 service (configurable)
         $primaryService = config('mt5.use_redis_coordination', true)
             ? EnhancedUniversalMT5Service::class
