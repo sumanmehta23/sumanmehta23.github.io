@@ -70,7 +70,7 @@ class MT5RestAPIService
             $loginString = implode(',', array_map('intval', $logins));
 
             Log::info('MT5RestAPI: Making batch request', [
-                'endpoint' => '/api/user/get_batch',
+                'endpoint' => '/api/user/account/get_batch',
                 'login_string' => $loginString,
                 'login_count' => count($logins)
             ]);
@@ -191,7 +191,7 @@ class MT5RestAPIService
 
         try {
             // Make individual user request
-            $result = $apiRequest->Post('/api/user/account/get_batch', json_encode(['login' => (int)$login]));
+            $result = $apiRequest->Post('/api/user/account/get', json_encode(['login' => (int)$login]));
 
             if ($result === false) {
                 Log::warning('MT5RestAPI: User balance request failed', ['login' => $login]);
