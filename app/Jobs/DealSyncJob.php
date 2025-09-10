@@ -448,11 +448,22 @@ class DealSyncJob implements ShouldQueue
             if (!$account) continue;
 
             // Get all trades for this account that might need profit updates
+            // Handle both string ('closed') and numeric (4) status values
             $trades = \App\Models\Trade::where('account_id', $account->id)
-                ->where('status', 'closed') // Only update closed trades
+                ->where(function ($query) {
+                    $query->where('status', 'closed')     // String format (local)
+                        ->orWhere('status', '4')         // Numeric format (production)
+                        ->orWhere('status', 4);          // Integer format (just in case)
+                })
                 ->get();
 
             Log::info("updateTradeProfilesAfterDealSync: Account {$account->code} has {$trades->count()} closed trades to check");
+
+            // Also log the status values we found for debugging
+            if ($trades->count() > 0) {
+                $statusValues = $trades->pluck('status')->unique()->toArray();
+                Log::info("updateTradeProfilesAfterDealSync: Status values found for {$account->code}: " . json_encode($statusValues));
+            }
 
             foreach ($trades as $trade) {
                 // Get all deals for this position
