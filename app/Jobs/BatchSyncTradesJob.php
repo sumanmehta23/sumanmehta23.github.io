@@ -677,7 +677,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 }));
 
                 // Calculate actual profit from deals if available
-                $actualProfit = 0;
+                $actualProfit = null; // Use null to indicate "no deals found"
                 $rateProfit = 1;
                 if (!empty($filteredDeals)) {
                     // Sum actual profit from all deals in this position
@@ -685,6 +685,21 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         return $deal->profit ?? 0;
                     }, $filteredDeals));
                     $rateProfit = $filteredDeals[0]->rate_profit ?? 1;
+
+                    Log::info("DEBUG[{$account->code}]: Position {$positionId} found {count($filteredDeals)} deals, actual profit: {$actualProfit}");
+                } else {
+                    // No deals found through order matching - check database directly
+                    $dbDeals = Deal::where('account_id', $account->id)
+                        ->where('position_id', $positionId)
+                        ->get();
+
+                    if ($dbDeals->count() > 0) {
+                        $actualProfit = round($dbDeals->sum('profit'), 2);
+                        $rateProfit = $dbDeals->first()->rate_profit ?? 1;
+                        Log::info("DEBUG[{$account->code}]: Position {$positionId} found {$dbDeals->count()} deals via database lookup, actual profit: {$actualProfit}");
+                    } else {
+                        Log::warning("DEBUG[{$account->code}]: Position {$positionId} has no deals - will use manual calculation");
+                    }
                 }
 
                 // Log::info("DEBUG[{$account->code}]: Position {$positionId} has {$positionOrders->count()} orders, " . count($filteredDeals) . " deals" .
