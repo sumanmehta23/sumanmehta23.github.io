@@ -156,6 +156,11 @@ class DealSyncJob implements ShouldQueue
             "Success: {$results['success']}, Errors: {$results['errors']}, " .
             "No changes: {$results['no_changes']}, Total deals: {$results['deals_synced']}. " .
             "Memory: {$memoryUsed}MB");
+
+        // Update trade profits for positions that had new deals synced
+        if ($results['deals_synced'] > 0) {
+            $this->updateTradeProfilesAfterDealSync();
+        }
     }
 
     protected function determineFromTime(Account $account, int $index): Carbon
@@ -426,6 +431,53 @@ class DealSyncJob implements ShouldQueue
                 'deals_sync_complete' => false
             ]);
             Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) - marked as incomplete");
+        }
+    }
+
+    /**
+     * Update trade profits for positions that had new deals synced
+     * This ensures trade profits are recalculated after deal sync completes
+     */
+    protected function updateTradeProfilesAfterDealSync(): void
+    {
+        $updatedCount = 0;
+
+        foreach ($this->accounts as $accountData) {
+            $account = Account::find($accountData['id']);
+            if (!$account) continue;
+
+            // Get all trades for this account that might need profit updates
+            $trades = \App\Models\Trade::where('account_id', $account->id)
+                ->where('status', 'closed') // Only update closed trades
+                ->get();
+
+            foreach ($trades as $trade) {
+                // Get all deals for this position
+                $deals = \App\Models\Deal::where('account_id', $account->id)
+                    ->where('position_id', $trade->position_id)
+                    ->get();
+
+                if ($deals->isEmpty()) continue;
+
+                // Calculate new profit from deals
+                $newProfit = round($deals->sum('profit'), 2);
+
+                // Only update if profit has changed significantly (avoid unnecessary updates)
+                if (abs($trade->profit - $newProfit) >= 0.01) {
+                    $oldProfit = $trade->profit;
+                    $trade->update([
+                        'profit' => $newProfit,
+                        'updated_at' => now()
+                    ]);
+
+                    $updatedCount++;
+                    Log::info("Updated trade {$trade->position_id} profit: {$oldProfit} → {$newProfit} (account: {$account->code})");
+                }
+            }
+        }
+
+        if ($updatedCount > 0) {
+            Log::info("Updated {$updatedCount} trade profits after deal sync");
         }
     }
 
