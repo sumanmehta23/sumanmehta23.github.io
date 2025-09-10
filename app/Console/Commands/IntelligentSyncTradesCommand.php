@@ -85,6 +85,7 @@ class IntelligentSyncTradesCommand extends Command
             $this->info('Deal sync job dispatched.');
         } else {
             $batch = Bus::batch($dealJobs)
+                ->onQueue('deal-sync')
                 ->then(function () {
                     Log::info('All deal sync jobs completed successfully.');
                 })
@@ -124,6 +125,7 @@ class IntelligentSyncTradesCommand extends Command
             $this->info('Enhanced trade sync job dispatched.');
         } else {
             $batch = Bus::batch($tradeJobs)
+                ->onQueue('enhanced-batch-sync-trades')
                 ->then(function () {
                     Log::info('All enhanced trade sync jobs completed successfully.');
                 })
@@ -152,8 +154,8 @@ class IntelligentSyncTradesCommand extends Command
         }
 
         // Only get accounts that are not currently syncing and not flagged
-        $query->whereNotIn('sync_status', ['syncing', 'pending', 'not_found_in_mt5', 'flagged']);
+        $query->where('code', '<>', 'Rejected')->whereNotIn('sync_status', ['syncing', 'pending', 'not_found_in_mt5', 'flagged']);
 
-        return $query->orderBy('code')->get();
+        return $query->orderBy('created_at', 'asc')->get();
     }
 }

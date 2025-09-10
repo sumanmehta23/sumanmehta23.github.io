@@ -234,7 +234,7 @@ return [
         ],
         'supervisor-optimized-sync' => [
             'connection' => 'redis',
-            'queue' => ['optimized-sync-trades'],
+            'queue' => ['optimized-sync-trades', 'enhanced-batch-sync-trades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for high volume
@@ -299,6 +299,7 @@ return [
             'timeout' => 900, // 15 minutes timeout for deal sync operations
             'nice' => 5, // Medium priority
         ],
+
 
     ],
 

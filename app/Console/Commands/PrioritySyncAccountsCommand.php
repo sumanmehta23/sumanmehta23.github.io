@@ -163,12 +163,14 @@ class PrioritySyncAccountsCommand extends Command
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
+            ->where('code', '<>', 'Rejected')
             ->count();
 
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
             ->whereNull('last_sync_attempt_at')
+            ->where('code', '<>', 'Rejected')
             ->count();
 
         $syncedToday = Account::whereNotNull('code')
@@ -188,6 +190,7 @@ class PrioritySyncAccountsCommand extends Command
             ->whereNull('deleted_at')
             ->where('demo', false)
             ->whereNotNull('last_sync_attempt_at')
+            ->where('code', '<>', 'Rejected')
             ->where('last_sync_attempt_at', '<', now()->subDay())
             ->count();
 
@@ -312,6 +315,7 @@ class PrioritySyncAccountsCommand extends Command
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             ->where('demo', false)
+
             ->whereNotIn('sync_status', ['flagged', 'not_found_in_mt5']); // Exclude flagged problematic accounts and accounts not found in MT5
 
         if (!$ignoreBalanceFilter) {

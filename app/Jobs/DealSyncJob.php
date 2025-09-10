@@ -109,6 +109,11 @@ class DealSyncJob implements ShouldQueue
                     $results['processed']++;
                     Log::error("Error syncing deals for account {$accountData['code']}: " . $e->getMessage());
 
+                    // Update account sync status to reflect the error
+                    if (isset($account) && $account instanceof Account) {
+                        $this->updateAccountDealSyncStatus($account, 'error');
+                    }
+
                     // Check if it's a connection issue and report it
                     if (
                         strpos($e->getMessage(), 'Broken pipe') !== false ||
@@ -183,6 +188,7 @@ class DealSyncJob implements ShouldQueue
         $timings = [];
 
         if (!$account->code) {
+            $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }
 
@@ -194,6 +200,7 @@ class DealSyncJob implements ShouldQueue
 
         if ($error_code != MTRetCode::MT_RET_OK) {
             Log::warning("MT5 user not found for account {$account->code}");
+            $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }
 
@@ -213,6 +220,7 @@ class DealSyncJob implements ShouldQueue
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                $this->updateAccountDealSyncStatus($account, 'error');
                 return ['status' => 'errors', 'deals_count' => 0];
             }
 
@@ -276,6 +284,7 @@ class DealSyncJob implements ShouldQueue
 
                 if ($error_code != MTRetCode::MT_RET_OK) {
                     Log::error("MT5 DealGetPage error for account {$account->code} page {$pageCount}: " . MTRetCode::GetError($error_code));
+                    $this->updateAccountDealSyncStatus($account, 'error');
                     return ['status' => 'errors', 'deals_count' => 0];
                 }
 
@@ -351,6 +360,7 @@ class DealSyncJob implements ShouldQueue
             return ['status' => 'success', 'deals_count' => $newDealsCount];
         } catch (\Exception $e) {
             Log::error("Error syncing deals for account {$account->code}: " . $e->getMessage());
+            $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }
     }
@@ -410,9 +420,12 @@ class DealSyncJob implements ShouldQueue
 
             Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) from {$from} to {$to}");
         } else {
-            // For errors, just update the fetch time
-            $account->update(['deals_last_fetch_at' => now()]);
-            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount})");
+            // For errors, update fetch time but mark sync as incomplete
+            $account->update([
+                'deals_last_fetch_at' => now(),
+                'deals_sync_complete' => false
+            ]);
+            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) - marked as incomplete");
         }
     }
 
