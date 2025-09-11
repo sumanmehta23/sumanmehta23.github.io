@@ -58,8 +58,11 @@ class TradeController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100'
         ]);
 
-        // Initialize query with account relationship for user_id and currency
-        $query = Trade::query()->with('account:id,user_id,currency');
+        // Initialize query with account relationship for user_id and currency, and filter for live accounts only
+        $query = Trade::query()->with('account:id,user_id,currency')
+            ->whereHas('account', function ($q) {
+                $q->where('demo', 0);
+            });
 
         // Apply filters only when there are actual values
         // Filter by position close date range (mandatory filter support)
