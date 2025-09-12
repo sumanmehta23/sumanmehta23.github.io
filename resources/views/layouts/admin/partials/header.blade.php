@@ -614,6 +614,11 @@ if (app()->environment('local')) {
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
+                                <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.kyc.sync.page') }}" class="side-menu__item ">
+                                           Sumsub KYC Sync
+                                        </a>
+                                </li>
                                 @can('setting:update')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.update_password') }}" class="side-menu__item ">

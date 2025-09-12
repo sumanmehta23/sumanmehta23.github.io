@@ -363,6 +363,317 @@ class Users extends Controller
         return response()->json(['status' => 'false', 'message' => 'Invalid request.']);
     }
 
+    /**
+     * Sync KYC data from Sumsub for a specific user
+     */
+    public function syncUserKyc(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $request->validate([
+            'user_id' => 'nullable|integer|exists:users,id',
+            'user_email' => 'nullable|email|exists:users,email',
+        ]);
+
+        // Ensure at least one identifier is provided
+        if (!$request->user_id && !$request->user_email) {
+            return response()->json([
+                'status' => 'false', 
+                'message' => 'Either user_id or user_email is required.'
+            ]);
+        }
+
+        // Find user by ID or email
+        $user = null;
+        if ($request->user_id) {
+            $user = User::find($request->user_id);
+        } elseif ($request->user_email) {
+            $user = User::where('email', $request->user_email)->first();
+        }
+        
+        if (!$user) {
+            return response()->json(['status' => 'false', 'message' => 'User not found.']);
+        }
+
+        try {
+            $result = $this->syncKycFromSumsub($user, $subscribeToKlaviyoList);
+            return response()->json($result);
+        } catch (\Exception $e) {
+            Log::error('KYC Sync Error for User ID ' . $user->id, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'false', 
+                'message' => 'Failed to sync KYC data: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Bulk sync KYC data from Sumsub for multiple users
+     */
+    public function bulkSyncKyc(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $request->validate([
+            'user_ids' => 'array',
+            'user_ids.*' => 'integer|exists:users,id',
+            'user_emails' => 'array',
+            'user_emails.*' => 'email|exists:users,email',
+            'sync_all_unverified' => 'boolean',
+        ]);
+
+        $results = [];
+        $users = collect();
+
+        if ($request->sync_all_unverified) {
+            // Get all users who don't have kyc_verify = 1 but might be verified on Sumsub
+            $users = User::where('kyc_verify', '!=', 1)->get();
+        } elseif ($request->user_ids || $request->user_emails) {
+            // Get users by IDs
+            if ($request->user_ids) {
+                $usersByIds = User::whereIn('id', $request->user_ids)->get();
+                $users = $users->merge($usersByIds);
+            }
+            
+            // Get users by emails
+            if ($request->user_emails) {
+                $usersByEmails = User::whereIn('email', $request->user_emails)->get();
+                $users = $users->merge($usersByEmails);
+            }
+            
+            // Remove duplicates (in case same user was specified by both ID and email)
+            $users = $users->unique('id');
+        } else {
+            return response()->json(['status' => 'false', 'message' => 'Either user_ids, user_emails, or sync_all_unverified option is required.']);
+        }
+
+        if ($users->isEmpty()) {
+            return response()->json(['status' => 'false', 'message' => 'No users found to sync.']);
+        }
+
+        foreach ($users as $user) {
+            try {
+                $result = $this->syncKycFromSumsub($user, $subscribeToKlaviyoList);
+                $results[] = [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'result' => $result
+                ];
+            } catch (\Exception $e) {
+                Log::error('Bulk KYC Sync Error for User ID ' . $user->id, [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                $results[] = [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'result' => [
+                        'status' => 'false',
+                        'message' => 'Failed to sync: ' . $e->getMessage()
+                    ]
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bulk sync completed.',
+            'results' => $results,
+            'total_processed' => count($results)
+        ]);
+    }
+
+    /**
+     * Core method to sync KYC data from Sumsub
+     */
+    private function syncKycFromSumsub(User $user, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $email = $user->email;
+        
+        // Try to find applicant by user email
+        $applicantId = $this->getApplicantIdByEmail($email);
+        
+        if (!$applicantId) {
+            return ['status' => 'false', 'message' => 'No applicant found for this user in Sumsub.'];
+        }
+
+        // Get applicant status from Sumsub
+        $statusResponse = $this->getSumsubApplicantStatus($applicantId);
+        
+        if (!$statusResponse) {
+            return ['status' => 'false', 'message' => 'Failed to get applicant status from Sumsub.'];
+        }
+
+        // Log the status response
+        KycLog::create([
+            'client_id' => $email,
+            'user_id' => $user->id,
+            'callback_code' => 'KYC_SYNC_STATUS_CHECK',
+            'callback_payload' => $statusResponse,
+        ]);
+
+        // Check if review status is completed and approved
+        if (isset($statusResponse['reviewStatus']) && $statusResponse['reviewStatus'] == 'completed') {
+            if (isset($statusResponse['reviewResult']['reviewAnswer']) && $statusResponse['reviewResult']['reviewAnswer'] == 'GREEN') {
+                
+                // Get full applicant details
+                $applicantDetails = $this->getSumsubApplicantDetails($applicantId);
+                
+                if ($applicantDetails) {
+                    // Log the applicant details
+                    KycLog::create([
+                        'client_id' => $email,
+                        'user_id' => $user->id,
+                        'callback_code' => 'KYC_SYNC_APPLICANT_DETAILS',
+                        'callback_payload' => $applicantDetails,
+                    ]);
+
+                    Log::info('Sumsub sync user payload', ['payload' => $applicantDetails, 'user_id' => $user->id]);
+                }
+
+                // Check if user's KYC is already verified
+                if ($user->kyc_verify == 1) {
+                    return ['status' => 'true', 'message' => 'User KYC was already verified. Data synced and logged.'];
+                }
+
+                // Update user's KYC status to verified
+                $user->update(['kyc_verify' => 1]);
+
+                // Subscribe to Klaviyo list if configured
+                $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
+                if ($list_id) {
+                    $subscribeToKlaviyoList->handle($user, $list_id);
+                }
+
+                return ['status' => 'true', 'message' => 'KYC status synced and verified successfully.'];
+                
+            } else {
+                return ['status' => 'false', 'message' => 'KYC review completed but not approved (not GREEN status).'];
+            }
+        } else {
+            return ['status' => 'false', 'message' => 'KYC review not completed yet.'];
+        }
+    }
+
+    /**
+     * Get applicant ID by email from Sumsub
+     */
+    private function getApplicantIdByEmail($email)
+    {
+        $timestamp = time();
+        $requestMethod = 'GET';
+        $secretKey = config('services.sumsub.api_secret');
+        $apiUrl = '/resources/applicants?email=' . urlencode($email);
+        $requestBody = '';
+
+        $valueToSign = $timestamp . $requestMethod . $apiUrl;
+        if (!empty($requestBody)) {
+            $valueToSign .= $requestBody;
+        }
+
+        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true);
+        $signatureHex = bin2hex($signature);
+
+        $response = Http::withHeaders([
+            'X-App-Token' => config('services.sumsub.api_token'),
+            'X-App-Access-Sig' => $signatureHex,
+            'X-App-Access-Ts' => $timestamp,
+        ])->get('https://api.sumsub.com' . $apiUrl);
+
+        if ($response->status() != 200) {
+            Log::error('Failed to get applicant by email', [
+                'email' => $email,
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            return null;
+        }
+
+        $applicants = $response->json();
+        
+        // If applicants found, return the first one's ID
+        if (isset($applicants['items']) && count($applicants['items']) > 0) {
+            return $applicants['items'][0]['id'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get applicant status from Sumsub
+     */
+    private function getSumsubApplicantStatus($applicantId)
+    {
+        $timestamp = time();
+        $requestMethod = 'GET';
+        $secretKey = config('services.sumsub.api_secret');
+        $apiUrl = '/resources/applicants/' . $applicantId . '/status';
+        $requestBody = '';
+
+        $valueToSign = $timestamp . $requestMethod . $apiUrl;
+        if (!empty($requestBody)) {
+            $valueToSign .= $requestBody;
+        }
+
+        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true);
+        $signatureHex = bin2hex($signature);
+
+        $response = Http::withHeaders([
+            'X-App-Token' => config('services.sumsub.api_token'),
+            'X-App-Access-Sig' => $signatureHex,
+            'X-App-Access-Ts' => $timestamp,
+        ])->get('https://api.sumsub.com' . $apiUrl);
+
+        if ($response->status() != 200) {
+            Log::error('Failed to get applicant status', [
+                'applicant_id' => $applicantId,
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Get full applicant details from Sumsub
+     */
+    private function getSumsubApplicantDetails($applicantId)
+    {
+        $timestamp = time();
+        $requestMethod = 'GET';
+        $secretKey = config('services.sumsub.api_secret');
+        $apiUrl = '/resources/applicants/' . $applicantId . '/one';
+        $requestBody = '';
+
+        $valueToSign = $timestamp . $requestMethod . $apiUrl;
+        if (!empty($requestBody)) {
+            $valueToSign .= $requestBody;
+        }
+
+        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true);
+        $signatureHex = bin2hex($signature);
+
+        $response = Http::withHeaders([
+            'X-App-Token' => config('services.sumsub.api_token'),
+            'X-App-Access-Sig' => $signatureHex,
+            'X-App-Access-Ts' => $timestamp,
+        ])->get('https://api.sumsub.com' . $apiUrl);
+
+        if ($response->status() != 200) {
+            Log::error('Failed to get applicant details', [
+                'applicant_id' => $applicantId,
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            return null;
+        }
+
+        return $response->json();
+    }
+
     public function logVerification(Request $request)
     {
         // Validate incoming data

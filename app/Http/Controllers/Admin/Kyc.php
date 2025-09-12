@@ -26,4 +26,12 @@ class Kyc extends Controller
         $kyc->save();
         return redirect()->back()->with("success","KYC Status Updated Successfully");
     }
+
+    /**
+     * Display the KYC sync page
+     */
+    public function syncPage()
+    {
+        return view('admin.kyc_sync');
+    }
 }

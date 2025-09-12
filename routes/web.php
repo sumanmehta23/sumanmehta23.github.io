@@ -33,6 +33,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
 use App\Http\Controllers\KycController;
+use App\Http\Controllers\KycSyncController;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
@@ -267,6 +268,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
+    
+    // KYC Sync Routes
+    Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('sync.user.kyc');
+    Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('bulk.sync.kyc');
 
     Route::post('/wallet/store', [Wallet::class, 'storeClientWallet'])->name('wallet.store');
     Route::post('/wallet/updateStatus', [Wallet::class, 'updateStatus'])->name('wallet.updateStatus');
@@ -464,6 +469,12 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/ticket_followups', [Tickets::class, 'fetchFollowups'])->name('ticket_followups');
 
         Route::post('/updateKyc', [Kyc::class, 'updateKyc'])->name('updateKyc');
+        Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page');
+        
+        // Admin KYC Sync Routes
+        Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user');
+        Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('kyc.sync.bulk');
+        Route::get('/debug-applicant', [KycSyncController::class, 'debugApplicant'])->name('kyc.debug.applicant');
 
         Route::get('/wallet_deposit_details', [Transaction::class, 'wallet_deposit_details']);
         Route::get('/wallet_withdrawal_details', [Transaction::class, 'wallet_withdrawal_details']);
