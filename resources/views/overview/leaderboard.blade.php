@@ -127,7 +127,7 @@
             <!-- Current Leader -->
             <div class="card p-3 bg-white shadow rounded-lg">
                 <p class="text-muted mb-1">Current Leader</p>
-                <h5>{{ $stats['top_performer']->name ?? '' }}</h5>
+                <h5>{{ $rankings[0]['name'] ?? 'N/A' }}</h5>
             </div>
         </div>
 
@@ -153,15 +153,23 @@
                             </thead>
                             <tbody class="text-sm">
                                 @foreach ($rankings as $rank)
-                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                    <tr class="bg-white border-b hover:bg-gray-50 cursor-pointer competitor-row"
+                                        data-name="{{ $rank['name'] ?? 'N/A' }}"
+                                        data-balance="{{ $rank['balance'] ?? 0 }}"
+                                        data-equity="{{ $rank['equity'] ?? 0 }}"
+                                        data-profit="{{ $rank['total_profit'] ?? 0 }}"
+                                        data-trades="{{ $rank['total_trades'] ?? 0 }}">
                                         <td class="p-3 font-bold">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-400 text-white text-xs font-bold">{{ $rank['rank'] }}</span>
+                                            <span
+                                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold">
+                                                {{ $rank['rank'] ?? 'N/A'}}
+                                            </span>
                                         </td>
-                                        <td class="p-3">{{ $rank['name'] }}</td>
-                                        <td class="p-3">{{ $rank['balance'] }}</td>
-                                        <td class="p-3">{{ $rank['equity'] }}</td>
-                                        <td class="p-3">{{ $rank['total_profit'] }}</td>
-                                        <td class="p-3">{{ $rank['total_trades'] }}</td>
+                                        <td class="p-3">{{ $rank['name'] ?? 'N/A' }}</td>
+                                        <td class="p-3">{{ $rank['balance'] ?? 'N/A'}}</td>
+                                        <td class="p-3">{{ $rank['equity'] ?? 'N/A'}}</td>
+                                        <td class="p-3">{{ $rank['total_profit'] ?? 'N/A'}}</td>
+                                        <td class="p-3">{{ $rank['total_trades'] ?? 'N/A'}}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -173,23 +181,20 @@
             <!-- Peter S. Performance -->
 
             <!-- Stats -->
-            <div class="bg-white shadow rounded-lg mt-6 overflow-hidden">
-                <h5 class="font-bold p-4">{{ $stats['top_performer']->name ?? '' }}</h5>
+            <div id="performerCard" class="bg-white shadow rounded-lg mt-6 overflow-hidden">
+                <h5 id="performerName" class="font-bold p-4">{{ $rankings[0]['name'] ?? '' }}</h5>
                 <div class="grid grid-cols-1 lg:grid-cols-12">
                     <div class="p-6 lg:col-span-3 rounded-r-none">
-
-                        <p class="mb-2"><strong>Starting Balance:</strong> {{ $stats['top_performer']->balance ?? '' }}</p>
-                        <p class="mb-2"><strong>Current Balance:</strong> {{ $stats['top_performer']->balance ?? '' }}</p>
-                        <p class="mb-2"><strong>Cumulative P/L:</strong>  {{ $stats['top_performer']->balance ?? '' }}</p>
-                        <p class="mb-2"><strong>Largest Winning Trade:</strong>  {{ $stats['top_performer']->balance ?? '' }}</p>
-                        {{-- <p class="mb-2"><strong>Return %:</strong> 68.59%</p> --}}
-                        <p class="mb-2"><strong>Equity:</strong>  {{ $stats['top_performer']->equity ?? '' }}</p>
+                        <p class="mb-2"><strong>Starting Balance:</strong> <span id="startingBalance">{{ $rankings[0]['balance'] ?? '' }}</span></p>
+                        <p class="mb-2"><strong>Current Balance:</strong> <span id="currentBalance">{{ $rankings[0]['balance'] ?? '' }}</span></p>
+                        <p class="mb-2"><strong>Cumulative P/L:</strong> <span id="cumulativePL">{{ $rankings[0]['total_profit'] ?? '' }}</span></p>
+                        <p class="mb-2"><strong>Biggest Trade:</strong> <span id="largestTrade">-</span></p>
+                        <p class="mb-2"><strong>Equity:</strong> <span id="equity">{{ $rankings[0]['equity'] ?? '' }}</span></p>
                     </div>
 
                     <!-- Chart -->
                     <div class="lg:col-span-9 rounded-l-none">
                         <div class="card-body p-6">
-                            {{-- <h5 class="card-title font-bold mb-4">Performance Chart</h5> --}}
                             <div class="chart-container h-100">
                                 <canvas id="performanceChart"></canvas>
                             </div>
@@ -197,6 +202,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
         <div class="bg-white shadow rounded-lg mt-6 overflow-hidden">
@@ -287,49 +293,6 @@
     </div>
 
     <script>
-        // Performance Chart
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        const performanceChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Aug 18', 'Aug 19', 'Aug 20', 'Aug 21', 'Aug 22', 'Aug 23'],
-                datasets: [{
-                    label: 'Balance',
-                    data: [100000, 120000, 150000, 160000, 165000, 168594],
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Balance ($)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
-                }
-            }
-        });
-    </script>
-
-    <script>
         // Counter
         const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
         const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
@@ -368,6 +331,86 @@
         updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
     </script>
+
+    <script>
+        // Init Chart (only once)
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+
+        let performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Balance',
+                    data: [],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            maxTicksLimit: 6 // <-- Add this line to limit Y axis intervals
+                        }
+
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // Handle row clicks
+        document.querySelectorAll('.competitor-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const name = row.dataset.name;
+                const balance = row.dataset.balance;
+                const equity = row.dataset.equity;
+                const profit = row.dataset.profit;
+                const trades = row.dataset.trades;
+
+                // Update text
+                document.getElementById('performerName').innerText = name;
+                document.getElementById('startingBalance').innerText = balance;
+                document.getElementById('currentBalance').innerText = balance;
+                document.getElementById('cumulativePL').innerText = profit;
+                document.getElementById('largestTrade').innerText = "-"; // Replace with real data if available
+                document.getElementById('equity').innerText = equity;
+
+                // Update Chart (example data, replace with actual)
+                performanceChart.data.labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4'];
+                performanceChart.data.datasets[0].data = [
+                    parseFloat(balance),
+                    parseFloat(balance),
+                    parseFloat(balance),
+                    parseFloat(balance)
+                ];
+                performanceChart.update();
+            });
+        });
+    </script>
+
 
 </body>
 
