@@ -205,9 +205,11 @@
 
         </div>
 
-        <div class="bg-white shadow rounded-lg mt-6 overflow-hidden">
+        <div class="bg-white shadow rounded-lg mt-6 overflow-hidden" id="tradingLogCard">
             <div class="p-4 border-b">
-                <h5 class="font-bold text-lg">{{ $stats['top_performer']->name ?? '' }} - Trading Log</h5>
+                <h5 id="tradingLogTitle" class="font-bold text-lg">
+                    {{ $stats['top_performer']->name ?? '' }} - Trading Log
+                </h5>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -225,71 +227,38 @@
                             <th class="px-4 py-3">CHANGE</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y">
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">Aug 26, 2025 @ 03:59:38</td>
-                            <td class="px-4 py-3">GBPNZD</td>
-                            <td class="px-4 py-3">#7782220156104734533</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded">BUY</span>
-                            </td>
-                            <td class="px-4 py-3">5</td>
-                            <td class="px-4 py-3">2.30753</td>
-                            <td class="px-4 py-3">Aug 26, 2025 @ 07:21:32</td>
-                            <td class="px-4 py-3">2.30147</td>
-                            <td class="px-4 py-3 text-red-600">-$1,768.63</td>
-                            <td class="px-4 py-3">-0.26%</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">Aug 22, 2025 @ 12:05:06</td>
-                            <td class="px-4 py-3">GBPAUD</td>
-                            <td class="px-4 py-3">#7782220156104690575</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded">BUY</span>
-                            </td>
-                            <td class="px-4 py-3">10</td>
-                            <td class="px-4 py-3">2.08891</td>
-                            <td class="px-4 py-3">Aug 22, 2025 @ 14:00:29</td>
-                            <td class="px-4 py-3">2.08566</td>
-                            <td class="px-4 py-3 text-red-600">-$2,096.90</td>
-                            <td class="px-4 py-3">-0.15%</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">Aug 19, 2025 @ 07:05:24</td>
-                            <td class="px-4 py-3">GBPNZD</td>
-                            <td class="px-4 py-3">#7782220156104610866</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded">BUY</span>
-                            </td>
-                            <td class="px-4 py-3">38</td>
-                            <td class="px-4 py-3">2.28111</td>
-                            <td class="px-4 py-3">Aug 20, 2025 @ 06:44:57</td>
-                            <td class="px-4 py-3">2.31397</td>
-                            <td class="px-4 py-3 text-green-600 font-bold">$72,854.86</td>
-                            <td class="px-4 py-3">+1.44%</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">Aug 18, 2025 @ 11:28:02</td>
-                            <td class="px-4 py-3">EURUSD</td>
-                            <td class="px-4 py-3">#7782220156104587796</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded">SELL</span>
-                            </td>
-                            <td class="px-4 py-3">38</td>
-                            <td class="px-4 py-3">1.16841</td>
-                            <td class="px-4 py-3">Aug 18, 2025 @ 19:10:07</td>
-                            <td class="px-4 py-3">1.16638</td>
-                            <td class="px-4 py-3 text-green-600 font-bold">$7,714.00</td>
-                            <td class="px-4 py-3">+0.17%</td>
-                        </tr>
+                    <tbody id="tradingLogBody" class="divide-y">
+                        {{ dd($stats) }}
+                        {{-- default trades loaded here --}}
+                        @foreach($stats['top_performer']->trades ?? [] as $trade)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ $trade->open_time }}</td>
+                                <td class="px-4 py-3">{{ $trade->symbol }}</td>
+                                <td class="px-4 py-3">#{{ $trade->position_id }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 text-xs font-semibold {{ $trade->type == 'BUY' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100' }} rounded">
+                                        {{ strtoupper($trade->type) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">{{ $trade->volume }}</td>
+                                <td class="px-4 py-3">{{ $trade->open_price }}</td>
+                                <td class="px-4 py-3">{{ $trade->close_time }}</td>
+                                <td class="px-4 py-3">{{ $trade->close_price }}</td>
+                                <td class="px-4 py-3 {{ $trade->profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600' }}">
+                                    {{ $trade->profit }}
+                                </td>
+                                <td class="px-4 py-3">{{ $trade->change }}</td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
             <div class="flex justify-between items-center p-4 text-xs text-gray-500 border-t">
-                <span>Page 1 of 1 | Items 1 - 8</span>
-                <span>Last Update: 5 minutes ago</span>
+                <span id="paginationInfo">Page 1 of 1 | Items {{ count($stats['top_performer']->trades ?? []) }}</span>
+                <span id="lastUpdate">Last Update: 5 minutes ago</span>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -383,30 +352,60 @@
 
         // Handle row clicks
         document.querySelectorAll('.competitor-row').forEach(row => {
-            row.addEventListener('click', () => {
+            row.addEventListener('click', async () => {
                 const name = row.dataset.name;
                 const balance = row.dataset.balance;
                 const equity = row.dataset.equity;
                 const profit = row.dataset.profit;
                 const trades = row.dataset.trades;
 
-                // Update text
+                // Update performer card
                 document.getElementById('performerName').innerText = name;
                 document.getElementById('startingBalance').innerText = balance;
                 document.getElementById('currentBalance').innerText = balance;
                 document.getElementById('cumulativePL').innerText = profit;
-                document.getElementById('largestTrade').innerText = "-"; // Replace with real data if available
+                document.getElementById('largestTrade').innerText = "-";
                 document.getElementById('equity').innerText = equity;
 
-                // Update Chart (example data, replace with actual)
-                performanceChart.data.labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4'];
-                performanceChart.data.datasets[0].data = [
-                    parseFloat(balance),
-                    parseFloat(balance),
-                    parseFloat(balance),
-                    parseFloat(balance)
-                ];
-                performanceChart.update();
+                // Update Trading Log title
+                document.getElementById('tradingLogTitle').innerText = `${name} - Trading Log`;
+
+                // Fetch competitor trades dynamically (via API or preloaded data)
+                try {
+                    const res = await fetch(`/competition/trades/${row.dataset.rankId}`);
+                    const tradesData = await res.json();
+
+                    const tbody = document.getElementById('tradingLogBody');
+                    tbody.innerHTML = "";
+
+                    tradesData.forEach(trade => {
+                        const tr = document.createElement('tr');
+                        tr.classList.add("hover:bg-gray-50");
+                        tr.innerHTML = `
+                            <td class="px-4 py-3">${trade.open_time}</td>
+                            <td class="px-4 py-3">${trade.symbol}</td>
+                            <td class="px-4 py-3">#${trade.position_id}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 text-xs font-semibold ${trade.type === 'BUY' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
+                                    ${trade.type}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">${trade.volume}</td>
+                            <td class="px-4 py-3">${trade.open_price}</td>
+                            <td class="px-4 py-3">${trade.close_time}</td>
+                            <td class="px-4 py-3">${trade.close_price}</td>
+                            <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
+                            <td class="px-4 py-3">${trade.change}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.length}`;
+                    document.getElementById('lastUpdate').innerText = `Last Update: just now`;
+
+                } catch (e) {
+                    console.error("Error fetching trades:", e);
+                }
             });
         });
     </script>
