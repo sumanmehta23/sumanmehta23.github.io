@@ -80,13 +80,13 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <!-- Time Remaining -->
             <div class="card p-3 bg-white shadow rounded-lg">
-                <p class="text-muted mb-1">Time Remaining</p>
+                <p class="text-muted mb-1 font-bold">Time Remaining</p>
                 <h5 id="countdown">Loading...</h5>
             </div>
 
             <!-- Prize Pool -->
             <div class="card p-3 bg-white shadow rounded-lg">
-                <p class="text-muted mb-1">Prize Pool</p>
+                <p class="text-muted mb-1 font-bold">Prize Pool</p>
 
                 <!-- Button to trigger modal -->
                 <button type="button" style="width: fit-content;"
@@ -120,13 +120,13 @@
 
             <!-- Contestants -->
             <div class="card p-3 bg-white shadow rounded-lg">
-                <p class="text-muted mb-1">Contestants</p>
+                <p class="text-muted mb-1 font-bold">Contestants</p>
                 <h5>{{ $stats['participants'] }}</h5>
             </div>
 
             <!-- Current Leader -->
             <div class="card p-3 bg-white shadow rounded-lg">
-                <p class="text-muted mb-1">Current Leader</p>
+                <p class="text-muted mb-1 font-bold">Current Leader</p>
                 <h5>{{ $rankings[0]['name'] ?? 'N/A' }}</h5>
             </div>
         </div>
