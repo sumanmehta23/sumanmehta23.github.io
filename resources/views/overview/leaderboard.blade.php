@@ -75,6 +75,7 @@
         </section>
         {{-- {{ dd($competition) }} --}}
         {{-- {{ dd($stats) }} --}}
+        {{-- {{ dd($rankings) }} --}}
         <!-- Header Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <!-- Time Remaining -->
@@ -89,7 +90,7 @@
 
                 <!-- Button to trigger modal -->
                 <button type="button" style="width: fit-content;"
-                    class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800"
+                    class="px-3 py-1 text-sm bg-emerald-700 text-white rounded-md font-medium shadow hover:bg-emerald-800"
                     data-bs-toggle="modal" data-bs-target="#prizeModal">
                     More Info
                 </button>
@@ -329,38 +330,45 @@
     </script>
 
     <script>
-    // Convert Blade variable to JS Date
+        // Counter
         const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
         const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
 
         function updateCountdown() {
             const now = new Date().getTime();
-            if(startDate < now){
-                const distance = startDate - now;
-            }else{
-                const distance = endDate - now;
-            }
-            console.log(distance);
-            console.log(endDate);
-            console.log(startDate);
-            console.log(now);
+            let distance;
 
-            if (distance <= 0) {
+            if (startDate > now && endDate > now) {
+                // Before competition starts
+                distance = startDate - now;
+                document.getElementById("countdown").innerHTML = "Starts in: ";
+            } else if (startDate <= now && endDate > now) {
+                // Competition is running
+                distance = endDate - now;
+                document.getElementById("countdown").innerHTML = "Ends in: ";
+            } else {
+                // Competition ended
                 document.getElementById("countdown").innerHTML = "Competition Ended";
                 clearInterval(interval);
                 return;
             }
 
+            // Calculate time parts
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Example format: "2d 5h 30m 10s"
-            document.getElementById("countdown").innerHTML =
+            // Show countdown
+            document.getElementById("countdown").innerHTML +=
                 `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
+
+        // Run immediately and then every second
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
     </script>
+
 </body>
 
 </html>
