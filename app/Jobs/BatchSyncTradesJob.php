@@ -597,9 +597,9 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $apiCalls[] = ['HistoryGetPage', $totalHistoryTime];
 
             Log::info("DEBUG[{$account->code}]: Successfully fetched " . count($orders) . " total orders in {$pageCount} pages ({$totalHistoryTime}ms)");
-            if ($login == 394402) {
-                Log::info("Orders for account {$account->code}: " . json_encode($orders));
-            }
+            // if ($login == 394402) {
+            //     Log::info("Orders for account {$account->code}: " . json_encode($orders));
+            // }
 
             // Phase 5: Data Processing - Group Orders into Positions
             $phaseStart = microtime(true);
@@ -635,7 +635,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     ->filter(fn($order) => isset($order->$positionField) && $order->$positionField > 0)
                     ->groupBy(fn($order) => $order->$positionField);
 
-                Log::info("DEBUG[{$account->code}]: Using {$positionField} for grouping. Found {$ordersByPosition->count()} positions");
+                // Log::info("DEBUG[{$account->code}]: Using {$positionField} for grouping. Found {$ordersByPosition->count()} positions");
             } else {
                 // Fallback: Create artificial positions by grouping similar orders
                 // Group by Symbol + Volume + approximate time window
@@ -686,7 +686,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     }, $filteredDeals));
                     $rateProfit = $filteredDeals[0]->rate_profit ?? 1;
 
-                    Log::info("DEBUG[{$account->code}]: Position {$positionId} found {count($filteredDeals)} deals, actual profit: {$actualProfit}");
+                    // Log::info("DEBUG[{$account->code}]: Position {$positionId} found {count($filteredDeals)} deals, actual profit: {$actualProfit}");
                 } else {
                     // No deals found through order matching - check database directly
                     $dbDeals = Deal::where('account_id', $account->id)
@@ -696,9 +696,9 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     if ($dbDeals->count() > 0) {
                         $actualProfit = round($dbDeals->sum('profit'), 2);
                         $rateProfit = $dbDeals->first()->rate_profit ?? 1;
-                        Log::info("DEBUG[{$account->code}]: Position {$positionId} found {$dbDeals->count()} deals via database lookup, actual profit: {$actualProfit}");
+                        // Log::info("DEBUG[{$account->code}]: Position {$positionId} found {$dbDeals->count()} deals via database lookup, actual profit: {$actualProfit}");
                     } else {
-                        Log::warning("DEBUG[{$account->code}]: Position {$positionId} has no deals - will use manual calculation");
+                        // Log::warning("DEBUG[{$account->code}]: Position {$positionId} has no deals - will use manual calculation");
                     }
                 }
 
