@@ -126,7 +126,7 @@
             <!-- Current Leader -->
             <div class="card p-3 bg-white shadow rounded-lg">
                 <p class="text-muted mb-1">Current Leader</p>
-                <h5>{{ $stats['top_performer']->name }}</h5>
+                <h5>{{ $stats['top_performer']->name ?? '' }}</h5>
             </div>
         </div>
 
@@ -173,16 +173,16 @@
 
             <!-- Stats -->
             <div class="bg-white shadow rounded-lg mt-6 overflow-hidden">
-                <h5 class="font-bold p-4">{{ $stats['top_performer']->name }}</h5>
+                <h5 class="font-bold p-4">{{ $stats['top_performer']->name ?? '' }}</h5>
                 <div class="grid grid-cols-1 lg:grid-cols-12">
                     <div class="p-6 lg:col-span-3 rounded-r-none">
 
-                        <p class="mb-2"><strong>Starting Balance:</strong> {{ $stats['top_performer']->balance }}</p>
-                        <p class="mb-2"><strong>Current Balance:</strong> {{ $stats['top_performer']->balance }}</p>
-                        <p class="mb-2"><strong>Cumulative P/L:</strong>  {{ $stats['top_performer']->balance }}</p>
-                        <p class="mb-2"><strong>Largest Winning Trade:</strong>  {{ $stats['top_performer']->balance }}</p>
+                        <p class="mb-2"><strong>Starting Balance:</strong> {{ $stats['top_performer']->balance ?? '' }}</p>
+                        <p class="mb-2"><strong>Current Balance:</strong> {{ $stats['top_performer']->balance ?? '' }}</p>
+                        <p class="mb-2"><strong>Cumulative P/L:</strong>  {{ $stats['top_performer']->balance ?? '' }}</p>
+                        <p class="mb-2"><strong>Largest Winning Trade:</strong>  {{ $stats['top_performer']->balance ?? '' }}</p>
                         {{-- <p class="mb-2"><strong>Return %:</strong> 68.59%</p> --}}
-                        <p class="mb-2"><strong>Equity:</strong>  {{ $stats['top_performer']->equity }}</p>
+                        <p class="mb-2"><strong>Equity:</strong>  {{ $stats['top_performer']->equity ?? '' }}</p>
                     </div>
 
                     <!-- Chart -->
@@ -200,7 +200,7 @@
 
         <div class="bg-white shadow rounded-lg mt-6 overflow-hidden">
             <div class="p-4 border-b">
-                <h5 class="font-bold text-lg">{{ $stats['top_performer']->name }} - Trading Log</h5>
+                <h5 class="font-bold text-lg">{{ $stats['top_performer']->name ?? '' }} - Trading Log</h5>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -219,7 +219,6 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y">
-                        {{ dd($rankings) }}
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3">Aug 26, 2025 @ 03:59:38</td>
                             <td class="px-4 py-3">GBPNZD</td>
@@ -332,10 +331,19 @@
     <script>
     // Convert Blade variable to JS Date
         const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
+        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
 
         function updateCountdown() {
             const now = new Date().getTime();
-            const distance = endDate - now;
+            if(startDate < now){
+                const distance = startDate - now;
+            }else{
+                const distance = endDate - now;
+            }
+            console.log(distance);
+            console.log(endDate);
+            console.log(startDate);
+            console.log(now);
 
             if (distance <= 0) {
                 document.getElementById("countdown").innerHTML = "Competition Ended";
@@ -352,10 +360,6 @@
             document.getElementById("countdown").innerHTML =
                 `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
-
-        // Run immediately, then every second
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
     </script>
 </body>
 
