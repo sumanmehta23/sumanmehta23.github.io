@@ -228,7 +228,7 @@
                         </tr>
                     </thead>
                     <tbody id="tradingLogBody" class="divide-y">
-                        {{ dd($stats) }}
+                        {{-- {{ dd($stats) }} --}}
                         {{-- default trades loaded here --}}
                         @foreach($stats['top_performer']->trades ?? [] as $trade)
                             <tr class="hover:bg-gray-50">
