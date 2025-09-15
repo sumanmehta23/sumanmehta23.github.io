@@ -14,18 +14,18 @@ use Carbon\Carbon;
 
 /**
  * Priority-Based Account Sync Command with Balance Change Optimization
- * 
+ *
  * This command continuously syncs accounts based on balance changes and sync priority:
  * 1. Only syncs accounts with balance activity (major optimization)
  * 2. Accounts that need retry (highest priority)
  * 3. Accounts with balance changes since last sync
  * 4. Accounts that haven't been synced for 6+ hours (fallback)
  * 5. Intelligent batching and queue limits for optimal performance
- * php artisan app:priority-sync --batch-size=100 --daemon 
+ * php artisan app:priority-sync --batch-size=100 --daemon
  */
 class PrioritySyncAccountsCommand extends Command
 {
-    protected $signature = 'app:priority-sync 
+    protected $signature = 'app:priority-sync
                             {--batch-size= : Number of accounts per batch (default from config)}
                             {--max-concurrent= : Maximum concurrent batches (default from config)}
                             {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
@@ -161,35 +161,51 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("Current BatchSyncTradesJob queue: {$pendingJobs} pending jobs");
         $this->info("");
 
+        // $totalAccounts = Account::whereNotNull('code')
+        //     ->whereNull('deleted_at')
+        //     ->where('demo', false)
+        //     ->where('code', '<>', 'Rejected')
+        //     ->count();
+
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
             ->where('code', '<>', 'Rejected')
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->count();
+
 
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNull('last_sync_attempt_at')
             ->where('code', '<>', 'Rejected')
             ->count();
 
         $syncedToday = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('last_sync_attempt_at', '>=', now()->subDay())
             ->count();
 
         $stale6h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotNull('last_sync_attempt_at')
             ->where('last_sync_attempt_at', '<', now()->subHours(6))
             ->count();
 
         $stale24h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotNull('last_sync_attempt_at')
             ->where('code', '<>', 'Rejected')
             ->where('last_sync_attempt_at', '<', now()->subDay())
@@ -197,13 +213,17 @@ class PrioritySyncAccountsCommand extends Command
 
         $retryAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('sync_status', 'needs_retry')
             ->count();
 
         $flaggedAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('sync_status', 'flagged')
             ->count();
 
@@ -223,7 +243,9 @@ class PrioritySyncAccountsCommand extends Command
             $this->info("\n=== Flagged Accounts Details ===");
             $flaggedDetails = Account::whereNotNull('code')
                 ->whereNull('deleted_at')
-                ->where('demo', false)
+                // ->where('demo', false)
+                ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
                 ->where('sync_status', 'flagged')
                 ->select('code', 'sync_flag_reason', 'sync_flagged_at', 'sync_stuck_count', 'sync_error')
                 ->get();
@@ -245,7 +267,9 @@ class PrioritySyncAccountsCommand extends Command
         // Show recent sync status distribution
         $statusCounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->selectRaw('sync_status, COUNT(*) as count')
             ->groupBy('sync_status')
             ->get();
@@ -317,7 +341,9 @@ class PrioritySyncAccountsCommand extends Command
 
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             // IMPORTANT: Don't sync accounts that were synced within the minimum interval (unless they need retry)
             ->where(function ($q) use ($cutoffTime) {
                 $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts regardless of timing

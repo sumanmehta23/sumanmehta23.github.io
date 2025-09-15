@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Bus;
 
 class SyncAccountBalances extends Command
 {
-    protected $signature = 'app:sync-account-balances 
+    protected $signature = 'app:sync-account-balances
                             {--accounts= : Comma-separated list of account codes to sync}
                             {--force : Force sync even if recently synced}
                             {--daemon : Run continuously}
@@ -213,7 +213,9 @@ class SyncAccountBalances extends Command
 
         // Get accounts to sync using similar logic as BalanceSyncService
         $query = Account::whereNotNull('code')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotIn('sync_status', ['not_found_in_mt5']);
 
         if ($accountCodes) {
@@ -303,7 +305,9 @@ class SyncAccountBalances extends Command
     private function showExclusionInfo(?array $accountCodes, bool $isDaemon = false): void
     {
         $excludedCount = Account::whereNotNull('code')
-            ->where('demo', false)
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereIn('sync_status', ['not_found_in_mt5'])
             ->count();
 
@@ -321,7 +325,7 @@ class SyncAccountBalances extends Command
 
     /**
      * Calculate intelligent sync interval based on system activity and configuration
-     * 
+     *
      * This dynamically determines the optimal interval for balance sync filtering,
      * ensuring accounts get updated as soon as possible while avoiding unnecessary work.
      */
@@ -376,7 +380,9 @@ class SyncAccountBalances extends Command
                 ->count();
 
             $totalActiveAccounts = Account::whereNotNull('code')
-                ->where('demo', false)
+                // ->where('demo', false)
+                ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
                 ->whereNotIn('sync_status', ['not_found_in_mt5'])
                 ->count();
 
