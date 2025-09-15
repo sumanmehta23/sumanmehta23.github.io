@@ -290,13 +290,15 @@ class LoginController extends Controller
 
         $email = $request->input('txtemail');
         $user = User::where('email', $email)->first();
+
         if ($user) {
             $code = Str::random(60);
             // User::where('email', $email)->update(['emailToken' => $code]);
-            User::where('email', $email)->update([
-                'emailToken' => $code,
-                'email_token_time' => Carbon::now(), // Set the current timestamp
-            ]);
+
+            $user->emailToken = $code;
+            $user->email_token_time = Carbon::now();
+            $user->save();
+
             $settings = settings();
             $from = $settings['email_from_address'];
             $emailSubject = $settings['admin_title'] . ' Password Reset';

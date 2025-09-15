@@ -355,7 +355,6 @@
                 @endif
             </div>
         </div>
-    </div>
     @include('add_amount_to_account')
     <script>
     document.addEventListener("DOMContentLoaded", function () {

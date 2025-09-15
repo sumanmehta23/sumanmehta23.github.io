@@ -61,7 +61,8 @@ class UserResource extends JsonResource
             'registration_date' => $registrationDate, // Mandatory
             'last_modified_date' => $lastModifiedDate, // Mandatory
             'iso_country' => $isoCountry, // Mandatory, taking first 2 letters of country
-            'user_ip_address' => $request->ip(), // Optional, using current request IP as fallback
+            'user_ip_address' => $this->client_ip, // Optional, using current request IP as fallback
+            'liveAccounts' => $this->liveAccounts
         ];
     }
 }

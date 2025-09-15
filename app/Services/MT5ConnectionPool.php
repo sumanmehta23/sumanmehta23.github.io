@@ -119,7 +119,7 @@ class MT5ConnectionPool
             Cache::put('mt5_global_connections', $globalConnections, 120); // 2 minutes TTL
 
             $maxGlobal = config('mt5.max_global_connections', 20);
-            Log::debug("MT5Pool: Global connections: {$activeConnections}/{$maxGlobal}" . ($cleaned ? " (after cleanup)" : ""));
+            // Log::debug("MT5Pool: Global connections: {$activeConnections}/{$maxGlobal}" . ($cleaned ? " (after cleanup)" : ""));
 
             return $activeConnections < $maxGlobal;
         } catch (\Exception $e) {
@@ -276,7 +276,7 @@ class MT5ConnectionPool
         }
 
         unset($this->connectionHealth[$connectionId]);
-        Log::info("MT5Pool: Removed connection {$connectionId}");
+        // Log::info("MT5Pool: Removed connection {$connectionId}");
 
         // Update global count
         $this->updateGlobalConnectionCount();

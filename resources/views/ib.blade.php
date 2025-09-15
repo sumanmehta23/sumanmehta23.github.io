@@ -56,7 +56,6 @@
         </div>
       </div>
     </div>
-  </div>
   <script>
     $(".ib-enroll").click(function() {
         $.ajax({

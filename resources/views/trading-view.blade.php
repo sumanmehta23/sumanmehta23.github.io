@@ -78,3 +78,4 @@ if ($theme === 'false') {
         "utm_campaign": "ticker-tape"
       }
     </script>
+</div>

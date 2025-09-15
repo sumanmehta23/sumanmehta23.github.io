@@ -513,7 +513,6 @@
             </div>
 
         </div>
-    </div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             let hash = window.location.hash;

@@ -133,14 +133,13 @@ class SyncAccountTradesJob implements ShouldQueue
                 'created_at' => now(),
                 'updated_at' => now()
             ];
-
         } catch (\Exception $e) {
             Log::error("Error processing order for IB commission: " . $e->getMessage());
             return null;
         }
     }
 
-   protected function processAccount($accountId): void
+    protected function processAccount($accountId): void
     {
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
@@ -335,5 +334,4 @@ class SyncAccountTradesJob implements ShouldQueue
 
         // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
     }
-
 }
