@@ -20,7 +20,7 @@ class TradeResource extends JsonResource
             'id' => $this->position_id,
             'user_id' => $this->account->user_id ?? null,
             'account_id' => $this->account_id,
-
+            'code' => $this->code,
             // Cellexpert required fields
             'symbol' => $this->symbol, // Optional: The symbol for the traded asset
             'position_volume' => $this->volume, // Mandatory: The Monetary position amount (Volume)
