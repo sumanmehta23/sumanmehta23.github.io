@@ -391,7 +391,6 @@
                 </div>
             </div>
         </div>
-    </div>
     {{--
     <script>
         $("#tradeWithdrawalForm").submit(function (e) {

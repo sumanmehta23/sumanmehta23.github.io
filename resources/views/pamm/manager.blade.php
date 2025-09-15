@@ -26,7 +26,6 @@
                 </div>
             </div>
         </div>
-    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.2.10/iframeResizer.js"></script>
     <script>
         iFrameResize({
