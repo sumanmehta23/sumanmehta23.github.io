@@ -169,9 +169,10 @@ class PrioritySyncAccountsCommand extends Command
 
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            ->where('code', '<>', 'Rejected')
+            // ->where('demo', false)
             ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
                     OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('code', '<>', 'Rejected')
             ->count();
 
 
