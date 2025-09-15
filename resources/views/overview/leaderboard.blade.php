@@ -68,7 +68,7 @@
             </a>
         </nav>
     </header>
-    <div class="container-fluid">
+    <div class="container-fluid px-10">
         <!-- Page Heading -->
         <section class="text-center mt-10 mb-10">
             <h1 class="text-4xl font-bold capitalize">{{ $competition->ac_name }}</h1>
@@ -258,8 +258,110 @@
                 <span id="lastUpdate">Last Update: 5 minutes ago</span>
             </div>
         </div>
-
     </div>
+
+    <!-- Footer (Bootstrap) -->
+  <div class="container-fluid bg-light mt-5 pt-5">
+    <div class="px-6 py-5">
+      <div class="row gy-4">
+
+        <!-- Logo & Info -->
+        <div class="col-lg-4 col-md-6">
+          <a href="/" class="d-inline-block mb-3">
+            <img src="/{{ $settings['admin_sidebar_logo'] }}" alt="LQH Markets Logo" class="img-fluid"
+              style="max-height: 45px;">
+          </a>
+          <p class="text-muted mb-1">
+            LQH Integrated Ltd <br> Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
+          </p>
+          <p class="mb-1">Email: <a href="mailto:support@lqhmarkets.com"
+              class="text-success text-decoration-none">support@lqhmarkets.com</a></p>
+          <p class="mb-0 text-muted">© 2025 LQH Markets | All rights reserved.</p>
+        </div>
+
+        <!-- Explore -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6 class="fw-bold mb-3">Explore</h6>
+          <ul class="list-unstyled">
+            <li><a href="https://www.lqhmarkets.com/" class="text-decoration-none text-dark">Home</a></li>
+            <li><a href="https://www.lqhmarkets.com/mt5" class="text-decoration-none text-dark">MetaTrader 5</a></li>
+            <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About Us</a></li>
+            <li><a href="https://www.lqhmarkets.com/help-center" class="text-decoration-none text-dark">Help Center</a>
+            </li>
+            <li><a href="https://www.lqhmarkets.com/lot-size-calculator"
+                class="text-decoration-none text-dark">Lot Size Calculator</a></li>
+          </ul>
+        </div>
+
+        <!-- Disclosures -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6 class="fw-bold mb-3">Disclosures</h6>
+          <ul class="list-unstyled">
+            <li><a href="https://www.lqhmarkets.com/risk-disclaimer"
+                class="text-decoration-none text-dark">Risk Disclaimer</a></li>
+            <li><a href="https://www.lqhmarkets.com/terms-conditions"
+                class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
+            <li><a href="https://www.lqhmarkets.com/privacy-policy"
+                class="text-decoration-none text-dark">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6 class="fw-bold mb-3">Company</h6>
+          <ul class="list-unstyled">
+            <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About</a></li>
+            <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Social Media -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6 class="fw-bold mb-3">Social Media</h6>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            <li>
+              <a href="https://discord.gg/lqhmarkets" target="_blank"
+                class="d-flex align-items-center text-decoration-none text-dark">
+                <img
+                  src="https://cdn.prod.website-files.com/66d6faa07d7bd55c6f3ca508/683d55e6248e95183cea86a5_icons8-discord-500.png"
+                  alt="Discord" class="me-2" style="height: 20px; width: 20px;">
+                Discord
+              </a>
+            </li>
+            <li>
+              <a href="https://instagram.com/lqhmarkets" target="_blank"
+                class="d-flex align-items-center text-decoration-none text-dark">
+                <img
+                  src="https://cdn.prod.website-files.com/66d6faa07d7bd55c6f3ca508/683d5538ee0b29783635919a_icons8-instagram-500.png"
+                  alt="Instagram" class="me-2" style="height: 20px; width: 20px;">
+                Instagram
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legal -->
+    <div class="border-top py-4">
+      <div class="px-6 text-muted small">
+        <p><strong>Legal:</strong> LQH Integrated Ltd is LQHMarkets.com and the LQH Markets brand and trademark is owned
+          by LQH Integrated Ltd.</p>
+        <p>LQH Integrated Ltd holds an International Brokerage and Clearing House License in Comoros with license number
+          L15833/LIL.</p>
+        <p>LQH Integrated Ltd holds a license in St. Lucia as an International Business Company with registration number
+          2023-00570.</p>
+        <p><strong>Risk Warning:</strong> An investment in derivatives may mean investors may lose an amount even greater
+          than their original investment. Anyone wishing to invest in any of the products mentioned in
+          <a href="https://www.LQHMarkets.com" class="text-success">www.LQHMarkets.com</a> should seek their own
+          financial or professional advice.</p>
+        <p><strong>Restricted Regions:</strong> LQH Integrated Limited does not provide services for
+          citizens/residents of the United States, Cuba, Iran, Myanmar, North Korea, Sudan, China, Singapore and to
+          jurisdictions on the FATF, OFAC and EU/UN sanctions lists.</p>
+        <p class="mb-0">© 2025 LQH Markets. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
 
     <script>
         // Counter
