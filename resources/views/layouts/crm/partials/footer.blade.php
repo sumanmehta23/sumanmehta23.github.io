@@ -1,5 +1,5 @@
 <div class="pc-content">
-  <div class="container py-5">
+  <div class="py-5">
     <div class="row">
 
       <!-- Logo & Company Info -->
