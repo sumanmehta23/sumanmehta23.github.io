@@ -339,20 +339,20 @@ class CompetitionController extends Controller
         }
     }
 
-    public function getTraderData($accountNo, $start, $end)
+    public function getTraderData($accountNo)
     {
+
         // Ensure start and end are Carbon instances
-        $startDate = \Carbon\Carbon::parse($start)->startOfDay();
-        $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+        // $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+        // $endDate = \Carbon\Carbon::parse($end)->endOfDay();
 
         $account = Account::with([
             'trades',
-            'dailyReports' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('report_date', [$startDate, $endDate])
-                    ->orderBy('report_date');
+            'dailyReports' => function ($query) {
+                $query->orderBy('report_date');
             }
         ])->where('code', $accountNo)->firstOrFail();
-
+// dd($account);
         // Get daily reports data
         $labels = [];
         $equity = [];
@@ -361,34 +361,38 @@ class CompetitionController extends Controller
             return $item->report_date->format('Y-m-d');
         });
 
-        // Fill in any missing dates with the last known equity value
-        $lastEquity = $account->equity ?? '0.00';
-        $currentDate = $startDate->copy();
+        // // Fill in any missing dates with the last known equity value
+        // $lastEquity = $account->equity ?? '0.00';
+        // $currentDate = $startDate->copy();
 
-        while ($currentDate <= $endDate) {
-            $dateKey = $currentDate->format('Y-m-d');
-            $dayLabel = $currentDate->format('M d');
-            $labels[] = $dayLabel;
+        // while ($currentDate <= $endDate) {
+        //     $dateKey = $currentDate->format('Y-m-d');
+        //     $dayLabel = $currentDate->format('M d');
+        //     $labels[] = $dayLabel;
 
-            if ($dailyData->has($dateKey)) {
-                $lastEquity = $dailyData[$dateKey]->equity;
-            } else {
-                $lastEquity = '0.00';
-            }
+        //     if ($dailyData->has($dateKey)) {
+        //         $lastEquity = $dailyData[$dateKey]->equity;
+        //     } else {
+        //         $lastEquity = '0.00';
+        //     }
 
-            $equity[] = round($lastEquity, 2);
-            $currentDate->addDay();
-        }
-
+        //     $equity[] = round($lastEquity, 2);
+        //     $currentDate->addDay();
+        // }
+// dd($account->trades);
         // Get trades data
         $trades = $account->trades->map(function ($trade) {
+
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,
                 'close_time' => $trade->close_time ?? null,
                 'symbol' => $trade->symbol,
                 'volume' => $trade->volume,
-                'profit' => $trade->profit
+                'profit' => $trade->profit,
+                'type' => $trade->type,
+                'open_price' => $trade->open_price,
+                'close_price' => $trade->close_price,
             ];
         })->sortByDesc('open_time')->values()->all();
 

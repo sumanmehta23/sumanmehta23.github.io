@@ -158,6 +158,7 @@
                                         data-balance="{{ $rank['balance'] ?? 0 }}"
                                         data-equity="{{ $rank['equity'] ?? 0 }}"
                                         data-profit="{{ $rank['total_profit'] ?? 0 }}"
+                                        data-account-code="{{ $rank['account_code'] ?? '' }}"
                                         data-trades="{{ $rank['total_trades'] ?? 0 }}">
                                         <td class="p-3 font-bold">
                                             <span
@@ -224,7 +225,7 @@
                             <th class="px-4 py-3">CLOSE TIME (UTC)</th>
                             <th class="px-4 py-3">CLOSE PRICE</th>
                             <th class="px-4 py-3">PROFIT</th>
-                            <th class="px-4 py-3">CHANGE</th>
+                            {{-- <th class="px-4 py-3">CHANGE</th> --}}
                         </tr>
                     </thead>
                     <tbody id="tradingLogBody" class="divide-y">
@@ -247,7 +248,7 @@
                                 <td class="px-4 py-3 {{ $trade->profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600' }}">
                                     {{ $trade->profit }}
                                 </td>
-                                <td class="px-4 py-3">{{ $trade->change }}</td>
+                                {{-- <td class="px-4 py-3">{{ $trade->change }}</td> --}}
                             </tr>
                         @endforeach
                     </tbody>
@@ -460,6 +461,7 @@
                 const equity = row.dataset.equity;
                 const profit = row.dataset.profit;
                 const trades = row.dataset.trades;
+                const account = row.dataset.accountCode;
 
                 // Update performer card
                 document.getElementById('performerName').innerText = name;
@@ -471,45 +473,47 @@
 
                 // Update Trading Log title
                 document.getElementById('tradingLogTitle').innerText = `${name} - Trading Log`;
-
-                // Fetch competitor trades dynamically (via API or preloaded data)
-                try {
-                    const res = await fetch(`/competition/trades/${row.dataset.rankId}`);
-                    const tradesData = await res.json();
-
-                    const tbody = document.getElementById('tradingLogBody');
-                    tbody.innerHTML = "";
-
-                    tradesData.forEach(trade => {
-                        const tr = document.createElement('tr');
-                        tr.classList.add("hover:bg-gray-50");
-                        tr.innerHTML = `
-                            <td class="px-4 py-3">${trade.open_time}</td>
-                            <td class="px-4 py-3">${trade.symbol}</td>
-                            <td class="px-4 py-3">#${trade.position_id}</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs font-semibold ${trade.type === 'BUY' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
-                                    ${trade.type}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">${trade.volume}</td>
-                            <td class="px-4 py-3">${trade.open_price}</td>
-                            <td class="px-4 py-3">${trade.close_time}</td>
-                            <td class="px-4 py-3">${trade.close_price}</td>
-                            <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
-                            <td class="px-4 py-3">${trade.change}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-
-                    document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.length}`;
-                    document.getElementById('lastUpdate').innerText = `Last Update: just now`;
-
-                } catch (e) {
-                    console.error("Error fetching trades:", e);
-                }
+                await updateTraderData(account);
             });
         });
+
+        async function updateTraderData(accountCode) {
+            try {
+                const res = await fetch(`/competitions-overview/trader-data/${accountCode}`);
+                const tradesData = await res.json();
+
+                const tbody = document.getElementById('tradingLogBody');
+                tbody.innerHTML = "";
+
+                (tradesData.trades).forEach(trade => {
+                    console.log(trade);
+                    const tr = document.createElement('tr');
+                    tr.classList.add("hover:bg-gray-50");
+                    tr.innerHTML = `
+                        <td class="px-4 py-3">${trade.open_time}</td>
+                        <td class="px-4 py-3">${trade.symbol}</td>
+                        <td class="px-4 py-3">#${trade.position}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 text-xs font-semibold ${trade.type == 'buy' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
+                                ${trade.type}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">${trade.volume}</td>
+                        <td class="px-4 py-3">${trade.open_price}</td>
+                        <td class="px-4 py-3">${trade.close_time}</td>
+                        <td class="px-4 py-3">${trade.close_price}</td>
+                        <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.length}`;
+                document.getElementById('lastUpdate').innerText = `Last Update: just now`;
+
+            } catch (e) {
+                console.error("Error fetching trades:", e);
+            }
+        }
     </script>
 
 

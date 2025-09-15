@@ -71,6 +71,7 @@ Route::get("/five", function () {
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
 Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');
+Route::get('/competitions-overview/trader-data/{accountNo}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
@@ -277,7 +278,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
-    
+
     // KYC Sync Routes
     Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('sync.user.kyc');
     Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('bulk.sync.kyc');
@@ -479,7 +480,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('/updateKyc', [Kyc::class, 'updateKyc'])->name('updateKyc');
         Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page');
-        
+
         // Admin KYC Sync Routes
         Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user');
         Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('kyc.sync.bulk');
