@@ -629,7 +629,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->first();
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
 
         if ($request->has('bonus_to_account_credit')) {
 
@@ -727,7 +727,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->first();
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
         // dd($user_id);
         // dd($user->id);
         if ($request->has('withdraw_from_account')) {
