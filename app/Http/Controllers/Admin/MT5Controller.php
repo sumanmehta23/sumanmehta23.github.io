@@ -400,7 +400,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->first();
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
