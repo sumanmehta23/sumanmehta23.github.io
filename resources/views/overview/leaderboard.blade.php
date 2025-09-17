@@ -373,7 +373,9 @@
             const now = Date.now(); // UTC in ms
             let distance;
             let label;
-
+            console.log(now);
+            console.log(startDate);
+            console.log(endDate);
             if (now < startDate) {
                 // Before competition starts
                 distance = startDate - now;
