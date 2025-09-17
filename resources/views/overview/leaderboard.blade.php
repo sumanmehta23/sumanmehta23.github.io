@@ -376,14 +376,17 @@
             console.log(startDate);
             console.log(endDate);
             if (startDate > now && endDate > now) {
+                console.log('sssss');
                 // Before competition starts
                 distance = startDate - now;
                 document.getElementById("countdown").innerHTML = "Starts in: ";
             } else if (startDate <= now && endDate > now) {
+                console.log('yyyy');
                 // Competition is running
                 distance = endDate - now;
                 document.getElementById("countdown").innerHTML = "Ends in: ";
             } else {
+                console.log('wwwww');
                 // Competition ended
                 document.getElementById("countdown").innerHTML = "Competition Ended";
                 clearInterval(interval);
