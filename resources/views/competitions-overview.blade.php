@@ -32,7 +32,7 @@
 
   <!-- Page Heading -->
   <section class="text-center mt-10">
-    <h1 class="text-4xl font-bold">Contest List</h1>
+    <h1 class="text-4xl font-bold">Competition List</h1>
   </section>
 
   <!-- Filters -->
