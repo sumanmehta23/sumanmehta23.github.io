@@ -24,7 +24,7 @@ class CompetitionProductController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
+        dd($request->all());
         try {
             $validatedData = $request->validate([
                 'groupCreation' => ['required'],
