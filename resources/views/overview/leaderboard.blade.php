@@ -372,7 +372,9 @@
         function updateCountdown() {
             const now = new Date().getTime();
             let distance;
-
+            console.log(now);
+            console.log(startDate);
+            console.log(endDate);
             if (startDate > now && endDate > now) {
                 // Before competition starts
                 distance = startDate - now;
