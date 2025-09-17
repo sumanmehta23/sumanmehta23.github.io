@@ -159,7 +159,7 @@ class CompetitionController extends Controller
 
         dump($start_date);
         dump($end_date);
-        dd(now());
+        dd(now('UTC'));
 
         if ($end_date < now()) {
             return redirect()->back()->with('error', 'Competition is over, try another.');
