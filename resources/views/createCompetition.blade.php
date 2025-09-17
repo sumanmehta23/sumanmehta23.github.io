@@ -40,10 +40,11 @@
                                                     {{-- {{ dd($acc) }} --}}
                                                         <div class="col-lg-6 col-xl-4 mb-2">
                                                             <div class="auth-option">
-                                                                {{ dd($acc) }}
+                                                                {{ dump($acc->competition_start_date) }}
+                                                                {{ dump($acc->competition_start_date) }}
                                                                 <input type="hidden" name="start_date" value="{{ $acc->competition_start_date }}">
                                                                 <input type="hidden" name="end_date" value="{{ $acc->competition_end_date }}">
-                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date)->lt(now('UTC'))) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if(\Carbon\Carbon::parse($acc->competition_start_date)->lt(now())) disabled @endif>
+                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date)->lt(now('UTC'))) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if(\Carbon\Carbon::parse($acc->competition_start_date)->lt(now('UTC'))) disabled @endif>
                                                                 <label class="auth-megaoption @if(\Carbon\Carbon::parse($acc->competition_start_date)->lt(now('UTC'))) opacity-50 @endif" for="option{{ $acc->ac_index }}" style="height: 230px !important;">
                                                                     <div class="d-block m-4" style="width: 80%;"
                                                                         @php
