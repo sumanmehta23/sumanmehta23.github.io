@@ -366,12 +366,14 @@
 
     <script>
         // Counter
-        const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
-        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
+        const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime() / 1000;
+        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime() / 1000;
 
         function updateCountdown() {
             const now = new Date().getTime();
             let distance;
+            console.log("End Date:", "{{ $stats['competition_end_date'] }}");
+            console.log("Start Date:", "{{ $stats['competition_start_date'] }}");
             console.log(now);
             console.log(startDate);
             console.log(endDate);
