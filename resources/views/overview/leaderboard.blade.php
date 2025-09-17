@@ -365,19 +365,16 @@
   </div>
 
     <script>
-        // Parse PHP dates safely into JS Date objects
-        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
-        const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
+        // Parse PHP dates safely into JS Date objects (UTC)
+        const startDate = new Date("{{ $stats['competition_start_date'] }} UTC").getTime();
+        const endDate   = new Date("{{ $stats['competition_end_date'] }} UTC").getTime();
 
         function updateCountdown() {
-            const now = Date.now(); // UTC in ms
+            const now = Date.now(); // current UTC in ms
+
             let distance;
             let label;
-            console.log("{{ $stats['competition_start_date'] }}");
-            console.log("{{ $stats['competition_end_date'] }}");
-            console.log(now);
-            console.log(startDate);
-            console.log(endDate);
+
             if (now < startDate) {
                 // Before competition starts
                 distance = startDate - now;
@@ -408,6 +405,7 @@
         updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
     </script>
+
 
 
     <script>
