@@ -157,9 +157,9 @@ class CompetitionController extends Controller
         $start_date = $group->competition_start_date;
         $end_date = $group->competition_end_date;
 
-        dump($start_date);
-        dump($end_date);
-        dd(now('UTC'));
+        // dump($start_date);
+        // dump($end_date);
+        // dd(now('UTC'));
 
         if ($end_date < now()) {
             return redirect()->back()->with('error', 'Competition is over, try another.');
