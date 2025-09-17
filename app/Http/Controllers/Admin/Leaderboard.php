@@ -140,7 +140,7 @@ class Leaderboard extends Controller
 
         $mt5_groups = Mt5Group::where('mt5_group_type', 'demo')->first();
         $competition_group = env('COMPETITION_GROUP');
-        dd($competition_group);
+        // dd($competition_group);
         $grp_books = MT5GroupCategory::where('mt5_grp_cat_type', 'book')
             ->orderBy('mt5_grp_cat_id')
             ->get();
