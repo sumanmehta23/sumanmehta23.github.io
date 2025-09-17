@@ -332,7 +332,6 @@
             </div>
         </div>
     </div>
-</div>
     @push('styles')
         <style>
         .avatar {
