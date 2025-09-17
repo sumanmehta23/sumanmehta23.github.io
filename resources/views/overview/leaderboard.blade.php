@@ -373,6 +373,8 @@
             const now = Date.now(); // UTC in ms
             let distance;
             let label;
+            console.log("{{ $stats['competition_start_date'] }}");
+            console.log("{{ $stats['competition_end_date'] }}");
             console.log(now);
             console.log(startDate);
             console.log(endDate);
