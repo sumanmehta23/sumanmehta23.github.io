@@ -363,11 +363,12 @@
       </div>
     </div>
   </div>
-
     <script>
         // Parse PHP dates safely into JS Date objects (UTC)
         const startDate = new Date("{{ $stats['competition_start_date'] }} UTC").getTime();
         const endDate   = new Date("{{ $stats['competition_end_date'] }} UTC").getTime();
+
+        let interval; // declare first so it’s accessible everywhere
 
         function updateCountdown() {
             const now = Date.now(); // current UTC in ms
@@ -403,9 +404,8 @@
 
         // Run immediately and then every second
         updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
+        interval = setInterval(updateCountdown, 1000);
     </script>
-
 
 
     <script>
