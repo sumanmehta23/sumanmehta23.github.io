@@ -365,30 +365,24 @@
   </div>
 
     <script>
-        // Counter
-        const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime() / 1000;
-        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime() / 1000;
+        // Parse PHP dates safely into JS Date objects
+        const startDate = new Date("{{ $stats['competition_start_date'] }}").getTime();
+        const endDate = new Date("{{ $stats['competition_end_date'] }}").getTime();
 
         function updateCountdown() {
-            const now = new Date().getTime();
+            const now = Date.now(); // UTC in ms
             let distance;
-            console.log("End Date:", "{{ $stats['competition_end_date'] }}");
-            console.log("Start Date:", "{{ $stats['competition_start_date'] }}");
-            console.log(now);
-            console.log(startDate);
-            console.log(endDate);
-            if (startDate < now && endDate < now) {
-                console.log('sssss');
+            let label;
+
+            if (now < startDate) {
                 // Before competition starts
                 distance = startDate - now;
-                document.getElementById("countdown").innerHTML = "Starts in: ";
-            } else if (startDate >= now && endDate < now) {
-                console.log('yyyy');
+                label = "Starts in: ";
+            } else if (now >= startDate && now <= endDate) {
                 // Competition is running
                 distance = endDate - now;
-                document.getElementById("countdown").innerHTML = "Ends in: ";
+                label = "Ends in: ";
             } else {
-                console.log('wwwww');
                 // Competition ended
                 document.getElementById("countdown").innerHTML = "Competition Ended";
                 clearInterval(interval);
@@ -402,14 +396,15 @@
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
             // Show countdown
-            document.getElementById("countdown").innerHTML +=
-                `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            document.getElementById("countdown").innerHTML =
+                `${label} ${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
         // Run immediately and then every second
         updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
     </script>
+
 
     <script>
         // Init Chart (only once)
