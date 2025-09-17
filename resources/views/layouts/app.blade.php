@@ -1,3 +1,4 @@
+X
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,18 +36,36 @@
         :root,
         [data-pc-preset=preset-7],
         [data-pc-preset=preset-7] * {
-            --primary-color: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-active-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-hover-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-link-color-rgb: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
-            --primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
+            --primary-color:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-active-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-hover-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-link-color-rgb:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
+            --primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
         }
 
         [data-pc-preset=preset-7] .link-primary {
-            color: {{ $settings['sidebar_color'] }} !important;
+            color:
+                {{ $settings['sidebar_color'] }}
+                !important;
         }
 
         body form [data-pc-preset=preset-7] .link-primary,
