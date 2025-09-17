@@ -161,10 +161,10 @@ class CompetitionController extends Controller
         // dump($end_date);
         // dd(now('UTC'));
 
-        if ($end_date < now()) {
+        if ($end_date < now('UTC')) {
             return redirect()->back()->with('error', 'Competition is over, try another.');
         }
-        if ($start_date < now()) {
+        if ($start_date < now('UTC')) {
             return redirect()->back()->with('error', 'Competition registration is over, try another competition.');
         }
 
