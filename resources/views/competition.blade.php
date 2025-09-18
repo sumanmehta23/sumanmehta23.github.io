@@ -190,11 +190,12 @@
 document.addEventListener("DOMContentLoaded", function () {
     function startCountdown(element, startDate) {
         const target = new Date(startDate).getTime();
-
+        console.log(target);
         function update() {
             const now = new Date().getTime();
             const distance = target - now;
-
+ console.log(now);
+ console.log(distance);
             if (distance <= 0) {
                 element.innerHTML = "Now!";
                 return;
