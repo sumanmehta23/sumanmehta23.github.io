@@ -118,9 +118,19 @@
                                                                 <span class="text-danger">Your request is rejected. Create your account again.</span>
                                                             </div>
                                                         @else
-                                                            <div class="d-flex align-items-center">
+                                                            {{-- <div class="d-flex align-items-center">
                                                                 <span class="text-warning">Your competition will be active on {{ $acc->competition_start_date }}.</span>
+                                                            </div> --}}
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="text-warning">
+                                                                    Your competition will be active in
+                                                                    <span class="countdown"
+                                                                        data-start="{{ \Carbon\Carbon::parse($acc->competition_start_date)->format('Y-m-d H:i:s') }}"
+                                                                        id="countdown-{{ $acc->id }}">
+                                                                    </span>
+                                                                </span>
                                                             </div>
+
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -176,4 +186,38 @@
             });
         });
     </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    function startCountdown(element, startDate) {
+        const target = new Date(startDate).getTime();
+
+        function update() {
+            const now = new Date().getTime();
+            const distance = target - now;
+
+            if (distance <= 0) {
+                element.innerHTML = "Now!";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            element.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        update(); // run immediately
+        setInterval(update, 1000); // update every second
+    }
+
+    // Loop through all countdown elements
+    document.querySelectorAll(".countdown").forEach(el => {
+        const startDate = el.getAttribute("data-start");
+        startCountdown(el, startDate);
+    });
+});
+</script>
+
 @endsection
