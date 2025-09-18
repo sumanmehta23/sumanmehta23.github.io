@@ -470,10 +470,10 @@
                 // Update performer card
                 document.getElementById('performerName').innerText = name;
                 // document.getElementById('startingBalance').innerText = balance;
-                document.getElementById('currentBalance').innerText = balance;
-                document.getElementById('cumulativePL').innerText = profit;
+                document.getElementById('currentBalance').innerText = "$".balance;
+                document.getElementById('cumulativePL').innerText = "$".profit;
                 document.getElementById('largestTrade').innerText = "-";
-                document.getElementById('equity').innerText = equity;
+                document.getElementById('equity').innerText = "$".equity;
 
                 // Update Trading Log title
                 document.getElementById('tradingLogTitle').innerText = `${name} - Trading Log`;
