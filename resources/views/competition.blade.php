@@ -190,6 +190,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     function startCountdown(element, startDate) {
         const target = new Date(startDate).getTime();
+        console.log(startDate);
         console.log(target);
         function update() {
             const now = new Date().getTime();
