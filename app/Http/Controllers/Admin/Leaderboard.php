@@ -443,7 +443,7 @@ class Leaderboard extends Controller
                 ->whereNotNull('competition_end_date')
                 ->whereNotNull('competition_product_id')
                 ->get();
-
+            dd($accounts);
             foreach ($accounts as $account) {
                 $accountData = null;
                 $apiResponse = $this->mt5Service->userAccountGet($account->code, $accountData);
