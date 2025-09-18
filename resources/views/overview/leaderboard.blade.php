@@ -233,7 +233,7 @@
                         {{-- default trades loaded here --}}
                         @foreach($stats['top_performer']->trades ?? [] as $trade)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ $trade->open_time }}</td>
+                                <td class="px-4 py-3"> {{ \Carbon\Carbon::parse($trade->open_time)->format('Y-m-d H:i:s') }}</td>
                                 <td class="px-4 py-3">{{ $trade->symbol }}</td>
                                 <td class="px-4 py-3">#{{ $trade->position_id }}</td>
                                 <td class="px-4 py-3">
@@ -243,7 +243,7 @@
                                 </td>
                                 <td class="px-4 py-3">{{ $trade->volume }}</td>
                                 <td class="px-4 py-3">{{ $trade->open_price }}</td>
-                                <td class="px-4 py-3">{{ $trade->close_time }}</td>
+                                <td class="px-4 py-3"> {{ \Carbon\Carbon::parse($trade->close_time)->format('Y-m-d H:i:s') }}</td>
                                 <td class="px-4 py-3">{{ $trade->close_price }}</td>
                                 <td class="px-4 py-3 {{ $trade->profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600' }}">
                                     {{ $trade->profit }}
