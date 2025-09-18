@@ -40,14 +40,14 @@
                                                     {{-- {{ dd($acc) }} --}}
                                                         <div class="col-lg-6 col-xl-4 mb-2">
                                                             <div class="auth-option">
-                                                                {{ dump($acc->competition_start_date) }}
+                                                                {{-- {{ dump($acc->competition_start_date) }}
                                                                 {{ dump(now('UTC')) }}
-                                                                {{ dump(\Carbon\Carbon::parse($acc->competition_start_date)) }}
-                                                                {{ dump(gte(now('UTC'))) }}
+                                                                {{ dump(\Carbon\Carbon::parse($acc->competition_start_date)) }} --}}
+
+                                                                {{-- {{ dump(gte(now('UTC'))) }} --}}
                                                                 <input type="hidden" name="start_date" value="{{ $acc->competition_start_date }}">
                                                                 <input type="hidden" name="end_date" value="{{ $acc->competition_end_date }}">
-                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date)->gte(now('UTC'))) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if(\Carbon\Carbon::parse($acc->competition_start_date)->gte(now('UTC'))) disabled @endif>
-                                                                <label class="auth-megaoption @if(\Carbon\Carbon::parse($acc->competition_start_date)->gte(now('UTC'))) opacity-50 @endif" for="option{{ $acc->ac_index }}" style="height: 230px !important;">
+                                                                <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if ($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->gte(now('UTC'))) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if ($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->gte(now('UTC'))) disabled @endif> <label class="auth-megaoption @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->gte(now('UTC'))) opacity-50 @endif" for="option{{ $acc->ac_index }}" style="height: 230px !important;">
                                                                     <div class="d-block m-4" style="width: 80%;"
                                                                         @php
                                                                             echo strtoupper($acc->ac_name) == 'PRO' ? 'style="width: 80% !important;"' : '';
