@@ -1,3 +1,4 @@
+X
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,6 +20,25 @@
     <script src="{{ asset('assets/js/jquery-3.3.1.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <!-- Meta Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '2659568854245574');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=2659568854245574&ev=PageView&noscript=1"
+        />
+    </noscript>
+    <!-- End Meta Pixel Code -->
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -35,18 +55,36 @@
         :root,
         [data-pc-preset=preset-7],
         [data-pc-preset=preset-7] * {
-            --primary-color: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-active-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-hover-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-link-color-rgb: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
-            --primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
+            --primary-color:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-active-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-hover-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-link-color-rgb:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
+            --primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
         }
 
         [data-pc-preset=preset-7] .link-primary {
-            color: {{ $settings['sidebar_color'] }} !important;
+            color:
+                {{ $settings['sidebar_color'] }}
+                !important;
         }
 
         body form [data-pc-preset=preset-7] .link-primary,

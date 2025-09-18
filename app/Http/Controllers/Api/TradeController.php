@@ -55,7 +55,7 @@ class TradeController extends Controller
             'position_status' => 'nullable|string|max:50',
             'position_type' => 'nullable|string|max:50',
             'position_trading_group' => 'nullable|string|max:100',
-            'per_page' => 'nullable|integer|min:1|max:100'
+            'per_page' => 'nullable|integer|min:1|max:500'
         ]);
 
         // Initialize query with account relationship for user_id and currency, and filter for live accounts only
@@ -133,7 +133,7 @@ class TradeController extends Controller
         $query->orderBy('close_time', 'desc');
 
         // Paginate the results
-        $perPage = min($request->input('per_page', 15), 100); // Limit max per page to 100
+        $perPage = min($request->input('per_page', 15), 500); // Limit max per page to 100
         $trades = $query->paginate($perPage);
 
         try {

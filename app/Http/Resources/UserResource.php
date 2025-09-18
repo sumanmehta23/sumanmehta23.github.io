@@ -53,6 +53,7 @@ class UserResource extends JsonResource
 
         return [
             'user_id' => $this->id, // Mandatory
+            'full_name' => $this->fullname,
             'user_additional_id' => $this->email, // Optional, using email as additional ID
             'cxd' => $this->cxd, // Mandatory, getting from the query string
             'aff_id' => $this->ib1, // Optional
@@ -62,7 +63,7 @@ class UserResource extends JsonResource
             'last_modified_date' => $lastModifiedDate, // Mandatory
             'iso_country' => $isoCountry, // Mandatory, taking first 2 letters of country
             'user_ip_address' => $this->client_ip, // Optional, using current request IP as fallback
-            'liveAccounts' => $this->liveAccounts
+            'live_accounts' => $this->liveAccounts
         ];
     }
 }
