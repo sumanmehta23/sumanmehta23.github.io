@@ -175,6 +175,7 @@ class PrioritySyncAccountsCommand extends Command
             ->where('code', '<>', 'Rejected')
             ->count();
 
+        Log::info("totalAccounts ".$totalAccounts);
 
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -185,6 +186,8 @@ class PrioritySyncAccountsCommand extends Command
             ->where('code', '<>', 'Rejected')
             ->count();
 
+        Log::info("neverSynced ".$neverSynced);
+
         $syncedToday = Account::whereNotNull('code')
             ->whereNull('deleted_at')
             // ->where('demo', false)
@@ -192,6 +195,8 @@ class PrioritySyncAccountsCommand extends Command
                     OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('last_sync_attempt_at', '>=', now()->subDay())
             ->count();
+
+        Log::info("syncedToday ".$syncedToday);
 
         $stale6h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
