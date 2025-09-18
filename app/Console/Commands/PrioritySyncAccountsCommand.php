@@ -169,9 +169,9 @@ class PrioritySyncAccountsCommand extends Command
 
         $totalAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('code', '<>', 'Rejected')
             ->count();
 
@@ -179,9 +179,9 @@ class PrioritySyncAccountsCommand extends Command
 
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNull('last_sync_attempt_at')
             ->where('code', '<>', 'Rejected')
             ->count();
@@ -190,9 +190,9 @@ class PrioritySyncAccountsCommand extends Command
 
         $syncedToday = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('last_sync_attempt_at', '>=', now()->subDay())
             ->count();
 
@@ -200,18 +200,18 @@ class PrioritySyncAccountsCommand extends Command
 
         $stale6h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotNull('last_sync_attempt_at')
             ->where('last_sync_attempt_at', '<', now()->subHours(6))
             ->count();
 
         $stale24h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotNull('last_sync_attempt_at')
             ->where('code', '<>', 'Rejected')
             ->where('last_sync_attempt_at', '<', now()->subDay())
@@ -219,17 +219,17 @@ class PrioritySyncAccountsCommand extends Command
 
         $retryAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('sync_status', 'needs_retry')
             ->count();
 
         $flaggedAccounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->where('sync_status', 'flagged')
             ->count();
 
@@ -249,9 +249,9 @@ class PrioritySyncAccountsCommand extends Command
             $this->info("\n=== Flagged Accounts Details ===");
             $flaggedDetails = Account::whereNotNull('code')
                 ->whereNull('deleted_at')
-                // ->where('demo', false)
-                ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+                ->where('demo', true)
+                // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                //     OR (competition_product_id IS NOT NULL AND demo = 1) )")
                 ->where('sync_status', 'flagged')
                 ->select('code', 'sync_flag_reason', 'sync_flagged_at', 'sync_stuck_count', 'sync_error')
                 ->get();
@@ -273,9 +273,9 @@ class PrioritySyncAccountsCommand extends Command
         // Show recent sync status distribution
         $statusCounts = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->selectRaw('sync_status, COUNT(*) as count')
             ->groupBy('sync_status')
             ->get();
@@ -347,9 +347,9 @@ class PrioritySyncAccountsCommand extends Command
 
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
-            // ->where('demo', false)
-            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            ->where('demo', true)
+            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+            //         OR (competition_product_id IS NOT NULL AND demo = 1) )")
             // IMPORTANT: Don't sync accounts that were synced within the minimum interval (unless they need retry)
             ->where(function ($q) use ($cutoffTime) {
                 $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts regardless of timing
