@@ -213,9 +213,9 @@ class SyncAccountBalances extends Command
 
         // Get accounts to sync using similar logic as BalanceSyncService
         $query = Account::whereNotNull('code')
-            ->where('demo', true)
-            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    // OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereNotIn('sync_status', ['not_found_in_mt5']);
 
         if ($accountCodes) {
@@ -305,9 +305,9 @@ class SyncAccountBalances extends Command
     private function showExclusionInfo(?array $accountCodes, bool $isDaemon = false): void
     {
         $excludedCount = Account::whereNotNull('code')
-            ->where('demo', true)
-            // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    // OR (competition_product_id IS NOT NULL AND demo = 1) )")
+            // ->where('demo', false)
+            ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
             ->whereIn('sync_status', ['not_found_in_mt5'])
             ->count();
 
@@ -380,9 +380,9 @@ class SyncAccountBalances extends Command
                 ->count();
 
             $totalActiveAccounts = Account::whereNotNull('code')
-                ->where('demo', true)
-                // ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    // OR (competition_product_id IS NOT NULL AND demo = 1) )")
+                // ->where('demo', false)
+                ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
                 ->whereNotIn('sync_status', ['not_found_in_mt5'])
                 ->count();
 

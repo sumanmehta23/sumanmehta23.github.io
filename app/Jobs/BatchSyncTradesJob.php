@@ -790,7 +790,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
     protected function executeWithRetries($callback)
     {
-        // Note: This method is now simplified since UniversalMT5Service 
+        // Note: This method is now simplified since UniversalMT5Service
         // handles retries internally. Keep for backward compatibility.
         return $callback();
     }
@@ -1150,7 +1150,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
     /**
      * Process deals directly from database instead of using MT5 API
      * This provides massive performance improvement when deal data is fresh
-     * 
+     *
      * CRITICAL: This method properly reconstructs POSITIONS from DEALS
      * - Groups deals by position_id
      * - Calculates if position is open/closed based on volume balance
