@@ -443,10 +443,10 @@ class Leaderboard extends Controller
                 ->whereNotNull('competition_end_date')
                 ->whereNotNull('competition_product_id')
                 ->get();
-            dd($accounts);
+            // dd($accounts);
             foreach ($accounts as $account) {
                 $accountData = null;
-                $apiResponse = $this->mt5Service->userAccountGet($account->code, $accountData);
+                $apiResponse = $this->mt5Service->userAccountGet((int)$account->code, $accountData);
                 if ($apiResponse === MTRetCode::MT_RET_OK && $accountData) {
                     $account->update([
                         'balance' => $accountData->Balance,
