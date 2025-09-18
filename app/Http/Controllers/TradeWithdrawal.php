@@ -98,6 +98,10 @@ class TradeWithdrawal extends Controller
     }
     public function withdraw(Request $request)
     {
+        if (!$request->filled('client_wallet_id')) {
+            return redirect()->back()->with('error', 'Please set up wallet address.');
+        }
+
         if (!$this->ensureMT5Connection()) {
             return redirect()->back()->with('error', 'Failed to connect to MT5 server');
         }
