@@ -40,8 +40,8 @@
                                                     {{-- {{ dd($acc) }} --}}
                                                         <div class="col-lg-6 col-xl-4 mb-2">
                                                             <div class="auth-option">
-                                                                {{-- {{ dump($acc->competition_start_date) }}
-                                                                {{ dump(now('UTC')) }} --}}
+                                                                {{ dump($acc->competition_start_date) }}
+                                                                {{ dump(now('UTC')) }}
                                                                 <input type="hidden" name="start_date" value="{{ $acc->competition_start_date }}">
                                                                 <input type="hidden" name="end_date" value="{{ $acc->competition_end_date }}">
                                                                 <input type="radio" data-group="{{ $acc->ac_name }}" data-inquiry="{{ $acc->inquiry_status }}" class="btn-check acc-types" @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date)->gte(now('UTC'))) checked @endif name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}" @if(\Carbon\Carbon::parse($acc->competition_start_date)->gte(now('UTC'))) disabled @endif>
