@@ -124,15 +124,15 @@
                                 <input type="number" class="form-control" id="ac_min_deposit" name="ac_min_deposit" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-3">
-                                <label for="ac_max_leverage" class="form-label">Leverages(,)</label>
+                                <label for="ac_max_leverage" class="form-label">Leverage</label>
                                 <input type="text" class="form-control" id="ac_max_leverage" name="ac_max_leverage" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
-                                <label for="start_date" class="form-label">Start Date</label>
+                                <label for="start_date" class="form-label">Start Date (UTC)</label>
                                 <input type="datetime-local" class="form-control" id="start_date" name="start_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
-                                <label for="end_date" class="form-label">End Date</label>
+                                <label for="end_date" class="form-label">End Date (UTC)</label>
                                 <input type="datetime-local" class="form-control" id="end_date" name="end_date" required="">
                             </div>
                             <div class="mb-3 form-group col-lg-4">
