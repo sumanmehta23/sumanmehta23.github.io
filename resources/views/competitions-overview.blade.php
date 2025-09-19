@@ -277,35 +277,32 @@
   <script>
   document.addEventListener("DOMContentLoaded", function () {
     @foreach ($competitions as $competition)
-      (function() {
-        const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toISOString() }}").getTime();
-        const endDate   = new Date("{{ \Carbon\Carbon::parse($competition->competition_end_date)->toISOString() }}").getTime();
-        const elementId = "countdown-{{ $competition->id }}";
+      @php
+        if ($competition->competition_end_date < now('UTC')) {
+            $status = 'Finished';
+        } elseif ($competition->competition_start_date > now('UTC')) {
+            $status = 'Upcoming';
+        } elseif ($competition->competition_start_date <= now('UTC') && $competition->competition_end_date >= now('UTC')) {
+            $status = 'In Progress';
+        }
+      @endphp
 
-        let interval;
+      @if ($status == 'Upcoming')
+        (function() {
+          const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601ZuluString() }}").getTime();
+          const elementId = "countdown-{{ $competition->id }}";
 
+          let interval;
 
-        function updateCountdown() {
-            const now = Date.now(); // always UTC in ms
+          function updateCountdown() {
+            const now = Date.now(); // UTC in ms
+            const distance = startDate - now;
 
-            let distance;
-            let label;
-
-            console.log("startDate", startDate);
-            console.log("endDate", endDate);
-            console.log("now", now);
-
-            if (now < startDate) {
-            distance = startDate - now;
-            label = "Starts in:";
-            } else if (now >= startDate && now <= endDate) {
-            distance = endDate - now;
-            label = "Ends in:";
-            } else {
-            const el = document.getElementById(elementId);
-            if (el) el.innerHTML = "Competition Ended";
-            clearInterval(interval);
-            return;
+            if (distance <= 0) {
+              const el = document.getElementById(elementId);
+              if (el) el.innerHTML = "Competition Started";
+              clearInterval(interval);
+              return;
             }
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -315,17 +312,18 @@
 
             const el = document.getElementById(elementId);
             if (el) {
-            el.innerHTML = `${label} ${days}d ${hours}h ${minutes}m ${seconds}s`;
+              el.innerHTML = `Starts in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
             }
-        }
+          }
 
-        updateCountdown();
-        interval = setInterval(updateCountdown, 1000);
+          updateCountdown();
+          interval = setInterval(updateCountdown, 1000);
         })();
-
+      @endif
     @endforeach
   });
 </script>
+
 
 
 
