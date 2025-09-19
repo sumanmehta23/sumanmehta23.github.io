@@ -289,7 +289,8 @@
 
       @if ($status == 'Upcoming')
         (function() {
-          const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601ZuluString() }}").getTime();
+        //   const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601ZuluString() }}").getTime();
+           const startDate = new Date("{{ $competition->competition_start_date }} UTC").getTime();
           const elementId = "countdown-{{ $competition->id }}";
 
           let interval;
