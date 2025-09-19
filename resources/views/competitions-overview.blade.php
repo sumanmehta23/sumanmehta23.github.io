@@ -278,50 +278,46 @@
   document.addEventListener("DOMContentLoaded", function () {
     @foreach ($competitions as $competition)
       (function() {
-        const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}").getTime();
-        const endDate   = new Date("{{ \Carbon\Carbon::parse($competition->competition_end_date)->toIso8601String() }}").getTime();
+        const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toISOString() }}").getTime();
+        const endDate   = new Date("{{ \Carbon\Carbon::parse($competition->competition_end_date)->toISOString() }}").getTime();
         const elementId = "countdown-{{ $competition->id }}";
 
         let interval;
 
         function updateCountdown() {
-          const now = Date.now(); // current UTC in ms
+            const now = Date.now(); // always UTC in ms
 
-          let distance;
-          let label;
+            let distance;
+            let label;
 
-          if (now < startDate) {
-            // Before competition starts
+            if (now < startDate) {
             distance = startDate - now;
             label = "Starts in:";
-          } else if (now >= startDate && now <= endDate) {
-            // Competition is running
+            } else if (now >= startDate && now <= endDate) {
             distance = endDate - now;
             label = "Ends in:";
-          } else {
-            // Competition ended
+            } else {
             const el = document.getElementById(elementId);
             if (el) el.innerHTML = "Competition Ended";
             clearInterval(interval);
             return;
-          }
+            }
 
-          // Calculate time parts
-          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-          // Show countdown
-          const el = document.getElementById(elementId);
-          if (el) {
+            const el = document.getElementById(elementId);
+            if (el) {
             el.innerHTML = `${label} ${days}d ${hours}h ${minutes}m ${seconds}s`;
-          }
+            }
         }
 
         updateCountdown();
         interval = setInterval(updateCountdown, 1000);
-      })();
+        })();
+
     @endforeach
   });
 </script>
