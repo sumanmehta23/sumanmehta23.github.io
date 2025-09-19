@@ -298,9 +298,8 @@
             const now = Date.now(); // UTC in ms
             const distance = startDate - now;
 
-            console.log("startDate", startDate);
-            console.log("endDate", endDate);
-            console.log("now", now);
+            console.log("startDate ", startDate);
+            console.log("now ", now);
 
             if (distance <= 0) {
               const el = document.getElementById(elementId);
