@@ -275,15 +275,15 @@
     }
   </script>
   <script>
-  function startCountdown(elementId, startDate) {
-    const target = new Date(startDate).getTime();
+  function startCountdown(elementId, startDateUtc) {
+    const target = new Date(startDateUtc).getTime();
 
     function update() {
       const now = new Date().getTime();
       const distance = target - now;
 
       if (distance <= 0) {
-        document.getElementById(elementId).innerHTML = "Starting Soon!";
+        document.getElementById(elementId).innerHTML = "Started!";
         clearInterval(interval);
         return;
       }
@@ -306,12 +306,13 @@
       @if ($competition->competition_start_date > now('UTC'))
         startCountdown(
           "countdown-{{ $competition->id }}",
-          "{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}"
+          "{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}" // ✅ UTC-safe format
         );
       @endif
     @endforeach
   });
 </script>
+
 
 </body>
 </html>
