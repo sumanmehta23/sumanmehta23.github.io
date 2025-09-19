@@ -301,7 +301,7 @@
             console.log("startDate ", startDate);
             console.log("now ", now);
 
-            if (distance <= 0) {
+            if (distance >= 0) {
               const el = document.getElementById(elementId);
               if (el) el.innerHTML = "Competition Started";
               clearInterval(interval);
