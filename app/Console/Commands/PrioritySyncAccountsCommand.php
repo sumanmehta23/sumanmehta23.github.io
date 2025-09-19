@@ -348,49 +348,61 @@ class PrioritySyncAccountsCommand extends Command
             ->whereNull('deleted_at')
             // ->where('demo', false)
             ->whereRaw("( (competition_product_id IS NULL AND demo = 0)
-                    OR (competition_product_id IS NOT NULL AND demo = 1) )")
+                    OR (competition_product_id IS NOT NULL AND demo = 1) )");
+
+        // When specific accounts are provided, bypass most restrictions to force sync
+        if ($specificAccounts !== null) {
+            $this->info("Forcing sync for specific accounts - bypassing status and timing restrictions");
+            // Only exclude accounts that are deleted or not found in MT5 (safety check)
+            $query->whereNotIn('sync_status', ['not_found_in_mt5']); // Only exclude accounts not found in MT5
+        } else {
+            // Apply normal restrictions when no specific accounts are provided
             // IMPORTANT: Don't sync accounts that were synced within the minimum interval (unless they need retry)
-            ->where(function ($q) use ($cutoffTime) {
+            $query->where(function ($q) use ($cutoffTime) {
                 $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts regardless of timing
                     ->orWhereNull('last_sync_attempt_at') // Never synced
                     ->orWhere('last_sync_attempt_at', '<', $cutoffTime); // Last sync was before cutoff time
             })
-            ->whereNotIn('sync_status', ['flagged', 'not_found_in_mt5']); // Exclude flagged problematic accounts and accounts not found in MT5
+                ->whereNotIn('sync_status', ['flagged', 'not_found_in_mt5']); // Exclude flagged problematic accounts and accounts not found in MT5
+        }
 
-        if (!$ignoreBalanceFilter) {
-            // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
-            $query->where(function ($q) use ($staleTime, $veryStaleTime) {
-                $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts
-                    ->orWhere(function ($balanceQuery) use ($staleTime) {
-                        $balanceQuery->where('has_balance_activity', true)
-                            ->where(function ($syncQuery) use ($staleTime) {
-                                $syncQuery->whereNull('last_sync_attempt_at') // Never synced trades
-                                    ->orWhereColumn('last_balance_changed_at', '>', 'last_sync_attempt_at') // Balance changed since last TRADE sync
-                                    ->orWhere('last_sync_attempt_at', '<', $staleTime); // Force sync every 6 hours
-                            });
-                    })
-                    ->orWhere(function ($fallbackQuery) use ($veryStaleTime) {
-                        // Fallback: sync accounts without balance tracking that are very stale
-                        $fallbackQuery->whereNull('has_balance_activity')
-                            ->where(function ($staleQuery) use ($veryStaleTime) {
-                                $staleQuery->whereNull('last_sync_attempt_at')
-                                    ->orWhere('last_sync_attempt_at', '<', $veryStaleTime);
-                            });
-                    });
-            });
-        } else {
-            // Original logic when balance filter is disabled
-            // Only include accounts that need syncing or retry
-            $query->where(function ($q) {
-                $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
-                    ->orWhere(function ($timeQuery) {
-                        $timeQuery->where(function ($statusQuery) {
-                            $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
-                                ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error', 'not_found_in_mt5']);  // Exclude final statuses and accounts not found in MT5
+        // Skip balance and status filters when specific accounts are provided
+        if ($specificAccounts === null) {
+            if (!$ignoreBalanceFilter) {
+                // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
+                $query->where(function ($q) use ($staleTime, $veryStaleTime) {
+                    $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts
+                        ->orWhere(function ($balanceQuery) use ($staleTime) {
+                            $balanceQuery->where('has_balance_activity', true)
+                                ->where(function ($syncQuery) use ($staleTime) {
+                                    $syncQuery->whereNull('last_sync_attempt_at') // Never synced trades
+                                        ->orWhereColumn('last_balance_changed_at', '>', 'last_sync_attempt_at') // Balance changed since last TRADE sync
+                                        ->orWhere('last_sync_attempt_at', '<', $staleTime); // Force sync every 6 hours
+                                });
+                        })
+                        ->orWhere(function ($fallbackQuery) use ($veryStaleTime) {
+                            // Fallback: sync accounts without balance tracking that are very stale
+                            $fallbackQuery->whereNull('has_balance_activity')
+                                ->where(function ($staleQuery) use ($veryStaleTime) {
+                                    $staleQuery->whereNull('last_sync_attempt_at')
+                                        ->orWhere('last_sync_attempt_at', '<', $veryStaleTime);
+                                });
                         });
-                        // Note: The timing check is already applied above in the main query
-                    });
-            });
+                });
+            } else {
+                // Original logic when balance filter is disabled
+                // Only include accounts that need syncing or retry
+                $query->where(function ($q) {
+                    $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
+                        ->orWhere(function ($timeQuery) {
+                            $timeQuery->where(function ($statusQuery) {
+                                $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
+                                    ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error', 'not_found_in_mt5']);  // Exclude final statuses and accounts not found in MT5
+                            });
+                            // Note: The timing check is already applied above in the main query
+                        });
+                });
+            }
         }
 
         // Filter for specific accounts if provided
@@ -472,7 +484,6 @@ class PrioritySyncAccountsCommand extends Command
             $currentPendingJobs = $this->getPendingJobsCount();
             if ($currentPendingJobs >= $maxPendingJobs) {
                 $this->warn("Queue limit reached ({$currentPendingJobs}/{$maxPendingJobs}). Stopping further dispatches.");
-
                 // IMPORTANT: Reset the sync attempt timestamp for unprocessed accounts
                 // so they can be retried in the next cycle
                 $unprocessedAccountIds = $accountBatches->slice($batchIndex)->flatten()->pluck('id');
