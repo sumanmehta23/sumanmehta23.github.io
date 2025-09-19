@@ -155,9 +155,9 @@
                                 @foreach ($rankings as $rank)
                                     <tr class="bg-white border-b hover:bg-gray-50 cursor-pointer competitor-row"
                                         data-name="{{ $rank['name'] ?? 'N/A' }}"
-                                        data-balance="${{ $rank['balance'] ?? 0 }}"
-                                        data-equity="${{ $rank['equity'] ?? 0 }}"
-                                        data-profit="${{ $rank['total_profit'] ?? 0 }}"
+                                        data-balance="{{ $rank['balance'] ?? 0 }}"
+                                        data-equity="{{ $rank['equity'] ?? 0 }}"
+                                        data-profit="{{ $rank['total_profit'] ?? 0 }}"
                                         data-account-code="{{ $rank['account_code'] ?? '' }}"
                                         data-trades="{{ $rank['total_trades'] ?? 0 }}">
                                         <td class="p-3 font-bold">
@@ -167,9 +167,9 @@
                                             </span>
                                         </td>
                                         <td class="p-3">{{ $rank['name'] ?? 'N/A' }}</td>
-                                        <td class="p-3">{{ $rank['balance'] ?? 'N/A'}}</td>
-                                        <td class="p-3">{{ $rank['equity'] ?? 'N/A'}}</td>
-                                        <td class="p-3">{{ $rank['total_profit'] ?? 'N/A'}}</td>
+                                        <td class="p-3">${{ $rank['balance'] ?? 'N/A'}}</td>
+                                        <td class="p-3">${{ $rank['equity'] ?? 'N/A'}}</td>
+                                        <td class="p-3">${{ $rank['total_profit'] ?? 'N/A'}}</td>
                                         <td class="p-3">{{ $rank['total_trades'] ?? 'N/A'}}</td>
                                     </tr>
                                 @endforeach

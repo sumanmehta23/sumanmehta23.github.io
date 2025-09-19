@@ -487,7 +487,7 @@ class PrioritySyncAccountsCommand extends Command
             // Calculate sync times for each account
             foreach ($accountBatch as $account) {
                 $lastSync = $account->last_balance_sync_at;
-                $batchSyncTimes[] = $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
+                $batchSyncTimes[] = $lastSync ? Carbon::parse($lastSync) : now()->subDays(700);
             }
 
             $accountCodes = $accountBatch->pluck('code')->join(', ');
@@ -495,7 +495,7 @@ class PrioritySyncAccountsCommand extends Command
 
             // Mark accounts as sync in progress (cache-based with 30-minute TTL)
             foreach ($accountBatch as $account) {
-                $this->markAccountSyncInProgress($account->id, 30);
+                $this->markAccountSyncInProgress($account->id, 1);
             }
 
             // Update sync attempt timestamp ONLY for accounts being dispatched
