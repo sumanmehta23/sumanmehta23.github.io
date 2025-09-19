@@ -86,16 +86,14 @@
           <div class="bg-gray-50 border rounded-xl py-4 mt-6">
             @if ($status == 'Upcoming')
               <p class="text-gray-800 font-bold">Starts At</p>
-              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_start_date)->format('F jS, Y') }}
-              </p>
+              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_start_date)->format('F jS, Y') }}</p>
+              <p id="countdown-{{ $competition->id }}" class="text-sm text-emerald-600 font-medium mt-2"></p>
             @elseif($status == 'In Progress')
               <p class="text-gray-800 font-bold">Finishes At</p>
-              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}
-              </p>
+              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
             @elseif($status == 'Finished')
               <p class="text-gray-800 font-bold">Finished At</p>
-              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}
-              </p>
+              <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
             @endif
           </div>
         </div>
@@ -276,5 +274,44 @@
       });
     }
   </script>
+  <script>
+  function startCountdown(elementId, startDate) {
+    const target = new Date(startDate).getTime();
+
+    function update() {
+      const now = new Date().getTime();
+      const distance = target - now;
+
+      if (distance <= 0) {
+        document.getElementById(elementId).innerHTML = "Starting Soon!";
+        clearInterval(interval);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById(elementId).innerHTML =
+        `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    update(); // Run immediately
+    const interval = setInterval(update, 1000);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    @foreach ($competitions as $competition)
+      @if ($competition->competition_start_date > now('UTC'))
+        startCountdown(
+          "countdown-{{ $competition->id }}",
+          "{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}"
+        );
+      @endif
+    @endforeach
+  });
+</script>
+
 </body>
 </html>
