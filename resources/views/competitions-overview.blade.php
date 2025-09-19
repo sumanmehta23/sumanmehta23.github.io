@@ -291,9 +291,9 @@
             let distance;
             let label;
 
-            console.log(startDate);
-            console.log(endDate);
-            console.log(now);
+            console.log('startDate '.startDate);
+            console.log('endDate '.endDate);
+            console.log('now '.now);
 
             if (now < startDate) {
             distance = startDate - now;
