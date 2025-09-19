@@ -27,6 +27,7 @@ class PrioritySyncAccountsCommand extends Command
 {
     protected $signature = 'app:priority-sync
                             {--batch-size= : Number of accounts per batch (default from config)}
+                            {--full-trade-sync : Force full trade sync for all eligible accounts from the beginning}
                             {--max-concurrent= : Maximum concurrent batches (default from config)}
                             {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
                             {--min-sync-interval= : Minimum minutes between syncs for same account (default from config)}
@@ -36,12 +37,13 @@ class PrioritySyncAccountsCommand extends Command
                             {--trades-range= : Sync accounts with trades in range, format: min,max (e.g., 200,500)}
                             {--ignore-balance-filter : Sync all accounts regardless of balance changes}
                             {--oldest-first : Prioritize older accounts (created_at asc) over newer accounts (default: newest first)}
+                            {--accounts= : Sync specific accounts only (comma-separated IDs or codes)}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}
                             {--unflag-account= : Manually unflag a problematic account by code}
                             {--clear-stuck-cache : Clear all stuck account cache markers}';
 
-    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs. Supports trade count filtering.';
+    protected $description = 'Continuously sync accounts prioritizing those with balance changes and sync needs. Supports trade count filtering and specific account targeting.';
 
     public function handle()
     {
@@ -54,6 +56,15 @@ class PrioritySyncAccountsCommand extends Command
         $oldestFirst = $this->option('oldest-first'); // Default is newest first
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
+        $fullTradeSync = $this->option('full-trade-sync') ?? false;
+
+        // Parse specific accounts to sync
+        $specificAccounts = null;
+        if ($this->option('accounts')) {
+            $accountsInput = $this->option('accounts');
+            $specificAccounts = array_map('trim', explode(',', $accountsInput));
+            $this->info("Syncing specific accounts: " . implode(', ', $specificAccounts));
+        }
 
         // Parse trade count filtering options
         $maxTrades = $this->option('max-trades') ? (int) $this->option('max-trades') : null;
@@ -125,9 +136,9 @@ class PrioritySyncAccountsCommand extends Command
         }
 
         if ($isDaemon) {
-            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
+            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
         } else {
-            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
+            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
         }
     }
 
@@ -277,7 +288,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $oldestFirst = false)
+    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null)
     {
         $this->info("Running in daemon mode. Press Ctrl+C to stop.");
 
@@ -297,7 +308,7 @@ class PrioritySyncAccountsCommand extends Command
                     continue;
                 }
 
-                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst);
+                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
 
                 if ($processed === 0) {
                     $this->info("No accounts needed syncing. Waiting {$cycleDelay}s before next cycle...");
@@ -314,7 +325,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $oldestFirst = false): int
+    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null): int
     {
         // First, handle any stuck accounts from previous cycles
         $this->handleStuckAccounts();
@@ -379,6 +390,14 @@ class PrioritySyncAccountsCommand extends Command
                         });
                         // Note: The timing check is already applied above in the main query
                     });
+            });
+        }
+
+        // Filter for specific accounts if provided
+        if ($specificAccounts !== null) {
+            $query->where(function ($q) use ($specificAccounts) {
+                $q->whereIn('code', $specificAccounts)
+                    ->orWhereIn('id', array_filter($specificAccounts, 'is_numeric'));
             });
         }
 
@@ -474,8 +493,12 @@ class PrioritySyncAccountsCommand extends Command
 
             // Calculate sync times for each account
             foreach ($accountBatch as $account) {
-                $lastSync = $account->last_balance_sync_at;
-                $batchSyncTimes[] = $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
+                if ($fullTradeSync) {
+                    $batchSyncTimes[] = $account->created_at;
+                } else {
+                    $lastSync = $account->last_balance_sync_at;
+                    $batchSyncTimes[] = $lastSync ? Carbon::parse($lastSync) : now()->subDays(7);
+                }
             }
 
             $accountCodes = $accountBatch->pluck('code')->join(', ');
