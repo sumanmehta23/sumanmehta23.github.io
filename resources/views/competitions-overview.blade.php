@@ -284,11 +284,16 @@
 
         let interval;
 
+
         function updateCountdown() {
             const now = Date.now(); // always UTC in ms
 
             let distance;
             let label;
+
+            console.log(startDate);
+            console.log(endDate);
+            console.log(now);
 
             if (now < startDate) {
             distance = startDate - now;
