@@ -275,43 +275,58 @@
     }
   </script>
   <script>
-  function startCountdown(elementId, startDateUtc) {
-    const target = new Date(startDateUtc).getTime();
-
-    function update() {
-      const now = new Date().getTime();
-      const distance = target - now;
-
-      if (distance <= 0) {
-        document.getElementById(elementId).innerHTML = "Started!";
-        clearInterval(interval);
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      document.getElementById(elementId).innerHTML =
-        `${days}d ${hours}h ${minutes}m ${seconds}s`;
-    }
-
-    update(); // Run immediately
-    const interval = setInterval(update, 1000);
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
     @foreach ($competitions as $competition)
-      @if ($competition->competition_start_date > now('UTC'))
-        startCountdown(
-          "countdown-{{ $competition->id }}",
-          "{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}" // ✅ UTC-safe format
-        );
-      @endif
+      (function() {
+        const startDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}").getTime();
+        const endDate   = new Date("{{ \Carbon\Carbon::parse($competition->competition_end_date)->toIso8601String() }}").getTime();
+        const elementId = "countdown-{{ $competition->id }}";
+
+        let interval;
+
+        function updateCountdown() {
+          const now = Date.now(); // current UTC in ms
+
+          let distance;
+          let label;
+
+          if (now < startDate) {
+            // Before competition starts
+            distance = startDate - now;
+            label = "Starts in:";
+          } else if (now >= startDate && now <= endDate) {
+            // Competition is running
+            distance = endDate - now;
+            label = "Ends in:";
+          } else {
+            // Competition ended
+            const el = document.getElementById(elementId);
+            if (el) el.innerHTML = "Competition Ended";
+            clearInterval(interval);
+            return;
+          }
+
+          // Calculate time parts
+          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+          // Show countdown
+          const el = document.getElementById(elementId);
+          if (el) {
+            el.innerHTML = `${label} ${days}d ${hours}h ${minutes}m ${seconds}s`;
+          }
+        }
+
+        updateCountdown();
+        interval = setInterval(updateCountdown, 1000);
+      })();
     @endforeach
   });
 </script>
+
+
 
 
 </body>
