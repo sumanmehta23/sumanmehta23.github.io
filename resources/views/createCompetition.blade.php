@@ -51,8 +51,14 @@
                                                                 {{-- @if ($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->lte(now('UTC'))) checked @endif --}}
                                                                 name="options" id="option{{ $acc->ac_index }}" value="{{ $acc->id }}"
                                                                 {{-- @if ($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->lte(now('UTC'))) disabled @endif --}}
+                                                                @if (\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->lt(now('UTC')))
+                                                                    disabled
+                                                                @endif
                                                                 > <label class="auth-megaoption
                                                                 {{-- @if($i == 0 && !\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->lte(now('UTC'))) opacity-50 @endif --}}
+                                                                @if (\Carbon\Carbon::parse($acc->competition_start_date, 'UTC')->lt(now('UTC')))
+                                                                    opacity-50
+                                                                @endif
                                                                 " for="option{{ $acc->ac_index }}" style="height: 230px !important;">
                                                                     <div class="d-block m-4" style="width: 80%;"
                                                                         @php
