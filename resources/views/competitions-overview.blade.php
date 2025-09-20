@@ -303,7 +303,7 @@
                 @elseif ($status == 'In Progress')
                     initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
                 @else
-                    initCountdown("Competition Ended");
+                    initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
                 @endif
             @endforeach
         });
