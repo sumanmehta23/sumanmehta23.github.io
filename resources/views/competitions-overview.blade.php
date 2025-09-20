@@ -91,6 +91,7 @@
             @elseif($status == 'In Progress')
               <p class="text-gray-800 font-bold">Finishes At</p>
               <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
+              <p id="countdown-{{ $competition->id }}" class="text-sm text-emerald-600 font-medium mt-2"></p>
             @elseif($status == 'Finished')
               <p class="text-gray-800 font-bold">Finished At</p>
               <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
@@ -317,6 +318,42 @@
             const el = document.getElementById(elementId);
             if (el) {
               el.innerHTML = `Starts in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+            }
+          }
+
+          updateCountdown();
+          interval = setInterval(updateCountdown, 1000);
+        })();
+      @endif
+      @if ($status == 'In Progress')
+        (function() {
+           const endDate = new Date("{{ $competition->competition_end_date }} UTC").getTime();
+          const elementId = "countdown-{{ $competition->id }}";
+
+          let interval;
+
+          function updateCountdown() {
+            const now = Date.now(); // UTC in ms
+            const distance = endDate - now;
+
+            console.log("endDate ", endDate);
+            console.log("now ", now);
+
+            if (distance <= 0) {
+              const el = document.getElementById(elementId);
+              if (el) el.innerHTML = "Competition Ended";
+              clearInterval(interval);
+              return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            const el = document.getElementById(elementId);
+            if (el) {
+              el.innerHTML = `End in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
             }
           }
 
