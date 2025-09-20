@@ -257,70 +257,54 @@
             });
         }
     </script>
-
-
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
+            function initCountdown(targetDate, elementId, endMsg, prefix) {
+            const target = new Date(targetDate + " UTC").getTime();
+            let interval;
+
+            function updateCountdown() {
+                const now = Date.now();
+                const distance = target - now;
+
+                if (distance <= 0) {
+                const el = document.getElementById(elementId);
+                if (el) el.innerHTML = endMsg;
+                clearInterval(interval);
+                return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                const el = document.getElementById(elementId);
+                if (el) el.innerHTML = `${prefix} ${days}d ${hours}h ${minutes}m ${seconds}s`;
+            }
+
+            updateCountdown();
+            interval = setInterval(updateCountdown, 1000);
+            }
+
             @foreach ($competitions as $competition)
-                @php
-                    if ($competition->competition_end_date < now('UTC')) {
-                        $status = 'Finished';
-                    } elseif ($competition->competition_start_date > now('UTC')) {
-                        $status = 'Upcoming';
-                    } elseif ($competition->competition_start_date <= now('UTC') && $competition->competition_end_date >= now('UTC')) {
-                        $status = 'In Progress';
-                    }
-                @endphp
+            @php
+                if ($competition->competition_end_date < now('UTC')) {
+                    $status = 'Finished';
+                } elseif ($competition->competition_start_date > now('UTC')) {
+                    $status = 'Upcoming';
+                } else {
+                    $status = 'In Progress';
+                }
+            @endphp
 
-                    (function() {
-                        const elementId = "countdown-{{ $competition->id }}";
-                        let targetDate = null;
-                        let messageWhenReached = "";
-
-                        @if ($status == 'Upcoming')
-                            targetDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_start_date)->toIso8601String() }}").getTime();
-                            messageWhenReached = "Competition Started";
-                        @elseif ($status == 'In Progress')
-                            targetDate = new Date("{{ \Carbon\Carbon::parse($competition->competition_end_date)->toIso8601String() }}").getTime();
-                            messageWhenReached = "Competition Ended";
-                        @elseif ($status == 'Finished')
-                            // Directly show "Competition Ended"
-                            const el = document.getElementById(elementId);
-                            if (el) el.innerHTML = "Competition Ended";
-                            return;
-                        @endif
-
-                        let interval;
-
-                        function updateCountdown() {
-                            const now = Date.now();
-                            const distance = targetDate - now;
-
-                            if (distance <= 0) {
-                                const el = document.getElementById(elementId);
-                                if (el) el.innerHTML = messageWhenReached;
-                                clearInterval(interval);
-                                return;
-                            }
-
-                            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                            const el = document.getElementById(elementId);
-                            if (el) {
-                                @if ($status == 'Upcoming')
-                                    el.innerHTML = `Starts in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-                                @elseif ($status == 'In Progress')
-                                    el.innerHTML = `Ends in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-                                @endif
-                            }
-                        }
-
-                        updateCountdown();
-                        interval = setInterval(updateCountdown, 1000);
-                    })();
+            @if ($status == 'Upcoming')
+                initCountdown("{{ $competition->competition_start_date }}", "countdown-{{ $competition->id }}", "Competition Started", "Starts in:");
+            @elseif ($status == 'In Progress')
+                initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
+            @else
+                initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
+            @endif
             @endforeach
         });
     </script>
