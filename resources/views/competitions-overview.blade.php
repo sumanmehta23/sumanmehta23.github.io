@@ -101,7 +101,7 @@
         <!-- Action Buttons -->
         <div class="mt-6 flex gap-3">
           <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50"
-            onclick="openRulesModal('{{ $competition->prize }}')">Rules</button>
+            onclick="openRulesModal('{{ $competition->prize }}')">Prize Pool</button>
           <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50"
             onclick="openLeaderboard('{{ $competition->id }}')">Standings</button>
         </div>
