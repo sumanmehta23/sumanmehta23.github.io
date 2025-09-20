@@ -288,23 +288,23 @@
             }
 
             @foreach ($competitions as $competition)
-            @php
-                if ($competition->competition_end_date < now('UTC')) {
-                    $status = 'Finished';
-                } elseif ($competition->competition_start_date > now('UTC')) {
-                    $status = 'Upcoming';
-                } else {
-                    $status = 'In Progress';
-                }
-            @endphp
+                @php
+                    if ($competition->competition_end_date < now('UTC')) {
+                        $status = 'Finished';
+                    } elseif ($competition->competition_start_date > now('UTC')) {
+                        $status = 'Upcoming';
+                    } else {
+                        $status = 'In Progress';
+                    }
+                @endphp
 
-            @if ($status == 'Upcoming')
-                initCountdown("{{ $competition->competition_start_date }}", "countdown-{{ $competition->id }}", "Competition Started", "Starts in:");
-            @elseif ($status == 'In Progress')
-                initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
-            @else
-                initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
-            @endif
+                @if ($status == 'Upcoming')
+                    initCountdown("{{ $competition->competition_start_date }}", "countdown-{{ $competition->id }}", "Competition Started", "Starts in:");
+                @elseif ($status == 'In Progress')
+                    initCountdown("{{ $competition->competition_end_date }}", "countdown-{{ $competition->id }}", "Competition Ended", "End in:");
+                @else
+                    initCountdown("Competition Ended");
+                @endif
             @endforeach
         });
     </script>
