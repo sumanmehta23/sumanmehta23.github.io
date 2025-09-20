@@ -2814,9 +2814,9 @@ class AjaxController extends Controller
 
         header('Content-Type: application/json');
         if ($type == NULL) {
-            $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by display_priority desc";
+            $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by created_at desc";
         } else {
-            $sql = "SELECT * from account_types where (ac_category) = '$type' AND (ac_name) like '%Competition%' order by display_priority asc";
+            $sql = "SELECT * from account_types where (ac_category) = '$type' AND (ac_name) like '%Competition%' order by created_at asc";
         }
         $query = DB::select($sql);
         $results = $query;
