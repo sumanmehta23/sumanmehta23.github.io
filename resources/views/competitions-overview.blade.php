@@ -260,31 +260,31 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             function initCountdown(targetDate, elementId, endMsg, prefix) {
-            const target = new Date(targetDate + " UTC").getTime();
-            let interval;
+                const target = new Date(targetDate + " UTC").getTime();
+                let interval;
 
-            function updateCountdown() {
-                const now = Date.now();
-                const distance = target - now;
+                function updateCountdown() {
+                    const now = Date.now();
+                    const distance = target - now;
 
-                if (distance <= 0) {
-                const el = document.getElementById(elementId);
-                if (el) el.innerHTML = endMsg;
-                clearInterval(interval);
-                return;
+                    if (distance <= 0) {
+                    const el = document.getElementById(elementId);
+                    if (el) el.innerHTML = endMsg;
+                    clearInterval(interval);
+                    return;
+                    }
+
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    const el = document.getElementById(elementId);
+                    if (el) el.innerHTML = `${prefix} ${days}d ${hours}h ${minutes}m ${seconds}s`;
                 }
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                const el = document.getElementById(elementId);
-                if (el) el.innerHTML = `${prefix} ${days}d ${hours}h ${minutes}m ${seconds}s`;
-            }
-
-            updateCountdown();
-            interval = setInterval(updateCountdown, 1000);
+                updateCountdown();
+                interval = setInterval(updateCountdown, 1000);
             }
 
             @foreach ($competitions as $competition)
