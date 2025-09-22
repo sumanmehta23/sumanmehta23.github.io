@@ -235,9 +235,6 @@
                                         </tr>
                                         <tr>
                                             <td>
-                                                @if ($details->email == 'kostiagraz@gmail.com')
-                                                    {{ dd($client_wallet) }}
-                                                @endif
                                                 <?php if($client_wallet):?>
                                                     <div class="d-flex align-items-center">
                                                         <div>
