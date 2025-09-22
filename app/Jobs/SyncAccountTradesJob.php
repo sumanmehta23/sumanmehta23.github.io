@@ -221,8 +221,14 @@ class SyncAccountTradesJob implements ShouldQueue
                 // Insert any remaining records
                 if (!empty($ibCommissionBatch)) {
                     Log::info('Processing remaining IB commissions batch');
-                    Ib1Commission::insert($ibCommissionBatch);
-                    $this->newTrades = true;
+                    try {
+                        Ib1Commission::insert($ibCommissionBatch);
+                        Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+                        $this->newTrades = true;
+                    } catch (Exception $e) {
+                        $this->newTrades = false;
+                        Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                    }
                 }
 
                 $orders = array_merge($orders, $pageOrders);
