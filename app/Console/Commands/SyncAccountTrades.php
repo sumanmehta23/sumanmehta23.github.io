@@ -88,6 +88,7 @@ class SyncAccountTrades extends Command
                         if ($totalJobsCreated >= $maxJobs) {
                             return false; // Stop chunking
                         }
+                        Log::info("accounts synced for ib ".json_encode($accounts));
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
