@@ -62,7 +62,8 @@ class TradeController extends Controller
         $query = Trade::query()->with('account:id,user_id,currency')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
-            });
+            })
+            ->where('profit', '!=', 0); // Exclude trades with zero profit
 
         // Apply filters only when there are actual values
         // Filter by position close date range (mandatory filter support)
