@@ -96,6 +96,9 @@ class SyncAccountTrades extends Command
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
+                            if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2',$accountIds)) {
+                               Log::info('dispaching sync for 505255');
+                            }
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }

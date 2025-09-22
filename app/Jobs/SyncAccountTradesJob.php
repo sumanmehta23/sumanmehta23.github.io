@@ -141,6 +141,9 @@ class SyncAccountTradesJob implements ShouldQueue
 
     protected function processAccount($accountId): void
     {
+     if ($accountId == '9fbb706d-e237-488c-a319-16d52d2e36d2') {
+       Log::info('processing sync for 505255');
+     }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
                 return Account::find($accountId);
