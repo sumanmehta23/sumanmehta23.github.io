@@ -457,6 +457,10 @@ class Transaction extends Controller
                 ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
 
+            if ($details->email == 'kostiagraz@gmail.com'){
+                dd($details);
+            }
+
             if ($details->clientWallet) {
                 $client_wallet = ClientWallet::withTrashed()->where('id', $details->clientWallet->id)
                     ->where('status', 1)
