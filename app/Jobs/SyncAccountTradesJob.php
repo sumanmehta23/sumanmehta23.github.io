@@ -141,9 +141,9 @@ class SyncAccountTradesJob implements ShouldQueue
 
     protected function processAccount($accountId): void
     {
-     if ($accountId == '9fbb706d-e237-488c-a319-16d52d2e36d2') {
-       Log::info('processing sync for 505255');
-     }
+        if ($accountId == '9fbb706d-e237-488c-a319-16d52d2e36d2') {
+            Log::info('processing sync for 505255');
+        }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
                 return Account::find($accountId);
@@ -181,7 +181,7 @@ class SyncAccountTradesJob implements ShouldQueue
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
-            Log::info("orders for account trades: ".json_encode($orders));
+            Log::info("orders for account trades: " . json_encode($orders));
             while (count($orders) < $total) {
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
@@ -205,7 +205,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 // Process orders in batches for better performance
                 $ibCommissionBatch = [];
                 foreach ($pageOrders as $order) {
-                    Log::info("order for account trades: ".json_encode($order));
+                    // Log::info("order for account trades: ".json_encode($order));
                     $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
                     if ($ibCommission) {
                         $ibCommissionBatch[] = $ibCommission;
