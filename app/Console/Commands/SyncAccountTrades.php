@@ -98,6 +98,7 @@ class SyncAccountTrades extends Command
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
+                            Log::info("accounts synced for ib ".json_encode($accountIds));
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }
