@@ -59,7 +59,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition" data-status="{{ $status }}">
                 <!-- Content -->
                 <div class="{{ ($status == 'Finished') ? 'opacity-50' : '' }}">
-                    @if ($status == 'Upcoming')
+                    @if ($status != 'Finished')
                         <img src="/assets/images/competition-trophies.svg" alt="" class="mb-6">
                     @else
                         <img src="/assets/images/trophies-gray.svg" alt="" class="mb-6">
