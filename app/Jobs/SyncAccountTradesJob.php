@@ -178,7 +178,7 @@ class SyncAccountTradesJob implements ShouldQueue
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
-
+            Log::info("orders for account trades: ".json_encode($orders));
             while (count($orders) < $total) {
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
@@ -202,6 +202,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 // Process orders in batches for better performance
                 $ibCommissionBatch = [];
                 foreach ($pageOrders as $order) {
+                    Log::info("order for account trades: ".json_encode($order));
                     $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
                     if ($ibCommission) {
                         $ibCommissionBatch[] = $ibCommission;
