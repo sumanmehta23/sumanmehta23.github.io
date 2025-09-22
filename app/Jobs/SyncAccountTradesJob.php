@@ -213,8 +213,15 @@ class SyncAccountTradesJob implements ShouldQueue
 
                     // Insert in batches of batchSize
                     if (count($ibCommissionBatch) >= $this->batchSize) {
-                        Ib1Commission::insert($ibCommissionBatch);
-                        $ibCommissionBatch = [];
+                        try {
+                            Ib1Commission::insert($ibCommissionBatch);
+                            // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+
+                            $ibCommissionBatch = [];
+                        } catch (Exception $e) {
+                            $this->newTrades = false;
+                            Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                        }
                     }
                 }
 
@@ -223,7 +230,7 @@ class SyncAccountTradesJob implements ShouldQueue
 
                     try {
                         Ib1Commission::insert($ibCommissionBatch);
-                        Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+                        // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
                         $this->newTrades = true;
                     } catch (Exception $e) {
                         $this->newTrades = false;
