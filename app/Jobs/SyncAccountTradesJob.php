@@ -181,7 +181,7 @@ class SyncAccountTradesJob implements ShouldQueue
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
-            Log::info("orders for account trades: " . json_encode($orders));
+            // Log::info("orders for account trades: " . json_encode($orders));
             while (count($orders) < $total) {
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
