@@ -3074,7 +3074,7 @@ class AjaxController extends Controller
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => $row->withdraw_type,
+                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type. '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
