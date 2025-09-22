@@ -85,19 +85,22 @@ class SyncAccountTrades extends Command
                     ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
                         // Stop creating jobs if we've reached the limit
                         if ($totalJobsCreated >= $maxJobs) {
+                            $this->info("Reached maximum job limit of $maxJobs. Stopping further job creation.");
                             return false; // Stop chunking
                         }
+                        $this->info("Processing accounts for IB: $referral_code, User ID: $userId");
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
                         foreach ($accountChunks as $accountChunk) {
                             if ($totalJobsCreated >= $maxJobs) {
+                                $this->info("Reached maximum job limits of $maxJobs. Stopping further job creation.");
                                 break;
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
-                            if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2',$accountIds)) {
-                               Log::info('dispaching sync for 505255');
+                            if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2', $accountIds)) {
+                                Log::info('dispaching sync for 505255');
                             }
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
