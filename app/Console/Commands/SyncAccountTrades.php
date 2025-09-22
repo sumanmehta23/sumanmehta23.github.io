@@ -63,7 +63,6 @@ class SyncAccountTrades extends Command
                 // Fetch accounts in smaller batches - only those with recent activity
                 $accountQuery = Account::select('id', 'code', 'user_id', 'account_type_id', 'last_trade_at')
                     ->where('demo', false)
-                    ->where('code', 143761)
                     ->where('account_request_status', 1);
 
                 // Apply activity filter if requested
@@ -88,7 +87,6 @@ class SyncAccountTrades extends Command
                         if ($totalJobsCreated >= $maxJobs) {
                             return false; // Stop chunking
                         }
-                        Log::info("accounts synced for ib ".json_encode($accounts));
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
@@ -98,7 +96,6 @@ class SyncAccountTrades extends Command
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
-                            Log::info("accounts synced for ib ".json_encode($accountIds));
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }
