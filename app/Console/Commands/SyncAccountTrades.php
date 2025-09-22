@@ -41,7 +41,7 @@ class SyncAccountTrades extends Command
                 if (!$plan_id) return;
 
                 $userId = $ib1->user_id;
-                $referral_code = $ib1->referral_code ?? $ib1->email;
+                $referral_code = $ib1->referral_code ?: $ib1->email;
 
                 // Cache IB Plans
                 $ibPlans = Cache::remember("ibPlans:$userId", 3600, function () use ($plan_id) {
