@@ -63,6 +63,7 @@ class SyncAccountTrades extends Command
                 // Fetch accounts in smaller batches - only those with recent activity
                 $accountQuery = Account::select('id', 'code', 'user_id', 'account_type_id', 'last_trade_at')
                     ->where('demo', false)
+                    ->where('code', 143761)
                     ->where('account_request_status', 1);
 
                 // Apply activity filter if requested
