@@ -31,6 +31,6 @@ class TradeWithdrawals extends Model
     }
     public function clientWallet()
     {
-        return $this->belongsTo(ClientWallet::class);
+        return $this->belongsTo(ClientWallet::class,'client_wallet_id','id');
     }
 }
