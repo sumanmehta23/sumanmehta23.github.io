@@ -484,7 +484,7 @@ if (app()->environment('local')) {
                         <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
-                        @if (strpos(((auth()->user()->email, 'lqhmarkets.com') !== false) || strpos(((auth()->user()->email, 'lqhmarkets.com') !== false))))
+                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
@@ -498,6 +498,7 @@ if (app()->environment('local')) {
                                 </a>
                             </li>
                         @endif
+
 
                         @can('m_t5_group:viewAny')
                             {{-- @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false) --}}
