@@ -865,6 +865,9 @@ class Transaction extends Controller
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
         $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+        if(!$walletDetails){
+            return redirect()->back()->with('status', 'Wallet details not present.');
+        }
         if ($transaction && $walletDetails) {
 
             if ($transaction->status == 2 || $transaction->status == 3) {
