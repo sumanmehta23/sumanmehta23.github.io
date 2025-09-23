@@ -860,8 +860,7 @@ class Transaction extends Controller
         // $transaction_id = $request->transaction_id;
 
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
-        dump($transaction->client_wallet_id);
-        dd($transaction);
+
         if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
@@ -879,7 +878,7 @@ class Transaction extends Controller
             $transaction->save();
             if ($status == 1) {
                 if ($transaction && $transaction->withdraw_type == "Trade Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
-                    $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
+                    // $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
                     $transaction->approved_by = $approved_by;
                     $transaction->approved_date = $approved_date;
                     $transaction->save();
