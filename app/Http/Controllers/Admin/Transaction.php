@@ -860,7 +860,7 @@ class Transaction extends Controller
         // $transaction_id = $request->transaction_id;
 
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
-
+        dd($transaction);
         if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
