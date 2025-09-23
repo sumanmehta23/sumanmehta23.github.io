@@ -887,7 +887,7 @@ class Transaction extends Controller
                     // Log::info("transaction_details ".json_encode($transaction));
                     // Log::info("transaction_details ". $transaction->client_wallet_id);
                     $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
-                    dd($transaction);
+                    dd($walletDetails);
                     // Log::info("wallet_details  ".json_encode($walletDetails));
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;
