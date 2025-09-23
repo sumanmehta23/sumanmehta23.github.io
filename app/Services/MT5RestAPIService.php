@@ -10,7 +10,7 @@ use Exception;
 
 /**
  * MT5 REST API Service
- * 
+ *
  * Provides high-level interface for MT5 operations using REST API
  * with connection pooling for improved performance and reliability.
  */
@@ -27,7 +27,7 @@ class MT5RestAPIService
 
     /**
      * Get multiple user balances using MT5 REST API batch endpoint with fallback to individual calls
-     * 
+     *
      * @param array $logins Array of MT5 login IDs
      * @return array Array of user balance data indexed by login
      */
@@ -69,11 +69,11 @@ class MT5RestAPIService
             // Convert logins to comma-separated string as per MT5 REST API documentation
             $loginString = implode(',', array_map('intval', $logins));
 
-            Log::info('MT5RestAPI: Making batch request', [
-                'endpoint' => '/api/user/account/get_batch',
-                'login_string' => $loginString,
-                'login_count' => count($logins)
-            ]);
+            // Log::info('MT5RestAPI: Making batch request', [
+            //     'endpoint' => '/api/user/account/get_batch',
+            //     'login_string' => $loginString,
+            //     'login_count' => count($logins)
+            // ]);
 
             // Make batch request using GET with query parameters
             $result = $apiRequest->Get('/api/user/account/get_batch?login=' . urlencode($loginString));
@@ -177,7 +177,7 @@ class MT5RestAPIService
 
     /**
      * Get individual user balance via REST API
-     * 
+     *
      * @param int|string $login MT5 login ID
      * @return array|null User balance data or null on error
      */
@@ -365,7 +365,7 @@ class MT5RestAPIService
 
     /**
      * Update balances for multiple MT5 users efficiently
-     * 
+     *
      * @param Collection|array $mt5Users Collection of Mt5User models or array of logins
      * @return array Summary of update results
      */

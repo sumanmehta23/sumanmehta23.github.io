@@ -449,15 +449,20 @@ class Transaction extends Controller
             //     ")
             //     ->groupBy('u.email')
             //     ->first();
-            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo')
+            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo','clientWallet')
                 ->where('id', request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
                 ->withSum('totalBalance', 'trading_withdrawal') // Aggregate total trading withdrawals
                 ->withSum('totalBalance', 'withdraw_amount') // Aggregate total wallet withdrawals
                 ->first();
-            if ($details->clientWallet) {
-                $client_wallet = ClientWallet::withTrashed()->where('id', $details->clientWallet->id)
+
+            // if ($details->email == 'kostiagraz@gmail.com'){
+            //     dd($details);
+            // }
+
+            if ($details->client_wallet_id) {
+                $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
                     ->where('status', 1)
                     ->first();
             } else {
@@ -859,8 +864,11 @@ class Transaction extends Controller
         if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
-
-        if ($transaction) {
+        $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+        if(!$walletDetails){
+            return redirect()->back()->with('status', 'Wallet details not present.');
+        }
+        if ($transaction && $walletDetails) {
 
             if ($transaction->status == 2 || $transaction->status == 3) {
                 return redirect()->back()->with('error', "Transaction already cancelled");
@@ -873,13 +881,16 @@ class Transaction extends Controller
             $transaction->save();
             if ($status == 1) {
                 if ($transaction && $transaction->withdraw_type == "Trade Withdrawal" && empty($transaction->payout_req) && $transaction->client_wallet_id) {
-                    $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
+                    // $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
+                    // dump($transaction->client_wallet_id);
+                    // dump($transaction);
                     $transaction->approved_by = $approved_by;
                     $transaction->approved_date = $approved_date;
                     $transaction->save();
                     // Log::info("transaction_details ".json_encode($transaction));
                     // Log::info("transaction_details ". $transaction->client_wallet_id);
-                    $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+
+                    // dd($walletDetails);
                     // Log::info("wallet_details  ".json_encode($walletDetails));
                     $walletNetwork = $walletDetails->wallet_network;
                     $walletCurrency = $walletDetails->wallet_currency;

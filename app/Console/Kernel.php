@@ -30,7 +30,8 @@ class Kernel extends ConsoleKernel
 
         // DISABLED: Replaced by priority-sync
         // $schedule->command('app:sync-accounts')->everyFiveMinutes();
-        $schedule->command('app:sync-account-trades')->everyTenMinutes();
+        $schedule->command('app:sync-account-trades')->everyFifteenMinutes();
+
 
         $schedule->command('app:sync-daily-reports')->daily();
 

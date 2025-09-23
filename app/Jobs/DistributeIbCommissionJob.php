@@ -203,7 +203,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             ->flip();
 
         foreach ($trades as $ca) {
-            // Log::alert("sync tradess".$ca->order_id);
+            Log::info("sync tradess".json_encode($ca));
             $user = $ca->user;
             $accountTypeId = $ca->account->account_type_id;
             $orderId = $ca->order_id;

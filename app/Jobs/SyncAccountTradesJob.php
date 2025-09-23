@@ -35,7 +35,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
-    protected $batchSize = 500;
+    protected $batchSize = 200;
     /**
      * Create a new job instance.
      */
@@ -141,6 +141,9 @@ class SyncAccountTradesJob implements ShouldQueue
 
     protected function processAccount($accountId): void
     {
+        if ($accountId == '9fbb706d-e237-488c-a319-16d52d2e36d2') {
+            Log::info('processing sync for 505255');
+        }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
                 return Account::find($accountId);
@@ -178,7 +181,7 @@ class SyncAccountTradesJob implements ShouldQueue
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
-
+            // Log::info("orders for account trades: " . json_encode($orders));
             while (count($orders) < $total) {
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
@@ -202,6 +205,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 // Process orders in batches for better performance
                 $ibCommissionBatch = [];
                 foreach ($pageOrders as $order) {
+                    // Log::info("order for account trades: ".json_encode($order));
                     $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
                     if ($ibCommission) {
                         $ibCommissionBatch[] = $ibCommission;
@@ -209,16 +213,29 @@ class SyncAccountTradesJob implements ShouldQueue
 
                     // Insert in batches of batchSize
                     if (count($ibCommissionBatch) >= $this->batchSize) {
-                        Ib1Commission::insert($ibCommissionBatch);
-                        $ibCommissionBatch = [];
+                        try {
+                            Ib1Commission::insert($ibCommissionBatch);
+                            // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+
+                            $ibCommissionBatch = [];
+                        } catch (Exception $e) {
+                            $this->newTrades = false;
+                            Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                        }
                     }
                 }
 
                 // Insert any remaining records
                 if (!empty($ibCommissionBatch)) {
-                    Log::info('Processing remaining IB commissions batch');
-                    Ib1Commission::insert($ibCommissionBatch);
-                    $this->newTrades = true;
+
+                    try {
+                        Ib1Commission::insert($ibCommissionBatch);
+                        // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+                        $this->newTrades = true;
+                    } catch (Exception $e) {
+                        $this->newTrades = false;
+                        Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                    }
                 }
 
                 $orders = array_merge($orders, $pageOrders);

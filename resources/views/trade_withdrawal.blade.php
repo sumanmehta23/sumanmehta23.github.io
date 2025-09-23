@@ -24,7 +24,7 @@
         <script>
             Swal.fire({
                 icon: 'warning',
-                title: "Something Went Wrong !!!!",
+                title: "Something Went Wrong!",
                 text: '{{ session('error') }}',
             });
         </script>

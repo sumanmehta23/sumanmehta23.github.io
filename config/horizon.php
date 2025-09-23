@@ -203,7 +203,7 @@ return [
             'maxJobs' => 0,
             'memory' => 1000,
             'tries' => 1,
-            'timeout' => 600,
+            'timeout' => 1200,
             'nice' => 0,
         ],
         'supervisor-3' => [

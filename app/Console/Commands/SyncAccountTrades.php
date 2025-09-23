@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 
 class SyncAccountTrades extends Command
 {
+    protected $totalAccountsProcessed = 0;
     protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email}';
     protected $description = 'Sync account trades for IBs';
 
@@ -24,7 +25,6 @@ class SyncAccountTrades extends Command
         $email      = $this->option('email');
 
         $totalJobsCreated = 0;
-
         $ibQuery = Ib1::with(['planDetails', 'user'])
             ->where('status', 1)
             ->whereNotNull('ib_plan_details_id');
@@ -83,19 +83,28 @@ class SyncAccountTrades extends Command
                     })->where('status', 1)
                 )
                     ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
+                        $this->totalAccountsProcessed += $accounts->count();
                         // Stop creating jobs if we've reached the limit
                         if ($totalJobsCreated >= $maxJobs) {
+                            $this->info("Reached maximum job limit of $maxJobs. Stopping further job creation.");
                             return false; // Stop chunking
                         }
+                        $this->info("Processing accounts for IB: $referral_code, User ID: $userId");
                         // Process accounts in smaller batches within each job
                         $accountChunks = $accounts->chunk($batchSize);
                         $jobs = [];
                         foreach ($accountChunks as $accountChunk) {
                             if ($totalJobsCreated >= $maxJobs) {
+                                $this->info("Reached maximum job limits of $maxJobs. Stopping further job creation.");
                                 break;
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
+                            $this->info("Dispatching sync for accounts: " . implode(', ', $accountIds));
+                            if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2', $accountIds)) {
+                                $this->info('Dispatching sync for 505255');
+                                Log::info('dispaching sync for 505255');
+                            }
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }
@@ -106,5 +115,7 @@ class SyncAccountTrades extends Command
                         }
                     });
             });
+        $this->info("Total jobs created: $totalJobsCreated");
+        $this->info("Total accounts processed: $this->totalAccountsProcessed");
     }
 }
