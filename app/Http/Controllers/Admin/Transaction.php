@@ -864,8 +864,8 @@ class Transaction extends Controller
         if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
-
-        if ($transaction) {
+        $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+        if ($transaction && $walletDetails) {
 
             if ($transaction->status == 2 || $transaction->status == 3) {
                 return redirect()->back()->with('error', "Transaction already cancelled");
@@ -886,7 +886,7 @@ class Transaction extends Controller
                     $transaction->save();
                     // Log::info("transaction_details ".json_encode($transaction));
                     // Log::info("transaction_details ". $transaction->client_wallet_id);
-                    $walletDetails = ClientWallet::where('id', $transaction->client_wallet_id)->first();
+
                     // dd($walletDetails);
                     // Log::info("wallet_details  ".json_encode($walletDetails));
                     $walletNetwork = $walletDetails->wallet_network;
