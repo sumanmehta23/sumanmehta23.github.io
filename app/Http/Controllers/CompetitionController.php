@@ -386,13 +386,11 @@ class CompetitionController extends Controller
 // dd($account->trades);
         // Get trades data
         $trades = $account->trades->map(function ($trade) {
-            // dd($trade->open_time);
-            $openTimeUtc = Carbon::parse($trade->open_time)->setTimezone('UTC')->format('Y-m-d H:i:s');
-            $closeTimeUtc = Carbon::parse($trade->close_time)->setTimezone('UTC')->format('Y-m-d H:i:s');
+            dd($trade);
             return [
                 'position' => $trade->position_id,
-                'open_time' => $openTimeUtc,
-                'close_time' => $closeTimeUtc,
+                'open_time' => $trade->open_time,
+                'close_time' => $trade->close_time ?? null,
                 'symbol' => $trade->symbol,
                 'volume' => $trade->volume,
                 'profit' => $trade->profit,
