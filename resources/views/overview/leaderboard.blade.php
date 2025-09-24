@@ -489,12 +489,11 @@
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
+                tradesData.trades.forEach(trade => {
+                    // Convert open_time and close_time to UTC
+                    const openTime = toUtcString(trade.open_time);
+                    const closeTime = trade.close_time ? toUtcString(trade.close_time) : "";
 
-                (tradesData.trades).forEach(trade => {
-                    // console.log(trade);
-                    console.log(trade.open_time);
-                    const openTime = toGmt(trade.open_time);
-                    const closeTime = trade.close_time ? toGmt(trade.close_time) : "";
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
@@ -502,8 +501,8 @@
                         <td class="px-4 py-3">${trade.symbol}</td>
                         <td class="px-4 py-3">#${trade.position}</td>
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 text-xs font-semibold ${trade.type == 'buy' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
-                                ${trade.type}
+                            <span class="px-2 py-1 text-xs font-semibold ${trade.type.toLowerCase() == 'buy' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
+                                ${trade.type.toUpperCase()}
                             </span>
                         </td>
                         <td class="px-4 py-3">${trade.volume}</td>
@@ -515,30 +514,23 @@
                     tbody.appendChild(tr);
                 });
 
-                document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.length}`;
+                document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.trades.length}`;
                 document.getElementById('lastUpdate').innerText = `Last Update: just now`;
 
             } catch (e) {
                 console.error("Error fetching trades:", e);
             }
         }
-        function formatUtc(dateString) {
-            // if already like "2025-09-23 17:35:01", just return it
-            if (dateString.includes("T")) {
-                return dateString.replace("T", " ").replace("Z", "").split(".")[0];
-            }
-            return dateString; // already correct format from backend
-        }
-        function toGmt(dateString) {
-            const date = new Date(dateString);
 
+        // Converts any date string to "YYYY-MM-DD HH:mm:ss" in UTC
+        function toUtcString(dateString) {
+            const date = new Date(dateString);
             const year = date.getUTCFullYear();
             const month = String(date.getUTCMonth() + 1).padStart(2, "0");
             const day = String(date.getUTCDate()).padStart(2, "0");
             const hours = String(date.getUTCHours()).padStart(2, "0");
             const minutes = String(date.getUTCMinutes()).padStart(2, "0");
             const seconds = String(date.getUTCSeconds()).padStart(2, "0");
-
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
     </script>
