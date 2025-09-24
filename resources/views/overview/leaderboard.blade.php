@@ -491,12 +491,36 @@
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
+                const openTime = new Date(trade.open_time).toLocaleString("en-GB", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false,
+                    timeZone: "UTC" // or remove if you want local time
+                });
+
+                const closeTime = trade.close_time
+                    ? new Date(trade.close_time).toLocaleString("en-GB", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false,
+                        timeZone: "UTC"
+                    })
+                    : "";
+
                 (tradesData.trades).forEach(trade => {
                     console.log(trade);
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
-                        <td class="px-4 py-3">${trade.open_time}</td>
+                        <td class="px-4 py-3">${openTime}</td>
                         <td class="px-4 py-3">${trade.symbol}</td>
                         <td class="px-4 py-3">#${trade.position}</td>
                         <td class="px-4 py-3">
@@ -506,7 +530,7 @@
                         </td>
                         <td class="px-4 py-3">${trade.volume}</td>
                         <td class="px-4 py-3">${trade.open_price}</td>
-                        <td class="px-4 py-3">${trade.close_time}</td>
+                        <td class="px-4 py-3">${closeTime}</td>
                         <td class="px-4 py-3">${trade.close_price}</td>
                         <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
                     `;
