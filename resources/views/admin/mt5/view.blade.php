@@ -279,7 +279,7 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     if (isset($accountHelper['equity'])) {
-                                                                        echo "$" . $total_trades;
+                                                                        echo $total_trades;
                                                                     }
                                                                     ?>
                                                                 </h4>
