@@ -493,8 +493,8 @@
 
 
                 (tradesData.trades).forEach(trade => {
-                    const openTime = formatUtc(trade.open_time);
-                    const closeTime = trade.close_time ? formatUtc(trade.close_time) : "";
+                    const openTime = formatUtc(trade.open_time, 'UTC');
+                    const closeTime = trade.close_time ? formatUtc(trade.close_time,'UTC') : "";
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
