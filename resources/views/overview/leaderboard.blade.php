@@ -493,6 +493,7 @@
 
 
                 (tradesData.trades).forEach(trade => {
+                    console.log(trade);
                     console.log(trade.open_time);
                     const openTime = formatUtc(trade.open_time);
                     const closeTime = trade.close_time ? formatUtc(trade.close_time) : "";
