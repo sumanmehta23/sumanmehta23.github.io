@@ -158,6 +158,7 @@
                                         data-balance="{{ $rank['balance'] ?? 0 }}"
                                         data-equity="{{ $rank['equity'] ?? 0 }}"
                                         data-profit="{{ $rank['total_profit'] ?? 0 }}"
+                                        data-top-trade="{{ $rank['top_trade'] ?? 0 }}"
                                         data-account-code="{{ $rank['account_code'] ?? '' }}"
                                         data-trades="{{ $rank['total_trades'] ?? 0 }}">
                                         <td class="p-3 font-bold">
@@ -464,6 +465,7 @@
                 const balance = row.dataset.balance;
                 const equity = row.dataset.equity;
                 const profit = row.dataset.profit;
+                const topTrade = row.dataset.topTrade;
                 const trades = row.dataset.trades;
                 const account = row.dataset.accountCode;
 
@@ -472,7 +474,7 @@
                 // document.getElementById('startingBalance').innerText = balance;
                 document.getElementById('currentBalance').innerText = `$${balance}`;
                 document.getElementById('cumulativePL').innerText = `$${profit}`;
-                document.getElementById('largestTrade').innerText = "-";
+                document.getElementById('largestTrade').innerText = `$${topTrade}`;
                 document.getElementById('equity').innerText = `$${equity}`;
 
                 // Update Trading Log title
