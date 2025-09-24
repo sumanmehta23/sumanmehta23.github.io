@@ -189,7 +189,7 @@
                         {{-- <p class="mb-2"><strong>Starting Balance:</strong> <span id="startingBalance">${{ $rankings[0]['balance'] ?? '' }}</span></p> --}}
                         <p class="mb-2"><strong>Current Balance:</strong> <span id="currentBalance">${{ $rankings[0]['balance'] ?? '' }}</span></p>
                         <p class="mb-2"><strong>Cumulative P/L:</strong> <span id="cumulativePL">${{ $rankings[0]['total_profit'] ?? '' }}</span></p>
-                        <p class="mb-2"><strong>Biggest Trade:</strong> <span id="largestTrade">-</span></p>
+                        <p class="mb-2"><strong>Biggest Trade:</strong> <span id="largestTrade">${{ $rankings[0]['top_trade'] ?? '' }}</span></p>
                         <p class="mb-2"><strong>Equity:</strong> <span id="equity">${{ $rankings[0]['equity'] ?? '' }}</span></p>
                     </div>
 
