@@ -493,10 +493,10 @@
 
 
                 (tradesData.trades).forEach(trade => {
-                    console.log(trade);
+                    // console.log(trade);
                     console.log(trade.open_time);
-                    const openTime = formatUtc(trade.open_time);
-                    const closeTime = trade.close_time ? formatUtc(trade.close_time) : "";
+                    const openTime = toGmt(trade.open_time);
+                    const closeTime = trade.close_time ? toGmt(trade.close_time) : "";
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
@@ -530,6 +530,18 @@
                 return dateString.replace("T", " ").replace("Z", "").split(".")[0];
             }
             return dateString; // already correct format from backend
+        }
+        function toGmt(dateString) {
+            const date = new Date(dateString);
+
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+            const day = String(date.getUTCDate()).padStart(2, "0");
+            const hours = String(date.getUTCHours()).padStart(2, "0");
+            const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+            const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
     </script>
 
