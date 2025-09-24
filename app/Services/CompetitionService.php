@@ -109,7 +109,7 @@ class CompetitionService
                     'equity' => $account->equity,
                     'balance' => $account->balance,
                     'volume' => $account->lots_completed,
-                    'top_trade' => $account->trades->sortByDesc('profit')->first(),
+                    'top_trade' => $account->trades->sortByDesc('profit')->first()->profit ?? 0,
                     'total_trades' => $account->trades->count(),
                     'total_profit' => $account->balance - $account->initial_balance,
                 ];
