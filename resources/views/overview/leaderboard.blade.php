@@ -486,25 +486,16 @@
         async function updateTraderData(accountCode) {
             try {
                 const res = await fetch(`/competitions-overview/trader-data/${accountCode}`);
-                console.log(res);
                 const tradesData = await res.json();
-
-                // Ensure the dates are properly preserved
-                tradesData.trades.forEach(trade => {
-                    trade.open_time = formatUtc(trade.open_time);
-                    if (trade.close_time) {
-                        trade.close_time = formatUtc(trade.close_time);
-                    }
-                });
-
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
 
                 (tradesData.trades).forEach(trade => {
-                    // Use the already formatted dates
-                    const openTime = trade.open_time;
-                    const closeTime = trade.close_time || "";
+                    // console.log(trade);
+                    console.log(trade.open_time);
+                    const openTime = toGmt(trade.open_time);
+                    const closeTime = trade.close_time ? toGmt(trade.close_time) : "";
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
@@ -533,29 +524,11 @@
             }
         }
         function formatUtc(dateString) {
-            if (!dateString) return "";
-
-            // If date is in ISO format (contains 'T' or 'Z')
+            // if already like "2025-09-23 17:35:01", just return it
             if (dateString.includes("T")) {
-                // Convert to UTC format: YYYY-MM-DD HH:mm:ss
                 return dateString.replace("T", " ").replace("Z", "").split(".")[0];
             }
-
-            // If date is already in the correct format
-            if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                return dateString;
-            }
-
-            // For any other format, create a new Date and format it
-            const date = new Date(dateString);
-            const year = date.getUTCFullYear();
-            const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-            const day = String(date.getUTCDate()).padStart(2, "0");
-            const hours = String(date.getUTCHours()).padStart(2, "0");
-            const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-            const seconds = String(date.getUTCSeconds()).padStart(2, "0");
-
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return dateString; // already correct format from backend
         }
         function toGmt(dateString) {
             const date = new Date(dateString);
