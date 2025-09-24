@@ -70,7 +70,7 @@ if ($getUser) {
                                                 <div class="mt-auto mb-auto user-wrap">
                                                     <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
                                                     <h6 class="fs-12 fw-normal text-muted">
-                                                        <?php 
+                                                        <?php
                                                             if ($account->platform === 'x9') {
                                                                 echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
                                                             } else {
@@ -184,6 +184,102 @@ if ($getUser) {
                                                                     <?php
                                                                     if (isset($accountHelper['equity'])) {
                                                                         echo "$" . number_format($accountHelper['equity'] , 2);
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="border avtar avtar-s"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Total Profit</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($accountHelper['equity'])) {
+                                                                        echo "$" . $total_profit;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="border avtar avtar-s"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Total Comission</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($accountHelper['equity'])) {
+                                                                        echo "$" . $total_comission;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="border avtar avtar-s"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Total Swap</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($accountHelper['equity'])) {
+                                                                        echo "$" . $total_swap;
+                                                                    }
+                                                                    ?>
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="border avtar avtar-s"><i
+                                                                class="ph-duotone ph-chart-line-up f-20"></i></div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="row g-1">
+                                                            <div class="col-6">
+                                                                <p class="mb-0 f-20">Total Trades</p>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <h4 class="mb-1 f-w-400">
+                                                                    <?php
+                                                                    if (isset($accountHelper['equity'])) {
+                                                                        echo "$" . $total_trades;
                                                                     }
                                                                     ?>
                                                                 </h4>

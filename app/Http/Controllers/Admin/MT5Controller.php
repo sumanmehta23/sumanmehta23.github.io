@@ -1015,10 +1015,11 @@ class MT5Controller extends Controller
 
         $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
-        if ($account->code==443128) {
-            $trade = Trade::where('code',443128)->get();
-            dd($trade);
-        }
+        $trade = Trade::where('code',$account->code)->get();
+        $total_profit = $trade->sum('profit');
+        $total_comission = $trade->sum('commission');
+        $total_swap = $trade->sum('swap');
+        $total_trades = count($trade);
 
         if ($account) {
             $code = $account->code;
@@ -1152,7 +1153,11 @@ class MT5Controller extends Controller
             'type' => $type,
             'title' => $title,
             'x9_group_name' => $x9GroupName,
-            'x9_leverage' => $x9Leverage
+            'x9_leverage' => $x9Leverage,
+            'total_profit' => $total_profit,
+            'total_comission' => $total_comission,
+            'total_swap' => $total_swap,
+            'total_trades' => $total_trades,
         ]);
     }
 }
