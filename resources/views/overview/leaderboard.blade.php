@@ -523,7 +523,11 @@
             }
         }
         function formatUtc(dateString) {
-            return dateString.replace("T", " ").replace("Z", "").split(".")[0];
+            // if already like "2025-09-23 17:35:01", just return it
+            if (dateString.includes("T")) {
+                return dateString.replace("T", " ").replace("Z", "").split(".")[0];
+            }
+            return dateString; // already correct format from backend
         }
     </script>
 
