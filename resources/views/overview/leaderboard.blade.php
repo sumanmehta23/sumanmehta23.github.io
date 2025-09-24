@@ -486,6 +486,7 @@
         async function updateTraderData(accountCode) {
             try {
                 const res = await fetch(`/competitions-overview/trader-data/${accountCode}`);
+                console.log(res);
                 const tradesData = await res.json();
 
                 const tbody = document.getElementById('tradingLogBody');

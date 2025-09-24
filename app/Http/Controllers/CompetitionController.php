@@ -386,7 +386,7 @@ class CompetitionController extends Controller
 // dd($account->trades);
         // Get trades data
         $trades = $account->trades->map(function ($trade) {
-            dd($trade);
+
             return [
                 'position' => $trade->position_id,
                 'open_time' => $trade->open_time,
