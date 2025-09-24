@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Trade;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
@@ -1013,6 +1014,11 @@ class MT5Controller extends Controller
     {
 
         $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
+
+        if ($account->code==443128) {
+            $trade = Trade::where('code',443128)->get();
+            dd($trade);
+        }
 
         if ($account) {
             $code = $account->code;
