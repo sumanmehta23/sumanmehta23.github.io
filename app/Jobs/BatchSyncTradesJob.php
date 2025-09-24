@@ -678,13 +678,22 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                 // Calculate actual profit from deals if available
                 $actualProfit = null; // Use null to indicate "no deals found"
+                $actualSwap = null;
+                $actualCommission = null;
                 $rateProfit = 1;
                 if (!empty($filteredDeals)) {
                     // Sum actual profit from all deals in this position
                     $actualProfit = array_sum(array_map(function ($deal) {
                         return $deal->profit ?? 0;
                     }, $filteredDeals));
+                    $actualSwap = array_sum(array_map(function ($deal) {
+                        return $deal->swap ?? 0;
+                    }, $filteredDeals));
+                    $actualCommission = array_sum(array_map(function ($deal) {
+                        return $deal->commission ?? 0;
+                    }, $filteredDeals));
                     $rateProfit = $filteredDeals[0]->rate_profit ?? 1;
+
 
                     // Log::info("DEBUG[{$account->code}]: Position {$positionId} found {count($filteredDeals)} deals, actual profit: {$actualProfit}");
                 } else {
@@ -696,6 +705,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     if ($dbDeals->count() > 0) {
                         $actualProfit = round($dbDeals->sum('profit'), 2);
                         $rateProfit = $dbDeals->first()->rate_profit ?? 1;
+                        $actualSwap = round($dbDeals->sum('swap'), 2);
+                        $actualCommission = round($dbDeals->sum('commission'), 2);
                         // Log::info("DEBUG[{$account->code}]: Position {$positionId} found {$dbDeals->count()} deals via database lookup, actual profit: {$actualProfit}");
                     } else {
                         // Log::warning("DEBUG[{$account->code}]: Position {$positionId} has no deals - will use manual calculation");
@@ -708,7 +719,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 if ($positionOrders->count() == 1) {
                     // Single order = Open position (no close yet)
                     if (!$existingTrade) {
-                        $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first());
+                        $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first(), $actualSwap, $actualCommission);
                         if ($tradeData !== null) {
                             $tradesToUpsert[] = $tradeData;
                             $savedCount++;
@@ -721,7 +732,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     $openOrder = $positionOrders->first();  // First order = open
                     $closeOrder = $positionOrders->last();  // Last order = close
 
-                    $closedTradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit, $rateProfit);
+                    $closedTradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit, $rateProfit, $actualSwap, $actualCommission);
                     if ($closedTradeData !== null) {
                         if ($existingTrade) {
                             $closedTradeData['id'] = $existingTrade->id; // Update existing
@@ -881,7 +892,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         ];
     }
 
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit = null, $rateProfit = 1)
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder, $actualProfit = null, $rateProfit = 1, $actualSwap = null, $actualCommission = null)
     {
         // CRITICAL: Validate position_id before creating trade data
         if (empty($positionId) || $positionId == 0 || $positionId === '0') {
@@ -960,6 +971,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
             'profit' => $profit,
+            'swap' => $actualSwap !== null ? round($actualSwap, 2) : 0,
+            'commission' => $actualCommission !== null ? round($actualCommission, 2) : 0,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
