@@ -491,19 +491,9 @@
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
-                const openTime = new Date(trade.open_time).toLocaleString("en-GB", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false,
-                    timeZone: "UTC" // or remove if you want local time
-                });
 
-                const closeTime = trade.close_time
-                    ? new Date(trade.close_time).toLocaleString("en-GB", {
+                (tradesData.trades).forEach(trade => {
+                    const openTime = new Date(trade.open_time).toLocaleString("en-GB", {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
@@ -511,12 +501,21 @@
                         minute: "2-digit",
                         second: "2-digit",
                         hour12: false,
-                        timeZone: "UTC"
-                    })
-                    : "";
+                        timeZone: "UTC" // or remove if you want local time
+                    });
 
-                (tradesData.trades).forEach(trade => {
-                    console.log(trade);
+                    const closeTime = trade.close_time
+                        ? new Date(trade.close_time).toLocaleString("en-GB", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: false,
+                            timeZone: "UTC"
+                        })
+                        : "";
                     const tr = document.createElement('tr');
                     tr.classList.add("hover:bg-gray-50");
                     tr.innerHTML = `
