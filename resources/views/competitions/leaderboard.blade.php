@@ -714,7 +714,7 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                // console.log(data);
+                console.log(data);
                 // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;

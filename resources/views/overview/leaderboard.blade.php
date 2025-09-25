@@ -417,11 +417,11 @@
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Balance',
+                    label: 'Equity',
                     data: [],
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                    tension: 0.1,
+                    borderColor: '#5E35B1',
+                    backgroundColor: 'rgba(94, 53, 177, 0.1)',
+                    tension: 0.2,
                     fill: true
                 }]
             },
