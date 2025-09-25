@@ -489,13 +489,14 @@
         });
 
         async function updateTraderData(accountCode,startDate,endDate) {
-            console.log(accountCode);
-            console.log(startDate);
-            console.log(endDate);
             try {
                 const res = await fetch(`/competitions-overview/trader-data/${accountCode}/${startDate}/${endDate}`);
                 const tradesData = await res.json();
-                console.log(tradesData);
+                // console.log(tradesData);
+                performanceChart.data.labels = tradesData.chart_data.labels;
+                performanceChart.data.datasets[0].data = tradesData.chart_data.equity;
+                performanceChart.update();
+
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
