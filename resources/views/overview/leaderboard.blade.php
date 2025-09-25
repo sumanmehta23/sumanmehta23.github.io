@@ -251,11 +251,13 @@
                 <h5 id="performerName" class="font-bold p-4">{{ $rankings[0]['name'] ?? '' }}</h5>
                 <div class="grid grid-cols-1 lg:grid-cols-12">
                     <div class="p-6 lg:col-span-3 rounded-r-none">
-                        {{-- <p class="mb-2"><strong>Starting Balance:</strong> <span id="startingBalance">${{ $rankings[0]['balance'] ?? '' }}</span></p> --}}
-                        <p class="mb-2"><strong>Current Balance:</strong> <span id="currentBalance">${{ $rankings[0]['balance'] ?? '' }}</span></p>
-                        <p class="mb-2"><strong>Cumulative P/L:</strong> <span id="cumulativePL">${{ $rankings[0]['total_profit'] ?? '' }}</span></p>
-                        <p class="mb-2"><strong>Biggest Trade:</strong> <span id="largestTrade">${{ $rankings[0]['top_trade'] ?? '' }}</span></p>
-                        <p class="mb-2"><strong>Equity:</strong> <span id="equity">${{ $rankings[0]['equity'] ?? '' }}</span></p>
+                        <p class="mb-2">
+                            <strong>Current Balance:</strong><br>
+                            <span id="currentBalance">${{ $rankings[0]['balance'] ?? '' }}</span>
+                        </p>
+                        <p class="mb-2"><strong>Cumulative P/L:</strong><br> <span id="cumulativePL">${{ $rankings[0]['total_profit'] ?? '' }}</span></p>
+                        <p class="mb-2"><strong>Biggest Trade:</strong><br> <span id="largestTrade">${{ $rankings[0]['top_trade'] ?? '' }}</span></p>
+                        <p class="mb-2"><strong>Equity:</strong><br> <span id="equity">${{ $rankings[0]['equity'] ?? '' }}</span></p>
                     </div>
 
                     <!-- Chart -->
