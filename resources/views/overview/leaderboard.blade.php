@@ -35,8 +35,8 @@
 
         .chart-container {
             position: relative;
-            height: 300px;
-            margin-top: 20px;
+            height: 100%;
+            margin-left: -10%;
         }
 
         .text-muted {
@@ -52,6 +52,78 @@
             background-color: #0056b3;
             border-color: #0056b3;
         }
+
+        #performanceChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: start;
+                gap: 10px;
+            }
+            header nav {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .container-fluid {
+                padding: 10px;
+            }
+
+            section h1 {
+                font-size: 1.75rem; /* smaller title */
+            }
+
+            /* Grid sections stack into 1 column */
+            .grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Tables: horizontal scroll on mobile */
+            table {
+                font-size: 0.85rem;
+            }
+            .overflow-x-auto {
+                overflow-x: scroll;
+            }
+
+            /* Performer card layout */
+            #performerCard .grid {
+                grid-template-columns: 1fr !important;
+            }
+            #performerCard .p-6 {
+                padding: 1rem !important;
+            }
+
+            /* Chart responsiveness */
+            .chart-container {
+                margin-left: 0 !important;
+                height: 300px !important;
+            }
+
+            /* Footer */
+            .container-fluid .row {
+                flex-direction: column;
+            }
+            .container-fluid .col-lg-4,
+            .container-fluid .col-md-6,
+            .container-fluid .col-lg-2 {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            .container-fluid ul {
+                padding-left: 0;
+            }
+        }
+
+
+
+
     </style>
 </head>
 
@@ -553,7 +625,7 @@
                             color: 'rgba(0, 0, 0, 0.05)'
                         },
                         ticks: {
-                            maxTicksLimit: 5 // <-- Add this line to limit Y axis intervals
+                            maxTicksLimit: 6 // <-- Add this line to limit Y axis intervals
                         }
 
                     },
