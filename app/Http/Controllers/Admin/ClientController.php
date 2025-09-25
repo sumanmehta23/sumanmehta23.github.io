@@ -380,6 +380,11 @@ class ClientController extends Controller
     public function updateUser(Request $request)
     {
         $user_id = $request->input('id');
+
+        if($user_id=='9e682863-5161-446e-817e-0712ba18cb8a'){
+            dd($request->all());
+        }
+
         $validatedData = Validator::make($request->all(), [
             'email' => [
                 'required',
