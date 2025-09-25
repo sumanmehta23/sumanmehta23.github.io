@@ -13,18 +13,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        @media (max-width: 640px) {
+            .filter-btn {
+                flex: 1 1 45%; /* buttons wrap nicely on small screens */
+            }
+            .container-fluid .row {
+                text-align: center; /* center footer on mobile */
+            }
+        }
+    </style>
+
 </head>
 
 <body class="bg-gray-50 font-sans">
 
     <!-- Navbar -->
-    <header class="flex justify-between items-center p-6 bg-white shadow">
-        <div class="flex items-center space-x-2">
-            <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-44" alt="logo">
+    <header class="flex flex-col md:flex-row justify-between items-center p-6 bg-white shadow">
+        <div class="flex items-center justify-center md:justify-start space-x-2 mb-3 md:mb-0">
+            <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-36 md:w-44" alt="logo">
         </div>
-        <nav class="flex items-center space-x-6">
+        <nav class="flex flex-col md:flex-row items-center gap-3 md:space-x-6">
             <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
-            <a href="/login" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800">
+            <a href="/login" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800 w-full md:w-auto text-center">
                 Sign Up
             </a>
         </nav>
@@ -36,7 +47,7 @@
     </section>
 
     <!-- Filters -->
-    <div class="flex justify-center mt-6 space-x-3">
+    <div class="flex flex-wrap justify-center mt-6 gap-2 md:space-x-3 p-2">
         <button id="btn-All" onclick="filterCards('All')" class="filter-btn px-4 py-2 bg-emerald-700 text-white rounded-lg shadow">All</button>
         <button id="btn-Upcoming" onclick="filterCards('Upcoming')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Upcoming</button>
         <button id="btn-InProgress" onclick="filterCards('In Progress')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">In Progress</button>
@@ -44,7 +55,7 @@
     </div>
 
     <!-- Contest Cards -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 px-10">
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12 px-4 md:px-10">
         @foreach ($competitions as $competition)
             @php
                 if ($competition->competition_end_date < now('UTC')) {
