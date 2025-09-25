@@ -234,7 +234,7 @@
                                                 <span id="rankingsPaginationInfo">Page 1 of 1</span>
                                                 <button id="nextRankPage" class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">Next &gt;</button>
                                             </div>
-                                            <span>Showing 10 entries per page</span>
+                                            <span>Showing 5 entries per page</span>
                                         </div>
                                     </td>
                                 </tr>
