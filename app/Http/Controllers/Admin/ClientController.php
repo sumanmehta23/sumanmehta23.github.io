@@ -488,7 +488,7 @@ class ClientController extends Controller
                             $trade_user = null;
                             if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 Log::error('error' . ' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
-                                return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                                // return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
                             }
                             if ($trade_user) {
                                 $trade_user->Email = $email;
