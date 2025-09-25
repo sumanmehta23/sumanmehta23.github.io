@@ -592,6 +592,27 @@
         });
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const firstRanking = rankings[0];
+            if (firstRanking) {
+                // Update initial performer card with top ranking trader
+                document.getElementById('performerName').innerText = firstRanking.name;
+                document.getElementById('currentBalance').innerText = `$${firstRanking.balance}`;
+                document.getElementById('cumulativePL').innerText = `$${firstRanking.total_profit}`;
+                document.getElementById('largestTrade').innerText = `$${firstRanking.top_trade}`;
+                document.getElementById('equity').innerText = `$${firstRanking.equity}`;
+
+                // Load initial trader data for the chart
+                await updateTraderData(
+                    firstRanking.account_code,
+                    firstRanking.start_date,
+                    firstRanking.end_date
+                );
+            }
+        });
+    </script>
+
 
     <script>
         // Init Chart (only once)
