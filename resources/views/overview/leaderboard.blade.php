@@ -363,7 +363,7 @@
         // Rankings pagination
         const rankings = @json($rankings);
         let currentRankPage = 1;
-        const ranksPerPage = 10;
+        const ranksPerPage = 5;
 
         function renderRankings(page) {
             const startIndex = (page - 1) * ranksPerPage;
@@ -534,7 +534,7 @@
                     data: [],
                     borderColor: '#5E35B1',
                     backgroundColor: 'rgba(94, 53, 177, 0.1)',
-                    tension: 0.2,
+                    tension: 0.5,
                     fill: true
                 }]
             },
@@ -553,7 +553,7 @@
                             color: 'rgba(0, 0, 0, 0.05)'
                         },
                         ticks: {
-                            maxTicksLimit: 6 // <-- Add this line to limit Y axis intervals
+                            maxTicksLimit: 5 // <-- Add this line to limit Y axis intervals
                         }
 
                     },
