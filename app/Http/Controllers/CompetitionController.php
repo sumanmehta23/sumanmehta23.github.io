@@ -366,7 +366,7 @@ class CompetitionController extends Controller
         });
 
         // // Fill in any missing dates with the last known equity value
-        // $lastEquity = $account->equity ?? '0.00';
+        $lastEquity = $account->equity ?? '0.00';
         // $currentDate = $startDate->copy();
 
         // while ($currentDate <= $endDate) {
@@ -375,7 +375,7 @@ class CompetitionController extends Controller
         //     $labels[] = $dayLabel;
 
         //     if ($dailyData->has($dateKey)) {
-        //         $lastEquity = $dailyData[$dateKey]->equity;
+                $lastEquity = $dailyData[$dateKey]->equity;
         //     } else {
         //         $lastEquity = '0.00';
         //     }

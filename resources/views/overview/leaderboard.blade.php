@@ -460,6 +460,7 @@
         // Handle row clicks
         document.querySelectorAll('.competitor-row').forEach(row => {
             row.addEventListener('click', async () => {
+                console.log(row.dataset);
                 const name = row.dataset.name;
                 const balance = row.dataset.balance;
                 const equity = row.dataset.equity;
