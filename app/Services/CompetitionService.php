@@ -90,7 +90,6 @@ class CompetitionService
         $startDate = $competition->competition_start_date ?? now()->format('F');
         $endDate = $competition->competition_end_date ?? now()->year;
 
-
         return Account::with('user', 'accountType', 'trades')
             // ->where('competition_start_date', $startDate)
             // ->where('competition_end_date', $endDate)
@@ -100,7 +99,7 @@ class CompetitionService
             ->where('competition_product_id', $competition->id)
             ->orderByDesc('equity')
             ->get()
-            ->map(function($account, $index) {
+            ->map(function($account, $index) use ($competition) {
                 return [
                     'rank' => $index + 1,
                     'name' => $account->user->fullname ?? $account->user->email,
@@ -112,6 +111,8 @@ class CompetitionService
                     'top_trade' => $account->trades->sortByDesc('profit')->first()->profit ?? 0,
                     'total_trades' => $account->trades->count(),
                     'total_profit' => $account->balance - $account->initial_balance,
+                    'start_date' => $competition->competition_start_date,
+                    'end_date' => $competition->competition_end_date,
                 ];
             });
     }

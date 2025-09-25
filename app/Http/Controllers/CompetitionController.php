@@ -343,12 +343,13 @@ class CompetitionController extends Controller
         }
     }
 
-    public function getTraderData($accountNo)
+    public function getTraderData($accountNo, $start, $end)
     {
 
         // Ensure start and end are Carbon instances
-        // $startDate = \Carbon\Carbon::parse($start)->startOfDay();
-        // $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+        $startDate = Carbon::parse($start);
+
+        $endDate = Carbon::parse($end);
 
         $account = Account::with([
             'trades',
@@ -367,22 +368,22 @@ class CompetitionController extends Controller
 
         // // Fill in any missing dates with the last known equity value
         $lastEquity = $account->equity ?? '0.00';
-        // $currentDate = $startDate->copy();
+        $currentDate = $startDate->copy();
 
-        // while ($currentDate <= $endDate) {
-        //     $dateKey = $currentDate->format('Y-m-d');
-        //     $dayLabel = $currentDate->format('M d');
-        //     $labels[] = $dayLabel;
+        while ($currentDate <= $endDate) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $dayLabel = $currentDate->format('M d');
+            $labels[] = $dayLabel;
 
-        //     if ($dailyData->has($dateKey)) {
+            if ($dailyData->has($dateKey)) {
                 $lastEquity = $dailyData[$dateKey]->equity;
-        //     } else {
-        //         $lastEquity = '0.00';
-        //     }
+            } else {
+                $lastEquity = '0.00';
+            }
 
-        //     $equity[] = round($lastEquity, 2);
-        //     $currentDate->addDay();
-        // }
+            $equity[] = round($lastEquity, 2);
+            $currentDate->addDay();
+        }
 // dd($account->trades);
         // Get trades data
         $trades = $account->trades->map(function ($trade) {

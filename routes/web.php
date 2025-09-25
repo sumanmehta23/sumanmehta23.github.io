@@ -71,7 +71,7 @@ Route::get("/five", function () {
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
 Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');
-Route::get('/competitions-overview/trader-data/{accountNo}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
+Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 
 Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {

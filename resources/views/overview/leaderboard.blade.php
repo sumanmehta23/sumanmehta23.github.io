@@ -153,6 +153,7 @@
                             </thead>
                             <tbody class="text-sm">
                                 @foreach ($rankings as $rank)
+                                    {{-- {{ dd($rank) }} --}}
                                     <tr class="bg-white border-b hover:bg-gray-50 cursor-pointer competitor-row"
                                         data-name="{{ $rank['name'] ?? 'N/A' }}"
                                         data-balance="{{ $rank['balance'] ?? 0 }}"
@@ -160,6 +161,8 @@
                                         data-profit="{{ $rank['total_profit'] ?? 0 }}"
                                         data-top-trade="{{ $rank['top_trade'] ?? 0 }}"
                                         data-account-code="{{ $rank['account_code'] ?? '' }}"
+                                        data-start-date="{{ $rank['start_date'] ?? '' }}"
+                                        data-end-date="{{ $rank['end_date'] ?? '' }}"
                                         data-trades="{{ $rank['total_trades'] ?? 0 }}">
                                         <td class="p-3 font-bold">
                                             <span
@@ -460,7 +463,7 @@
         // Handle row clicks
         document.querySelectorAll('.competitor-row').forEach(row => {
             row.addEventListener('click', async () => {
-                console.log(row.dataset);
+                // console.log(row.dataset);
                 const name = row.dataset.name;
                 const balance = row.dataset.balance;
                 const equity = row.dataset.equity;
@@ -468,6 +471,8 @@
                 const topTrade = row.dataset.topTrade;
                 const trades = row.dataset.trades;
                 const account = row.dataset.accountCode;
+                const startDate = row.dataset.startDate;
+                const endDate = row.dataset.endDate;
 
                 // Update performer card
                 document.getElementById('performerName').innerText = name;
@@ -479,13 +484,16 @@
 
                 // Update Trading Log title
                 document.getElementById('tradingLogTitle').innerText = `${name} - Trading Log`;
-                await updateTraderData(account);
+                await updateTraderData(account,startDate,endDate);
             });
         });
 
-        async function updateTraderData(accountCode) {
+        async function updateTraderData(accountCode,startDate,endDate) {
+            console.log(accountCode);
+            console.log(startDate);
+            console.log(endDate);
             try {
-                const res = await fetch(`/competitions-overview/trader-data/${accountCode}`);
+                const res = await fetch(`/competitions-overview/trader-data/${accountCode}/${startDate}/${endDate}`);
                 const tradesData = await res.json();
                 console.log(tradesData);
                 const tbody = document.getElementById('tradingLogBody');
