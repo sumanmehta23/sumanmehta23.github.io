@@ -98,6 +98,7 @@ class CompetitionService
             ->where('demo', true)
             ->where('competition_product_id', $competition->id)
             ->orderByDesc('equity')
+            ->take(10)
             ->get()
             ->map(function($account, $index) use ($competition) {
                 return [

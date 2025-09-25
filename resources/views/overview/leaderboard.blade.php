@@ -258,7 +258,11 @@
                 </table>
             </div>
             <div class="flex justify-between items-center p-4 text-xs text-gray-500 border-t">
-                <span id="paginationInfo">Page 1 of 1 | Items {{ count($stats['top_performer']->trades ?? []) }}</span>
+                <div class="flex items-center gap-2">
+                    <button id="prevPage" class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">&lt; Prev</button>
+                    <span id="paginationInfo">Page 1 of 1 | Items {{ count($stats['top_performer']->trades ?? []) }}</span>
+                    <button id="nextPage" class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">Next &gt;</button>
+                </div>
                 <span id="lastUpdate">Last Update: 5 minutes ago</span>
             </div>
         </div>
@@ -408,6 +412,22 @@
         // Run immediately and then every second
         updateCountdown();
         interval = setInterval(updateCountdown, 1000);
+
+        // Add pagination event listeners
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTrades(currentPage);
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            const totalPages = Math.ceil(allTrades.length / tradesPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTrades(currentPage);
+            }
+        });
     </script>
 
 
@@ -488,44 +508,66 @@
             });
         });
 
+        let currentPage = 1;
+        let tradesPerPage = 10;
+        let allTrades = [];
+
+        function renderTrades(page) {
+            const startIndex = (page - 1) * tradesPerPage;
+            const endIndex = startIndex + tradesPerPage;
+            const tradesToShow = allTrades.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('tradingLogBody');
+            tbody.innerHTML = "";
+
+            tradesToShow.forEach(trade => {
+                const openTime = toUtcString(trade.open_time);
+                const closeTime = trade.close_time ? toUtcString(trade.close_time) : "";
+
+                const tr = document.createElement('tr');
+                tr.classList.add("hover:bg-gray-50");
+                tr.innerHTML = `
+                    <td class="px-4 py-3">${openTime}</td>
+                    <td class="px-4 py-3">${trade.symbol}</td>
+                    <td class="px-4 py-3">#${trade.position}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 text-xs font-semibold ${trade.type.toLowerCase() == 'buy' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
+                            ${trade.type.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">${trade.volume}</td>
+                    <td class="px-4 py-3">${trade.open_price}</td>
+                    <td class="px-4 py-3">${closeTime}</td>
+                    <td class="px-4 py-3">${trade.close_price}</td>
+                    <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update pagination info and buttons
+            const totalPages = Math.ceil(allTrades.length / tradesPerPage);
+            document.getElementById('paginationInfo').innerText =
+                `Page ${page} of ${totalPages} | Items ${allTrades.length}`;
+
+            // Enable/disable pagination buttons
+            document.getElementById('prevPage').disabled = page <= 1;
+            document.getElementById('nextPage').disabled = page >= totalPages;
+        }
+
         async function updateTraderData(accountCode,startDate,endDate) {
             try {
                 const res = await fetch(`/competitions-overview/trader-data/${accountCode}/${startDate}/${endDate}`);
                 const tradesData = await res.json();
-                // console.log(tradesData);
+
                 performanceChart.data.labels = tradesData.chart_data.labels;
                 performanceChart.data.datasets[0].data = tradesData.chart_data.equity;
                 performanceChart.update();
 
-                const tbody = document.getElementById('tradingLogBody');
-                tbody.innerHTML = "";
+                // Store all trades and render first page
+                allTrades = tradesData.trades;
+                currentPage = 1;
+                renderTrades(currentPage);
 
-                tradesData.trades.forEach(trade => {
-                    // Convert open_time and close_time to UTC
-                    const openTime = toUtcString(trade.open_time);
-                    const closeTime = trade.close_time ? toUtcString(trade.close_time) : "";
-
-                    const tr = document.createElement('tr');
-                    tr.classList.add("hover:bg-gray-50");
-                    tr.innerHTML = `
-                        <td class="px-4 py-3">${openTime}</td>
-                        <td class="px-4 py-3">${trade.symbol}</td>
-                        <td class="px-4 py-3">#${trade.position}</td>
-                        <td class="px-4 py-3">
-                            <span class="px-2 py-1 text-xs font-semibold ${trade.type.toLowerCase() == 'buy' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} rounded">
-                                ${trade.type.toUpperCase()}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">${trade.volume}</td>
-                        <td class="px-4 py-3">${trade.open_price}</td>
-                        <td class="px-4 py-3">${closeTime}</td>
-                        <td class="px-4 py-3">${trade.close_price}</td>
-                        <td class="px-4 py-3 ${trade.profit >= 0 ? 'text-green-600 font-bold' : 'text-red-600'}">${trade.profit}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('paginationInfo').innerText = `Page 1 of 1 | Items ${tradesData.trades.length}`;
                 document.getElementById('lastUpdate').innerText = `Last Update: just now`;
 
             } catch (e) {
