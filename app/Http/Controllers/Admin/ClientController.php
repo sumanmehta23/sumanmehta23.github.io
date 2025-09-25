@@ -506,7 +506,7 @@ class ClientController extends Controller
                         // }
                         foreach ($accounts as $account) {
                             $trade_user = null;
-                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                            if (($error_code = $this->mt5Service->userGet((int)$account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 Log::error("Account {$account->code}: Failed to fetch user. Error: " . MTRetCode::GetError($error_code));
                                 continue; // Skip to next account
                             }
