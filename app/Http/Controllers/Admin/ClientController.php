@@ -505,6 +505,9 @@ class ClientController extends Controller
                         //     }
                         // }
                         foreach ($accounts as $account) {
+                            $account->email = $email;
+                            $account->name = $fullname;
+                            $account->save();
                             $trade_user = null;
                             if (($error_code = $this->mt5Service->userGet((int)$account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                 Log::error("Account {$account->code}: Failed to fetch user. Error: " . MTRetCode::GetError($error_code));
@@ -512,6 +515,9 @@ class ClientController extends Controller
                             }
                             if ($trade_user) {
                                 $trade_user->Email = $email;
+                                $trade_user->Name = $fullname;
+                                $trade_user->Phone = $number;
+                                $trade_user->Country = $country;
                                 $updated_user = "";
                                 $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
                                 if ($error_code != MTRetCode::MT_RET_OK) {
