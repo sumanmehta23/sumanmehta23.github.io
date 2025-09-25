@@ -381,10 +381,6 @@ class ClientController extends Controller
     {
         $user_id = $request->input('id');
 
-        if($user_id=='9e682863-5161-446e-817e-0712ba18cb8a'){
-            dd($request->all());
-        }
-
         $validatedData = Validator::make($request->all(), [
             'email' => [
                 'required',
@@ -479,7 +475,9 @@ class ClientController extends Controller
             try {
 
                 $user = User::find($user_id);
-
+                if($user_id=='9e682863-5161-446e-817e-0712ba18cb8a'){
+                    dd($request->all());
+                }
                 if ($user) {
                     if ($email) {
                         $accounts = Account::where('email', $user->email)->get();
