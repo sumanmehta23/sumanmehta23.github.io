@@ -486,6 +486,7 @@
             try {
                 const res = await fetch(`/competitions-overview/trader-data/${accountCode}`);
                 const tradesData = await res.json();
+                console.log(tradesData);
                 const tbody = document.getElementById('tradingLogBody');
                 tbody.innerHTML = "";
 
