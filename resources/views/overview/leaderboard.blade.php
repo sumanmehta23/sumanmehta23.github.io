@@ -151,33 +151,22 @@
                                     <th class="p-3">Total trades</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-sm">
-                                @foreach ($rankings as $rank)
-                                    {{-- {{ dd($rank) }} --}}
-                                    <tr class="bg-white border-b hover:bg-gray-50 cursor-pointer competitor-row"
-                                        data-name="{{ $rank['name'] ?? 'N/A' }}"
-                                        data-balance="{{ $rank['balance'] ?? 0 }}"
-                                        data-equity="{{ $rank['equity'] ?? 0 }}"
-                                        data-profit="{{ $rank['total_profit'] ?? 0 }}"
-                                        data-top-trade="{{ $rank['top_trade'] ?? 0 }}"
-                                        data-account-code="{{ $rank['account_code'] ?? '' }}"
-                                        data-start-date="{{ $rank['start_date'] ?? '' }}"
-                                        data-end-date="{{ $rank['end_date'] ?? '' }}"
-                                        data-trades="{{ $rank['total_trades'] ?? 0 }}">
-                                        <td class="p-3 font-bold">
-                                            <span
-                                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold">
-                                                {{ $rank['rank'] ?? 'N/A'}}
-                                            </span>
-                                        </td>
-                                        <td class="p-3">{{ $rank['name'] ?? 'N/A' }}</td>
-                                        <td class="p-3">${{ $rank['balance'] ?? 'N/A'}}</td>
-                                        <td class="p-3">${{ $rank['equity'] ?? 'N/A'}}</td>
-                                        <td class="p-3">${{ $rank['total_profit'] ?? 'N/A'}}</td>
-                                        <td class="p-3">{{ $rank['total_trades'] ?? 'N/A'}}</td>
-                                    </tr>
-                                @endforeach
+                            <tbody class="text-sm" id="rankingsTableBody">
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="p-4 border-t">
+                                        <div class="flex justify-between items-center text-xs text-gray-500">
+                                            <div class="flex items-center gap-2">
+                                                <button id="prevRankPage" class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">&lt; Prev</button>
+                                                <span id="rankingsPaginationInfo">Page 1 of 1</span>
+                                                <button id="nextRankPage" class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">Next &gt;</button>
+                                            </div>
+                                            <span>Showing 10 entries per page</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -371,6 +360,107 @@
     </div>
   </div>
     <script>
+        // Rankings pagination
+        const rankings = @json($rankings);
+        let currentRankPage = 1;
+        const ranksPerPage = 10;
+
+        function renderRankings(page) {
+            const startIndex = (page - 1) * ranksPerPage;
+            const endIndex = startIndex + ranksPerPage;
+            const ranksToShow = rankings.slice(startIndex, endIndex);
+
+            const tbody = document.getElementById('rankingsTableBody');
+            tbody.innerHTML = '';
+
+            ranksToShow.forEach(rank => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50 cursor-pointer competitor-row';
+                tr.dataset.name = rank.name ?? 'N/A';
+                tr.dataset.balance = rank.balance ?? 0;
+                tr.dataset.equity = rank.equity ?? 0;
+                tr.dataset.profit = rank.total_profit ?? 0;
+                tr.dataset.topTrade = rank.top_trade ?? 0;
+                tr.dataset.accountCode = rank.account_code ?? '';
+                tr.dataset.startDate = rank.start_date ?? '';
+                tr.dataset.endDate = rank.end_date ?? '';
+                tr.dataset.trades = rank.total_trades ?? 0;
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold">
+                            ${rank.rank ?? 'N/A'}
+                        </span>
+                    </td>
+                    <td class="p-3">${rank.name ?? 'N/A'}</td>
+                    <td class="p-3">$${rank.balance ?? 'N/A'}</td>
+                    <td class="p-3">$${rank.equity ?? 'N/A'}</td>
+                    <td class="p-3">$${rank.total_profit ?? 'N/A'}</td>
+                    <td class="p-3">${rank.total_trades ?? 'N/A'}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            // Update pagination info and buttons
+            const totalPages = Math.ceil(rankings.length / ranksPerPage);
+            document.getElementById('rankingsPaginationInfo').innerText =
+                `Page ${page} of ${totalPages}`;
+
+            // Enable/disable pagination buttons
+            document.getElementById('prevRankPage').disabled = page <= 1;
+            document.getElementById('nextRankPage').disabled = page >= totalPages;
+
+            // Reattach click handlers for competitor rows
+            attachCompetitorRowHandlers();
+        }
+
+        // Add pagination event listeners for rankings
+        document.getElementById('prevRankPage').addEventListener('click', () => {
+            if (currentRankPage > 1) {
+                currentRankPage--;
+                renderRankings(currentRankPage);
+            }
+        });
+
+        document.getElementById('nextRankPage').addEventListener('click', () => {
+            const totalPages = Math.ceil(rankings.length / ranksPerPage);
+            if (currentRankPage < totalPages) {
+                currentRankPage++;
+                renderRankings(currentRankPage);
+            }
+        });
+
+        // Initial render of rankings
+        renderRankings(1);
+
+        // Function to attach click handlers to competitor rows
+        function attachCompetitorRowHandlers() {
+            document.querySelectorAll('.competitor-row').forEach(row => {
+                row.addEventListener('click', async () => {
+                    const name = row.dataset.name;
+                    const balance = row.dataset.balance;
+                    const equity = row.dataset.equity;
+                    const profit = row.dataset.profit;
+                    const topTrade = row.dataset.topTrade;
+                    const account = row.dataset.accountCode;
+                    const startDate = row.dataset.startDate;
+                    const endDate = row.dataset.endDate;
+
+                    // Update performer card
+                    document.getElementById('performerName').innerText = name;
+                    document.getElementById('currentBalance').innerText = `$${balance}`;
+                    document.getElementById('cumulativePL').innerText = `$${profit}`;
+                    document.getElementById('largestTrade').innerText = `$${topTrade}`;
+                    document.getElementById('equity').innerText = `$${equity}`;
+
+                    // Update Trading Log title
+                    document.getElementById('tradingLogTitle').innerText = `${name} - Trading Log`;
+                    await updateTraderData(account, startDate, endDate);
+                });
+            });
+        }
+
         // Parse PHP dates safely into JS Date objects (UTC)
         const startDate = new Date("{{ $stats['competition_start_date'] }} UTC").getTime();
         const endDate   = new Date("{{ $stats['competition_end_date'] }} UTC").getTime();
