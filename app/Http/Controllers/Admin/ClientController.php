@@ -484,26 +484,46 @@ class ClientController extends Controller
                             return redirect()->back()->with('error', 'Failed to connect to MT5 server');
                         }
 
+                        // foreach ($accounts as $account) {
+                        //     $trade_user = null;
+                        //     if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
+                        //         Log::error('error' . ' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                        //         // return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                        //     }
+                        //     if ($trade_user) {
+                        //         $trade_user->Email = $email;
+                        //         $updated_user = "";
+                        //         $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
+                        //         if ($error_code != MTRetCode::MT_RET_OK) {
+                        //             Log::error("error " . $account->code . " Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                        //             return redirect()->back()->with("error", "Something went wrong on Updating email" . MTRetCode::GetError($error_code));
+                        //         } else {
+                        //             Account::where('code', $account->code)->update([
+                        //                 'email' => $email
+                        //             ]);
+                        //         }
+                        //     }
+                        // }
                         foreach ($accounts as $account) {
                             $trade_user = null;
                             if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                Log::error('error' . ' Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
-                                // return redirect()->back()->with('error', 'Something went wrong on getting user  details' . MTRetCode::GetError($error_code));
+                                Log::error("Account {$account->code}: Failed to fetch user. Error: " . MTRetCode::GetError($error_code));
+                                continue; // Skip to next account
                             }
                             if ($trade_user) {
                                 $trade_user->Email = $email;
                                 $updated_user = "";
                                 $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
                                 if ($error_code != MTRetCode::MT_RET_OK) {
-                                    Log::error("error " . $account->code . " Something went wrong on Updating email" . MTRetCode::GetError($error_code));
-                                    return redirect()->back()->with("error", "Something went wrong on Updating email" . MTRetCode::GetError($error_code));
-                                } else {
-                                    Account::where('code', $account->code)->update([
-                                        'email' => $email
-                                    ]);
+                                    Log::error("Account {$account->code}: Failed to update email. Error: " . MTRetCode::GetError($error_code));
+                                    continue; // Skip this account but keep looping
                                 }
+                                Account::where('code', $account->code)->update([
+                                    'email' => $email
+                                ]);
                             }
                         }
+
                     }
 
                     $user->fullname = $fullname;
