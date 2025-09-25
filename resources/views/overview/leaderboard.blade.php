@@ -751,7 +751,7 @@
                 currentPage = 1;
                 renderTrades(currentPage);
 
-                document.getElementById('lastUpdate').innerText = `Last Update: just now`;
+                document.getElementById('lastUpdate').innerText = ``;
 
             } catch (e) {
                 console.error("Error fetching trades:", e);
