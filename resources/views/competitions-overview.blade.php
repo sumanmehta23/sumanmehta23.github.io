@@ -19,7 +19,7 @@
                 flex: 1 1 45%; /* buttons wrap nicely on small screens */
             }
             .container-fluid .row {
-                text-align: center; /* center footer on mobile */
+                text-align: left; /* center footer on mobile */
             }
         }
     </style>
