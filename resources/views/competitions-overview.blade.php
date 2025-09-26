@@ -31,7 +31,9 @@
     <!-- Navbar -->
     <header class="flex flex-col md:flex-row justify-between items-center p-6 bg-white shadow">
         <div class="flex items-center justify-center md:justify-start space-x-2 mb-3 md:mb-0">
-            <img src="/{{ $settings['admin_sidebar_logo'] }}" href='https://www.lqhmarkets.com/' class="w-36 md:w-44" alt="logo">
+            <a href='https://www.lqhmarkets.com/'>
+                <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-36 md:w-44" alt="logo">
+            </a>
         </div>
         <nav class="flex flex-col md:flex-row items-center gap-3 md:space-x-6">
             <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
