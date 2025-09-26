@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\IbPlanDetails;
 use Illuminate\Console\Command;
 use App\Jobs\SyncAccountTradesJob;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -17,9 +18,22 @@ class SyncAccountTrades extends Command
     protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
+    private function interpolateQuery($query, $bindings)
+    {
+        foreach ($bindings as $binding) {
+            // Quote strings, leave numbers as is
+            $binding = is_numeric($binding) ? $binding : "'" . addslashes($binding) . "'";
+            $query = preg_replace('/\?/', $binding, $query, 1);
+        }
+        return $query;
+    }
     public function handle()
     {
         Log::info('Starting SyncAccountTrades command every x minutes');
+        DB::listen(function ($query) {
+            $fullSql = $this->interpolateQuery($query->sql, $query->bindings);
+            Log::info("Full SQL: $fullSql");
+        });
         $batchSize = (int) $this->option('batch-size');
         $maxJobs = (int) $this->option('max-jobs');
         $activeOnly = $this->option('active-only');
@@ -69,7 +83,7 @@ class SyncAccountTrades extends Command
 
                 // Apply code filter if provided
                 if ($code) {
-                    Log::info("synced account for code : $code");
+                    // Log::info("synced account for code : $code");
                     $accountQuery->where('code', $code);
                 }
 
@@ -90,8 +104,8 @@ class SyncAccountTrades extends Command
                         }
                     })->where('status', 1)
                 )
-                    ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
-                        Log::info("synced account for code : " . json_encode($accounts));
+                    ->chunk(5000, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
+                        Log::info("synced account for account ids : " . json_encode($accounts));
                         $this->totalAccountsProcessed += $accounts->count();
                         // Stop creating jobs if we've reached the limit
                         if ($totalJobsCreated >= $maxJobs) {
@@ -114,10 +128,10 @@ class SyncAccountTrades extends Command
                                 $this->info('Dispatching sync for 505255');
                                 Log::info('dispaching sync for 505255');
                             }
-                            Log::info("synced account for code : " . json_encode($accountIds));
-                            Log::info("synced account for code : " . json_encode($referral_code));
-                            Log::info("synced account for code : " . json_encode($userId));
-                            Log::info("synced account for code : " . json_encode($ib_acc_plans));
+                            Log::info("synced account accountIds : " . json_encode($accountIds));
+                            Log::info("synced account referral_code : " . json_encode($referral_code));
+                            Log::info("synced account userId : " . json_encode($userId));
+                            Log::info("synced account ib_acc_plans : " . json_encode($ib_acc_plans));
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }
