@@ -72,7 +72,7 @@ class BatchBalanceSyncJob implements ShouldQueue
             // Extract login codes for batch API call
             $logins = $accounts->pluck('code')->map(fn($code) => (int)$code)->toArray();
 
-            Log::debug('BatchBalanceSyncJob: Fetching balances for logins', ['logins' => $logins]);
+            // Log::debug('BatchBalanceSyncJob: Fetching balances for logins', ['logins' => $logins]);
 
             // Use REST API to get all balances in one call
             $balanceData = $restApiService->getBatchBalances($logins);
