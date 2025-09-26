@@ -18,22 +18,22 @@ class SyncAccountTrades extends Command
     protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
-    private function interpolateQuery($query, $bindings)
-    {
-        foreach ($bindings as $binding) {
-            // Quote strings, leave numbers as is
-            $binding = is_numeric($binding) ? $binding : "'" . addslashes($binding) . "'";
-            $query = preg_replace('/\?/', $binding, $query, 1);
-        }
-        return $query;
-    }
+    // private function interpolateQuery($query, $bindings)
+    // {
+    //     foreach ($bindings as $binding) {
+    //         // Quote strings, leave numbers as is
+    //         $binding = is_numeric($binding) ? $binding : "'" . addslashes($binding) . "'";
+    //         $query = preg_replace('/\?/', $binding, $query, 1);
+    //     }
+    //     return $query;
+    // }
     public function handle()
     {
-        Log::info('Starting SyncAccountTrades command every x minutes');
-        DB::listen(function ($query) {
-            $fullSql = $this->interpolateQuery($query->sql, $query->bindings);
-            Log::info("Full SQL: $fullSql");
-        });
+        // Log::info('Starting SyncAccountTrades command every x minutes');
+        // DB::listen(function ($query) {
+        //     $fullSql = $this->interpolateQuery($query->sql, $query->bindings);
+        //     Log::info("Full SQL: $fullSql");
+        // });
         $batchSize = (int) $this->option('batch-size');
         $maxJobs = (int) $this->option('max-jobs');
         $activeOnly = $this->option('active-only');
