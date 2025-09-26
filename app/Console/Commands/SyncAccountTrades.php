@@ -90,6 +90,7 @@ class SyncAccountTrades extends Command
                     })->where('status', 1)
                 )
                     ->chunk(500, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
+                        Log::info("synced account for code : ".json_encode($accounts));
                         $this->totalAccountsProcessed += $accounts->count();
                         // Stop creating jobs if we've reached the limit
                         if ($totalJobsCreated >= $maxJobs) {
@@ -112,6 +113,10 @@ class SyncAccountTrades extends Command
                                 $this->info('Dispatching sync for 505255');
                                 Log::info('dispaching sync for 505255');
                             }
+                            Log::info("synced account for code : ".json_encode($accountIds));
+                            Log::info("synced account for code : ".json_encode($referral_code));
+                            Log::info("synced account for code : ".json_encode($userId));
+                            Log::info("synced account for code : ".json_encode($ib_acc_plans));
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
                         }
