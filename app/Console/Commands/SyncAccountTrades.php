@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Cache;
 class SyncAccountTrades extends Command
 {
     protected $totalAccountsProcessed = 0;
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=500 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
     // private function interpolateQuery($query, $bindings)
