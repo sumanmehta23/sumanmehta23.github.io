@@ -68,6 +68,7 @@ class SyncAccountTrades extends Command
 
                 // Apply code filter if provided
                 if ($code) {
+                    Log::info("synced account for code : $code");
                     $accountQuery->where('code', $code);
                 }
 
