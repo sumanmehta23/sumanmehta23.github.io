@@ -58,12 +58,14 @@
             </div>
         </div>
     @else
-        <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
-            <div class="row p-3">
-                <div class="card-body text-center">
-                    <div class="text-center me-4"><a href="/transactions/deposit#"><img src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
-                    <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !</h6>
-                    <a id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span class="text-truncate">Verify Now To Proceed</span></button></a>
+        <div class="pc-content">
+            <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
+                <div class="row p-3">
+                    <div class="card-body text-center">
+                        <div class="text-center me-4"><a href="/transactions/deposit#"><img src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
+                        <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !</h6>
+                        <a id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span class="text-truncate">Verify Now To Proceed</span></button></a>
+                    </div>
                 </div>
             </div>
         </div>
