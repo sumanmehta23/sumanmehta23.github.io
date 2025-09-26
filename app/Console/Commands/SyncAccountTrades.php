@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
 class SyncAccountTrades extends Command
 {
     protected $totalAccountsProcessed = 0;
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--ids= : Sync only for specific account ids (comma-separated)}';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=50 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
     public function handle()
@@ -23,7 +23,7 @@ class SyncAccountTrades extends Command
         $maxJobs = (int) $this->option('max-jobs');
         $activeOnly = $this->option('active-only');
         $email = $this->option('email');
-        $ids = $this->option('ids') ? array_map('trim', explode(',', $this->option('ids'))) : [];
+        $code = $this->option('code');
 
         $totalJobsCreated = 0;
         $ibQuery = Ib1::with(['planDetails', 'user'])
@@ -36,7 +36,7 @@ class SyncAccountTrades extends Command
         }
 
         $ibQuery->cursor()  // More memory efficient for large datasets
-            ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, $ids, &$totalJobsCreated) {
+            ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, $code, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
 
                 if (!$plan_id) return;
@@ -66,9 +66,9 @@ class SyncAccountTrades extends Command
                     ->where('demo', false)
                     ->where('account_request_status', 1);
 
-                // Apply IDs filter if provided
-                if (!empty($ids)) {
-                    $accountQuery->whereIn('id', $ids);
+                // Apply code filter if provided
+                if ($code) {
+                    $accountQuery->where('code', $code);
                 }
 
                 // Apply activity filter if requested
