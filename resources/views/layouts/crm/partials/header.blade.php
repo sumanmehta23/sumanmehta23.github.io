@@ -399,7 +399,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                             <use xlink:href="#custom-user-square"></use>
                                         </svg>
                                     </span>
-                                    <span class="pc-mtext">MT5 Accounts</span>
+                                    <span class="pc-mtext">Accounts</span>
                                     <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
