@@ -7,17 +7,11 @@ use App\Models\KycLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use App\Actions\SubscribeToKlaviyoList;
+use App\Events\KycVerifiedEvent;
 use Illuminate\Support\Facades\Validator;
 
 class KycSyncController extends Controller
 {
-    protected $subscribeToKlaviyoList;
-
-    public function __construct(SubscribeToKlaviyoList $subscribeToKlaviyoList)
-    {
-        $this->subscribeToKlaviyoList = $subscribeToKlaviyoList;
-    }
 
     /**
      * Display the KYC sync page
@@ -370,8 +364,8 @@ class KycSyncController extends Controller
         // Update user's KYC status to verified
         // $user->update(['kyc_verify' => 1]);
 
-        // Subscribe to Klaviyo list if configured
-        $this->subscribeToKlaviyo($user);
+        // Fire Customer.io event for KYC verification
+        event(new KycVerifiedEvent($user));
 
         return [
             'success' => true,
@@ -448,29 +442,7 @@ class KycSyncController extends Controller
         }
     }
 
-    /**
-     * Subscribe user to Klaviyo list
-     */
-    private function subscribeToKlaviyo(User $user)
-    {
-        try {
-            $klaviyoConfig = config('services.klaviyo');
-            $list_id = $klaviyoConfig['list_ids']['KYC_COMPLETED'] ?? null;
-            
-            if ($list_id) {
-                $this->subscribeToKlaviyoList->handle($user, $list_id);
-            } else {
-                Log::info('Klaviyo KYC_COMPLETED list ID not configured, skipping subscription', [
-                    'user_id' => $user->id
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to subscribe to Klaviyo', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
+
 
     /**
      * Get applicant ID by email from Sumsub

@@ -65,8 +65,11 @@ return [
         'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
         'clientId' => env('SUMSUB_CLIENT_ID', ''),
     ],
-    'klaviyo' => [
-        'list_ids' => json_decode(env('KLAVIYO_LIST_IDS', '[]'), true),
+    'customerio' => [
+        'api_url' => env('CUSTOMERIO_API_URL', 'https://track.customer.io'),
+        'site_id' => env('CUSTOMERIO_SITE_ID'),
+        'app_key' => env('CUSTOMERIO_APP_KEY'),
+        'tracking_api_key' => env('CUSTOMERIO_TRACKING_API_KEY')
     ],
     '1forge' => [
         'api_key' => env('FORGE_API_KEY', ''),

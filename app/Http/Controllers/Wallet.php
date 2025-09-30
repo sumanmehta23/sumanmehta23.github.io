@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Actions\SubscribeToKlaviyoList;
+use App\Events\AccountTradesDepositEvent;
 use App\Http\Resources\DepositResource;
 use Spatie\Activitylog\Models\Activity;
 use App\Http\Resources\DepositCollection;
@@ -937,29 +937,8 @@ class Wallet extends Controller
             // }
         }
     }
-    protected function getKlaviyoListId($amount)
-    {
-        $lists = [
-            'DEPOSIT_10_200' => ['min' => 10, 'max' => 200, 'id' => config('services.klaviyo.list_ids.DEPOSIT_10_200')],
-            'DEPOSIT_200_2000' => ['min' => 200, 'max' => 2000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_200_2000')],
-            'DEPOSIT_2000_5000' => ['min' => 2000, 'max' => 5000, 'id' => config('services.klaviyo.list_ids.DEPOSIT_2000_5000')],
-            'DEPOSIT_5000_PLUS' => ['min' => 5000, 'max' => PHP_INT_MAX, 'id' => config('services.klaviyo.list_ids.DEPOSIT_5000_PLUS')],
-        ];
-        foreach ($lists as $list) {
-            if ($amount >= $list['min'] && $amount < $list['max']) {
-                return $list['id'];
-            }
-        }
-        return null;
-    }
-    protected function subscribeToKlaviyoList(User $user, $amount, SubscribeToKlaviyoList $subscribeToKlaviyoList)
-    {
-        $listId = $this->getKlaviyoListId($amount);
-        if ($listId) {
-            $subscribeToKlaviyoList->handle($user, $listId);
-        }
-    }
-    public function secureProcessPayment(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+
+    public function secureProcessPayment(Request $request)
     {
         // Get the JSON payload from the request
         $payload = $request->json()->all();
@@ -1044,7 +1023,8 @@ class Wallet extends Controller
 
                         DB::commit();
                         $user = User::where('id', $customerID)->first();
-                        $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                        // Fire Customer.io event for deposit
+                        event(new AccountTradesDepositEvent($user, $amount));
                         Cache::forget("user:{$customerID}:wallet_balance");
                         Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
 
@@ -1267,7 +1247,8 @@ class Wallet extends Controller
                                 DB::commit();
 
                                 $user = User::where('id', $customerID)->first();
-                                $this->subscribeToKlaviyoList($user, $amount, $subscribeToKlaviyoList);
+                                // Fire Customer.io event for deposit
+                                event(new AccountTradesDepositEvent($user, $amount));
                                 Cache::forget("user:{$customerID}:wallet_balance");
 
                                 Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
