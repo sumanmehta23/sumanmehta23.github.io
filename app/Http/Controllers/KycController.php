@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\KycLog;
 use App\Models\KycUpdate;
+use App\Events\KycVerifiedEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
@@ -97,6 +98,9 @@ class KycController extends Controller
                 // Update user's KYC status to verified
                 $user->kyc_verify = 1;
                 $user->save();
+                
+                // Fire the KycVerifiedEvent for Customer.io integration
+                event(new KycVerifiedEvent($user));
 
                 $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
                 if ($list_id) {
