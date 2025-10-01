@@ -563,7 +563,10 @@ class TradeWithdrawal extends Controller
                     "subtitle_right" => "Your Account Withdrawal Request",
                     "btn_text" => "Verify"
                 ];
-                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+                if($toEmail !='empirelegacy55@gmail.com' || $toEmail !='fxlifeab@gmail.com'){
+                    $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+                }
+
                 // RateLimiter::clear($key);
                 // return response()->json(['success' => "Verification email sent successfully."]);
                 return redirect()->route('trade-withdrawal')->with('success', 'Verification email sent successfully.');
