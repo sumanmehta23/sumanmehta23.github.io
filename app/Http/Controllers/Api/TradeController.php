@@ -59,7 +59,7 @@ class TradeController extends Controller
         ]);
 
         // Initialize query with account relationship for user_id and currency, and filter for live accounts only
-        $query = Trade::query()->with('account:id,user_id,currency')
+        $query = Trade::query()->with('account:id,user_id,currency,account_type_id')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
