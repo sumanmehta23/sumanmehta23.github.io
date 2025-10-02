@@ -33,7 +33,8 @@ class TransactionController extends Controller
         $query = TradeDeposit::query()->with('account:id,user_id,currency')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
-            });
+            })
+            ->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);
 
         // Filter by transaction date range
         $dateFrom = $request->input('transaction_date_from');
