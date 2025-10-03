@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\SubscribeToKlaviyoList;
+use App\Events\AccountTradesDepositEvent;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
@@ -454,7 +454,7 @@ class LoginController extends Controller
         $countries = Country::all();
         return view('auth.register', compact('countries'));
     }
-    public function addUser(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    public function addUser(Request $request)
     {
 
         // Generate a unique rate-limiting key based on user or IP
@@ -579,6 +579,9 @@ class LoginController extends Controller
         $user = User::create($userData);
 
         if ($user) {
+            // Fire the Registered event for Customer.io integration
+            event(new \Illuminate\Auth\Events\Registered($user));
+            
             $settings = settings();
             $from = $settings['email_from_address'];
             $toEmail = $request->email;
@@ -606,10 +609,8 @@ class LoginController extends Controller
                 "btn_text" => "Activate",
             ];
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-            $list_id = @config('services.klaviyo.list_ids')['ACCOUNT_CREATED'];
-            if ($list_id) {
-                $subscribeToKlaviyoList->handle($user, $list_id);
-            }
+            // User registration will automatically trigger Customer.io via Registered event
+            // No additional Customer.io code needed here
 
             return redirect()->route('register')->with('status', 'We have sent an email to ' . $toEmail . '. Please click on the confirmation link in the email to activate your account and login.');
         }

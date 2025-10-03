@@ -31,7 +31,7 @@ use App\Http\Controllers\Transactions;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Actions\SubscribeToKlaviyoList;
+
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\KycSyncController;
 use App\Http\Controllers\PammController;
@@ -39,7 +39,7 @@ use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\InternalTransfer;
-use EonVisualMedia\LaravelKlaviyo\Klaviyo;
+
 use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\IBController;
@@ -65,7 +65,7 @@ use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\CompetitionProductController;
 
 Route::get("/five", function () {
-    throw new \Exception("This is a test exception for Klaviyo subscription.");
+    throw new \Exception("This is a test exception for Customer.io integration.");
 });
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
@@ -73,103 +73,6 @@ Route::get('/competitions-overview', [CompetitionController::class, 'competition
 Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');
 Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
-
-Route::get("/se", function (SubscribeToKlaviyoList $subscribeToKlaviyoList) {
-    $settings = settings();
-    $htmlContent = "<p>hello , please check your acount for more details</p>";
-    $payload = [
-        'sender' => [
-            'name' => $settings['sender_name'],
-            'email' => $settings['sender_email_address'],
-        ],
-        'to' => [
-            [
-                'email' => "whmcsdeveloper@gmail.com",
-            ],
-        ],
-        'subject' => "Check your account ",
-        'htmlContent' => $htmlContent,
-    ];
-    $response = Http::withHeaders([
-        'api-key' => "api key here",
-        'Content-Type' => 'application/json',
-        'Accept' => 'application/json',
-    ])->get('https://fakestoreapi.com/products/1');
-
-    Telescope::tag(function () {
-        return ['test-client-request'];
-    });
-
-    return $response;
-    // return Klaviyo::post("profile-import", [
-    //     'data' => [
-    //         'type'          => 'profile',
-    //         'attributes' => [
-    //             "location"=> [
-    //                 "address1"=> "89 E 42nd St",
-    //                 "address2"=> "1st floor",
-    //                 "city"=> "New York",
-    //                 "country"=> "United States",
-    //                 "region"=> "NY",
-    //                 "zip"=> "10017",
-    //                 "timezone"=> "America/New_York",
-    //                 "ip"=> "127.0.0.1"
-    //             ],
-    //             'email'         => 'foo@example.com',
-    //             'external_id'   => '12345',
-    //             'phone_number'  => '+12345678901',
-    //             "first_name"=> "John",
-    //             "last_name"=> "Stean",
-
-    //         ]
-    //     ]
-    // ]);
-
-    // return config("services.klaviyo.list_ids");
-    // $uuids=[];
-    // for($i=0;$i<100;$i++){
-    //     $uuids[]=Str::orderedUuid()->__tostring();
-    // }
-    // dump($uuids);
-    //     // Cache::put('test-key', 'test-value', 1000);
-    // $value = Cache::get('test-key');
-    // dd($value); // Should output 'test-value'
-    // $settings = DB::table('page_categories')->get()->toArray();
-    // file_put_contents('page_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('pages')->get()->toArray();
-    // file_put_contents('pages.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('countries')->get()->toArray();
-    // file_put_contents('countries.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('account_types')->get()->toArray();
-    // file_put_contents('account_types.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('mt5_groups')->get()->toArray();
-    // file_put_contents('mt5_groups.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('mt5_group_categories')->get()->toArray();
-    // file_put_contents('mt5_group_categories.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('leverage')->get()->toArray();
-    // file_put_contents('leverage.json', json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = DB::table('client_wallets')->get()->toArray();
-    // file_put_contents(storage_path('app/client_wallets.json'), json_encode($settings, JSON_PRETTY_PRINT));
-    // TradeWithdrawals::create([
-    //     'user_id' => $user_id,
-    //     'account_id' => $account->id,
-    //     'withdrawal_amount' => $amount,
-    //     'withdraw_type' => $withdraw_type,
-    //     // 'withdraw_to' => $to_account_id,
-    //     'wallet_qr' => '',
-    //     'Status' => 1
-    // ]);
-    // $settings = \App\Models\TradeWithdrawals::get()->toArray();
-    // file_put_contents(storage_path('app/trade_withdrawals.json'), json_encode($settings, JSON_PRETTY_PRINT));
-
-    // $settings = \App\Models\TotalBalance::get()->toArray();
-    // file_put_contents(storage_path('app/total_balance.json'), json_encode($settings, JSON_PRETTY_PRINT));
-
-    // $settings = \App\Models\WalletDeposit::get()->toArray();
-    // file_put_contents(storage_path('app/wallet_deposit.json'), json_encode($settings, JSON_PRETTY_PRINT));
-    // $settings = \App\Models\Account::get()->toArray();
-    // file_put_contents(storage_path('app/accounts.json'), json_encode($settings, JSON_PRETTY_PRINT));
-});
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 

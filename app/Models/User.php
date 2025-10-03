@@ -49,7 +49,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'klaviyo_last_error' => 'json',
+        'customerio_last_error' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
