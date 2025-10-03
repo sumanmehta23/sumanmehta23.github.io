@@ -541,8 +541,10 @@ class MT5Controller extends Controller
             } else {
                 // Handle MT5 deposit (existing logic)
                 $ticket = null;
-                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                if(!$user->cxd){
+                    if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    }
                 }
             }
 
