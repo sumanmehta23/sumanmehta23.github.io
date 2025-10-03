@@ -472,7 +472,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
+        Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
+        Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount')->middleware('check.permissions:bonus_transaction:create');
         Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount')->middleware('check.permissions:bonus_transaction:create');
 

@@ -612,6 +612,116 @@ class MT5Controller extends Controller
         }
     }
 
+    public function depositToCellexpertAccount(Request $request)
+    {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
+        $eid = $request->input('email');
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account->cell_tracking = 1;
+        $account->save();
+        if ($request->has('deposit_to_account')) {
+            $amount = str_replace(',', '', $request->input('amount'));
+            $description = $request->input('description');
+            $deposit_type = 'CRM';
+            $email = $eid;
+            $deposit_currency = 'USD';
+            $login = $code;
+            $comment = 'CRM Deposited';
+
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 deposit
+                $response = $this->x9Service->manageBalance(
+                    intval($login),
+                    'balance', // operation_type
+                    'deposit', // transaction_type
+                    floatval($amount),
+                    $comment
+                );
+
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Deposit Failed: ' . $response['message']);
+                }
+            } else {
+                // Handle MT5 deposit (existing logic)
+                $ticket = null;
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                }
+            }
+
+            // Create deposit record in database (same for both platforms)
+            $tradeDeposit = TradeDeposit::create([
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'email' => $email,
+                'code' => $code,
+                'deposit_amount' => $amount,
+                'deposit_type' => $deposit_type,
+                'status' => 1,
+                'admin_remark' => $description,
+                'deposit_currency' => $deposit_currency,
+                'created_by' => session('alogin')
+            ]);
+            $transid = "TDID" . str_pad($tradeDeposit->id, 4, '0', STR_PAD_LEFT);
+
+            // Store in total_balance table
+            TotalBalance::create([
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'email' => $email,
+                'code' => $account->code,
+                'trading_deposited' => $amount,
+            ]);
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $email,
+                    'deposit_amount' => $amount,
+                    'code' => $code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Deposit'
+                ])
+                ->event('create')
+                ->log('CRM Deposit');
+
+            $settings = settings();
+            $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
+            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
+      <div><b>Transaction Details</b></div>
+      <div><b>Amount: </b>$' . $amount . '</div>
+      <div><b>Account ID: </b>' . $code . '</div>
+      <div><b>Transaction ID: </b>' . $transid . '</div>
+      <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
+      <div><b>Deposit Type </b>' . $deposit_type . '</div>';
+            $templateVars = [
+                'name' => $user->fullname,
+                'site_link' => settings()['copyright_site_name_text'],
+                "btn_text" => "Go To Dashboard",
+                'email' => settings()['email_from_address'],
+                "content" => $content,
+                "title_right" => "Fund",
+                "subtitle_right" => "Deposit"
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+            return redirect()->back()->with('success', 'Trade Deposit Successful');
+        }
+    }
+
     public function bonusToAccount(Request $request)
     {
         if (!$this->ensureMT5Connection()) {
@@ -897,6 +1007,110 @@ class MT5Controller extends Controller
         $user = User::find($user_id);
         $code = $request->input('code');
         $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        // dd($user_id);
+        // dd($user->id);
+        if ($request->has('withdraw_from_account')) {
+            $amount = $request->input('amount');
+            $tw_amount = abs($request->input('amount')) * -1;
+            $description = $request->input('description');
+            $withdraw_type = 'CRM';
+            $email = $eid;
+            $login = $code;
+            $comment = 'CRM Withdrawal';
+
+            // Handle based on platform
+            if ($account->platform === 'x9') {
+                // Handle X9 withdrawal
+                $response = $this->x9Service->manageBalance(
+                    intval($login),
+                    'balance', // operation_type
+                    'withdrawal', // transaction_type
+                    floatval($amount), // Always send positive amount
+                    $comment
+                );
+
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Withdrawal Failed: ' . $response['message']);
+                }
+            } else {
+                // Handle MT5 withdrawal (existing logic)
+                $ticket = null;
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", MTRetCode::GetError($error_code));
+                }
+            }
+
+            // Create withdrawal record in database (same for both platforms)
+            $deposit_details = TradeWithdrawals::create([
+                'email' => $email,
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'code' => $account->code,
+                'withdraw_to' => null,
+                'withdrawal_amount' => $amount,
+                'withdraw_type' => $withdraw_type,
+                'admin_remark' => $description,
+                'Status' => 1,
+                'created_by' => session('alogin')
+            ]);
+
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $email,
+                    'withdrawal_amount' => $amount,
+                    'code' => $code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Withdraw'
+                ])
+                ->event('create')
+                ->log('CRM Withdraw');
+
+            // Send Email
+            $transid = "TWID" . str_pad($deposit_details->id, 4, '0', STR_PAD_LEFT);
+            $settings = settings();
+            $emailSubject = $settings['admin_title'] . ' - Fund Withdrawal';
+            $content = '<div>We are pleased to inform you that funds have been successfully withdrawn from your account.</div>
+            <div><b>Withdrawal Details</b></div>
+            <div><b>Amount: </b>$' . $deposit_details->withdrawal_amount . '</div>
+            <div><b>Account ID: </b>' . $deposit_details->code . '</div>
+            <div><b>Transaction ID: </b>' . $transid . '</div>
+            <div><b>Withdraw Date: </b>' . date("Y-m-d H:i:s") . '</div>
+            <div><b>Withdraw Type </b>' . $deposit_details->withdraw_type . '</div>';
+            $templateVars = [
+                'name' => $user->fullname,
+                'site_link' => settings()['copyright_site_name_text'],
+                'email' => settings()['email_from_address'],
+                "content" => $content,
+                "title_right" => "Fund",
+                "subtitle_right" => "Withdrawal",
+                "btn_text" => "Go To Dashboard",
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+            return redirect()->back()->with("success", "Withdrawal Successful");
+        }
+    }
+
+    public function withdrawFromCellexpertAccount(Request $request)
+    {
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+        }
+
+        $eid = $request->input('email');
+        $user_id = $request->input('client_id');
+        $user = User::find($user_id);
+        $code = $request->input('code');
+        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account->cell_tracking = 1;
+        $account->save();
         // dd($user_id);
         // dd($user->id);
         if ($request->has('withdraw_from_account')) {
