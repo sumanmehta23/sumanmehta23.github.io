@@ -34,11 +34,7 @@ class TransactionController extends Controller
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
-            ->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill'])
-            ->where(function ($q) {
-                $q->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill'])
-                ->orWhere('cell_tracking', 1);
-            });
+            ->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);
 
         // Filter by transaction date range
         $dateFrom = $request->input('transaction_date_from');
