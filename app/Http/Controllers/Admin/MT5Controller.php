@@ -545,6 +545,8 @@ class MT5Controller extends Controller
                     if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
                         return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                     }
+                }else{
+                    return redirect()->back()->with('error', 'Cellexpert account detected. Please use the Cellexpert deposit option.');
                 }
             }
 
