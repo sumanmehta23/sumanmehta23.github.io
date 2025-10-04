@@ -655,9 +655,14 @@ class MT5Controller extends Controller
             } else {
                 // Handle MT5 deposit (existing logic)
                 $ticket = null;
-                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                if($user->cxd){
+                    if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    }
+                }else{
+                    return redirect()->back()->with('error', 'Non-Cellexpert account detected. Please use the regular deposit option.');
                 }
+
             }
 
             // Create deposit record in database (same for both platforms)
@@ -1147,9 +1152,14 @@ class MT5Controller extends Controller
             } else {
                 // Handle MT5 withdrawal (existing logic)
                 $ticket = null;
-                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with("error", MTRetCode::GetError($error_code));
+                if($user->cxd){
+                    if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                        return redirect()->back()->with("error", MTRetCode::GetError($error_code));
+                    }
+                }else{
+                    return redirect()->back()->with('error', 'Non Cellexpert account detected. Please use the normal withdraw option.');
                 }
+
             }
 
             // Create withdrawal record in database (same for both platforms)
