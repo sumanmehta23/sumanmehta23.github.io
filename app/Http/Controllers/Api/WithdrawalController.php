@@ -65,9 +65,9 @@ class WithdrawalController extends Controller
         // Build trade withdrawals query
         $tradeQuery = TradeWithdrawals::query()->with('account:id,user_id,currency')
             ->whereHas('account', function ($q) {
-                $q->where('demo', 0)
-                ->orwhere('cell_tracking', 1);
-            });
+                $q->where('demo', 0);
+            })
+            ->where('cell_tracking', 1); // Only include trade withdrawals with cell_tracking = 1
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {
