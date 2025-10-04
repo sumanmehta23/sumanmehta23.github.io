@@ -30,12 +30,21 @@ class TransactionController extends Controller
         ]);
 
         // Initialize query
-        $query = TradeDeposit::query()->with('account:id,user_id,currency')
-            ->whereHas('account', function ($q) {
-                $q->where('demo', 0);
-            })
-            ->WhereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill'])
-            ->where('cell_tracking', 1); // Only include transactions with cell_tracking = 1
+        $query = TradeDeposit::query()
+                    ->with('account:id,user_id,currency')
+                    ->whereHas('account', function ($q) {
+                        $q->where('demo', 0);
+                    })
+                    ->where(function ($q) {
+                        // Case 1: CreditCardPayissa or CryptoChill → include all
+                        $q->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);
+
+                        // Case 2: CRM → only if cell_tracking = 1
+                        $q->orWhere(function ($q2) {
+                            $q2->where('deposit_type', 'CRM')
+                            ->where('cell_tracking', 1);
+                        });
+                    });
 
         // Filter by transaction date range
         $dateFrom = $request->input('transaction_date_from');
