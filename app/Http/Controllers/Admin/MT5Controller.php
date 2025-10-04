@@ -650,17 +650,13 @@ class MT5Controller extends Controller
             } else {
                 // Handle MT5 deposit (existing logic)
                 $ticket = null;
-                if($user->cxd){
-                    if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                    }
-                }else{
-                    return redirect()->back()->with('error', 'Non-Cellexpert account detected. Please use the regular deposit option.');
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                 }
 
             }
             // Create deposit record in database (same for both platforms)
-            $tradeDeposit = TradeDeposit::create([
+            $tradeDepositDate = [
                 'user_id' => $user->id,
                 'account_id' => $account->id,
                 'email' => $email,
@@ -671,8 +667,14 @@ class MT5Controller extends Controller
                 'admin_remark' => $description,
                 'deposit_currency' => $deposit_currency,
                 'created_by' => session('alogin'),
-                'cell_tracking'=>1
-            ]);
+            ];
+
+            if ($user->cxd) {
+                $tradeDepositDate['cell_tracking'] = 1;
+            }
+
+            $tradeDeposit = TradeDeposit::create($tradeDepositDate);
+
             $transid = "TDID" . str_pad($tradeDeposit->id, 4, '0', STR_PAD_LEFT);
 
             // Store in total_balance table
@@ -1142,18 +1144,13 @@ class MT5Controller extends Controller
             } else {
                 // Handle MT5 withdrawal (existing logic)
                 $ticket = null;
-                if($user->cxd){
-                    if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with("error", MTRetCode::GetError($error_code));
-                    }
-                }else{
-                    return redirect()->back()->with('error', 'Non Cellexpert account detected. Please use the normal withdraw option.');
+                if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $tw_amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                    return redirect()->back()->with("error", MTRetCode::GetError($error_code));
                 }
-
             }
 
-            // Create withdrawal record in database (same for both platforms)
-            $deposit_details = TradeWithdrawals::create([
+            // Common data for TradeWithdrawals
+            $withdrawData = [
                 'email' => $email,
                 'user_id' => $user->id,
                 'account_id' => $account->id,
@@ -1164,8 +1161,14 @@ class MT5Controller extends Controller
                 'admin_remark' => $description,
                 'Status' => 1,
                 'created_by' => session('alogin'),
-                'cell_tracking'=>1
-            ]);
+            ];
+
+            // Add cell_tracking only for Cellexpert accounts (cxd)
+            if ($user->cxd) {
+                $withdrawData['cell_tracking'] = 1;
+            }
+
+            $deposit_details = TradeWithdrawals::create($withdrawData);
 
             activity()
                 ->causedBy(auth()->guard('admin')->user())
