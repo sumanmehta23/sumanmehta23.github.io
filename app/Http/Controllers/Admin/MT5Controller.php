@@ -33,7 +33,7 @@ class MT5Controller extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service,X9Service $x9Service)
+    public function __construct(MailService $mailService, UniversalMT5Service $mt5Service, X9Service $x9Service)
     {
         $this->mt5Service = $mt5Service;
         // MT5 connection deferred - use ensureMT5Connection() in methods that need it
@@ -514,7 +514,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
             $description = $request->input('description');
@@ -550,6 +550,7 @@ class MT5Controller extends Controller
             $tradeDeposit = TradeDeposit::create([
                 'user_id' => $user->id,
                 'account_id' => $account->id,
+                'transaction_id' => uniqid(),
                 'email' => $email,
                 'code' => $code,
                 'deposit_amount' => $amount,
@@ -622,7 +623,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
 
         if ($request->has('deposit_to_account')) {
             $amount = str_replace(',', '', $request->input('amount'));
@@ -653,12 +654,12 @@ class MT5Controller extends Controller
                 if (($error_code = $this->api->TradeBalance($login, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true)) !== MTRetCode::MT_RET_OK) {
                     return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                 }
-
             }
             // Create deposit record in database (same for both platforms)
             $tradeDepositDate = [
                 'user_id' => $user->id,
                 'account_id' => $account->id,
+                'transaction_id' => uniqid(),
                 'email' => $email,
                 'code' => $code,
                 'deposit_amount' => $amount,
@@ -891,7 +892,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
 
         if ($request->has('bonus_to_account_credit')) {
 
@@ -1012,7 +1013,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
         // dd($user_id);
         // dd($user->id);
         if ($request->has('withdraw_from_account')) {
@@ -1114,7 +1115,7 @@ class MT5Controller extends Controller
         $user_id = $request->input('client_id');
         $user = User::find($user_id);
         $code = $request->input('code');
-        $account = Account::where('code', $code)->where('user_id',$user_id)->first();
+        $account = Account::where('code', $code)->where('user_id', $user_id)->first();
 
         // dd($user_id);
         // dd($user->id);
@@ -1241,7 +1242,7 @@ class MT5Controller extends Controller
 
         $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
-        $trade = Trade::where('code',$account->code)->get();
+        $trade = Trade::where('code', $account->code)->get();
         $total_profit = $trade->sum('profit');
         $total_comission = $trade->sum('commission');
         $total_swap = $trade->sum('swap');
@@ -1306,14 +1307,14 @@ class MT5Controller extends Controller
                 $x9AccountData = $response['data'];
                 $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
 
-                if(isset($balanceData['balance'])){
-                    $balanceData['balance'] = str_replace(',','',$balanceData['balance']);
+                if (isset($balanceData['balance'])) {
+                    $balanceData['balance'] = str_replace(',', '', $balanceData['balance']);
                 }
-                if(isset($balanceData['equity'])){
-                    $balanceData['equity'] = str_replace(',','',$balanceData['equity']);
+                if (isset($balanceData['equity'])) {
+                    $balanceData['equity'] = str_replace(',', '', $balanceData['equity']);
                 }
-                if(isset($balanceData['free_margin'])){
-                    $balanceData['free_margin'] = str_replace(',','',$balanceData['free_margin']);
+                if (isset($balanceData['free_margin'])) {
+                    $balanceData['free_margin'] = str_replace(',', '', $balanceData['free_margin']);
                 }
                 // Update account with fresh data from X9
                 try {
