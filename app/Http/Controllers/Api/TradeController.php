@@ -136,7 +136,7 @@ class TradeController extends Controller
         // Paginate the results
         $perPage = min($request->input('per_page', 15), 500); // Limit max per page to 100
         $trades = $query->paginate($perPage);
-
+        dd($trades);
         try {
             return response()->json([
                 'data' => TradeResource::collection($trades->items()),
