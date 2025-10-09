@@ -11,7 +11,7 @@ use Carbon\Carbon;
 
 class SyncDealsCommand extends Command
 {
-    protected $signature = 'app:sync-deals 
+    protected $signature = 'app:sync-deals
                             {--account= : Specific account code to sync}
                             {--demo : Sync demo accounts only}
                             {--live : Sync live accounts only}
@@ -52,6 +52,8 @@ class SyncDealsCommand extends Command
 
         $accountBatches = $accounts->chunk($batchSize);
         $jobs = [];
+
+        Log::info('abhay '.json_encode($accounts));
 
         foreach ($accountBatches as $batch) {
             $fromTimes = [];
