@@ -85,9 +85,11 @@ class DealSyncJob implements ShouldQueue
             $api = $mt5Service->getApi();
 
             foreach ($this->accounts as $index => $accountData) {
+                Log::info("abhay Processing account ".json_encode($accountData));
                 $accountIterationStart = microtime(true);
                 try {
                     $account = Account::find($accountData['id']);
+                    Log::info("abhay Processing account ".json_encode($account));
                     if (!$account) {
                         Log::warning("Account {$accountData['code']} not found in database");
                         $results['skipped']++;
