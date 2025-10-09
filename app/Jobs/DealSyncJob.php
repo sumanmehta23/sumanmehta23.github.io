@@ -94,9 +94,11 @@ class DealSyncJob implements ShouldQueue
                         $results['processed']++;
                         continue;
                     }
-
+                    Log::info("abhay Processing account ".json_encode($account));
                     $fromTime = $this->determineFromTime($account, $index);
+                    Log::info("abhay Processing account ".json_encode($fromTime));
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
+                    Log::info("abhay Processing account ".json_encode($result));
 
                     $results[$result['status']]++;
                     $results['deals_synced'] += $result['deals_count'];

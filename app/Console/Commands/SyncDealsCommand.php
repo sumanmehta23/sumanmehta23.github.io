@@ -53,20 +53,14 @@ class SyncDealsCommand extends Command
         $accountBatches = $accounts->chunk($batchSize);
         $jobs = [];
 
-        Log::info('abhay accountBatches '.json_encode($accountBatches));
-
         foreach ($accountBatches as $batch) {
             $fromTimes = [];
-            Log::info('abhay accountBatches '.json_encode($fullSync));
             if ($fullSync) {
                 // For full sync, use the same fromTime for all accounts in batch
                 $fromTime = now()->subDays($fromDays);
                 $fromTimes = array_fill(0, $batch->count(), $fromTime);
             }
             // For incremental sync, fromTimes will be empty and job will determine them
-             Log::info('abhay accountBatches '.json_encode($fullSync));
-             Log::info('abhay accountBatches '.json_encode($fromTimes));
-             Log::info('abhay accountBatches '.json_encode($batch->all()));
 
             $job = new DealSyncJob($batch->all(), $fromTimes, $fullSync);
             $jobs[] = $job;
