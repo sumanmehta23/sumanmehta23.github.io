@@ -40,6 +40,7 @@ class DealSyncJob implements ShouldQueue
 
     public function __construct(array $accounts, array $fromTimes = [], bool $fullSync = false)
     {
+
         // Convert Account models to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
             return [
@@ -85,22 +86,19 @@ class DealSyncJob implements ShouldQueue
             $api = $mt5Service->getApi();
 
             foreach ($this->accounts as $index => $accountData) {
-                Log::info("abhay Processing account1 ".json_encode($accountData));
+                
                 $accountIterationStart = microtime(true);
                 try {
                     $account = Account::find($accountData['id']);
-                    Log::info("abhay Processing account2 ".json_encode($account));
                     if (!$account) {
                         Log::warning("Account {$accountData['code']} not found in database");
                         $results['skipped']++;
                         $results['processed']++;
                         continue;
                     }
-                    Log::info("abhay Processing account3 ".json_encode($account));
                     $fromTime = $this->determineFromTime($account, $index);
-                    Log::info("abhay Processing account4 ".json_encode($fromTime));
+
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
-                    Log::info("abhay Processing account5 ".json_encode($result));
 
                     $results[$result['status']]++;
                     $results['deals_synced'] += $result['deals_count'];
@@ -224,7 +222,9 @@ class DealSyncJob implements ShouldQueue
             // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
             Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $phaseStart = microtime(true);
+
             $error_code = $api->DealGetTotal($login, $fromTimestamp, $toTimestamp, $totalDeals);
+
             $timings['mt5_deal_total'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             if ($error_code != MTRetCode::MT_RET_OK) {

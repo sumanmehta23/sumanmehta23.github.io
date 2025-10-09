@@ -52,7 +52,6 @@ class SyncDealsCommand extends Command
 
         $accountBatches = $accounts->chunk($batchSize);
         $jobs = [];
-
         foreach ($accountBatches as $batch) {
             $fromTimes = [];
             if ($fullSync) {
