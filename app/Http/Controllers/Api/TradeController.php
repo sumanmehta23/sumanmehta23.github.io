@@ -63,7 +63,13 @@ class TradeController extends Controller
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
-            ->where('profit', '!=', 0); // Exclude trades with zero profit
+            ->where(function ($q) {
+                $q->where('profit', '!=', 0)
+                    ->orWhere(function ($q2) {
+                        $q2->where('profit', 0)
+                            ->where('created_at', '<=', now()->subHours(2));
+                    });
+            }); // Exclude trades with zero profit
 
         // Apply filters only when there are actual values
         // Filter by position close date range (mandatory filter support)
