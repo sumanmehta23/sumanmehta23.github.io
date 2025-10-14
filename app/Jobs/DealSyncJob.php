@@ -86,7 +86,7 @@ class DealSyncJob implements ShouldQueue
             $api = $mt5Service->getApi();
 
             foreach ($this->accounts as $index => $accountData) {
-                
+
                 $accountIterationStart = microtime(true);
                 try {
                     $account = Account::find($accountData['id']);
@@ -97,7 +97,7 @@ class DealSyncJob implements ShouldQueue
                         continue;
                     }
                     $fromTime = $this->determineFromTime($account, $index);
-
+                    Log::info("fromTime abhay". $fromTime);
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
 
                     $results[$result['status']]++;

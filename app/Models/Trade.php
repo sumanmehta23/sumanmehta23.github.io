@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Deal;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\Log;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 
 class Trade extends Model
 {
@@ -115,5 +116,13 @@ class Trade extends Model
             'account_id', // Local key on trades table
             'user_id' // Local key on accounts table
         );
+    }
+
+    /**
+     * Relationship to the Deal model (multiple deals can belong to a trade via position_id)
+     */
+    public function deals()
+    {
+        return $this->hasMany(Deal::class, 'position_id', 'position_id');
     }
 }

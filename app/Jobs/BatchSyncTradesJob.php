@@ -282,14 +282,14 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             $zeroProfitTrades = Trade::where('account_id', $account->id)
                                 ->where('profit', 0)
+                                ->whereDoesntHave('deals') // Exclude trades with matching position_id in deals
                                 ->orderBy('created_at', 'asc')
                                 ->get();
-
+            Log::info("zeroProfitTrades ".json_encode($zeroProfitTrades));
             if ($zeroProfitTrades->isNotEmpty()) {
                 // Get earliest trade with profit = 0
                 $earliestZeroProfitTrade = $zeroProfitTrades->first();
-                $syncFromTime = Carbon::parse($earliestZeroProfitTrade->created_at)->subHours(2);
-
+                $syncFromTime = Carbon::parse($earliestZeroProfitTrade->open_time)->subHours(2);
                 Log::info("DEBUG[{$account->code}]: Found {$zeroProfitTrades->count()} trades with zero profit. " .
                     "Triggering DealSyncJob from {$syncFromTime} (2 hours before earliest zero-profit trade at {$earliestZeroProfitTrade->created_at})");
 
@@ -322,6 +322,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
                 // Dispatch deal sync job and wait for it to complete
+
                 $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
                 $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
 
