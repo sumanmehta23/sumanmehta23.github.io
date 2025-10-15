@@ -550,7 +550,7 @@ class TradeDepositController extends Controller
     {
         $user = auth()->user();
         // Local callback URLs for testing
-        $success_url = $this->settings['local_base_url'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
+        $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
         $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
         $error_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=error";
 
