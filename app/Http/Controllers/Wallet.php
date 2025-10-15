@@ -773,6 +773,7 @@ class Wallet extends Controller
         $wallet_balance = $user->wallet_balance;
         return view('wallet_withdrawal', compact('client_banks', 'settings', 'liveaccount_details', 'totals', 'wallet_balance'));
     }
+    // TODO: Integrate RagaPay service endpoint for wallet deposit payments
     public function deposit(Request $request)
     {
         $request->validate(
@@ -833,6 +834,7 @@ class Wallet extends Controller
             return redirect()->back()->with('error', $error);
         }
     }
+    // TODO: Replace with RagaPay service endpoint for credit card payments
     private function createCCPayment($amount, $currency, $orderId, $paymentId)
     {
         $user = auth()->user();
@@ -859,6 +861,7 @@ class Wallet extends Controller
         }
         return null;
     }
+    // TODO: Consider RagaPay service endpoint as alternative to NowPayments
     private function createPayment($amount, $currency, $orderId, $paymentId)
     {
         $success_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";

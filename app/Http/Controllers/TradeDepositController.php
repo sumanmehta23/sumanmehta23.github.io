@@ -335,8 +335,10 @@ class TradeDepositController extends Controller
 
 
 
+    // TODO: Integrate RagaPay service endpoint for payment processing
     public function deposit(Request $request)
     {
+        // dd($request->all());
         $request->validate(
             [
                 'confirmcryptoCheckbox' => [
@@ -357,11 +359,32 @@ class TradeDepositController extends Controller
             $trading_deposited1 = $request->input('deposit');
             $deposit_type = $request->input('deposit_type');
 
-            if ($deposit_type == "CreditCardPayissa") {
+            if ($deposit_type == "RagaPay") {
+                $promocode = $request->raga_promocode ?? '';
+                $data = [
+                    "payment_amount" => $trading_deposited1,
+                    "payment_type" => "RagaPay",
+                    "payment_reference_id" => "TradeAccount", // Changed from "Wallet" to "TradeAccount"
+                    "user_id" => $user->id,
+                    "payment_status" => "Initiated",
+                    "initiated_by" => $user->email,
+                    "account_id" => $request['user']['code'],
+                    "promocode" => $promocode,
+                ];
+                $paymentLog = PaymentLog::create($data);
+                $orderId = 'ragaPay' . $paymentLog->id;
+                $currency = 'USD';
+                $payment = $this->createRagaPayment($trading_deposited1, $currency, $orderId, $paymentLog->id, $promocode);
+                if ($payment) {
+                    return redirect()->away($payment['invoice_url']);
+                } else {
+                    return redirect()->back()->with('error', 'Something went wrong with RagaPay. Please try again or use other payment methods.');
+                }
+            } elseif ($deposit_type == "CreditCardPayissa") {
                 $data = [
                     "payment_amount" => $trading_deposited1,
                     "payment_type" => "CreditCardPayissa",
-                    "payment_reference_id" => "Wallet",
+                    "payment_reference_id" => "TradeAccount", // Changed from "Wallet" to "TradeAccount"
                     "user_id" => $user->id,
                     "payment_status" => "Initiated",
                     "initiated_by" => $user->email,
@@ -521,6 +544,82 @@ class TradeDepositController extends Controller
         // }
     }
 
+
+    // Integrate RagaPay service endpoint for payment processing
+    private function createRagaPayment($amount, $currency, $orderId, $paymentId, $promocode)
+    {
+        $user = auth()->user();
+        // Local callback URLs for testing
+        $success_url = $this->settings['local_base_url'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=success";
+        $cancel_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=cancel";
+        $error_url = $this->settings['copyright_site_name_text'] . "/payment-response?amount=" . $amount . "&payment_id=" . $paymentId . "&status=error";
+
+        try {
+            $ragaPayService = app(\App\Services\RagaPayService::class);
+
+            // Prepare order data for RagaPay
+            $order = [
+                'number' => $orderId,
+                'amount' => number_format((float) $amount, 2, '.', ''),
+                'currency' => $currency,
+                'description' => 'Trading Account Deposit - ' . $orderId,
+            ];
+
+            // Prepare customer data for RagaPay
+            $customer = [
+                'first_name' => $user->firstname ?? 'Customer',
+                'last_name' => $user->lastname ?? '',
+                'email' => $user->email,
+                'phone' => $user->phone ?? '',
+                'country' => $user->country ?? 'US',
+                'city' => $user->city ?? '',
+                'address' => $user->address ?? '',
+                'zip' => $user->zip ?? '',
+            ];
+
+            // Prepare callback URLs
+            $urls = [
+                'success_url' => $success_url,
+                'cancel_url' => $cancel_url,
+                'error_url' => $error_url,
+            ];
+
+            // Create checkout session with RagaPay
+            $response = $ragaPayService->createCheckoutSession($order, $customer, $urls);
+
+            // Log the payment request
+            PaymentLog::where('id', $paymentId)->update([
+                'payment_req' => json_encode([
+                    'order' => $order,
+                    'customer' => $customer,
+                    'success_url' => $success_url,
+                    'cancel_url' => $cancel_url,
+                    'error_url' => $error_url,
+                ]),
+                'payment_url' => $response['redirect_url'] ?? null,
+                'remarks' => 'RagaPay payment initiated - Order ID: ' . $orderId,
+            ]);
+
+            // Return the redirect URL from RagaPay response
+            if (isset($response['redirect_url'])) {
+                return [
+                    'invoice_url' => $response['redirect_url']
+                ];
+            }
+
+            Log::error('RagaPay payment creation: No redirect_url in response', ['response' => $response]);
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('RagaPay payment creation failed: ' . $e->getMessage(), [
+                'order_id' => $orderId,
+                'payment_id' => $paymentId,
+                'amount' => $amount,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
 
     private function createCCPayment($amount, $currency, $orderId, $paymentId, $promocode)
     {

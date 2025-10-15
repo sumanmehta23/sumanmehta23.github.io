@@ -110,6 +110,18 @@ Route::post('/ib-ref', [LoginController::class, 'addUser'])->name('ib-ref-post')
 
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('ragapay-success', function () {
+        return "Payment Successful! Thank you for your purchase.";
+    })->name('ragapay.success');
+
+    Route::get('ragapay-cancel', function () {
+        return "Payment Cancelled. You have cancelled the payment process.";
+    })->name('ragapay.cancel');
+
+    Route::get('ragapay-error', function () {
+        return "Payment Error. An error occurred during the payment process.";
+    })->name('ragapay.error');
+
     Route::get('/wallet_address_verify', [Wallet::class, 'wallet_address_verify']);
 
     Route::get('/switchToAdmin', [AjaxController::class, 'switchToAdmin'])->name("switchToAdmin");

@@ -64,12 +64,12 @@ class Transactions extends Controller
         $email = Auth::user()->email;
 
         $deposit_history1 = WalletDeposit::where('user_id',  Auth::user()->id)
-            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])
             ->orderBy('id', 'desc')
             ->get();
 
         $deposit_history2 = TradeDeposit::where('user_id',  Auth::user()->id)
-            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])
             ->orderBy('id', 'desc')
             ->get();
 
