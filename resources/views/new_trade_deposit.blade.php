@@ -493,6 +493,7 @@
             if (selectedMethod === 'CryptoChill') {
                 $('#credit-services-section').hide();
                 // // Uncheck and remove styling from crypto
+                $('#payment_credit').prop('checked', false);
                 $('#payment_credit').closest('.address-check').removeClass('border-primary');
                 $('#payment_credit').closest('.address-check').css('background-color', '');
                 // Show crypto deposit details
