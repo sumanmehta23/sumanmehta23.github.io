@@ -338,7 +338,6 @@ class TradeDepositController extends Controller
     // TODO: Integrate RagaPay service endpoint for payment processing
     public function deposit(Request $request)
     {
-        // dd($request->all());
         $request->validate(
             [
                 'confirmcryptoCheckbox' => [
