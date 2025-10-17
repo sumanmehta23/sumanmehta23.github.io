@@ -22,6 +22,7 @@ use App\Models\PaymentLog;
 use Illuminate\Support\Facades\Http;
 use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Log;
+use Stevebauman\Location\Facades\Location;
 
 class TradeDepositController extends Controller
 {
@@ -55,7 +56,7 @@ class TradeDepositController extends Controller
         return $this->api !== null;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $email = auth()->user()->email;
         $user = auth()->user();
@@ -91,8 +92,22 @@ class TradeDepositController extends Controller
         $totalWw = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status', [2, 3])->sum('withdraw_amount');
         $totalWwf = WalletWithdraw::where('user_id', $user->id)->whereNotIn('status', [2, 3])->sum('withdraw_transaction_fee');
         $wallet_balance = round($totalWd - ($totalWw + $totalWwf), 2);
+
+        // Check if user is from UK based on IP
+        $userIp = $request->ip();
+        $isUkUser = false;
+
+        try {
+            $location = Location::get($userIp);
+            if ($location && $location->countryCode === 'GB') {
+                $isUkUser = true;
+            }
+        } catch (\Exception $e) {
+            // Log error but don't break the page
+            Log::info('Location detection failed for IP: ' . $userIp . ' - ' . $e->getMessage());
+        }
         // return view('trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals','wallet_balance'));
-        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'wallet_balance', 'user'));
+        return view('new_trade_deposit', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'wallet_balance', 'user', 'isUkUser'));
     }
 
     public function sync_amount(Request $request)

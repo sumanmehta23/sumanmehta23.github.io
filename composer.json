@@ -7,7 +7,6 @@
     "require": {
         "php": "^8.2",
         "cknow/laravel-money": "^8.4",
-
         "guzzlehttp/guzzle": "^7.9",
         "laravel/fortify": "^1.25",
         "laravel/framework": "^11.0",
@@ -22,6 +21,7 @@
         "predis/predis": "^2.3",
         "realrashid/sweet-alert": "^7.2",
         "spatie/laravel-activitylog": "^4.10",
+        "stevebauman/location": "^7.6",
         "symfony/css-selector": "^7.2",
         "symfony/dom-crawler": "^7.2",
         "yajra/laravel-datatables-oracle": "^11.1"
