@@ -127,7 +127,7 @@
                                                     <div class="col-12">
                                                         <h6 class="mb-3" style="margin-left: 10px;">SELECT CREDIT SERVICE</h6>
                                                     </div>
-                                                    @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1')
+                                                    @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1' && $isUkUser)
                                                         <div class="col-6 col-lg-6 col-xl-6">
                                                             <div class="border rounded address-check trade-deposit-type">
                                                                 <div class="form-check">
@@ -174,7 +174,7 @@
                                                 </div>
                                             @endif
                                             <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
-                                             @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1')
+                                             @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1' && $isUkUser)
                                                 <div class="RagaPay trade-deposit-details">
                                                     <form method="post" id="RagaPayForm" action="{{ route('trade-deposit_store') }}">
                                                         @csrf
@@ -778,7 +778,9 @@ function updateRagaButtonState() {
             } else {
                 $('.promo-field-crypto').show();
                 $('.promo-field-cc').show();
+                @if($isUkUser)
                 $('.promo-field-ragapay').show();
+                @endif
             }
 
             $('#crypto_deposit_amount').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
