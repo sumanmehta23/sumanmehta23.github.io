@@ -338,14 +338,14 @@ class LoginController extends Controller
         $code = $request->query('code');
         // Check user exists
         $user = User::where('id', $id)->where('emailToken', $code)->first();
-        if ($user->email == 'abhay@lqhmarkets.com') {
-            dump($request->all());
-            dump($request->isMethod('post'));
-            dump($user);
-            dump($user->email_token_time);
-            dump(Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
-            dd($user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
-        }
+        // if ($user->email == 'abhay@lqhmarkets.com') {
+        //     dump($request->all());
+        //     dump($request->isMethod('post'));
+        //     dump($user);
+        //     dump($user->email_token_time);
+        //     dump(Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
+        //     dd($user->email_token_time >= Carbon::now()->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME')));
+        // }
         if ($user && $user->email_token_time >= Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME'))) {
             if ($request->isMethod('post')) {
                 // Validate
