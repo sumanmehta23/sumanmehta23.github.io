@@ -3876,7 +3876,7 @@ class AjaxController extends Controller
                 })
 
                 ->editColumn('total_deposit', function ($row) {
-                    return $row->total_deposit ? $row->total_deposit : "$";
+                    return $row->total_deposit ? $row->total_deposit : "$0.00";
                 })
 
                 ->editColumn('profile_status', function ($row) {
