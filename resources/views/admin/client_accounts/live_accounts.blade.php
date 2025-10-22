@@ -102,7 +102,10 @@
 <!-- End::app-content -->
 <script>
     $(document).ready(function() {
-        window.myModal = new bootstrap.Modal(document.getElementById('accountUpdatemodal'));
+        var modalElement = document.getElementById('accountUpdatemodal');
+        if (modalElement) {
+            window.myModal = new bootstrap.Modal(modalElement);
+        }
     });
     // console.log(bootstrap.Modal);
 
@@ -170,6 +173,15 @@
                 data: {}, // Ensure this is populated dynamically if needed.
                 dataSrc: function(json) {
                     return json.data;
+                },
+                error: function(xhr, error, code) {
+                    console.log('DataTable AJAX Error:', xhr, error, code);
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        alert('Error loading data: ' + xhr.responseJSON.message);
+                    } else if (xhr.responseText) {
+                        console.log('Response Text:', xhr.responseText);
+                        alert('Error loading live accounts. Please check console for details.');
+                    }
                 }
             },
             columns: [

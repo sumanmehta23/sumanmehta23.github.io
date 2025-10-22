@@ -13,7 +13,12 @@ class ClientWallet extends Model
     use HasFactory,HasUuids,SoftDeletes;
     protected $table = 'client_wallets';
     protected $guarded = [];
-    
+
+    // Hide encrypted fields from JSON serialization to prevent MAC errors
+    protected $hidden = [
+        'wallet_address',
+    ];
+
     public function casts(){
         return [
             'wallet_address' => 'encrypted',
