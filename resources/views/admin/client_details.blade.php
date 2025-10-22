@@ -136,7 +136,7 @@
         </div>
     </div>
      <!-- Add Note Modal -->
-    {{-- <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.client.notes.store') }}" method="POST">
@@ -159,7 +159,7 @@
                 </form>
             </div>
         </div>
-    </div> --}}
+    </div>
 
     <!-- Notes History Modal -->
     <div class="modal fade" id="notesHistoryModal" tabindex="-1" aria-labelledby="notesHistoryModalLabel" aria-hidden="true">
@@ -205,7 +205,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

@@ -23,6 +23,7 @@ use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\Models\ClientNote;
 use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -713,6 +714,12 @@ class ClientController extends Controller
         }
 
         $kyc_log = KycLog::where('user_id', $id)->where('callback_payload', 'like', '%GREEN%')->latest()->first();
+
+        $client_notes = ClientNote::where('client_id', $id)
+            ->with('admin')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('admin.client_details', compact(
             'acc_groups',
             'acc_types',
@@ -738,7 +745,8 @@ class ClientController extends Controller
             'IbTotalDeposits',
             'kyc_log',
             'total_ntd',
-            'total_ntw'
+            'total_ntw',
+            'client_notes'
         ));
     }
 
@@ -770,5 +778,21 @@ class ClientController extends Controller
         } else {
             return redirect()->back()->with("error", "User not found.");
         }
+    }
+
+    public function storeNote(Request $request)
+    {
+        $request->validate([
+            'client_id' => 'required|exists:aspnetusers,Id',
+            'note' => 'required|string|max:5000'
+        ]);
+
+        ClientNote::create([
+            'client_id' => $request->client_id,
+            'admin_id' => Auth::guard('admin')->id(),
+            'note' => $request->note
+        ]);
+
+        return redirect()->back()->with('success', 'Note added successfully.');
     }
 }
