@@ -188,7 +188,7 @@ return [
             'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 3), // Reduced from 5
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 600,
             'nice' => 0,
@@ -201,7 +201,7 @@ return [
             'maxProcesses' => env('SYNC_MAX_COMMISSION_PROCESSES', 5), // Reduced from 30
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 1000,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 1200,
             'nice' => 0,
@@ -214,7 +214,7 @@ return [
             'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 3), // Reduced from 10
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 600,
             'nice' => 0,
@@ -227,7 +227,7 @@ return [
             'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 8), // Reduced from 40
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 1000,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 120, // Increased timeout
             'nice' => 0,
@@ -240,7 +240,7 @@ return [
             'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for high volume
             'maxTime' => 0,
             'maxJobs' => 100, // Process 100 jobs before restarting worker
-            'memory' => 1500, // Increased memory for larger batches
+            'memory' => 256, // Increased memory for larger batches
             'tries' => 2, // Reduced retries for faster processing
             'timeout' => 600, // Increased timeout for large batches
             'nice' => 0,
@@ -253,7 +253,7 @@ return [
             'maxProcesses' => env('ACCOUNT_SYNC_MAX_PROCESSES', 3),
             'maxTime' => 0,
             'maxJobs' => 50, // Process 50 jobs before restarting worker
-            'memory' => 1024, // Adequate memory for batch processing
+            'memory' => 256, // Adequate memory for batch processing
             'tries' => 2, // Retries for account sync
             'timeout' => 600, // 10 minutes timeout for batch operations
             'nice' => 0, // Normal priority
@@ -263,7 +263,7 @@ return [
             'queue' => ['priority-sync-trades'],
             'balance' => 'auto',
             'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 10),
-            'memory' => 1024,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 300,
         ],
@@ -272,7 +272,7 @@ return [
             'queue' => ['high-volume-sync'],
             'balance' => 'auto',
             'maxProcesses' => env('HIGH_VOLUME_SYNC_MAX_QUEUE_PROCESSES', 1),
-            'memory' => 1024,
+            'memory' => 256,
             'tries' => 1,
             'timeout' => 1800,
         ],
@@ -281,7 +281,7 @@ return [
             'queue' => ['demo-sync-trades'],
             'balance' => 'simple',
             'maxProcesses' => 1, // Only 1 process for minimal impact
-            'memory' => 512, // Lower memory requirement
+            'memory' => 256, // Lower memory requirement
             'tries' => 1,
             'timeout' => 900, // 15 minutes timeout for demo accounts
             'nice' => 10, // Lower priority (higher nice value)
@@ -294,7 +294,7 @@ return [
             'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 3), // Conservative for MT5 connection management
             'maxTime' => 0,
             'maxJobs' => 50, // Process 50 jobs before restarting worker to manage MT5 connections
-            'memory' => 1024, // Adequate memory for deal processing
+            'memory' => 256, // Adequate memory for deal processing
             'tries' => 3, // More retries for deal sync due to MT5 connection issues
             'timeout' => 900, // 15 minutes timeout for deal sync operations
             'nice' => 5, // Medium priority
