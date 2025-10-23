@@ -281,10 +281,10 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $phaseStart = microtime(true);
 
             $zeroProfitTrades = Trade::where('account_id', $account->id)
-                                ->where('profit', 0)
-                                ->whereDoesntHave('deals') // Exclude trades with matching position_id in deals
-                                ->orderBy('created_at', 'desc')
-                                ->get();
+                ->where('profit', 0)
+                ->whereDoesntHave('deals') // Exclude trades with matching position_id in deals
+                ->orderBy('created_at', 'desc')
+                ->get();
             // Log::info("zeroProfitTrades ".json_encode($zeroProfitTrades));
             if ($zeroProfitTrades->isNotEmpty()) {
                 // Get earliest trade with profit = 0
@@ -953,7 +953,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $profit = round($priceDiff * $volumeInLots * $contractSize * $rateProfit * $multiplier, 2);
             Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
             // Log calculation details for troubleshooting
-            Log::warning("DEBUG[{$account->code}]: Manual calculation details - " .
+            Log::warning("DEBUG[{$account->code}]: Manual calculation details line 956 - " .
                 "Type: " . ($openOrder->Type ? 'sell' : 'buy') . ", " .
                 "PriceDiff: {$priceDiff}, " .
                 "VolumeLots: {$volumeInLots}, " .
@@ -962,18 +962,18 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 "Multiplier: {$multiplier}");
 
             // Track accounts with frequent manual calculations for admin review
-            activity('trade_profit_calculation')
-                ->withProperties([
-                    'account_code' => $account->code,
-                    'position_id' => $positionId,
-                    'manual_calculation' => true,
-                    'calculated_profit' => $profit,
-                    'price_diff' => $priceDiff,
-                    'volume_lots' => $volumeInLots,
-                    'contract_size' => $contractSize,
-                    'rate_profit' => $rateProfit
-                ])
-                ->log("Manual profit calculation used for position {$positionId} - deals not found");
+            // activity('trade_profit_calculation')
+            //     ->withProperties([
+            //         'account_code' => $account->code,
+            //         'position_id' => $positionId,
+            //         'manual_calculation' => true,
+            //         'calculated_profit' => $profit,
+            //         'price_diff' => $priceDiff,
+            //         'volume_lots' => $volumeInLots,
+            //         'contract_size' => $contractSize,
+            //         'rate_profit' => $rateProfit
+            //     ])
+            //     ->log("Manual profit calculation used for position {$positionId} - deals not found");
             $profit = 0; // TEMPORARY OVERRIDE: Set to zero to avoid misleading data until deals are fixed . We will fetch such positions from positions api later like every 5 minutes
         }
 
