@@ -96,8 +96,10 @@ class TradeWithdrawal extends Controller
             ->get();
         return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks', 'account_id'));
     }
+
     public function withdraw(Request $request)
     {
+
         if (!$request->filled('client_wallet_id')) {
             return redirect()->back()->with('error', 'Please set up wallet address.');
         }
@@ -306,6 +308,7 @@ class TradeWithdrawal extends Controller
         Log::alert("account " . ($login));
 
         $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
+
         // if (1 == 2) {
         if ($errorCode1 != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($errorCode1);
@@ -328,6 +331,7 @@ class TradeWithdrawal extends Controller
 
             $total_promo_deducted = 0;
             $deductableAmount = 0; //Amount from withdrwal request which will be used to calculate promo deductions . So this must be sum of deposits without bonus +/- profit/loss on the account
+
             if ($promo_left) {
                 $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
                 Log::alert("tradedeposits " . $tradedeposits);
@@ -563,7 +567,15 @@ class TradeWithdrawal extends Controller
                     "subtitle_right" => "Your Account Withdrawal Request",
                     "btn_text" => "Verify"
                 ];
-                if($toEmail !='topzplaza18@gmail.com' || $toEmail !='lhenriquega@gmail.com' || $toEmail !='luchatrader23fx@gmail.com' || $toEmail !='alexbostontrading@gmail.com' || $toEmail !='alisakotsa@gmail.com' || $toEmail !='abhay@lqhmarkets.com'){
+                $blockedEmails = [
+                    'topzplaza18@gmail.com',
+                    'lhenriquega@gmail.com',
+                    'luchatrader23fx@gmail.com',
+                    'alexbostontrading@gmail.com',
+                    'alisakotsa@gmail.com',
+                    'abhay@lqhmarkets.com',
+                ];
+                if (!in_array($toEmail, $blockedEmails)) {
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                 }
 
