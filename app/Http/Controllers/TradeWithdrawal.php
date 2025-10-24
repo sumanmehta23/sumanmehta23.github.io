@@ -563,7 +563,7 @@ class TradeWithdrawal extends Controller
                     "subtitle_right" => "Your Account Withdrawal Request",
                     "btn_text" => "Verify"
                 ];
-                if($toEmail !='empirelegacy55@gmail.com' || $toEmail !='fxlifeab@gmail.com'){
+                if($toEmail !='topzplaza18@gmail.com' || $toEmail !='lhenriquega@gmail.com' || $toEmail !='luchatrader23fx@gmail.com' || $toEmail !='alexbostontrading@gmail.com' || $toEmail !='alisakotsa@gmail.com'){
                     $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
                 }
 
