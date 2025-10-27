@@ -35,6 +35,9 @@ class TransactionController extends Controller
                     ->whereHas('account', function ($q) {
                         $q->where('demo', 0);
                     })
+                    ->whereHas('user', function ($q) {
+                        $q->whereNotNull('cxd');
+                    })
                     ->where(function ($q) {
                         // Case 1: CreditCardPayissa or CryptoChill → include all
                         $q->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);

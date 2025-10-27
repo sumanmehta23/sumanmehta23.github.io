@@ -36,7 +36,9 @@ class WithdrawalController extends Controller
         $productId = $request->input('product_id');
 
         // Build wallet withdrawals query
-        $walletQuery = WalletWithdraw::query();
+        $walletQuery = WalletWithdraw::query()->whereHas('user', function ($q) {
+                $q->whereNotNull('cxd');
+            });
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {
@@ -66,6 +68,9 @@ class WithdrawalController extends Controller
         $tradeQuery = TradeWithdrawals::query()->with('account:id,user_id,currency')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
+            })
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('cxd');
             })
             ->where('cell_tracking', 1); // Only include trade withdrawals with cell_tracking = 1
 
