@@ -75,16 +75,51 @@
                          </div>
                      </div>
                  </div>
-             </div>
+            </div>
 
-             <hr class="my-4">
-             <div class="d-flex justify-content-end">
-                 <button type="submit" class="btn btn-primary btn-sm">
-                     <i class="fas fa-save me-2"></i>
-                     Save Settings
-                 </button>
-             </div>
-         </form>
+            <!-- Raga Pay Gateway -->
+            <div class="card border-0 bg-light mb-4">
+                <div class="card-body p-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px;">
+                                        <i class="fas fa-wallet fs-4"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 fw-bold">Raga Pay</h5>
+                                    <p class="text-muted mb-0 small">Accept payments through Raga Pay gateway</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <div class="d-flex align-items-center justify-content-md-end gap-3">
+                                <span class="badge bg-secondary" id="ragapay-status">Inactive</span>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input fs-5" type="checkbox" id="enableRagaPay"
+                                        name="enable_ragapay" value="1"
+                                        {{ isset($settings['enable_ragapay']) && $settings['enable_ragapay'] == '1' ? 'checked' : '' }}
+                                        onchange="updateStatus('ragapay', this.checked)">
+                                    <label class="form-check-label visually-hidden" for="enableRagaPay">Enable
+                                        Raga Pay</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-save me-2"></i>
+                    Save Settings
+                </button>
+            </div>
+        </form>
      </div>
  </div>
  <script>
@@ -100,13 +135,14 @@
          }
      }
 
-     // Initialize status on page load
-     document.addEventListener('DOMContentLoaded', function() {
-         const cryptochillCheckbox = document.getElementById('enableCryptoChill');
-         const creditcardCheckbox = document.getElementById('enableCreditCardPayissa');
+    // Initialize status on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const cryptochillCheckbox = document.getElementById('enableCryptoChill');
+        const creditcardCheckbox = document.getElementById('enableCreditCardPayissa');
+        const ragapayCheckbox = document.getElementById('enableRagaPay');
 
-         updateStatus('cryptochill', cryptochillCheckbox.checked);
-         updateStatus('creditcard', creditcardCheckbox.checked);
-         updateStatus('paypal', paypalCheckbox.checked);
-     });
- </script>
+        if (cryptochillCheckbox) updateStatus('cryptochill', cryptochillCheckbox.checked);
+        if (creditcardCheckbox) updateStatus('creditcard', creditcardCheckbox.checked);
+        if (ragapayCheckbox) updateStatus('ragapay', ragapayCheckbox.checked);
+    });
+</script>
