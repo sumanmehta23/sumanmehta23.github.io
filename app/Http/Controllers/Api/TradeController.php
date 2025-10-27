@@ -63,6 +63,9 @@ class TradeController extends Controller
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('cxd');
+            })
             ->where(function ($q) {
                 $q->where('profit', '!=', 0)
                     ->orWhere(function ($q2) {
@@ -142,7 +145,7 @@ class TradeController extends Controller
         // Paginate the results
         $perPage = min($request->input('per_page', 15), 500); // Limit max per page to 100
         $trades = $query->paginate($perPage);
-        dd($trades);
+
         try {
             return response()->json([
                 'data' => TradeResource::collection($trades->items()),
