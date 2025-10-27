@@ -31,23 +31,23 @@ class TransactionController extends Controller
 
         // Initialize query
         $query = TradeDeposit::query()
-                    ->with('account:id,user_id,currency')
-                    ->whereHas('account', function ($q) {
-                        $q->where('demo', 0);
-                    })
-                    ->whereHas('user', function ($q) {
-                        $q->whereNotNull('cxd');
-                    })
-                    ->where(function ($q) {
-                        // Case 1: CreditCardPayissa or CryptoChill → include all
-                        $q->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);
+            ->with('account:id,user_id,currency')
+            ->whereHas('account', function ($q) {
+                $q->where('demo', 0);
+            })
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('cxd');
+            })
+            ->where(function ($q) {
+                // Case 1: CreditCardPayissa or CryptoChill → include all
+                $q->whereIn('deposit_type', ['CreditCardPayissa', 'CryptoChill']);
 
-                        // Case 2: CRM → only if cell_tracking = 1
-                        $q->orWhere(function ($q2) {
-                            $q2->where('deposit_type', 'CRM')
-                            ->where('cell_tracking', 1);
-                        });
-                    });
+                // Case 2: CRM → only if cell_tracking = 1
+                $q->orWhere(function ($q2) {
+                    $q2->where('deposit_type', 'CRM')
+                        ->where('cell_tracking', 1);
+                });
+            });
 
         // Filter by transaction date range
         $dateFrom = $request->input('transaction_date_from');
@@ -55,14 +55,30 @@ class TransactionController extends Controller
 
         // Ensure filters are applied only when data is provided
         if (!empty($dateFrom) && !empty($dateTo)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            $toDate = Carbon::parse($dateTo);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $query->whereBetween('deposted_date', [$fromDate, $toDate]);
         } elseif (!empty($dateFrom)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+
             $query->where('deposted_date', '>=', $fromDate);
         } elseif (!empty($dateTo)) {
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $toDate = Carbon::parse($dateTo);
+
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $query->where('deposted_date', '<=', $toDate);
         }
 

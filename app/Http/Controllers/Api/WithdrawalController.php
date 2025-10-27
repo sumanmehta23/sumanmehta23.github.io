@@ -37,19 +37,35 @@ class WithdrawalController extends Controller
 
         // Build wallet withdrawals query
         $walletQuery = WalletWithdraw::query()->whereHas('user', function ($q) {
-                $q->whereNotNull('cxd');
-            });
+            $q->whereNotNull('cxd');
+        });
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            $toDate = Carbon::parse($dateTo);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $walletQuery->whereBetween('withdraw_date', [$fromDate, $toDate]);
         } elseif (!empty($dateFrom)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+
             $walletQuery->where('withdraw_date', '>=', $fromDate);
         } elseif (!empty($dateTo)) {
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $toDate = Carbon::parse($dateTo);
+
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $walletQuery->where('withdraw_date', '<=', $toDate);
         }
 
@@ -78,14 +94,30 @@ class WithdrawalController extends Controller
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            $toDate = Carbon::parse($dateTo);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $tradeQuery->whereBetween('withdraw_date', [$fromDate, $toDate]);
         } elseif (!empty($dateFrom)) {
-            $fromDate = Carbon::parse($dateFrom)->startOfDay();
+            $fromDate = Carbon::parse($dateFrom);
+            // Only apply startOfDay/endOfDay if time portion is not provided
+            if ($fromDate->format('H:i:s') === '00:00:00') {
+                $fromDate = $fromDate->startOfDay();
+            }
+
             $tradeQuery->where('withdraw_date', '>=', $fromDate);
         } elseif (!empty($dateTo)) {
-            $toDate = Carbon::parse($dateTo)->endOfDay();
+            $toDate = Carbon::parse($dateTo);
+
+            if ($toDate->format('H:i:s') === '00:00:00') {
+                $toDate = $toDate->endOfDay();
+            }
             $tradeQuery->where('withdraw_date', '<=', $toDate);
         }
 
