@@ -16,6 +16,8 @@ class TransactionResource extends JsonResource
     {
         return [
             'user_id' => $this->user_id,
+            'account_id' => $this->account_id,
+            'code' => $this->account->code ?? null,
             'transaction_id' => $this->transaction_id,
             'transaction_type' => $this->deposit_type,
             'transaction_amount' => $this->deposit_amount,
