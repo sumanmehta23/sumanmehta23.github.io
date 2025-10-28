@@ -74,7 +74,9 @@
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
-                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1')
+                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' && 
+                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') || 
+                                                     (isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')))
                                                     <div class="col-6 col-lg-6 col-xl-6">
                                                         <div class="border rounded address-check">
                                                             <div class="form-check">
