@@ -716,15 +716,36 @@ class SettingsController extends Controller
 
     public function updatePaymentGateways(Request $request)
     {
-        $gateways = ['enable_cryptochill', 'enable_creditcardpayissa', 'enable_ragapay'];
+        // Get checkbox values (1 if checked, 0 if unchecked)
+        $payissaEnabled = $request->input('enable_creditcardpayissa', '0') === '1';
+        $ragapayEnabled = $request->input('enable_ragapay', '0') === '1';
+        $cryptochillEnabled = $request->input('enable_cryptochill', '0') === '1';
+        
+        // Auto-manage credit card: enabled if either sub-option is enabled
+        $creditEnabled = $payissaEnabled || $ragapayEnabled;
+        
+        // Gateway settings to update
+        $settings = [
+            'enable_cryptochill' => $cryptochillEnabled ? '1' : '0',
+            'enable_credit' => $creditEnabled ? '1' : '0',
+            'enable_creditcardpayissa' => $payissaEnabled ? '1' : '0',
+            'enable_ragapay' => $ragapayEnabled ? '1' : '0'
+        ];
 
-        foreach ($gateways as $gateway) {
-            $value = $request->has($gateway) ? '1' : '0';
-
-            Setting::updateOrCreate(
-                ['name' => $gateway],
-                ['value' => $value, 'updated_at' => now()]
-            );
+        // Update all settings
+        foreach ($settings as $name => $value) {
+            try {
+                $result = Setting::updateOrCreate(
+                    ['name' => $name],
+                    ['value' => $value, 'updated_at' => now()]
+                );
+                
+                // Log what actually happened
+                Log::info("Gateway {$name}: " . ($result->wasRecentlyCreated ? 'CREATED' : 'UPDATED') . " with value {$value}, ID: {$result->id}");
+                
+            } catch (\Exception $e) {
+                Log::error("Failed to update/create setting {$name}: " . $e->getMessage());
+            }
         }
 
         return redirect()->back()->with('success', 'Payment gateway settings updated!');
