@@ -8,6 +8,7 @@
     <option value="pt">Portuguese</option>
 </select>
 
+
 <script>
     // Initialize this dropdown using the shared Google Translate functions
     document.addEventListener('DOMContentLoaded', function(){
