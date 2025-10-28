@@ -26,7 +26,10 @@
                          </div>
                          <div class="col-md-4 text-md-end mt-3 mt-md-0">
                              <div class="d-flex align-items-center justify-content-md-end gap-3">
-                                 <span class="badge bg-secondary" id="cryptochill-status">Inactive</span>
+                                 <span class="badge {{ isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] == '1' ? 'bg-success' : 'bg-secondary' }}" id="cryptochill-status">
+                                     {{ isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] == '1' ? 'Active' : 'Inactive' }}
+                                 </span>
+                   
                                  <div class="form-check form-switch">
                                      <input class="form-check-input fs-5" type="checkbox" id="enableCryptoChill"
                                          name="enable_cryptochill" value="1"
@@ -65,7 +68,9 @@
                          </div>
                          <div class="col-md-4 text-md-end mt-3 mt-md-0">
                              <div class="d-flex align-items-center justify-content-md-end gap-3">
-                                 <span class="badge bg-success" id="creditcard-status">Active</span>
+                                 <span class="badge {{ isset($settings['enable_credit']) && $settings['enable_credit'] == '1' ? 'bg-success' : 'bg-secondary' }}" id="creditcard-status">
+                                     {{ isset($settings['enable_credit']) && $settings['enable_credit'] == '1' ? 'Active' : 'Inactive' }}
+                                 </span>
                                  <div class="form-check form-switch">
                                      <input class="form-check-input fs-5" type="checkbox" id="enableCreditCard"
                                          name="enable_credit" value="1"
@@ -103,7 +108,9 @@
                                                  </div>
                                              </div>
                                              <div class="d-flex align-items-center gap-2">
-                                                 <span class="badge bg-secondary" id="payissa-status">Inactive</span>
+                                                 <span class="badge {{ isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] == '1' ? 'bg-success' : 'bg-secondary' }}" id="payissa-status">
+                                                     {{ isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] == '1' ? 'Active' : 'Inactive' }}
+                                                 </span>
                                                  <div class="form-check form-switch">
                                                      <input class="form-check-input" type="checkbox" id="enablePayissa"
                                                          name="enable_creditcardpayissa" value="1"
@@ -135,7 +142,9 @@
                                                  </div>
                                              </div>
                                              <div class="d-flex align-items-center gap-2">
-                                                 <span class="badge bg-secondary" id="ragapay-status">Inactive</span>
+                                                 <span class="badge {{ isset($settings['enable_ragapay']) && $settings['enable_ragapay'] == '1' ? 'bg-success' : 'bg-secondary' }}" id="ragapay-status">
+                                                     {{ isset($settings['enable_ragapay']) && $settings['enable_ragapay'] == '1' ? 'Active' : 'Inactive' }}
+                                                 </span>
                                                  <div class="form-check form-switch">
                                                      <input class="form-check-input" type="checkbox" id="enableRagaPay"
                                                          name="enable_ragapay" value="1"
