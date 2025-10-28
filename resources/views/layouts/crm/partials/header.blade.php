@@ -563,6 +563,16 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                             </ul>
                         @endif
                         <ul class="list-unstyled">
+                            <li class="pc-h-item">
+                                <select id="custom_translate_select_header_crm" class="form-select form-select-sm" style="min-width: 160px;">
+                                    <option value="en">English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="ar">Arabic</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="pt">Portuguese</option>
+                                </select>
+                            </li>
                             <li class="dropdown pc-h-item">
                                 <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">

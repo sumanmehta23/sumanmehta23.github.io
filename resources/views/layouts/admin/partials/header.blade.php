@@ -187,6 +187,19 @@ if (app()->environment('local')) {
                     </li>
                     <!-- End::header-element -->
 
+                    <!-- Start::header-element: Language Dropdown -->
+                    <li class="header-element">
+                        <select id="custom_translate_select_header" class="form-select form-select-sm" style="min-width: 160px;">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="ar">Arabic</option>
+                            <option value="hi">Hindi</option>
+                            <option value="pt">Portuguese</option>
+                        </select>
+                    </li>
+                    <!-- End::header-element: Language Dropdown -->
+
                     <!-- Start::header-element -->
                     <li class="header-element dropdown">
                         <!-- Start::header-link|dropdown-toggle -->
