@@ -716,7 +716,7 @@ class SettingsController extends Controller
 
     public function updatePaymentGateways(Request $request)
     {
-        $gateways = ['enable_cryptochill', 'enable_creditcardpayissa'];
+        $gateways = ['enable_cryptochill', 'enable_creditcardpayissa', 'enable_ragapay'];
 
         foreach ($gateways as $gateway) {
             $value = $request->has($gateway) ? '1' : '0';
