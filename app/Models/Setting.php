@@ -11,7 +11,7 @@ class Setting extends Model
     use HasFactory,HasUuids;
     protected $table = 'settings';
 
-    protected $fillable = ['key', 'value'];
+    protected $fillable = ['name', 'value', 'updated_at'];
     public $timestamps = false;
     public static function tableExists()
     {

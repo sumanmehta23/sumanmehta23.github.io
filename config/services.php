@@ -77,5 +77,11 @@ return [
     'x9' => [
         'base_url' => env('X9_BASE_URL', ''),
         'access_token' => env('X9_ACCESS_TOKEN', ''),
-    ]
+    ],
+
+    'raga_pay' => [
+        'api_url' => env('RAGAPAY_API_URL', 'https://api.ragapay.com/api/v1'),
+        'merchant_key' => env('RAGAPAY_MERCHANT_KEY', ''),
+        'password' => env('RAGAPAY_PASSWORD', ''),
+    ],
 ];
