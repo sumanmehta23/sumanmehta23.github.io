@@ -460,6 +460,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+@include('components.google-translate')
+
+<script>
+    // Initialize header dropdowns for CRM portal
+    document.addEventListener('DOMContentLoaded', function(){
+        if (window.__googleTranslateInitSelects) {
+            window.__googleTranslateInitSelects(['custom_translate_select_header_crm']);
+        }
+    });
+</script>
+
 </body>
 
 </html>
