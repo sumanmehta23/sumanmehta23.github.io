@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="/admin_assets/assets/libs/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="/admin_assets/assets/libs/flatpickr/flatpickr.min.css">
     <link rel="stylesheet" href="/admin_assets/assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
     @if (!View::hasSection('noDatatable'))
         <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
@@ -189,14 +190,10 @@ if (app()->environment('local')) {
 
                     <!-- Start::header-element: Language Dropdown -->
                     <li class="header-element">
-                        <select id="custom_translate_select_header" class="form-select form-select-sm" style="min-width: 160px;">
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="ar">Arabic</option>
-                            <option value="hi">Hindi</option>
-                            <option value="pt">Portuguese</option>
-                        </select>
+                        @include('components.language-dropdown', [
+                            'selectId' => 'custom_translate_select_header',
+                            'flagPreviewId' => 'flag-preview-admin-header'
+                        ])
                     </li>
                     <!-- End::header-element: Language Dropdown -->
 

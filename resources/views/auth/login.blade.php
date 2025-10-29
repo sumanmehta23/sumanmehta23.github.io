@@ -187,21 +187,10 @@
         @include('components.google-translate')
         <!-- Visible language dropdown for client login page -->
         <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
-            <select id="custom_translate_select_client_login" class="form-select form-select-sm" style="min-width: 180px;">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="ar">Arabic</option>
-                <option value="hi">Hindi</option>
-                <option value="pt">Portuguese</option>
-            </select>
+            @include('components.language-dropdown', [
+                'selectId' => 'custom_translate_select_client_login',
+                'flagPreviewId' => 'flag-preview-client-login'
+            ])
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function(){
-                if (window.__googleTranslateInitSelects) {
-                    window.__googleTranslateInitSelects(['custom_translate_select_client_login']);
-                }
-            });
-        </script>
 
 @endsection
