@@ -90,12 +90,3 @@
 @include('sweetalert::alert')
 
 @include('components.google-translate')
-
-<script>
-    // Initialize header dropdowns for admin panel
-    document.addEventListener('DOMContentLoaded', function(){
-        if (window.__googleTranslateInitSelects) {
-            window.__googleTranslateInitSelects(['custom_translate_select_header']);
-        }
-    });
-</script>

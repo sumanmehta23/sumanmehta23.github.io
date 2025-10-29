@@ -80,6 +80,29 @@
                 if(sel){
                     sel.value = current;
                     sel.addEventListener('change', function(){ applyTranslation(this.value); });
+                    
+                    // Update flag icon after setting value
+                    var flagPreviewId = '';
+                    if (id === 'custom_translate_select_header') flagPreviewId = 'flag-preview-admin-header';
+                    else if (id === 'custom_translate_select_header_crm') flagPreviewId = 'flag-preview-crm-header';
+                    else if (id === 'custom_translate_select_login') flagPreviewId = 'flag-preview-login';
+                    else if (id === 'custom_translate_select_client_login') flagPreviewId = 'flag-preview-client-login';
+                    
+                    if (flagPreviewId) {
+                        setTimeout(function() {
+                            var flagPreview = document.getElementById(flagPreviewId);
+                            if (flagPreview && sel.selectedIndex >= 0) {
+                                var selected = sel.options[sel.selectedIndex];
+                                if (selected) {
+                                    var flagCode = selected.getAttribute('data-flag');
+                                    if (flagCode) {
+                                        flagPreview.className = 'flag-preview fi fi-' + flagCode;
+                                        flagPreview.style.display = 'block';
+                                    }
+                                }
+                            }
+                        }, 100);
+                    }
                 }
             });
         }
