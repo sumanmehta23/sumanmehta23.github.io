@@ -23,6 +23,7 @@
         "predis/predis": "^2.3",
         "realrashid/sweet-alert": "^7.2",
         "spatie/laravel-activitylog": "^4.10",
+        "stevebauman/location": "^7.6",
         "symfony/css-selector": "^7.2",
         "symfony/dom-crawler": "^7.2",
         "yajra/laravel-datatables-oracle": "^11.1"

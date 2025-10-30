@@ -65,11 +65,11 @@ class Home extends Controller
         // $totalDeposit = TotalBalance::where('user_id', $userId)
         //     ->sum('trading_deposited');
         $totalDeposit1 = WalletDeposit::where('user_id', $userId)
-            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])
             ->where('status', 1)
             ->sum('deposit_amount');
         $totalDeposit2 = TradeDeposit::where('user_id', $userId)
-            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+            ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])
             ->where('status', 1)
             ->sum('deposit_amount');
 

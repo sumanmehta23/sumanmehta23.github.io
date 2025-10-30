@@ -59,6 +59,7 @@ class Payment extends Controller
         return $this->api !== null;
     }
 
+    // Handle RagaPay and CreditCardPayissa payment callbacks
     public function handlePaymentResponse(Request $request)
     {
         if (!$this->ensureMT5Connection()) {
@@ -69,18 +70,324 @@ class Payment extends Controller
         $status = $request->input('status');
         $payment_id = $request->input('payment_id');
         $address_in = $request->input('address_in');
+        $order_id = $request->input('order_id');
         $responsedata = $request->all();
-        $transactionId = $responsedata['txid_in'];
+
         try {
+            // For RagaPay, extract our payment ID from order_id (format: ragaPay{uuid})
+            if (!empty($order_id) && strpos($order_id, 'ragaPay') === 0) {
+                $extractedPaymentId = substr($order_id, 7); // Remove 'ragaPay' prefix
+                Log::info('Extracted payment ID from RagaPay order_id', [
+                    'order_id' => $order_id,
+                    'extracted_payment_id' => $extractedPaymentId
+                ]);
+                $payment_id = $extractedPaymentId;
+            }
+
+            // Check if payment_id is provided
+            if (empty($payment_id)) {
+                Log::error('Payment ID is missing in callback', ['responsedata' => $responsedata]);
+                return redirect('/trade-deposit')->with('error', 'Payment ID is missing. Please contact support.');
+            }
+
+            // Get payment log
+            $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
+            if (!$paymentLog) {
+                Log::error('Invalid Payment ID: ' . $payment_id, ['responsedata' => $responsedata]);
+                return redirect('/trade-deposit')->with('error', 'Invalid Payment ID. Please contact support with reference: ' . $payment_id);
+            }
+
+            // Handle RagaPay success callback (for Wallet deposits)
+            if ($paymentLog->payment_type === 'RagaPay' && $status === 'success' && $paymentLog->payment_reference_id === 'Wallet') {
+                Log::info('RagaPay wallet deposit callback: ' . json_encode($responsedata));
+
+                // Get RagaPay transaction ID
+                $ragapayTransactionId = $responsedata['trans_id'] ?? $responsedata['payment_id'] ?? $payment_id;
+
+                // Check for duplicate transaction using our payment log ID
+                $existingDeposit = WalletDeposit::where('transaction_id', $payment_id)
+                    ->orWhere('transaction_id', $ragapayTransactionId)
+                    ->first();
+                if ($existingDeposit) {
+                    Log::channel('ragapay')->info('Wallet deposit already exists for payment ID: ' . $payment_id);
+                    return redirect('/trade-deposit')->with('info', 'This deposit has already been processed.');
+                }
+
+                // Update payment log
+                $paymentLog->update([
+                    'payment_res' => json_encode($responsedata),
+                    'payment_status' => 'success',
+                ]);
+
+                $email = $paymentLog->initiated_by;
+                $amount = $paymentLog->payment_amount;
+                $userId = $paymentLog->user_id;
+
+                try {
+                    DB::beginTransaction();
+
+                    // Create wallet deposit record
+                    $walletDeposit = WalletDeposit::create([
+                        'user_id' => $userId,
+                        'email' => $email,
+                        'deposit_type' => 'RagaPay',
+                        'deposit_amount' => $amount,
+                        'company_bank' => 'RagaPay',
+                        'transaction_id' => $payment_id, // Store our payment log ID
+                        'status' => 1,
+                        'currency_type' => 'USD',
+                        'callback_data' => json_encode($responsedata),
+                        'callback_code' => 'success',
+                    ]);
+
+                    // Update total balance
+                    TotalBalance::create([
+                        'user_id' => $userId,
+                        'email' => $email,
+                        'deposit_amount' => $amount
+                    ]);
+
+                    DB::commit();
+
+                    // Fire Customer.io event for deposit
+                    event(new AccountTradesDepositEvent($paymentLog->user, $amount));
+                    Cache::forget("user:{$userId}:wallet_balance");
+
+                    Log::channel('ragapay')->info('RagaPay wallet deposit confirmed successfully for payment ID: ' . $payment_id);
+
+                    // Send success email
+                    $this->sendSuccessEmail($email, $amount, $paymentLog, $walletDeposit->id);
+
+                    return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Wallet");
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel('ragapay')->error('RagaPay wallet deposit failed: ' . $e->getMessage());
+                    return redirect('/trade-deposit')->with('error', 'Something went wrong processing your deposit. Please contact support.');
+                }
+            }
+
+            // Handle RagaPay success callback (for Trade Account deposits)
+            if ($paymentLog->payment_type === 'RagaPay' && $status === 'success' && $paymentLog->payment_reference_id === 'TradeAccount') {
+                Log::info('RagaPay trade account deposit callback: ' . json_encode($responsedata));
+
+                // Get RagaPay transaction ID
+                $ragapayTransactionId = $responsedata['trans_id'] ?? $responsedata['payment_id'] ?? $payment_id;
+
+                // Check for duplicate transaction
+                $existingDeposit = TradeDeposit::where('transaction_id', $payment_id)
+                    ->orWhere('transaction_id', $ragapayTransactionId)
+                    ->first();
+                if ($existingDeposit) {
+                    Log::channel('ragapay')->info('Trade deposit already exists for payment ID: ' . $payment_id);
+                    return redirect('/trade-deposit')->with('info', 'This deposit has already been processed.');
+                }
+
+                // Update payment log
+                $paymentLog->update([
+                    'payment_res' => json_encode($responsedata),
+                    'payment_status' => 'success',
+                ]);
+
+                $email = $paymentLog->initiated_by;
+                $amount = $paymentLog->payment_amount;
+                $userId = $paymentLog->user_id;
+
+                // Get account from payment log
+                $account = Account::where('id', $paymentLog->account_id)->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                    $query->where('status', 1);
+                }])->first();
+
+                if (!$account) {
+                    Log::error('Account not found for payment log: ' . $payment_id);
+                    return redirect('/trade-deposit')->with('error', 'Account not found. Please contact support.');
+                }
+
+                try {
+                    // Credit the MT5 account
+                    $comment = 'RagaPay';
+                    $ticket3 = NULL;
+                    $errorCode3 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket3, true);
+
+                    if ($errorCode3 !== MTRetCode::MT_RET_OK) {
+                        $error = MTRetCode::GetError($errorCode3);
+                        Log::channel('ragapay')->error('RagaPay trade balance failed: ' . $error);
+                        return redirect('/trade-deposit')->with('error', 'Something went wrong processing your deposit. Please contact support.');
+                    }
+
+                    DB::beginTransaction();
+
+                    // Handle 10x Trader Leverage for first deposit
+                    $ticket1 = NULL;
+                    if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $account->successful_trade_deposits_count == 0) {
+                        if ($amount > 250) {
+                            $bonusamount = 9 * 250;
+                        } else {
+                            $bonusamount = 9 * $amount;
+                        }
+
+                        if (($error_code1 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) === MTRetCode::MT_RET_OK) {
+                            // Update leverage
+                            $trade_user = null;
+                            if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) == MTRetCode::MT_RET_OK) {
+                                if ($trade_user) {
+                                    $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                    $trade_user->Leverage = $leverage;
+
+                                    $updated_user = "";
+                                    if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                        Log::warning("Failed to update leverage: " . MTRetCode::GetError($error_code));
+                                    }
+                                }
+                            }
+
+                            BonusTransaction::create([
+                                'email' => $email,
+                                'user_id' => $userId,
+                                'account_id' => $paymentLog->account_id,
+                                'code' => $account->code,
+                                'bonus_amount' => $bonusamount,
+                                'bonus_type' => 'Bonus In',
+                                'status' => 1,
+                                'admin_remark' => '10x Trader Leverage',
+                                'bonus_currency' => 'USD',
+                                'transaction_id' => $payment_id,
+                            ]);
+                        }
+                    }
+
+                    // Prepare trade deposit data
+                    $data = [
+                        'user_id' => $userId,
+                        'account_id' => $paymentLog->account_id,
+                        'email' => $email,
+                        'code' => $account->code,
+                        'deposit_amount' => $amount,
+                        'deposit_type' => 'RagaPay',
+                        'deposit_from' => 'RagaPay',
+                        'status' => 1,
+                        'deposit_currency' => 'USD',
+                        'transaction_id' => $payment_id,
+                        'deposted_date' => now(),
+                        'callback_data' => json_encode($responsedata),
+                        'callback_code' => 'success',
+                    ];
+
+                    // Handle promocode if exists
+                    if (isset($paymentLog->promocode) && $paymentLog->promocode != '') {
+                        $ticket2 = NULL;
+                        $promo = Promocode::where('code', $paymentLog->promocode)->first();
+                        if ($promo) {
+                            $min_deposit = $promo->min_deposit;
+                            if ($amount >= $min_deposit) {
+                                if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
+                                    $bonus_amount = ($promo->promo_percentage / 100) * $promo->max_deposit;
+                                } else {
+                                    $bonus_amount = ($promo->promo_percentage / 100) * $amount;
+                                }
+
+                                if (($error_code2 = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket2, true)) === MTRetCode::MT_RET_OK) {
+                                    BonusTransaction::create([
+                                        'email' => $email,
+                                        'user_id' => $userId,
+                                        'account_id' => $paymentLog->account_id,
+                                        'code' => $account->code,
+                                        'bonus_amount' => $bonus_amount,
+                                        'bonus_type' => 'Bonus In',
+                                        'status' => 1,
+                                        'admin_remark' => 'Promo Bonus',
+                                        'bonus_currency' => 'USD',
+                                        'transaction_id' => $payment_id,
+                                        'promocode_id' => $promo->id
+                                    ]);
+
+                                    // Update leverage
+                                    $trade_user = null;
+                                    if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) == MTRetCode::MT_RET_OK) {
+                                        if ($trade_user) {
+                                            $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
+                                            $trade_user->Leverage = $leverage;
+
+                                            $updated_user = "";
+                                            if (($error_code = $this->mt5Service->userUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
+                                                Log::warning("Failed to update leverage: " . MTRetCode::GetError($error_code));
+                                            }
+                                        }
+                                    }
+                                }
+
+                                $data['promocode_percentage'] = $promo->promo_percentage;
+                                $data['promocode_code'] = $promo->code;
+                            }
+                        }
+                    } else {
+                        $data['promocode_percentage'] = null;
+                        $data['promocode_code'] = null;
+                    }
+
+                    // Create trade deposit record
+                    $tradeDeposit = TradeDeposit::create($data);
+
+                    // Update total balance
+                    TotalBalance::create([
+                        'email' => $email,
+                        'user_id' => $userId,
+                        'deposit_amount' => $amount
+                    ]);
+
+                    DB::commit();
+
+                    // Fire Customer.io event for deposit
+                    event(new AccountTradesDepositEvent($paymentLog->user, $amount));
+                    Cache::forget("user:{$userId}:wallet_balance");
+
+                    Log::channel('ragapay')->info('RagaPay trade deposit confirmed successfully for payment ID: ' . $payment_id);
+
+                    // Send success email
+                    $this->sendSuccessEmail2($email, $amount, $tradeDeposit);
+
+                    return redirect('/trade-deposit')->with('success', "Successfully Deposited \$$amount To Your Trading Account {$account->code}");
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::channel('ragapay')->error('RagaPay trade deposit failed: ' . $e->getMessage());
+
+                    // Reverse the MT5 balance if database transaction failed
+                    try {
+                        $reverseAmount = abs((float)$amount) * -1;
+                        $comment = 'RagaPay - Error Reversal';
+                        $ticket = NULL;
+                        $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BALANCE, $reverseAmount, $comment, $ticket, true);
+                    } catch (Exception $reverseException) {
+                        Log::error('Failed to reverse MT5 balance: ' . $reverseException->getMessage());
+                    }
+
+                    return redirect('/trade-deposit')->with('error', 'Something went wrong processing your deposit. Please contact support.');
+                }
+            }
+
+            // Handle RagaPay cancel/error callbacks
+            if ($paymentLog->payment_type === 'RagaPay' && in_array($status, ['cancel', 'error'])) {
+                Log::channel('ragapay')->info('RagaPay payment ' . $status . ': ' . json_encode($responsedata));
+
+                $paymentLog->update([
+                    'payment_res' => json_encode($responsedata),
+                    'payment_status' => $status,
+                ]);
+
+                $message = $status === 'cancel' ? 'Payment was cancelled.' : 'Payment failed. Please try again.';
+                return redirect('/trade-deposit')->with('error', $message);
+            }
+
+            // Handle CreditCardPayissa callback (existing logic)
             if (!empty($address_in)) {
+                if (!$this->ensureMT5Connection()) {
+                    Log::error('Failed to connect to MT5 server in handlePaymentResponse');
+                    return response()->json(['error' => 'MT5 connection failed'], 500);
+                }
+
+                $transactionId = $responsedata['txid_in'];
 
                 Log::channel("creditcardpayissa")->info('Payment callback Response: ' . json_encode($responsedata));
 
-
-                $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
-                if (!$paymentLog) {
-                    return response()->json(['error' => 'Invalid Payment ID'], 400);
-                }
                 $paymentlinkresponse = json_decode($paymentLog->payment_req);
                 $validationToken = $paymentlinkresponse->polygon_address_in;
                 // && $responsedata['value_coin']==$paymentLog->payment_amount can't compare as it will never be same as intial input
@@ -335,6 +642,18 @@ class Payment extends Controller
                 return ["ok"];
                 // return redirect('/wallet_deposit')->with('error', "Payment in progress: We are processing your payment request. Please wait for a while.");
             }
+
+            // If we reach here, no handler matched - return a helpful error
+            Log::warning('No payment handler matched', [
+                'payment_type' => $paymentLog->payment_type ?? 'unknown',
+                'status' => $status,
+                'has_address' => !empty($address_in),
+                'payment_reference_id' => $paymentLog->payment_reference_id ?? 'unknown',
+                'responsedata' => $responsedata
+            ]);
+
+            return redirect('/trade-deposit')->with('error', 'Payment callback received but could not be processed. Payment type: ' . ($paymentLog->payment_type ?? 'unknown') . '. Please contact support with reference: ' . $payment_id);
+
             // else {
 
             //     $payment_res = json_encode($request->all());

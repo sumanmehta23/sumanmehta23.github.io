@@ -74,13 +74,37 @@
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
+                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' && 
+                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') || 
+                                                     (isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')))
+                                                    <div class="col-6 col-lg-6 col-xl-6">
+                                                        <div class="border rounded address-check">
+                                                            <div class="form-check">
+                                                                <input type="radio" name="payment_method"
+                                                                    class="form-check-input input-primary payment-method-selector"
+                                                                    id="payment_credit" value="credit"
+                                                                    data-method="credit">
+                                                                <label class="form-check-label d-block" for="payment_credit">
+                                                                    <span class="p-2 card-body d-block">
+                                                                        <span class="d-flex align-items-center justify-content-between">
+                                                                            <span>Credit</span>
+                                                                            <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                <img src="/assets/images/credit-card.png" alt="Credit" class="w-xs-100 w-md-25">
+                                                                            </span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                                 @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
                                                     <div class="col-6 col-lg-6 col-xl-6">
                                                         <div class="border rounded address-check trade-deposit-type">
                                                             <div class="form-check">
                                                                 <input type="radio" name="deposit_type"
                                                                     checked
-                                                                    class="form-check-input input-primary tradefund-deposit"
+                                                                    class="form-check-input input-primary tradefund-deposit payment-method-selector"
                                                                     id="cryptochill" value="CryptoChill"
                                                                     data-type="CryptoChill">
                                                                 <label class="form-check-label d-block" for="cryptochill">
@@ -97,30 +121,119 @@
                                                         </div>
                                                     </div>
                                                 @endif
-                                                @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
-                                                    <div class="col-6 col-lg-6 col-xl-6">
-                                                        <div class="border rounded address-check trade-deposit-type">
-                                                            <div class="form-check">
-                                                                <input type="radio" name="deposit_type"
-                                                                    class="form-check-input input-primary tradefund-deposit"
-                                                                    id="option_cc" value="CreditCardPayissa"
-                                                                    data-type="CreditCardPayissa">
-                                                                <label class="form-check-label d-block" for="option_cc">
-                                                                    <span class="p-2 card-body d-block">
-                                                                        <span class="d-flex align-items-center justify-content-between">
-                                                                            <span class="no-wrap">Credit Card</span>
-                                                                            <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
-                                                                                <img src="/assets/images/credit-card.png" alt="Credit Card" class="w-xs-100 w-md-25">
+                                            </div>
+
+                                            <!-- Credit Services Selection (shown when credit is selected) -->
+                                            @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1')
+                                                <div id="credit-services-section" class="row g-1 mt-3" style="display:none;">
+                                                    <div class="col-12">
+                                                        <h6 class="mb-3" style="margin-left: 10px;">SELECT CREDIT SERVICE</h6>
+                                                    </div>
+                                                    @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1' && $isUkUser)
+                                                        <div class="col-6 col-lg-6 col-xl-6">
+                                                            <div class="border rounded address-check trade-deposit-type">
+                                                                <div class="form-check">
+                                                                    <input type="radio" name="deposit_type"
+                                                                        class="form-check-input input-primary tradefund-deposit"
+                                                                        id="ragapay" value="RagaPay"
+                                                                        data-type="RagaPay">
+                                                                    <label class="form-check-label d-block" for="ragapay">
+                                                                        <span class="p-2 card-body d-block">
+                                                                            <span class="d-flex align-items-center justify-content-between">
+                                                                                <span>Ragapay</span>
+                                                                                <!-- <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                    <img src="/assets/images/credit-card.png" alt="RagaPay" class="w-xs-75 w-md-25">
+                                                                                </span> -->
                                                                             </span>
                                                                         </span>
-                                                                    </span>
-                                                                </label>
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                                    @endif
+                                                    @if(isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')
+                                                        <div class="col-6 col-lg-6 col-xl-6">
+                                                            <div class="border rounded address-check trade-deposit-type">
+                                                                <div class="form-check">
+                                                                    <input type="radio" name="deposit_type"
+                                                                        class="form-check-input input-primary tradefund-deposit"
+                                                                        id="option_cc" value="CreditCardPayissa"
+                                                                        data-type="CreditCardPayissa">
+                                                                    <label class="form-check-label d-block" for="option_cc">
+                                                                        <span class="p-2 card-body d-block">
+                                                                            <span class="d-flex align-items-center justify-content-between">
+                                                                                <span class="no-wrap">Payissa</span>
+                                                                                <!-- <span class="mb-1 h6 f-w-500 d-block" style="text-align: end;">
+                                                                                    <img src="/assets/images/credit-card.png" alt="Payissa" class="w-xs-100 w-md-25">
+                                                                                </span> -->
+                                                                            </span>
+                                                                        </span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
                                             <div class="my-4 divider"><span>DEPOSIT DETAILS</span></div>
+                                             @if(isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1' && $isUkUser)
+                                                <div class="RagaPay trade-deposit-details">
+                                                    <form method="post" id="RagaPayForm" action="{{ route('trade-deposit_store') }}">
+                                                        @csrf
+                                                        <input type="hidden" name="email" value="{{ session('clogin') }}" min="10" required class="form-control fill">
+                                                        <input class="user_code" type="hidden" name="user[code]" value="" class="form-control fill" readonly required>
+                                                        <div class="row">
+                                                            <div class="mt-2 col-12">
+                                                                <input type="hidden" name="deposit_type" class="tradedeposittype" value="RagaPay">
+                                                                <div class="form-group row promo-field-ragapay">
+                                                                    <label class="col-lg-4 col-form-label">ENTER PROMOCODE:
+                                                                        <small class="text-muted d-block">Please enter promocode</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <input name="raga_promocode" id="raga_promocode" type="text" class="form-control fill" placeholder="Promocode" aria-label="promocode">
+                                                                            <button type="button" id="verifyRagaPromocodeBtn" class="btn btn-primary">Verify</button>
+                                                                        </div>
+                                                                        <small id="raga_promocodeStatus" class="text-muted"></small>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group row">
+                                                                    <label class="col-lg-4 col-form-label">ENTER AMOUNT:
+                                                                        <small class="text-muted d-block">Please enter the amount to be deposited</small>
+                                                                    </label>
+                                                                    <div class="col-lg-8">
+                                                                        <div class="mb-3 input-group">
+                                                                            <span class="input-group-text">USD</span>
+                                                                            <input placeholder="Minimum $10" name="deposit" id="deposit_amount_raga" type="number" min="10" title="Minimum $10" class="form-control fill ragadeposit_amount" aria-label="Amount" required>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <div class="col-lg-4"></div>
+                                                                    <div class="col-lg-8 pb-4">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input mt-1" type="checkbox" id="ragaWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <label class="form-check-label" for="ragaWarningCheckbox">
+                                                                                I confirm that I have reviewed the payment details and understand that this transaction will be processed through RagaPay payment gateway. I agree to proceed with this payment.
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="">
+                                                                    <div class="row">
+                                                                        <div class="col-lg-4"></div>
+                                                                        <div class="col-lg-8">
+                                                                            <div class="row g-1">
+                                                                                <input type="submit" name="ragapay" id="ragapay-submit-btn" class="btn btn-primary col-12" value="Deposit To Trading Account" disabled>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            @endif
                                             @if(isset($settings['enable_cryptochill']) && $settings['enable_cryptochill'] === '1')
                                                 <div class="CryptoChill trade-deposit-details">
                                                     <form method="post">
@@ -245,6 +358,13 @@
                                                                                 Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, this option may not be available in your country. In that case, please use cryptocurrency to deposit.
                                                                             </label>
                                                                         </div>
+                                                                         <div class="form-check mt-2">
+                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
+                                                                            <label class="form-check-label" for="creditusdcCheckbox">
+                                                                                I understand this credit card option processes payments only in USDC.
+                                                                            </label>
+                                                                            <p>If any other coin is selected on the next page, it will need to be manually credited and may take up to 24 hours to process after contacting support.</p>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="">
@@ -358,6 +478,38 @@
     @include('add_amount_to_account')
     <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Payment method selection handling (only for credit)
+        $('.payment-method-selector').on('change', function() {
+            const selectedMethod = $(this).val();
+
+            // Hide credit services section and credit-related deposit details
+            $('#credit-services-section').hide();
+            $('.RagaPay, .CreditCardPayissa').hide();
+
+            // Uncheck credit-related deposit type radios
+            $('#ragapay, #option_cc').prop('checked', false);
+
+            if (selectedMethod === 'credit') {
+                $('#credit-services-section').show();
+                // Uncheck and remove styling from crypto
+                $('#cryptochill').prop('checked', false);
+                $('#cryptochill').closest('.trade-deposit-type').removeClass('border-primary');
+                $('#cryptochill').closest('.trade-deposit-type').css('background-color', '');
+                // Hide crypto deposit details
+                $('.CryptoChill').hide();
+            }
+
+            if (selectedMethod === 'CryptoChill') {
+                $('#credit-services-section').hide();
+                // // Uncheck and remove styling from crypto
+                $('#payment_credit').prop('checked', false);
+                $('#payment_credit').closest('.address-check').removeClass('border-primary');
+                $('#payment_credit').closest('.address-check').css('background-color', '');
+                // Show crypto deposit details
+                $('.CryptoChill').show();
+            }
+        });
+
         // CryptoChill form handling
         const cryptoPromocodeInput = $('#promocode');
         const cryptoAmountInput = $('#crypto_deposit_amount');
@@ -365,7 +517,7 @@
         const cryptoPromocodeStatus = $('#promocodeStatus');
         const cryptoVerifyButton = $('#verifyPromocodeBtn');
         let isCryptoPromocodeValid = false;
-        let isCryptoPromocodeEntered = false;
+        let isCryptoPromocodeEntered = false;        
 
         // CreditCard form handling
         const ccPromocodeInput = $('#cc_promocode');
@@ -375,6 +527,15 @@
         const ccVerifyButton = $('#verifyCcPromocodeBtn');
         let isCcPromocodeValid = false;
         let isCcPromocodeEntered = false;
+
+        // RagaPay form handling
+        const ragaPromocodeInput = $('#raga_promocode');
+        const ragaAmountInput = $('#deposit_amount_raga');
+        const ragaDepositButton = $('#ragapay-submit-btn');
+        const ragaPromocodeStatus = $('#raga_promocodeStatus');
+        const ragaVerifyButton = $('#verifyRagaPromocodeBtn');
+        let isRagaPromocodeValid = false;
+        let isRagaPromocodeEntered = false;
 
         // Function to update CryptoChill button state
         // Function to update CryptoChill button state
@@ -401,15 +562,43 @@ function updateCcButtonState() {
     const amount = parseFloat(ccAmountInput.val());
     const isAmountValid = amount >= minDeposit;
     const isCheckboxChecked = $('#creditWarningCheckbox').is(':checked');
+    const isUsdcCheckboxChecked = $('#creditusdcCheckbox').is(':checked');
+    const bothChecked = isCheckboxChecked && isUsdcCheckboxChecked;
 
-    if (isCcPromocodeEntered) {
-        ccDepositButton.prop('disabled', !isCcPromocodeValid || !isAmountValid || !isCheckboxChecked);
-        ccDepositButton.css('opacity', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
-        ccDepositButton.css('cursor', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    // Always require both checkboxes checked, even if only amount is entered
+    let isEnabled = false;
+    if (bothChecked) {
+        if (isCcPromocodeEntered) {
+            isEnabled = isCcPromocodeValid && isAmountValid;
+        } else {
+            isEnabled = isAmountValid;
+        }
     } else {
-        ccDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
-        ccDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
-        ccDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+        isEnabled = false;
+    }
+
+    ccDepositButton.prop('disabled', !isEnabled);
+    ccDepositButton.css({
+        opacity: isEnabled ? '1' : '0.5',
+        cursor: isEnabled ? 'pointer' : 'not-allowed'
+    });
+}
+
+// Function to update RagaPay button state
+function updateRagaButtonState() {
+    const minDeposit = parseFloat($('#deposit_amount_raga').attr('min')) || 10; // read dynamic min
+    const amount = parseFloat(ragaAmountInput.val());
+    const isAmountValid = amount >= minDeposit;
+    const isCheckboxChecked = $('#ragaWarningCheckbox').is(':checked');
+    
+    if (isRagaPromocodeEntered) {
+        ragaDepositButton.prop('disabled', !isRagaPromocodeValid || !isAmountValid || !isCheckboxChecked);
+        ragaDepositButton.css('opacity', isRagaPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        ragaDepositButton.css('cursor', isRagaPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    } else {
+        ragaDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
+        ragaDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
+        ragaDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
     }
 }
 
@@ -508,6 +697,53 @@ function updateCcButtonState() {
             });
         });
 
+        // RagaPay promocode verification
+        ragaVerifyButton.click(function() {
+            const promocode = ragaPromocodeInput.val().trim();
+            isRagaPromocodeEntered = promocode !== '';
+            ragaPromocodeStatus.text('Verifying...').removeClass('text-success text-danger');
+            ragaVerifyButton.prop('disabled', true).text('Verifying...');
+
+            if (promocode === '') {
+                ragaPromocodeStatus.text('Please enter a promocode.').addClass('text-danger');
+                isRagaPromocodeValid = false;
+                ragaPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                updateRagaButtonState();
+                ragaVerifyButton.prop('disabled', false).text('Verify');
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route("verify.promocode") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    promocode: promocode
+                },
+                success: function(response) {
+                    if (response.valid) {
+                        ragaPromocodeStatus.text(response.message || 'Promocode verified successfully!').addClass('text-success');
+                        isRagaPromocodeValid = true;
+                        ragaPromocodeInput.css('border-color', 'rgb(34, 197, 94)');
+                    } else {
+                        ragaPromocodeStatus.text(response.message || 'Invalid promocode.').addClass('text-danger');
+                        isRagaPromocodeValid = false;
+                        ragaPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                    }
+                    updateRagaButtonState();
+                },
+                error: function(xhr) {
+                    ragaPromocodeStatus.text('Error verifying promocode. Please try again.').addClass('text-danger');
+                    isRagaPromocodeValid = false;
+                    ragaPromocodeInput.css('border-color', 'rgb(239, 68, 68)');
+                    updateRagaButtonState();
+                },
+                complete: function() {
+                    ragaVerifyButton.prop('disabled', false).text('Verify');
+                }
+            });
+        });
+
         // Handle promocode input changes
         cryptoPromocodeInput.on('input', function() {
             const promocode = $(this).val().trim();
@@ -527,11 +763,23 @@ function updateCcButtonState() {
             updateCcButtonState();
         });
 
+        ragaPromocodeInput.on('input', function() {
+            const promocode = $(this).val().trim();
+            isRagaPromocodeEntered = promocode !== '';
+            isRagaPromocodeValid = false;
+            ragaPromocodeStatus.text(promocode ? 'Please verify this promocode before proceeding.' : '').removeClass('text-success').addClass(promocode ? 'text-danger' : '');
+            ragaPromocodeInput.css('border-color', promocode ? 'rgb(239, 68, 68)' : '');
+            updateRagaButtonState();
+        });
+
         // Handle amount and checkbox input changes
         cryptoAmountInput.on('input', updateCryptoButtonState);
         ccAmountInput.on('input', updateCcButtonState);
+        ragaAmountInput.on('input', updateRagaButtonState);
         $('#cryptoWarningCheckbox').on('change', updateCryptoButtonState);
         $('#creditWarningCheckbox').on('change', updateCcButtonState);
+        $('#creditusdcCheckbox').on('change', updateCcButtonState);
+        $('#ragaWarningCheckbox').on('change', updateRagaButtonState);
 
         // Handle account selection
         $('.select-liveaccount').on('change', function () {
@@ -543,18 +791,25 @@ function updateCcButtonState() {
             if (group === 'LM\\B-Book\\10x\\DF-B') {
                 $('.promo-field-crypto').hide();
                 $('.promo-field-cc').hide();
+                $('.promo-field-ragapay').hide();
                 $('#promocode').val('');
                 $('#cc_promocode').val('');
+                $('#raga_promocode').val('');
             } else {
                 $('.promo-field-crypto').show();
                 $('.promo-field-cc').show();
+                @if($isUkUser)
+                $('.promo-field-ragapay').show();
+                @endif
             }
 
             $('#crypto_deposit_amount').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
             $('#deposit_amount_cc').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
+            $('#deposit_amount_raga').attr('min', minDeposit).attr('placeholder', 'Minimum $' + minDeposit);
 
             updateCryptoButtonState();
             updateCcButtonState();
+            updateRagaButtonState();
         });
 
         // Prevent form submission if no account selected
@@ -570,6 +825,26 @@ function updateCcButtonState() {
                 return false;
             }
             const amount = parseFloat(ccAmountInput.val());
+            if (!amount || amount < 10) {
+                e.preventDefault();
+                alert('Please enter a valid amount (minimum $10).');
+                return false;
+            }
+        });
+
+        // Prevent RagaPay form submission if validations fail
+        $('#RagaPayForm').on('submit', function(e) {
+            if (!$('.user_code').val()) {
+                e.preventDefault();
+                alert('Please select a trading account.');
+                return false;
+            }
+            if (isRagaPromocodeEntered && !isRagaPromocodeValid) {
+                e.preventDefault();
+                ragaPromocodeStatus.text('Please verify the promocode before proceeding.').addClass('text-danger');
+                return false;
+            }
+            const amount = parseFloat(ragaAmountInput.val());
             if (!amount || amount < 10) {
                 e.preventDefault();
                 alert('Please enter a valid amount (minimum $10).');
@@ -607,11 +882,16 @@ function updateCcButtonState() {
                 ccDepositButton.prop('disabled', true).css({'opacity': '0.5', 'cursor': 'not-allowed'});
                 console.warn('🔒 Security: Credit Card submit button was artificially enabled and has been re-disabled.');
             }
+            if (!ragaDepositButton.prop('disabled') && (isRagaPromocodeEntered && !isRagaPromocodeValid)) {
+                ragaDepositButton.prop('disabled', true).css({'opacity': '0.5', 'cursor': 'not-allowed'});
+                console.warn('🔒 Security: RagaPay submit button was artificially enabled and has been re-disabled.');
+            }
         }, 1000);
 
         // Initial button state
         updateCryptoButtonState();
         updateCcButtonState();
+        updateRagaButtonState();
     });
 </script>
 @endsection

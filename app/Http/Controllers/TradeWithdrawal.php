@@ -97,6 +97,7 @@ class TradeWithdrawal extends Controller
         return view('trade_withdrawal', compact('liveaccount_details', 'walletenabled', 'bank_details', 'totals', 'walletBalance', 'client_banks', 'account_id'));
     }
 
+    // TODO: Consider RagaPay service endpoint for withdrawal/payout processing
     public function withdraw(Request $request)
     {
 

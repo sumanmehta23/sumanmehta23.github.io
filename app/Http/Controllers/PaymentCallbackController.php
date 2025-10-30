@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\WalletDeposit;
 use App\Models\TotalBalance;
+use App\Models\User;
 use Exception;
 
 class PaymentCallbackController extends Controller
@@ -80,8 +81,13 @@ class PaymentCallbackController extends Controller
     private function handleWalletDeposit($email, $depositType, $amount, $transactionId, $callbackData, $callbackCode, $logData)
     {
         try {
-            DB::transaction(function () use ($email, $depositType, $amount, $transactionId, $callbackData, $callbackCode) {
+            // Get user_id from email to match the pattern used in Wallet.php secureProcessPayment
+            $user = User::where('email', $email)->first();
+            $userId = $user ? $user->id : null;
+
+            DB::transaction(function () use ($email, $userId, $depositType, $amount, $transactionId, $callbackData, $callbackCode) {
                 WalletDeposit::create([
+                    'user_id' => $userId,
                     'email' => $email,
                     'deposit_type' => $depositType,
                     'deposit_amount' => $amount,
@@ -94,23 +100,27 @@ class PaymentCallbackController extends Controller
                 ]);
 
                 TotalBalance::create([
+                    'user_id' => $userId,
                     'email' => $email,
                     'deposit_amount' => $amount
                 ]);
 
-                activity()->causedBy(auth()->user()->id)
-                    ->withProperties(
-                        [
-                            'ip' => request()->ip(),
-                            'email' => auth()->user()->email,
-                            'payment_amount' => $amount,
-                            'payment_type' => $depositType,
-                            'transaction_id' => $transactionId,
-                            'remark' => 'Wallet Deposits'
-                        ]
-                    )
-                    ->event('create')
-                    ->log('Wallet Deposit');
+                // Only log activity if user is authenticated
+                if (auth()->check()) {
+                    activity()->causedBy(auth()->user()->id)
+                        ->withProperties(
+                            [
+                                'ip' => request()->ip(),
+                                'email' => auth()->user()->email,
+                                'payment_amount' => $amount,
+                                'payment_type' => $depositType,
+                                'transaction_id' => $transactionId,
+                                'remark' => 'Wallet Deposits'
+                            ]
+                        )
+                        ->event('create')
+                        ->log('Wallet Deposit');
+                }
             });
 
             Log::info($logData . "Transaction Confirmed\n");
