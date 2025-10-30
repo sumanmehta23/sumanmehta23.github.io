@@ -153,22 +153,12 @@
         @include('components.google-translate')
         
         <!-- Visible language dropdown for login page -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
         <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
-            <select id="custom_translate_select_login" class="form-select form-select-sm" style="min-width: 180px;">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="ar">Arabic</option>
-                <option value="hi">Hindi</option>
-                <option value="pt">Portuguese</option>
-            </select>
+            @include('components.language-dropdown', [
+                'selectId' => 'custom_translate_select_login',
+                'flagPreviewId' => 'flag-preview-login'
+            ])
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function(){
-                if (window.__googleTranslateInitSelects) {
-                    window.__googleTranslateInitSelects(['custom_translate_select_login']);
-                }
-            });
-        </script>
     </body>
 @endsection
