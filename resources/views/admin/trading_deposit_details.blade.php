@@ -51,7 +51,7 @@
                                 </div>
                                 @if(!empty($link))
                                     <div class="ms-3">
-                                        <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Payment</a>
+                                        <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Deposit Hash</a>
                                     </div>
                                 @else
                                     @if(!empty($details->transaction_id))
